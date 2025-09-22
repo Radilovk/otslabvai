@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="bg" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Персонализиран Въпросник - BIOCODE</title>
+    <meta name="description" content="Персонализиран въпросник за препоръки от BIOCODE.">
+    <meta property="og:title" content="Персонализиран Въпросник - BIOCODE">
+    <meta property="og:description" content="Персонализиран въпросник за препоръки от BIOCODE.">
+    <meta property="og:image" content="img/logo.svg">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="bg_BG">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="index.css" />
+
+    <link rel="stylesheet" href="questionnaire.css" />
+  </head>
+  <body>
+
+
+    <main class="main-container">
+      <div class="questionnaire-container">
+        <div class="questionnaire-header">
+          <h1>Вашият Път към Оптимизация</h1>
+          <p>
+            Отговорете на въпросите, за да изготвим Вашата персонална програма.
+          </p>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-bar"></div>
+        </div>
+        <form id="questionnaire-form" novalidate>
+          <!-- СЪДЪРЖАНИЕТО НА ФОРМАТА Е НЕПРОМЕНЕНО -->
+          <div class="form-step active" data-step="1">
+            <h2 class="step-title">Стъпка 1: За Вас</h2>
+            <div class="form-group">
+              <label>Пол</label>
+              <div class="choice-group">
+                <label class="choice-item" for="male"
+                  ><input
+                    type="radio"
+                    id="male"
+                    name="gender"
+                    value="male"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label">Мъж</span></label
+                >
+                <label class="choice-item" for="female"
+                  ><input
+                    type="radio"
+                    id="female"
+                    name="gender"
+                    value="female"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label">Жена</span></label
+                >
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="age">Възраст</label>
+              <input
+                type="number"
+                id="age"
+                name="age"
+                placeholder="Години"
+                min="18"
+                max="100"
+              />
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="height">Ръст (в см)</label>
+              <input
+                type="number"
+                id="height"
+                name="height"
+                placeholder="180"
+                min="100"
+                max="250"
+              />
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="weight">Тегло (в кг)</label>
+              <input
+                type="number"
+                id="weight"
+                name="weight"
+                placeholder="80"
+                min="30"
+                max="300"
+              />
+              <div class="error-message"></div>
+            </div>
+          </div>
+          <div class="form-step" data-step="2">
+            <h2 class="step-title">Стъпка 2: Вашите Цели</h2>
+            <div class="form-group">
+              <label
+                >Моля, отбележете всички цели, които са важни за Вас:</label
+              >
+              <div class="choice-group">
+                <label class="choice-item" for="goal1"
+                  ><input
+                    type="checkbox"
+                    id="goal1"
+                    name="goals"
+                    value="anti-aging"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label"
+                    >Анти-ейджинг и виталност</span
+                  ></label
+                >
+                <label class="choice-item" for="goal2"
+                  ><input
+                    type="checkbox"
+                    id="goal2"
+                    name="goals"
+                    value="skin-health"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label"
+                    >Подобряване на кожата</span
+                  ></label
+                >
+                <label class="choice-item" for="goal3"
+                  ><input
+                    type="checkbox"
+                    id="goal3"
+                    name="goals"
+                    value="cognitive"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label"
+                    >Фокус, памет и настроение</span
+                  ></label
+                >
+                <label class="choice-item" for="goal4"
+                  ><input
+                    type="checkbox"
+                    id="goal4"
+                    name="goals"
+                    value="sleep"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label">Подобряване на съня</span></label
+                >
+                <label class="choice-item" for="goal5"
+                  ><input
+                    type="checkbox"
+                    id="goal5"
+                    name="goals"
+                    value="muscle-gain"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label"
+                    >Покачване на мускулна маса</span
+                  ></label
+                >
+                <label class="choice-item" for="goal6"
+                  ><input
+                    type="checkbox"
+                    id="goal6"
+                    name="goals"
+                    value="fat-loss"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label">Изгаряне на мазнини</span></label
+                >
+                <label class="choice-item" for="goal7"
+                  ><input
+                    type="checkbox"
+                    id="goal7"
+                    name="goals"
+                    value="recovery"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label"
+                    >Възстановяване (тренировки/травми)</span
+                  ></label
+                >
+                <label class="choice-item" for="goal8"
+                  ><input
+                    type="checkbox"
+                    id="goal8"
+                    name="goals"
+                    value="libido"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label"
+                    >Повишаване на либидото</span
+                  ></label
+                >
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="main-goal"
+                >Опишете с 1-2 изречения най-важната си цел</label
+              >
+              <textarea
+                id="main-goal"
+                name="main_goal"
+                placeholder="Пример: Искам да повиша енергията си през деня и да подобря възстановяването си след фитнес."
+              ></textarea>
+              <div class="error-message"></div>
+            </div>
+          </div>
+          <div class="form-step" data-step="3">
+            <h2 class="step-title">Стъпка 3: Здраве</h2>
+            <div class="form-group">
+              <label for="conditions"
+                >Имате ли диагностицирани заболявания или състояния?</label
+              >
+              <textarea
+                id="conditions"
+                name="conditions"
+                placeholder="Пример: Високо кръвно, диабет... Ако нямате, напишете 'Нямам'."
+              ></textarea>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="medications"
+                >Приемате ли лекарства или други добавки?</label
+              >
+              <textarea
+                id="medications"
+                name="medications"
+                placeholder="Избройте всичко. Ако не, напишете 'Не приемам'."
+              ></textarea>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="allergies">Имате ли известни алергии?</label>
+              <textarea
+                id="allergies"
+                name="allergies"
+                placeholder="Ако нямате, напишете 'Нямам'."
+              ></textarea>
+              <div class="error-message"></div>
+            </div>
+          </div>
+          <div class="form-step" data-step="4">
+            <h2 class="step-title">Стъпка 4: Начин на живот</h2>
+            <div class="form-group">
+              <label>Физическа активност (тренировки на седмица)</label>
+              <div class="choice-group">
+                <label class="choice-item" for="activity1"
+                  ><input
+                    type="radio"
+                    id="activity1"
+                    name="activity"
+                    value="0"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label">0 (заседнал)</span></label
+                >
+                <label class="choice-item" for="activity2"
+                  ><input
+                    type="radio"
+                    id="activity2"
+                    name="activity"
+                    value="1-2"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label">1-2 пъти</span></label
+                >
+                <label class="choice-item" for="activity3"
+                  ><input
+                    type="radio"
+                    id="activity3"
+                    name="activity"
+                    value="3-4"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label">3-4 пъти</span></label
+                >
+                <label class="choice-item" for="activity4"
+                  ><input
+                    type="radio"
+                    id="activity4"
+                    name="activity"
+                    value="5+"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label">5+ пъти</span></label
+                >
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="sleep">Средно часове сън на нощ?</label>
+              <input
+                type="number"
+                id="sleep"
+                name="sleep"
+                placeholder="8"
+                min="1"
+                max="12"
+              />
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="stress">Ниво на ежедневен стрес (от 1 до 10)</label>
+              <input
+                type="number"
+                id="stress"
+                name="stress"
+                placeholder="7"
+                min="1"
+                max="10"
+              />
+              <div class="error-message"></div>
+            </div>
+          </div>
+          <div class="form-step" data-step="5">
+            <h2 class="step-title">Стъпка 5: Контакт и Финализиране</h2>
+            <div class="form-group">
+              <label>За какъв период планирате приема?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="duration1"
+                  ><input
+                    type="radio"
+                    id="duration1"
+                    name="duration"
+                    value="1-2m"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label">1-2 месеца</span></label
+                >
+                <label class="choice-item" for="duration2"
+                  ><input
+                    type="radio"
+                    id="duration2"
+                    name="duration"
+                    value="3-4m"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label">3-4 месеца</span></label
+                >
+                <label class="choice-item" for="duration3"
+                  ><input
+                    type="radio"
+                    id="duration3"
+                    name="duration"
+                    value="6m+"
+                  /><span class="checkmark"></span
+                  ><span class="choice-label">6+ месеца</span></label
+                >
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="name">Име</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Вашето име"
+              />
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="email">Имейл</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="primer@email.com"
+              />
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="phone">Телефон</label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                placeholder="0888123456"
+              />
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Съгласие</label>
+              <div class="choice-group">
+                <label class="choice-item" for="consent">
+                  <input type="checkbox" id="consent" name="consent" />
+                  <span class="checkmark"></span>
+                  <span class="choice-label"
+                    >Потвърждавам, че предоставената информация е точна.</span
+                  >
+                </label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+          </div>
+          <div class="navigation-buttons">
+            <button type="button" class="nav-btn" id="back-btn">Назад</button>
+            <button type="button" class="nav-btn" id="next-btn">Напред</button>
+          </div>
+        </form>
+
+        <div
+          id="form-error-container"
+          class="result-card hidden"
+          aria-live="polite"
+        >
+          <h3>Възникна грешка</h3>
+          <p id="form-error-text"></p>
+        </div>
+      </div>
+
+      <div class="loading-container hidden" id="loading-container">
+        <div class="loading-animation"></div>
+        <h2>Анализираме Вашите данни...</h2>
+        <p>Генерираме Вашия персонализиран BIOCODE протокол.</p>
+      </div>
+
+      <div class="results-container hidden" id="results-container">
+        <div class="results-header">
+          <h1>Здравейте, <span id="results-name"></span>!</h1>
+          <p>Ето Вашия персонален BIOCODE план:</p>
+        </div>
+        <div id="results-content">
+          <div class="result-card" id="analysis-card">
+            <h3>Анализ на Вашата ситуация</h3>
+            <p id="analysis-text"></p>
+          </div>
+          <!-- НОВА СЕКЦИЯ ЗА ПРОДУКТИ -->
+          <div class="result-card" id="products-card">
+            <h3>Препоръчителни Продукти</h3>
+            <div id="products-list">
+              <!-- Тук ще се генерират динамично новите, по-богати карти -->
+            </div>
+          </div>
+          <!-- КРАЙ НА НОВА СЕКЦИЯ -->
+          <div class="result-card" id="protocol-card">
+            <h3>Протокол за Прием</h3>
+            <p id="protocol-details"></p>
+          </div>
+          <div class="result-card" id="tips-card">
+            <h3>Съвети за Начина на Живот</h3>
+            <ul id="tips-list"></ul>
+          </div>
+        </div>
+        <p class="disclaimer" id="results-disclaimer"></p>
+        <button type="button" class="nav-btn" id="reset-btn">
+          Започни отначало
+        </button>
+      </div>
+</main>
+
+    <script src="questionnaire.js"></script>
+  </body>
+</html>

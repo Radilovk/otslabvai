@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "lib": [
+      "es2020",
+      "webworker"
+    ],
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "worker.js"
+  ]
+}

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="bg" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поръчка - BIOCODE</title>
+    <meta name="description" content="Формуляр за завършване на поръчката в BIOCODE.">
+    <meta property="og:title" content="Поръчка - BIOCODE">
+    <meta property="og:description" content="Формуляр за завършване на поръчката в BIOCODE.">
+    <meta property="og:image" content="img/logo.svg">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="bg_BG">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <style>
+        :root {
+            --bg-primary-dark: #0D0F12; --bg-secondary-dark: #12151A; --text-primary-dark: #E9ECEF; --text-secondary-dark: #A0AEC0; --accent-dark: #00E0E0; --border-color-dark: rgba(255, 255, 255, 0.1); --error-color-dark: #ff5c5c;
+        }
+        [data-theme="dark"] {
+            --bg-primary: var(--bg-primary-dark); --bg-secondary: var(--bg-secondary-dark); --text-primary: var(--text-primary-dark); --text-secondary: var(--text-secondary-dark); --accent: var(--accent-dark); --border-color: var(--border-color-dark); --error-color: var(--error-color-dark);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-primary); color: var(--text-primary); line-height: 1.6; }
+        .checkout-container { display: flex; flex-wrap: wrap; max-width: 1400px; margin: 2rem auto; padding: 0 1rem; gap: 2rem; }
+        .form-section { flex: 6; min-width: 320px; }
+        .summary-section { flex: 4; min-width: 300px; background-color: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-color); padding: 1.5rem; align-self: flex-start; position: sticky; top: 2rem; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+        h1 { margin-bottom: 2rem; }
+        h2 { font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
+        .form-step { margin-bottom: 2.5rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .form-group input { width: 100%; padding: 0.8rem; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 1rem; transition: border-color 0.3s, box-shadow 0.3s; }
+        .form-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 224, 224, 0.2); }
+        .form-group input.is-invalid { border-color: var(--error-color); }
+        .error-message { color: var(--error-color); font-size: 0.85rem; margin-top: 0.25rem; display: none; }
+        input.is-invalid + .error-message { display: block; }
+        .form-row { display: flex; gap: 1rem; }
+        .form-row .form-group { flex: 1; }
+        .checkbox-group { display: flex; align-items: center; gap: 0.75rem; background-color: var(--bg-secondary); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 1rem; }
+        .checkbox-group label { margin-bottom: 0; color: var(--text-primary); font-weight: 400; cursor: pointer; }
+        .checkbox-group input { width: auto; }
+        .hidden-fields { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        .hidden-fields.visible { max-height: 1000px; margin-top: 1rem;}
+        /* Summary Section Styles */
+        .product-list { list-style: none; }
+        .product-item { display: flex; gap: 1rem; align-items: center; padding: 1rem 0; border-bottom: 1px solid var(--border-color); }
+        .product-item:last-child { border-bottom: none; }
+        .product-image { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); }
+        .product-info { flex-grow: 1; }
+        .product-info h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1rem; font-weight: 600; margin: 0; }
+        .product-info span { font-size: 0.9rem; color: var(--text-secondary); }
+        .product-controls { display: flex; flex-direction: column; align-items: flex-end; }
+        .quantity-control { display: flex; align-items: center; border: 1px solid var(--border-color); border-radius: 6px; }
+        .quantity-control button { background: none; border: none; color: var(--text-primary); font-size: 1.2rem; cursor: pointer; padding: 0.3rem 0.7rem; }
+        .quantity-control span { padding: 0 0.5rem; font-weight: 600; }
+        .product-price { font-weight: 600; margin-top: 0.5rem; }
+        .remove-item-btn { font-size: 1rem; color: var(--text-secondary); cursor: pointer; transition: color 0.3s; margin-left: 0.5rem; }
+        .remove-item-btn:hover { color: var(--error-color); }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; font-size: 1rem; }
+        .summary-row.total { font-size: 1.2rem; font-weight: bold; border-top: 1px solid var(--border-color); margin-top: 1rem; padding-top: 1rem; }
+        .promo-code-form { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .promo-code-form input { flex-grow: 1; }
+        .promo-code-form button { padding: 0.8rem; background-color: var(--accent); color: var(--bg-primary); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        [data-theme="dark"] .promo-code-form button { color: #000; }
+        /* Finalization */
+        .btn-submit { width: 100%; padding: 1rem; font-size: 1.1rem; font-weight: 700; color: #000; background-color: var(--accent); border: none; border-radius: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .btn-submit:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--accent); }
+        .trust-seals { text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.8rem; }
+        @media (max-width: 992px) {
+            .checkout-container { flex-direction: column-reverse; }
+            .summary-section { position: static; }
+        }
+        @media (max-width: 600px) {
+            .checkout-container { padding: 0 0.5rem; }
+            .form-row { flex-direction: column; }
+            .product-item { flex-direction: column; align-items: flex-start; }
+            .product-controls { width: 100%; flex-direction: row; justify-content: space-between; margin-top: 0.5rem; }
+            .summary-section { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <a href="index.html" class="logo-container" id="header-logo-link">
+                <img src="" alt="BIOCODE Logo" id="header-logo-img">
+                <div>
+                    <span class="brand-name" id="header-brand-name">BIOCODE</span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <ul class="nav-links" id="main-nav-links">
+                    <li><a href="index.html">Начало</a></li>
+                    <li><a href="checkout.html" class="cart-link">Количка (<span id="cart-count">0</span>)</a></li>
+                </ul>
+            </nav>
+            <button class="menu-toggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    <div class="nav-overlay"></div>
+    <div class="checkout-container">
+        <!-- Форма за попълване -->
+        <main class="form-section">
+            <h1>BIOCODE</h1>
+            <a href="index.html" class="btn-primary" style="display:inline-block;margin-bottom:1rem;">&larr; Обратно към магазина</a>
+            <form id="checkout-form" novalidate>
+                <div class="form-step">
+                    <h2>Информация за контакт</h2>
+                    <div class="form-group">
+                        <label for="email">Имейл адрес</label>
+                        <input type="email" id="email" name="email" required>
+                        <div class="error-message">Моля, въведете валиден имейл адрес.</div>
+                    </div>
+                </div>
+
+                <div class="form-step">
+                    <h2>Адрес за доставка</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="first-name">Име</label>
+                            <input type="text" id="first-name" name="firstName" required>
+                            <div class="error-message">Полето е задължително.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="last-name">Фамилия</label>
+                            <input type="text" id="last-name" name="lastName" required>
+                            <div class="error-message">Полето е задължително.</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Адрес (улица, номер, бл., вх., ет., ап.)</label>
+                        <input type="text" id="address" name="address" required>
+                        <div class="error-message">Полето е задължително.</div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">Град / Населено място</label>
+                            <input type="text" id="city" name="city" required>
+                            <div class="error-message">Полето е задължително.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="postcode">Пощенски код</label>
+                            <input type="text" id="postcode" name="postcode" required>
+                            <div class="error-message">Полето е задължително.</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Телефон</label>
+                        <input type="tel" id="phone" name="phone" required>
+                        <div class="error-message">Моля, въведете валиден телефонен номер.</div>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="billing-same" name="billingSame" checked>
+                        <label for="billing-same">Адресът за фактуриране е същият като този за доставка</label>
+                    </div>
+                    <div id="billing-fields" class="hidden-fields">
+                         <h3>Адрес за фактуриране</h3>
+                         <!-- Тук ще се добавят същите полета за адрес, ако е необходимо -->
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="company-invoice" name="companyInvoice">
+                        <label for="company-invoice">Желая фактура на фирма</label>
+                    </div>
+                    <div id="company-fields" class="hidden-fields">
+                        <div class="form-group">
+                            <label for="company-name">Име на фирма</label>
+                            <input type="text" id="company-name" name="companyName">
+                        </div>
+                        <div class="form-row">
+                           <div class="form-group">
+                               <label for="company-eik">ЕИК / Булстат</label>
+                               <input type="text" id="company-eik" name="companyEik">
+                           </div>
+                           <div class="form-group">
+                               <label for="company-mol">МОЛ</label>
+                               <input type="text" id="company-mol" name="companyMol">
+                           </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-step">
+                    <h2>Начин на плащане</h2>
+                    <div class="checkbox-group">
+                        <input type="radio" id="cod" name="paymentMethod" value="cod" checked>
+                        <label for="cod">Наложен платеж</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="radio" id="card" name="paymentMethod" value="card" disabled>
+                        <label for="card">Кредитна/Дебитна карта (Очаквайте скоро)</label>
+                    </div>
+                </div>
+                
+                <div class="form-step">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms">Прочетох и се съгласявам с <a href="terms.html" style="color:var(--accent)">Общите условия</a>.</label>
+                    </div>
+                    <div class="error-message" id="terms-error">Трябва да се съгласите с общите условия.</div>
+
+                    <button type="submit" class="btn-submit" style="margin-top: 1.5rem;">Поръчай с наложен платеж</button>
+                    <p class="trust-seals">Всички транзакции са сигурни и криптирани.</p>
+                </div>
+            </form>
+        </main>
+
+        <!-- Резюме на поръчката -->
+        <aside class="summary-section">
+            <h2>Резюме на поръчката</h2>
+            <ul class="product-list" id="product-list">
+                <!-- Продуктите ще се заредят тук от JS -->
+            </ul>
+            <div class="promo-code-form">
+                <input type="text" id="promo-code" placeholder="Промо код">
+                <button id="apply-promo">Приложи</button>
+            </div>
+            <div class="summary-details">
+                <div class="summary-row">
+                    <span>Междинна сума</span>
+                    <span id="summary-subtotal">0.00 лв.</span>
+                </div>
+                <div class="summary-row">
+                    <span>Доставка</span>
+                    <span id="summary-shipping">10.00 лв.</span>
+                </div>
+                <div class="summary-row" id="discount-row" style="display:none;">
+                    <span>Отстъпка</span>
+                    <span id="summary-discount"></span>
+                </div>
+                <div class="summary-row total">
+                    <span>ОБЩО</span>
+                    <span id="summary-total">10.00 лв.</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- 1. Зареждане на количката от localStorage ---
+        const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
+        const PROMO_CODES = { 'SAVE10': 0.10, 'WELCOME5': 0.05 };
+        let activeDiscount = 0;
+
+        // --- 2. ЕЛЕМЕНТИ ОТ DOM ---
+        const productListEl = document.getElementById('product-list');
+        const subtotalEl = document.getElementById('summary-subtotal');
+        const shippingEl = document.getElementById('summary-shipping');
+        const totalEl = document.getElementById('summary-total');
+        const form = document.getElementById('checkout-form');
+        const promoInput = document.getElementById('promo-code');
+        const applyPromoBtn = document.getElementById('apply-promo');
+        const discountRow = document.getElementById('discount-row');
+        const discountEl = document.getElementById('summary-discount');
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        const navOverlay = document.querySelector('.nav-overlay');
+        const cartCountEl = document.getElementById('cart-count');
+
+        const saveCart = () => localStorage.setItem('cart', JSON.stringify(cartData));
+
+        const updateCartCount = () => {
+            if (cartCountEl) {
+                const count = cartData.reduce((acc, p) => acc + p.quantity, 0);
+                cartCountEl.textContent = count;
+            }
+        };
+        
+        // --- 3. РЕНДЕРИРАНЕ И ИЗЧИСЛЕНИЯ ---
+        function renderProducts() {
+            productListEl.innerHTML = '';
+            if (cartData.length === 0) {
+                productListEl.innerHTML = '<p style="text-align:center; padding: 2rem 0;">Кошницата е празна.</p>';
+                return;
+            }
+
+            cartData.forEach(product => {
+                const itemEl = document.createElement('li');
+                itemEl.className = 'product-item';
+                itemEl.dataset.id = product.id;
+                itemEl.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}" class="product-image">
+                    <div class="product-info">
+                        <h3>${product.name}</h3>
+                        <span>Ед. цена: ${product.price.toFixed(2)} лв.</span>
+                    </div>
+                    <div class="product-controls">
+                        <div class="quantity-control">
+                            <button class="quantity-btn" data-action="decrease">-</button>
+                            <span class="quantity">${product.quantity}</span>
+                            <button class="quantity-btn" data-action="increase">+</button>
+                        </div>
+                        <span class="product-price">${(product.price * product.quantity).toFixed(2)} лв.</span>
+                    </div>
+                    <span class="remove-item-btn" title="Премахни">✖</span>
+                `;
+                productListEl.appendChild(itemEl);
+            });
+            updateSummary();
+            saveCart();
+            updateCartCount();
+        }
+
+        function updateSummary() {
+            const subtotal = cartData.reduce((acc, p) => acc + (p.price * p.quantity), 0);
+            const shipping = subtotal > 0 ? 10.00 : 0.00;
+            const discountAmount = subtotal * activeDiscount;
+            const total = subtotal - discountAmount + shipping;
+
+            subtotalEl.textContent = `${subtotal.toFixed(2)} лв.`;
+            shippingEl.textContent = `${shipping.toFixed(2)} лв.`;
+            if (activeDiscount > 0) {
+                discountRow.style.display = 'flex';
+                discountEl.textContent = `- ${discountAmount.toFixed(2)} лв.`;
+            } else {
+                discountRow.style.display = 'none';
+                discountEl.textContent = '';
+            }
+            totalEl.textContent = `${total.toFixed(2)} лв.`;
+        }
+
+        // --- 4. СЪБИТИЯ (EVENTS) ---
+        productListEl.addEventListener('click', (e) => {
+            const target = e.target;
+            const productItem = target.closest('.product-item');
+            if (!productItem) return;
+
+            const productId = productItem.dataset.id;
+            const productIndex = cartData.findIndex(p => p.id === productId);
+
+            if (target.matches('.quantity-btn')) {
+                const action = target.dataset.action;
+                if (action === 'increase') {
+                    const max = cartData[productIndex].inventory || Infinity;
+                    if (cartData[productIndex].quantity < max) {
+                        cartData[productIndex].quantity++;
+                    } else {
+                        alert('Няма повече наличности.');
+                    }
+                } else if (action === 'decrease' && cartData[productIndex].quantity > 1) {
+                    cartData[productIndex].quantity--;
+                }
+                renderProducts();
+                saveCart();
+                updateCartCount();
+            }
+
+            if (target.matches('.remove-item-btn')) {
+                if(confirm(`Сигурни ли сте, че искате да премахнете "${cartData[productIndex].name}"?`)){
+                    cartData.splice(productIndex, 1);
+                    renderProducts();
+                    saveCart();
+                    updateCartCount();
+                }
+            }
+        });
+
+        applyPromoBtn.addEventListener('click', () => {
+            const code = promoInput.value.trim().toUpperCase();
+            if (PROMO_CODES[code]) {
+                activeDiscount = PROMO_CODES[code];
+                updateSummary();
+                alert('Промо кодът е приложен.');
+            } else {
+                alert('Невалиден промо код.');
+            }
+        });
+
+        // Toggle hidden fields
+        document.getElementById('billing-same').addEventListener('change', (e) => {
+            document.getElementById('billing-fields').classList.toggle('visible', !e.target.checked);
+        });
+        document.getElementById('company-invoice').addEventListener('change', (e) => {
+            document.getElementById('company-fields').classList.toggle('visible', e.target.checked);
+        });
+        
+        // --- 5. ВАЛИДАЦИЯ И ИЗПРАЩАНЕ НА ФОРМАТА ---
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (validateForm()) {
+                const formData = new FormData(form);
+                const orderData = Object.fromEntries(formData.entries());
+                
+                const fullOrder = {
+                    customer: orderData,
+                    products: cartData,
+                    summary: {
+                        subtotal: subtotalEl.textContent,
+                        shipping: shippingEl.textContent,
+                        total: totalEl.textContent
+                    },
+                    status: 'Нова'
+                };
+
+                fetch('orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fullOrder)
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Server error');
+                    return res.json();
+                })
+                .then(() => {
+                    localStorage.removeItem('cart');
+                    alert('Поръчката е приета успешно!');
+                })
+                .catch(err => {
+                    console.error('Грешка при изпращане на поръчката:', err);
+                    alert('Възникна грешка. Опитайте по-късно.');
+                });
+            }
+        });
+        
+        function validateForm() {
+            let isValid = true;
+            // Reset previous errors
+            form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            document.getElementById('terms-error').style.display = 'none';
+
+            const requiredFields = form.querySelectorAll('input[required]');
+            requiredFields.forEach(input => {
+                let fieldIsValid = true;
+                if (input.type === 'email') {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(input.value)) fieldIsValid = false;
+                } else {
+                    if (input.value.trim() === '') fieldIsValid = false;
+                }
+
+                if (!fieldIsValid) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            });
+            
+            // Validate company fields if checkbox is checked
+            if (document.getElementById('company-invoice').checked) {
+                ['company-name', 'company-eik', 'company-mol'].forEach(id => {
+                    const input = document.getElementById(id);
+                    if (input.value.trim() === '') {
+                        input.classList.add('is-invalid');
+                        isValid = false;
+                    }
+                })
+            }
+
+            // Validate terms
+            const termsCheckbox = document.getElementById('terms');
+            if (!termsCheckbox.checked) {
+                document.getElementById('terms-error').style.display = 'block';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // --- 6. ИНИЦИАЛИЗАЦИЯ ---
+        renderProducts();
+        updateCartCount();
+
+
+        if (menuToggle) {
+            const toggleMenu = () => {
+                menuToggle.classList.toggle('active');
+                navLinks.classList.toggle('active');
+                navOverlay.classList.toggle('active');
+                document.body.classList.toggle('nav-open');
+            };
+            menuToggle.addEventListener('click', toggleMenu);
+            navOverlay.addEventListener('click', toggleMenu);
+            navLinks.addEventListener('click', e => {
+                if (e.target.tagName === 'A') toggleMenu();
+            });
+        }
+
+    });
+    </script>
+</body>
+</html>

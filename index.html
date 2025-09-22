@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="bg" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIOCODE</title>
+    <meta name="description" content="BIOCODE е онлайн магазин за пептиди и регенеративна медицина. Открийте висококачествени решения за здраве и дълголетие.">
+    <meta property="og:title" content="BIOCODE - Науката за живота">
+    <meta property="og:description" content="BIOCODE е онлайн магазин за пептиди и регенеративна медицина. Открийте висококачествени решения за здраве и дълголетие.">
+    <meta property="og:image" content="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="bg_BG">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="index.css">
+
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <a href="#" class="logo-container" id="header-logo-link">
+                <img src="" alt="BIOCODE Logo" id="header-logo-img">
+                <div>
+                    <span class="brand-name" id="header-brand-name"></span>
+                    <span class="brand-slogan" id="header-brand-slogan"></span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <ul class="nav-links" id="main-nav-links">
+                    <li>
+                        <a href="checkout.html" class="cart-link">Количка (<span id="cart-count">0</span>)</a>
+                    </li>
+                </ul>
+            </nav>
+            <button class="menu-toggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    <div class="nav-overlay"></div>
+
+    <!-- 
+        Контейнерът вече няма class="container", защото всяка секция ще управлява свой собствен.
+    -->
+    <main id="main-content-container">
+        <!-- Скелет за Hero секцията -->
+        <header class="hero-section">
+            <canvas id="neuron-canvas"></canvas>
+            <div class="hero-content">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+            </div>
+        </header>
+
+        <!-- Скелет за Инфо Кард. Обвит е в .container, за да съответства на финалния HTML -->
+        <section class="info-card-section skeleton-wrapper">
+             <div class="container" style="display: flex; gap: 3rem; align-items: center;">
+                <div class="info-card-image" style="flex:1;">
+                    <div class="skeleton skeleton-image"></div>
+                </div>
+                <div class="info-card-content" style="flex:1;">
+                    <div class="skeleton skeleton-h2"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text short"></div>
+                    <div class="skeleton skeleton-button"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Скелет за Продуктова категория -->
+        <section class="category-section skeleton-wrapper">
+            <div class="container">
+                <div class="category-header">
+                    <div class="skeleton skeleton-h2 category-title-skeleton"></div>
+                </div>
+                <div class="product-grid">
+                    <article class="product-card skeleton-card">
+                        <div class="card-header">
+                            <div class="product-title">
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
+                            </div>
+                            <div class="effects-container">
+                                <div class="skeleton skeleton-bar"></div>
+                                <div class="skeleton skeleton-bar"></div>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="product-card skeleton-card">
+                        <div class="card-header">
+                            <div class="product-title">
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
+                            </div>
+                            <div class="effects-container">
+                                <div class="skeleton skeleton-bar"></div>
+                                <div class="skeleton skeleton-bar"></div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid" id="footer-grid-container">
+                <!-- Футър колоните ще бъдат генерирани от JS -->
+            </div>
+            <div class="footer-bottom" id="footer-copyright-container">
+                <!-- Copyright текстът ще бъде генериран от JS -->
+            </div>
+        </div>
+    </footer>
+
+    <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
+
+    <div id="quest-modal-backdrop" class="modal-backdrop"></div>
+    <div id="quest-modal-container" class="modal-container">
+        <iframe id="quest-modal-iframe" src="" loading="lazy" title="BIOCODE въпросник"></iframe>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="index.js" type="module"></script>
+    
+</body>
+</html>

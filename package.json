@@ -1,0 +1,19 @@
+{
+  "name": "port-worker",
+  "version": "1.0.0",
+  "main": "worker.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "wrangler dev",
+    "local": "node local/local-worker.js",
+    "deploy": "wrangler deploy",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "type": "module",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
