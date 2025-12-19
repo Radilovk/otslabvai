@@ -272,7 +272,7 @@ img {
     font-weight: 600;
     font-size: 0.95rem;
     animation: pulse 2s ease-in-out infinite;
-    z-index: 1001;
+    z-index: 999;
 }
 
 .promo-banner p {
@@ -336,7 +336,7 @@ img {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-color);
-    z-index: 1000;
+    z-index: 1001;
     transition: all var(--transition-speed);
 }
 
@@ -457,7 +457,7 @@ img {
     background: none; 
     border: none; 
     cursor: pointer; 
-    z-index: 101; 
+    z-index: 1003; 
 }
 
 .menu-toggle span { 
@@ -491,7 +491,7 @@ img {
     opacity: 0; 
     visibility: hidden; 
     transition: opacity 0.4s ease, visibility 0.4s ease; 
-    z-index: 98; 
+    z-index: 1000; 
 }
 
 .nav-overlay.active { 
@@ -781,6 +781,21 @@ main {
     border-color: var(--color-primary);
     transform: translateY(-5px);
     box-shadow: 0 15px 40px rgba(228, 0, 124, 0.15);
+}
+
+.product-image {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.product-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    max-height: 250px;
 }
 
 .card-header { 
@@ -1616,7 +1631,7 @@ body.modal-open { overflow: hidden; }
         align-items: center; 
         gap: 2rem; 
         transition: right 0.4s cubic-bezier(0.23, 1, 0.32, 1); 
-        z-index: 99;
+        z-index: 1002;
     }
     .nav-links.active { 
         right: 0; 
