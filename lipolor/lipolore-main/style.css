@@ -1,0 +1,666 @@
+/* ============================
+   1. GLOBAL STYLES & VARIABLES
+   ============================ */
+
+:root {
+    /* Colors */
+    --color-primary: #E4007C; /* Magenta */
+    --color-secondary: #00A99D; /* Teal */
+    --color-dark: #212529;
+    --color-light: #F8F9FA;
+    --color-white: #FFFFFF;
+    --color-gray: #6c757d;
+
+    /* Typography */
+    --font-primary: 'Poppins', sans-serif;
+    --font-secondary: 'Montserrat', sans-serif;
+
+    /* Design Elements */
+    --border-radius: 8px;
+    --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --transition-speed: 0.3s ease;
+}
+
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+}
+
+body {
+    font-family: var(--font-secondary);
+    color: var(--color-dark);
+    background-color: var(--color-white);
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: var(--color-primary);
+    transition: color var(--transition-speed);
+}
+
+a:hover {
+    color: var(--color-secondary);
+}
+
+ul {
+    list-style: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-primary);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+/* ============================
+   2. UTILITY & REUSABLE CLASSES
+   ============================ */
+
+.container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.section-padding {
+    padding: 80px 0;
+}
+
+.section-bg {
+    background-color: var(--color-light);
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.section-title h2 {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    position: relative;
+    display: inline-block;
+}
+
+/* Creates the underline effect for titles */
+.section-title h2::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background-color: var(--color-primary);
+    border-radius: 2px;
+}
+
+.section-title p {
+    font-size: 1.1rem;
+    color: var(--color-gray);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    border: 2px solid transparent;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.btn-primary:hover {
+    background-color: #c3006a;
+    color: var(--color-white);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(228, 0, 124, 0.4);
+}
+
+.btn-large {
+    padding: 15px 35px;
+    font-size: 1.1rem;
+}
+
+.btn-full {
+    display: block;
+    width: 100%;
+}
+
+/* === [CORRECTED] ANIMATION ON SCROLL === */
+/* This is the initial, hidden state of the elements */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* This is the final, visible state, which will be added by JavaScript */
+.animate-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+/* ============================
+   3. HEADER & NAVIGATION
+   ============================ */
+
+.main-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 20px 0;
+    transition: all var(--transition-speed);
+}
+
+.main-header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--color-dark);
+    font-family: var(--font-primary);
+}
+
+.main-nav {
+    display: none; /* Hidden on mobile by default */
+}
+
+.main-nav ul {
+    display: flex;
+    gap: 30px;
+}
+
+.main-nav a {
+    color: var(--color-dark);
+    font-weight: 600;
+    position: relative;
+    padding: 5px 0;
+}
+
+.main-nav a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--color-primary);
+    transition: width var(--transition-speed);
+}
+
+.main-nav a:hover::after {
+    width: 100%;
+}
+
+.mobile-nav-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+.mobile-nav-toggle svg {
+    stroke: var(--color-dark);
+}
+
+/* Scrolled (sticky) header style */
+.main-header.scrolled {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 10px 0;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+}
+
+
+/* ============================
+   4. HERO SECTION
+   ============================ */
+
+#hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--color-white);
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://via.placeholder.com/1920x1080/212529/FFFFFF?text=Hero+Background+Image') no-repeat center center/cover;
+}
+
+.hero-content {
+    max-width: 800px;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+/* ============================
+   5. ABOUT & BENEFITS SECTION
+   ============================ */
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    align-items: center;
+}
+
+.about-image-placeholder {
+    width: 100%;
+    min-height: 400px;
+    background: var(--color-light);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--color-gray);
+    box-shadow: var(--box-shadow);
+}
+
+.about-content h3 {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+}
+
+.benefits {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.benefit-item svg {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    color: var(--color-primary);
+}
+
+.benefit-item h4 {
+    color: var(--color-secondary);
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+
+/* ============================
+   6. HOW IT WORKS / TIMELINE
+   ============================ */
+
+.timeline {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.timeline::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    background-color: var(--color-secondary);
+    opacity: 0.2;
+    top: 0;
+    bottom: 0;
+    left: 20px;
+}
+
+.timeline-item {
+    padding: 10px 40px;
+    padding-left: 60px;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--color-white);
+    border: 4px solid var(--color-secondary);
+    top: 15px;
+    left: 12px;
+    z-index: 1;
+}
+
+.timeline-content {
+    padding: 20px;
+    background: var(--color-white);
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+}
+
+.timeline-content h4 {
+    color: var(--color-primary);
+}
+
+/* ============================
+   7. INGREDIENTS SECTION (CARD FLIP)
+   ============================ */
+.ingredients-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.ingredient-card {
+    background-color: transparent;
+    height: 120px;
+    perspective: 1000px;
+    cursor: pointer;
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    border-radius: var(--border-radius);
+}
+
+.ingredient-card:hover .card-inner,
+.ingredient-card:focus .card-inner,
+.ingredient-card.is-flipped .card-inner {
+    transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-radius: var(--border-radius);
+}
+
+.card-front {
+    background-color: var(--color-light);
+    color: var(--color-dark);
+}
+
+.card-front h5 {
+    font-size: 1.2rem;
+}
+
+.card-front span {
+    font-size: 1rem;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.card-back {
+    background-color: var(--color-secondary);
+    color: white;
+    transform: rotateY(180deg);
+}
+
+
+/* ============================
+   8. MANUFACTURER SECTION
+   ============================ */
+
+.manufacturer-content {
+    text-align: center;
+    max-width: 700px;
+}
+.manufacturer-logo {
+    margin-bottom: 20px;
+}
+.manufacturer-content h3 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+
+/* ============================
+   9. ORDER & CONTACT SECTION
+   ============================ */
+
+.order-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 50px;
+}
+
+.contact-details h4 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+.contact-details ul {
+    margin-bottom: 20px;
+}
+.contact-details li {
+    margin-bottom: 10px;
+}
+
+.social-links {
+    display: flex;
+    gap: 15px;
+}
+.social-links a {
+    color: var(--color-gray);
+}
+.social-links a:hover {
+    color: var(--color-primary);
+}
+
+.order-form {
+    background: var(--color-light);
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.order-form h4 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    transition: border-color var(--transition-speed);
+}
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+}
+.quantity-selector input {
+    text-align: center;
+    border-left: none;
+    border-right: none;
+    width: 50px;
+}
+.quantity-btn {
+    width: 40px;
+    height: 46px;
+    border: 1px solid #ddd;
+    background: var(--color-white);
+    cursor: pointer;
+    font-size: 1.5rem;
+}
+
+
+/* ============================
+   10. FOOTER
+   ============================ */
+.main-footer {
+    background-color: var(--color-dark);
+    color: var(--color-light);
+    padding: 30px 0;
+    text-align: center;
+}
+.main-footer .container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.main-footer a {
+    color: var(--color-white);
+}
+.footer-links span {
+    margin: 0 10px;
+}
+
+/* ============================
+   11. RESPONSIVE DESIGN (MEDIA QUERIES)
+   ============================ */
+
+/* Mobile Nav Styles - Less than 768px */
+@media (max-width: 767px) {
+    .nav-btn {
+        display: none;
+    }
+    
+    .main-nav {
+        position: absolute;
+        top: 100%; /* Position it right below the header */
+        left: 0;
+        width: 100%;
+        background-color: var(--color-white);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        
+        /* Hide it by default and prepare for transition */
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: opacity var(--transition-speed), transform var(--transition-speed), visibility var(--transition-speed);
+    }
+    
+    .main-nav ul {
+        flex-direction: column;
+        padding: 20px;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    /* When JS adds the .nav-open class to the header, show the menu */
+    .main-header.nav-open .main-nav {
+        display: block;
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+    .mobile-nav-toggle { display: none; }
+    .nav-btn { display: inline-block; }
+    .main-nav { display: block; }
+    
+    .hero-title { font-size: 4rem; }
+    
+    .about-grid { grid-template-columns: 1fr 1fr; }
+    
+    .ingredients-grid { grid-template-columns: repeat(2, 1fr); }
+    
+    .order-grid { grid-template-columns: 1fr 1fr; }
+
+    .main-footer .container {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
+
+/* Large devices (desktops, 1024px and up) */
+@media (min-width: 1024px) {
+    .nav-btn { margin-left: 20px; }
+    
+    .timeline::after { left: 50%; transform: translateX(-50%); }
+
+    .timeline-item { width: 50%; padding: 10px 40px; }
+
+    .timeline-item:nth-child(odd) {
+        left: 0;
+        padding-right: 60px;
+        text-align: right;
+    }
+
+    .timeline-item:nth-child(even) {
+        left: 50%;
+        padding-left: 60px;
+    }
+    
+    .timeline-item::before {
+        top: 25px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .timeline-item:nth-child(odd)::before { left: auto; right: -10px; transform: none;}
+    .timeline-item:nth-child(even)::before { left: -10px; transform: none;}
+    
+    .ingredients-grid { grid-template-columns: repeat(3, 1fr); }
+}
