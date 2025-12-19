@@ -355,7 +355,6 @@ function initializePageInteractions() {
 function initializeGlobalScripts() {
     // --- Sticky Header on Scroll (Lipolor style) ---
     const header = document.querySelector('.main-header');
-    const promoBanner = document.querySelector('.promo-banner');
     
     function handleStickyHeader() {
         const stickyThreshold = 50;
@@ -383,11 +382,12 @@ function initializeGlobalScripts() {
         };
 
         const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach((entry, index) => {
+            entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                     // Add staggered delay for timeline items
                     if (entry.target.classList.contains('timeline-item')) {
-                        entry.target.style.transitionDelay = `${index * 0.15}s`;
+                        const elementIndex = Array.from(animatedElements).indexOf(entry.target);
+                        entry.target.style.transitionDelay = `${elementIndex * 0.15}s`;
                     }
                     
                     entry.target.classList.add('visible');
