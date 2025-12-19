@@ -77,6 +77,7 @@ const generateProductCard = (product) => {
 
     return `
     <article class="product-card fade-in-up" data-product-id="${productId}">
+        ${publicData.image_url ? `<div class="product-image"><img src="${publicData.image_url}" alt="${publicData.name}" loading="lazy"></div>` : ''}
         <div class="card-header" role="button" aria-expanded="false" aria-controls="${cardDetailsId}" tabindex="0">
             <div class="product-title"><h3>${publicData.name}</h3><p>${publicData.tagline}</p></div>
             <div class="product-price">${Number(publicData.price).toFixed(2)} лв.</div>
@@ -413,6 +414,12 @@ function renderMainContent(pageContent) {
     
     let contentHtml = '';
     pageContent.forEach((component, index) => {
+        // Filter out the analysis info card (with analyzis.png image)
+        if (component.type === 'info_card' && component.image && component.image.includes('analyzis.png')) {
+            console.log('Skipping analysis info card');
+            return;
+        }
+        
         switch (component.type) {
             case 'hero_banner':
                 contentHtml += generateHeroHTML(component);
