@@ -42,6 +42,17 @@ function debounce(func, wait) {
     };
 }
 
+// HTML escaping utility to prevent XSS attacks
+function escapeHtml(unsafe) {
+    if (unsafe === null || unsafe === undefined) return '';
+    return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 
 // =======================================================
 //          2. ГЕНЕРАТОРИ НА HTML (GENERATOR FUNCTIONS)
@@ -49,16 +60,16 @@ function debounce(func, wait) {
 
 const generateVariantItem = variant => `
     <li class="variant-item">
-        <strong>${variant.title}</strong>
-        <span>${variant.description}</span>
-        <a href="${variant.url}" class="variant-link" target="_blank" rel="noopener">Виж продукта</a>
+        <strong>${escapeHtml(variant.title)}</strong>
+        <span>${escapeHtml(variant.description)}</span>
+        <a href="${escapeHtml(variant.url)}" class="variant-link" target="_blank" rel="noopener">Виж продукта</a>
     </li>`;
 
 const generateEffectBar = effect => `
     <div class="effect-bar-group">
-        <div class="effect-label">${effect.label}</div>
+        <div class="effect-label">${escapeHtml(effect.label)}</div>
         <div class="effect-bar-container">
-            <div class="effect-bar" data-width="${effect.value}%">${(effect.value / 10).toFixed(1)} / 10</div>
+            <div class="effect-bar" data-width="${Number(effect.value)}%">${(effect.value / 10).toFixed(1)} / 10</div>
         </div>
     </div>`;
 
@@ -76,10 +87,10 @@ const generateProductCard = (product) => {
     const cardDetailsId = `card-details-${productId}`;
 
     return `
-    <article class="product-card fade-in-up" data-product-id="${productId}">
-        ${publicData.image_url ? `<div class="product-image"><img src="${publicData.image_url}" alt="${publicData.name}" loading="lazy"></div>` : ''}
-        <div class="card-header" role="button" aria-expanded="false" aria-controls="${cardDetailsId}" tabindex="0">
-            <div class="product-title"><h3>${publicData.name}</h3><p>${publicData.tagline}</p></div>
+    <article class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}">
+        ${publicData.image_url ? `<div class="product-image"><img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)}" loading="lazy"></div>` : ''}
+        <div class="card-header" role="button" aria-expanded="false" aria-controls="${escapeHtml(cardDetailsId)}" tabindex="0">
+            <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(publicData.tagline)}</p></div>
             <div class="product-price">${Number(publicData.price).toFixed(2)} лв.</div>
             <div class="product-stock ${inventory > 0 ? '' : 'out-of-stock'}">${inventory > 0 ? `Налично: ${inventory}` : 'Изчерпано'}</div>
             <div class="effects-container">
@@ -87,14 +98,14 @@ const generateProductCard = (product) => {
             </div>
             <span class="expand-icon"></span>
         </div>
-        <div class="card-details" id="${cardDetailsId}">
-            <p>${publicData.description}</p>
-            ${publicData.research_note && publicData.research_note.url ? `<div class="research-note">Източник: <a href="${publicData.research_note.url}" target="_blank" rel="noopener">${publicData.research_note.text}</a></div>` : ''}
+        <div class="card-details" id="${escapeHtml(cardDetailsId)}">
+            <p>${escapeHtml(publicData.description)}</p>
+            ${publicData.research_note && publicData.research_note.url ? `<div class="research-note">Източник: <a href="${escapeHtml(publicData.research_note.url)}" target="_blank" rel="noopener">${escapeHtml(publicData.research_note.text)}</a></div>` : ''}
             <h4 class="details-section-title">Налични форми:</h4>
             <ul class="product-variants">
                 ${(publicData.variants || []).map(generateVariantItem).join('')}
             </ul>
-            <button class="add-to-cart-btn" data-id="${productId}" data-name="${publicData.name}" data-price="${publicData.price}" data-inventory="${inventory}" ${inventory > 0 ? '' : 'disabled'}>Добави в количката</button>
+            <button class="add-to-cart-btn" data-id="${escapeHtml(productId)}" data-name="${escapeHtml(publicData.name)}" data-price="${escapeHtml(publicData.price)}" data-inventory="${inventory}" ${inventory > 0 ? '' : 'disabled'}>Добави в количката</button>
         </div>
     </article>`;
 }
