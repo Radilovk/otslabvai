@@ -381,7 +381,7 @@ main { padding-top: var(--header-height); }
 }
 .effect-bar {
   width: 0; height: 100%; border-radius: 12px;
-  /* Initial gradient visible immediately - lipolor-inspired magenta/teal */
+  /* Initial gradient visible immediately - Lipolor-inspired magenta/teal */
   background: linear-gradient(135deg, rgba(0, 169, 157, 0.3), rgba(228, 0, 124, 0.3));
   display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; box-sizing: border-box;
   color: #FFFFFF; font-weight: 600; font-size: 0.75rem;
@@ -389,7 +389,7 @@ main { padding-top: var(--header-height); }
   transition: width 1.5s cubic-bezier(0.25, 1, 0.5, 1), background 0.5s ease-out, box-shadow 0.5s ease-out;
 }
 .effect-bar.animated {
-  /* Vibrant lipolor-inspired gradient: teal to magenta */
+  /* Vibrant Lipolor-inspired gradient: teal to magenta */
   background: linear-gradient(135deg, #00A99D, #E4007C);
   box-shadow: 0 0 15px rgba(228, 0, 124, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
