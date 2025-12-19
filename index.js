@@ -425,10 +425,10 @@ function renderMainContent(pageContent) {
     
     let contentHtml = '';
     pageContent.forEach((component, index) => {
-        // Filter out the analysis info card (with analyzis.png image)
+        // Filter out the individual analysis info card (containing analyzis.png image)
+        // Note: The filename 'analyzis.png' is intentionally kept as-is to match the existing asset
         if (component.type === 'info_card' && component.image && component.image.includes('analyzis.png')) {
-            console.log('Skipping analysis info card');
-            return;
+            return; // Skip rendering this component
         }
         
         switch (component.type) {
