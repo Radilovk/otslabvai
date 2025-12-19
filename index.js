@@ -348,6 +348,85 @@ function initializePageInteractions() {
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in-up').forEach(el => scrollObserver.observe(el));
 
+    // --- Ingredient Card Flip (Lipolor style) ---
+    document.querySelectorAll('.ingredient-card').forEach(card => {
+        const toggleFlip = () => {
+            card.classList.toggle('is-flipped');
+        };
+
+        card.addEventListener('click', toggleFlip);
+
+        // For accessibility: allow flipping with Enter or Space key
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleFlip();
+            }
+        });
+    });
+
+    // --- FAQ Accordion (Lipolor style) ---
+    document.querySelectorAll('.faq-item').forEach(item => {
+        const question = item.querySelector('.faq-question');
+        
+        if (!question) return;
+        
+        const toggleFAQ = () => {
+            const isActive = item.classList.contains('active');
+            
+            // Close all other FAQ items
+            document.querySelectorAll('.faq-item').forEach(otherItem => {
+                if (otherItem !== item) {
+                    otherItem.classList.remove('active');
+                    const otherQuestion = otherItem.querySelector('.faq-question');
+                    if (otherQuestion) {
+                        otherQuestion.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+            
+            // Toggle current item
+            if (isActive) {
+                item.classList.remove('active');
+                question.setAttribute('aria-expanded', 'false');
+            } else {
+                item.classList.add('active');
+                question.setAttribute('aria-expanded', 'true');
+            }
+        };
+        
+        // Click event
+        question.addEventListener('click', toggleFAQ);
+        
+        // Keyboard event for accessibility
+        question.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleFAQ();
+            }
+        });
+    });
+
+    // --- Contact Form Submission (Lipolor style) ---
+    const orderForm = document.getElementById('order-form');
+    if (orderForm) {
+        orderForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = orderForm.querySelector('#contact-name')?.value.trim();
+            const email = orderForm.querySelector('#contact-email')?.value.trim();
+            const message = orderForm.querySelector('#contact-message')?.value.trim();
+
+            if (!name || !email || !message) {
+                showToast('Моля, попълнете всички задължителни полета.', 'error');
+                return;
+            }
+            
+            showToast('Благодарим за вашето запитване! Ще се свържем с вас скоро.', 'success');
+            orderForm.reset();
+        });
+    }
+
     // Initialize Canvas
     initializeCanvasAnimation();
 }
