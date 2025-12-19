@@ -353,10 +353,56 @@ function initializePageInteractions() {
 }
 
 function initializeGlobalScripts() {
-
+    // --- Sticky Header on Scroll (Lipolor style) ---
+    const header = document.querySelector('.main-header');
+    const promoBanner = document.querySelector('.promo-banner');
+    
+    function handleStickyHeader() {
+        const stickyThreshold = 50;
+        if (window.scrollY > stickyThreshold) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    }
+    
     window.addEventListener('scroll', () => {
+        handleStickyHeader();
         DOM.backToTopBtn.classList.toggle('visible', window.scrollY > 300);
     });
+
+    // --- Scroll Animations (Lipolor style) ---
+    function handleScrollAnimations() {
+        const animatedElements = document.querySelectorAll('.animate-on-scroll');
+        
+        if (!animatedElements.length) return;
+
+        const observerOptions = {
+            root: null,
+            threshold: 0.1,
+        };
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    // Add staggered delay for timeline items
+                    if (entry.target.classList.contains('timeline-item')) {
+                        entry.target.style.transitionDelay = `${index * 0.15}s`;
+                    }
+                    
+                    entry.target.classList.add('visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        animatedElements.forEach(el => {
+            revealObserver.observe(el);
+        });
+    }
+    
+    // Initialize scroll animations
+    handleScrollAnimations();
 
     const closeMenu = () => {
         DOM.menuToggle.classList.remove('active');
@@ -532,9 +578,18 @@ async function main() {
     initializeGlobalScripts();
     
     try {
-        const response = await fetch(`${API_URL}/page_content.json?v=${Date.now()}`);
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        const data = await response.json();
+        // Try to use mock data for testing if API fails
+        let response, data;
+        try {
+            response = await fetch(`${API_URL}/page_content.json?v=${Date.now()}`);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            data = await response.json();
+        } catch (apiError) {
+            console.warn('API failed, trying mock data:', apiError);
+            response = await fetch(`page_content_mock.json?v=${Date.now()}`);
+            if (!response.ok) throw new Error('Mock data also unavailable');
+            data = await response.json();
+        }
 
         DOM.mainContainer.innerHTML = ''; 
         
