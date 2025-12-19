@@ -148,6 +148,182 @@ const generateInfoCardHTML = component => `
         </div>
     </section>`;
 
+const generateBenefitsHTML = component => `
+    <section id="benefits" class="section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="about-grid">
+                ${component.image ? `<div class="about-image-placeholder animate-on-scroll">
+                    <img src="${component.image}" alt="${component.title}" style="width:100%; height:100%; object-fit:cover;">
+                </div>` : ''}
+                <div class="about-content">
+                    ${component.content_title ? `<h3 class="animate-on-scroll">${component.content_title}</h3>` : ''}
+                    <div class="benefits">
+                        ${(component.benefits || []).map(benefit => `
+                            <div class="benefit-item animate-on-scroll">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    ${benefit.icon === 'check' ? '<polyline points="20 6 9 17 4 12"></polyline>' : 
+                                      benefit.icon === 'fire' ? '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>' :
+                                      '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'}
+                                </svg>
+                                <div>
+                                    <h4>${benefit.title}</h4>
+                                    <p>${benefit.text}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>`;
+
+const generateTimelineHTML = component => `
+    <section id="effects" class="section-padding section-bg">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="timeline">
+                ${(component.steps || []).map((step, index) => `
+                    <div class="timeline-item animate-on-scroll">
+                        <div class="timeline-content">
+                            <h4>${index + 1}. ${step.title}</h4>
+                            <p>${step.text}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    </section>`;
+
+const generateIngredientsHTML = component => `
+    <section id="ingredients" class="section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="ingredients-grid">
+                ${(component.ingredients || []).map(ingredient => `
+                    <div class="ingredient-card animate-on-scroll" tabindex="0">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <h5>${ingredient.name}</h5>
+                                <span>${ingredient.amount}</span>
+                            </div>
+                            <div class="card-back">
+                                <p>${ingredient.description}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    </section>`;
+
+const generateTestimonialsHTML = component => `
+    <section id="testimonials" class="section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="testimonials-grid">
+                ${(component.testimonials || []).map(testimonial => `
+                    <div class="testimonial-card animate-on-scroll">
+                        <div class="stars" aria-label="${testimonial.rating} out of 5 stars">${'★'.repeat(testimonial.rating)}${'☆'.repeat(5 - testimonial.rating)}</div>
+                        <p class="testimonial-text">"${testimonial.text}"</p>
+                        <div class="testimonial-author">
+                            <strong>${testimonial.author}</strong>
+                            ${testimonial.location ? `<span>${testimonial.location}</span>` : ''}
+                        </div>
+                        ${testimonial.result ? `<div class="result-badge">${testimonial.result}</div>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    </section>`;
+
+const generateFAQHTML = component => `
+    <section id="faq" class="section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="faq-container">
+                ${(component.questions || []).map(faq => `
+                    <div class="faq-item animate-on-scroll">
+                        <div class="faq-question" role="button" aria-expanded="false" tabindex="0">
+                            <h4>${faq.question}</h4>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>${faq.answer}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    </section>`;
+
+const generateContactHTML = component => `
+    <section id="order" class="section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="order-grid">
+                <div class="contact-details animate-on-scroll">
+                    <h4>Информация за контакт</h4>
+                    <p>За повече информация и поръчки, свържете се с нас.</p>
+                    <ul>
+                        ${component.email ? `<li><strong>Имейл:</strong> ${component.email}</li>` : ''}
+                        ${component.phone ? `<li><strong>Телефон:</strong> ${component.phone}</li>` : ''}
+                        ${component.address ? `<li><strong>Адрес:</strong> ${component.address}</li>` : ''}
+                    </ul>
+                    ${component.social ? `
+                        <h4>Последвайте ни</h4>
+                        <div class="social-links">
+                            ${component.social.facebook ? `<a href="${component.social.facebook}" aria-label="Facebook">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                            </a>` : ''}
+                            ${component.social.instagram ? `<a href="${component.social.instagram}" aria-label="Instagram">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                            </a>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+                <form id="order-form" class="order-form animate-on-scroll">
+                    <h4>Свържете се с нас</h4>
+                    <div class="form-group">
+                        <label for="contact-name">Име *</label>
+                        <input type="text" id="contact-name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-email">Имейл *</label>
+                        <input type="email" id="contact-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-phone">Телефон</label>
+                        <input type="tel" id="contact-phone" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-message">Съобщение *</label>
+                        <textarea id="contact-message" name="message" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Изпрати запитване</button>
+                </form>
+            </div>
+        </div>
+    </section>`;
+
 
 // =======================================================
 //          3. УПРАВЛЕНИЕ НА КОЛИЧКА (CART LOGIC)
@@ -246,6 +422,24 @@ function renderMainContent(pageContent) {
                 break;
             case 'info_card':
                 contentHtml += generateInfoCardHTML(component);
+                break;
+            case 'benefits':
+                contentHtml += generateBenefitsHTML(component);
+                break;
+            case 'timeline':
+                contentHtml += generateTimelineHTML(component);
+                break;
+            case 'ingredients':
+                contentHtml += generateIngredientsHTML(component);
+                break;
+            case 'testimonials':
+                contentHtml += generateTestimonialsHTML(component);
+                break;
+            case 'faq':
+                contentHtml += generateFAQHTML(component);
+                break;
+            case 'contact':
+                contentHtml += generateContactHTML(component);
                 break;
             default:
                 console.warn('Unknown component type:', component.type);
@@ -348,15 +542,140 @@ function initializePageInteractions() {
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in-up').forEach(el => scrollObserver.observe(el));
 
+    // --- Ingredient Card Flip (Lipolor style) ---
+    document.querySelectorAll('.ingredient-card').forEach(card => {
+        const toggleFlip = () => {
+            card.classList.toggle('is-flipped');
+        };
+
+        card.addEventListener('click', toggleFlip);
+
+        // For accessibility: allow flipping with Enter or Space key
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleFlip();
+            }
+        });
+    });
+
+    // --- FAQ Accordion (Lipolor style) ---
+    document.querySelectorAll('.faq-item').forEach(item => {
+        const question = item.querySelector('.faq-question');
+        
+        if (!question) return;
+        
+        const toggleFAQ = () => {
+            const isActive = item.classList.contains('active');
+            
+            // Close all other FAQ items
+            document.querySelectorAll('.faq-item').forEach(otherItem => {
+                if (otherItem !== item) {
+                    otherItem.classList.remove('active');
+                    const otherQuestion = otherItem.querySelector('.faq-question');
+                    if (otherQuestion) {
+                        otherQuestion.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+            
+            // Toggle current item
+            if (isActive) {
+                item.classList.remove('active');
+                question.setAttribute('aria-expanded', 'false');
+            } else {
+                item.classList.add('active');
+                question.setAttribute('aria-expanded', 'true');
+            }
+        };
+        
+        // Click event
+        question.addEventListener('click', toggleFAQ);
+        
+        // Keyboard event for accessibility
+        question.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleFAQ();
+            }
+        });
+    });
+
+    // --- Contact Form Submission (Lipolor style) ---
+    const orderForm = document.getElementById('order-form');
+    if (orderForm) {
+        orderForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = orderForm.querySelector('#contact-name')?.value.trim();
+            const email = orderForm.querySelector('#contact-email')?.value.trim();
+            const message = orderForm.querySelector('#contact-message')?.value.trim();
+
+            if (!name || !email || !message) {
+                showToast('Моля, попълнете всички задължителни полета.', 'error');
+                return;
+            }
+            
+            showToast('Благодарим за вашето запитване! Ще се свържем с вас скоро.', 'success');
+            orderForm.reset();
+        });
+    }
+
     // Initialize Canvas
     initializeCanvasAnimation();
 }
 
 function initializeGlobalScripts() {
-
+    // --- Sticky Header on Scroll (Lipolor style) ---
+    const header = document.querySelector('.main-header');
+    
+    function handleStickyHeader() {
+        const stickyThreshold = 50;
+        if (window.scrollY > stickyThreshold) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    }
+    
     window.addEventListener('scroll', () => {
+        handleStickyHeader();
         DOM.backToTopBtn.classList.toggle('visible', window.scrollY > 300);
     });
+
+    // --- Scroll Animations (Lipolor style) ---
+    function handleScrollAnimations() {
+        const animatedElements = document.querySelectorAll('.animate-on-scroll');
+        
+        if (!animatedElements.length) return;
+
+        const observerOptions = {
+            root: null,
+            threshold: 0.1,
+        };
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    // Add staggered delay for timeline items
+                    if (entry.target.classList.contains('timeline-item')) {
+                        const elementIndex = Array.from(animatedElements).indexOf(entry.target);
+                        entry.target.style.transitionDelay = `${elementIndex * 0.15}s`;
+                    }
+                    
+                    entry.target.classList.add('visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        animatedElements.forEach(el => {
+            revealObserver.observe(el);
+        });
+    }
+    
+    // Initialize scroll animations
+    handleScrollAnimations();
 
     const closeMenu = () => {
         DOM.menuToggle.classList.remove('active');
@@ -532,9 +851,18 @@ async function main() {
     initializeGlobalScripts();
     
     try {
-        const response = await fetch(`${API_URL}/page_content.json?v=${Date.now()}`);
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        const data = await response.json();
+        // Try to use mock data for testing if API fails
+        let response, data;
+        try {
+            response = await fetch(`${API_URL}/page_content.json?v=${Date.now()}`);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            data = await response.json();
+        } catch (apiError) {
+            console.warn('API failed, trying mock data:', apiError);
+            response = await fetch(`page_content_mock.json?v=${Date.now()}`);
+            if (!response.ok) throw new Error('Mock data also unavailable');
+            data = await response.json();
+        }
 
         DOM.mainContainer.innerHTML = ''; 
         

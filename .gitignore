@@ -20,3 +20,5 @@ yarn-error.log*
 # Local data
 page_content.json
 orders.json
+page_content_mock.json
+index.css.backup
