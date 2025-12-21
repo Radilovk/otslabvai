@@ -272,7 +272,7 @@ img {
     font-weight: 600;
     font-size: 0.95rem;
     animation: pulse 2s ease-in-out infinite;
-    z-index: 1001;
+    z-index: 999;
 }
 
 .promo-banner p {
