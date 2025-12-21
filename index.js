@@ -1041,10 +1041,7 @@ function initializeMarketingFeatures() {
     // 2. Sticky CTA Button
     initStickyCTA();
     
-    // 3. Dynamic Trust Indicators
-    initTrustIndicators();
-    
-    // 4. Product Badges
+    // 3. Product Badges
     addProductBadges();
     
     // 5. Stock Urgency Indicators
@@ -1106,53 +1103,6 @@ function initStickyCTA() {
     }
     
     window.addEventListener('scroll', debounce(checkScroll, 100));
-}
-
-// Trust Indicators - Dynamic visitor and order counts
-function initTrustIndicators() {
-    const visitorsCount = document.getElementById('visitors-count');
-    const ordersCount = document.getElementById('orders-count');
-    
-    if (!visitorsCount || !ordersCount) return;
-    
-    // Configuration constants
-    const VISITOR_COUNT_MIN = 80;
-    const VISITOR_COUNT_RANGE = 70;
-    const TARGET_ORDERS = 2840;
-    const STARTING_ORDERS = 2500;
-    const ORDERS_INCREMENT = 5;
-    const ORDERS_ANIMATION_INTERVAL_MS = 20;
-    const VISITOR_UPDATE_INTERVAL_MS = 15000; // 15 seconds
-    
-    // Simulate dynamic visitor count (randomize between configured range)
-    function updateVisitorCount() {
-        const baseCount = VISITOR_COUNT_MIN;
-        const randomAdd = Math.floor(Math.random() * VISITOR_COUNT_RANGE);
-        visitorsCount.textContent = baseCount + randomAdd;
-    }
-    
-    // Animate orders count on load
-    function animateOrdersCount() {
-        const target = TARGET_ORDERS;
-        let current = STARTING_ORDERS;
-        const increment = ORDERS_INCREMENT;
-        const interval = ORDERS_ANIMATION_INTERVAL_MS;
-        
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= target) {
-                current = target;
-                clearInterval(timer);
-            }
-            ordersCount.textContent = current.toLocaleString('bg-BG') + '+';
-        }, interval);
-    }
-    
-    updateVisitorCount();
-    animateOrdersCount();
-    
-    // Update visitors periodically
-    setInterval(updateVisitorCount, VISITOR_UPDATE_INTERVAL_MS);
 }
 
 // Add product badges based on criteria

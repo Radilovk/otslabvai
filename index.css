@@ -159,8 +159,8 @@ body {
     line-height: 1.6;
     overflow-x: hidden;
     transition: background-color 0.4s ease, color 0.4s ease;
-    /* Add padding-top to account for fixed header + promo banner */
-    padding-top: calc(var(--header-height) + var(--double-promo-banner-height));
+    /* Add padding-top to account for fixed header */
+    padding-top: var(--header-height);
 }
         
 body.nav-open {
@@ -291,7 +291,7 @@ img {
 
 .promo-banner {
     position: fixed;
-    top: 0;
+    top: var(--header-height); /* Position below the header */
     left: 0;
     width: 100%;
     background: linear-gradient(135deg, var(--color-primary), #c3006a);
@@ -301,7 +301,7 @@ img {
     font-weight: 600;
     font-size: 0.95rem;
     animation: pulse 2s ease-in-out infinite;
-    z-index: 999;
+    z-index: 998; /* Below header */
 }
 
 .promo-banner p {
@@ -357,7 +357,7 @@ img {
 /* ======================================================= */
 .main-header {
     position: fixed;
-    top: var(--double-promo-banner-height); /* Position further below promo banner */
+    top: 0; /* Position at the very top of the screen */
     left: 0; 
     width: 100%; 
     height: var(--header-height);
@@ -365,7 +365,7 @@ img {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--header-border);
-    z-index: 1000;
+    z-index: 1001; /* Higher than promo banner to stay on top */
     transition: all var(--transition-speed);
 }
 
@@ -593,7 +593,7 @@ main {
 
 /* --- HERO SECTION (Lipolor style) --- */
 .hero-section {
-    min-height: calc(100vh - var(--header-height) - var(--double-promo-banner-height));
+    min-height: calc(100vh - var(--header-height));
     display: flex; 
     flex-direction: column; 
     justify-content: center; 
@@ -1852,7 +1852,7 @@ body.modal-open { overflow: hidden; }
 
 @media (max-width: 768px) {
     body {
-        padding-top: calc(var(--header-height) + var(--double-promo-banner-height));
+        padding-top: var(--header-height);
     }
     
     .info-card-section .container, .info-card-section.image-align-right .container {
@@ -1978,72 +1978,6 @@ body.modal-open { overflow: hidden; }
     background: rgba(255, 255, 255, 0.2);
     border-radius: 20px;
     font-family: 'Courier New', monospace;
-}
-
-/* Floating Trust Indicators */
-.floating-trust-indicators {
-    position: fixed;
-    bottom: 100px;
-    left: 20px;
-    z-index: 999;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    animation: fadeInUp 1s ease-out 2s both;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.trust-item {
-    background: var(--bg-primary);
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    animation: pulse 2s ease-in-out infinite;
-}
-
-.trust-item:hover {
-    transform: translateX(5px);
-    box-shadow: 0 6px 25px rgba(228, 0, 124, 0.2);
-}
-
-@keyframes pulse {
-    0%, 100% {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-    50% {
-        box-shadow: 0 4px 20px rgba(228, 0, 124, 0.3);
-    }
-}
-
-.trust-icon {
-    font-size: 1.5rem;
-    line-height: 1;
-}
-
-.trust-text {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    white-space: nowrap;
-}
-
-.trust-text strong {
-    color: var(--accent);
-    font-weight: 700;
 }
 
 /* Sticky CTA Button */
@@ -2202,20 +2136,6 @@ body.modal-open { overflow: hidden; }
 
 /* Media Queries for Mobile */
 @media (max-width: 768px) {
-    .floating-trust-indicators {
-        left: 10px;
-        bottom: 80px;
-        transform: scale(0.9);
-    }
-    
-    .trust-item {
-        padding: 10px 12px;
-    }
-    
-    .trust-text {
-        font-size: 0.75rem;
-    }
-    
     .sticky-cta {
         right: 50%;
         transform: translateX(50%) translateY(100px);
@@ -2238,11 +2158,6 @@ body.modal-open { overflow: hidden; }
 }
 
 @media (max-width: 480px) {
-    .floating-trust-indicators {
-        transform: scale(0.85);
-        gap: 8px;
-    }
-    
     .sticky-cta-btn {
         padding: 12px 20px;
         font-size: 0.9rem;
