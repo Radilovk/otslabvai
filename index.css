@@ -290,9 +290,7 @@ img {
 /* ======================================================= */
 
 .promo-banner {
-    position: fixed;
-    top: var(--header-height); /* Position below the header */
-    left: 0;
+    position: relative; /* Changed from fixed to relative - banner stays in page flow */
     width: 100%;
     background: linear-gradient(135deg, var(--color-primary), #c3006a);
     color: var(--color-white);
@@ -301,7 +299,7 @@ img {
     font-weight: 600;
     font-size: 0.95rem;
     animation: pulse 2s ease-in-out infinite;
-    z-index: 998; /* Below header */
+    z-index: 1; /* No longer needs high z-index since it's not fixed */
 }
 
 .promo-banner p {
