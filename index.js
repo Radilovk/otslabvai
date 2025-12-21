@@ -323,6 +323,36 @@ const generateFAQHTML = component => `
         </div>
     </section>`;
 
+const generateGuaranteeHTML = component => `
+    <section class="guarantee-section section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="guarantee-grid">
+                ${(component.items || []).map(item => {
+                    const iconSVG = {
+                        'shield': '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>',
+                        'truck': '<rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle>',
+                        'certificate': '<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>',
+                        'support': '<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path><circle cx="6.5" cy="11.5" r="1.5"></circle><circle cx="9.5" cy="7.5" r="1.5"></circle><circle cx="14.5" cy="7.5" r="1.5"></circle><circle cx="17.5" cy="11.5" r="1.5"></circle>'
+                    };
+                    return `
+                    <div class="guarantee-card animate-on-scroll">
+                        <div class="guarantee-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                ${iconSVG[item.icon] || iconSVG['shield']}
+                            </svg>
+                        </div>
+                        <h4>${item.title}</h4>
+                        <p>${item.description}</p>
+                    </div>
+                `}).join('')}
+            </div>
+        </div>
+    </section>`;
+
 const generateContactHTML = component => `
     <section id="order" class="section-padding">
         <div class="container">
@@ -494,6 +524,9 @@ function renderMainContent(pageContent) {
                 break;
             case 'faq':
                 contentHtml += generateFAQHTML(component);
+                break;
+            case 'guarantee':
+                contentHtml += generateGuaranteeHTML(component);
                 break;
             case 'contact':
                 contentHtml += generateContactHTML(component);
@@ -1016,6 +1049,9 @@ function initializeMarketingFeatures() {
     
     // 5. Stock Urgency Indicators
     updateStockUrgency();
+    
+    // 6. Exit Intent Modal
+    initExitIntentModal();
 }
 
 // Promo Timer - Shows countdown to create urgency
@@ -1164,6 +1200,61 @@ function updateStockUrgency() {
             } else if (quantity > 30) {
                 stock.classList.add('in-stock');
             }
+        }
+    });
+}
+
+// Exit Intent Modal - Shows when user is about to leave
+function initExitIntentModal() {
+    const modal = document.getElementById('exit-intent-modal');
+    if (!modal) return;
+    
+    let hasShown = false;
+    const closeBtn = modal.querySelector('.exit-modal-close');
+    
+    // Close modal function
+    const closeModal = () => {
+        modal.classList.remove('active');
+        hasShown = true;
+        localStorage.setItem('exitModalShown', 'true');
+    };
+    
+    // Check if already shown in this session
+    if (localStorage.getItem('exitModalShown')) {
+        hasShown = true;
+    }
+    
+    // Close button click
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    
+    // Close on overlay click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    // Exit intent detection
+    document.addEventListener('mouseleave', (e) => {
+        // Only trigger when mouse leaves from top of the page
+        if (e.clientY <= 0 && !hasShown) {
+            modal.classList.add('active');
+        }
+    });
+    
+    // Also show after 30 seconds if not shown yet
+    setTimeout(() => {
+        if (!hasShown) {
+            modal.classList.add('active');
+        }
+    }, 30000);
+    
+    // Keyboard escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
         }
     });
 }
