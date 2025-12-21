@@ -748,6 +748,60 @@ function initializeGlobalScripts() {
         }
     });
 
+    // --- Theme Toggle ---
+    const themeToggle = document.getElementById('theme-toggle');
+    
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        try {
+            localStorage.setItem('theme', theme);
+        } catch (e) {
+            console.warn('Could not save theme preference:', e);
+        }
+        
+        // Reinitialize canvas animation with new colors
+        if (typeof initializeCanvasAnimation === 'function') {
+            initializeCanvasAnimation(true);
+        }
+        
+        // Show toast notification
+        const themeLabel = theme === 'dark' ? 'Тъмна тема' : 'Светла тема';
+        showToast(`${themeLabel} активирана`, 'info');
+    }
+    
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+    }
+    
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+    
+    // Listen for system theme changes
+    if (window.matchMedia) {
+        const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        
+        darkModeQuery.addEventListener('change', (e) => {
+            // Only auto-switch if user hasn't manually set a preference
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (!savedTheme) {
+                    const newTheme = e.matches ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    
+                    // Reinitialize canvas animation with new colors
+                    if (typeof initializeCanvasAnimation === 'function') {
+                        initializeCanvasAnimation(true);
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not check theme preference:', e);
+            }
+        });
+    }
+
     updateCartCount();
 }
 
