@@ -179,6 +179,13 @@ function renderPageContent() {
         hero_banner: 'Hero Banner',
         product_category: 'Продуктова Категория',
         info_card: 'Информационен Кард',
+        benefits: 'Ползи',
+        timeline: 'Времева линия',
+        ingredients: 'Съставки',
+        testimonials: 'Отзиви',
+        faq: 'Често задавани въпроси',
+        guarantee: 'Гаранции',
+        contact: 'Контакти',
     };
     appData.page_content.forEach(component => {
         const item = createListItem({
@@ -250,6 +257,13 @@ function populateAddComponentMenu() {
         'hero_banner': { label: 'Hero Banner', templateId: 'form-hero-banner-template' },
         'info_card': { label: 'Инфо Кард', templateId: 'form-info-card-template' },
         'product_category': { label: 'Продуктова Категория', templateId: 'form-product-category-template' },
+        'benefits': { label: 'Ползи', templateId: 'form-benefits-template' },
+        'timeline': { label: 'Времева линия', templateId: 'form-timeline-template' },
+        'ingredients': { label: 'Съставки', templateId: 'form-ingredients-template' },
+        'testimonials': { label: 'Отзиви', templateId: 'form-testimonials-template' },
+        'faq': { label: 'FAQ', templateId: 'form-faq-template' },
+        'guarantee': { label: 'Гаранции', templateId: 'form-guarantee-template' },
+        'contact': { label: 'Контакти', templateId: 'form-contact-template' },
     };
     for (const [type, info] of Object.entries(componentTemplates)) {
         const link = document.createElement('a');
