@@ -318,7 +318,6 @@
             <nav class="modal-tab-nav">
                 <button type="button" class="modal-tab-btn active" data-modal-tab=".product-tab-public">Публични данни</button>
                 <button type="button" class="modal-tab-btn" data-modal-tab=".product-tab-system">Системни данни</button>
-                <button type="button" class="modal-tab-btn" data-modal-tab=".product-tab-variants">Варианти</button>
             </nav>
 
             <div class="modal-tab-content">
@@ -412,14 +411,6 @@
                         <textarea data-field="system_data.safety_warnings" rows="3"></textarea>
                     </div>
                 </div>
-
-                <!-- ТАБ 3: ВАРИАНТИ -->
-                <div class="modal-tab-pane product-tab-variants">
-                    <div class="nested-sublist-container" data-sub-container="variants">
-                         <!-- Вариантите ще се генерират тук от JS -->
-                    </div>
-                    <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="variant-editor-template" data-container="[data-sub-container='variants']">Добави вариант</button>
-                </div>
             </div>
         </div>
     </template>
@@ -436,29 +427,6 @@
                 <input type="number" data-field="value" min="0" max="100">
             </div>
             <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий ефекта">×</button>
-        </div>
-    </template>
-
-    <!-- Вложен шаблон за редактор на ВАРИАНТ -->
-    <template id="variant-editor-template">
-        <div class="nested-sub-item" data-type="variant">
-             <div class="form-group">
-                <label>Заглавие на разфасовка</label>
-                <input type="text" data-field="title" placeholder="напр. 10 mg (прах)">
-            </div>
-            <div class="form-group">
-                <label>Описание</label>
-                <input type="text" data-field="description" placeholder="Кратко описание">
-            </div>
-            <div class="form-group">
-                <label>Цена</label>
-                <input type="number" data-field="price" step="0.01" min="0">
-            </div>
-            <div class="form-group">
-                <label>URL за покупка</label>
-                <input type="text" data-field="url">
-            </div>
-            <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий варианта">×</button>
         </div>
     </template>
     

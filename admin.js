@@ -359,8 +359,8 @@ function serializeForm(form) {
                 setProperty(productData, path, value);
             });
 
-            // Сериализираме вложените списъци (ефекти, варианти)
-            ['effects', 'variants'].forEach(subListName => {
+            // Сериализираме вложените списъци (само ефекти)
+            ['effects'].forEach(subListName => {
                 const subContainer = productNode.querySelector(`[data-sub-container="${subListName}"]`);
                 if (subContainer) {
                     const subList = [];
@@ -400,8 +400,8 @@ function addNestedItem(container, templateId, data) {
                 }
             }
         });
-        // Попълваме вложените списъци
-        ['effects', 'variants'].forEach(subListName => {
+        // Попълваме вложените списъци (само ефекти)
+        ['effects'].forEach(subListName => {
             const subContainer = itemElement.querySelector(`[data-sub-container="${subListName}"]`);
             const subData = getProperty(data, `public_data.${subListName}`);
             if (subContainer && Array.isArray(subData)) {
