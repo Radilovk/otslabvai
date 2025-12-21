@@ -477,6 +477,60 @@ img {
     font-weight: 700;
 }
 
+/* -- Theme Toggle Button -- */
+.theme-toggle-btn {
+    background: transparent;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-speed);
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-toggle-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent);
+    transform: rotate(180deg) scale(1.1);
+}
+
+.theme-toggle-btn svg {
+    position: absolute;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle-btn .sun-icon {
+    color: var(--accent);
+    opacity: 0;
+    transform: rotate(-90deg) scale(0);
+}
+
+.theme-toggle-btn .moon-icon {
+    color: var(--accent);
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+[data-theme="dark"] .theme-toggle-btn .sun-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+[data-theme="dark"] .theme-toggle-btn .moon-icon {
+    opacity: 0;
+    transform: rotate(90deg) scale(0);
+}
+
+.theme-toggle-btn:hover .sun-icon,
+.theme-toggle-btn:hover .moon-icon {
+    color: var(--color-white);
+}
+
 /* -- Мобилно меню -- */
 .menu-toggle { 
     display: none; 
