@@ -64,7 +64,7 @@
     
     /* Promo banner height */
     --promo-banner-height: 48px;
-    --double-promo-banner-height: calc(var(--promo-banner-height) * 2);
+    --double-promo-banner-height: var(--promo-banner-height);
 }
 
 
