@@ -371,6 +371,38 @@
                         </div>
                         <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="effect-editor-template" data-container="[data-sub-container='effects']">Добави ефект</button>
                     </fieldset>
+
+                    <fieldset>
+                        <legend>За продукта (About Content)</legend>
+                        <div class="form-group">
+                            <label>Заглавие</label>
+                            <input type="text" data-field="public_data.about_content.title" placeholder="За продукта">
+                        </div>
+                        <div class="form-group">
+                            <label>Описание</label>
+                            <textarea data-field="public_data.about_content.description" rows="4" placeholder="Подробно описание за продукта"></textarea>
+                        </div>
+                        <div class="nested-sublist-container" data-sub-container="about-benefits">
+                            <!-- Ползите ще се генерират тук от JS -->
+                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="about-benefit-editor-template" data-container="[data-sub-container='about-benefits']">Добави полза</button>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Съставки (Ingredients)</legend>
+                        <div class="nested-sublist-container" data-sub-container="ingredients">
+                            <!-- Съставките ще се генерират тук от JS -->
+                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="ingredient-editor-template" data-container="[data-sub-container='ingredients']">Добави съставка</button>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>Често задавани въпроси (FAQ)</legend>
+                        <div class="nested-sublist-container" data-sub-container="faq">
+                            <!-- FAQ въпросите ще се генерират тук от JS -->
+                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="faq-editor-template" data-container="[data-sub-container='faq']">Добави въпрос</button>
+                    </fieldset>
                 </div>
 
                 <!-- ТАБ 2: СИСТЕМНИ ДАННИ -->
@@ -427,6 +459,55 @@
                 <input type="number" data-field="value" min="0" max="100">
             </div>
             <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий ефекта">×</button>
+        </div>
+    </template>
+
+    <!-- Вложен шаблон за редактор на ПОЛЗА (About Benefit) -->
+    <template id="about-benefit-editor-template">
+        <div class="nested-sub-item" data-type="about-benefit">
+             <div class="form-group">
+                <label>Заглавие на ползата</label>
+                <input type="text" data-field="title" placeholder="Напр. Ефективно изгаряне на мазнини">
+            </div>
+             <div class="form-group">
+                <label>Описание на ползата</label>
+                <textarea data-field="text" rows="3" placeholder="Подробно описание на ползата"></textarea>
+            </div>
+            <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий ползата">×</button>
+        </div>
+    </template>
+
+    <!-- Вложен шаблон за редактор на СЪСТАВКА (Ingredient) -->
+    <template id="ingredient-editor-template">
+        <div class="nested-sub-item" data-type="ingredient">
+             <div class="form-group">
+                <label>Име на съставката</label>
+                <input type="text" data-field="name" placeholder="Напр. Зелен чай екстракт">
+            </div>
+            <div class="form-group">
+                <label>Количество</label>
+                <input type="text" data-field="amount" placeholder="Напр. 200 mg">
+            </div>
+             <div class="form-group">
+                <label>Описание на съставката</label>
+                <textarea data-field="description" rows="3" placeholder="Какво прави тази съставка"></textarea>
+            </div>
+            <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий съставката">×</button>
+        </div>
+    </template>
+
+    <!-- Вложен шаблон за редактор на FAQ -->
+    <template id="faq-editor-template">
+        <div class="nested-sub-item" data-type="faq">
+             <div class="form-group">
+                <label>Въпрос</label>
+                <input type="text" data-field="question" placeholder="Напр. Колко време трае доставката?">
+            </div>
+             <div class="form-group">
+                <label>Отговор</label>
+                <textarea data-field="answer" rows="3" placeholder="Отговорът на въпроса"></textarea>
+            </div>
+            <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий въпроса">×</button>
         </div>
     </template>
     
