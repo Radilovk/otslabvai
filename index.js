@@ -30,6 +30,8 @@ const DOM = {
     toastContainer: document.getElementById('toast-container')
 };
 
+const promoBanner = document.querySelector('.promo-banner');
+
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -41,6 +43,16 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+
+const updatePromoBannerOffset = () => {
+    const bannerHeight = promoBanner ? promoBanner.getBoundingClientRect().height : 0;
+    document.documentElement.style.setProperty('--promo-banner-height', `${bannerHeight}px`);
+    document.documentElement.style.setProperty('--double-promo-banner-height', `${bannerHeight}px`);
+};
+
+updatePromoBannerOffset();
+window.addEventListener('resize', debounce(updatePromoBannerOffset, 150));
+window.addEventListener('load', updatePromoBannerOffset);
 
 // HTML escaping utility to prevent XSS attacks
 function escapeHtml(unsafe) {
