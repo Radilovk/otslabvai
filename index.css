@@ -131,7 +131,7 @@ body {
     overflow-x: hidden;
     transition: background-color 0.4s ease, color 0.4s ease;
     /* Add padding-top to account for fixed header + promo banner */
-    padding-top: calc(var(--header-height) + var(--promo-banner-height));
+    padding-top: calc(var(--header-height) + var(--promo-banner-height) * 2);
 }
         
 body.nav-open {
@@ -328,7 +328,7 @@ img {
 /* ======================================================= */
 .main-header {
     position: fixed;
-    top: var(--promo-banner-height); /* Position below promo banner */
+    top: calc(var(--promo-banner-height) * 2); /* Position further below promo banner */
     left: 0; 
     width: 100%; 
     height: var(--header-height);
@@ -509,7 +509,7 @@ main {
 
 /* --- HERO SECTION (Lipolor style) --- */
 .hero-section {
-    min-height: calc(100vh - var(--header-height) - var(--promo-banner-height));
+    min-height: calc(100vh - var(--header-height) - var(--promo-banner-height) * 2);
     display: flex; 
     flex-direction: column; 
     justify-content: center; 
@@ -1657,7 +1657,7 @@ body.modal-open { overflow: hidden; }
 
 @media (max-width: 768px) {
     body {
-        padding-top: calc(var(--header-height) + var(--promo-banner-height));
+        padding-top: calc(var(--header-height) + var(--promo-banner-height) * 2);
     }
     
     .info-card-section .container, .info-card-section.image-align-right .container {
