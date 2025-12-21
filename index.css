@@ -2205,7 +2205,7 @@ body.modal-open { overflow: hidden; }
     .floating-trust-indicators {
         left: 10px;
         bottom: 80px;
-        scale: 0.9;
+        transform: scale(0.9);
     }
     
     .trust-item {
@@ -2239,7 +2239,7 @@ body.modal-open { overflow: hidden; }
 
 @media (max-width: 480px) {
     .floating-trust-indicators {
-        scale: 0.85;
+        transform: scale(0.85);
         gap: 8px;
     }
     

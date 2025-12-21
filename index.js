@@ -1115,19 +1115,28 @@ function initTrustIndicators() {
     
     if (!visitorsCount || !ordersCount) return;
     
-    // Simulate dynamic visitor count (randomize between 80-150)
+    // Configuration constants
+    const VISITOR_COUNT_MIN = 80;
+    const VISITOR_COUNT_RANGE = 70;
+    const TARGET_ORDERS = 2840;
+    const STARTING_ORDERS = 2500;
+    const ORDERS_INCREMENT = 5;
+    const ORDERS_ANIMATION_INTERVAL_MS = 20;
+    const VISITOR_UPDATE_INTERVAL_MS = 15000; // 15 seconds
+    
+    // Simulate dynamic visitor count (randomize between configured range)
     function updateVisitorCount() {
-        const baseCount = 80;
-        const randomAdd = Math.floor(Math.random() * 70);
+        const baseCount = VISITOR_COUNT_MIN;
+        const randomAdd = Math.floor(Math.random() * VISITOR_COUNT_RANGE);
         visitorsCount.textContent = baseCount + randomAdd;
     }
     
     // Animate orders count on load
     function animateOrdersCount() {
-        const target = 2840;
-        let current = 2500;
-        const increment = 5;
-        const interval = 20;
+        const target = TARGET_ORDERS;
+        let current = STARTING_ORDERS;
+        const increment = ORDERS_INCREMENT;
+        const interval = ORDERS_ANIMATION_INTERVAL_MS;
         
         const timer = setInterval(() => {
             current += increment;
@@ -1142,8 +1151,8 @@ function initTrustIndicators() {
     updateVisitorCount();
     animateOrdersCount();
     
-    // Update visitors every 15 seconds
-    setInterval(updateVisitorCount, 15000);
+    // Update visitors periodically
+    setInterval(updateVisitorCount, VISITOR_UPDATE_INTERVAL_MS);
 }
 
 // Add product badges based on criteria
@@ -1212,6 +1221,10 @@ function initExitIntentModal() {
     let hasShown = false;
     const closeBtn = modal.querySelector('.exit-modal-close');
     
+    // Configuration constants
+    const EXIT_MODAL_DELAY_MS = 30000; // 30 seconds
+    const MOUSE_LEAVE_THRESHOLD_Y = 0; // Top of viewport
+    
     // Close modal function
     const closeModal = () => {
         modal.classList.remove('active');
@@ -1236,20 +1249,20 @@ function initExitIntentModal() {
         }
     });
     
-    // Exit intent detection
+    // Exit intent detection - only trigger when mouse leaves from top of viewport
     document.addEventListener('mouseleave', (e) => {
-        // Only trigger when mouse leaves from top of the page
-        if (e.clientY <= 0 && !hasShown) {
+        // Check if mouse actually left the viewport from the top
+        if (e.clientY <= MOUSE_LEAVE_THRESHOLD_Y && !hasShown && e.relatedTarget === null) {
             modal.classList.add('active');
         }
     });
     
-    // Also show after 30 seconds if not shown yet
+    // Also show after configured delay if not shown yet
     setTimeout(() => {
         if (!hasShown) {
             modal.classList.add('active');
         }
-    }, 30000);
+    }, EXIT_MODAL_DELAY_MS);
     
     // Keyboard escape
     document.addEventListener('keydown', (e) => {
