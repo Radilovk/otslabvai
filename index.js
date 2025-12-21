@@ -70,13 +70,6 @@ function escapeHtml(unsafe) {
 //          2. ГЕНЕРАТОРИ НА HTML (GENERATOR FUNCTIONS)
 // =======================================================
 
-const generateVariantItem = variant => `
-    <li class="variant-item">
-        <strong>${escapeHtml(variant.title)}</strong>
-        <span>${escapeHtml(variant.description)}</span>
-        <a href="${escapeHtml(variant.url)}" class="variant-link" target="_blank" rel="noopener">Виж продукта</a>
-    </li>`;
-
 const generateEffectBar = effect => `
     <div class="effect-bar-group">
         <div class="effect-label">${escapeHtml(effect.label)}</div>
@@ -113,10 +106,6 @@ const generateProductCard = (product) => {
         <div class="card-details" id="${escapeHtml(cardDetailsId)}">
             <p>${escapeHtml(publicData.description)}</p>
             ${publicData.research_note && publicData.research_note.url ? `<div class="research-note">Източник: <a href="${escapeHtml(publicData.research_note.url)}" target="_blank" rel="noopener">${escapeHtml(publicData.research_note.text)}</a></div>` : ''}
-            <h4 class="details-section-title">Налични форми:</h4>
-            <ul class="product-variants">
-                ${(publicData.variants || []).map(generateVariantItem).join('')}
-            </ul>
             <button class="add-to-cart-btn" data-id="${escapeHtml(productId)}" data-name="${escapeHtml(publicData.name)}" data-price="${escapeHtml(publicData.price)}" data-inventory="${inventory}" ${inventory > 0 ? '' : 'disabled'}>Добави в количката</button>
         </div>
     </article>`;
