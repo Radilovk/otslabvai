@@ -785,10 +785,19 @@ function initializeGlobalScripts() {
         
         darkModeQuery.addEventListener('change', (e) => {
             // Only auto-switch if user hasn't manually set a preference
-            const savedTheme = localStorage.getItem('theme');
-            if (!savedTheme) {
-                const newTheme = e.matches ? 'dark' : 'light';
-                document.documentElement.setAttribute('data-theme', newTheme);
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (!savedTheme) {
+                    const newTheme = e.matches ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    
+                    // Reinitialize canvas animation with new colors
+                    if (typeof initializeCanvasAnimation === 'function') {
+                        initializeCanvasAnimation(true);
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not check theme preference:', e);
             }
         });
     }
