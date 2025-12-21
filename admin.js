@@ -373,19 +373,42 @@ function serializeForm(form) {
                 setProperty(productData, path, value);
             });
 
-            // Сериализираме вложените списъци (само ефекти)
-            ['effects'].forEach(subListName => {
+            // Сериализираме вложените списъци
+            ['effects', 'about-benefits', 'ingredients', 'faq'].forEach(subListName => {
                 const subContainer = productNode.querySelector(`[data-sub-container="${subListName}"]`);
                 if (subContainer) {
                     const subList = [];
-                    subContainer.querySelectorAll(`:scope > .nested-sub-item[data-type="${subListName.slice(0,-1)}"]`).forEach(subItemNode => {
+                    let dataType;
+                    
+                    // Определяме data-type атрибута в зависимост от типа
+                    if (subListName === 'effects') {
+                        dataType = 'effect';
+                    } else if (subListName === 'about-benefits') {
+                        dataType = 'about-benefit';
+                    } else if (subListName === 'ingredients') {
+                        dataType = 'ingredient';
+                    } else if (subListName === 'faq') {
+                        dataType = 'faq';
+                    }
+                    
+                    subContainer.querySelectorAll(`:scope > .nested-sub-item[data-type="${dataType}"]`).forEach(subItemNode => {
                         const subItemData = {};
                         subItemNode.querySelectorAll('[data-field]').forEach(input => {
                             subItemData[input.dataset.field] = (input.type === 'number' ? (input.value ? parseFloat(input.value) : null) : input.value);
                         });
                         subList.push(subItemData);
                     });
-                    setProperty(productData, `public_data.${subListName}`, subList);
+                    
+                    // Запазваме данните на правилното място
+                    if (subListName === 'effects') {
+                        setProperty(productData, `public_data.effects`, subList);
+                    } else if (subListName === 'about-benefits') {
+                        setProperty(productData, `public_data.about_content.benefits`, subList);
+                    } else if (subListName === 'ingredients') {
+                        setProperty(productData, `public_data.ingredients`, subList);
+                    } else if (subListName === 'faq') {
+                        setProperty(productData, `public_data.faq`, subList);
+                    }
                 }
             });
             data.products.push(productData);
@@ -414,14 +437,39 @@ function addNestedItem(container, templateId, data) {
                 }
             }
         });
-        // Попълваме вложените списъци (само ефекти)
-        ['effects'].forEach(subListName => {
+        // Попълваме вложените списъци
+        ['effects', 'about-benefits', 'ingredients', 'faq'].forEach(subListName => {
             const subContainer = itemElement.querySelector(`[data-sub-container="${subListName}"]`);
-            const subData = getProperty(data, `public_data.${subListName}`);
+            let subData = null;
+            
+            // Определяме откъде да вземем данните в зависимост от типа
+            if (subListName === 'effects') {
+                subData = getProperty(data, `public_data.effects`);
+            } else if (subListName === 'about-benefits') {
+                subData = getProperty(data, `public_data.about_content.benefits`);
+            } else if (subListName === 'ingredients') {
+                subData = getProperty(data, `public_data.ingredients`);
+            } else if (subListName === 'faq') {
+                subData = getProperty(data, `public_data.faq`);
+            }
+            
             if (subContainer && Array.isArray(subData)) {
                 subData.forEach(subItemData => {
-                    const subTemplateId = `${subListName.slice(0, -1)}-editor-template`;
-                    addNestedItem(subContainer, subTemplateId, subItemData);
+                    // Определяме template ID в зависимост от типа
+                    let subTemplateId;
+                    if (subListName === 'effects') {
+                        subTemplateId = 'effect-editor-template';
+                    } else if (subListName === 'about-benefits') {
+                        subTemplateId = 'about-benefit-editor-template';
+                    } else if (subListName === 'ingredients') {
+                        subTemplateId = 'ingredient-editor-template';
+                    } else if (subListName === 'faq') {
+                        subTemplateId = 'faq-editor-template';
+                    }
+                    
+                    if (subTemplateId) {
+                        addNestedItem(subContainer, subTemplateId, subItemData);
+                    }
                 });
             }
         });

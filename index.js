@@ -91,6 +91,71 @@ const generateProductCard = (product) => {
     const productId = product.product_id; // Използваме надеждния уникален ID
     const cardDetailsId = `card-details-${productId}`;
 
+    // Generate About Content section if available
+    const aboutContentHTML = publicData.about_content ? `
+        <div class="product-about-section section-padding">
+            <h3>${escapeHtml(publicData.about_content.title || 'За продукта')}</h3>
+            <p>${escapeHtml(publicData.about_content.description)}</p>
+            ${publicData.about_content.benefits && publicData.about_content.benefits.length > 0 ? `
+                <div class="product-benefits">
+                    ${publicData.about_content.benefits.map(benefit => `
+                        <div class="benefit-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <div>
+                                <h4>${escapeHtml(benefit.title)}</h4>
+                                <p>${escapeHtml(benefit.text)}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : ''}
+        </div>
+    ` : '';
+
+    // Generate Ingredients section if available
+    const ingredientsHTML = publicData.ingredients && publicData.ingredients.length > 0 ? `
+        <div class="product-ingredients-section section-padding">
+            <h3>Съставки</h3>
+            <div class="ingredients-grid-mini">
+                ${publicData.ingredients.map(ingredient => `
+                    <div class="ingredient-card-mini" tabindex="0">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <h5>${escapeHtml(ingredient.name)}</h5>
+                                <span>${escapeHtml(ingredient.amount)}</span>
+                            </div>
+                            <div class="card-back">
+                                <p>${escapeHtml(ingredient.description)}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    // Generate FAQ section if available
+    const faqHTML = publicData.faq && publicData.faq.length > 0 ? `
+        <div class="product-faq-section section-padding">
+            <h3>Често задавани въпроси</h3>
+            <div class="faq-container-mini">
+                ${publicData.faq.map(faq => `
+                    <div class="faq-item-mini">
+                        <div class="faq-question-mini" role="button" aria-expanded="false" tabindex="0">
+                            <h4>${escapeHtml(faq.question)}</h4>
+                            <span class="faq-toggle-mini">+</span>
+                        </div>
+                        <div class="faq-answer-mini">
+                            <p>${escapeHtml(faq.answer)}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';
+
     return `
     <article class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}">
         ${publicData.image_url ? `<div class="product-image"><img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)}" loading="lazy"></div>` : ''}
@@ -104,8 +169,13 @@ const generateProductCard = (product) => {
             <span class="expand-icon"></span>
         </div>
         <div class="card-details" id="${escapeHtml(cardDetailsId)}">
-            <p>${escapeHtml(publicData.description)}</p>
-            ${publicData.research_note && publicData.research_note.url ? `<div class="research-note">Източник: <a href="${escapeHtml(publicData.research_note.url)}" target="_blank" rel="noopener">${escapeHtml(publicData.research_note.text)}</a></div>` : ''}
+            <div class="product-description">
+                <p>${escapeHtml(publicData.description)}</p>
+                ${publicData.research_note && publicData.research_note.url ? `<div class="research-note">Източник: <a href="${escapeHtml(publicData.research_note.url)}" target="_blank" rel="noopener">${escapeHtml(publicData.research_note.text)}</a></div>` : ''}
+            </div>
+            ${aboutContentHTML}
+            ${ingredientsHTML}
+            ${faqHTML}
             <button class="add-to-cart-btn" data-id="${escapeHtml(productId)}" data-name="${escapeHtml(publicData.name)}" data-price="${escapeHtml(publicData.price)}" data-inventory="${inventory}" ${inventory > 0 ? '' : 'disabled'}>Добави в количката</button>
         </div>
     </article>`;
@@ -622,7 +692,7 @@ function initializePageInteractions() {
     document.querySelectorAll('.fade-in-up').forEach(el => scrollObserver.observe(el));
 
     // --- Ingredient Card Flip (Lipolor style) ---
-    document.querySelectorAll('.ingredient-card').forEach(card => {
+    document.querySelectorAll('.ingredient-card, .ingredient-card-mini').forEach(card => {
         const toggleFlip = () => {
             card.classList.toggle('is-flipped');
         };
@@ -634,6 +704,51 @@ function initializePageInteractions() {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 toggleFlip();
+            }
+        });
+    });
+
+    // --- Product Detail FAQ Accordion ---
+    document.querySelectorAll('.faq-item-mini').forEach(item => {
+        const question = item.querySelector('.faq-question-mini');
+        
+        if (!question) return;
+        
+        const toggleFAQ = () => {
+            const isActive = item.classList.contains('active');
+            
+            // Close all other FAQ items in the same product card
+            const parentCard = item.closest('.product-card');
+            if (parentCard) {
+                parentCard.querySelectorAll('.faq-item-mini').forEach(otherItem => {
+                    if (otherItem !== item) {
+                        otherItem.classList.remove('active');
+                        const otherQuestion = otherItem.querySelector('.faq-question-mini');
+                        if (otherQuestion) {
+                            otherQuestion.setAttribute('aria-expanded', 'false');
+                        }
+                    }
+                });
+            }
+            
+            // Toggle current item
+            if (isActive) {
+                item.classList.remove('active');
+                question.setAttribute('aria-expanded', 'false');
+            } else {
+                item.classList.add('active');
+                question.setAttribute('aria-expanded', 'true');
+            }
+        };
+        
+        // Click event
+        question.addEventListener('click', toggleFAQ);
+        
+        // Keyboard event for accessibility
+        question.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleFAQ();
             }
         });
     });
