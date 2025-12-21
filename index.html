@@ -47,7 +47,9 @@
 <body>
     <!-- ============================ PROMO BANNER ============================ -->
     <div class="promo-banner">
-        <p>🔥 СПЕЦИАЛНИ ОФЕРТИ ЗА ОТСЛАБВАНЕ - Свържете се с нас за повече информация!</p>
+        <div class="promo-content">
+            <p>🔥 <strong>СПЕЦИАЛНА ОФЕРТА:</strong> До 30% отстъпка при поръчка над 100 лв! <span class="promo-timer" id="promo-timer"></span></p>
+        </div>
     </div>
 
     <!-- ============================ HEADER & NAVIGATION ============================ -->
@@ -171,12 +173,56 @@
 
     <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
 
+    <!-- Trust Indicators -->
+    <div class="floating-trust-indicators" id="trust-indicators">
+        <div class="trust-item">
+            <span class="trust-icon">👥</span>
+            <span class="trust-text"><strong id="visitors-count">127</strong> посетители сега</span>
+        </div>
+        <div class="trust-item">
+            <span class="trust-icon">✅</span>
+            <span class="trust-text"><strong id="orders-count">2,840+</strong> доволни клиенти</span>
+        </div>
+    </div>
+
+    <!-- Sticky CTA Button -->
+    <div class="sticky-cta" id="sticky-cta">
+        <button class="sticky-cta-btn" onclick="document.getElementById('products')?.scrollIntoView({behavior: 'smooth'})">
+            <span>🎯 Виж продуктите</span>
+        </button>
+    </div>
+
     <div id="quest-modal-backdrop" class="modal-backdrop"></div>
     <div id="quest-modal-container" class="modal-container">
         <iframe id="quest-modal-iframe" src="" loading="lazy" title="BIOCODE въпросник"></iframe>
     </div>
 
     <div id="toast-container"></div>
+
+    <!-- Exit Intent Popup -->
+    <div id="exit-intent-modal" class="exit-modal">
+        <div class="exit-modal-content">
+            <button class="exit-modal-close" aria-label="Затвори">&times;</button>
+            <div class="exit-modal-body">
+                <div class="exit-modal-icon">🎁</div>
+                <h2>Не пропускайте!</h2>
+                <p class="exit-modal-subtitle">Специална оферта само за вас</p>
+                <div class="exit-offer">
+                    <div class="exit-offer-badge">-20%</div>
+                    <p>Използвайте код <strong class="promo-code">SAVE20</strong> при първа поръчка</p>
+                </div>
+                <div class="exit-benefits">
+                    <div class="exit-benefit">✓ Безплатна доставка над 50 лв</div>
+                    <div class="exit-benefit">✓ 30 дни гаранция</div>
+                    <div class="exit-benefit">✓ Експресна обработка</div>
+                </div>
+                <button class="exit-cta-btn" onclick="document.getElementById('products')?.scrollIntoView({behavior: 'smooth'}); document.getElementById('exit-intent-modal').classList.remove('active');">
+                    Искам отстъпката
+                </button>
+                <p class="exit-modal-footer">Офертата е валидна само днес!</p>
+            </div>
+        </div>
+    </div>
 
     <script src="index.js" type="module"></script>
     

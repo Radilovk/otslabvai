@@ -131,6 +131,33 @@ const generateHeroHTML = component => `
             <div class="hero-content">
                 <h1>${component.title}</h1>
                 <p>${component.subtitle}</p>
+                <div class="hero-cta-group">
+                    <button class="btn-hero-primary" onclick="document.getElementById('products')?.scrollIntoView({behavior: 'smooth'})">
+                        🛒 Разгледай продуктите
+                    </button>
+                    <button class="btn-hero-secondary" onclick="document.getElementById('benefits')?.scrollIntoView({behavior: 'smooth'})">
+                        ℹ️ Научи повече
+                    </button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <strong>2,840+</strong>
+                        <span>Доволни клиенти</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>98%</strong>
+                        <span>Успеваемост</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>100%</strong>
+                        <span>Естествени съставки</span>
+                    </div>
+                </div>
+                <div class="hero-trust-badges">
+                    <div class="trust-badge">✓ Клинично тествано</div>
+                    <div class="trust-badge">✓ GMP сертифицирано</div>
+                    <div class="trust-badge">✓ 30 дни гаранция</div>
+                </div>
             </div>
         </div>
     </header>`;
@@ -292,6 +319,36 @@ const generateFAQHTML = component => `
                         </div>
                     </div>
                 `).join('')}
+            </div>
+        </div>
+    </section>`;
+
+const generateGuaranteeHTML = component => `
+    <section class="guarantee-section section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="guarantee-grid">
+                ${(component.items || []).map(item => {
+                    const iconSVG = {
+                        'shield': '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>',
+                        'truck': '<rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle>',
+                        'certificate': '<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>',
+                        'support': '<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path><circle cx="6.5" cy="11.5" r="1.5"></circle><circle cx="9.5" cy="7.5" r="1.5"></circle><circle cx="14.5" cy="7.5" r="1.5"></circle><circle cx="17.5" cy="11.5" r="1.5"></circle>'
+                    };
+                    return `
+                    <div class="guarantee-card animate-on-scroll">
+                        <div class="guarantee-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                ${iconSVG[item.icon] || iconSVG['shield']}
+                            </svg>
+                        </div>
+                        <h4>${item.title}</h4>
+                        <p>${item.description}</p>
+                    </div>
+                `}).join('')}
             </div>
         </div>
     </section>`;
@@ -467,6 +524,9 @@ function renderMainContent(pageContent) {
                 break;
             case 'faq':
                 contentHtml += generateFAQHTML(component);
+                break;
+            case 'guarantee':
+                contentHtml += generateGuaranteeHTML(component);
                 break;
             case 'contact':
                 contentHtml += generateContactHTML(component);
@@ -958,6 +1018,7 @@ async function main() {
 
         initializePageInteractions();
         initializeScrollSpy();
+        initializeMarketingFeatures();
 
     } catch (error) {
         console.error("Fatal Error: Could not load or render page content.", error);
@@ -967,6 +1028,248 @@ async function main() {
                 <p>Не успяхме да се свържем със сървъра. Моля, опреснете страницата или опитайте по-късно.</p>
              </div>`;
     }
+}
+
+// =======================================================
+//          MARKETING FEATURES INITIALIZATION
+// =======================================================
+
+function initializeMarketingFeatures() {
+    // 1. Countdown Timer for Promo
+    initPromoTimer();
+    
+    // 2. Sticky CTA Button
+    initStickyCTA();
+    
+    // 3. Dynamic Trust Indicators
+    initTrustIndicators();
+    
+    // 4. Product Badges
+    addProductBadges();
+    
+    // 5. Stock Urgency Indicators
+    updateStockUrgency();
+    
+    // 6. Exit Intent Modal
+    initExitIntentModal();
+}
+
+// Promo Timer - Shows countdown to create urgency
+function initPromoTimer() {
+    const timerElement = document.getElementById('promo-timer');
+    if (!timerElement) return;
+    
+    // Set end time to midnight today (or customize)
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    
+    function updateTimer() {
+        const now = new Date();
+        const diff = midnight - now;
+        
+        if (diff <= 0) {
+            timerElement.textContent = 'Офертата изтече!';
+            return;
+        }
+        
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        timerElement.textContent = `⏰ ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    updateTimer();
+    setInterval(updateTimer, 1000);
+}
+
+// Sticky CTA - Shows when user scrolls past hero
+function initStickyCTA() {
+    const stickyCTA = document.getElementById('sticky-cta');
+    if (!stickyCTA) return;
+    
+    let lastScrollY = window.scrollY;
+    
+    function checkScroll() {
+        const currentScrollY = window.scrollY;
+        const heroHeight = document.querySelector('.hero-section')?.offsetHeight || 600;
+        
+        // Show when scrolled past hero and scrolling up
+        if (currentScrollY > heroHeight && currentScrollY < lastScrollY) {
+            stickyCTA.classList.add('visible');
+        } else if (currentScrollY <= heroHeight || currentScrollY > lastScrollY + 50) {
+            stickyCTA.classList.remove('visible');
+        }
+        
+        lastScrollY = currentScrollY;
+    }
+    
+    window.addEventListener('scroll', debounce(checkScroll, 100));
+}
+
+// Trust Indicators - Dynamic visitor and order counts
+function initTrustIndicators() {
+    const visitorsCount = document.getElementById('visitors-count');
+    const ordersCount = document.getElementById('orders-count');
+    
+    if (!visitorsCount || !ordersCount) return;
+    
+    // Configuration constants
+    const VISITOR_COUNT_MIN = 80;
+    const VISITOR_COUNT_RANGE = 70;
+    const TARGET_ORDERS = 2840;
+    const STARTING_ORDERS = 2500;
+    const ORDERS_INCREMENT = 5;
+    const ORDERS_ANIMATION_INTERVAL_MS = 20;
+    const VISITOR_UPDATE_INTERVAL_MS = 15000; // 15 seconds
+    
+    // Simulate dynamic visitor count (randomize between configured range)
+    function updateVisitorCount() {
+        const baseCount = VISITOR_COUNT_MIN;
+        const randomAdd = Math.floor(Math.random() * VISITOR_COUNT_RANGE);
+        visitorsCount.textContent = baseCount + randomAdd;
+    }
+    
+    // Animate orders count on load
+    function animateOrdersCount() {
+        const target = TARGET_ORDERS;
+        let current = STARTING_ORDERS;
+        const increment = ORDERS_INCREMENT;
+        const interval = ORDERS_ANIMATION_INTERVAL_MS;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            ordersCount.textContent = current.toLocaleString('bg-BG') + '+';
+        }, interval);
+    }
+    
+    updateVisitorCount();
+    animateOrdersCount();
+    
+    // Update visitors periodically
+    setInterval(updateVisitorCount, VISITOR_UPDATE_INTERVAL_MS);
+}
+
+// Add product badges based on criteria
+function addProductBadges() {
+    const products = document.querySelectorAll('.product-card');
+    
+    products.forEach((card, index) => {
+        const productId = card.getAttribute('data-product-id');
+        if (!productId) return;
+        
+        let badge = null;
+        
+        // First product - Bestseller
+        if (index === 0) {
+            badge = createBadge('⭐ Най-продаван', 'bestseller');
+        }
+        // Second product - New
+        else if (index === 1) {
+            badge = createBadge('🆕 Ново', 'new');
+        }
+        // Third product - Limited offer
+        else if (index === 2) {
+            badge = createBadge('🔥 Ограничена оферта', 'limited');
+        }
+        
+        if (badge) {
+            card.style.position = 'relative';
+            card.insertBefore(badge, card.firstChild);
+        }
+    });
+}
+
+function createBadge(text, type) {
+    const badge = document.createElement('div');
+    badge.className = `product-badge ${type}`;
+    badge.textContent = text;
+    return badge;
+}
+
+// Update stock urgency styling
+function updateStockUrgency() {
+    const stockElements = document.querySelectorAll('.product-stock');
+    
+    stockElements.forEach(stock => {
+        const text = stock.textContent;
+        const match = text.match(/Налично:\s*(\d+)/);
+        
+        if (match) {
+            const quantity = parseInt(match[1]);
+            
+            if (quantity > 0 && quantity <= 30) {
+                stock.classList.add('low-stock');
+                stock.textContent = `⚠️ Само ${quantity} бр. налични!`;
+            } else if (quantity > 30) {
+                stock.classList.add('in-stock');
+            }
+        }
+    });
+}
+
+// Exit Intent Modal - Shows when user is about to leave
+function initExitIntentModal() {
+    const modal = document.getElementById('exit-intent-modal');
+    if (!modal) return;
+    
+    let hasShown = false;
+    const closeBtn = modal.querySelector('.exit-modal-close');
+    
+    // Configuration constants
+    const EXIT_MODAL_DELAY_MS = 30000; // 30 seconds
+    const MOUSE_LEAVE_THRESHOLD_Y = 0; // Top of viewport
+    
+    // Close modal function
+    const closeModal = () => {
+        modal.classList.remove('active');
+        hasShown = true;
+        localStorage.setItem('exitModalShown', 'true');
+    };
+    
+    // Check if already shown in this session
+    if (localStorage.getItem('exitModalShown')) {
+        hasShown = true;
+    }
+    
+    // Close button click
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    
+    // Close on overlay click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    // Exit intent detection - only trigger when mouse leaves from top of viewport
+    document.addEventListener('mouseleave', (e) => {
+        // Check if mouse actually left the viewport from the top
+        if (e.clientY <= MOUSE_LEAVE_THRESHOLD_Y && !hasShown && e.relatedTarget === null) {
+            modal.classList.add('active');
+        }
+    });
+    
+    // Also show after configured delay if not shown yet
+    setTimeout(() => {
+        if (!hasShown) {
+            modal.classList.add('active');
+        }
+    }, EXIT_MODAL_DELAY_MS);
+    
+    // Keyboard escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
 }
 
 // Старт на приложението
