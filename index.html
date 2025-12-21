@@ -47,7 +47,7 @@
 <body>
     <!-- ============================ PROMO BANNER ============================ -->
     <div class="promo-banner">
-        <p>🔥 СПЕЦИАЛНИ ОФЕРТИ ЗА ОТСЛАБВАНЕ - Свържете се с нас за повече информация!</p>
+        <p>🔥 СПЕЦИАЛНА ОФЕРТА - Свържете се с нас за повече информация и отстъпки!</p>
     </div>
 
     <!-- ============================ HEADER & NAVIGATION ============================ -->
@@ -94,65 +94,37 @@
     </header>
     <div class="nav-overlay"></div>
 
-    <!-- 
-        Контейнерът вече няма class="container", защото всяка секция ще управлява свой собствен.
-    -->
     <main id="main-content-container">
         <!-- Скелет за Hero секцията -->
-        <header class="hero-section">
+        <section class="hero-section">
             <canvas id="neuron-canvas"></canvas>
-            <div class="hero-content">
+            <div class="container hero-content">
                 <div class="skeleton skeleton-title"></div>
                 <div class="skeleton skeleton-text"></div>
-            </div>
-        </header>
-
-        <!-- Скелет за Инфо Кард. Обвит е в .container, за да съответства на финалния HTML -->
-        <section class="info-card-section skeleton-wrapper">
-             <div class="container" style="display: flex; gap: 3rem; align-items: center;">
-                <div class="info-card-image" style="flex:1;">
-                    <div class="skeleton skeleton-image"></div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="skeleton skeleton-line"></div>
+                        <div class="skeleton skeleton-line short"></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="skeleton skeleton-line"></div>
+                        <div class="skeleton skeleton-line short"></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="skeleton skeleton-line"></div>
+                        <div class="skeleton skeleton-line short"></div>
+                    </div>
                 </div>
-                <div class="info-card-content" style="flex:1;">
-                    <div class="skeleton skeleton-h2"></div>
-                    <div class="skeleton skeleton-text"></div>
-                    <div class="skeleton skeleton-text short"></div>
-                    <div class="skeleton skeleton-button"></div>
-                </div>
+                <div class="skeleton skeleton-button"></div>
             </div>
         </section>
 
-        <!-- Скелет за Продуктова категория -->
-        <section class="category-section skeleton-wrapper">
+        <!-- Скелет за Секции (ще бъдат заменени с динамично съдържание) -->
+        <section class="section-padding skeleton-wrapper">
             <div class="container">
-                <div class="category-header">
-                    <div class="skeleton skeleton-h2 category-title-skeleton"></div>
-                </div>
-                <div class="product-grid">
-                    <article class="product-card skeleton-card">
-                        <div class="card-header">
-                            <div class="product-title">
-                                <div class="skeleton skeleton-line"></div>
-                                <div class="skeleton skeleton-line short"></div>
-                            </div>
-                            <div class="effects-container">
-                                <div class="skeleton skeleton-bar"></div>
-                                <div class="skeleton skeleton-bar"></div>
-                            </div>
-                        </div>
-                    </article>
-                    <article class="product-card skeleton-card">
-                        <div class="card-header">
-                            <div class="product-title">
-                                <div class="skeleton skeleton-line"></div>
-                                <div class="skeleton skeleton-line short"></div>
-                            </div>
-                            <div class="effects-container">
-                                <div class="skeleton skeleton-bar"></div>
-                                <div class="skeleton skeleton-bar"></div>
-                            </div>
-                        </div>
-                    </article>
+                <div class="section-title">
+                    <div class="skeleton skeleton-h2"></div>
+                    <div class="skeleton skeleton-text"></div>
                 </div>
             </div>
         </section>
