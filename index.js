@@ -131,6 +131,33 @@ const generateHeroHTML = component => `
             <div class="hero-content">
                 <h1>${component.title}</h1>
                 <p>${component.subtitle}</p>
+                <div class="hero-cta-group">
+                    <button class="btn-hero-primary" onclick="document.getElementById('products')?.scrollIntoView({behavior: 'smooth'})">
+                        🛒 Разгледай продуктите
+                    </button>
+                    <button class="btn-hero-secondary" onclick="document.getElementById('benefits')?.scrollIntoView({behavior: 'smooth'})">
+                        ℹ️ Научи повече
+                    </button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <strong>2,840+</strong>
+                        <span>Доволни клиенти</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>98%</strong>
+                        <span>Успеваемост</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong>100%</strong>
+                        <span>Естествени съставки</span>
+                    </div>
+                </div>
+                <div class="hero-trust-badges">
+                    <div class="trust-badge">✓ Клинично тествано</div>
+                    <div class="trust-badge">✓ GMP сертифицирано</div>
+                    <div class="trust-badge">✓ 30 дни гаранция</div>
+                </div>
             </div>
         </div>
     </header>`;
@@ -958,6 +985,7 @@ async function main() {
 
         initializePageInteractions();
         initializeScrollSpy();
+        initializeMarketingFeatures();
 
     } catch (error) {
         console.error("Fatal Error: Could not load or render page content.", error);
@@ -967,6 +995,177 @@ async function main() {
                 <p>Не успяхме да се свържем със сървъра. Моля, опреснете страницата или опитайте по-късно.</p>
              </div>`;
     }
+}
+
+// =======================================================
+//          MARKETING FEATURES INITIALIZATION
+// =======================================================
+
+function initializeMarketingFeatures() {
+    // 1. Countdown Timer for Promo
+    initPromoTimer();
+    
+    // 2. Sticky CTA Button
+    initStickyCTA();
+    
+    // 3. Dynamic Trust Indicators
+    initTrustIndicators();
+    
+    // 4. Product Badges
+    addProductBadges();
+    
+    // 5. Stock Urgency Indicators
+    updateStockUrgency();
+}
+
+// Promo Timer - Shows countdown to create urgency
+function initPromoTimer() {
+    const timerElement = document.getElementById('promo-timer');
+    if (!timerElement) return;
+    
+    // Set end time to midnight today (or customize)
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    
+    function updateTimer() {
+        const now = new Date();
+        const diff = midnight - now;
+        
+        if (diff <= 0) {
+            timerElement.textContent = 'Офертата изтече!';
+            return;
+        }
+        
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        timerElement.textContent = `⏰ ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    updateTimer();
+    setInterval(updateTimer, 1000);
+}
+
+// Sticky CTA - Shows when user scrolls past hero
+function initStickyCTA() {
+    const stickyCTA = document.getElementById('sticky-cta');
+    if (!stickyCTA) return;
+    
+    let lastScrollY = window.scrollY;
+    
+    function checkScroll() {
+        const currentScrollY = window.scrollY;
+        const heroHeight = document.querySelector('.hero-section')?.offsetHeight || 600;
+        
+        // Show when scrolled past hero and scrolling up
+        if (currentScrollY > heroHeight && currentScrollY < lastScrollY) {
+            stickyCTA.classList.add('visible');
+        } else if (currentScrollY <= heroHeight || currentScrollY > lastScrollY + 50) {
+            stickyCTA.classList.remove('visible');
+        }
+        
+        lastScrollY = currentScrollY;
+    }
+    
+    window.addEventListener('scroll', debounce(checkScroll, 100));
+}
+
+// Trust Indicators - Dynamic visitor and order counts
+function initTrustIndicators() {
+    const visitorsCount = document.getElementById('visitors-count');
+    const ordersCount = document.getElementById('orders-count');
+    
+    if (!visitorsCount || !ordersCount) return;
+    
+    // Simulate dynamic visitor count (randomize between 80-150)
+    function updateVisitorCount() {
+        const baseCount = 80;
+        const randomAdd = Math.floor(Math.random() * 70);
+        visitorsCount.textContent = baseCount + randomAdd;
+    }
+    
+    // Animate orders count on load
+    function animateOrdersCount() {
+        const target = 2840;
+        let current = 2500;
+        const increment = 5;
+        const interval = 20;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            ordersCount.textContent = current.toLocaleString('bg-BG') + '+';
+        }, interval);
+    }
+    
+    updateVisitorCount();
+    animateOrdersCount();
+    
+    // Update visitors every 15 seconds
+    setInterval(updateVisitorCount, 15000);
+}
+
+// Add product badges based on criteria
+function addProductBadges() {
+    const products = document.querySelectorAll('.product-card');
+    
+    products.forEach((card, index) => {
+        const productId = card.getAttribute('data-product-id');
+        if (!productId) return;
+        
+        let badge = null;
+        
+        // First product - Bestseller
+        if (index === 0) {
+            badge = createBadge('⭐ Най-продаван', 'bestseller');
+        }
+        // Second product - New
+        else if (index === 1) {
+            badge = createBadge('🆕 Ново', 'new');
+        }
+        // Third product - Limited offer
+        else if (index === 2) {
+            badge = createBadge('🔥 Ограничена оферта', 'limited');
+        }
+        
+        if (badge) {
+            card.style.position = 'relative';
+            card.insertBefore(badge, card.firstChild);
+        }
+    });
+}
+
+function createBadge(text, type) {
+    const badge = document.createElement('div');
+    badge.className = `product-badge ${type}`;
+    badge.textContent = text;
+    return badge;
+}
+
+// Update stock urgency styling
+function updateStockUrgency() {
+    const stockElements = document.querySelectorAll('.product-stock');
+    
+    stockElements.forEach(stock => {
+        const text = stock.textContent;
+        const match = text.match(/Налично:\s*(\d+)/);
+        
+        if (match) {
+            const quantity = parseInt(match[1]);
+            
+            if (quantity > 0 && quantity <= 30) {
+                stock.classList.add('low-stock');
+                stock.textContent = `⚠️ Само ${quantity} бр. налични!`;
+            } else if (quantity > 30) {
+                stock.classList.add('in-stock');
+            }
+        }
+    });
 }
 
 // Старт на приложението

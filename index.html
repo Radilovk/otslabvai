@@ -47,7 +47,9 @@
 <body>
     <!-- ============================ PROMO BANNER ============================ -->
     <div class="promo-banner">
-        <p>🔥 СПЕЦИАЛНИ ОФЕРТИ ЗА ОТСЛАБВАНЕ - Свържете се с нас за повече информация!</p>
+        <div class="promo-content">
+            <p>🔥 <strong>СПЕЦИАЛНА ОФЕРТА:</strong> До 30% отстъпка при поръчка над 100 лв! <span class="promo-timer" id="promo-timer"></span></p>
+        </div>
     </div>
 
     <!-- ============================ HEADER & NAVIGATION ============================ -->
@@ -170,6 +172,25 @@
     </footer>
 
     <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
+
+    <!-- Trust Indicators -->
+    <div class="floating-trust-indicators" id="trust-indicators">
+        <div class="trust-item">
+            <span class="trust-icon">👥</span>
+            <span class="trust-text"><strong id="visitors-count">127</strong> посетители сега</span>
+        </div>
+        <div class="trust-item">
+            <span class="trust-icon">✅</span>
+            <span class="trust-text"><strong id="orders-count">2,840+</strong> доволни клиенти</span>
+        </div>
+    </div>
+
+    <!-- Sticky CTA Button -->
+    <div class="sticky-cta" id="sticky-cta">
+        <button class="sticky-cta-btn" onclick="document.getElementById('products')?.scrollIntoView({behavior: 'smooth'})">
+            <span>🎯 Виж продуктите</span>
+        </button>
+    </div>
 
     <div id="quest-modal-backdrop" class="modal-backdrop"></div>
     <div id="quest-modal-container" class="modal-container">

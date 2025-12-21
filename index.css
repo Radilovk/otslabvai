@@ -651,12 +651,19 @@ main {
     justify-content: center;
     margin: 30px 0;
     flex-wrap: wrap;
+    animation: fadeInUp 1s ease-out 0.6s;
+    animation-fill-mode: both;
 }
 
 .stat-item {
     display: flex;
     flex-direction: column;
     align-items: center;
+    transition: transform 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-5px);
 }
 
 .stat-item strong {
@@ -665,11 +672,114 @@ main {
     display: block;
     margin-bottom: 5px;
     color: var(--color-primary);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .stat-item span {
     font-size: 0.9rem;
     color: var(--text-secondary);
+}
+
+/* Hero CTA Buttons */
+.hero-cta-group {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin: 30px 0;
+    flex-wrap: wrap;
+    animation: fadeInUp 1s ease-out 0.4s;
+    animation-fill-mode: both;
+}
+
+.btn-hero-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white;
+    border: none;
+    padding: 16px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(228, 0, 124, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-hero-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-hero-primary:hover::before {
+    left: 100%;
+}
+
+.btn-hero-primary:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 12px 30px rgba(228, 0, 124, 0.5);
+}
+
+.btn-hero-primary:active {
+    transform: translateY(0) scale(1);
+}
+
+.btn-hero-secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    padding: 16px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-hero-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(228, 0, 124, 0.05);
+    transform: translateY(-3px);
+}
+
+/* Hero Trust Badges */
+.hero-trust-badges {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 25px;
+    animation: fadeInUp 1s ease-out 0.8s;
+    animation-fill-mode: both;
+}
+
+.trust-badge {
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.trust-badge:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(228, 0, 124, 0.2);
 }
 
 .hero-guarantee {
@@ -1809,5 +1919,332 @@ body.modal-open { overflow: hidden; }
     
     .testimonials-grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ======================================================= */
+/*          MARKETING ENHANCEMENTS - TRUST & URGENCY      */
+/* ======================================================= */
+
+/* Enhanced Promo Banner with Timer */
+.promo-banner {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white;
+    text-align: center;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+    animation: slideDown 0.5s ease-out;
+}
+
+.promo-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.promo-content {
+    position: relative;
+    z-index: 1;
+}
+
+.promo-timer {
+    font-weight: 700;
+    margin-left: 10px;
+    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    font-family: 'Courier New', monospace;
+}
+
+/* Floating Trust Indicators */
+.floating-trust-indicators {
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: fadeInUp 1s ease-out 2s both;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.trust-item {
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.trust-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 6px 25px rgba(228, 0, 124, 0.2);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(228, 0, 124, 0.3);
+    }
+}
+
+.trust-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.trust-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.trust-text strong {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+/* Sticky CTA Button */
+.sticky-cta {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 998;
+    opacity: 0;
+    transform: translateY(100px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.sticky-cta.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.sticky-cta-btn {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 32px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(228, 0, 124, 0.4);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.sticky-cta-btn:hover {
+    transform: scale(1.1) translateY(-5px);
+    box-shadow: 0 12px 35px rgba(228, 0, 124, 0.6);
+}
+
+.sticky-cta-btn:active {
+    transform: scale(1.05);
+}
+
+/* Product Badge Styles */
+.product-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--accent);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.product-badge.bestseller {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+}
+
+.product-badge.new {
+    background: linear-gradient(135deg, var(--color-primary), #FF1493);
+}
+
+.product-badge.limited {
+    background: linear-gradient(135deg, #DC143C, #8B0000);
+    animation: badgeUrgent 1s ease-in-out infinite;
+}
+
+@keyframes badgeUrgent {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+    }
+    50% {
+        transform: scale(1.1) rotate(-5deg);
+    }
+}
+
+/* Enhanced Product Card with Badges */
+.product-card {
+    position: relative;
+    overflow: visible;
+}
+
+.product-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+    border-radius: inherit;
+}
+
+.product-card:hover::before {
+    opacity: 0.05;
+}
+
+/* Stock Urgency Indicator */
+.product-stock {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 8px 0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.product-stock.low-stock {
+    background: #FFF3CD;
+    color: #856404;
+    animation: stockAlert 2s ease-in-out infinite;
+}
+
+@keyframes stockAlert {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.product-stock.in-stock {
+    background: #D4EDDA;
+    color: #155724;
+}
+
+/* Media Queries for Mobile */
+@media (max-width: 768px) {
+    .floating-trust-indicators {
+        left: 10px;
+        bottom: 80px;
+        scale: 0.9;
+    }
+    
+    .trust-item {
+        padding: 10px 12px;
+    }
+    
+    .trust-text {
+        font-size: 0.75rem;
+    }
+    
+    .sticky-cta {
+        right: 50%;
+        transform: translateX(50%) translateY(100px);
+    }
+    
+    .sticky-cta.visible {
+        transform: translateX(50%) translateY(0);
+    }
+    
+    .sticky-cta-btn {
+        padding: 14px 24px;
+        font-size: 1rem;
+    }
+    
+    .promo-timer {
+        display: block;
+        margin-top: 5px;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .floating-trust-indicators {
+        scale: 0.85;
+        gap: 8px;
+    }
+    
+    .sticky-cta-btn {
+        padding: 12px 20px;
+        font-size: 0.9rem;
     }
 }
