@@ -141,7 +141,7 @@ const generateProductCard = (product) => {
         <div class="product-faq-section section-padding">
             <h3>Често задавани въпроси</h3>
             <div class="faq-container-mini">
-                ${publicData.faq.map((faq, index) => `
+                ${publicData.faq.map(faq => `
                     <div class="faq-item-mini">
                         <div class="faq-question-mini" role="button" aria-expanded="false" tabindex="0">
                             <h4>${escapeHtml(faq.question)}</h4>
