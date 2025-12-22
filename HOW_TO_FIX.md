@@ -22,6 +22,10 @@ Backend worker-ът на Cloudflare връща грешка "Not Found" защо
 
 3. **Качете статичните файлове в KV**:
    ```bash
+   npm run upload-static
+   ```
+   Или директно:
+   ```bash
    ./upload-static-to-kv.sh
    ```
 
@@ -43,6 +47,10 @@ Backend worker-ът на Cloudflare връща грешка "Not Found" защо
    ```
 
 2. **Стартирайте скрипта**:
+   ```bash
+   npm run upload-static-node
+   ```
+   Или директно:
    ```bash
    node upload-static-files.js
    ```
