@@ -5,6 +5,32 @@
 // API Endpoint
 import { API_URL } from './config.js';
 
+// =======================================================
+//          THEME TOGGLE FUNCTIONALITY
+// =======================================================
+function initThemeToggle() {
+    const themeToggle = document.getElementById('theme-toggle');
+    
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        try {
+            localStorage.setItem('theme', theme);
+        } catch (e) {
+            console.warn('Could not save theme preference:', e);
+        }
+    }
+    
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+    }
+    
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+}
+
 // Централизирани DOM елементи
 const DOM = {
     // Основни
@@ -832,6 +858,7 @@ function setProperty(obj, path, value) {
 // =======================================================
 
 async function init() {
+    initThemeToggle();
     setupEventListeners();
     populateAddComponentMenu();
     appData = await fetchData();
