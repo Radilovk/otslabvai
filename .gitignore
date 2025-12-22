@@ -17,7 +17,7 @@ yarn-error.log*
 
 # Cloudflare
 
-# Local data
-page_content.json
-orders.json
+# Local data (only in root, not in backend/)
+/page_content.json
+/orders.json
 index.css.backup
