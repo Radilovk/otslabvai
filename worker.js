@@ -123,7 +123,7 @@ export default {
  * @param {object} env - Environment with KV bindings
  * @param {string} filename - Name of the file to serve
  * @param {string} contentType - MIME type for the response
- * @returns {Response} Response object with file content
+ * @returns {Promise<Response>} Response object with file content
  * @throws {UserFacingError} When file is not found in storage (404)
  */
 async function serveStaticFile(env, filename, contentType) {
