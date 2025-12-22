@@ -30,20 +30,27 @@ export default {
 
     const url = new URL(request.url);
     
+    // Content type constants
+    const CONTENT_TYPES = {
+      html: 'text/html; charset=utf-8',
+      js: 'application/javascript; charset=utf-8',
+      css: 'text/css; charset=utf-8'
+    };
+    
     // Static file configuration
     const STATIC_FILES = {
-      '/': { file: 'index.html', type: 'text/html; charset=utf-8' },
-      '/index.html': { file: 'index.html', type: 'text/html; charset=utf-8' },
-      '/index.js': { file: 'index.js', type: 'application/javascript; charset=utf-8' },
-      '/index.css': { file: 'index.css', type: 'text/css; charset=utf-8' },
-      '/config.js': { file: 'config.js', type: 'application/javascript; charset=utf-8' },
-      '/admin.html': { file: 'admin.html', type: 'text/html; charset=utf-8' },
-      '/admin.js': { file: 'admin.js', type: 'application/javascript; charset=utf-8' },
-      '/admin.css': { file: 'admin.css', type: 'text/css; charset=utf-8' },
-      '/checkout.html': { file: 'checkout.html', type: 'text/html; charset=utf-8' },
-      '/quest.html': { file: 'quest.html', type: 'text/html; charset=utf-8' },
-      '/questionnaire.js': { file: 'questionnaire.js', type: 'application/javascript; charset=utf-8' },
-      '/questionnaire.css': { file: 'questionnaire.css', type: 'text/css; charset=utf-8' }
+      '/': { file: 'index.html', type: CONTENT_TYPES.html },
+      '/index.html': { file: 'index.html', type: CONTENT_TYPES.html },
+      '/index.js': { file: 'index.js', type: CONTENT_TYPES.js },
+      '/index.css': { file: 'index.css', type: CONTENT_TYPES.css },
+      '/config.js': { file: 'config.js', type: CONTENT_TYPES.js },
+      '/admin.html': { file: 'admin.html', type: CONTENT_TYPES.html },
+      '/admin.js': { file: 'admin.js', type: CONTENT_TYPES.js },
+      '/admin.css': { file: 'admin.css', type: CONTENT_TYPES.css },
+      '/checkout.html': { file: 'checkout.html', type: CONTENT_TYPES.html },
+      '/quest.html': { file: 'quest.html', type: CONTENT_TYPES.html },
+      '/questionnaire.js': { file: 'questionnaire.js', type: CONTENT_TYPES.js },
+      '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css }
     };
     
     try {
@@ -116,7 +123,8 @@ export default {
  * @param {object} env - Environment with KV bindings
  * @param {string} filename - Name of the file to serve
  * @param {string} contentType - MIME type for the response
- * @returns {Response}
+ * @returns {Response} Response object with file content
+ * @throws {UserFacingError} When file is not found in storage (404)
  */
 async function serveStaticFile(env, filename, contentType) {
     const fileContent = await env.PAGE_CONTENT.get(`static_${filename}`);

@@ -27,7 +27,9 @@ const FILES_TO_UPLOAD = [
     { file: 'questionnaire.css', key: 'static_questionnaire.css' },
 ];
 
-// KV Namespace details from wrangler.toml or environment
+// KV Namespace details
+// Note: The default namespace ID matches the one in wrangler.toml for this project
+// Override with CLOUDFLARE_KV_NAMESPACE_ID environment variable if using a different namespace
 const KV_NAMESPACE_ID = process.env.CLOUDFLARE_KV_NAMESPACE_ID || 'd220db696e414b7cb3da2b19abd53d0f';
 const KV_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const KV_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
