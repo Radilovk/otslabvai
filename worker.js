@@ -30,38 +30,67 @@ export default {
 
     const url = new URL(request.url);
     
+    // Content type constants
+    const CONTENT_TYPES = {
+      html: 'text/html; charset=utf-8',
+      js: 'application/javascript; charset=utf-8',
+      css: 'text/css; charset=utf-8'
+    };
+    
+    // Static file configuration
+    const STATIC_FILES = {
+      '/': { file: 'index.html', type: CONTENT_TYPES.html },
+      '/index.html': { file: 'index.html', type: CONTENT_TYPES.html },
+      '/index.js': { file: 'index.js', type: CONTENT_TYPES.js },
+      '/index.css': { file: 'index.css', type: CONTENT_TYPES.css },
+      '/config.js': { file: 'config.js', type: CONTENT_TYPES.js },
+      '/admin.html': { file: 'admin.html', type: CONTENT_TYPES.html },
+      '/admin.js': { file: 'admin.js', type: CONTENT_TYPES.js },
+      '/admin.css': { file: 'admin.css', type: CONTENT_TYPES.css },
+      '/checkout.html': { file: 'checkout.html', type: CONTENT_TYPES.html },
+      '/quest.html': { file: 'quest.html', type: CONTENT_TYPES.html },
+      '/questionnaire.js': { file: 'questionnaire.js', type: CONTENT_TYPES.js },
+      '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css }
+    };
+    
     try {
       let response;
-      // --- МОДИФИЦИРАН РУТЕР ---
-      switch (url.pathname) {
-        case '/quest-submit':
-          response = await handleQuestSubmit(request, env, ctx);
-          break;
-        
-        case '/page_content.json':
-          // Този ендпойнт вече ще обработва GET и POST
-          if (request.method === 'GET') {
-              response = await handleGetPageContent(request, env);
-          } else if (request.method === 'POST') {
-              response = await handleSavePageContent(request, env, ctx);
-          } else {
-              throw new UserFacingError('Method Not Allowed.', 405);
-          }
-          break;
-        
-        case '/orders':
-            // --- НОВ ЕНДПОЙНТ ЗА ПОРЪЧКИ ---
+      
+      // Check if it's a static file request
+      if (STATIC_FILES[url.pathname]) {
+        const { file, type } = STATIC_FILES[url.pathname];
+        response = await serveStaticFile(env, file, type);
+      }
+      // API endpoints
+      else {
+        switch (url.pathname) {
+          case '/quest-submit':
+            response = await handleQuestSubmit(request, env, ctx);
+            break;
+          
+          case '/page_content.json':
             if (request.method === 'GET') {
-                response = await handleGetOrders(request, env);
-            } else if (request.method === 'PUT') {
-                response = await handleUpdateOrderStatus(request, env, ctx);
+                response = await handleGetPageContent(request, env);
+            } else if (request.method === 'POST') {
+                response = await handleSavePageContent(request, env, ctx);
             } else {
                 throw new UserFacingError('Method Not Allowed.', 405);
             }
             break;
           
-        default:
-          throw new UserFacingError('Not Found', 404);
+          case '/orders':
+              if (request.method === 'GET') {
+                  response = await handleGetOrders(request, env);
+              } else if (request.method === 'PUT') {
+                  response = await handleUpdateOrderStatus(request, env, ctx);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
+            
+          default:
+            throw new UserFacingError('Not Found', 404);
+        }
       }
 
       // Добавяме CORS хедъри към всеки успешен отговор
@@ -88,6 +117,28 @@ export default {
 
 
 // --- СПЕЦИФИЧНИ ОБРАБОТЧИЦИ НА ЕНДПОЙНТИ ---
+
+/**
+ * Serves static files from KV storage
+ * @param {object} env - Environment with KV bindings
+ * @param {string} filename - Name of the file to serve
+ * @param {string} contentType - MIME type for the response
+ * @returns {Response} Response object with file content
+ * @throws {UserFacingError} When file is not found in storage (404)
+ */
+async function serveStaticFile(env, filename, contentType) {
+    const fileContent = await env.PAGE_CONTENT.get(`static_${filename}`);
+    if (fileContent === null) {
+        throw new UserFacingError(`File ${filename} not found in storage.`, 404);
+    }
+    return new Response(fileContent, {
+        status: 200,
+        headers: { 
+            'Content-Type': contentType,
+            'Cache-Control': 'public, max-age=3600'
+        }
+    });
+}
 
 /**
  * Handles GET /page_content.json
