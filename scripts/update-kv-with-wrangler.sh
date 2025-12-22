@@ -21,16 +21,16 @@ if [ -z "$KV_ID" ]; then
 fi
 
 echo "📦 KV Namespace ID: $KV_ID"
-echo "📝 Uploading content from page_content_mock.json..."
+echo "📝 Uploading content from backend/page_content.json..."
 
-# Upload the mock data to KV
-wrangler kv:key put --namespace-id="$KV_ID" "page_content" --path="page_content_mock.json"
+# Upload the backend data to KV
+wrangler kv:key put --namespace-id="$KV_ID" "page_content" --path="backend/page_content.json"
 
 if [ $? -eq 0 ]; then
     echo "✅ Success! Page content updated."
     echo ""
     echo "📋 The following content was uploaded:"
-    cat page_content_mock.json | jq -r '.settings | "   Site Name: \(.site_name)\n   Site Slogan: \(.site_slogan)"'
+    cat backend/page_content.json | jq -r '.settings | "   Site Name: \(.site_name)\n   Site Slogan: \(.site_slogan)"'
 else
     echo "❌ Error: Failed to update KV content"
     exit 1
