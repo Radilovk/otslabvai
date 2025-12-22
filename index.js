@@ -91,17 +91,18 @@ const generateProductCard = (product) => {
     const productId = product.product_id; // Използваме надеждния уникален ID
     const cardDetailsId = `card-details-${productId}`;
 
-    // Generate About Content section if available
+    // Generate About Content section if available (Lipolor style)
     const aboutContentHTML = publicData.about_content ? `
-        <div class="product-about-section section-padding">
+        <div class="product-about-section">
             <h3>${escapeHtml(publicData.about_content.title || 'За продукта')}</h3>
             <p>${escapeHtml(publicData.about_content.description)}</p>
             ${publicData.about_content.benefits && publicData.about_content.benefits.length > 0 ? `
-                <div class="product-benefits">
+                <div class="product-benefits-full">
                     ${publicData.about_content.benefits.map(benefit => `
                         <div class="benefit-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="20 6 9 17 4 12"></polyline>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
                             </svg>
                             <div>
                                 <h4>${escapeHtml(benefit.title)}</h4>
@@ -114,13 +115,14 @@ const generateProductCard = (product) => {
         </div>
     ` : '';
 
-    // Generate Ingredients section if available
+    // Generate Ingredients section if available (Lipolor style with flip cards)
     const ingredientsHTML = publicData.ingredients && publicData.ingredients.length > 0 ? `
-        <div class="product-ingredients-section section-padding">
-            <h3>Съставки</h3>
-            <div class="ingredients-grid-mini">
+        <div class="product-ingredients-section">
+            <h3>Активни съставки</h3>
+            <p class="section-subtitle">Натиснете на всяка съставка, за да разкриете нейната роля в формулата</p>
+            <div class="ingredients-grid-full">
                 ${publicData.ingredients.map(ingredient => `
-                    <div class="ingredient-card-mini" tabindex="0">
+                    <div class="ingredient-card-full" tabindex="0">
                         <div class="card-inner">
                             <div class="card-front">
                                 <h5>${escapeHtml(ingredient.name)}</h5>
@@ -136,18 +138,18 @@ const generateProductCard = (product) => {
         </div>
     ` : '';
 
-    // Generate FAQ section if available
+    // Generate FAQ section if available (Lipolor style)
     const faqHTML = publicData.faq && publicData.faq.length > 0 ? `
-        <div class="product-faq-section section-padding">
+        <div class="product-faq-section">
             <h3>Често задавани въпроси</h3>
-            <div class="faq-container-mini">
+            <div class="faq-container-full">
                 ${publicData.faq.map(faq => `
-                    <div class="faq-item-mini">
-                        <div class="faq-question-mini" role="button" aria-expanded="false" tabindex="0">
+                    <div class="faq-item-full">
+                        <div class="faq-question-full" role="button" aria-expanded="false" tabindex="0">
                             <h4>${escapeHtml(faq.question)}</h4>
-                            <span class="faq-toggle-mini">+</span>
+                            <span class="faq-toggle-full">+</span>
                         </div>
-                        <div class="faq-answer-mini">
+                        <div class="faq-answer-full">
                             <p>${escapeHtml(faq.answer)}</p>
                         </div>
                     </div>
@@ -691,8 +693,8 @@ function initializePageInteractions() {
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in-up').forEach(el => scrollObserver.observe(el));
 
-    // --- Ingredient Card Flip (Lipolor style) ---
-    document.querySelectorAll('.ingredient-card, .ingredient-card-mini').forEach(card => {
+    // --- Ingredient Card Flip (Lipolor style) - supports both mini and full versions ---
+    document.querySelectorAll('.ingredient-card, .ingredient-card-mini, .ingredient-card-full').forEach(card => {
         const toggleFlip = () => {
             card.classList.toggle('is-flipped');
         };
@@ -708,7 +710,7 @@ function initializePageInteractions() {
         });
     });
 
-    // --- Product Detail FAQ Accordion ---
+    // --- Product Detail FAQ Accordion (Mini version) ---
     document.querySelectorAll('.faq-item-mini').forEach(item => {
         const question = item.querySelector('.faq-question-mini');
         
@@ -724,6 +726,51 @@ function initializePageInteractions() {
                     if (otherItem !== item) {
                         otherItem.classList.remove('active');
                         const otherQuestion = otherItem.querySelector('.faq-question-mini');
+                        if (otherQuestion) {
+                            otherQuestion.setAttribute('aria-expanded', 'false');
+                        }
+                    }
+                });
+            }
+            
+            // Toggle current item
+            if (isActive) {
+                item.classList.remove('active');
+                question.setAttribute('aria-expanded', 'false');
+            } else {
+                item.classList.add('active');
+                question.setAttribute('aria-expanded', 'true');
+            }
+        };
+        
+        // Click event
+        question.addEventListener('click', toggleFAQ);
+        
+        // Keyboard event for accessibility
+        question.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleFAQ();
+            }
+        });
+    });
+
+    // --- Product Detail FAQ Accordion (Full version - Lipolor style) ---
+    document.querySelectorAll('.faq-item-full').forEach(item => {
+        const question = item.querySelector('.faq-question-full');
+        
+        if (!question) return;
+        
+        const toggleFAQ = () => {
+            const isActive = item.classList.contains('active');
+            
+            // Close all other FAQ items in the same product card
+            const parentCard = item.closest('.product-card');
+            if (parentCard) {
+                parentCard.querySelectorAll('.faq-item-full').forEach(otherItem => {
+                    if (otherItem !== item) {
+                        otherItem.classList.remove('active');
+                        const otherQuestion = otherItem.querySelector('.faq-question-full');
                         if (otherQuestion) {
                             otherQuestion.setAttribute('aria-expanded', 'false');
                         }

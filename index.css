@@ -2672,3 +2672,286 @@ body.modal-open { overflow: hidden; }
         gap: 10px;
     }
 }
+
+/* ======================================================= */
+/*   PRODUCT EXPANSION SECTIONS (LIPOLOR DESIGN)          */
+/* ======================================================= */
+
+/* About Content Section for Products */
+.product-about-section {
+    padding: 40px 30px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    margin-top: 20px;
+}
+
+.product-about-section h3 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+    font-family: var(--font-primary);
+}
+
+.product-about-section p {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin-bottom: 30px;
+}
+
+/* Product Benefits Grid (larger version) */
+.product-benefits-full {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.product-benefits-full .benefit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.product-benefits-full .benefit-item svg {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    color: var(--accent);
+}
+
+.product-benefits-full .benefit-item h4 {
+    color: var(--accent-secondary);
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    font-family: var(--font-primary);
+    font-weight: 600;
+}
+
+.product-benefits-full .benefit-item p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin: 0;
+}
+
+/* Ingredients Section (Full Version with Flip Cards) */
+.product-ingredients-section {
+    padding: 40px 30px;
+    margin-top: 20px;
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+}
+
+.product-ingredients-section h3 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    color: var(--text-primary);
+    font-family: var(--font-primary);
+    text-align: center;
+}
+
+.product-ingredients-section .section-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+    font-size: 1rem;
+}
+
+.ingredients-grid-full {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+@media (min-width: 768px) {
+    .ingredients-grid-full {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .ingredients-grid-full {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.ingredient-card-full {
+    background-color: transparent;
+    height: 140px;
+    perspective: 1000px;
+    cursor: pointer;
+}
+
+.ingredient-card-full .card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    border-radius: var(--border-radius);
+}
+
+.ingredient-card-full:hover .card-inner,
+.ingredient-card-full:focus .card-inner,
+.ingredient-card-full.is-flipped .card-inner {
+    transform: rotateY(180deg);
+}
+
+.ingredient-card-full .card-front,
+.ingredient-card-full .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-radius: var(--border-radius);
+}
+
+.ingredient-card-full .card-front {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.ingredient-card-full .card-front h5 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: var(--accent);
+    font-family: var(--font-primary);
+    font-weight: 600;
+}
+
+.ingredient-card-full .card-front span {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.ingredient-card-full .card-back {
+    background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+    color: var(--color-white);
+    transform: rotateY(180deg);
+}
+
+.ingredient-card-full .card-back p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--color-white);
+}
+
+/* FAQ Section (Full Version) */
+.product-faq-section {
+    padding: 40px 30px;
+    margin-top: 20px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+.product-faq-section h3 {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+    color: var(--text-primary);
+    font-family: var(--font-primary);
+    text-align: center;
+}
+
+.faq-container-full {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq-item-full {
+    background: var(--bg-primary);
+    margin-bottom: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.faq-question-full {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+    user-select: none;
+}
+
+.faq-question-full:hover {
+    background-color: var(--bg-secondary);
+}
+
+.faq-question-full h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    flex: 1;
+    font-family: var(--font-secondary);
+}
+
+.faq-toggle-full {
+    font-size: 1.5rem;
+    color: var(--accent);
+    font-weight: 700;
+    transition: transform var(--transition-speed);
+    min-width: 30px;
+    text-align: center;
+}
+
+.faq-item-full.active .faq-toggle-full {
+    transform: rotate(45deg);
+}
+
+.faq-answer-full {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+    padding: 0 25px;
+}
+
+.faq-item-full.active .faq-answer-full {
+    max-height: 1000px;
+    padding: 0 25px 20px;
+}
+
+.faq-answer-full p {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin: 0;
+}
+
+/* Responsive adjustments for expansion sections */
+@media (max-width: 768px) {
+    .product-about-section,
+    .product-ingredients-section,
+    .product-faq-section {
+        padding: 30px 20px;
+    }
+    
+    .product-about-section h3,
+    .product-ingredients-section h3,
+    .product-faq-section h3 {
+        font-size: 1.5rem;
+    }
+    
+    .product-benefits-full .benefit-item {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .ingredients-grid-full {
+        grid-template-columns: 1fr;
+    }
+    
+    .ingredient-card-full {
+        height: 120px;
+    }
+}
