@@ -142,11 +142,12 @@ The HTML files were updated for the new site, but the KV storage was not updated
 
 ### Mock Data Usage
 
-The `page_content_mock.json` file contains the correct "ОТСЛАБВАНЕ" content and should be treated as the source of truth for the current site design.
+The `page_content_mock.json` file (in the repository root) contains the correct "ОТСЛАБВАНЕ" content and is used as the source of truth for generating the backend content file.
+The worker/backend reads from `backend/page_content.json` (or from KV populated from that file), which must stay in sync with `page_content_mock.json`.
 
 ### Content Customization
 
 If you need to customize the content further:
-1. Edit `page_content_mock.json`
-2. Run the update script again
-3. Or use the admin panel to make live changes
+1. Edit `page_content_mock.json` (source content)
+2. Run the update script to regenerate `backend/page_content.json` and/or update KV
+3. Or use the admin panel to make live changes to the backend content
