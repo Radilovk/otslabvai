@@ -12,8 +12,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read the mock data file
-const mockDataPath = path.join(__dirname, '..', 'page_content_mock.json');
+// Read the page content data file from the backend directory
+const mockDataPath = path.join(__dirname, '..', 'backend', 'page_content.json');
 const mockData = JSON.parse(fs.readFileSync(mockDataPath, 'utf8'));
 
 // API URL from config
