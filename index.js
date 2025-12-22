@@ -100,7 +100,7 @@ const generateProductCard = (product) => {
                 <div class="product-benefits-full">
                     ${publicData.about_content.benefits.map(benefit => `
                         <div class="benefit-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
                             </svg>
@@ -143,17 +143,20 @@ const generateProductCard = (product) => {
         <div class="product-faq-section">
             <h3>Често задавани въпроси</h3>
             <div class="faq-container-full">
-                ${publicData.faq.map(faq => `
+                ${publicData.faq.map((faq, index) => {
+                    const faqId = `faq-${productId}-${index}`;
+                    return `
                     <div class="faq-item-full">
-                        <div class="faq-question-full" role="button" aria-expanded="false" tabindex="0">
+                        <div class="faq-question-full" role="button" aria-expanded="false" aria-controls="${faqId}" tabindex="0">
                             <h4>${escapeHtml(faq.question)}</h4>
                             <span class="faq-toggle-full">+</span>
                         </div>
-                        <div class="faq-answer-full">
+                        <div class="faq-answer-full" id="${faqId}">
                             <p>${escapeHtml(faq.answer)}</p>
                         </div>
                     </div>
-                `).join('')}
+                `;
+                }).join('')}
             </div>
         </div>
     ` : '';
