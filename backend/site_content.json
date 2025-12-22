@@ -1,25 +1,25 @@
 {
   "settings": {
-    "site_name": "BIOCODE",
-    "site_slogan": "the science of life",
+    "site_name": "ОТСЛАБВАНЕ",
+    "site_slogan": "Здравословен начин на живот",
     "logo_url": "https://radilovk.github.io/face/assets/logo.png"
   },
   "navigation": [
     {
-      "text": "Anti-Aging",
-      "link": "#anti-aging"
+      "text": "Изгаряне на мазнини",
+      "link": "#fat-burners"
     },
     {
-      "text": "Невропептиди",
-      "link": "#neuro"
+      "text": "Апетит контрол",
+      "link": "#appetite-control"
     },
     {
-      "text": "Растеж",
-      "link": "#growth"
+      "text": "Метаболизъм",
+      "link": "#metabolism"
     },
     {
-      "text": "Лайфстайл",
-      "link": "#lifestyle"
+      "text": "Детокс",
+      "link": "#detox"
     },
     {
       "text": "За нас",
@@ -31,12 +31,12 @@
       "type": "info_card",
       "component_id": "comp-uuid-infocard-001",
       "id": "about-us",
-      "title": "Науката зад BIOCODE",
+      "title": "Науката зад отслабването",
       "image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
-      "content": "Нашата мисия е да демистифицираме света на регенеративната медицина. Всеки продукт в нашето портфолио е подкрепен от научни изследвания и е избран заради неговия потенциал да оптимизира човешкото здраве на клетъчно ниво.\n\nНие вярваме в информирания избор и предоставяме прозрачна информация, за да можете да вземете най-доброто решение за вашето тяло и ум.",
+      "content": "Нашата мисия е да ви помогнем да постигнете здравословно тегло чрез научно доказани продукти и решения. Всеки продукт в нашето портфолио е избран заради неговата ефективност и безопасност.\n\nНие вярваме в балансирания подход към отслабването и предоставяме качествени продукти, които подпомагат вашите цели за здравословен начин на живот.",
       "button": {
-        "text": "Разгледай изследванията",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/"
+        "text": "Разгледай продуктите",
+        "url": "#fat-burners"
       },
       "options": {
         "image_align": "right"
@@ -45,13 +45,13 @@
     {
       "type": "hero_banner",
       "component_id": "comp-uuid-hero-001",
-      "title": "Интерактивно Портфолио",
-      "subtitle": "Пептиди и Регенеративна Медицина"
+      "title": "Ефективни Решения за Отслабване",
+      "subtitle": "Качествени продукти за контрол на теглото"
     },
     {
-      "title": "BIOCODE - индивидуален анализатор",
+      "title": "Индивидуален план за отслабване",
       "image": "https://radilovk.github.io/face/assets/analyzis.png",
-      "content": "Създай индивидуален протокол и препоръки",
+      "content": "Създай персонализиран план за постигане на целите си",
       "button": {
         "text": "Начало",
         "url": "https://radilovk.github.io/port/quest.html"
@@ -78,16 +78,16 @@
             "url": "#"
           },
           {
-            "text": "Anti-Aging",
-            "url": "#anti-aging"
+            "text": "Изгаряне на мазнини",
+            "url": "#fat-burners"
           },
           {
-            "text": "Невропептиди",
-            "url": "#neuro"
+            "text": "Апетит контрол",
+            "url": "#appetite-control"
           },
           {
-            "text": "Растеж",
-            "url": "#growth"
+            "text": "Метаболизъм",
+            "url": "#metabolism"
           }
         ]
       },
@@ -110,6 +110,6 @@
         ]
       }
     ],
-    "copyright_text": "© 2025 BIOCODE. Всички права запазени."
+    "copyright_text": "© 2025 ОТСЛАБВАНЕ. Всички права запазени."
   }
 }
