@@ -44,6 +44,7 @@ Backend worker-ът на Cloudflare връща грешка "Not Found" защо
    ```bash
    export CLOUDFLARE_ACCOUNT_ID="your-account-id"
    export CLOUDFLARE_API_TOKEN="your-api-token"
+   export CLOUDFLARE_KV_NAMESPACE_ID="your-kv-namespace-id"  # Optional, defaults to d220db696e414b7cb3da2b19abd53d0f
    ```
 
 2. **Стартирайте скрипта**:

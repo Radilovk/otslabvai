@@ -30,83 +30,60 @@ export default {
 
     const url = new URL(request.url);
     
+    // Static file configuration
+    const STATIC_FILES = {
+      '/': { file: 'index.html', type: 'text/html; charset=utf-8' },
+      '/index.html': { file: 'index.html', type: 'text/html; charset=utf-8' },
+      '/index.js': { file: 'index.js', type: 'application/javascript; charset=utf-8' },
+      '/index.css': { file: 'index.css', type: 'text/css; charset=utf-8' },
+      '/config.js': { file: 'config.js', type: 'application/javascript; charset=utf-8' },
+      '/admin.html': { file: 'admin.html', type: 'text/html; charset=utf-8' },
+      '/admin.js': { file: 'admin.js', type: 'application/javascript; charset=utf-8' },
+      '/admin.css': { file: 'admin.css', type: 'text/css; charset=utf-8' },
+      '/checkout.html': { file: 'checkout.html', type: 'text/html; charset=utf-8' },
+      '/quest.html': { file: 'quest.html', type: 'text/html; charset=utf-8' },
+      '/questionnaire.js': { file: 'questionnaire.js', type: 'application/javascript; charset=utf-8' },
+      '/questionnaire.css': { file: 'questionnaire.css', type: 'text/css; charset=utf-8' }
+    };
+    
     try {
       let response;
-      // --- МОДИФИЦИРАН РУТЕР ---
-      switch (url.pathname) {
-        case '/':
-        case '/index.html':
-          response = await serveStaticFile(env, 'index.html', 'text/html; charset=utf-8');
-          break;
-        
-        case '/index.js':
-          response = await serveStaticFile(env, 'index.js', 'application/javascript; charset=utf-8');
-          break;
-        
-        case '/index.css':
-          response = await serveStaticFile(env, 'index.css', 'text/css; charset=utf-8');
-          break;
-        
-        case '/config.js':
-          response = await serveStaticFile(env, 'config.js', 'application/javascript; charset=utf-8');
-          break;
-        
-        case '/admin.html':
-          response = await serveStaticFile(env, 'admin.html', 'text/html; charset=utf-8');
-          break;
-        
-        case '/admin.js':
-          response = await serveStaticFile(env, 'admin.js', 'application/javascript; charset=utf-8');
-          break;
-        
-        case '/admin.css':
-          response = await serveStaticFile(env, 'admin.css', 'text/css; charset=utf-8');
-          break;
-        
-        case '/checkout.html':
-          response = await serveStaticFile(env, 'checkout.html', 'text/html; charset=utf-8');
-          break;
-        
-        case '/quest.html':
-          response = await serveStaticFile(env, 'quest.html', 'text/html; charset=utf-8');
-          break;
-        
-        case '/questionnaire.js':
-          response = await serveStaticFile(env, 'questionnaire.js', 'application/javascript; charset=utf-8');
-          break;
-        
-        case '/questionnaire.css':
-          response = await serveStaticFile(env, 'questionnaire.css', 'text/css; charset=utf-8');
-          break;
-        
-        case '/quest-submit':
-          response = await handleQuestSubmit(request, env, ctx);
-          break;
-        
-        case '/page_content.json':
-          // Този ендпойнт вече ще обработва GET и POST
-          if (request.method === 'GET') {
-              response = await handleGetPageContent(request, env);
-          } else if (request.method === 'POST') {
-              response = await handleSavePageContent(request, env, ctx);
-          } else {
-              throw new UserFacingError('Method Not Allowed.', 405);
-          }
-          break;
-        
-        case '/orders':
-            // --- НОВ ЕНДПОЙНТ ЗА ПОРЪЧКИ ---
+      
+      // Check if it's a static file request
+      if (STATIC_FILES[url.pathname]) {
+        const { file, type } = STATIC_FILES[url.pathname];
+        response = await serveStaticFile(env, file, type);
+      }
+      // API endpoints
+      else {
+        switch (url.pathname) {
+          case '/quest-submit':
+            response = await handleQuestSubmit(request, env, ctx);
+            break;
+          
+          case '/page_content.json':
             if (request.method === 'GET') {
-                response = await handleGetOrders(request, env);
-            } else if (request.method === 'PUT') {
-                response = await handleUpdateOrderStatus(request, env, ctx);
+                response = await handleGetPageContent(request, env);
+            } else if (request.method === 'POST') {
+                response = await handleSavePageContent(request, env, ctx);
             } else {
                 throw new UserFacingError('Method Not Allowed.', 405);
             }
             break;
           
-        default:
-          throw new UserFacingError('Not Found', 404);
+          case '/orders':
+              if (request.method === 'GET') {
+                  response = await handleGetOrders(request, env);
+              } else if (request.method === 'PUT') {
+                  response = await handleUpdateOrderStatus(request, env, ctx);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
+            
+          default:
+            throw new UserFacingError('Not Found', 404);
+        }
       }
 
       // Добавяме CORS хедъри към всеки успешен отговор
