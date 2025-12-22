@@ -2916,7 +2916,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .faq-item-full.active .faq-answer-full {
-    max-height: 1000px;
+    max-height: 2000px; /* Increased for longer answers */
     padding: 0 25px 20px;
 }
 

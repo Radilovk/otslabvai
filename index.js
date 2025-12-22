@@ -710,95 +710,56 @@ function initializePageInteractions() {
         });
     });
 
-    // --- Product Detail FAQ Accordion (Mini version) ---
-    document.querySelectorAll('.faq-item-mini').forEach(item => {
-        const question = item.querySelector('.faq-question-mini');
-        
-        if (!question) return;
-        
-        const toggleFAQ = () => {
-            const isActive = item.classList.contains('active');
+    // --- FAQ Accordion Handler (Reusable function) ---
+    function initFAQAccordion(itemSelector, questionSelector) {
+        document.querySelectorAll(itemSelector).forEach(item => {
+            const question = item.querySelector(questionSelector);
             
-            // Close all other FAQ items in the same product card
-            const parentCard = item.closest('.product-card');
-            if (parentCard) {
-                parentCard.querySelectorAll('.faq-item-mini').forEach(otherItem => {
-                    if (otherItem !== item) {
-                        otherItem.classList.remove('active');
-                        const otherQuestion = otherItem.querySelector('.faq-question-mini');
-                        if (otherQuestion) {
-                            otherQuestion.setAttribute('aria-expanded', 'false');
+            if (!question) return;
+            
+            const toggleFAQ = () => {
+                const isActive = item.classList.contains('active');
+                
+                // Close all other FAQ items in the same product card
+                const parentCard = item.closest('.product-card');
+                if (parentCard) {
+                    parentCard.querySelectorAll(itemSelector).forEach(otherItem => {
+                        if (otherItem !== item) {
+                            otherItem.classList.remove('active');
+                            const otherQuestion = otherItem.querySelector(questionSelector);
+                            if (otherQuestion) {
+                                otherQuestion.setAttribute('aria-expanded', 'false');
+                            }
                         }
-                    }
-                });
-            }
+                    });
+                }
+                
+                // Toggle current item
+                if (isActive) {
+                    item.classList.remove('active');
+                    question.setAttribute('aria-expanded', 'false');
+                } else {
+                    item.classList.add('active');
+                    question.setAttribute('aria-expanded', 'true');
+                }
+            };
             
-            // Toggle current item
-            if (isActive) {
-                item.classList.remove('active');
-                question.setAttribute('aria-expanded', 'false');
-            } else {
-                item.classList.add('active');
-                question.setAttribute('aria-expanded', 'true');
-            }
-        };
-        
-        // Click event
-        question.addEventListener('click', toggleFAQ);
-        
-        // Keyboard event for accessibility
-        question.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                toggleFAQ();
-            }
+            // Click event
+            question.addEventListener('click', toggleFAQ);
+            
+            // Keyboard event for accessibility
+            question.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleFAQ();
+                }
+            });
         });
-    });
+    }
 
-    // --- Product Detail FAQ Accordion (Full version - Lipolor style) ---
-    document.querySelectorAll('.faq-item-full').forEach(item => {
-        const question = item.querySelector('.faq-question-full');
-        
-        if (!question) return;
-        
-        const toggleFAQ = () => {
-            const isActive = item.classList.contains('active');
-            
-            // Close all other FAQ items in the same product card
-            const parentCard = item.closest('.product-card');
-            if (parentCard) {
-                parentCard.querySelectorAll('.faq-item-full').forEach(otherItem => {
-                    if (otherItem !== item) {
-                        otherItem.classList.remove('active');
-                        const otherQuestion = otherItem.querySelector('.faq-question-full');
-                        if (otherQuestion) {
-                            otherQuestion.setAttribute('aria-expanded', 'false');
-                        }
-                    }
-                });
-            }
-            
-            // Toggle current item
-            if (isActive) {
-                item.classList.remove('active');
-                question.setAttribute('aria-expanded', 'false');
-            } else {
-                item.classList.add('active');
-                question.setAttribute('aria-expanded', 'true');
-            }
-        };
-        
-        // Click event
-        question.addEventListener('click', toggleFAQ);
-        
-        // Keyboard event for accessibility
-        question.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                toggleFAQ();
-            }
-        });
-    });
+    // Initialize all FAQ accordion types
+    initFAQAccordion('.faq-item-mini', '.faq-question-mini');
+    initFAQAccordion('.faq-item-full', '.faq-question-full');
 
     // --- FAQ Accordion (Lipolor style) ---
     document.querySelectorAll('.faq-item').forEach(item => {
