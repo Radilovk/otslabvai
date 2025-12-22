@@ -1,40 +1,77 @@
 <!DOCTYPE html>
-<html lang="bg" data-theme="dark">
+<html lang="bg" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Политика и правила - BIOCODE</title>
-    <meta name="description" content="Политика и правила за поверителност на BIOCODE.">
-    <meta property="og:title" content="Политика и правила - BIOCODE">
-    <meta property="og:description" content="Политика и правила за поверителност на BIOCODE.">
-    <meta property="og:image" content="img/logo.svg">
+    <title>Политика и правила - Продукти за Отслабване</title>
+    <meta name="description" content="Политика и правила за поверителност.">
+    <meta property="og:title" content="Политика и правила">
+    <meta property="og:description" content="Политика и правила за поверителност.">
+    <meta property="og:image" content="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="bg_BG">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
+    
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('theme');
+                var theme = savedTheme || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
 </head>
 <body>
     <header class="main-header">
         <div class="header-container">
             <a href="index.html" class="logo-container" id="header-logo-link">
-                <img src="" alt="BIOCODE Logo" id="header-logo-img">
+                <img src="" alt="Лого" id="header-logo-img" style="display: none;">
                 <div>
-                    <span class="brand-name" id="header-brand-name">BIOCODE</span>
+                    <span class="brand-name" id="header-brand-name">ОТСЛАБВАНЕ</span>
+                    <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
                 </div>
             </a>
             <nav class="main-nav">
                 <ul class="nav-links" id="main-nav-links">
                     <li><a href="index.html">Начало</a></li>
-                    <li><a href="checkout.html">Количка</a></li>
+                    <li>
+                        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Превключи тема">
+                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </button>
+                    </li>
+                    <li><a href="checkout.html" class="cart-link">Количка (<span id="cart-count">0</span>)</a></li>
                 </ul>
             </nav>
+            <button class="menu-toggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </header>
+    <div class="nav-overlay"></div>
 
-    <main class="container" style="padding-top:var(--header-height);">
-        <h1 style="font-family:'Playfair Display',serif;margin-bottom:1rem;">Политика и правила</h1>
+    <main class="container" style="padding-top:2rem; padding-bottom: 2rem;">
+        <h1 style="font-family: var(--font-primary); margin-bottom:1rem;">Политика и правила</h1>
         <p>Тази страница описва основните правила за ползване на магазина BIOCODE, както и нашата политика за поверителност. При посещение на сайта и извършване на поръчка се съгласявате с посочените по-долу принципи.</p>
         
         <h2>1. Администратор на лични данни</h2>
@@ -61,8 +98,19 @@
         <p>Препоръчваме да се запознаете и с <a href="shipping.html">условията за доставка</a> и <a href="terms.html">общите условия</a>.</p>
     </main>
 
-    <footer class="main-footer" style="padding:2rem 0;text-align:center;">
-        <a href="index.html" class="btn-primary">Връщане към начална страница</a>
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid" id="footer-grid-container">
+                <!-- Футър колоните ще бъдат генерирани от JS -->
+            </div>
+            <div class="footer-bottom" id="footer-copyright-container">
+                <!-- Copyright текстът ще бъде генериран от JS -->
+            </div>
+        </div>
     </footer>
+
+    <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
+    
+    <script type="module" src="index.js"></script>
 </body>
 </html>
