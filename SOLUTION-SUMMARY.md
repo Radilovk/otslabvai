@@ -92,7 +92,7 @@ npm run update-kv
 2. Workers & Pages → KV
 3. Изберете `PAGE_CONTENT` namespace
 4. Намерете ключа `page_content`
-5. Копирайте съдържанието от `page_content_mock.json`
+5. Копирайте съдържанието от `backend/page_content.json`
 6. Поставете го като стойност
 7. Запазете
 
