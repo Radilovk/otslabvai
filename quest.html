@@ -1,24 +1,36 @@
 <!doctype html>
-<html lang="bg" data-theme="dark">
+<html lang="bg" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Персонализиран Въпросник - BIOCODE</title>
-    <meta name="description" content="Персонализиран въпросник за препоръки от BIOCODE.">
-    <meta property="og:title" content="Персонализиран Въпросник - BIOCODE">
-    <meta property="og:description" content="Персонализиран въпросник за препоръки от BIOCODE.">
-    <meta property="og:image" content="img/logo.svg">
+    <title>Персонализиран Въпросник - Продукти за Отслабване</title>
+    <meta name="description" content="Персонализиран въпросник за препоръки.">
+    <meta property="og:title" content="Персонализиран Въпросник">
+    <meta property="og:description" content="Персонализиран въпросник за препоръки.">
+    <meta property="og:image" content="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="bg_BG">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Montserrat:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="index.css" />
 
     <link rel="stylesheet" href="questionnaire.css" />
+    
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('theme');
+                var theme = savedTheme || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
   </head>
   <body>
 

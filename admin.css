@@ -2,31 +2,58 @@
 /*          1. ГЛОБАЛНИ СТИЛОВЕ И ПРОМЕНЛИВИ (MOBILE-FIRST) */
 /* ======================================================= */
 :root {
-    --bg-main: #f4f7fa;
-    --bg-secondary: #ffffff;
+    /* Lipolor Color Palette */
+    --color-primary: #E4007C; /* Magenta */
+    --color-secondary: #00A99D; /* Teal */
+    --color-dark: #212529;
+    --color-light: #F8F9FA;
+    --color-white: #FFFFFF;
+    --color-gray: #6c757d;
+    
+    /* Typography */
+    --font-primary: 'Poppins', sans-serif;
+    --font-secondary: 'Montserrat', sans-serif;
+    
+    /* Light theme colors */
+    --bg-main: #F8F9FA;
+    --bg-secondary: #FFFFFF;
     --bg-light: #e9ecef;
-    --bg-accent: #e6f2ff;
+    --bg-accent: #fff7fb;
     --text-primary: #212529;
     --text-secondary: #6c757d;
-    --border-color: #dee2e6;
-    --primary-color: #007bff;
-    --primary-hover: #0056b3;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --primary-color: #E4007C;
+    --primary-hover: #c3006a;
     --danger-color: #dc3545;
     --danger-hover: #c82333;
-    --success-color: #28a745;
-    --success-hover: #218838;
+    --success-color: #00A99D;
+    --success-hover: #008d84;
     --warning-color: #ffc107;
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --border-radius: 8px;
+    --transition-speed: 0.3s ease;
+}
+
+/* Dark Theme Variables */
+[data-theme="dark"] {
+    --bg-main: #0D0F12;
+    --bg-secondary: #12151A;
+    --bg-light: #1a1e25;
+    --bg-accent: rgba(228, 0, 124, 0.08);
+    --text-primary: #E9ECEF;
+    --text-secondary: #A0AEC0;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 body {
-    font-family: var(--font-family);
+    font-family: var(--font-secondary);
     line-height: 1.6;
     margin: 0;
     padding: 1rem;
     background-color: var(--bg-main);
     color: var(--text-primary);
+    transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 .admin-container {
@@ -35,7 +62,8 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    color: #1a2533;
+    font-family: var(--font-primary);
+    color: var(--text-primary);
     margin: 0 0 1rem 0;
     line-height: 1.3;
 }
@@ -48,15 +76,73 @@ h2 {
     background-color: var(--bg-accent);
     border-left: 4px solid var(--primary-color);
     padding: 1rem 1.5rem;
-    border-radius: 4px;
+    border-radius: var(--border-radius);
     margin-bottom: 1.5rem;
     font-size: 0.9rem;
-    color: #004085;
+    color: var(--text-primary);
 }
 
 
 /* ======================================================= */
-/*          2. ХЕДЪР И БУТОНИ ЗА ЗАПИСВАНЕ                 */
+/*          2. THEME TOGGLE BUTTON                         */
+/* ======================================================= */
+.theme-toggle-btn {
+    background: transparent;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-speed);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.theme-toggle-btn:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    transform: rotate(180deg) scale(1.1);
+}
+
+.theme-toggle-btn svg {
+    position: absolute;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle-btn .sun-icon {
+    color: var(--primary-color);
+    opacity: 0;
+    transform: rotate(-90deg) scale(0);
+}
+
+.theme-toggle-btn .moon-icon {
+    color: var(--primary-color);
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+[data-theme="dark"] .theme-toggle-btn .sun-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+[data-theme="dark"] .theme-toggle-btn .moon-icon {
+    opacity: 0;
+    transform: rotate(90deg) scale(0);
+}
+
+.theme-toggle-btn:hover .sun-icon,
+.theme-toggle-btn:hover .moon-icon {
+    color: var(--color-white);
+}
+
+
+/* ======================================================= */
+/*          3. ХЕДЪР И БУТОНИ ЗА ЗАПИСВАНЕ                 */
 /* ======================================================= */
 .admin-header {
     display: flex;
@@ -83,30 +169,39 @@ h2 {
 .save-status.is-dirty { color: var(--primary-color); font-weight: 500; }
 
 /* ======================================================= */
-/*          3. ОСНОВНИ КОНТРОЛИ И БУТОНИ                   */
+/*          4. ОСНОВНИ КОНТРОЛИ И БУТОНИ                   */
 /* ======================================================= */
 .btn {
     cursor: pointer;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1.5rem;
     border: none;
-    border-radius: 5px;
-    font-weight: bold;
+    border-radius: 50px;
+    font-weight: 600;
     font-size: 0.9rem;
-    transition: all 0.2s;
+    transition: all var(--transition-speed);
     text-decoration: none;
     display: inline-block;
-    color: white;
+    color: var(--color-white);
     text-align: center;
+    font-family: var(--font-primary);
 }
 .btn.btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
 .btn-primary { background-color: var(--primary-color); }
-.btn-primary:hover:not(:disabled) { background-color: var(--primary-hover); }
+.btn-primary:hover:not(:disabled) { 
+    background-color: var(--primary-hover); 
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(228, 0, 124, 0.4);
+}
 .btn-danger { background-color: var(--danger-color); }
 .btn-danger:hover:not(:disabled) { background-color: var(--danger-hover); }
 .btn-secondary { background-color: #6c757d; }
 .btn-secondary:hover:not(:disabled) { background-color: #5a6268; }
 .btn-success { background-color: var(--success-color); }
-.btn-success:hover:not(:disabled) { background-color: var(--success-hover); }
+.btn-success:hover:not(:disabled) { 
+    background-color: var(--success-hover); 
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 169, 157, 0.4);
+}
 .btn:disabled { background-color: #adb5bd; cursor: not-allowed; opacity: 0.7; }
 .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.5rem; line-height: 1; color: var(--text-secondary); padding: 0.25rem 0.5rem; }
 .btn-icon.delete-nested-btn { color: var(--danger-color); }
@@ -122,7 +217,7 @@ h2 {
 .dropdown-menu a:hover { background-color: var(--bg-main); }
 
 /* ======================================================= */
-/*          4. ТАБОВ ИНТЕРФЕЙС                             */
+/*          5. ТАБОВ ИНТЕРФЕЙС                             */
 /* ======================================================= */
 .tab-nav {
     display: flex;

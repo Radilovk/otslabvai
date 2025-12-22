@@ -1,29 +1,62 @@
 <!DOCTYPE html>
-<html lang="bg">
+<html lang="bg" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIOCODE - Админ Панел</title>
-    <meta name="description" content="Административен панел за управление на BIOCODE.">
-    <meta property="og:title" content="BIOCODE - Админ Панел">
-    <meta property="og:description" content="Административен панел за управление на BIOCODE.">
-    <meta property="og:image" content="img/logo.svg">
+    <title>Админ Панел - Продукти за Отслабване</title>
+    <meta name="description" content="Административен панел за управление.">
+    <meta property="og:title" content="Админ Панел">
+    <meta property="og:description" content="Административен панел за управление.">
+    <meta property="og:image" content="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="bg_BG">
+    
+    <!-- Import consistent fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     
     <!-- Връзка към външния CSS файл -->
     <link rel="stylesheet" href="admin.css">
     
     <!-- Библиотека за Drag & Drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('theme');
+                var theme = savedTheme || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
 </head>
 <body>
 
     <div class="admin-container">
         <!-- ГЛАВЕН ХЕДЪР НА ПАНЕЛА -->
         <header class="admin-header">
-            <h1>BIOCODE Админ Панел</h1>
+            <h1>Админ Панел</h1>
             <div class="header-actions">
+                <button id="theme-toggle" class="theme-toggle-btn" aria-label="Превключи тема" style="width: auto; height: auto; margin-right: 1rem;">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
                 <span id="save-status" class="save-status">Всички промени са записани.</span>
                 <button id="save-all-btn" class="btn btn-success" disabled>Запиши промените</button>
             </div>

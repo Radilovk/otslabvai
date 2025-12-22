@@ -1,33 +1,43 @@
 <!DOCTYPE html>
-<html lang="bg" data-theme="dark">
+<html lang="bg" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Поръчка - BIOCODE</title>
-    <meta name="description" content="Формуляр за завършване на поръчката в BIOCODE.">
-    <meta property="og:title" content="Поръчка - BIOCODE">
-    <meta property="og:description" content="Формуляр за завършване на поръчката в BIOCODE.">
-    <meta property="og:image" content="img/logo.svg">
+    <title>Поръчка - Продукти за Отслабване</title>
+    <meta name="description" content="Формуляр за завършване на поръчката.">
+    <meta property="og:title" content="Поръчка - Продукти за Отслабване">
+    <meta property="og:description" content="Формуляр за завършване на поръчката.">
+    <meta property="og:image" content="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="bg_BG">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
+    
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('theme');
+                var theme = savedTheme || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
     <style>
-        :root {
-            --bg-primary-dark: #0D0F12; --bg-secondary-dark: #12151A; --text-primary-dark: #E9ECEF; --text-secondary-dark: #A0AEC0; --accent-dark: #00E0E0; --border-color-dark: rgba(255, 255, 255, 0.1); --error-color-dark: #ff5c5c;
+        /* Reuse global CSS variables from index.css */
+        body { 
+            font-family: var(--font-secondary); 
+            background-color: var(--bg-primary); 
+            color: var(--text-primary); 
+            line-height: 1.6;
         }
-        [data-theme="dark"] {
-            --bg-primary: var(--bg-primary-dark); --bg-secondary: var(--bg-secondary-dark); --text-primary: var(--text-primary-dark); --text-secondary: var(--text-secondary-dark); --accent: var(--accent-dark); --border-color: var(--border-color-dark); --error-color: var(--error-color-dark);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-primary); color: var(--text-primary); line-height: 1.6; }
         .checkout-container { display: flex; flex-wrap: wrap; max-width: 1400px; margin: 2rem auto; padding: 0 1rem; gap: 2rem; }
         .form-section { flex: 6; min-width: 320px; }
         .summary-section { flex: 4; min-width: 300px; background-color: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-color); padding: 1.5rem; align-self: flex-start; position: sticky; top: 2rem; }
-        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+        h1, h2, h3 { font-family: var(--font-primary); }
         h1 { margin-bottom: 2rem; }
         h2 { font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
         .form-step { margin-bottom: 2.5rem; }
@@ -64,11 +74,41 @@
         .summary-row.total { font-size: 1.2rem; font-weight: bold; border-top: 1px solid var(--border-color); margin-top: 1rem; padding-top: 1rem; }
         .promo-code-form { display: flex; gap: 0.5rem; margin-top: 1rem; }
         .promo-code-form input { flex-grow: 1; }
-        .promo-code-form button { padding: 0.8rem; background-color: var(--accent); color: var(--bg-primary); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        [data-theme="dark"] .promo-code-form button { color: #000; }
+        .promo-code-form button { 
+            padding: 0.8rem 1.5rem; 
+            background-color: var(--color-primary); 
+            color: var(--color-white); 
+            border: none; 
+            border-radius: 50px; 
+            cursor: pointer; 
+            font-weight: 600;
+            transition: all var(--transition-speed);
+            font-family: var(--font-primary);
+        }
+        .promo-code-form button:hover {
+            background-color: #c3006a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(228, 0, 124, 0.4);
+        }
         /* Finalization */
-        .btn-submit { width: 100%; padding: 1rem; font-size: 1.1rem; font-weight: 700; color: #000; background-color: var(--accent); border: none; border-radius: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-        .btn-submit:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--accent); }
+        .btn-submit { 
+            width: 100%; 
+            padding: 1rem; 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            color: var(--color-white); 
+            background-color: var(--color-primary); 
+            border: none; 
+            border-radius: 50px; 
+            cursor: pointer; 
+            transition: all var(--transition-speed);
+            font-family: var(--font-primary);
+        }
+        .btn-submit:hover { 
+            background-color: #c3006a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(228, 0, 124, 0.4);
+        }
         .trust-seals { text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.8rem; }
         @media (max-width: 992px) {
             .checkout-container { flex-direction: column-reverse; }
@@ -87,14 +127,33 @@
     <header class="main-header">
         <div class="header-container">
             <a href="index.html" class="logo-container" id="header-logo-link">
-                <img src="" alt="BIOCODE Logo" id="header-logo-img">
+                <img src="" alt="Лого" id="header-logo-img" style="display: none;">
                 <div>
-                    <span class="brand-name" id="header-brand-name">BIOCODE</span>
+                    <span class="brand-name" id="header-brand-name">ОТСЛАБВАНЕ</span>
+                    <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
                 </div>
             </a>
             <nav class="main-nav">
                 <ul class="nav-links" id="main-nav-links">
                     <li><a href="index.html">Начало</a></li>
+                    <li>
+                        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Превключи тема">
+                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </button>
+                    </li>
                     <li><a href="checkout.html" class="cart-link">Количка (<span id="cart-count">0</span>)</a></li>
                 </ul>
             </nav>
@@ -109,8 +168,8 @@
     <div class="checkout-container">
         <!-- Форма за попълване -->
         <main class="form-section">
-            <h1>BIOCODE</h1>
-            <a href="index.html" class="btn-primary" style="display:inline-block;margin-bottom:1rem;">&larr; Обратно към магазина</a>
+            <h1>Завършване на поръчката</h1>
+            <a href="index.html" class="btn btn-primary" style="display:inline-block;margin-bottom:1rem;">&larr; Обратно към магазина</a>
             <form id="checkout-form" novalidate>
                 <div class="form-step">
                     <h2>Информация за контакт</h2>
@@ -245,8 +304,163 @@
         </aside>
     </div>
 
-    <script>
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid" id="footer-grid-container">
+                <!-- Футър колоните ще бъдат генерирани от JS -->
+            </div>
+            <div class="footer-bottom" id="footer-copyright-container">
+                <!-- Copyright текстът ще бъде генериран от JS -->
+            </div>
+        </div>
+    </footer>
+
+    <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
+
+    <script type="module">
+    import { API_URL } from './config.js';
+    
     document.addEventListener('DOMContentLoaded', () => {
+
+        // --- Load header settings from API ---
+        async function loadHeaderSettings() {
+            try {
+                let response, data;
+                try {
+                    response = await fetch(`${API_URL}/page_content.json?v=${Date.now()}`);
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    data = await response.json();
+                } catch (apiError) {
+                    console.warn('API failed, trying mock data:', apiError);
+                    response = await fetch(`page_content_mock.json?v=${Date.now()}`);
+                    if (!response.ok) throw new Error('Mock data also unavailable');
+                    data = await response.json();
+                }
+                
+                if (data && data.settings) {
+                    const settings = data.settings;
+                    if (settings.logo_url) {
+                        const logoImg = document.getElementById('header-logo-img');
+                        logoImg.src = settings.logo_url;
+                        logoImg.style.display = 'block';
+                    }
+                    if (settings.site_name) {
+                        document.getElementById('header-brand-name').textContent = settings.site_name;
+                    }
+                    if (settings.site_slogan) {
+                        const sloganEl = document.getElementById('header-brand-slogan');
+                        sloganEl.textContent = settings.site_slogan;
+                        sloganEl.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Could not load header settings:', error);
+            }
+        }
+        
+        loadHeaderSettings();
+        
+        // --- Load footer settings from API ---
+        async function loadFooterSettings() {
+            try {
+                let response, data;
+                try {
+                    response = await fetch(`${API_URL}/page_content.json?v=${Date.now()}`);
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    data = await response.json();
+                } catch (apiError) {
+                    console.warn('API failed, trying mock data:', apiError);
+                    response = await fetch(`page_content_mock.json?v=${Date.now()}`);
+                    if (!response.ok) throw new Error('Mock data also unavailable');
+                    data = await response.json();
+                }
+                
+                if (data && data.footer) {
+                    const footer = data.footer;
+                    const settings = data.settings;
+                    
+                    // Render footer columns
+                    const footerGridEl = document.getElementById('footer-grid-container');
+                    if (footerGridEl && footer.columns) {
+                        const columnsHTML = footer.columns.map(col => {
+                            if (col.type === 'logo') {
+                                return `<div class="footer-column">
+                                     <a href="#" class="logo-container footer-logo-container">
+                                        <img src="${settings.logo_url}" alt="${settings.site_name} Logo">
+                                        <div><span class="brand-name">${settings.site_name}</span><span class="brand-slogan">${settings.site_slogan}</span></div>
+                                    </a>
+                                </div>`;
+                            }
+                            if (col.type === 'links') {
+                                const links = col.links.map(link => `<li><a href="${link.url}">${link.text}</a></li>`).join('');
+                                return `<div class="footer-column"><h4>${col.title}</h4><ul>${links}</ul></div>`;
+                            }
+                            return '';
+                        }).join('');
+                        footerGridEl.innerHTML = columnsHTML;
+                    }
+                    
+                    // Render copyright
+                    const copyrightEl = document.getElementById('footer-copyright-container');
+                    if (copyrightEl && footer.copyright_text) {
+                        copyrightEl.innerHTML = footer.copyright_text;
+                    }
+                }
+            } catch (error) {
+                console.error('Could not load footer settings:', error);
+            }
+        }
+        
+        loadFooterSettings();
+
+        // --- Theme Toggle ---
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            try {
+                localStorage.setItem('theme', theme);
+            } catch (e) {
+                console.warn('Could not save theme preference:', e);
+            }
+        }
+        
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+        
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+        
+        // --- Mobile Menu ---
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        const navOverlay = document.querySelector('.nav-overlay');
+        
+        const closeMenu = () => {
+            menuToggle.classList.remove('active');
+            navLinks.classList.remove('active');
+            navOverlay.classList.remove('active');
+            document.body.classList.remove('nav-open');
+        };
+        
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                menuToggle.classList.toggle('active');
+                navLinks.classList.toggle('active');
+                navOverlay.classList.toggle('active');
+                document.body.classList.toggle('nav-open');
+            });
+            navOverlay.addEventListener('click', closeMenu);
+            navLinks.addEventListener('click', e => {
+                if (e.target.tagName === 'A' || e.target.closest('button')) {
+                    closeMenu();
+                }
+            });
+        }
 
         // --- 1. Зареждане на количката от localStorage ---
         const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -263,7 +477,6 @@
         const applyPromoBtn = document.getElementById('apply-promo');
         const discountRow = document.getElementById('discount-row');
         const discountEl = document.getElementById('summary-discount');
-        const menuToggle = document.querySelector('.menu-toggle');
         const navLinks = document.querySelector('.nav-links');
         const navOverlay = document.querySelector('.nav-overlay');
         const cartCountEl = document.getElementById('cart-count');
@@ -469,22 +682,14 @@
         // --- 6. ИНИЦИАЛИЗАЦИЯ ---
         renderProducts();
         updateCartCount();
-
-
-        if (menuToggle) {
-            const toggleMenu = () => {
-                menuToggle.classList.toggle('active');
-                navLinks.classList.toggle('active');
-                navOverlay.classList.toggle('active');
-                document.body.classList.toggle('nav-open');
-            };
-            menuToggle.addEventListener('click', toggleMenu);
-            navOverlay.addEventListener('click', toggleMenu);
-            navLinks.addEventListener('click', e => {
-                if (e.target.tagName === 'A') toggleMenu();
+        
+        // --- Back to top button ---
+        const backToTopBtn = document.getElementById('back-to-top');
+        if (backToTopBtn) {
+            window.addEventListener('scroll', () => {
+                backToTopBtn.classList.toggle('visible', window.scrollY > 300);
             });
         }
-
     });
     </script>
 </body>
