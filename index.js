@@ -1123,6 +1123,9 @@ async function main() {
         initializePageInteractions();
         initializeScrollSpy();
         initializeMarketingFeatures();
+        
+        // Remove loading class to show content with smooth fade-in
+        document.documentElement.classList.remove('loading-content');
 
     } catch (error) {
         console.error("Fatal Error: Could not load or render page content.", error);
@@ -1131,6 +1134,8 @@ async function main() {
                 <h2>Грешка при зареждане на съдържанието</h2>
                 <p>Не успяхме да се свържем със сървъра. Моля, опреснете страницата или опитайте по-късно.</p>
              </div>`;
+        // Remove loading class even on error
+        document.documentElement.classList.remove('loading-content');
     }
 }
 
