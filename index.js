@@ -534,10 +534,25 @@ const addToCart = (id, name, price, inventory) => {
 
 function renderHeader(settings, navigation) {
     document.title = settings.site_name;
-    DOM.header.logoImg.src = encodeURI(settings.logo_url);
-    DOM.header.logoImg.alt = `${settings.site_name} Logo`;
+    
+    // Show/hide logo image based on whether URL is provided
+    if (settings.logo_url && settings.logo_url.trim() !== '') {
+        DOM.header.logoImg.src = encodeURI(settings.logo_url);
+        DOM.header.logoImg.alt = `${settings.site_name} Logo`;
+        DOM.header.logoImg.style.display = 'block';
+    } else {
+        DOM.header.logoImg.style.display = 'none';
+    }
+    
     DOM.header.brandName.textContent = settings.site_name;
-    DOM.header.brandSlogan.textContent = settings.site_slogan;
+    
+    // Show/hide slogan based on whether it's provided
+    if (settings.site_slogan && settings.site_slogan.trim() !== '') {
+        DOM.header.brandSlogan.textContent = settings.site_slogan;
+        DOM.header.brandSlogan.style.display = 'block';
+    } else {
+        DOM.header.brandSlogan.style.display = 'none';
+    }
 
     const navItemsHTML = navigation.map(item => `<li><a href="${item.link}">${item.text}</a></li>`).join('');
     const questionnaireLink = '<li><a href="quest.html">Въпросник</a></li>';
