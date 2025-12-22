@@ -885,25 +885,25 @@ main {
     display: block; 
 }
 
-.expand-icon, .category-expand-icon {
+.expand-icon {
+    /* Removed - expand icon no longer used */
+    display: none;
+}
+
+.category-expand-icon {
     flex-shrink: 0; 
-    width: 1em; 
-    height: 1em; 
+    width: 0.8em; 
+    height: 0.8em; 
     border-style: solid;
     border-width: 0.15em 0.15em 0 0; 
     border-color: var(--text-secondary);
     display: inline-block; 
     transform: rotate(135deg);
     transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s ease;
-}
-
-.category-expand-icon { 
-    width: 0.8em; 
-    height: 0.8em; 
     margin-left: 1rem; 
 }
 
-[aria-expanded="true"] .expand-icon, [aria-expanded="true"] .category-expand-icon {
+[aria-expanded="true"] .category-expand-icon {
     transform: rotate(-45deg); 
     border-color: var(--accent);
 }
@@ -950,6 +950,9 @@ main {
     transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
     position: relative;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    display: block; /* Make it a proper link block */
+    text-decoration: none; /* Remove underline from link */
+    color: inherit; /* Inherit text color */
 }
 
 .product-card::before {
@@ -991,18 +994,12 @@ main {
     max-height: 250px;
 }
 
-.card-header { 
+.card-content { 
+    /* Renamed from card-header - no longer a button/accordion */
     display: flex; 
     flex-wrap: wrap; 
     align-items: flex-start; 
-    gap: 1rem; 
-    cursor: pointer; 
-    outline: none; 
-}
-
-.card-header:focus-visible { 
-    box-shadow: 0 0 0 2px var(--accent); 
-    border-radius: 8px; 
+    gap: 1rem;
 }
 
 .product-title { 
@@ -1042,69 +1039,14 @@ main {
     color: var(--error-color); 
 }
 
-.add-to-cart-btn[disabled] { 
-    opacity: 0.6; 
-    cursor: not-allowed; 
-}
-
 .effects-container { 
     flex: 1 1 100%; 
     order: 3; 
 }
 
-.expand-icon { 
-    align-self: center; 
-}
-
 .card-details {
-    max-height: 0; 
-    opacity: 0; 
-    visibility: hidden;
-    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1); 
-    position: relative; 
-    z-index: 2;
-}
-
-.card-header[aria-expanded="true"] + .card-details { 
-    max-height: 1500px; 
-    opacity: 1; 
-    visibility: visible; 
-    margin-top: 1.5rem; 
-}
-
-.card-details > p { 
-    margin-bottom: 1.5rem; 
-    color: var(--text-secondary);
-    padding-top: 1rem; 
-    border-top: 1px solid var(--border-color);
-    line-height: 1.8;
-}
-
-.add-to-cart-btn {
-    display: inline-block; 
-    background: var(--color-primary);
-    color: var(--color-white);
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 50px;
-    font-weight: 600; 
-    cursor: pointer; 
-    transition: all var(--transition-speed);
-    margin-top: 1rem; 
-    font-size: 1rem;
-    font-family: var(--font-primary);
-}
-
-.add-to-cart-btn:hover { 
-    transform: translateY(-2px); 
-    box-shadow: 0 5px 15px rgba(228, 0, 124, 0.4);
-    background-color: #c3006a;
-}
-
-.add-to-cart-btn.added {
-    background-color: var(--success-color);
-    box-shadow: 0 5px 15px rgba(0, 169, 157, 0.4);
-    pointer-events: none;
+    /* Removed - product details are now on separate page */
+    display: none;
 }
 
 /* --- RESEARCH NOTE STYLE --- */

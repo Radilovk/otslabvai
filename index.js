@@ -79,6 +79,7 @@ const generateEffectBar = effect => `
     </div>`;
 
 // --- START: MODIFIED FUNCTION ---
+// Product cards are now clickable links that navigate to product detail page
 const generateProductCard = (product) => {
     // Проверка за сигурност: ако продуктът няма public_data, не го рендираме.
     if (!product.public_data) {
@@ -89,101 +90,19 @@ const generateProductCard = (product) => {
     const publicData = product.public_data;
     const inventory = product.system_data?.inventory ?? 0;
     const productId = product.product_id; // Използваме надеждния уникален ID
-    const cardDetailsId = `card-details-${productId}`;
-
-    // Generate About Content section if available (Lipolor style)
-    const aboutContentHTML = publicData.about_content ? `
-        <div class="product-about-section">
-            <h3>${escapeHtml(publicData.about_content.title || 'За продукта')}</h3>
-            <p>${escapeHtml(publicData.about_content.description)}</p>
-            ${publicData.about_content.benefits && publicData.about_content.benefits.length > 0 ? `
-                <div class="product-benefits-full">
-                    ${publicData.about_content.benefits.map(benefit => `
-                        <div class="benefit-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                            </svg>
-                            <div>
-                                <h4>${escapeHtml(benefit.title)}</h4>
-                                <p>${escapeHtml(benefit.text)}</p>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            ` : ''}
-        </div>
-    ` : '';
-
-    // Generate Ingredients section if available (Lipolor style with flip cards)
-    const ingredientsHTML = publicData.ingredients && publicData.ingredients.length > 0 ? `
-        <div class="product-ingredients-section">
-            <h3>Активни съставки</h3>
-            <p class="section-subtitle">Натиснете на всяка съставка, за да разкриете нейната роля в формулата</p>
-            <div class="ingredients-grid-full">
-                ${publicData.ingredients.map(ingredient => `
-                    <div class="ingredient-card-full" tabindex="0">
-                        <div class="card-inner">
-                            <div class="card-front">
-                                <h5>${escapeHtml(ingredient.name)}</h5>
-                                <span>${escapeHtml(ingredient.amount)}</span>
-                            </div>
-                            <div class="card-back">
-                                <p>${escapeHtml(ingredient.description)}</p>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    ` : '';
-
-    // Generate FAQ section if available (Lipolor style)
-    const faqHTML = publicData.faq && publicData.faq.length > 0 ? `
-        <div class="product-faq-section">
-            <h3>Често задавани въпроси</h3>
-            <div class="faq-container-full">
-                ${publicData.faq.map((faq, index) => {
-                    const faqId = `faq-${productId}-${index}`;
-                    return `
-                    <div class="faq-item-full">
-                        <div class="faq-question-full" role="button" aria-expanded="false" aria-controls="${faqId}" tabindex="0">
-                            <h4>${escapeHtml(faq.question)}</h4>
-                            <span class="faq-toggle-full">+</span>
-                        </div>
-                        <div class="faq-answer-full" id="${faqId}">
-                            <p>${escapeHtml(faq.answer)}</p>
-                        </div>
-                    </div>
-                `;
-                }).join('')}
-            </div>
-        </div>
-    ` : '';
 
     return `
-    <article class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}">
+    <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}">
         ${publicData.image_url ? `<div class="product-image"><img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)}" loading="lazy"></div>` : ''}
-        <div class="card-header" role="button" aria-expanded="false" aria-controls="${escapeHtml(cardDetailsId)}" tabindex="0">
+        <div class="card-content">
             <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(publicData.tagline)}</p></div>
             <div class="product-price">${Number(publicData.price).toFixed(2)} лв.</div>
             <div class="product-stock ${inventory > 0 ? '' : 'out-of-stock'}">${inventory > 0 ? `Налично: ${inventory}` : 'Изчерпано'}</div>
             <div class="effects-container">
                 ${(publicData.effects || []).map(generateEffectBar).join('')}
             </div>
-            <span class="expand-icon"></span>
         </div>
-        <div class="card-details" id="${escapeHtml(cardDetailsId)}">
-            <div class="product-description">
-                <p>${escapeHtml(publicData.description)}</p>
-                ${publicData.research_note && publicData.research_note.url ? `<div class="research-note">Източник: <a href="${escapeHtml(publicData.research_note.url)}" target="_blank" rel="noopener">${escapeHtml(publicData.research_note.text)}</a></div>` : ''}
-            </div>
-            ${aboutContentHTML}
-            ${ingredientsHTML}
-            ${faqHTML}
-            <button class="add-to-cart-btn" data-id="${escapeHtml(productId)}" data-name="${escapeHtml(publicData.name)}" data-price="${escapeHtml(publicData.price)}" data-inventory="${inventory}" ${inventory > 0 ? '' : 'disabled'}>Добави в количката</button>
-        </div>
-    </article>`;
+    </a>`;
 }
 // --- END: MODIFIED FUNCTION ---
 
@@ -629,6 +548,7 @@ function renderFooter(settings, footer) {
 // =======================================================
 
 function initializePageInteractions() {
+    // Handle category header click (for collapsible categories)
     document.body.addEventListener('click', e => {
         const toggleAccordion = (header) => {
             const isExpanded = header.getAttribute('aria-expanded') === 'true';
@@ -640,30 +560,15 @@ function initializePageInteractions() {
             toggleAccordion(categoryHeader);
             return;
         }
-
-        const cardHeader = e.target.closest('.product-card .card-header');
-        if (cardHeader && !e.target.closest('.add-to-cart-btn')) {
-            toggleAccordion(cardHeader);
-            return;
-        }
         
-        const addToCartBtn = e.target.closest('.add-to-cart-btn');
-        if (addToCartBtn) {
-            e.stopPropagation();
-            addToCart(
-                addToCartBtn.dataset.id,
-                addToCartBtn.dataset.name,
-                addToCartBtn.dataset.price,
-                addToCartBtn.dataset.inventory
-            );
-            return;
-        }
+        // Product cards are now links, no click handler needed here
     });
 
     document.body.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
             const accordionHeader = e.target.closest('[role="button"][aria-expanded]');
-            if (accordionHeader) {
+            // Only handle category headers, not product cards
+            if (accordionHeader && accordionHeader.classList.contains('category-header')) {
                 e.preventDefault();
                 const isExpanded = accordionHeader.getAttribute('aria-expanded') === 'true';
                 accordionHeader.setAttribute('aria-expanded', !isExpanded);
