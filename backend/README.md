@@ -1,4 +1,4 @@
-# Backend - КV Storage Data Files
+# Backend - KV Storage Data Files
 
 Тази папка съдържа JSON файловете, които трябва да се качат в Cloudflare KV storage за правилното функциониране на ОТСЛАБВАНЕ сайта.
 
