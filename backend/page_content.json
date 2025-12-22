@@ -715,6 +715,17 @@
           }
         }
       ]
+    },
+    {
+      "type": "product_category",
+      "component_id": "cat_weight_loss_products",
+      "id": "weight-loss-products",
+      "title": "Продукти за отслабване",
+      "image": "https://raw.githubusercontent.com/Radilovk/face/main/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png",
+      "options": {
+        "is_collapsible": true,
+        "is_expanded_by_default": true
+      }
     }
   ],
   "footer": {
