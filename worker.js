@@ -34,6 +34,51 @@ export default {
       let response;
       // --- МОДИФИЦИРАН РУТЕР ---
       switch (url.pathname) {
+        case '/':
+        case '/index.html':
+          response = await serveStaticFile(env, 'index.html', 'text/html; charset=utf-8');
+          break;
+        
+        case '/index.js':
+          response = await serveStaticFile(env, 'index.js', 'application/javascript; charset=utf-8');
+          break;
+        
+        case '/index.css':
+          response = await serveStaticFile(env, 'index.css', 'text/css; charset=utf-8');
+          break;
+        
+        case '/config.js':
+          response = await serveStaticFile(env, 'config.js', 'application/javascript; charset=utf-8');
+          break;
+        
+        case '/admin.html':
+          response = await serveStaticFile(env, 'admin.html', 'text/html; charset=utf-8');
+          break;
+        
+        case '/admin.js':
+          response = await serveStaticFile(env, 'admin.js', 'application/javascript; charset=utf-8');
+          break;
+        
+        case '/admin.css':
+          response = await serveStaticFile(env, 'admin.css', 'text/css; charset=utf-8');
+          break;
+        
+        case '/checkout.html':
+          response = await serveStaticFile(env, 'checkout.html', 'text/html; charset=utf-8');
+          break;
+        
+        case '/quest.html':
+          response = await serveStaticFile(env, 'quest.html', 'text/html; charset=utf-8');
+          break;
+        
+        case '/questionnaire.js':
+          response = await serveStaticFile(env, 'questionnaire.js', 'application/javascript; charset=utf-8');
+          break;
+        
+        case '/questionnaire.css':
+          response = await serveStaticFile(env, 'questionnaire.css', 'text/css; charset=utf-8');
+          break;
+        
         case '/quest-submit':
           response = await handleQuestSubmit(request, env, ctx);
           break;
@@ -88,6 +133,27 @@ export default {
 
 
 // --- СПЕЦИФИЧНИ ОБРАБОТЧИЦИ НА ЕНДПОЙНТИ ---
+
+/**
+ * Serves static files from KV storage
+ * @param {object} env - Environment with KV bindings
+ * @param {string} filename - Name of the file to serve
+ * @param {string} contentType - MIME type for the response
+ * @returns {Response}
+ */
+async function serveStaticFile(env, filename, contentType) {
+    const fileContent = await env.PAGE_CONTENT.get(`static_${filename}`);
+    if (fileContent === null) {
+        throw new UserFacingError(`File ${filename} not found in storage.`, 404);
+    }
+    return new Response(fileContent, {
+        status: 200,
+        headers: { 
+            'Content-Type': contentType,
+            'Cache-Control': 'public, max-age=3600'
+        }
+    });
+}
 
 /**
  * Handles GET /page_content.json
