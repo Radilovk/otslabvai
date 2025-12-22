@@ -1,25 +1,25 @@
 {
   "settings": {
-    "site_name": "BIOCODE",
-    "site_slogan": "the science of life",
+    "site_name": "ОТСЛАБВАНЕ",
+    "site_slogan": "Здравословен начин на живот",
     "logo_url": "https://radilovk.github.io/face/assets/logo.png"
   },
   "navigation": [
     {
-      "text": "Anti-Aging",
-      "link": "#anti-aging"
+      "text": "Изгаряне на мазнини",
+      "link": "#fat-burners"
     },
     {
-      "text": "Невропептиди",
-      "link": "#neuro"
+      "text": "Апетит контрол",
+      "link": "#appetite-control"
     },
     {
-      "text": "Растеж",
-      "link": "#growth"
+      "text": "Метаболизъм",
+      "link": "#metabolism"
     },
     {
-      "text": "Лайфстайл",
-      "link": "#lifestyle"
+      "text": "Детокс",
+      "link": "#detox"
     },
     {
       "text": "За нас",
@@ -31,12 +31,12 @@
       "type": "info_card",
       "component_id": "comp-uuid-infocard-001",
       "id": "about-us",
-      "title": "Науката зад BIOCODE",
+      "title": "Науката зад отслабването",
       "image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
-      "content": "Нашата мисия е да демистифицираме света на регенеративната медицина. Всеки продукт в нашето портфолио е подкрепен от научни изследвания и е избран заради неговия потенциал да оптимизира човешкото здраве на клетъчно ниво.\n\nНие вярваме в информирания избор и предоставяме прозрачна информация, за да можете да вземете най-доброто решение за вашето тяло и ум.",
+      "content": "Нашата мисия е да ви помогнем да постигнете здравословно тегло чрез научно доказани продукти и решения. Всеки продукт в нашето портфолио е избран заради неговата ефективност и безопасност.\n\nНие вярваме в балансирания подход към отслабването и предоставяме качествени продукти, които подпомагат вашите цели за здравословен начин на живот.",
       "button": {
-        "text": "Разгледай изследванията",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/"
+        "text": "Разгледай продуктите",
+        "url": "#fat-burners"
       },
       "options": {
         "image_align": "right"
@@ -45,775 +45,13 @@
     {
       "type": "hero_banner",
       "component_id": "comp-uuid-hero-001",
-      "title": "Интерактивно Портфолио",
-      "subtitle": "Пептиди и Регенеративна Медицина"
+      "title": "Ефективни Решения за Отслабване",
+      "subtitle": "Качествени продукти за контрол на теглото"
     },
     {
-      "type": "product_category",
-      "component_id": "comp-uuid-prodcat-001",
-      "id": "anti-aging",
-      "title": "Anti-Aging & Клетъчна Регенерация",
-      "image": "https://raw.githubusercontent.com/Radilovk/face/main/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png",
-      "options": {
-        "is_collapsible": true,
-        "is_expanded_by_default": true
-      },
-      "products": [
-        {
-          "product_id": "prod-epitalon",
-          "public_data": {
-            "name": "Epitalon",
-            "tagline": "Ключът към удължаване на теломерите",
-            "price": 0,
-            "description": "Рестартирайте биологичния си часовник. Epitalon е революционен тетрапептид, който активира ензима теломераза, за да предпази и удължи теломерите, които са ключови за клетъчното стареене.",
-            "image_url": "/images/products/epitalon.png",
-            "research_note": {
-              "text": "Bulletin of Experimental Biology 2003",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=Epitalon+telomerase+2003"
-            },
-            "effects": [
-              {
-                "label": "Активиране на Теломераза",
-                "value": 95
-              },
-              {
-                "label": "Регулация на Циркаден Ритъм",
-                "value": 85
-              },
-              {
-                "label": "Имунна Модулация",
-                "value": 75
-              }
-            ],
-            "variants": [
-              {
-                "title": "Epitalon 20 mg (прах)",
-                "description": "Стандартна доза.",
-                "url": "https://www.peptidesciences.com/epithalon-epitalon-20mg"
-              },
-              {
-                "title": "Epitalon 50 mg (прах)",
-                "description": "По-висока концентрация.",
-                "url": "https://www.peptidesciences.com/epithalon-epitalon-50mg"
-              },
-              {
-                "title": "N-Acetyl Epithalon Amidate 20 mg",
-                "description": "Амидирана, по-стабилна форма.",
-                "url": "https://www.peptidesciences.com/n-acetyl-epithalon-amidate-20mg"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Injectable",
-            "goals": [
-              "anti-aging",
-              "longevity",
-              "immune-support"
-            ],
-            "target_profile": "Хора, търсещи превантивни анти-ейджинг стратегии и подобряване на съня.",
-            "protocol_hint": "Прилага се подкожно или интрамускулно, обикновено в цикли.",
-            "synergy_products": [
-              "prod-nad-plus"
-            ],
-            "safety_warnings": "Да се използва след консултация със специалист. Не се препоръчва при активни онкологични заболявания."
-          }
-        },
-        {
-          "product_id": "prod-ghk-cu",
-          "public_data": {
-            "name": "GHK-Cu",
-            "tagline": "Еликсир за кожа и тъкани",
-            "price": 0,
-            "description": "Подарете на кожата си плътност и блясък. GHK-Cu (меден пептид) мощно стимулира производството на колаген, изглажда фините линии и ускорява регенерацията на тъкани в цялото тяло.",
-            "image_url": "/images/products/ghk-cu.png",
-            "research_note": {
-              "text": "Journal of Cosmetic Dermatology 2020",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=GHK-Cu+skin+2020"
-            },
-            "effects": [
-              {
-                "label": "Синтез на Колаген и Еластин",
-                "value": 90
-              },
-              {
-                "label": "Регенерация на Кожа и Тъкани",
-                "value": 95
-              },
-              {
-                "label": "Противовъзпалителен Ефект",
-                "value": 80
-              }
-            ],
-            "variants": [
-              {
-                "title": "GHK-Cu 50 mg (прах)",
-                "description": "За системно инжекционно приложение.",
-                "url": "https://www.peptidesciences.com/ghk-cu-50mg-copper-peptide"
-              },
-              {
-                "title": "GHK-Cu 2 mg / 60 капсули",
-                "description": "Удобна орална форма.",
-                "url": "https://www.peptidesciences.com/ghk-cu-copper-tripeptide"
-              },
-              {
-                "title": "GHK-Cu 200 mg (крем)",
-                "description": "За локално третиране на кожата.",
-                "url": "https://www.peptidesciences.com/ghk-ghk-cu-200mg-topical"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Injectable / Oral / Topical",
-            "goals": [
-              "skin-health",
-              "anti-aging",
-              "wound-healing"
-            ],
-            "target_profile": "Потребители, целящи подобряване на състоянието на кожата, косата и обща регенерация.",
-            "protocol_hint": "Приложението зависи от формата - локално за кожа, системно за общи ползи.",
-            "synergy_products": [],
-            "safety_warnings": "Високи дози могат да нарушат медния баланс. Консултирайте се със специалист."
-          }
-        },
-        {
-          "product_id": "prod-nad-plus",
-          "public_data": {
-            "name": "NAD⁺",
-            "tagline": "Горивото на живота",
-            "price": 0,
-            "description": "Заредете клетките си с енергия. NAD⁺ е жизненоважен коензим, който захранва митохондриите, активира гените на дълголетието (Sirtuins) и е ключов за ремонта на ДНК.",
-            "image_url": "/images/products/nad-plus.png",
-            "research_note": {
-              "text": "Nature Metabolism 2019",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=NAD%2B+metabolism+2019"
-            },
-            "effects": [
-              {
-                "label": "Клетъчна Енергия и Метаболизъм",
-                "value": 95
-              },
-              {
-                "label": "ДНК Възстановяване",
-                "value": 85
-              },
-              {
-                "label": "Активиране на Сиртуини",
-                "value": 90
-              }
-            ],
-            "variants": [
-              {
-                "title": "NAD⁺ 1000 mg (IV/SQ/IM)",
-                "description": "Стерилен флакон от NAD MEDICA.",
-                "url": "https://www.nadmedica.com/product/nad-1000mg/"
-              },
-              {
-                "title": "NAD⁺ Home Injection Kit",
-                "description": "Комплект за курс от NAD MEDICA.",
-                "url": "https://www.nadmedica.com/product/nad-home-kit/"
-              },
-              {
-                "title": "NAD⁺ 750 mg (прах)",
-                "description": "Лиофилизат от PEPTIDE SCIENCES.",
-                "url": "https://www.peptidesciences.com/nadplus-750mg"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Injectable (IV/SQ/IM)",
-            "goals": [
-              "longevity",
-              "energy",
-              "metabolism",
-              "detox"
-            ],
-            "target_profile": "Всеки, който иска да повиши клетъчната си енергия, да подобри метаболизма и да подпомогне дълголетието.",
-            "protocol_hint": "Подкожните инжекции са най-достъпният метод за домашна употреба. IV инфузиите осигуряват 100% бионаличност.",
-            "synergy_products": [
-              "prod-epitalon"
-            ],
-            "safety_warnings": "Бързото IV вливане може да причини дискомфорт. Да се прилага от медицинско лице."
-          }
-        }
-      ]
-    },
-    {
-      "type": "product_category",
-      "component_id": "comp-uuid-prodcat-002",
-      "id": "neuro",
-      "title": "Невропептиди & Ноотропици",
-      "image": "https://raw.githubusercontent.com/Radilovk/face/main/assets/ChatGPT%20Image%20Jul%205,%202025,%2006_28_24%20PM.png",
-      "options": {
-        "is_collapsible": true,
-        "is_expanded_by_default": false
-      },
-      "products": [
-        {
-          "product_id": "prod-semax",
-          "public_data": {
-            "name": "Semax",
-            "tagline": "Когнитивен ускорител",
-            "price": 0,
-            "description": "Отключете пълния си умствен потенциал. Semax повишава нивата на BDNF, което стимулира растежа на нови неврони, подобрява паметта, фокуса и скоростта на мисълта.",
-            "image_url": "/images/products/semax.png",
-            "research_note": {
-              "text": "Bulletin of Experimental Biology 2012",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=Semax+cognitive+2012"
-            },
-            "effects": [
-              {
-                "label": "Фокус и Концентрация",
-                "value": 90
-              },
-              {
-                "label": "BDNF Стимулация (Неврогенеза)",
-                "value": 95
-              },
-              {
-                "label": "Невропротекция",
-                "value": 80
-              }
-            ],
-            "variants": [
-              {
-                "title": "Semax 30 mg (прах)",
-                "description": "За интраназално приложение.",
-                "url": "https://www.peptidesciences.com/semax-30mg"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Intranasal",
-            "goals": [
-              "cognitive",
-              "focus",
-              "memory"
-            ],
-            "target_profile": "Студенти, професионалисти и всеки, който иска да подобри когнитивните си функции.",
-            "protocol_hint": "Прилага се като спрей за нос. Обикновено 1-2 впръсквания във всяка ноздра сутрин.",
-            "synergy_products": [
-              "prod-selank"
-            ],
-            "safety_warnings": "Да се съхранява в хладилник след разтваряне. Консултирайте се със специалист."
-          }
-        },
-        {
-          "product_id": "prod-selank",
-          "public_data": {
-            "name": "Selank",
-            "tagline": "Спокойствие и устойчивост",
-            "price": 0,
-            "description": "Естествено решение срещу стрес и тревожност. Selank модулира нивата на GABA и енкефалини в мозъка, което води до усещане за спокойствие и емоционална стабилност, без седация.",
-            "image_url": "/images/products/selank.png",
-            "research_note": {
-              "text": "European Neuropsychopharmacology 2015",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=Selank+anxiety+2015"
-            },
-            "effects": [
-              {
-                "label": "Анксиолитичен Ефект (Анти-стрес)",
-                "value": 90
-              },
-              {
-                "label": "Подобряване на Настроението",
-                "value": 80
-              },
-              {
-                "label": "Когнитивна Подкрепа",
-                "value": 70
-              }
-            ],
-            "variants": [
-              {
-                "title": "Selank 10 mg (прах)",
-                "description": "За интраназално приложение.",
-                "url": "https://www.peptidesciences.com/selank-10mg"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Intranasal",
-            "goals": [
-              "anti-stress",
-              "anxiety-relief",
-              "mood-support"
-            ],
-            "target_profile": "Хора, подложени на ежедневен стрес, или страдащи от лека до умерена тревожност.",
-            "protocol_hint": "Прилага се като спрей за нос. Може да се използва ежедневно или при нужда.",
-            "synergy_products": [
-              "prod-semax"
-            ],
-            "safety_warnings": "Да се съхранява в хладилник след разтваряне. Консултирайте се със специалист."
-          }
-        },
-        {
-          "product_id": "prod-dsip",
-          "public_data": {
-            "name": "DSIP",
-            "tagline": "Дълбок и възстановяващ сън",
-            "price": 0,
-            "description": "Оптимизирайте най-важния процес за регенерация. DSIP (Delta Sleep-Inducing Peptide) насърчава навлизането в дълбоките фази на съня (slow-wave sleep) и нормализира циркадните ритми.",
-            "image_url": "/images/products/dsip.png",
-            "research_note": {
-              "text": "Sleep Research 1988",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=Delta+Sleep-Inducing+Peptide+1988"
-            },
-            "effects": [
-              {
-                "label": "Подобряване Качеството на Съня",
-                "value": 85
-              },
-              {
-                "label": "Намаляване на Стреса",
-                "value": 70
-              },
-              {
-                "label": "Нормализиране на Ритмите",
-                "value": 60
-              }
-            ],
-            "variants": [
-              {
-                "title": "DSIP 5 mg (прах)",
-                "description": "За инжекционно приложение преди сън.",
-                "url": "https://www.peptidesciences.com/delta-sleep-inducing-peptide"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Injectable",
-            "goals": [
-              "sleep-quality",
-              "recovery"
-            ],
-            "target_profile": "Хора с проблеми със съня, работещи на смени или пътуващи често.",
-            "protocol_hint": "Прилага се подкожно около 30-60 минути преди лягане.",
-            "synergy_products": [
-              "prod-epitalon"
-            ],
-            "safety_warnings": "Може да предизвика сънливост. Не шофирайте след употреба. Консултирайте се със специалист."
-          }
-        }
-      ]
-    },
-    {
-      "type": "product_category",
-      "component_id": "cat_165890",
-      "id": "growth",
-      "title": "Растеж, Метаболизъм & Възстановяване",
-      "image": "https://raw.githubusercontent.com/Radilovk/face/main/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_31_47%20PM.png",
-      "options": {
-        "is_collapsible": true,
-        "is_expanded_by_default": false
-      },
-      "products": [
-        {
-          "product_id": "prod-tb-500",
-          "public_data": {
-            "name": "TB-500",
-            "tagline": "Системно заздравяване",
-            "price": 0,
-            "description": "Синтетичен вариант на Thymosin Beta-4, естествен протеин, който играе ключова роля в регенерацията на тъкани. Ускорява възстановяването на мускули, сухожилия, стави и кожа.",
-            "image_url": "/images/products/tb-500.png",
-            "research_note": {
-              "text": "Annals of NY Academy of Sciences 2010",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=Thymosin+Beta+4+regeneration+2010"
-            },
-            "effects": [
-              {
-                "label": "Възстановяване на Меки Тъкани",
-                "value": 90
-              },
-              {
-                "label": "Намаляване на Възпалението",
-                "value": 80
-              },
-              {
-                "label": "Подобряване на Гъвкавостта",
-                "value": 70
-              }
-            ],
-            "variants": [
-              {
-                "title": "TB-500 10 mg (прах)",
-                "description": "Висока доза за ефективни протоколи.",
-                "url": "https://www.peptidesciences.com/tb-500-10mg"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Injectable",
-            "goals": [
-              "recovery",
-              "injury-repair",
-              "anti-inflammatory"
-            ],
-            "target_profile": "Спортисти, хора с хронични или остри травми на меките тъкани.",
-            "protocol_hint": "Прилага се подкожно. Често се използва зареждаща фаза, последвана от поддържаща.",
-            "synergy_products": [
-              "prod-ghk-cu"
-            ],
-            "safety_warnings": "Да се използва след консултация със специалист."
-          }
-        },
-        {
-          "product_id": "prod-cjc-1295-no-dac",
-          "public_data": {
-            "name": "CJC-1295 no DAC",
-            "tagline": "Пулсова GH стимулация",
-            "price": 0,
-            "description": "Модифициран аналог на GHRH, който стимулира хипофизата да освобождава растежен хормон (GH) в естествени, физиологични пулсации. Идеален за комбиниране с GHRP пептиди.",
-            "image_url": "/images/products/cjc-1295.png",
-            "research_note": {
-              "text": "Journal of Clinical Endocrinology 2006",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=CJC-1295+GHRH+2006"
-            },
-            "effects": [
-              {
-                "label": "Стимулация на Растежен Хормон (GH)",
-                "value": 85
-              },
-              {
-                "label": "Покачване на Мускулна Маса",
-                "value": 70
-              },
-              {
-                "label": "Намаляване на Мазнини",
-                "value": 65
-              }
-            ],
-            "variants": [
-              {
-                "title": "CJC-1295 No DAC 5 mg (прах)",
-                "description": "Стандартна доза.",
-                "url": "https://www.peptidesciences.com/mod-grf-1-29-5mg-cjc-1295-no-dac"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Injectable",
-            "goals": [
-              "muscle-growth",
-              "fat-loss",
-              "anti-aging"
-            ],
-            "target_profile": "Фитнес ентусиасти, бодибилдъри и хора, търсещи анти-ейджинг ефекти от повишен GH.",
-            "protocol_hint": "Работи най-добре в комбинация с GHRP като Ipamorelin, за да се постигне синергичен ефект.",
-            "synergy_products": [
-              "prod-ipamorelin"
-            ],
-            "safety_warnings": "Да се прилага на празен стомах за максимален ефект. Консултирайте се със специалист."
-          }
-        },
-        {
-          "product_id": "prod-ipamorelin",
-          "public_data": {
-            "name": "Ipamorelin",
-            "tagline": "Селективна GH стимулация",
-            "price": 0,
-            "description": "Един от най-селективните GH секретагози. Стимулира освобождаването на GH с минимално или никакво въздействие върху нивата на кортизол и пролактин, което го прави идеален за анти-ейджинг.",
-            "image_url": "/images/products/ipamorelin.png",
-            "research_note": {
-              "text": "Growth Hormone & IGF Research 2001",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=Ipamorelin+GH+2001"
-            },
-            "effects": [
-              {
-                "label": "Селективна GH Стимулация",
-                "value": 80
-              },
-              {
-                "label": "Минимално Въздействие на Кортизол",
-                "value": 95
-              },
-              {
-                "label": "Подобряване на Съня",
-                "value": 70
-              }
-            ],
-            "variants": [
-              {
-                "title": "Ipamorelin 5 mg (прах)",
-                "description": "Висококачествен пептид.",
-                "url": "https://www.peptidesciences.com/ipamorelin-5mg"
-              },
-              {
-                "title": "CJC-1295/Ipamorelin 10 mg (Бленд)",
-                "description": "Синергична комбинация.",
-                "url": "https://www.peptidesciences.com/cjc-1295-ipamorelin-10mg-blend"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Injectable",
-            "goals": [
-              "anti-aging",
-              "fat-loss",
-              "sleep-quality"
-            ],
-            "target_profile": "Потребители, които искат ползите от GH без странични ефекти като повишен кортизол.",
-            "protocol_hint": "Често се комбинира с CJC-1295 no DAC. Прилага се преди лягане за синхронизация с естествения GH пулс.",
-            "synergy_products": [
-              "prod-cjc-1295-no-dac"
-            ],
-            "safety_warnings": "Консултирайте се със специалист."
-          }
-        },
-        {
-          "product_id": "prod-fragment-176-191",
-          "public_data": {
-            "name": "Fragment 176-191",
-            "tagline": "Изгаряне на мазнини",
-            "price": 0,
-            "description": "Специализиран фрагмент от молекулата на растежния хормон, отговорен само за липолизата. Ускорява метаболизма на мазнините и инхибира създаването на нови мастни клетки.",
-            "image_url": "/images/products/fragment-176-191.png",
-            "research_note": {
-              "text": "Obesity Research 2004",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=hGH+Fragment+176-191+lipolysis+2004"
-            },
-            "effects": [
-              {
-                "label": "Насочено Изгаряне на Мазнини",
-                "value": 90
-              },
-              {
-                "label": "Инхибиране на Липогенезата",
-                "value": 85
-              },
-              {
-                "label": "Без Ефект върху Кръвната Захар",
-                "value": 100
-              }
-            ],
-            "variants": [
-              {
-                "title": "Fragment 176-191 5 mg (прах)",
-                "description": "Оптимална доза за изгаряне на мазнини.",
-                "url": "https://www.peptidesciences.com/fragment-176-191-5mg"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Injectable",
-            "goals": [
-              "fat-loss"
-            ],
-            "target_profile": "Хора, които искат да намалят телесните мазнини без стимулиращия ефект на други фет-бърнъри.",
-            "protocol_hint": "Прилага се подкожно, обикновено сутрин на гладно или преди тренировка.",
-            "synergy_products": [],
-            "safety_warnings": "Консултирайте се със специалист."
-          }
-        }
-      ]
-    },
-    {
-      "type": "product_category",
-      "component_id": "cat_165891",
-      "id": "lifestyle",
-      "title": "Лайфстайл, Либидо & Естетика",
-      "image": "https://raw.githubusercontent.com/Radilovk/face/main/assets/ChatGPT%20Image%20Jul%205,%202025,%2009_16_33%20PM.png",
-      "options": {
-        "is_collapsible": false,
-        "is_expanded_by_default": true
-      },
-      "products": [
-        {
-          "product_id": "prod-pt-141",
-          "public_data": {
-            "name": "PT-141",
-            "tagline": "Централен стимул за либидото",
-            "price": 0,
-            "description": "Уникален пептид, който действа директно върху меланокортиновите рецептори в мозъка, за да повиши сексуалното желание и възбуда както при мъже, така и при жени.",
-            "image_url": "/images/products/pt-141.png",
-            "research_note": {
-              "text": "Journal of Sexual Medicine 2020",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=Bremelanotide+PT-141+libido+2020"
-            },
-            "effects": [
-              {
-                "label": "Повишаване на Либидото",
-                "value": 95
-              },
-              {
-                "label": "Еректилна Функция",
-                "value": 85
-              },
-              {
-                "label": "Действие върху Нервната С-ма",
-                "value": 90
-              }
-            ],
-            "variants": [
-              {
-                "title": "PT-141 10 mg (прах)",
-                "description": "За интраназално/инжекционно приложение.",
-                "url": "https://www.peptidesciences.com/pt-141-10mg"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Intranasal / Injectable",
-            "goals": [
-              "libido",
-              "sexual-health"
-            ],
-            "target_profile": "Мъже и жени, изпитващи намалено либидо.",
-            "protocol_hint": "Прилага се при нужда, около 1-2 часа преди очаквания ефект.",
-            "synergy_products": [
-              "prod-kisspeptin-10"
-            ],
-            "safety_warnings": "Може да предизвика временно гадене или зачервяване на лицето. Не се препоръчва при сърдечно-съдови проблеми."
-          }
-        },
-        {
-          "product_id": "prod-melanotan-1",
-          "public_data": {
-            "name": "Melanotan I",
-            "tagline": "Естествен тен с висока селективност",
-            "price": 0,
-            "description": "Стимулира производството на меланин за постигане на естествен тен, като предлага по-селективно действие и по-малко странични ефекти в сравнение с Melanotan II.",
-            "image_url": "/images/products/melanotan-1.png",
-            "research_note": {
-              "text": "Archives of Dermatology 2009",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=Melanotan+I+afamelanotide+2009"
-            },
-            "effects": [
-              {
-                "label": "Стимулация на Кожен Тен",
-                "value": 95
-              },
-              {
-                "label": "UV Защита",
-                "value": 90
-              },
-              {
-                "label": "Минимални странични ефекти",
-                "value": 90
-              }
-            ],
-            "variants": [
-              {
-                "title": "Melanotan I 10 mg (прах)",
-                "description": "По-селективен вариант за тен.",
-                "url": "https://www.peptidesciences.com/melanotan-1-10mg"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Injectable",
-            "goals": [
-              "aesthetics",
-              "tanning",
-              "uv-protection"
-            ],
-            "target_profile": "Хора със светла кожа, които искат безопасен тен и UV защита.",
-            "protocol_hint": "Използва се в ниски дози ежедневно до достигане на желания тен, след което се преминава на поддържаща доза.",
-            "synergy_products": [],
-            "safety_warnings": "По-малко странични ефекти от MT-II. Препоръчва се преглед на бенките преди употреба."
-          }
-        },
-        {
-          "product_id": "prod-melanotan-2",
-          "public_data": {
-            "name": "Melanotan II",
-            "tagline": "Безопасен и дълбок тен",
-            "price": 0,
-            "description": "Постигнете перфектен слънчев загар с минимално излагане на UV лъчи. Melanotan II стимулира производството на меланин. Като страничен ефект може да повиши либидото и да намали апетита.",
-            "image_url": "/images/products/melanotan-2.png",
-            "research_note": {
-              "text": "British Journal of Pharmacology 2000",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=Melanotan+II+pigmentation+2000"
-            },
-            "effects": [
-              {
-                "label": "Стимулация на Кожен Тен",
-                "value": 90
-              },
-              {
-                "label": "Повишаване на Либидото",
-                "value": 70
-              },
-              {
-                "label": "Намаляване на Апетита",
-                "value": 60
-              }
-            ],
-            "variants": [
-              {
-                "title": "Melanotan II 10 mg (прах)",
-                "description": "Стандартна доза за протоколи за тен.",
-                "url": "https://www.peptidesciences.com/melanotan-2-10mg"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Injectable",
-            "goals": [
-              "aesthetics",
-              "tanning",
-              "libido"
-            ],
-            "target_profile": "Хора, които търсят бърз и наситен тен, както и потенциално повишаване на либидото.",
-            "protocol_hint": "Започва се с много ниска доза, за да се оцени толерантността към страничните ефекти.",
-            "synergy_products": [],
-            "safety_warnings": "Чести странични ефекти включват гадене, зачервяване, спонтанни ерекции. Препоръчва се преглед на бенките преди употреба."
-          }
-        },
-        {
-          "product_id": "prod-kisspeptin-10",
-          "public_data": {
-            "name": "Kisspeptin-10",
-            "tagline": "Регулатор на репродукцията",
-            "price": 0,
-            "description": "Основен регулатор на оста хипоталамус-хипофиза-гонади. Kisspeptin-10 е мощен стимулатор на освобождаването на GnRH, което от своя страна води до продукция на LH и FSH.",
-            "image_url": "/images/products/kisspeptin-10.png",
-            "research_note": {
-              "text": "Human Reproduction Update 2014",
-              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=Kisspeptin-10+reproduction+2014"
-            },
-            "effects": [
-              {
-                "label": "Стимулация на LH/FSH",
-                "value": 85
-              },
-              {
-                "label": "Регулация на Репродуктивна Ос",
-                "value": 90
-              },
-              {
-                "label": "Влияние върху Настроението",
-                "value": 65
-              }
-            ],
-            "variants": [
-              {
-                "title": "Kisspeptin-10 5 mg (прах)",
-                "description": "За изследователски протоколи.",
-                "url": "https://www.peptidesciences.com/kisspeptin-10-5mg"
-              }
-            ]
-          },
-          "system_data": {
-            "application_type": "Injectable",
-            "goals": [
-              "libido",
-              "fertility",
-              "hormone-regulation"
-            ],
-            "target_profile": "Използва се при протоколи за възстановяване на репродуктивната ос (PCT) или за стимулиране на либидото.",
-            "protocol_hint": "Има кратък полуживот и се инжектира често, понякога в комбинация с други пептиди.",
-            "synergy_products": [
-              "prod-pt-141"
-            ],
-            "safety_warnings": "Използването му трябва да бъде внимателно наблюдавано от специалист поради силното му въздействие върху хормоналната ос."
-          }
-        }
-      ]
-    },
-    {
-      "title": "BIOCODE - индивидуален анализатор",
+      "title": "Индивидуален план за отслабване",
       "image": "https://radilovk.github.io/face/assets/analyzis.png",
-      "content": "Създай индивидуален протокол и препоръки",
+      "content": "Създай персонализиран план за постигане на целите си",
       "button": {
         "text": "Начало",
         "url": "https://radilovk.github.io/port/quest.html"
@@ -823,6 +61,660 @@
       },
       "type": "info_card",
       "component_id": "comp_1752287788540"
+    },
+    {
+      "type": "product_category",
+      "component_id": "comp-uuid-prodcat-001",
+      "id": "fat-burners",
+      "title": "Изгаряне на мазнини",
+      "image": "https://raw.githubusercontent.com/Radilovk/face/main/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png",
+      "options": {
+        "is_collapsible": true,
+        "is_expanded_by_default": true
+      },
+      "products": [
+        {
+          "product_id": "prod-green-tea-extract",
+          "public_data": {
+            "name": "Екстракт от зелен чай",
+            "tagline": "Природна термогенеза",
+            "price": 45,
+            "description": "Мощен природен жиробърнер, богат на катехини и кофеин. Ускорява метаболизма и стимулира изгарянето на мазнини, като същевременно подпомага общото здраве.",
+            "image_url": "/images/products/green-tea.png",
+            "research_note": {
+              "text": "Доказана ефективност в множество изследвания",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=green+tea+extract+weight+loss"
+            },
+            "effects": [
+              {
+                "label": "Ускоряване на метаболизма",
+                "value": 85
+              },
+              {
+                "label": "Изгаряне на мазнини",
+                "value": 80
+              },
+              {
+                "label": "Антиоксидантна защита",
+                "value": 95
+              }
+            ],
+            "variants": [
+              {
+                "title": "Екстракт от зелен чай 500mg - 60 капсули",
+                "description": "Стандартна доза за ежедневна употреба",
+                "url": "#"
+              },
+              {
+                "title": "Екстракт от зелен чай 1000mg - 90 капсули",
+                "description": "Висока концентрация за максимален ефект",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Capsules",
+            "goals": [
+              "fat-loss",
+              "metabolism",
+              "antioxidant"
+            ],
+            "target_profile": "Хора, търсещи естествен начин за ускоряване на метаболизма и изгаряне на мазнини.",
+            "protocol_hint": "Приема се 1-2 капсули дневно, предпочитано сутрин или преди тренировка.",
+            "synergy_products": [
+              "prod-l-carnitine"
+            ],
+            "safety_warnings": "Съдържа кофеин. Не се препоръчва при чувствителност към кофеин или сърдечни проблеми.",
+            "inventory": 50
+          }
+        },
+        {
+          "product_id": "prod-l-carnitine",
+          "public_data": {
+            "name": "L-Carnitine",
+            "tagline": "Транспорт на мазнините",
+            "price": 55,
+            "description": "Аминокиселина, която играе ключова роля в транспортирането на мастните киселини в митохондриите, където се превръщат в енергия. Идеална за спортуващи и активни хора.",
+            "image_url": "/images/products/l-carnitine.png",
+            "research_note": {
+              "text": "Ефективност при физическа активност",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=L-carnitine+fat+metabolism"
+            },
+            "effects": [
+              {
+                "label": "Оптимизиране на изгарянето на мазнини",
+                "value": 90
+              },
+              {
+                "label": "Повишаване на енергията",
+                "value": 85
+              },
+              {
+                "label": "Подобряване на възстановяването",
+                "value": 75
+              }
+            ],
+            "variants": [
+              {
+                "title": "L-Carnitine 1000mg - течна форма 500ml",
+                "description": "Бърза абсорбция за оптимален ефект",
+                "url": "#"
+              },
+              {
+                "title": "L-Carnitine 500mg - 100 капсули",
+                "description": "Удобна форма за ежедневна употреба",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Liquid / Capsules",
+            "goals": [
+              "fat-loss",
+              "energy",
+              "recovery"
+            ],
+            "target_profile": "Спортисти и хора с активен начин на живот, които искат да оптимизират изгарянето на мазнини.",
+            "protocol_hint": "Приема се 30-60 минути преди тренировка за най-добър ефект.",
+            "synergy_products": [
+              "prod-green-tea-extract"
+            ],
+            "safety_warnings": "Безопасен при препоръчителните дози. Консултирайте се с лекар при хронични заболявания.",
+            "inventory": 45
+          }
+        },
+        {
+          "product_id": "prod-cla",
+          "public_data": {
+            "name": "CLA (Конюгирана линолова киселина)",
+            "tagline": "Оптимизация на телесния състав",
+            "price": 60,
+            "description": "Естествена мастна киселина, която помага за намаляване на мастната тъкан и увеличаване на мускулната маса. Подпомага постигането на по-здрав телесен състав.",
+            "image_url": "/images/products/cla.png",
+            "research_note": {
+              "text": "Изследвания за телесен състав",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=CLA+body+composition"
+            },
+            "effects": [
+              {
+                "label": "Намаляване на мастната тъкан",
+                "value": 80
+              },
+              {
+                "label": "Запазване на мускулна маса",
+                "value": 85
+              },
+              {
+                "label": "Подобряване на метаболизма",
+                "value": 75
+              }
+            ],
+            "variants": [
+              {
+                "title": "CLA 1000mg - 90 софтгел капсули",
+                "description": "Високо концентриран продукт",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Softgels",
+            "goals": [
+              "fat-loss",
+              "body-composition",
+              "muscle-preservation"
+            ],
+            "target_profile": "Хора, които искат да подобрят телесния си състав, запазвайки мускулната маса.",
+            "protocol_hint": "Приема се 3 пъти дневно с храна.",
+            "synergy_products": [],
+            "safety_warnings": "Безопасен при препоръчителните дози. Не се препоръчва при бременност.",
+            "inventory": 40
+          }
+        }
+      ]
+    },
+    {
+      "type": "product_category",
+      "component_id": "comp-uuid-prodcat-002",
+      "id": "appetite-control",
+      "title": "Контрол на апетита",
+      "image": "https://raw.githubusercontent.com/Radilovk/face/main/assets/ChatGPT%20Image%20Jul%205,%202025,%2006_28_24%20PM.png",
+      "options": {
+        "is_collapsible": true,
+        "is_expanded_by_default": false
+      },
+      "products": [
+        {
+          "product_id": "prod-glucomannan",
+          "public_data": {
+            "name": "Глюкоманан",
+            "tagline": "Чувство на ситост",
+            "price": 40,
+            "description": "Природно фибри от корена на растението коняк. Набъбва в стомаха, създавайки чувство на ситост и намалявайки апетита. Подпомага контрола на калориите.",
+            "image_url": "/images/products/glucomannan.png",
+            "research_note": {
+              "text": "Доказан ефект върху контрола на теглото",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=glucomannan+weight+loss"
+            },
+            "effects": [
+              {
+                "label": "Намаляване на апетита",
+                "value": 90
+              },
+              {
+                "label": "Чувство на ситост",
+                "value": 95
+              },
+              {
+                "label": "Подкрепа на храносмилането",
+                "value": 80
+              }
+            ],
+            "variants": [
+              {
+                "title": "Глюкоманан 1000mg - 60 капсули",
+                "description": "Стандартна доза",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Capsules",
+            "goals": [
+              "appetite-control",
+              "satiety",
+              "calorie-control"
+            ],
+            "target_profile": "Хора, които имат проблеми с контрола на апетита и желаят да намалят калорийния прием.",
+            "protocol_hint": "Приема се 30 минути преди храна с голямо количество вода.",
+            "synergy_products": [
+              "prod-5-htp"
+            ],
+            "safety_warnings": "Трябва да се приема с достатъчно вода. Не се препоръчва при проблеми с хранопровода.",
+            "inventory": 55
+          }
+        },
+        {
+          "product_id": "prod-5-htp",
+          "public_data": {
+            "name": "5-HTP",
+            "tagline": "Контрол на въглехидратния глад",
+            "price": 50,
+            "description": "Прекурсор на серотонин, който помага за регулиране на апетита и настроението. Особено ефективен срещу емоционалното хранене и желанието за сладко.",
+            "image_url": "/images/products/5-htp.png",
+            "research_note": {
+              "text": "Ефект върху апетита и настроението",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=5-HTP+appetite"
+            },
+            "effects": [
+              {
+                "label": "Намаляване на апетита",
+                "value": 85
+              },
+              {
+                "label": "Подобряване на настроението",
+                "value": 90
+              },
+              {
+                "label": "Контрол на емоционалното хранене",
+                "value": 88
+              }
+            ],
+            "variants": [
+              {
+                "title": "5-HTP 100mg - 60 капсули",
+                "description": "Оптимална доза за ежедневна употреба",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Capsules",
+            "goals": [
+              "appetite-control",
+              "mood-support",
+              "emotional-eating"
+            ],
+            "target_profile": "Хора с емоционално хранене и трудности при контрол на апетита.",
+            "protocol_hint": "Приема се веднъж или два пъти дневно, предпочитано вечер.",
+            "synergy_products": [
+              "prod-glucomannan"
+            ],
+            "safety_warnings": "Не се комбинира с антидепресанти без консултация с лекар.",
+            "inventory": 35
+          }
+        },
+        {
+          "product_id": "prod-chromium",
+          "public_data": {
+            "name": "Хром пиколинат",
+            "tagline": "Баланс на кръвната захар",
+            "price": 35,
+            "description": "Минерал, който подпомага регулацията на кръвната захар и инсулиновата чувствителност. Намалява желанието за въглехидрати и сладкиши.",
+            "image_url": "/images/products/chromium.png",
+            "research_note": {
+              "text": "Ефект върху регулацията на кръвната захар",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=chromium+picolinate+blood+sugar"
+            },
+            "effects": [
+              {
+                "label": "Регулация на кръвната захар",
+                "value": 90
+              },
+              {
+                "label": "Намаляване на желанието за сладко",
+                "value": 85
+              },
+              {
+                "label": "Подобряване на инсулиновата чувствителност",
+                "value": 80
+              }
+            ],
+            "variants": [
+              {
+                "title": "Хром пиколинат 200mcg - 100 таблетки",
+                "description": "Стандартна доза",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Tablets",
+            "goals": [
+              "blood-sugar-control",
+              "carb-cravings",
+              "insulin-sensitivity"
+            ],
+            "target_profile": "Хора с желание за сладко и проблеми с регулацията на кръвната захар.",
+            "protocol_hint": "Приема се с храна за по-добра абсорбция.",
+            "synergy_products": [],
+            "safety_warnings": "Безопасен при препоръчителните дози. Консултирайте се с лекар при диабет.",
+            "inventory": 60
+          }
+        }
+      ]
+    },
+    {
+      "type": "product_category",
+      "component_id": "cat_165890",
+      "id": "metabolism",
+      "title": "Ускоряване на метаболизма",
+      "image": "https://raw.githubusercontent.com/Radilovk/face/main/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_31_47%20PM.png",
+      "options": {
+        "is_collapsible": true,
+        "is_expanded_by_default": false
+      },
+      "products": [
+        {
+          "product_id": "prod-caffeine",
+          "public_data": {
+            "name": "Кофеин",
+            "tagline": "Енергия и фокус",
+            "price": 30,
+            "description": "Природен стимулант, който ускорява метаболизма, повишава енергията и подобрява физическата работоспособност. Ефективен при изгаряне на калории.",
+            "image_url": "/images/products/caffeine.png",
+            "research_note": {
+              "text": "Доказан термогенен ефект",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=caffeine+thermogenesis"
+            },
+            "effects": [
+              {
+                "label": "Ускоряване на метаболизма",
+                "value": 90
+              },
+              {
+                "label": "Повишаване на енергията",
+                "value": 95
+              },
+              {
+                "label": "Подобряване на фокуса",
+                "value": 85
+              }
+            ],
+            "variants": [
+              {
+                "title": "Кофеин 200mg - 100 таблетки",
+                "description": "Стандартна доза",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Tablets",
+            "goals": [
+              "metabolism",
+              "energy",
+              "focus"
+            ],
+            "target_profile": "Активни хора, търсещи енергия и подкрепа на метаболизма.",
+            "protocol_hint": "Приема се сутрин или преди тренировка. Не се препоръчва след обяд.",
+            "synergy_products": [
+              "prod-green-tea-extract"
+            ],
+            "safety_warnings": "Не се препоръчва при чувствителност към кофеин или сърдечни проблеми.",
+            "inventory": 70
+          }
+        },
+        {
+          "product_id": "prod-b-complex",
+          "public_data": {
+            "name": "Витамин B комплекс",
+            "tagline": "Енергиен метаболизъм",
+            "price": 38,
+            "description": "Пълен комплекс от В витамини, които са ключови за превръщането на храната в енергия. Подпомагат метаболизма на въглехидрати, протеини и мазнини.",
+            "image_url": "/images/products/b-complex.png",
+            "research_note": {
+              "text": "Роля в енергийния метаболизъм",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=B+vitamins+energy+metabolism"
+            },
+            "effects": [
+              {
+                "label": "Подкрепа на метаболизма",
+                "value": 85
+              },
+              {
+                "label": "Повишаване на енергията",
+                "value": 80
+              },
+              {
+                "label": "Подобряване на настроението",
+                "value": 75
+              }
+            ],
+            "variants": [
+              {
+                "title": "B-Complex - 60 капсули",
+                "description": "Пълен комплекс от В витамини",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Capsules",
+            "goals": [
+              "metabolism",
+              "energy",
+              "mood-support"
+            ],
+            "target_profile": "Всеки, който иска да подкрепи енергийния си метаболизъм.",
+            "protocol_hint": "Приема се веднъж дневно, предпочитано сутрин с храна.",
+            "synergy_products": [],
+            "safety_warnings": "Безопасен при препоръчителните дози.",
+            "inventory": 65
+          }
+        },
+        {
+          "product_id": "prod-capsaicin",
+          "public_data": {
+            "name": "Капсаицин",
+            "tagline": "Природна термогенеза",
+            "price": 42,
+            "description": "Активното вещество в лютите чушки, което стимулира термогенезата и ускорява изгарянето на калории. Помага за намаляване на апетита.",
+            "image_url": "/images/products/capsaicin.png",
+            "research_note": {
+              "text": "Термогенен ефект",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=capsaicin+thermogenesis"
+            },
+            "effects": [
+              {
+                "label": "Термогенеза",
+                "value": 88
+              },
+              {
+                "label": "Ускоряване на метаболизма",
+                "value": 85
+              },
+              {
+                "label": "Намаляване на апетита",
+                "value": 75
+              }
+            ],
+            "variants": [
+              {
+                "title": "Капсаицин 500mg - 60 капсули",
+                "description": "Стандартизиран екстракт",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Capsules",
+            "goals": [
+              "thermogenesis",
+              "metabolism",
+              "appetite-control"
+            ],
+            "target_profile": "Хора, търсещи природен начин за ускоряване на метаболизма.",
+            "protocol_hint": "Приема се с храна за да се избегне стомашен дискомфорт.",
+            "synergy_products": [
+              "prod-caffeine"
+            ],
+            "safety_warnings": "Може да причини стомашен дискомфорт при чувствителни хора.",
+            "inventory": 48
+          }
+        }
+      ]
+    },
+    {
+      "type": "product_category",
+      "component_id": "cat_165891",
+      "id": "detox",
+      "title": "Детокс и пречистване",
+      "image": "https://raw.githubusercontent.com/Radilovk/face/main/assets/ChatGPT%20Image%20Jul%205,%202025,%2009_16_33%20PM.png",
+      "options": {
+        "is_collapsible": false,
+        "is_expanded_by_default": true
+      },
+      "products": [
+        {
+          "product_id": "prod-chlorella",
+          "public_data": {
+            "name": "Хлорела",
+            "tagline": "Супер зелена храна",
+            "price": 48,
+            "description": "Мощна зелена водорасла, богата на хлорофил, протеини и хранителни вещества. Подпомага естественото пречистване на тялото и подобрява храносмилането.",
+            "image_url": "/images/products/chlorella.png",
+            "research_note": {
+              "text": "Детоксикиращи свойства",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=chlorella+detox"
+            },
+            "effects": [
+              {
+                "label": "Пречистване на тялото",
+                "value": 90
+              },
+              {
+                "label": "Хранителна подкрепа",
+                "value": 95
+              },
+              {
+                "label": "Подкрепа на храносмилането",
+                "value": 85
+              }
+            ],
+            "variants": [
+              {
+                "title": "Хлорела 500mg - 120 таблетки",
+                "description": "Органична хлорела",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Tablets",
+            "goals": [
+              "detox",
+              "nutrition",
+              "digestion"
+            ],
+            "target_profile": "Хора, които искат да подкрепят естественото пречистване на тялото.",
+            "protocol_hint": "Приема се 2-3 пъти дневно с храна.",
+            "synergy_products": [
+              "prod-milk-thistle"
+            ],
+            "safety_warnings": "Безопасен при препоръчителните дози. Започнете с ниска доза.",
+            "inventory": 42
+          }
+        },
+        {
+          "product_id": "prod-milk-thistle",
+          "public_data": {
+            "name": "Бял трън (Milk Thistle)",
+            "tagline": "Подкрепа на черния дроб",
+            "price": 44,
+            "description": "Традиционна билка за поддръжка на черния дроб. Съдържа силимарин, който помага за регенерацията на черния дроб и защитава от токсини.",
+            "image_url": "/images/products/milk-thistle.png",
+            "research_note": {
+              "text": "Хепатопротективни свойства",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=milk+thistle+liver"
+            },
+            "effects": [
+              {
+                "label": "Подкрепа на черния дроб",
+                "value": 95
+              },
+              {
+                "label": "Антиоксидантна защита",
+                "value": 90
+              },
+              {
+                "label": "Детоксикация",
+                "value": 85
+              }
+            ],
+            "variants": [
+              {
+                "title": "Бял трън 300mg - 90 капсули",
+                "description": "Стандартизиран екстракт със силимарин",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Capsules",
+            "goals": [
+              "liver-support",
+              "detox",
+              "antioxidant"
+            ],
+            "target_profile": "Хора, които искат да подкрепят здравето на черния дроб.",
+            "protocol_hint": "Приема се 2-3 пъти дневно с храна.",
+            "synergy_products": [
+              "prod-chlorella"
+            ],
+            "safety_warnings": "Безопасен при препоръчителните дози. Консултирайте се с лекар при чернодробни заболявания.",
+            "inventory": 50
+          }
+        },
+        {
+          "product_id": "prod-probiotics",
+          "public_data": {
+            "name": "Пробиотици",
+            "tagline": "Здрави черва, здраво тяло",
+            "price": 52,
+            "description": "Комплекс от полезни бактерии, които подпомагат здравето на червата, подобряват храносмилането и укрепват имунната система. Важна част от процеса на отслабване.",
+            "image_url": "/images/products/probiotics.png",
+            "research_note": {
+              "text": "Роля в контрола на теглото",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/?term=probiotics+weight+management"
+            },
+            "effects": [
+              {
+                "label": "Подобряване на храносмилането",
+                "value": 95
+              },
+              {
+                "label": "Укрепване на имунната система",
+                "value": 90
+              },
+              {
+                "label": "Поддръжка на метаболизма",
+                "value": 80
+              }
+            ],
+            "variants": [
+              {
+                "title": "Пробиотици 10 млрд. CFU - 60 капсули",
+                "description": "Мулти-щамов комплекс",
+                "url": "#"
+              }
+            ]
+          },
+          "system_data": {
+            "application_type": "Oral / Capsules",
+            "goals": [
+              "gut-health",
+              "digestion",
+              "immune-support"
+            ],
+            "target_profile": "Всеки, който иска да подкрепи здравето на червата и общото здраве.",
+            "protocol_hint": "Приема се веднъж дневно, предпочитано сутрин на гладно.",
+            "synergy_products": [],
+            "safety_warnings": "Безопасен при препоръчителните дози.",
+            "inventory": 55
+          }
+        }
+      ]
     }
   ],
   "footer": {
@@ -840,16 +732,16 @@
             "url": "#"
           },
           {
-            "text": "Anti-Aging",
-            "url": "#anti-aging"
+            "text": "Изгаряне на мазнини",
+            "url": "#fat-burners"
           },
           {
-            "text": "Невропептиди",
-            "url": "#neuro"
+            "text": "Апетит контрол",
+            "url": "#appetite-control"
           },
           {
-            "text": "Растеж",
-            "url": "#growth"
+            "text": "Метаболизъм",
+            "url": "#metabolism"
           }
         ]
       },
@@ -872,6 +764,6 @@
         ]
       }
     ],
-    "copyright_text": "© 2025 BIOCODE. Всички права запазени."
+    "copyright_text": "© 2025 ОТСЛАБВАНЕ. Всички права запазени."
   }
 }
