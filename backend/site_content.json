@@ -1,0 +1,115 @@
+{
+  "settings": {
+    "site_name": "BIOCODE",
+    "site_slogan": "the science of life",
+    "logo_url": "https://radilovk.github.io/face/assets/logo.png"
+  },
+  "navigation": [
+    {
+      "text": "Anti-Aging",
+      "link": "#anti-aging"
+    },
+    {
+      "text": "Невропептиди",
+      "link": "#neuro"
+    },
+    {
+      "text": "Растеж",
+      "link": "#growth"
+    },
+    {
+      "text": "Лайфстайл",
+      "link": "#lifestyle"
+    },
+    {
+      "text": "За нас",
+      "link": "#about-us"
+    }
+  ],
+  "page_content": [
+    {
+      "type": "info_card",
+      "component_id": "comp-uuid-infocard-001",
+      "id": "about-us",
+      "title": "Науката зад BIOCODE",
+      "image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
+      "content": "Нашата мисия е да демистифицираме света на регенеративната медицина. Всеки продукт в нашето портфолио е подкрепен от научни изследвания и е избран заради неговия потенциал да оптимизира човешкото здраве на клетъчно ниво.\n\nНие вярваме в информирания избор и предоставяме прозрачна информация, за да можете да вземете най-доброто решение за вашето тяло и ум.",
+      "button": {
+        "text": "Разгледай изследванията",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/"
+      },
+      "options": {
+        "image_align": "right"
+      }
+    },
+    {
+      "type": "hero_banner",
+      "component_id": "comp-uuid-hero-001",
+      "title": "Интерактивно Портфолио",
+      "subtitle": "Пептиди и Регенеративна Медицина"
+    },
+    {
+      "title": "BIOCODE - индивидуален анализатор",
+      "image": "https://radilovk.github.io/face/assets/analyzis.png",
+      "content": "Създай индивидуален протокол и препоръки",
+      "button": {
+        "text": "Начало",
+        "url": "https://radilovk.github.io/port/quest.html"
+      },
+      "options": {
+        "image_align": "right"
+      },
+      "type": "info_card",
+      "component_id": "comp_1752287788540"
+    }
+  ],
+  "footer": {
+    "columns": [
+      {
+        "type": "logo",
+        "title": ""
+      },
+      {
+        "type": "links",
+        "title": "Бързи Връзки",
+        "links": [
+          {
+            "text": "Начало",
+            "url": "#"
+          },
+          {
+            "text": "Anti-Aging",
+            "url": "#anti-aging"
+          },
+          {
+            "text": "Невропептиди",
+            "url": "#neuro"
+          },
+          {
+            "text": "Растеж",
+            "url": "#growth"
+          }
+        ]
+      },
+      {
+        "type": "links",
+        "title": "Информация",
+        "links": [
+          {
+            "text": "За нас",
+            "url": "#about-us"
+          },
+          {
+            "text": "Контакти",
+            "url": "#contact"
+          },
+          {
+            "text": "Политика за поверителност",
+            "url": "/privacy"
+          }
+        ]
+      }
+    ],
+    "copyright_text": "© 2025 BIOCODE. Всички права запазени."
+  }
+}

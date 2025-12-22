@@ -1,0 +1,23 @@
+[
+  {
+    "id": "order-1752939184225",
+    "timestamp": "2025-07-19T15:33:04.225Z",
+    "customer": {
+      "firstName": "Petra ",
+      "lastName": "",
+      "phone": "0888888888",
+      "email": "slujebeglovi@gmail.con"
+    },
+    "products": [
+      {
+        "id": "prod-ghk-cu",
+        "quantity": 1
+      },
+      {
+        "id": "prod-epitalon",
+        "quantity": 1
+      }
+    ],
+    "status": "Нова"
+  }
+]
