@@ -8,6 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { API_URL } from '../config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,9 +16,6 @@ const __dirname = path.dirname(__filename);
 // Read the page content data file from the backend directory
 const mockDataPath = path.join(__dirname, '..', 'backend', 'page_content.json');
 const mockData = JSON.parse(fs.readFileSync(mockDataPath, 'utf8'));
-
-// API URL from config
-const API_URL = 'https://port.radilov-k.workers.dev';
 
 async function updatePageContent() {
   try {

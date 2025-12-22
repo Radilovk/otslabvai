@@ -8,7 +8,7 @@
     "local": "node local/local-worker.js",
     "deploy": "wrangler deploy",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "update-kv": "node -e \"const cp = require('child_process'); if (process.platform === 'win32') { console.error('The \\'update-kv\\' script is Unix/Mac only because it runs scripts/update-kv-with-wrangler.sh.'); process.exit(1); } else { const r = cp.spawnSync('bash', ['scripts/update-kv-with-wrangler.sh'], { stdio: 'inherit' }); process.exit(r.status ?? 0); }\"",
+    "update-kv": "node -e \"const cp = require('child_process'); if (process.platform === 'win32') { console.error('The update-kv script requires Unix/Mac (bash). Use update-kv-api instead or run scripts/update-kv-with-wrangler.sh in WSL/Git Bash.'); process.exit(1); } else { const r = cp.spawnSync('bash', ['scripts/update-kv-with-wrangler.sh'], { stdio: 'inherit' }); process.exit(r.status ?? 0); }\"",
     "update-kv-api": "node scripts/update-kv-content.js"
   },
   "dependencies": {

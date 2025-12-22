@@ -29,8 +29,14 @@ wrangler kv:key put --namespace-id="$KV_ID" "page_content" --path="backend/page_
 if [ $? -eq 0 ]; then
     echo "✅ Success! Page content updated."
     echo ""
-    echo "📋 The following content was uploaded:"
-    cat backend/page_content.json | jq -r '.settings | "   Site Name: \(.site_name)\n   Site Slogan: \(.site_slogan)"'
+    
+    # Check if jq is available for pretty output
+    if command -v jq &> /dev/null; then
+        echo "📋 The following content was uploaded:"
+        cat backend/page_content.json | jq -r '.settings | "   Site Name: \(.site_name)\n   Site Slogan: \(.site_slogan)"'
+    else
+        echo "📋 Content uploaded successfully. (Install 'jq' for detailed preview)"
+    fi
 else
     echo "❌ Error: Failed to update KV content"
     exit 1

@@ -73,6 +73,8 @@ wrangler kv:key put --namespace-id="d220db696e414b7cb3da2b19abd53d0f" \
 
 **Забележка**: `d220db696e414b7cb3da2b19abd53d0f` е ID-то на PAGE_CONTENT namespace от wrangler.toml
 
+**⚠️ Важно**: Проверете вашия `wrangler.toml` файл за правилния namespace ID за вашата среда. Ако използвате различни среди (dev, staging, production), може да имате различни ID-та.
+
 ### Метод 2: През Cloudflare Dashboard (GUI)
 
 1. Влезте в [Cloudflare Dashboard](https://dash.cloudflare.com/)
