@@ -42,7 +42,21 @@
                 document.documentElement.setAttribute('data-theme', 'light');
             }
         })();
+        
+        // Add class to prevent flash of wrong content
+        // This will be removed by JavaScript once content is loaded
+        document.documentElement.classList.add('loading-content');
     </script>
+    <style>
+        /* Prevent flash of wrong content during initial load */
+        html.loading-content body {
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+        html:not(.loading-content) body {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
     <!-- ============================ HEADER & NAVIGATION ============================ -->

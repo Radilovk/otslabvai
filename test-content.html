@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест на Съдържанието - ОТСЛАБВАНЕ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status.loading {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .status.success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status.error {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .info-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .info-box span {
+            color: #666;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .instructions {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .instructions h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .instructions ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Тест на Съдържанието</h1>
+        <p class="subtitle">Проверка дали KV хранилището е актуализирано правилно</p>
+        
+        <div class="test-section">
+            <h2>
+                <span id="api-status" class="status loading">Зареждане...</span>
+                API Тест
+            </h2>
+            <div class="info-box" id="api-info">
+                <strong>Проверява се API endpoint...</strong>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>
+                <span id="content-status" class="status loading">Зареждане...</span>
+                Проверка на Съдържание
+            </h2>
+            <div class="info-box" id="content-info">
+                <strong>Анализира се съдържанието...</strong>
+            </div>
+        </div>
+        
+        <button onclick="runTest()">🔄 Пусни отново теста</button>
+        
+        <div class="instructions" id="instructions" style="display: none;">
+            <h3>⚠️ Проблемът все още съществува</h3>
+            <p style="margin-bottom: 10px;">За да го коригирате, следвайте тези стъпки:</p>
+            <ul>
+                <li>Уверете се, че имате инсталиран <code>wrangler</code></li>
+                <li>Изпълнете командата:
+                    <div class="code">npm run update-kv</div>
+                </li>
+                <li>След това презаредете тази страница</li>
+            </ul>
+            <p style="margin-top: 15px; font-size: 14px;">
+                За повече информация вижте: 
+                <a href="docs/ИНСТРУКЦИИ-ПОТРЕБИТЕЛ.md" style="color: #2196f3;">Инструкции за потребител</a>
+            </p>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { API_URL } from './config.js';
+        
+        async function runTest() {
+            // Reset UI
+            document.getElementById('api-status').className = 'status loading';
+            document.getElementById('api-status').textContent = 'Зареждане...';
+            document.getElementById('content-status').className = 'status loading';
+            document.getElementById('content-status').textContent = 'Зареждане...';
+            document.getElementById('instructions').style.display = 'none';
+            
+            try {
+                // Test API connection
+                const response = await fetch(`${API_URL}/page_content.json?v=${Date.now()}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                document.getElementById('api-status').className = 'status success';
+                document.getElementById('api-status').textContent = 'Успешно';
+                document.getElementById('api-info').innerHTML = `
+                    <strong>API е достъпно ✓</strong>
+                    <span>URL: ${API_URL}</span>
+                `;
+                
+                // Parse content
+                const data = await response.json();
+                
+                // Check if content matches expected "ОТСЛАБВАНЕ" theme
+                const siteName = data.settings?.site_name || '';
+                const isCorrect = siteName.includes('ОТСЛАБВАНЕ') || siteName.includes('отслабване');
+                
+                if (isCorrect) {
+                    document.getElementById('content-status').className = 'status success';
+                    document.getElementById('content-status').textContent = 'Коректно ✓';
+                    document.getElementById('content-info').innerHTML = `
+                        <strong>Съдържанието е правилно! ✓</strong>
+                        <span>Име на сайта: ${siteName}</span><br>
+                        <span>Слоган: ${data.settings?.site_slogan || 'N/A'}</span><br>
+                        <span style="color: #28a745; margin-top: 10px; display: block;">
+                            🎉 Проблемът е решен! Сайтът ще се показва правилно.
+                        </span>
+                    `;
+                } else {
+                    document.getElementById('content-status').className = 'status error';
+                    document.getElementById('content-status').textContent = 'Грешно ✗';
+                    document.getElementById('content-info').innerHTML = `
+                        <strong>Съдържанието не е коректно ✗</strong>
+                        <span>Текущо име: ${siteName}</span><br>
+                        <span>Очаквано име: ОТСЛАБВАНЕ</span><br>
+                        <span style="color: #dc3545; margin-top: 10px; display: block;">
+                            ⚠️ KV хранилището трябва да се актуализира
+                        </span>
+                    `;
+                    document.getElementById('instructions').style.display = 'block';
+                }
+                
+            } catch (error) {
+                document.getElementById('api-status').className = 'status error';
+                document.getElementById('api-status').textContent = 'Грешка';
+                document.getElementById('api-info').innerHTML = `
+                    <strong>Грешка при свързване с API ✗</strong>
+                    <span>${error.message}</span>
+                `;
+                
+                document.getElementById('content-status').className = 'status error';
+                document.getElementById('content-status').textContent = 'Неуспешно';
+                document.getElementById('content-info').innerHTML = `
+                    <strong>Не може да се провери съдържанието</strong>
+                    <span>API е недостъпно</span>
+                `;
+            }
+        }
+        
+        // Run test on page load
+        window.runTest = runTest;
+        runTest();
+    </script>
+</body>
+</html>

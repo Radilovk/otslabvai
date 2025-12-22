@@ -7,7 +7,9 @@
     "start": "wrangler dev",
     "local": "node local/local-worker.js",
     "deploy": "wrangler deploy",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest"
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "update-kv": "./scripts/update-kv-with-wrangler.sh",
+    "update-kv-api": "node scripts/update-kv-content.js"
   },
   "dependencies": {
     "express": "^5.1.0"
