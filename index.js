@@ -956,6 +956,10 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
 
     currentAnimationType = animationType;
 
+    // --- Mobile Detection Constants ---
+    const isMobile = window.innerWidth < 768;
+    const isSmallMobile = window.innerWidth < 480;
+
     // --- Common Helper Functions ---
     function resizeCanvas() {
         const parent = canvas.parentElement;
@@ -965,7 +969,6 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
         if (width === lastWidth && height === lastHeight) return;
 
         // Optimize DPR for mobile devices - use lower resolution for better performance
-        const isMobile = window.innerWidth < 768;
         const dpr = isMobile ? Math.min(window.devicePixelRatio || 1, 1.5) : (window.devicePixelRatio || 1);
         canvas.width = width * dpr;
         canvas.height = height * dpr;
@@ -986,8 +989,6 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
             particles = [];
             const baseCount = Math.floor((canvas.width * canvas.height) / 15000);
             // Further reduce particles on mobile for better performance
-            const isMobile = window.innerWidth < 768;
-            const isSmallMobile = window.innerWidth < 480;
             const particleMultiplier = isSmallMobile ? 0.3 : (isMobile ? 0.5 : 1);
             const particleCount = Math.max(isSmallMobile ? 4 : 8, Math.floor(baseCount * particleMultiplier));
             const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
@@ -1033,7 +1034,6 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
                 ctx.fill();
                 
                 // Optional subtle glow for better performance - disable on mobile
-                const isMobile = window.innerWidth < 768;
                 if (p.opacity > 0.3 && !isMobile) {
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size + 2, 0, Math.PI * 2);
@@ -1213,8 +1213,6 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
             particles = [];
             const baseCount = Math.floor((canvas.width * canvas.height) / 18000);
             // Further reduce particles on mobile for better performance
-            const isMobile = window.innerWidth < 768;
-            const isSmallMobile = window.innerWidth < 480;
             const particleMultiplier = isSmallMobile ? 0.3 : (isMobile ? 0.5 : 1);
             const particleCount = Math.max(isSmallMobile ? 3 : 6, Math.floor(baseCount * particleMultiplier));
             const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
@@ -1265,7 +1263,6 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
                 ctx.stroke();
                 
                 // Inner glow - disable on mobile for better performance
-                const isMobile = window.innerWidth < 768;
                 if (!isMobile) {
                     ctx.beginPath();
                     ctx.arc(p.x - p.size * 0.3, p.y - p.size * 0.3, p.size * 0.3, 0, Math.PI * 2);
@@ -1287,7 +1284,6 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
 
     // Frame skipping for mobile performance optimization
     let frameCount = 0;
-    const isMobile = window.innerWidth < 768;
     const frameSkip = isMobile ? 2 : 1; // Skip every other frame on mobile
 
     function animate() {

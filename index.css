@@ -1828,7 +1828,6 @@ body.modal-open { overflow: hidden; }
     /* Hide canvas background on very small screens for best performance */
     #neuron-canvas {
         display: none;
-        opacity: 0;
     }
     
     /* Adjust hero section for small screens */
@@ -1882,7 +1881,6 @@ body.modal-open { overflow: hidden; }
     /* Hide canvas animations */
     #neuron-canvas {
         display: none;
-        opacity: 0;
     }
     
     /* Remove bounce and pulse animations */
