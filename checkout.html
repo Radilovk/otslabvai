@@ -475,6 +475,40 @@
                 padding: 1rem;
             }
         }
+        
+        /* Reduced motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            .success-modal-content,
+            .checkmark,
+            .success-title,
+            .success-message,
+            .success-detail-item,
+            .success-btn {
+                animation: none;
+            }
+            
+            .detail-icon {
+                animation: none;
+            }
+            
+            .success-animation::before,
+            .success-animation::after {
+                animation: none;
+                opacity: 0;
+            }
+            
+            .success-modal {
+                animation: fadeIn 0.2s ease;
+            }
+            
+            .success-btn:hover {
+                transform: none;
+            }
+            
+            .success-modal-close:hover {
+                transform: none;
+            }
+        }
     </style>
 </head>
 <body>
