@@ -600,11 +600,12 @@ function initializePageInteractions() {
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in-up').forEach(el => scrollObserver.observe(el));
 
-    // --- Save scroll position before navigating to product page ---
-    document.querySelectorAll('.product-card').forEach(card => {
-        card.addEventListener('click', () => {
+    // --- Save scroll position before navigating to product page (using event delegation) ---
+    document.body.addEventListener('click', (e) => {
+        const productCard = e.target.closest('.product-card');
+        if (productCard) {
             sessionStorage.setItem('indexScrollPosition', window.scrollY.toString());
-        });
+        }
     });
 
     // --- Ingredient Card Flip (Lipolor style) - supports both mini and full versions ---
