@@ -339,6 +339,13 @@ h2 {
 }
 .modal-form input[readonly] { background-color: var(--bg-light); cursor: not-allowed; }
 .modal-form textarea { min-height: 120px; resize: vertical; }
+.modal-form .form-hint { 
+    display: block; 
+    margin-top: 0.5rem; 
+    font-size: 0.85rem; 
+    color: var(--text-secondary); 
+    line-height: 1.4; 
+}
 
 .modal-form fieldset {
     border: 1px solid var(--border-color);
