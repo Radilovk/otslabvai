@@ -1036,9 +1036,24 @@
         const successModal = document.getElementById('success-modal');
         const modalOverlay = successModal ? successModal.querySelector('.success-modal-overlay') : null;
         
+        // Define closeSuccessModal first
+        window.closeSuccessModal = function() {
+            if (successModal) {
+                successModal.classList.remove('active');
+                document.body.style.overflow = '';
+                document.removeEventListener('keydown', handleModalEscape);
+            }
+        };
+        
+        function handleModalEscape(e) {
+            if (e.key === 'Escape') {
+                window.closeSuccessModal();
+            }
+        }
+        
         // Add overlay click listener once during initialization
         if (modalOverlay) {
-            modalOverlay.addEventListener('click', closeSuccessModal);
+            modalOverlay.addEventListener('click', window.closeSuccessModal);
         }
         
         function showSuccessModal() {
@@ -1054,20 +1069,6 @@
                 
                 // Add ESC key listener
                 document.addEventListener('keydown', handleModalEscape);
-            }
-        }
-        
-        window.closeSuccessModal = function() {
-            if (successModal) {
-                successModal.classList.remove('active');
-                document.body.style.overflow = '';
-                document.removeEventListener('keydown', handleModalEscape);
-            }
-        };
-        
-        function handleModalEscape(e) {
-            if (e.key === 'Escape') {
-                closeSuccessModal();
             }
         }
         
