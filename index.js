@@ -1047,6 +1047,7 @@ async function main() {
         initializeMarketingFeatures();
 
         // Restore scroll position if returning from product page
+        // Small timeout to ensure DOM is fully rendered before scrolling
         const savedScrollPosition = sessionStorage.getItem('indexScrollPosition');
         if (savedScrollPosition) {
             setTimeout(() => {

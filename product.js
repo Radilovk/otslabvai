@@ -450,15 +450,6 @@ function initializeGlobalScripts() {
         themeToggle.addEventListener('click', toggleTheme);
     }
 
-    // Handle back button click with scroll restoration
-    const backButton = document.getElementById('sticky-back-button');
-    if (backButton) {
-        backButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.location.href = 'index.html';
-        });
-    }
-
     updateCartCount();
 }
 
