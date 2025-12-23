@@ -175,6 +175,30 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             text-align: center;
             animation: slideInUp 0.5s ease;
+            position: relative;
+        }
+        
+        .success-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .success-modal-close:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
         }
         
         .success-animation {
@@ -505,28 +529,29 @@
     <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
 
     <!-- Success Modal -->
-    <div id="success-modal" class="success-modal">
-        <div class="success-modal-overlay"></div>
+    <div id="success-modal" class="success-modal" role="dialog" aria-modal="true" aria-labelledby="success-title">
+        <div class="success-modal-overlay" aria-hidden="true"></div>
         <div class="success-modal-content">
+            <button class="success-modal-close" aria-label="Затвори" onclick="closeSuccessModal()">&times;</button>
             <div class="success-animation">
-                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" aria-hidden="true">
                     <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
                     <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
                 </svg>
             </div>
-            <h2 class="success-title">Поръчката е приета успешно! 🎉</h2>
+            <h2 id="success-title" class="success-title">Поръчката е приета успешно! 🎉</h2>
             <p class="success-message">Благодарим ви за доверието!</p>
             <div class="success-details">
                 <div class="success-detail-item">
-                    <span class="detail-icon">📦</span>
+                    <span class="detail-icon" aria-hidden="true">📦</span>
                     <span class="detail-text">Вашата поръчка ще бъде изпратена в рамките на <strong>48 часа</strong></span>
                 </div>
                 <div class="success-detail-item">
-                    <span class="detail-icon">✉️</span>
+                    <span class="detail-icon" aria-hidden="true">✉️</span>
                     <span class="detail-text">Ще получите имейл с потвърждение и номер за проследяване</span>
                 </div>
                 <div class="success-detail-item">
-                    <span class="detail-icon">🚚</span>
+                    <span class="detail-icon" aria-hidden="true">🚚</span>
                     <span class="detail-text">Безплатна доставка при поръчки над 100 лв</span>
                 </div>
             </div>
@@ -933,11 +958,7 @@
                 .then(() => {
                     localStorage.removeItem('cart');
                     // Show success modal instead of alert
-                    const successModal = document.getElementById('success-modal');
-                    if (successModal) {
-                        successModal.classList.add('active');
-                        document.body.style.overflow = 'hidden';
-                    }
+                    showSuccessModal();
                 })
                 .catch(err => {
                     console.error('Грешка при изпращане на поръчката:', err);
@@ -1010,6 +1031,40 @@
         renderProducts();
         updateCartCount();
         toggleDeliveryFields(); // Initialize delivery method visibility
+        
+        // --- Success Modal Functions ---
+        function showSuccessModal() {
+            const successModal = document.getElementById('success-modal');
+            if (successModal) {
+                successModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                
+                // Focus the modal for accessibility
+                successModal.querySelector('.success-modal-content').focus();
+                
+                // Add ESC key listener
+                document.addEventListener('keydown', handleModalEscape);
+                
+                // Close on overlay click
+                const overlay = successModal.querySelector('.success-modal-overlay');
+                overlay.addEventListener('click', closeSuccessModal);
+            }
+        }
+        
+        window.closeSuccessModal = function() {
+            const successModal = document.getElementById('success-modal');
+            if (successModal) {
+                successModal.classList.remove('active');
+                document.body.style.overflow = '';
+                document.removeEventListener('keydown', handleModalEscape);
+            }
+        };
+        
+        function handleModalEscape(e) {
+            if (e.key === 'Escape') {
+                closeSuccessModal();
+            }
+        }
         
         // --- Back to top button ---
         const backToTopBtn = document.getElementById('back-to-top');
