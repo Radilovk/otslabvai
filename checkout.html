@@ -209,55 +209,58 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="address">Адрес (улица, номер, бл., вх., ет., ап.)</label>
-                        <input type="text" id="address" name="address" required>
-                        <div class="error-message">Полето е задължително.</div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="city">Град / Населено място</label>
-                            <input type="text" id="city" name="city" required>
-                            <div class="error-message">Полето е задължително.</div>
-                        </div>
-                        <div class="form-group">
-                            <label for="postcode">Пощенски код</label>
-                            <input type="text" id="postcode" name="postcode" required>
-                            <div class="error-message">Полето е задължително.</div>
-                        </div>
-                    </div>
-                    <div class="form-group">
                         <label for="phone">Телефон</label>
                         <input type="tel" id="phone" name="phone" required>
                         <div class="error-message">Моля, въведете валиден телефонен номер.</div>
                     </div>
                     
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem;">Метод на доставка</h3>
                     <div class="checkbox-group">
-                        <input type="checkbox" id="billing-same" name="billingSame" checked>
-                        <label for="billing-same">Адресът за фактуриране е същият като този за доставка</label>
+                        <input type="radio" id="delivery-address" name="deliveryMethod" value="address" checked>
+                        <label for="delivery-address">Доставка до личен адрес</label>
                     </div>
-                    <div id="billing-fields" class="hidden-fields">
-                         <h3>Адрес за фактуриране</h3>
-                         <!-- Тук ще се добавят същите полета за адрес, ако е необходимо -->
-                    </div>
-
                     <div class="checkbox-group">
-                        <input type="checkbox" id="company-invoice" name="companyInvoice">
-                        <label for="company-invoice">Желая фактура на фирма</label>
+                        <input type="radio" id="delivery-courier" name="deliveryMethod" value="courier">
+                        <label for="delivery-courier">Доставка до офис на куриер</label>
                     </div>
-                    <div id="company-fields" class="hidden-fields">
+                    
+                    <div id="address-fields" class="hidden-fields visible">
                         <div class="form-group">
-                            <label for="company-name">Име на фирма</label>
-                            <input type="text" id="company-name" name="companyName">
+                            <label for="address">Адрес (улица, номер, бл., вх., ет., ап.)</label>
+                            <input type="text" id="address" name="address" required>
+                            <div class="error-message">Полето е задължително.</div>
                         </div>
                         <div class="form-row">
-                           <div class="form-group">
-                               <label for="company-eik">ЕИК / Булстат</label>
-                               <input type="text" id="company-eik" name="companyEik">
-                           </div>
-                           <div class="form-group">
-                               <label for="company-mol">МОЛ</label>
-                               <input type="text" id="company-mol" name="companyMol">
-                           </div>
+                            <div class="form-group">
+                                <label for="city">Град / Населено място</label>
+                                <input type="text" id="city" name="city" required>
+                                <div class="error-message">Полето е задължително.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="postcode">Пощенски код</label>
+                                <input type="text" id="postcode" name="postcode" required>
+                                <div class="error-message">Полето е задължително.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="courier-fields" class="hidden-fields">
+                        <h4 style="margin-top: 1rem; margin-bottom: 0.75rem;">Избор на куриер</h4>
+                        <div class="checkbox-group">
+                            <input type="radio" id="courier-speedy" name="courierCompany" value="speedy">
+                            <label for="courier-speedy">Speedy</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="radio" id="courier-ekont" name="courierCompany" value="ekont">
+                            <label for="courier-ekont">Econt</label>
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label for="courier-office">Офис на куриер</label>
+                            <input type="text" id="courier-office" name="courierOffice" list="courier-offices-list" placeholder="Започнете да пишете град или адрес...">
+                            <datalist id="courier-offices-list">
+                                <!-- Офисите ще се заредят динамично -->
+                            </datalist>
+                            <div class="error-message">Моля, изберете офис на куриер.</div>
                         </div>
                     </div>
                 </div>
@@ -497,8 +500,6 @@
         const applyPromoBtn = document.getElementById('apply-promo');
         const discountRow = document.getElementById('discount-row');
         const discountEl = document.getElementById('summary-discount');
-        const navLinks = document.querySelector('.nav-links');
-        const navOverlay = document.querySelector('.nav-overlay');
         const cartCountEl = document.getElementById('cart-count');
 
         const saveCart = () => localStorage.setItem('cart', JSON.stringify(cartData));
@@ -610,13 +611,103 @@
             }
         });
 
-        // Toggle hidden fields
-        document.getElementById('billing-same').addEventListener('change', (e) => {
-            document.getElementById('billing-fields').classList.toggle('visible', !e.target.checked);
-        });
-        document.getElementById('company-invoice').addEventListener('change', (e) => {
-            document.getElementById('company-fields').classList.toggle('visible', e.target.checked);
-        });
+        // Toggle delivery method fields
+        const deliveryAddressRadio = document.getElementById('delivery-address');
+        const deliveryCourierRadio = document.getElementById('delivery-courier');
+        const addressFields = document.getElementById('address-fields');
+        const courierFields = document.getElementById('courier-fields');
+        const courierOfficesList = document.getElementById('courier-offices-list');
+        
+        function toggleDeliveryFields() {
+            if (deliveryAddressRadio.checked) {
+                addressFields.classList.add('visible');
+                courierFields.classList.remove('visible');
+                // Make address fields required
+                document.getElementById('address').required = true;
+                document.getElementById('city').required = true;
+                document.getElementById('postcode').required = true;
+                // Make courier office not required
+                document.getElementById('courier-office').required = false;
+            } else {
+                addressFields.classList.remove('visible');
+                courierFields.classList.add('visible');
+                // Make address fields not required
+                document.getElementById('address').required = false;
+                document.getElementById('city').required = false;
+                document.getElementById('postcode').required = false;
+                // Make courier office required
+                document.getElementById('courier-office').required = true;
+            }
+        }
+        
+        deliveryAddressRadio.addEventListener('change', toggleDeliveryFields);
+        deliveryCourierRadio.addEventListener('change', toggleDeliveryFields);
+        
+        // Load courier offices based on selection
+        const speedyRadio = document.getElementById('courier-speedy');
+        const ekontRadio = document.getElementById('courier-ekont');
+        
+        function loadCourierOffices() {
+            const offices = [];
+            
+            if (speedyRadio.checked) {
+                // Speedy offices in major Bulgarian cities
+                offices.push(
+                    'Speedy - София, бул. Цариградско шосе 115',
+                    'Speedy - София, бул. Витоша 1',
+                    'Speedy - София, бул. Сливница 47',
+                    'Speedy - Пловдив, бул. Цар Борис III Обединител 102',
+                    'Speedy - Пловдив, ул. Васил Левски 1',
+                    'Speedy - Варна, бул. Владислав Варненчик 73',
+                    'Speedy - Варна, бул. Сливница 33',
+                    'Speedy - Бургас, ул. Александровска 69',
+                    'Speedy - Бургас, бул. Транспортна 1',
+                    'Speedy - Русе, ул. Александровска 57',
+                    'Speedy - Стара Загора, бул. Патриарх Евтимий 133',
+                    'Speedy - Плевен, ул. Васил Левски 59',
+                    'Speedy - Сливен, бул. Цар Освободител 1',
+                    'Speedy - Велико Търново, ул. Никола Габровски 68',
+                    'Speedy - Шумен, бул. Славянски 17',
+                    'Speedy - Добрич, ул. Независимост 23',
+                    'Speedy - Перник, ул. Кракра 45',
+                    'Speedy - Ямбол, ул. Търговска 82',
+                    'Speedy - Хасково, бул. България 97',
+                    'Speedy - Пазарджик, ул. Иван Вазов 1'
+                );
+            } else if (ekontRadio.checked) {
+                // Econt offices in major Bulgarian cities
+                offices.push(
+                    'Econt - София, бул. Цар Борис III 232',
+                    'Econt - София, бул. Александър Малинов 51',
+                    'Econt - София, бул. Христо Ботев 48',
+                    'Econt - Пловдив, бул. Марица 81',
+                    'Econt - Пловдив, бул. Васил Левски 97',
+                    'Econt - Варна, бул. Владислав Варненчик 185',
+                    'Econt - Варна, ул.Devnya 31',
+                    'Econt - Бургас, ул. Александровска 21',
+                    'Econt - Бургас, бул. Стефан Стамболов 45',
+                    'Econt - Русе, ул. Борисова 43',
+                    'Econt - Стара Загора, бул. Цар Симеон Велики 140',
+                    'Econt - Плевен, бул. Данаил Попов 2',
+                    'Econt - Сливен, ул. Хаджи Димитър 73',
+                    'Econt - Велико Търново, ул. Никола Габровски 27',
+                    'Econt - Шумен, бул. Славянски 75',
+                    'Econt - Добрич, ул. Добротица 24',
+                    'Econt - Перник, бул. Кракра Пернишки 2',
+                    'Econt - Ямбол, ул. Индустриална 14',
+                    'Econt - Хасково, ул. Добруджа 2',
+                    'Econt - Пазарджик, бул. България 8'
+                );
+            }
+            
+            // Update datalist
+            courierOfficesList.innerHTML = offices.map(office => 
+                `<option value="${office}">`
+            ).join('');
+        }
+        
+        speedyRadio.addEventListener('change', loadCourierOffices);
+        ekontRadio.addEventListener('change', loadCourierOffices);
         
         // --- 5. ВАЛИДАЦИЯ И ИЗПРАЩАНЕ НА ФОРМАТА ---
         form.addEventListener('submit', (e) => {
@@ -668,6 +759,9 @@
                 // Skip checkbox validation here, handle separately
                 if (input.type === 'checkbox') return;
                 
+                // Skip fields that are not visible
+                if (!input.offsetParent) return;
+                
                 let fieldIsValid = true;
                 if (input.type === 'email') {
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -682,15 +776,18 @@
                 }
             });
             
-            // Validate company fields if checkbox is checked
-            if (document.getElementById('company-invoice').checked) {
-                ['company-name', 'company-eik', 'company-mol'].forEach(id => {
-                    const input = document.getElementById(id);
-                    if (input.value.trim() === '') {
-                        input.classList.add('is-invalid');
-                        isValid = false;
-                    }
-                })
+            // Validate courier office if courier delivery is selected
+            if (deliveryCourierRadio.checked) {
+                const courierOfficeInput = document.getElementById('courier-office');
+                if (courierOfficeInput.value.trim() === '') {
+                    courierOfficeInput.classList.add('is-invalid');
+                    isValid = false;
+                }
+                // Check if a courier is selected
+                if (!speedyRadio.checked && !ekontRadio.checked) {
+                    alert('Моля, изберете куриерска фирма (Speedy или Econt).');
+                    isValid = false;
+                }
             }
 
             // Validate policy consent
@@ -713,6 +810,7 @@
         // --- 6. ИНИЦИАЛИЗАЦИЯ ---
         renderProducts();
         updateCartCount();
+        toggleDeliveryFields(); // Initialize delivery method visibility
         
         // --- Back to top button ---
         const backToTopBtn = document.getElementById('back-to-top');
