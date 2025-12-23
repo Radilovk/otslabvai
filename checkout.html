@@ -531,7 +531,7 @@
     <!-- Success Modal -->
     <div id="success-modal" class="success-modal" role="dialog" aria-modal="true" aria-labelledby="success-title">
         <div class="success-modal-overlay" aria-hidden="true"></div>
-        <div class="success-modal-content">
+        <div class="success-modal-content" tabindex="-1">
             <button class="success-modal-close" aria-label="Затвори" onclick="closeSuccessModal()">&times;</button>
             <div class="success-animation">
                 <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" aria-hidden="true">
@@ -1033,26 +1033,31 @@
         toggleDeliveryFields(); // Initialize delivery method visibility
         
         // --- Success Modal Functions ---
+        const successModal = document.getElementById('success-modal');
+        const modalOverlay = successModal ? successModal.querySelector('.success-modal-overlay') : null;
+        
+        // Add overlay click listener once during initialization
+        if (modalOverlay) {
+            modalOverlay.addEventListener('click', closeSuccessModal);
+        }
+        
         function showSuccessModal() {
-            const successModal = document.getElementById('success-modal');
             if (successModal) {
                 successModal.classList.add('active');
                 document.body.style.overflow = 'hidden';
                 
                 // Focus the modal for accessibility
-                successModal.querySelector('.success-modal-content').focus();
+                const modalContent = successModal.querySelector('.success-modal-content');
+                if (modalContent) {
+                    modalContent.focus();
+                }
                 
                 // Add ESC key listener
                 document.addEventListener('keydown', handleModalEscape);
-                
-                // Close on overlay click
-                const overlay = successModal.querySelector('.success-modal-overlay');
-                overlay.addEventListener('click', closeSuccessModal);
             }
         }
         
         window.closeSuccessModal = function() {
-            const successModal = document.getElementById('success-modal');
             if (successModal) {
                 successModal.classList.remove('active');
                 document.body.style.overflow = '';
