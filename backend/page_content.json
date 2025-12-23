@@ -27,25 +27,10 @@
     },
     {
       "text": "За нас",
-      "link": "#about-us"
+      "link": "about-us.html"
     }
   ],
   "page_content": [
-    {
-      "type": "info_card",
-      "component_id": "comp-uuid-infocard-001",
-      "id": "about-us",
-      "title": "Науката зад отслабването",
-      "image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
-      "content": "Нашата мисия е да ви помогнем да постигнете здравословно тегло чрез научно доказани продукти и решения. Всеки продукт в нашето портфолио е избран заради неговата ефективност и безопасност.\n\nНие вярваме в балансирания подход към отслабването и предоставяме качествени продукти, които подпомагат вашите цели за здравословен начин на живот.",
-      "button": {
-        "text": "Разгледай продуктите",
-        "url": "#fat-burners"
-      },
-      "options": {
-        "image_align": "right"
-      }
-    },
     {
       "type": "hero_banner",
       "component_id": "comp-uuid-hero-001",
@@ -906,7 +891,7 @@
         "links": [
           {
             "text": "За нас",
-            "url": "#about-us"
+            "url": "about-us.html"
           },
           {
             "text": "Политика за поверителност",
