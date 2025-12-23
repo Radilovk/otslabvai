@@ -81,6 +81,8 @@ export default {
           case '/orders':
               if (request.method === 'GET') {
                   response = await handleGetOrders(request, env);
+              } else if (request.method === 'POST') {
+                  response = await handleCreateOrder(request, env, ctx);
               } else if (request.method === 'PUT') {
                   response = await handleUpdateOrderStatus(request, env, ctx);
               } else {
@@ -182,6 +184,48 @@ async function handleGetOrders(request, env) {
     const orders = ordersJson ? JSON.parse(ordersJson) : [];
     return new Response(JSON.stringify(orders), {
         status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles POST /orders (създаване на нова поръчка от checkout)
+ */
+async function handleCreateOrder(request, env, ctx) {
+    let orderData;
+    try {
+        orderData = await request.json();
+    } catch (e) {
+        throw new UserFacingError("Невалиден JSON формат на заявката.", 400);
+    }
+    
+    if (!orderData || !orderData.customer || !orderData.products) {
+        throw new UserFacingError("Липсват задължителни данни за поръчката.", 400);
+    }
+    
+    // Генерираме уникален ID и timestamp за поръчката
+    const newOrder = {
+        id: `order-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString(),
+        customer: orderData.customer,
+        products: orderData.products,
+        summary: orderData.summary || {},
+        status: orderData.status || 'Нова'
+    };
+    
+    // Четем съществуващите поръчки
+    const ordersJson = await env.PAGE_CONTENT.get('orders');
+    let orders = ordersJson ? JSON.parse(ordersJson) : [];
+    
+    // Добавяме новата поръчка
+    orders.push(newOrder);
+    
+    // Запазваме обратно в KV
+    ctx.waitUntil(env.PAGE_CONTENT.put('orders', JSON.stringify(orders, null, 2)));
+    
+    return new Response(JSON.stringify({ success: true, order: newOrder }), {
+        status: 201,
         headers: { 'Content-Type': 'application/json' }
     });
 }
