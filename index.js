@@ -943,6 +943,16 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
     // Respect user preference for reduced motion
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reducedMotion) return;
+    
+    // --- Mobile Detection Constants ---
+    const isMobile = window.innerWidth < 768;
+    const isSmallMobile = window.innerWidth < 480;
+    
+    // Disable animations on very small screens for better performance
+    // CSS will handle hiding the canvas via display:none, we just exit early
+    if (isSmallMobile) {
+        return;
+    }
 
     currentAnimationType = animationType;
 
@@ -954,7 +964,8 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
         const height = parent.offsetHeight;
         if (width === lastWidth && height === lastHeight) return;
 
-        const dpr = window.devicePixelRatio || 1;
+        // Optimize DPR for mobile devices - use lower resolution for better performance
+        const dpr = isMobile ? Math.min(window.devicePixelRatio || 1, 1.5) : (window.devicePixelRatio || 1);
         canvas.width = width * dpr;
         canvas.height = height * dpr;
         canvas.style.width = width + 'px';
@@ -973,7 +984,9 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
         init: function() {
             particles = [];
             const baseCount = Math.floor((canvas.width * canvas.height) / 15000);
-            const particleCount = Math.max(8, Math.floor(baseCount * (window.innerWidth < 768 ? 0.5 : 1)));
+            // Further reduce particles on mobile for better performance
+            const particleMultiplier = isSmallMobile ? 0.3 : (isMobile ? 0.5 : 1);
+            const particleCount = Math.max(isSmallMobile ? 4 : 8, Math.floor(baseCount * particleMultiplier));
             const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
             
             for (let i = 0; i < particleCount; i++) {
@@ -1016,8 +1029,8 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
                 ctx.fillStyle = `rgba(${accentRgb}, ${p.opacity})`;
                 ctx.fill();
                 
-                // Optional subtle glow for better performance
-                if (p.opacity > 0.3) {
+                // Optional subtle glow for better performance - disable on mobile
+                if (p.opacity > 0.3 && !isMobile) {
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size + 2, 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(${accentRgb}, ${p.opacity * 0.3})`;
@@ -1195,7 +1208,9 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
         init: function() {
             particles = [];
             const baseCount = Math.floor((canvas.width * canvas.height) / 18000);
-            const particleCount = Math.max(6, Math.floor(baseCount * (window.innerWidth < 768 ? 0.5 : 1)));
+            // Further reduce particles on mobile for better performance
+            const particleMultiplier = isSmallMobile ? 0.3 : (isMobile ? 0.5 : 1);
+            const particleCount = Math.max(isSmallMobile ? 3 : 6, Math.floor(baseCount * particleMultiplier));
             const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
             
             for (let i = 0; i < particleCount; i++) {
@@ -1243,11 +1258,13 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                // Inner glow
-                ctx.beginPath();
-                ctx.arc(p.x - p.size * 0.3, p.y - p.size * 0.3, p.size * 0.3, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * 0.3})`;
-                ctx.fill();
+                // Inner glow - disable on mobile for better performance
+                if (!isMobile) {
+                    ctx.beginPath();
+                    ctx.arc(p.x - p.size * 0.3, p.y - p.size * 0.3, p.size * 0.3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * 0.3})`;
+                    ctx.fill();
+                }
             });
         }
     };
@@ -1261,11 +1278,20 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
         'transformation-bubbles': transformationBubblesAnimation
     };
 
+    // Frame skipping for mobile performance optimization
+    let frameCount = 0;
+    const frameSkip = isMobile ? 2 : 1; // Skip every other frame on mobile
+
     function animate() {
         const currentAnimation = animations[currentAnimationType];
         if (!currentAnimation) return; // Early exit if no valid animation
         
         animationFrameId = requestAnimationFrame(animate);
+        
+        // Frame skipping for mobile performance
+        frameCount = (frameCount + 1) % 100; // Reset periodically to prevent overflow
+        if (frameCount % frameSkip !== 0) return;
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         currentAnimation.animate();
     }
