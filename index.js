@@ -944,21 +944,17 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reducedMotion) return;
     
-    // Disable animations on very small screens for better performance
-    const isVerySmallScreen = window.innerWidth < 480;
-    if (isVerySmallScreen) {
-        // Hide canvas on very small screens
-        canvas.style.opacity = '0';
-        return;
-    } else {
-        canvas.style.opacity = '1';
-    }
-
-    currentAnimationType = animationType;
-
     // --- Mobile Detection Constants ---
     const isMobile = window.innerWidth < 768;
     const isSmallMobile = window.innerWidth < 480;
+    
+    // Disable animations on very small screens for better performance
+    // CSS will handle hiding the canvas via display:none, we just exit early
+    if (isSmallMobile) {
+        return;
+    }
+
+    currentAnimationType = animationType;
 
     // --- Common Helper Functions ---
     function resizeCanvas() {
