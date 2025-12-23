@@ -97,15 +97,115 @@
             width: 100%;
             max-width: 600px;
             margin: 30px auto;
+        }
+        
+        .product-image-gallery {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .main-product-image {
+            width: 100%;
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--box-shadow);
+            cursor: zoom-in;
+            position: relative;
         }
         
-        .product-detail-image img {
+        .main-product-image img {
             width: 100%;
             height: auto;
             display: block;
+            transition: transform 0.3s ease;
+        }
+        
+        .main-product-image:hover img {
+            transform: scale(1.05);
+        }
+        
+        .image-thumbnails {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            opacity: 0.6;
+        }
+        
+        .thumbnail:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        .thumbnail.active {
+            border-color: var(--accent);
+            opacity: 1;
+        }
+        
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Image zoom modal */
+        .image-zoom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+        
+        .image-zoom-modal.active {
+            display: flex;
+        }
+        
+        .zoomed-image {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+        }
+        
+        .zoom-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 3rem;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .zoom-close:hover {
+            background: rgba(228, 0, 124, 0.8);
+            transform: rotate(90deg);
         }
         
         .product-detail-effects {
@@ -269,6 +369,19 @@
                 margin: 20px auto;
             }
             
+            .thumbnail {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .zoom-close {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 2rem;
+            }
+            
             .order-now-btn {
                 width: 100%;
                 padding: 16px 20px;
@@ -342,16 +455,6 @@
             <nav class="main-nav">
                 <ul class="nav-links" id="main-nav-links">
                     <li>
-                        <a href="checkout.html" class="cart-icon-btn" aria-label="Количка">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="9" cy="21" r="1"></circle>
-                                <circle cx="20" cy="21" r="1"></circle>
-                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                            </svg>
-                            <span class="cart-badge" id="cart-count">0</span>
-                        </a>
-                    </li>
-                    <li>
                         <button id="theme-toggle" class="theme-toggle-btn" aria-label="Превключи тема">
                             <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="5"></circle>
@@ -371,6 +474,14 @@
                     </li>
                 </ul>
             </nav>
+            <a href="checkout.html" class="cart-icon-btn" aria-label="Количка">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                <span class="cart-badge" id="cart-count">0</span>
+            </a>
             <button class="menu-toggle" aria-label="Toggle Menu">
                 <span></span>
                 <span></span>
@@ -412,6 +523,12 @@
     </footer>
 
     <div id="toast-container"></div>
+    
+    <!-- Image Zoom Modal -->
+    <div class="image-zoom-modal" id="image-zoom-modal">
+        <span class="zoom-close" id="zoom-close">×</span>
+        <img src="" alt="Zoomed product image" class="zoomed-image" id="zoomed-image">
+    </div>
 
     <script src="product.js" type="module"></script>
     

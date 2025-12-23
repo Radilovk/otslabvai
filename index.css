@@ -385,6 +385,7 @@ img {
     display: flex; 
     justify-content: space-between; 
     align-items: center;
+    gap: 1rem;
 }
 
 .logo-container {
@@ -544,6 +545,7 @@ img {
     position: relative;
     text-decoration: none;
     color: var(--accent);
+    flex-shrink: 0;
 }
 
 .cart-icon-btn:hover {

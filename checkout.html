@@ -109,7 +109,21 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(228, 0, 124, 0.4);
         }
-        .trust-seals { text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.8rem; }
+        .trust-seals { 
+            text-align: center; 
+            margin-top: 1.5rem; 
+            color: var(--text-secondary); 
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+        .checkout-page-title {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
         @media (max-width: 992px) {
             .checkout-container { flex-direction: column-reverse; }
             .summary-section { position: static; }
@@ -168,7 +182,7 @@
     <div class="checkout-container">
         <!-- Форма за попълване -->
         <main class="form-section">
-            <h1>Завършване на поръчката</h1>
+            <h1 class="checkout-page-title">Завършване на поръчката</h1>
             <a href="index.html" class="btn btn-primary" style="display:inline-block;margin-bottom:1rem;">&larr; Обратно към магазина</a>
             <form id="checkout-form" novalidate>
                 <div class="form-step">
@@ -262,13 +276,19 @@
                 
                 <div class="form-step">
                     <div class="checkbox-group">
+                        <input type="checkbox" id="policy-consent" name="policyConsent" required>
+                        <label for="policy-consent">Прочетох и се съгласявам с <a href="policy.html" target="_blank" style="color:var(--accent)">политиката за поверителност</a> и <a href="shipping.html" target="_blank" style="color:var(--accent)">условията за доставка</a>.</label>
+                    </div>
+                    <div class="error-message" id="policy-error">Трябва да се съгласите с политиката и условията.</div>
+                    
+                    <div class="checkbox-group">
                         <input type="checkbox" id="terms" name="terms" required>
-                        <label for="terms">Прочетох и се съгласявам с <a href="terms.html" style="color:var(--accent)">Общите условия</a>.</label>
+                        <label for="terms">Прочетох и се съгласявам с <a href="terms.html" target="_blank" style="color:var(--accent)">Общите условия</a>.</label>
                     </div>
                     <div class="error-message" id="terms-error">Трябва да се съгласите с общите условия.</div>
 
                     <button type="submit" class="btn-submit" style="margin-top: 1.5rem;">Поръчай с наложен платеж</button>
-                    <p class="trust-seals">Всички транзакции са сигурни и криптирани.</p>
+                    <p class="trust-seals">🔒 Всички транзакции са сигурни и криптирани.<br>📦 Гаранция за качество и сигурна доставка.</p>
                 </div>
             </form>
         </main>
@@ -641,9 +661,13 @@
             // Reset previous errors
             form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
             document.getElementById('terms-error').style.display = 'none';
+            document.getElementById('policy-error').style.display = 'none';
 
             const requiredFields = form.querySelectorAll('input[required]');
             requiredFields.forEach(input => {
+                // Skip checkbox validation here, handle separately
+                if (input.type === 'checkbox') return;
+                
                 let fieldIsValid = true;
                 if (input.type === 'email') {
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -669,6 +693,13 @@
                 })
             }
 
+            // Validate policy consent
+            const policyCheckbox = document.getElementById('policy-consent');
+            if (!policyCheckbox.checked) {
+                document.getElementById('policy-error').style.display = 'block';
+                isValid = false;
+            }
+            
             // Validate terms
             const termsCheckbox = document.getElementById('terms');
             if (!termsCheckbox.checked) {
