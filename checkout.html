@@ -135,6 +135,194 @@
             .product-controls { width: 100%; flex-direction: row; justify-content: space-between; margin-top: 0.5rem; }
             .summary-section { padding: 1rem; }
         }
+        
+        /* Success Modal Styles */
+        .success-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .success-modal.active {
+            display: block;
+        }
+        
+        .success-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        
+        .success-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-primary);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            animation: slideInUp 0.5s ease;
+            position: relative;
+        }
+        
+        .success-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .success-modal-close:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .success-animation {
+            margin-bottom: 2rem;
+        }
+        
+        .checkmark {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+            animation: scaleIn 0.5s ease;
+        }
+        
+        .checkmark-circle {
+            stroke: var(--color-secondary);
+            stroke-width: 2;
+            stroke-miterlimit: 10;
+            animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        
+        .checkmark-check {
+            stroke: var(--color-primary);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-miterlimit: 10;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.4s forwards;
+        }
+        
+        .success-title {
+            font-family: var(--font-primary);
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            animation: slideInUp 0.6s ease 0.3s both;
+        }
+        
+        .success-message {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            animation: slideInUp 0.6s ease 0.4s both;
+        }
+        
+        .success-details {
+            text-align: left;
+            margin-bottom: 2rem;
+            animation: slideInUp 0.6s ease 0.5s both;
+        }
+        
+        .success-detail-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+        }
+        
+        .detail-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .detail-text {
+            flex: 1;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .success-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-family: var(--font-primary);
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: slideInUp 0.6s ease 0.6s both;
+        }
+        
+        .success-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(228, 0, 124, 0.3);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes stroke {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -339,6 +527,33 @@
     </footer>
 
     <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="success-modal" role="dialog" aria-modal="true" aria-labelledby="success-title">
+        <div class="success-modal-overlay" aria-hidden="true"></div>
+        <div class="success-modal-content" tabindex="-1">
+            <button class="success-modal-close" aria-label="Затвори" onclick="closeSuccessModal()">&times;</button>
+            <div class="success-animation">
+                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" aria-hidden="true">
+                    <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                    <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                </svg>
+            </div>
+            <h2 id="success-title" class="success-title">Поръчката е приета успешно! 🎉</h2>
+            <p class="success-message">Благодарим ви за доверието!</p>
+            <div class="success-details">
+                <div class="success-detail-item">
+                    <span class="detail-icon" aria-hidden="true">📦</span>
+                    <span class="detail-text">Вашата поръчка ще бъде изпратена в рамките на <strong>48 часа</strong></span>
+                </div>
+                <div class="success-detail-item">
+                    <span class="detail-icon" aria-hidden="true">🎯</span>
+                    <span class="detail-text">Направихте важна стъпка към постигането на вашата цел</span>
+                </div>
+            </div>
+            <button class="success-btn" onclick="window.location.href='index.html'">Продължи пазаруването</button>
+        </div>
+    </div>
 
     <script type="module">
     import { API_URL } from './config.js';
@@ -738,7 +953,8 @@
                 })
                 .then(() => {
                     localStorage.removeItem('cart');
-                    alert('Поръчката е приета успешно!');
+                    // Show success modal instead of alert
+                    showSuccessModal();
                 })
                 .catch(err => {
                     console.error('Грешка при изпращане на поръчката:', err);
@@ -811,6 +1027,46 @@
         renderProducts();
         updateCartCount();
         toggleDeliveryFields(); // Initialize delivery method visibility
+        
+        // --- Success Modal Functions ---
+        const successModal = document.getElementById('success-modal');
+        const modalOverlay = successModal ? successModal.querySelector('.success-modal-overlay') : null;
+        
+        // Define closeSuccessModal first
+        window.closeSuccessModal = function() {
+            if (successModal) {
+                successModal.classList.remove('active');
+                document.body.style.overflow = '';
+                document.removeEventListener('keydown', handleModalEscape);
+            }
+        };
+        
+        function handleModalEscape(e) {
+            if (e.key === 'Escape') {
+                window.closeSuccessModal();
+            }
+        }
+        
+        // Add overlay click listener once during initialization
+        if (modalOverlay) {
+            modalOverlay.addEventListener('click', window.closeSuccessModal);
+        }
+        
+        function showSuccessModal() {
+            if (successModal) {
+                successModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                
+                // Focus the modal for accessibility
+                const modalContent = successModal.querySelector('.success-modal-content');
+                if (modalContent) {
+                    modalContent.focus();
+                }
+                
+                // Add ESC key listener
+                document.addEventListener('keydown', handleModalEscape);
+            }
+        }
         
         // --- Back to top button ---
         const backToTopBtn = document.getElementById('back-to-top');

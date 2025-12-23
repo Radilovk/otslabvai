@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="bg" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>За нас - Продукти за Отслабване</title>
+    <meta name="description" content="Научете повече за нашата мисия и как можем да ви помогнем да постигнете здравословно тегло.">
+    <meta property="og:title" content="За нас - Продукти за Отслабване">
+    <meta property="og:description" content="Научете повече за нашата мисия и как можем да ви помогнем да постигнете здравословно тегло.">
+    <meta property="og:image" content="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="bg_BG">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('theme');
+                var theme = savedTheme || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <style>
+        .about-hero {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            padding: 4rem 0;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .about-hero h1 {
+            font-family: var(--font-primary);
+            font-size: 3rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        
+        .about-hero p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.95);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .about-content {
+            display: flex;
+            gap: 3rem;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+        
+        .about-image {
+            flex: 1;
+            max-width: 500px;
+        }
+        
+        .about-image img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .about-text {
+            flex: 1;
+        }
+        
+        .about-text h2 {
+            font-family: var(--font-primary);
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+        
+        .about-text p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-family: var(--font-primary);
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(228, 0, 124, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .about-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .about-hero p {
+                font-size: 1rem;
+            }
+            
+            .about-content {
+                flex-direction: column;
+            }
+            
+            .about-image {
+                max-width: 100%;
+            }
+            
+            .about-text h2 {
+                font-size: 1.5rem;
+            }
+            
+            .about-text p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <a href="index.html" class="logo-container" id="header-logo-link">
+                <img src="" alt="Лого" id="header-logo-img" style="display: none;">
+                <div>
+                    <span class="brand-name" id="header-brand-name">ОТСЛАБВАНЕ</span>
+                    <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <ul class="nav-links" id="main-nav-links">
+                    <li><a href="index.html">Начало</a></li>
+                    <li>
+                        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Превключи тема">
+                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </button>
+                    </li>
+                    <li><a href="checkout.html" class="cart-link">Количка (<span id="cart-count">0</span>)</a></li>
+                </ul>
+            </nav>
+            <button class="menu-toggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    <div class="nav-overlay"></div>
+
+    <div class="about-hero">
+        <div class="container">
+            <h1>За нас</h1>
+            <p>Вашият надежден партньор на пътя към здравословен живот</p>
+        </div>
+    </div>
+
+    <main class="container" style="padding-bottom: 3rem;">
+        <div class="about-content">
+            <div class="about-image">
+                <img src="https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp" alt="Научни изследвания" loading="lazy">
+            </div>
+            <div class="about-text">
+                <h2>Науката зад отслабването</h2>
+                <p>Нашата мисия е да ви помогнем да постигнете здравословно тегло чрез научно доказани продукти и решения. Всеки продукт в нашето портфолио е избран заради неговата ефективност и безопасност.</p>
+                <p>Ние вярваме в балансирания подход към отслабването и предоставяме качествени продукти, които подпомагат вашите цели за здравословен начин на живот.</p>
+                <p>Ние вярваме, че всеки заслужава да се чувства добре в собственото си тяло. Нашата мисия е да ви вдъхновим и подкрепим на пътя към здравословно тегло и балансиран начин на живот.</p>
+                <p>Всеки продукт в нашето портфолио е внимателно подбран въз основа на научни изследвания и доказана ефективност. Ние не вярваме в магически решения - вярваме в комбинацията от качествени добавки, балансирано хранене и активен начин на живот.</p>
+                <p>Вашето здраве е нашият приоритет. Затова предлагаме само безопасни и ефективни продукти, които подпомагат метаболизма, контролират апетита и стимулират изгарянето на мазнини по естествен начин.</p>
+                <p>Заедно можем да постигнем вашите цели и да създадем устойчиви навици за здравословен живот.</p>
+                <a href="index.html#fat-burners" class="cta-button">Разгледай продуктите</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid" id="footer-grid-container">
+                <!-- Футър колоните ще бъдат генерирани от JS -->
+            </div>
+            <div class="footer-bottom" id="footer-copyright-container">
+                <!-- Copyright текстът ще бъде генериран от JS -->
+            </div>
+        </div>
+    </footer>
+
+    <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
+    
+    <script type="module" src="index.js"></script>
+</body>
+</html>
