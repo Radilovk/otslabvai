@@ -145,11 +145,13 @@
             width: 100%;
             height: 100%;
             z-index: 10000;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.4s ease;
         }
         
         .success-modal.active {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .success-modal-overlay {
@@ -158,37 +160,35 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.4s ease;
         }
         
         .success-modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--bg-primary);
-            border-radius: 20px;
-            padding: 3rem 2rem;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            animation: slideInUp 0.5s ease;
             position: relative;
+            background: var(--bg-primary);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            max-width: 540px;
+            width: 90%;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            text-align: center;
+            animation: modalBounceIn 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1;
         }
         
         .success-modal-close {
             position: absolute;
             top: 1rem;
             right: 1rem;
-            background: none;
+            background: rgba(255, 255, 255, 0.1);
             border: none;
-            font-size: 2rem;
+            font-size: 1.8rem;
             color: var(--text-secondary);
             cursor: pointer;
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -199,98 +199,175 @@
         .success-modal-close:hover {
             background: var(--bg-secondary);
             color: var(--text-primary);
+            transform: rotate(90deg);
         }
         
         .success-animation {
             margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        /* Add celebration confetti effect */
+        .success-animation::before,
+        .success-animation::after {
+            content: '🎉';
+            position: absolute;
+            font-size: 2rem;
+            animation: celebrate 1.5s ease-out;
+        }
+        
+        .success-animation::before {
+            left: 10%;
+            top: -10px;
+            animation-delay: 0.3s;
+        }
+        
+        .success-animation::after {
+            right: 10%;
+            top: -10px;
+            animation-delay: 0.5s;
         }
         
         .checkmark {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             margin: 0 auto;
-            animation: scaleIn 0.5s ease;
+            animation: checkmarkBounce 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.2s both;
+            filter: drop-shadow(0 5px 15px rgba(0, 224, 224, 0.3));
         }
         
         .checkmark-circle {
             stroke: var(--color-secondary);
-            stroke-width: 2;
+            stroke-width: 3;
             stroke-miterlimit: 10;
-            animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            animation: strokeCircle 0.8s cubic-bezier(0.65, 0, 0.45, 1) 0.3s forwards;
+            fill: none;
         }
         
         .checkmark-check {
             stroke: var(--color-primary);
-            stroke-width: 3;
+            stroke-width: 4;
             stroke-linecap: round;
             stroke-linejoin: round;
             stroke-miterlimit: 10;
             stroke-dasharray: 48;
             stroke-dashoffset: 48;
-            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.4s forwards;
+            animation: strokeCheck 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
         }
         
         .success-title {
             font-family: var(--font-primary);
-            font-size: 1.8rem;
-            color: var(--text-primary);
-            margin-bottom: 1rem;
-            animation: slideInUp 0.6s ease 0.3s both;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+            animation: fadeSlideUp 0.6s ease 0.5s both;
         }
         
         .success-message {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             color: var(--text-secondary);
             margin-bottom: 2rem;
-            animation: slideInUp 0.6s ease 0.4s both;
+            animation: fadeSlideUp 0.6s ease 0.6s both;
+            font-weight: 500;
         }
         
         .success-details {
             text-align: left;
             margin-bottom: 2rem;
-            animation: slideInUp 0.6s ease 0.5s both;
         }
         
         .success-detail-item {
             display: flex;
             align-items: flex-start;
             gap: 1rem;
-            padding: 1rem;
-            background: var(--bg-secondary);
-            border-radius: 10px;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, rgba(228, 0, 124, 0.05), rgba(0, 224, 224, 0.05));
+            border: 1px solid rgba(228, 0, 124, 0.1);
+            border-radius: 12px;
             margin-bottom: 0.75rem;
+            animation: fadeSlideUp 0.5s ease both;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .success-detail-item:nth-child(1) {
+            animation-delay: 0.7s;
+        }
+        
+        .success-detail-item:nth-child(2) {
+            animation-delay: 0.8s;
+        }
+        
+        .success-detail-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(228, 0, 124, 0.15);
         }
         
         .detail-icon {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             flex-shrink: 0;
+            animation: bounce 1s ease infinite;
         }
         
         .detail-text {
             flex: 1;
-            font-size: 0.95rem;
-            color: var(--text-secondary);
+            font-size: 1rem;
+            color: var(--text-primary);
             line-height: 1.6;
+        }
+        
+        .detail-text strong {
+            color: var(--color-primary);
         }
         
         .success-btn {
             width: 100%;
-            padding: 1rem 2rem;
+            padding: 1.25rem 2rem;
             background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
             color: white;
             border: none;
             border-radius: 50px;
             font-family: var(--font-primary);
-            font-weight: 600;
-            font-size: 1.1rem;
+            font-weight: 700;
+            font-size: 1.15rem;
             cursor: pointer;
             transition: all 0.3s ease;
-            animation: slideInUp 0.6s ease 0.6s both;
+            animation: fadeSlideUp 0.6s ease 0.9s both;
+            box-shadow: 0 8px 20px rgba(228, 0, 124, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .success-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .success-btn:hover::before {
+            width: 300px;
+            height: 300px;
         }
         
         .success-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(228, 0, 124, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(228, 0, 124, 0.4);
+        }
+        
+        .success-btn:active {
+            transform: translateY(-1px);
         }
         
         @keyframes fadeIn {
@@ -298,10 +375,27 @@
             to { opacity: 1; }
         }
         
-        @keyframes slideInUp {
+        @keyframes modalBounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(-50px);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.95);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes fadeSlideUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -309,18 +403,110 @@
             }
         }
         
-        @keyframes scaleIn {
-            from {
+        @keyframes checkmarkBounce {
+            0% {
                 transform: scale(0);
+                opacity: 0;
             }
-            to {
+            50% {
+                transform: scale(1.15);
+            }
+            100% {
                 transform: scale(1);
+                opacity: 1;
             }
         }
         
-        @keyframes stroke {
+        @keyframes strokeCircle {
             to {
                 stroke-dashoffset: 0;
+            }
+        }
+        
+        @keyframes strokeCheck {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        
+        @keyframes celebrate {
+            0% {
+                opacity: 0;
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-80px) rotate(180deg);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .success-modal-content {
+                padding: 2.5rem 1.5rem;
+                border-radius: 20px;
+            }
+            
+            .checkmark {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .success-title {
+                font-size: 1.6rem;
+            }
+            
+            .success-message {
+                font-size: 1rem;
+            }
+            
+            .success-detail-item {
+                padding: 1rem;
+            }
+        }
+        
+        /* Reduced motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            .success-modal-content,
+            .checkmark,
+            .success-title,
+            .success-message,
+            .success-detail-item,
+            .success-btn {
+                animation: none;
+            }
+            
+            .detail-icon {
+                animation: none;
+            }
+            
+            .success-animation::before,
+            .success-animation::after {
+                animation: none;
+                opacity: 0;
+            }
+            
+            .success-modal {
+                animation: fadeIn 0.2s ease;
+            }
+            
+            .success-btn:hover {
+                transform: none;
+            }
+            
+            .success-modal-close:hover {
+                transform: none;
             }
         }
     </style>
@@ -331,7 +517,7 @@
             <a href="index.html" class="logo-container" id="header-logo-link">
                 <img src="" alt="Лого" id="header-logo-img" style="display: none;">
                 <div>
-                    <span class="brand-name" id="header-brand-name">ОТСЛАБВАНЕ</span>
+                    <span class="brand-name" id="header-brand-name">ДА ОТСЛАБНА</span>
                     <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
                 </div>
             </a>
