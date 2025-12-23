@@ -374,10 +374,18 @@
                         <label>Слоган</label>
                         <input type="text" data-field="public_data.tagline">
                     </div>
-                    <div class="form-group">
-                        <label>URL на изображение</label>
-                        <input type="text" data-field="public_data.image_url">
-                    </div>
+                    <fieldset>
+                        <legend>Изображения на продукта</legend>
+                        <div class="form-group">
+                            <label>Основно изображение (URL)</label>
+                            <input type="text" data-field="public_data.image_url" placeholder="https://example.com/image.jpg">
+                        </div>
+                        <div class="form-group">
+                            <label>Допълнителни изображения (по едно на ред)</label>
+                            <textarea data-field="public_data.additional_images" rows="4" placeholder="https://example.com/image2.jpg&#10;https://example.com/image3.jpg&#10;https://example.com/image4.jpg"></textarea>
+                            <small style="color: var(--text-secondary); font-size: 0.85rem;">Въведете URL адресите на допълнителни изображения, всеки на нов ред. Те ще се показват като галерия в страницата на продукта.</small>
+                        </div>
+                    </fieldset>
                     <div class="form-group">
                         <label>Описание</label>
                         <textarea data-field="public_data.description" rows="4"></textarea>

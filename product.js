@@ -209,6 +209,46 @@ function renderProductDetail(product) {
         stockText = `Налично: ${inventory} бр.`;
     }
 
+    // Prepare image gallery
+    let imagesHTML = '';
+    if (publicData.image_url) {
+        // Collect all images
+        const images = [publicData.image_url];
+        
+        // Add additional images if they exist
+        if (publicData.additional_images) {
+            let additionalImages = [];
+            if (typeof publicData.additional_images === 'string') {
+                // Split by newlines and filter out empty lines
+                additionalImages = publicData.additional_images.split('\n').map(url => url.trim()).filter(url => url);
+            } else if (Array.isArray(publicData.additional_images)) {
+                additionalImages = publicData.additional_images;
+            }
+            images.push(...additionalImages);
+        }
+        
+        if (images.length > 0) {
+            imagesHTML = `
+                <div class="product-detail-image">
+                    <div class="product-image-gallery">
+                        <div class="main-product-image" data-zoom-image="${escapeHtml(images[0])}">
+                            <img src="${escapeHtml(images[0])}" alt="${escapeHtml(publicData.name)}" loading="lazy" id="main-product-img">
+                        </div>
+                        ${images.length > 1 ? `
+                            <div class="image-thumbnails">
+                                ${images.map((img, idx) => `
+                                    <div class="thumbnail ${idx === 0 ? 'active' : ''}" data-image="${escapeHtml(img)}">
+                                        <img src="${escapeHtml(img)}" alt="${escapeHtml(publicData.name)} - Изглед ${idx + 1}">
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+    }
+
     // Build the product detail HTML
     const productHTML = `
         <div class="product-detail-header">
@@ -220,11 +260,7 @@ function renderProductDetail(product) {
             </div>
         </div>
 
-        ${publicData.image_url ? `
-            <div class="product-detail-image">
-                <img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)}" loading="lazy">
-            </div>
-        ` : ''}
+        ${imagesHTML}
 
         ${(publicData.effects && publicData.effects.length > 0) ? `
             <div class="product-detail-effects">
@@ -373,6 +409,75 @@ function initializeProductInteractions() {
             }
         });
     });
+    
+    // Image Gallery - Thumbnail switching
+    const thumbnails = document.querySelectorAll('.thumbnail');
+    const mainImage = document.getElementById('main-product-img');
+    const mainImageContainer = document.querySelector('.main-product-image');
+    
+    thumbnails.forEach(thumbnail => {
+        thumbnail.addEventListener('click', () => {
+            const newImageUrl = thumbnail.dataset.image;
+            
+            // Update active thumbnail
+            thumbnails.forEach(t => t.classList.remove('active'));
+            thumbnail.classList.add('active');
+            
+            // Update main image
+            if (mainImage && newImageUrl) {
+                mainImage.src = newImageUrl;
+            }
+            
+            // Update zoom data attribute
+            if (mainImageContainer && newImageUrl) {
+                mainImageContainer.dataset.zoomImage = newImageUrl;
+            }
+        });
+    });
+    
+    // Image Zoom functionality
+    const zoomModal = document.getElementById('image-zoom-modal');
+    const zoomedImage = document.getElementById('zoomed-image');
+    const zoomClose = document.getElementById('zoom-close');
+    
+    if (mainImageContainer && zoomModal && zoomedImage) {
+        mainImageContainer.addEventListener('click', () => {
+            const imageUrl = mainImageContainer.dataset.zoomImage || mainImage?.src;
+            if (imageUrl) {
+                zoomedImage.src = imageUrl;
+                zoomModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+        
+        const closeZoom = () => {
+            zoomModal.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+        
+        if (zoomClose) {
+            zoomClose.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeZoom();
+            });
+        }
+        
+        zoomModal.addEventListener('click', closeZoom);
+        
+        // Prevent closing when clicking on the image itself
+        if (zoomedImage) {
+            zoomedImage.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+        
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && zoomModal.classList.contains('active')) {
+                closeZoom();
+            }
+        });
+    }
 }
 
 // =======================================================
