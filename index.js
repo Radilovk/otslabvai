@@ -943,6 +943,16 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
     // Respect user preference for reduced motion
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reducedMotion) return;
+    
+    // Disable animations on very small screens for better performance
+    const isVerySmallScreen = window.innerWidth < 480;
+    if (isVerySmallScreen) {
+        // Hide canvas on very small screens
+        canvas.style.opacity = '0';
+        return;
+    } else {
+        canvas.style.opacity = '1';
+    }
 
     currentAnimationType = animationType;
 
@@ -954,7 +964,9 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
         const height = parent.offsetHeight;
         if (width === lastWidth && height === lastHeight) return;
 
-        const dpr = window.devicePixelRatio || 1;
+        // Optimize DPR for mobile devices - use lower resolution for better performance
+        const isMobile = window.innerWidth < 768;
+        const dpr = isMobile ? Math.min(window.devicePixelRatio || 1, 1.5) : (window.devicePixelRatio || 1);
         canvas.width = width * dpr;
         canvas.height = height * dpr;
         canvas.style.width = width + 'px';
@@ -973,7 +985,11 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
         init: function() {
             particles = [];
             const baseCount = Math.floor((canvas.width * canvas.height) / 15000);
-            const particleCount = Math.max(8, Math.floor(baseCount * (window.innerWidth < 768 ? 0.5 : 1)));
+            // Further reduce particles on mobile for better performance
+            const isMobile = window.innerWidth < 768;
+            const isSmallMobile = window.innerWidth < 480;
+            const particleMultiplier = isSmallMobile ? 0.3 : (isMobile ? 0.5 : 1);
+            const particleCount = Math.max(isSmallMobile ? 4 : 8, Math.floor(baseCount * particleMultiplier));
             const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
             
             for (let i = 0; i < particleCount; i++) {
@@ -1195,7 +1211,11 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
         init: function() {
             particles = [];
             const baseCount = Math.floor((canvas.width * canvas.height) / 18000);
-            const particleCount = Math.max(6, Math.floor(baseCount * (window.innerWidth < 768 ? 0.5 : 1)));
+            // Further reduce particles on mobile for better performance
+            const isMobile = window.innerWidth < 768;
+            const isSmallMobile = window.innerWidth < 480;
+            const particleMultiplier = isSmallMobile ? 0.3 : (isMobile ? 0.5 : 1);
+            const particleCount = Math.max(isSmallMobile ? 3 : 6, Math.floor(baseCount * particleMultiplier));
             const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
             
             for (let i = 0; i < particleCount; i++) {
