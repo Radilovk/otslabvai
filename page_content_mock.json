@@ -1,7 +1,7 @@
 {
   "settings": {
-    "site_name": "ОТСЛАБВАНЕ",
-    "site_slogan": "Здравословен начин на живот",
+    "site_name": "ДА ОТСЛАБНА",
+    "site_slogan": "Мисията възможна",
     "logo_url": "https://radilovk.github.io/face/assets/logo.png"
   },
   "navigation": [
@@ -904,6 +904,6 @@
         ]
       }
     ],
-    "copyright_text": "© 2025 ОТСЛАБВАНЕ. Всички права запазени."
+    "copyright_text": "© 2025 ДА ОТСЛАБНА. Всички права запазени."
   }
 }
