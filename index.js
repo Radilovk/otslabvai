@@ -1010,21 +1010,26 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
                     p.wobble = Math.random() * Math.PI * 2;
                 }
                 
-                // Draw particle with glow
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = `rgba(${accentRgb}, ${p.opacity})`;
+                // Draw particle with glow (optimized)
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(${accentRgb}, ${p.opacity})`;
                 ctx.fill();
-                ctx.shadowBlur = 0;
+                
+                // Optional subtle glow for better performance
+                if (p.opacity > 0.3) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size + 2, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${accentRgb}, ${p.opacity * 0.3})`;
+                    ctx.fill();
+                }
             });
         }
     };
 
     // =======================================================
     //   АНИМАЦИЯ 2: Energy Pulse (Енергиен пулс)
-    //   Психологически ефект: Витални, динамичност, сила
+    //   Психологически ефект: Виталност, динамичност, сила
     // =======================================================
     const energyPulseAnimation = {
         init: function() {
@@ -1090,6 +1095,7 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
         },
         animate: function() {
             const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim();
+            const step = Math.max(3, Math.floor(canvas.width / 200)); // Dynamic step based on canvas width
             
             particles.forEach(wave => {
                 wave.phase += wave.speed;
@@ -1097,7 +1103,7 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
                 ctx.beginPath();
                 ctx.moveTo(0, wave.y);
                 
-                for (let x = 0; x < canvas.width; x += 5) {
+                for (let x = 0; x < canvas.width; x += step) {
                     const y = wave.y + Math.sin(x * wave.frequency + wave.phase) * wave.amplitude;
                     ctx.lineTo(x, y);
                 }
@@ -1256,13 +1262,12 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
     };
 
     function animate() {
+        const currentAnimation = animations[currentAnimationType];
+        if (!currentAnimation) return; // Early exit if no valid animation
+        
         animationFrameId = requestAnimationFrame(animate);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        const currentAnimation = animations[currentAnimationType];
-        if (currentAnimation) {
-            currentAnimation.animate();
-        }
+        currentAnimation.animate();
     }
     
     // --- Execution Logic ---
