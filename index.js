@@ -464,9 +464,8 @@ function renderHeader(settings, navigation) {
     DOM.header.brandSlogan.textContent = settings.site_slogan;
 
     const navItemsHTML = navigation.map(item => `<li><a href="${item.link}">${item.text}</a></li>`).join('');
-    const questionnaireLink = '<li><a href="quest.html">Въпросник</a></li>';
     const persistentLis = DOM.header.navLinks.querySelectorAll('li:nth-last-child(-n+2)');
-    DOM.header.navLinks.innerHTML = navItemsHTML + questionnaireLink;
+    DOM.header.navLinks.innerHTML = navItemsHTML;
     persistentLis.forEach(li => DOM.header.navLinks.appendChild(li));
 
     updateCartCount();
@@ -600,6 +599,13 @@ function initializePageInteractions() {
         });
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in-up').forEach(el => scrollObserver.observe(el));
+
+    // --- Save scroll position before navigating to product page ---
+    document.querySelectorAll('.product-card').forEach(card => {
+        card.addEventListener('click', () => {
+            sessionStorage.setItem('indexScrollPosition', window.scrollY.toString());
+        });
+    });
 
     // --- Ingredient Card Flip (Lipolor style) - supports both mini and full versions ---
     document.querySelectorAll('.ingredient-card, .ingredient-card-mini, .ingredient-card-full').forEach(card => {
@@ -1039,6 +1045,15 @@ async function main() {
         initializePageInteractions();
         initializeScrollSpy();
         initializeMarketingFeatures();
+
+        // Restore scroll position if returning from product page
+        const savedScrollPosition = sessionStorage.getItem('indexScrollPosition');
+        if (savedScrollPosition) {
+            setTimeout(() => {
+                window.scrollTo(0, parseInt(savedScrollPosition, 10));
+                sessionStorage.removeItem('indexScrollPosition');
+            }, 100);
+        }
 
     } catch (error) {
         console.error("Fatal Error: Could not load or render page content.", error);

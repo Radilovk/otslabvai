@@ -529,6 +529,56 @@ img {
     color: var(--color-white);
 }
 
+/* -- Cart Icon Button -- */
+.cart-icon-btn {
+    background: transparent;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-speed);
+    position: relative;
+    text-decoration: none;
+    color: var(--accent);
+}
+
+.cart-icon-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--color-white);
+    transform: scale(1.1);
+}
+
+.cart-icon-btn svg {
+    width: 20px;
+    height: 20px;
+    transition: all 0.3s ease;
+}
+
+.cart-icon-btn .cart-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.cart-icon-btn:hover .cart-badge {
+    background: var(--color-secondary);
+}
+
 /* -- Мобилно меню -- */
 .menu-toggle { 
     display: none; 

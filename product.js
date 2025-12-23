@@ -286,9 +286,8 @@ function renderHeader(settings, navigation) {
     DOM.header.brandSlogan.textContent = settings.site_slogan;
 
     const navItemsHTML = navigation.map(item => `<li><a href="index.html${item.link}">${item.text}</a></li>`).join('');
-    const questionnaireLink = '<li><a href="quest.html">Въпросник</a></li>';
     const persistentLis = DOM.header.navLinks.querySelectorAll('li:nth-last-child(-n+2)');
-    DOM.header.navLinks.innerHTML = navItemsHTML + questionnaireLink;
+    DOM.header.navLinks.innerHTML = navItemsHTML;
     persistentLis.forEach(li => DOM.header.navLinks.appendChild(li));
 
     updateCartCount();
@@ -395,9 +394,6 @@ function initializeGlobalScripts() {
     
     window.addEventListener('scroll', () => {
         handleStickyHeader();
-        if (DOM.backToTopBtn) {
-            DOM.backToTopBtn.classList.toggle('visible', window.scrollY > 300);
-        }
     });
 
     // Mobile Menu
@@ -452,6 +448,15 @@ function initializeGlobalScripts() {
     
     if (themeToggle) {
         themeToggle.addEventListener('click', toggleTheme);
+    }
+
+    // Handle back button click with scroll restoration
+    const backButton = document.getElementById('sticky-back-button');
+    if (backButton) {
+        backButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = 'index.html';
+        });
     }
 
     updateCartCount();
