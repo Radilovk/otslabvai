@@ -1289,7 +1289,7 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
         animationFrameId = requestAnimationFrame(animate);
         
         // Frame skipping for mobile performance
-        frameCount++;
+        frameCount = (frameCount + 1) % 100; // Reset periodically to prevent overflow
         if (frameCount % frameSkip !== 0) return;
         
         ctx.clearRect(0, 0, canvas.width, canvas.height);
