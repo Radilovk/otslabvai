@@ -909,12 +909,16 @@
             "url": "#about-us"
           },
           {
-            "text": "Контакти",
-            "url": "#contact"
+            "text": "Политика за поверителност",
+            "url": "policy.html"
           },
           {
-            "text": "Политика за поверителност",
-            "url": "/privacy"
+            "text": "Доставка",
+            "url": "shipping.html"
+          },
+          {
+            "text": "Общи условия",
+            "url": "terms.html"
           }
         ]
       }

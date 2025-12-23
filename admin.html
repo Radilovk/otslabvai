@@ -69,6 +69,7 @@
             <button class="tab-btn" data-tab="tab-content">Съдържание</button>
             <button class="tab-btn" data-tab="tab-footer">Футър</button>
             <button class="tab-btn" data-tab="tab-orders">Поръчки</button>
+            <button class="tab-btn" data-tab="tab-pages">Страници</button>
         </nav>
 
         <!-- КОНТЕЙНЕР ЗА СЪДЪРЖАНИЕТО НА ТАБОВЕТЕ -->
@@ -139,6 +140,36 @@
                             <!-- Редовете ще се генерират от JS -->
                         </tbody>
                     </table>
+                </div>
+            </section>
+            
+            <!-- Секция: Информационни страници -->
+            <section id="tab-pages" class="tab-pane">
+                <h2>Управление на информационни страници</h2>
+                <p class="instructions">Редактирайте съдържанието на юридическите и информационни страници на сайта.</p>
+                <div class="info-pages-grid" style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-top: 2rem;">
+                    <div class="info-page-card" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; background: var(--bg-secondary);">
+                        <h3 style="margin-top: 0;">📄 Политика за поверителност</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Управление на информацията за поверителност и GDPR съответствие.</p>
+                        <a href="policy.html" target="_blank" class="btn btn-primary" style="display: inline-block; text-decoration: none;">Отвори страницата</a>
+                    </div>
+                    <div class="info-page-card" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; background: var(--bg-secondary);">
+                        <h3 style="margin-top: 0;">🚚 Доставка</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Информация за транспорт, срокове и цени на доставка.</p>
+                        <a href="shipping.html" target="_blank" class="btn btn-primary" style="display: inline-block; text-decoration: none;">Отвори страницата</a>
+                    </div>
+                    <div class="info-page-card" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; background: var(--bg-secondary);">
+                        <h3 style="margin-top: 0;">📋 Общи условия</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Условия за ползване, право на отказ и други правни аспекти.</p>
+                        <a href="terms.html" target="_blank" class="btn btn-primary" style="display: inline-block; text-decoration: none;">Отвори страницата</a>
+                    </div>
+                </div>
+                <div style="margin-top: 2rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px; border-left: 4px solid var(--accent);">
+                    <h4 style="margin-top: 0;">ℹ️ Важно</h4>
+                    <p style="margin: 0; color: var(--text-secondary);">
+                        Информационните страници съдържат задължителна правна информация за онлайн магазини в България. 
+                        За промяна на съдържанието, редактирайте директно HTML файловете: <code>policy.html</code>, <code>shipping.html</code> и <code>terms.html</code>.
+                    </p>
                 </div>
             </section>
         </main>
