@@ -546,7 +546,7 @@ function renderFooter(settings, footer) {
 //          5. ИНИЦИАЛИЗАЦИЯ НА СЪБИТИЯ (INITIALIZERS)
 // =======================================================
 
-function initializePageInteractions() {
+function initializePageInteractions(settings = {}) {
     // Handle category header click (for collapsible categories)
     document.body.addEventListener('click', e => {
         const toggleAccordion = (header) => {
@@ -738,8 +738,9 @@ function initializePageInteractions() {
         });
     }
 
-    // Initialize Canvas
-    initializeCanvasAnimation();
+    // Initialize Canvas with selected animation type
+    const animationType = settings.background_animation || 'rising-success';
+    initializeCanvasAnimation(animationType);
 }
 
 function initializeGlobalScripts() {
@@ -848,7 +849,7 @@ function initializeGlobalScripts() {
         
         // Reinitialize canvas animation with new colors
         if (typeof initializeCanvasAnimation === 'function') {
-            initializeCanvasAnimation(true);
+            initializeCanvasAnimation(currentAnimationType, true);
         }
         
         // Show toast notification
@@ -880,7 +881,7 @@ function initializeGlobalScripts() {
                     
                     // Reinitialize canvas animation with new colors
                     if (typeof initializeCanvasAnimation === 'function') {
-                        initializeCanvasAnimation(true);
+                        initializeCanvasAnimation(currentAnimationType, true);
                     }
                 }
             } catch (e) {
@@ -926,9 +927,10 @@ let animationFrameId;
 let canvas, ctx,
     particles = [],
     lastWidth = 0,
-    lastHeight = 0;
+    lastHeight = 0,
+    currentAnimationType = 'rising-success';
 
-function initializeCanvasAnimation(forceReinit = false) {
+function initializeCanvasAnimation(animationType = 'rising-success', forceReinit = false) {
     canvas = document.getElementById('neuron-canvas');
     if (!canvas) return;
 
@@ -942,23 +944,9 @@ function initializeCanvasAnimation(forceReinit = false) {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reducedMotion) return;
 
-    // --- Helper Functions ---
-    class Particle {
-        constructor(x, y, dirX, dirY, size, color) { this.x = x; this.y = y; this.directionX = dirX; this.directionY = dirY; this.size = size; this.color = color; }
-        draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false); ctx.fillStyle = this.color; ctx.fill(); }
-        update() { if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX; if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY; this.x += this.directionX; this.y += this.directionY; this.draw(); }
-    }
+    currentAnimationType = animationType;
 
-    function initParticles() {
-        particles = [];
-        const baseCount = Math.floor((canvas.width * canvas.height) / 12000);
-        const particleCount = Math.max(10, Math.floor(baseCount * (window.innerWidth < 768 ? 0.6 : 1)));
-        const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-        for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, (Math.random() * 0.4) - 0.2, (Math.random() * 0.4) - 0.2, Math.random() * 2 + 1, accentColor));
-        }
-    }
-
+    // --- Common Helper Functions ---
     function resizeCanvas() {
         const parent = canvas.parentElement;
         if (!parent) return;
@@ -977,40 +965,329 @@ function initializeCanvasAnimation(forceReinit = false) {
         lastHeight = height;
     }
 
-    function connect() {
-        const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim();
-        const connectDistance = Math.min(canvas.width, canvas.height) / 5;
-        const connectArea = connectDistance * connectDistance;
-
-        for (let a = 0; a < particles.length; a++) {
-            for (let b = a + 1; b < particles.length; b++) {
-                let distance = ((particles[a].x - particles[b].x) ** 2) + ((particles[a].y - particles[b].y) ** 2);
-                if (distance < connectArea) {
-                    let opacityValue = 1 - (distance / (connectArea * 1.1));
-                    ctx.strokeStyle = `rgba(${accentRgb}, ${opacityValue})`;
-                    ctx.lineWidth = 1;
-                    ctx.beginPath(); ctx.moveTo(particles[a].x, particles[a].y); ctx.lineTo(particles[b].x, particles[b].y); ctx.stroke();
-                }
+    // =======================================================
+    //   АНИМАЦИЯ 1: Rising Success (Възходящ успех)
+    //   Психологически ефект: Прогрес, постигане на цели
+    // =======================================================
+    const risingSuccessAnimation = {
+        init: function() {
+            particles = [];
+            const baseCount = Math.floor((canvas.width * canvas.height) / 15000);
+            const particleCount = Math.max(8, Math.floor(baseCount * (window.innerWidth < 768 ? 0.5 : 1)));
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+            
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + Math.random() * 100,
+                    speed: Math.random() * 0.5 + 0.3,
+                    size: Math.random() * 3 + 1,
+                    opacity: Math.random() * 0.5 + 0.3,
+                    color: accentColor,
+                    wobble: Math.random() * Math.PI * 2,
+                    wobbleSpeed: Math.random() * 0.02 + 0.01
+                });
             }
+        },
+        animate: function() {
+            const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim();
+            
+            particles.forEach(p => {
+                p.y -= p.speed;
+                p.wobble += p.wobbleSpeed;
+                p.x += Math.sin(p.wobble) * 0.5;
+                
+                // Fade out as it rises
+                if (p.y < canvas.height * 0.3) {
+                    p.opacity -= 0.005;
+                }
+                
+                // Reset particle
+                if (p.y < -10 || p.opacity <= 0) {
+                    p.y = canvas.height + 10;
+                    p.x = Math.random() * canvas.width;
+                    p.opacity = Math.random() * 0.5 + 0.3;
+                    p.wobble = Math.random() * Math.PI * 2;
+                }
+                
+                // Draw particle with glow (optimized)
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${accentRgb}, ${p.opacity})`;
+                ctx.fill();
+                
+                // Optional subtle glow for better performance
+                if (p.opacity > 0.3) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size + 2, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${accentRgb}, ${p.opacity * 0.3})`;
+                    ctx.fill();
+                }
+            });
         }
-    }
+    };
+
+    // =======================================================
+    //   АНИМАЦИЯ 2: Energy Pulse (Енергиен пулс)
+    //   Психологически ефект: Виталност, динамичност, сила
+    // =======================================================
+    const energyPulseAnimation = {
+        init: function() {
+            particles = [];
+            const ringCount = 5;
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+            
+            for (let i = 0; i < ringCount; i++) {
+                particles.push({
+                    radius: (i * canvas.height / (ringCount * 2)),
+                    maxRadius: canvas.height * 1.5,
+                    speed: 0.5 + (i * 0.1),
+                    opacity: 0.4,
+                    color: accentColor
+                });
+            }
+        },
+        animate: function() {
+            const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            particles.forEach(ring => {
+                ring.radius += ring.speed;
+                ring.opacity = 0.4 * (1 - ring.radius / ring.maxRadius);
+                
+                if (ring.radius > ring.maxRadius) {
+                    ring.radius = 0;
+                    ring.opacity = 0.4;
+                }
+                
+                // Draw expanding ring
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, ring.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(${accentRgb}, ${ring.opacity})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+    };
+
+    // =======================================================
+    //   АНИМАЦИЯ 3: Trust Flow (Поток на доверие)
+    //   Психологически ефект: Спокойствие, стабилност, надеждност
+    // =======================================================
+    const trustFlowAnimation = {
+        init: function() {
+            particles = [];
+            const waveCount = 6;
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+            
+            for (let i = 0; i < waveCount; i++) {
+                particles.push({
+                    y: (canvas.height / waveCount) * i,
+                    amplitude: 30 + Math.random() * 20,
+                    frequency: 0.002 + Math.random() * 0.001,
+                    phase: Math.random() * Math.PI * 2,
+                    speed: 0.01 + Math.random() * 0.01,
+                    opacity: 0.15 + Math.random() * 0.1,
+                    color: accentColor
+                });
+            }
+        },
+        animate: function() {
+            const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim();
+            const step = Math.max(3, Math.floor(canvas.width / 200)); // Dynamic step based on canvas width
+            
+            particles.forEach(wave => {
+                wave.phase += wave.speed;
+                
+                ctx.beginPath();
+                ctx.moveTo(0, wave.y);
+                
+                for (let x = 0; x < canvas.width; x += step) {
+                    const y = wave.y + Math.sin(x * wave.frequency + wave.phase) * wave.amplitude;
+                    ctx.lineTo(x, y);
+                }
+                
+                ctx.strokeStyle = `rgba(${accentRgb}, ${wave.opacity})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+    };
+
+    // =======================================================
+    //   АНИМАЦИЯ 4: Goal Achievement (Постигане на цели)
+    //   Психологически ефект: Фокус, целенасоченост, резултати
+    // =======================================================
+    const goalAchievementAnimation = {
+        init: function() {
+            particles = [];
+            const particleCount = Math.floor((canvas.width * canvas.height) / 20000);
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+            
+            for (let i = 0; i < Math.max(5, particleCount); i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * Math.min(canvas.width, canvas.height) / 2;
+                
+                particles.push({
+                    startX: Math.random() * canvas.width,
+                    startY: Math.random() * canvas.height,
+                    targetX: canvas.width / 2,
+                    targetY: canvas.height / 2,
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    progress: Math.random(),
+                    speed: 0.005 + Math.random() * 0.005,
+                    size: Math.random() * 2 + 1,
+                    opacity: 0.5,
+                    color: accentColor
+                });
+            }
+        },
+        animate: function() {
+            const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim();
+            
+            particles.forEach(p => {
+                p.progress += p.speed;
+                
+                if (p.progress >= 1) {
+                    p.progress = 0;
+                    p.startX = Math.random() * canvas.width;
+                    p.startY = Math.random() * canvas.height;
+                    p.opacity = 0.5;
+                }
+                
+                // Easing function for smooth movement
+                const eased = 1 - Math.pow(1 - p.progress, 3);
+                p.x = p.startX + (p.targetX - p.startX) * eased;
+                p.y = p.startY + (p.targetY - p.startY) * eased;
+                p.opacity = 0.5 * (1 - p.progress);
+                
+                // Draw particle
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${accentRgb}, ${p.opacity})`;
+                ctx.fill();
+                
+                // Draw trail
+                if (p.progress > 0.1) {
+                    const prevProgress = Math.max(0, p.progress - 0.1);
+                    const prevEased = 1 - Math.pow(1 - prevProgress, 3);
+                    const prevX = p.startX + (p.targetX - p.startX) * prevEased;
+                    const prevY = p.startY + (p.targetY - p.startY) * prevEased;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevY);
+                    ctx.lineTo(p.x, p.y);
+                    ctx.strokeStyle = `rgba(${accentRgb}, ${p.opacity * 0.3})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            });
+        }
+    };
+
+    // =======================================================
+    //   АНИМАЦИЯ 5: Transformation Bubbles (Трансформационни балони)
+    //   Психологически ефект: Промяна, лекота, постигане
+    // =======================================================
+    const transformationBubblesAnimation = {
+        init: function() {
+            particles = [];
+            const baseCount = Math.floor((canvas.width * canvas.height) / 18000);
+            const particleCount = Math.max(6, Math.floor(baseCount * (window.innerWidth < 768 ? 0.5 : 1)));
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+            
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + Math.random() * 100,
+                    baseSize: Math.random() * 15 + 10,
+                    size: 0,
+                    maxSize: Math.random() * 15 + 10,
+                    speed: Math.random() * 0.3 + 0.2,
+                    opacity: Math.random() * 0.3 + 0.2,
+                    growthPhase: Math.random() * Math.PI * 2,
+                    color: accentColor,
+                    drift: (Math.random() - 0.5) * 0.3
+                });
+            }
+        },
+        animate: function() {
+            const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim();
+            
+            particles.forEach(p => {
+                p.y -= p.speed;
+                p.x += p.drift;
+                p.growthPhase += 0.05;
+                p.size = p.maxSize * (0.5 + Math.sin(p.growthPhase) * 0.5);
+                
+                // Pop effect near top
+                if (p.y < canvas.height * 0.2) {
+                    p.opacity -= 0.01;
+                }
+                
+                // Reset bubble
+                if (p.y < -50 || p.opacity <= 0) {
+                    p.y = canvas.height + 10;
+                    p.x = Math.random() * canvas.width;
+                    p.opacity = Math.random() * 0.3 + 0.2;
+                    p.maxSize = Math.random() * 15 + 10;
+                    p.growthPhase = 0;
+                }
+                
+                // Draw bubble with highlight
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(${accentRgb}, ${p.opacity})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Inner glow
+                ctx.beginPath();
+                ctx.arc(p.x - p.size * 0.3, p.y - p.size * 0.3, p.size * 0.3, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * 0.3})`;
+                ctx.fill();
+            });
+        }
+    };
+
+    // Animation registry
+    const animations = {
+        'rising-success': risingSuccessAnimation,
+        'energy-pulse': energyPulseAnimation,
+        'trust-flow': trustFlowAnimation,
+        'goal-achievement': goalAchievementAnimation,
+        'transformation-bubbles': transformationBubblesAnimation
+    };
 
     function animate() {
+        const currentAnimation = animations[currentAnimationType];
+        if (!currentAnimation) return; // Early exit if no valid animation
+        
         animationFrameId = requestAnimationFrame(animate);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let i = 0; i < particles.length; i++) particles[i].update();
-        connect();
+        currentAnimation.animate();
     }
     
     // --- Execution Logic ---
     if (particles.length === 0 || forceReinit) {
         resizeCanvas();
-        initParticles();
+        const currentAnimation = animations[currentAnimationType];
+        if (currentAnimation) {
+            currentAnimation.init();
+        }
     }
     
     animate();
 
-    const debouncedResize = debounce(resizeCanvas, 100);
+    const debouncedResize = debounce(() => {
+        resizeCanvas();
+        const currentAnimation = animations[currentAnimationType];
+        if (currentAnimation) {
+            currentAnimation.init();
+        }
+    }, 100);
     window.addEventListener('resize', debouncedResize);
 }
 
@@ -1043,7 +1320,7 @@ async function main() {
         
         DOM.mainContainer.classList.add('is-loaded');
 
-        initializePageInteractions();
+        initializePageInteractions(data.settings);
         initializeScrollSpy();
         initializeMarketingFeatures();
 
