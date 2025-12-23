@@ -1867,6 +1867,33 @@ body.modal-open { overflow: hidden; }
     }
 }
 
+/* ======================================================= */
+/*          ACCESSIBILITY - REDUCED MOTION                 */
+/* ======================================================= */
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    /* Disable all animations for users who prefer reduced motion */
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    /* Hide canvas animations */
+    #neuron-canvas {
+        display: none;
+        opacity: 0;
+    }
+    
+    /* Remove bounce and pulse animations */
+    .sticky-cta-btn,
+    .exit-modal-icon,
+    .product-badge,
+    .product-stock.low-stock {
+        animation: none !important;
+    }
+}
+
 @media (min-width: 768px) { 
     .product-grid { 
         grid-template-columns: repeat(2, 1fr); 

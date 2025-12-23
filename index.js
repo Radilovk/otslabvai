@@ -1032,8 +1032,9 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
                 ctx.fillStyle = `rgba(${accentRgb}, ${p.opacity})`;
                 ctx.fill();
                 
-                // Optional subtle glow for better performance
-                if (p.opacity > 0.3) {
+                // Optional subtle glow for better performance - disable on mobile
+                const isMobile = window.innerWidth < 768;
+                if (p.opacity > 0.3 && !isMobile) {
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size + 2, 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(${accentRgb}, ${p.opacity * 0.3})`;
@@ -1263,11 +1264,14 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                // Inner glow
-                ctx.beginPath();
-                ctx.arc(p.x - p.size * 0.3, p.y - p.size * 0.3, p.size * 0.3, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * 0.3})`;
-                ctx.fill();
+                // Inner glow - disable on mobile for better performance
+                const isMobile = window.innerWidth < 768;
+                if (!isMobile) {
+                    ctx.beginPath();
+                    ctx.arc(p.x - p.size * 0.3, p.y - p.size * 0.3, p.size * 0.3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * 0.3})`;
+                    ctx.fill();
+                }
             });
         }
     };
@@ -1281,11 +1285,21 @@ function initializeCanvasAnimation(animationType = 'rising-success', forceReinit
         'transformation-bubbles': transformationBubblesAnimation
     };
 
+    // Frame skipping for mobile performance optimization
+    let frameCount = 0;
+    const isMobile = window.innerWidth < 768;
+    const frameSkip = isMobile ? 2 : 1; // Skip every other frame on mobile
+
     function animate() {
         const currentAnimation = animations[currentAnimationType];
         if (!currentAnimation) return; // Early exit if no valid animation
         
         animationFrameId = requestAnimationFrame(animate);
+        
+        // Frame skipping for mobile performance
+        frameCount++;
+        if (frameCount % frameSkip !== 0) return;
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         currentAnimation.animate();
     }
