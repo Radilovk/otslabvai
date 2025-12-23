@@ -169,7 +169,7 @@ const generateProductCategoryHTML = (component, index) => {
 // --- END: MODIFIED FUNCTION ---
 
 const generateInfoCardHTML = component => `
-    <section class="info-card-section fade-in-up ${'image-align-' + (component.options.image_align || 'left')}">
+    <section ${component.id ? `id="${component.id}"` : ''} class="info-card-section fade-in-up ${'image-align-' + (component.options.image_align || 'left')}">
         <div class="container">
             <div class="info-card-image">
                 <img src="${component.image}" alt="${component.title}" loading="lazy">
