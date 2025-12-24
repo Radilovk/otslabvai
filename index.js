@@ -144,10 +144,20 @@ const generateHeroHTML = component => {
                 <p>${component.subtitle}</p>
                 <div class="hero-cta-group">
                     <button class="btn-hero-primary" onclick="document.getElementById('products')?.scrollIntoView({behavior: 'smooth'})">
-                        🛒 Разгледай продуктите
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        </svg>
+                        Разгледай продуктите
                     </button>
                     <button class="btn-hero-secondary" onclick="document.getElementById('benefits')?.scrollIntoView({behavior: 'smooth'})">
-                        ℹ️ Научи повече
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        Научи повече
                     </button>
                 </div>
                 <div class="hero-stats">
@@ -165,9 +175,24 @@ const generateHeroHTML = component => {
                     </div>
                 </div>
                 <div class="hero-trust-badges">
-                    <div class="trust-badge">✓ Клинично тествано</div>
-                    <div class="trust-badge">✓ GMP сертифицирано</div>
-                    <div class="trust-badge">✓ 30 дни гаранция</div>
+                    <div class="trust-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Клинично тествано
+                    </div>
+                    <div class="trust-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        GMP сертифицирано
+                    </div>
+                    <div class="trust-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        30 дни гаранция
+                    </div>
                 </div>
             </div>
         </div>
@@ -1079,15 +1104,15 @@ function addProductBadges() {
         
         // First product - Bestseller
         if (index === 0) {
-            badge = createBadge('⭐ Най-продаван', 'bestseller');
+            badge = createBadge('Най-продаван', 'bestseller', 'star');
         }
         // Second product - New
         else if (index === 1) {
-            badge = createBadge('🆕 Ново', 'new');
+            badge = createBadge('Ново', 'new', 'sparkles');
         }
         // Third product - Limited offer
         else if (index === 2) {
-            badge = createBadge('🔥 Ограничена оферта', 'limited');
+            badge = createBadge('Ограничена оферта', 'limited', 'fire');
         }
         
         if (badge) {
@@ -1097,10 +1122,21 @@ function addProductBadges() {
     });
 }
 
-function createBadge(text, type) {
+function createBadge(text, type, iconType) {
     const badge = document.createElement('div');
     badge.className = `product-badge ${type}`;
-    badge.textContent = text;
+    
+    // Create SVG icon based on type
+    let iconSVG = '';
+    if (iconType === 'star') {
+        iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+    } else if (iconType === 'sparkles') {
+        iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"></path></svg>';
+    } else if (iconType === 'fire') {
+        iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>';
+    }
+    
+    badge.innerHTML = iconSVG + text;
     return badge;
 }
 
