@@ -111,7 +111,11 @@ const generateHeroHTML = component => {
     // Build style attribute for custom background
     let heroStyle = '';
     let heroClass = '';
-    if (component.background_image) {
+    
+    // Check background_type field to determine what to apply
+    const bgType = component.background_type || 'default';
+    
+    if (bgType === 'image' && component.background_image) {
         // Validate URL to prevent CSS injection and XSS
         const imageUrl = escapeHtml(component.background_image);
         // Explicitly block dangerous protocols
@@ -128,7 +132,7 @@ const generateHeroHTML = component => {
             heroClass = ' hero-custom-bg';
             heroStyle = ` data-bg-image="true" style="background-image: url('${imageUrl}');"`;
         }
-    } else if (component.background_gradient) {
+    } else if (bgType === 'custom_gradient' && component.background_gradient) {
         // Validate gradient - strict character set for security
         const gradient = escapeHtml(component.background_gradient);
         // Only allow safe characters: alphanumeric, spaces, commas, periods, %, #, (), and hyphens
@@ -138,6 +142,7 @@ const generateHeroHTML = component => {
             heroStyle = ` style="background: ${gradient};"`;
         }
     }
+    // If bgType is 'default' or validation fails, use the default theme-based gradient (no custom class/style)
     
     return `
     <header class="hero-section${heroClass}"${heroStyle}>
