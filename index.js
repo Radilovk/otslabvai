@@ -107,8 +107,18 @@ const generateProductCard = (product) => {
 // --- END: MODIFIED FUNCTION ---
 
 
-const generateHeroHTML = component => `
-    <header class="hero-section">
+const generateHeroHTML = component => {
+    // Build style attribute for custom background
+    let heroStyle = '';
+    if (component.background_image) {
+        heroStyle = ` data-bg-image="true" style="background-image: url('${escapeHtml(component.background_image)}');"`;
+    } else if (component.background_gradient) {
+        // Custom gradient specified in admin panel
+        heroStyle = ` style="background: ${escapeHtml(component.background_gradient)};"`;
+    }
+    
+    return `
+    <header class="hero-section"${heroStyle}>
         <div class="container">
             <div class="hero-content">
                 <h1>${component.title}</h1>
@@ -143,6 +153,7 @@ const generateHeroHTML = component => `
             </div>
         </div>
     </header>`;
+};
 
 // --- START: MODIFIED FUNCTION ---
 const generateProductCategoryHTML = (component, index) => {
@@ -833,6 +844,7 @@ function initializeGlobalScripts() {
 
     // --- Theme Toggle ---
     const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleMobile = document.getElementById('theme-toggle-mobile');
     
     function setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
@@ -855,6 +867,10 @@ function initializeGlobalScripts() {
     
     if (themeToggle) {
         themeToggle.addEventListener('click', toggleTheme);
+    }
+    
+    if (themeToggleMobile) {
+        themeToggleMobile.addEventListener('click', toggleTheme);
     }
     
     // Listen for system theme changes
