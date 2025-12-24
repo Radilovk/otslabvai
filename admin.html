@@ -257,6 +257,85 @@
                 <label for="logo_url">URL на логото</label>
                 <input type="text" id="logo_url" data-field="logo_url">
             </div>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">🎨 Градиенти за теми</h4>
+            
+            <!-- Light Theme Gradient -->
+            <div class="form-group">
+                <label for="theme_light_gradient">Градиент за светла тема</label>
+                <div id="gradient_preview_light" class="gradient-preview"></div>
+                <input type="text" id="theme_light_gradient" data-field="theme_gradients.light" placeholder="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+                <small class="form-hint">Избери градиент от списъка по-долу или въведи собствен</small>
+                
+                <div class="gradient-section">
+                    <h5 class="gradient-section-title">🌞 Линейни градиенти за светла тема</h5>
+                    <div class="gradient-grid" id="light-gradient-grid">
+                        <button type="button" class="btn-gradient-preset" data-target="theme_light_gradient" data-gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" title="Лилав океан">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            <span class="gradient-label">Лилав океан</span>
+                        </button>
+                        <button type="button" class="btn-gradient-preset" data-target="theme_light_gradient" data-gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" title="Розова страст">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                            <span class="gradient-label">Розова страст</span>
+                        </button>
+                        <button type="button" class="btn-gradient-preset" data-target="theme_light_gradient" data-gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" title="Син блясък">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                            <span class="gradient-label">Син блясък</span>
+                        </button>
+                        <button type="button" class="btn-gradient-preset" data-target="theme_light_gradient" data-gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" title="Зелена свежест">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"></div>
+                            <span class="gradient-label">Зелена свежест</span>
+                        </button>
+                        <button type="button" class="btn-gradient-preset" data-target="theme_light_gradient" data-gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)" title="Залез">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"></div>
+                            <span class="gradient-label">Залез</span>
+                        </button>
+                        <button type="button" class="btn-gradient-preset" data-target="theme_light_gradient" data-gradient="linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)" title="Праскова">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);"></div>
+                            <span class="gradient-label">Праскова</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dark Theme Gradient -->
+            <div class="form-group">
+                <label for="theme_dark_gradient">Градиент за тъмна тема</label>
+                <div id="gradient_preview_dark" class="gradient-preview"></div>
+                <input type="text" id="theme_dark_gradient" data-field="theme_gradients.dark" placeholder="linear-gradient(135deg, #2d3436 0%, #000000 100%)">
+                <small class="form-hint">Избери градиент от списъка по-долу или въведи собствен</small>
+                
+                <div class="gradient-section">
+                    <h5 class="gradient-section-title">🌙 Линейни градиенти за тъмна тема</h5>
+                    <div class="gradient-grid" id="dark-gradient-grid">
+                        <button type="button" class="btn-gradient-preset" data-target="theme_dark_gradient" data-gradient="linear-gradient(135deg, #2d3436 0%, #000000 100%)" title="Нощна тъмнина">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #2d3436 0%, #000000 100%);"></div>
+                            <span class="gradient-label">Нощна тъмнина</span>
+                        </button>
+                        <button type="button" class="btn-gradient-preset" data-target="theme_dark_gradient" data-gradient="linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" title="Тъмносин">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);"></div>
+                            <span class="gradient-label">Тъмносин</span>
+                        </button>
+                        <button type="button" class="btn-gradient-preset" data-target="theme_dark_gradient" data-gradient="linear-gradient(135deg, #232526 0%, #414345 100%)" title="Графитен">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #232526 0%, #414345 100%);"></div>
+                            <span class="gradient-label">Графитен</span>
+                        </button>
+                        <button type="button" class="btn-gradient-preset" data-target="theme_dark_gradient" data-gradient="linear-gradient(135deg, #30cfd0 0%, #330867 100%)" title="Нощен градиент">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);"></div>
+                            <span class="gradient-label">Нощен градиент</span>
+                        </button>
+                        <button type="button" class="btn-gradient-preset" data-target="theme_dark_gradient" data-gradient="linear-gradient(135deg, #141e30 0%, #243b55 100%)" title="Тъмно небе">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #141e30 0%, #243b55 100%);"></div>
+                            <span class="gradient-label">Тъмно небе</span>
+                        </button>
+                        <button type="button" class="btn-gradient-preset" data-target="theme_dark_gradient" data-gradient="linear-gradient(135deg, #0f2027 0%, #203a43 100%)" title="Космическа тъмнина">
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 100%);"></div>
+                            <span class="gradient-label">Космическа тъмнина</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </form>
     </template>
     
