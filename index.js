@@ -973,6 +973,26 @@ function initializeScrollSpy() {
     sections.forEach(section => observer.observe(section));
 }
 
+// =======================================================
+//          Apply Theme Gradients
+// =======================================================
+function applyThemeGradients(settings) {
+    if (!settings || !settings.theme_gradients) return;
+    
+    const { light, dark } = settings.theme_gradients;
+    const root = document.documentElement;
+    
+    // Apply light theme gradient
+    if (light) {
+        root.style.setProperty('--theme-gradient-light', light);
+    }
+    
+    // Apply dark theme gradient
+    if (dark) {
+        root.style.setProperty('--theme-gradient-dark', dark);
+    }
+}
+
 
 // =======================================================
 //          7. ГЛАВНА ИЗПЪЛНЯВАЩА ФУНКЦИЯ (MAIN)
@@ -1003,6 +1023,7 @@ async function main() {
         DOM.mainContainer.classList.add('is-loaded');
 
         initializePageInteractions(data.settings);
+        applyThemeGradients(data.settings);
         initializeScrollSpy();
         initializeMarketingFeatures();
 

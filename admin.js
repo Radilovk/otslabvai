@@ -327,6 +327,11 @@ function openModal(title, formTemplateId, data, onSave) {
         initHeroBackgroundControls();
     }
     
+    // Special handlers for global settings theme gradients
+    if (formTemplateId === 'form-global-settings-template') {
+        initThemeGradientControls();
+    }
+    
     DOM.modal.container.classList.add('show');
     DOM.modal.backdrop.classList.add('show');
 }
@@ -614,6 +619,62 @@ function parseGradientToBuilder(gradientStr) {
         const event = new CustomEvent('updateColorStops', { detail: parsed.stops });
         colorStopsList.dispatchEvent(event);
     }
+}
+
+// Initialize theme gradient controls for global settings
+function initThemeGradientControls() {
+    const lightGradientInput = DOM.modal.body.querySelector('#theme_light_gradient');
+    const darkGradientInput = DOM.modal.body.querySelector('#theme_dark_gradient');
+    const lightPreview = DOM.modal.body.querySelector('#gradient_preview_light');
+    const darkPreview = DOM.modal.body.querySelector('#gradient_preview_dark');
+    
+    // Update gradient preview
+    function updateGradientPreview(input, preview) {
+        if (preview && input && input.value) {
+            preview.style.background = input.value;
+        }
+    }
+    
+    // Initialize previews with current values
+    if (lightGradientInput && lightPreview) {
+        updateGradientPreview(lightGradientInput, lightPreview);
+        
+        // Live preview on input change
+        lightGradientInput.addEventListener('input', () => {
+            updateGradientPreview(lightGradientInput, lightPreview);
+        });
+    }
+    
+    if (darkGradientInput && darkPreview) {
+        updateGradientPreview(darkGradientInput, darkPreview);
+        
+        // Live preview on input change
+        darkGradientInput.addEventListener('input', () => {
+            updateGradientPreview(darkGradientInput, darkPreview);
+        });
+    }
+    
+    // Handle gradient preset buttons
+    const presetButtons = DOM.modal.body.querySelectorAll('.btn-gradient-preset[data-target]');
+    presetButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = btn.dataset.target;
+            const gradient = btn.dataset.gradient;
+            const targetInput = DOM.modal.body.querySelector(`#${targetId}`);
+            
+            if (targetInput) {
+                targetInput.value = gradient;
+                
+                // Update the corresponding preview
+                if (targetId === 'theme_light_gradient' && lightPreview) {
+                    updateGradientPreview(targetInput, lightPreview);
+                } else if (targetId === 'theme_dark_gradient' && darkPreview) {
+                    updateGradientPreview(targetInput, darkPreview);
+                }
+            }
+        });
+    });
 }
 
 function closeModal() {

@@ -56,6 +56,10 @@
     --hero-bg-start-dark: #1a0d14;
     --hero-bg-end-dark: #0a1a1a;
     
+    /* Theme gradient variables - default values */
+    --theme-gradient-light: linear-gradient(135deg, #FFE5F1 0%, #E0F2F1 100%);
+    --theme-gradient-dark: linear-gradient(135deg, #1a0d14 0%, #0a1a1a 100%);
+    
     /* Light Theme Variables (Lipolor-inspired) */
     --bg-primary-light: #FFFFFF;
     --bg-secondary-light: #F8F9FA;
@@ -109,6 +113,7 @@
     --header-scrolled-bg: var(--header-scrolled-bg-light);
     --hero-bg-start: var(--hero-bg-start-light);
     --hero-bg-end: var(--hero-bg-end-light);
+    --theme-gradient: var(--theme-gradient-light);
 }
 
 /* Dark Theme */
@@ -138,6 +143,7 @@
     --header-scrolled-bg: var(--header-scrolled-bg-dark);
     --hero-bg-start: var(--hero-bg-start-dark);
     --hero-bg-end: var(--hero-bg-end-dark);
+    --theme-gradient: var(--theme-gradient-dark);
 }
 
 /* Basic Reset */
@@ -673,7 +679,7 @@ main {
     text-align: center;
     position: relative;
     color: var(--text-primary);
-    background: linear-gradient(135deg, var(--hero-bg-start), var(--hero-bg-end));
+    background: var(--theme-gradient);
     overflow: hidden; /* Prevents animated overlay from extending beyond bounds */
 }
 
