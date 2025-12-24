@@ -86,7 +86,7 @@ const addToCart = (id, name, price, inventory) => {
     // Update button state
     if (DOM.addToCartBtn) {
         DOM.addToCartBtn.classList.add('added');
-        const originalText = DOM.addToCartBtn.textContent;
+        const originalHTML = DOM.addToCartBtn.innerHTML;
         DOM.addToCartBtn.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -95,7 +95,7 @@ const addToCart = (id, name, price, inventory) => {
         `;
         setTimeout(() => {
             DOM.addToCartBtn.classList.remove('added');
-            DOM.addToCartBtn.textContent = originalText;
+            DOM.addToCartBtn.innerHTML = originalHTML;
         }, 2000);
     }
 };

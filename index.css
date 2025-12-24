@@ -706,8 +706,7 @@ main {
 }
 
 /* Overlay for custom gradients to ensure text readability */
-.hero-section[style*="background:"]::before,
-.hero-section[style*="background-image:"]::before {
+.hero-section.hero-custom-bg::before {
     content: '';
     position: absolute;
     top: 0;
@@ -719,47 +718,46 @@ main {
 }
 
 /* Light theme: add light overlay for custom gradients */
-[data-theme="light"] .hero-section[style*="background:"]::before,
-[data-theme="light"] .hero-section[style*="background-image:"]::before {
+[data-theme="light"] .hero-section.hero-custom-bg::before {
     background: rgba(255, 255, 255, 0.2);
 }
 
 /* Ensure text is always readable with custom backgrounds */
-.hero-section[style*="background:"] .hero-content,
+.hero-section.hero-custom-bg .hero-content,
 .hero-section[data-bg-image] .hero-content {
     position: relative;
     z-index: 1;
 }
 
 /* Force white text with shadow for custom gradients to ensure readability */
-.hero-section[style*="background:"] .hero-content h1,
-.hero-section[style*="background:"] .hero-content p {
+.hero-section.hero-custom-bg .hero-content h1,
+.hero-section.hero-custom-bg .hero-content p {
     color: #FFFFFF;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Ensure stat items are readable */
-.hero-section[style*="background:"] .stat-item strong {
+.hero-section.hero-custom-bg .stat-item strong {
     color: #FFFFFF;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     background: none;
     -webkit-text-fill-color: #FFFFFF;
 }
 
-.hero-section[style*="background:"] .stat-item span {
+.hero-section.hero-custom-bg .stat-item span {
     color: rgba(255, 255, 255, 0.9);
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Adjust trust badges for custom backgrounds */
-.hero-section[style*="background:"] .trust-badge {
+.hero-section.hero-custom-bg .trust-badge {
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.3);
     color: #FFFFFF;
     backdrop-filter: blur(10px);
 }
 
-.hero-section[style*="background:"] .trust-badge:hover {
+.hero-section.hero-custom-bg .trust-badge:hover {
     background: rgba(255, 255, 255, 0.25);
     border-color: rgba(255, 255, 255, 0.5);
     color: #FFFFFF;

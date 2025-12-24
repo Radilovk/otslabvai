@@ -110,6 +110,7 @@ const generateProductCard = (product) => {
 const generateHeroHTML = component => {
     // Build style attribute for custom background
     let heroStyle = '';
+    let heroClass = '';
     if (component.background_image) {
         // Validate URL to prevent CSS injection and XSS
         const imageUrl = escapeHtml(component.background_image);
@@ -124,6 +125,7 @@ const generateHeroHTML = component => {
             (imageUrl.startsWith('/') && (imageUrl.startsWith('/images/') || imageUrl.startsWith('/assets/')))
         );
         if (isValidUrl) {
+            heroClass = ' hero-custom-bg';
             heroStyle = ` data-bg-image="true" style="background-image: url('${imageUrl}');"`;
         }
     } else if (component.background_gradient) {
@@ -132,12 +134,13 @@ const generateHeroHTML = component => {
         // Only allow safe characters: alphanumeric, spaces, commas, periods, %, #, (), and hyphens
         const gradientPattern = /^(linear-gradient|radial-gradient|conic-gradient|repeating-linear-gradient|repeating-radial-gradient)\([a-zA-Z0-9\s,%.#()-]+\)$/;
         if (gradientPattern.test(gradient)) {
+            heroClass = ' hero-custom-bg';
             heroStyle = ` style="background: ${gradient};"`;
         }
     }
     
     return `
-    <header class="hero-section"${heroStyle}>
+    <header class="hero-section${heroClass}"${heroStyle}>
         <div class="container">
             <div class="hero-content">
                 <h1>${component.title}</h1>
