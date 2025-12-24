@@ -516,6 +516,10 @@ h2 {
     transition: background 0.3s ease;
 }
 
+.gradient-section {
+    margin-top: 1rem;
+}
+
 .gradient-section-title {
     margin-bottom: 0.5rem;
     color: var(--text-secondary);
