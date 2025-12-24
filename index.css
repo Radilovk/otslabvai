@@ -46,15 +46,15 @@
     --header-border-light: rgba(0, 0, 0, 0.04);
     --header-border-scrolled-light: rgba(0, 0, 0, 0.06);
     --header-scrolled-bg-light: #ffffff;
-    --hero-bg-start-light: #fff7fb;
-    --hero-bg-end-light: #e9f7f5;
+    --hero-bg-start-light: #f8f9fa;
+    --hero-bg-end-light: #ffffff;
     --header-gradient-start-dark: var(--header-bg-dark);
     --header-gradient-end-dark: var(--header-bg-dark);
     --header-border-dark: rgba(255, 255, 255, 0.1);
     --header-border-scrolled-dark: rgba(255, 255, 255, 0.12);
     --header-scrolled-bg-dark: var(--header-bg-dark);
-    --hero-bg-start-dark: rgba(228, 0, 124, 0.8);
-    --hero-bg-end-dark: rgba(0, 169, 157, 0.7);
+    --hero-bg-start-dark: #12151A;
+    --hero-bg-end-dark: #0D0F12;
     
     /* Light Theme Variables (Lipolor-inspired) */
     --bg-primary-light: #FFFFFF;
@@ -428,7 +428,8 @@ img {
 .main-nav { 
     display: flex; 
     align-items: center; 
-    gap: 1.5rem; 
+    gap: 1.5rem;
+    flex: 1;
 }
 
 .nav-links { 
@@ -474,6 +475,13 @@ img {
 .nav-links a.active {
     color: var(--accent);
     font-weight: 700;
+}
+
+/* -- Header Actions Container -- */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 /* -- Theme Toggle Button -- */
@@ -643,7 +651,8 @@ main {
 
 /* --- HERO SECTION (Lipolor style) --- */
 .hero-section {
-    min-height: calc(100vh - var(--header-height));
+    min-height: 500px;
+    padding: 60px 0;
     display: flex; 
     flex-direction: column; 
     justify-content: center; 
@@ -656,17 +665,6 @@ main {
 
 .hero-section .container { 
     width: 100%; 
-}
-
-#neuron-canvas {
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    z-index: 0;
-    transition: opacity 0.3s ease; /* Smooth transition for opacity changes */
-    pointer-events: none; /* Ensure canvas doesn't block interactions */
 }
 
 .hero-content { 
@@ -1812,28 +1810,19 @@ body.modal-open { overflow: hidden; }
         padding: 20px;
     }
     
-    /* Optimize canvas animations for mobile */
-    #neuron-canvas {
-        opacity: 0.6; /* Reduce opacity on mobile for better readability */
-    }
-    
     /* Reduce animation intensity on mobile */
     .hero-section {
-        min-height: 70vh; /* Reduce height on mobile for better performance */
+        min-height: 450px;
+        padding: 40px 0;
     }
 }
 
 /* Very small mobile screens - further optimizations */
 @media (max-width: 480px) {
-    /* Hide canvas background on very small screens for best performance */
-    #neuron-canvas {
-        display: none;
-    }
-    
     /* Adjust hero section for small screens */
     .hero-section {
-        min-height: auto;
-        padding: 40px 0;
+        min-height: 400px;
+        padding: 30px 0;
     }
     
     .hero-content {
@@ -1876,11 +1865,6 @@ body.modal-open { overflow: hidden; }
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
-    }
-    
-    /* Hide canvas animations */
-    #neuron-canvas {
-        display: none;
     }
     
     /* Remove bounce and pulse animations */
