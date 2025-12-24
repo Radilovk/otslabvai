@@ -628,10 +628,39 @@ function initThemeGradientControls() {
     const lightPreview = DOM.modal.body.querySelector('#gradient_preview_light');
     const darkPreview = DOM.modal.body.querySelector('#gradient_preview_dark');
     
+    // Validate gradient string to prevent CSS injection
+    function isValidGradient(gradientStr) {
+        if (typeof gradientStr !== 'string' || !gradientStr.trim()) return false;
+        
+        // Only allow gradient functions
+        const validPrefixes = ['linear-gradient', 'radial-gradient', 'conic-gradient', 'repeating-linear-gradient', 'repeating-radial-gradient'];
+        const hasValidPrefix = validPrefixes.some(prefix => gradientStr.trim().startsWith(prefix + '('));
+        
+        if (!hasValidPrefix) return false;
+        
+        // Check for potentially dangerous characters or patterns
+        const dangerousPatterns = [
+            '<script', 'javascript:', 'expression(', 'url(', '@import', 'behavior:'
+        ];
+        
+        const lowerStr = gradientStr.toLowerCase();
+        if (dangerousPatterns.some(pattern => lowerStr.includes(pattern))) {
+            console.warn('Potentially unsafe gradient string blocked:', gradientStr);
+            return false;
+        }
+        
+        return true;
+    }
+    
     // Update gradient preview
     function updateGradientPreview(input, preview) {
         if (preview && input && input.value) {
-            preview.style.background = input.value;
+            // Validate before applying
+            if (isValidGradient(input.value)) {
+                preview.style.background = input.value;
+            } else {
+                console.warn('Invalid gradient format');
+            }
         }
     }
     

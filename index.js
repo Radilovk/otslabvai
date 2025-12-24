@@ -982,15 +982,39 @@ function applyThemeGradients(settings) {
     const { light, dark } = settings.theme_gradients;
     const root = document.documentElement;
     
-    // Apply light theme gradient
-    if (light) {
+    // Validate and apply light theme gradient
+    if (light && isValidGradient(light)) {
         root.style.setProperty('--theme-gradient-light', light);
     }
     
-    // Apply dark theme gradient
-    if (dark) {
+    // Validate and apply dark theme gradient
+    if (dark && isValidGradient(dark)) {
         root.style.setProperty('--theme-gradient-dark', dark);
     }
+}
+
+// Validate gradient string to prevent CSS injection
+function isValidGradient(gradientStr) {
+    if (typeof gradientStr !== 'string') return false;
+    
+    // Only allow gradient functions
+    const validPrefixes = ['linear-gradient', 'radial-gradient', 'conic-gradient', 'repeating-linear-gradient', 'repeating-radial-gradient'];
+    const hasValidPrefix = validPrefixes.some(prefix => gradientStr.trim().startsWith(prefix + '('));
+    
+    if (!hasValidPrefix) return false;
+    
+    // Check for potentially dangerous characters or patterns
+    const dangerousPatterns = [
+        '<script', 'javascript:', 'expression(', 'url(', '@import', 'behavior:'
+    ];
+    
+    const lowerStr = gradientStr.toLowerCase();
+    if (dangerousPatterns.some(pattern => lowerStr.includes(pattern))) {
+        console.warn('Potentially unsafe gradient string blocked:', gradientStr);
+        return false;
+    }
+    
+    return true;
 }
 
 
