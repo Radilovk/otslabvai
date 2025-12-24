@@ -1869,6 +1869,11 @@ body.modal-open { overflow: hidden; }
 /*          9. РЕСПОНСИВ МОБИЛНИ УСТРОЙСТВА              */
 /* ======================================================= */
 
+/* Hide theme toggle in mobile menu by default (shown only on mobile via media query) */
+.theme-toggle-mobile {
+    display: none;
+}
+
 @media (max-width: 992px) {
     .nav-links {
         position: fixed; 

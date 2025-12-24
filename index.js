@@ -113,14 +113,19 @@ const generateHeroHTML = component => {
     if (component.background_image) {
         // Validate URL to prevent CSS injection
         const imageUrl = escapeHtml(component.background_image);
-        // Only allow http/https URLs, block data: and javascript: URIs
-        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('/')) {
+        // Only allow http/https URLs and relative paths starting with /images/ or /assets/
+        const isValidUrl = imageUrl.startsWith('https://') || 
+                          imageUrl.startsWith('http://') ||
+                          (imageUrl.startsWith('/') && (imageUrl.startsWith('/images/') || imageUrl.startsWith('/assets/')));
+        if (isValidUrl) {
             heroStyle = ` data-bg-image="true" style="background-image: url('${imageUrl}');"`;
         }
     } else if (component.background_gradient) {
-        // Validate gradient - only allow if it starts with valid CSS gradient functions
+        // Validate gradient - check format more thoroughly
         const gradient = escapeHtml(component.background_gradient);
-        if (gradient.match(/^(linear-gradient|radial-gradient|conic-gradient|repeating-linear-gradient|repeating-radial-gradient)\(/)) {
+        // Regex validates: gradient function name, opening paren, content with allowed chars, closing paren
+        const gradientPattern = /^(linear-gradient|radial-gradient|conic-gradient|repeating-linear-gradient|repeating-radial-gradient)\([^<>"']*\)$/;
+        if (gradientPattern.test(gradient)) {
             heroStyle = ` style="background: ${gradient};"`;
         }
     }
