@@ -497,6 +497,7 @@ h2 {
 
 .btn-gradient-preset:hover {
     border-color: var(--primary-color);
+    color: var(--primary-color);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(228, 0, 124, 0.2);
 }
