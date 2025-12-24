@@ -664,7 +664,7 @@ main {
     position: relative;
     color: var(--text-primary);
     background: linear-gradient(135deg, var(--hero-bg-start), var(--hero-bg-end));
-    overflow: hidden;
+    overflow: hidden; /* Prevents animated overlay from extending beyond bounds */
 }
 
 /* Hero section with custom background image */

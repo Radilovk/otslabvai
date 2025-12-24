@@ -111,10 +111,18 @@ const generateHeroHTML = component => {
     // Build style attribute for custom background
     let heroStyle = '';
     if (component.background_image) {
-        heroStyle = ` data-bg-image="true" style="background-image: url('${escapeHtml(component.background_image)}');"`;
+        // Validate URL to prevent CSS injection
+        const imageUrl = escapeHtml(component.background_image);
+        // Only allow http/https URLs, block data: and javascript: URIs
+        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('/')) {
+            heroStyle = ` data-bg-image="true" style="background-image: url('${imageUrl}');"`;
+        }
     } else if (component.background_gradient) {
-        // Custom gradient specified in admin panel
-        heroStyle = ` style="background: ${escapeHtml(component.background_gradient)};"`;
+        // Validate gradient - only allow if it starts with valid CSS gradient functions
+        const gradient = escapeHtml(component.background_gradient);
+        if (gradient.match(/^(linear-gradient|radial-gradient|conic-gradient|repeating-linear-gradient|repeating-radial-gradient)\(/)) {
+            heroStyle = ` style="background: ${gradient};"`;
+        }
     }
     
     return `
