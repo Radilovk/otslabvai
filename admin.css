@@ -479,25 +479,32 @@ h2 {
 /*          GRADIENT PRESET BUTTONS                        */
 /* ======================================================= */
 .btn-gradient-preset {
-    padding: 0.5rem 1rem;
+    padding: 0.5rem;
     border: 2px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: 8px;
     background: var(--bg-secondary);
     color: var(--text-primary);
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-speed);
     font-family: var(--font-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 .btn-gradient-preset:hover {
     border-color: var(--primary-color);
-    color: var(--primary-color);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(228, 0, 124, 0.2);
 }
 
 .btn-gradient-preset:active {
     transform: translateY(0);
+}
+
+#gradient_preview {
+    transition: background 0.3s ease;
 }

@@ -336,6 +336,7 @@ function initHeroBackgroundControls() {
     const imageGroup = DOM.modal.body.querySelector('#hero_bg_image_group');
     const gradientGroup = DOM.modal.body.querySelector('#hero_bg_gradient_group');
     const gradientInput = DOM.modal.body.querySelector('#hero_bg_gradient');
+    const gradientPreview = DOM.modal.body.querySelector('#gradient_preview');
     
     if (!bgTypeSelect) return;
     
@@ -346,6 +347,13 @@ function initHeroBackgroundControls() {
         gradientGroup.style.display = type === 'custom_gradient' ? 'block' : 'none';
     }
     
+    // Update gradient preview
+    function updateGradientPreview(gradient) {
+        if (gradientPreview && gradient) {
+            gradientPreview.style.background = gradient;
+        }
+    }
+    
     // Handle gradient preset buttons
     const presetButtons = DOM.modal.body.querySelectorAll('.btn-gradient-preset');
     presetButtons.forEach(btn => {
@@ -354,9 +362,21 @@ function initHeroBackgroundControls() {
             const gradient = btn.dataset.gradient;
             if (gradientInput) {
                 gradientInput.value = gradient;
+                updateGradientPreview(gradient);
             }
         });
     });
+    
+    // Live preview on gradient input change
+    if (gradientInput) {
+        gradientInput.addEventListener('input', (e) => {
+            updateGradientPreview(e.target.value);
+        });
+        // Initialize preview with current value
+        if (gradientInput.value) {
+            updateGradientPreview(gradientInput.value);
+        }
+    }
     
     bgTypeSelect.addEventListener('change', updateBackgroundFields);
     updateBackgroundFields();
