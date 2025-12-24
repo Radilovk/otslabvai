@@ -509,10 +509,19 @@ function initGradientBuilder(gradientInput, updatePreviewCallback) {
     
     addColorStopBtn.addEventListener('click', () => {
         // Add new color stop in the middle
-        const newPosition = colorStops.length > 0 ? 50 : 50;
+        const newPosition = 50;
         colorStops.push({ color: '#ffffff', position: newPosition });
         renderColorStops();
         updateGradientCSS();
+    });
+    
+    // Listen for updates from preset selections
+    colorStopsList.addEventListener('updateColorStops', (e) => {
+        if (e.detail && Array.isArray(e.detail)) {
+            colorStops = [...e.detail];
+            renderColorStops();
+            updateGradientCSS();
+        }
     });
     
     // Initial render
@@ -524,12 +533,27 @@ function initGradientBuilder(gradientInput, updatePreviewCallback) {
 
 // Parse gradient string to builder controls
 function parseGradient(gradientStr) {
-    const linearMatch = gradientStr.match(/linear-gradient\((\d+)deg,\s*(.+)\)/);
-    const radialMatch = gradientStr.match(/radial-gradient\(circle,\s*(.+)\)/);
+    // Linear gradient patterns - supports degrees, directions, and keywords
+    const linearMatch = gradientStr.match(/linear-gradient\((?:(\d+)deg|to\s+(\w+)),\s*(.+)\)/);
+    // Radial gradient patterns - supports circle, ellipse
+    const radialMatch = gradientStr.match(/radial-gradient\((?:circle|ellipse)?,?\s*(.+)\)/);
     
     if (linearMatch) {
-        const angle = parseInt(linearMatch[1]);
-        const stopsStr = linearMatch[2];
+        // Extract angle - default to 135 if using 'to right' etc
+        let angle = 135;
+        if (linearMatch[1]) {
+            angle = parseInt(linearMatch[1]);
+        } else if (linearMatch[2]) {
+            // Convert direction keywords to angles
+            const directionMap = {
+                'right': 90,
+                'left': 270,
+                'bottom': 180,
+                'top': 0
+            };
+            angle = directionMap[linearMatch[2]] || 135;
+        }
+        const stopsStr = linearMatch[3];
         const stops = parseColorStops(stopsStr);
         return { type: 'linear', angle, stops };
     } else if (radialMatch) {
@@ -543,7 +567,8 @@ function parseGradient(gradientStr) {
 
 function parseColorStops(stopsStr) {
     const stops = [];
-    const regex = /(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|rgba?\([^)]+\))\s+(\d+)%/g;
+    // Enhanced regex to support hex, rgb, rgba, hsl, hsla, and named colors
+    const regex = /(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)|[a-z]+)\s+(\d+)%/gi;
     let match;
     
     while ((match = regex.exec(stopsStr)) !== null) {
@@ -553,33 +578,42 @@ function parseColorStops(stopsStr) {
         });
     }
     
+    // Return default stops if parsing fails
     return stops.length > 0 ? stops : [
         { color: '#667eea', position: 0 },
         { color: '#764ba2', position: 100 }
     ];
 }
 
+// Parse gradient string to builder controls (when preset is selected)
 function parseGradientToBuilder(gradientStr) {
-    // This will be called when a preset is selected to update the builder
+    // Update the gradient input and preview without re-initializing
     const parsed = parseGradient(gradientStr);
     if (!parsed) return;
     
     const gradientType = DOM.modal.body.querySelector('#gradient_type');
     const gradientAngle = DOM.modal.body.querySelector('#gradient_angle');
     const gradientAngleValue = DOM.modal.body.querySelector('#gradient_angle_value');
+    const gradientAngleGroup = DOM.modal.body.querySelector('#gradient_angle_group');
     
-    if (gradientType) gradientType.value = parsed.type;
+    if (gradientType) {
+        gradientType.value = parsed.type;
+        if (gradientAngleGroup) {
+            gradientAngleGroup.style.display = parsed.type === 'linear' ? 'block' : 'none';
+        }
+    }
     if (gradientAngle && parsed.angle !== null) {
         gradientAngle.value = parsed.angle;
         if (gradientAngleValue) gradientAngleValue.textContent = parsed.angle;
     }
     
-    // Re-initialize builder with new stops
-    const gradientInput = DOM.modal.body.querySelector('#hero_bg_gradient');
-    const gradientPreview = DOM.modal.body.querySelector('#gradient_preview');
-    initGradientBuilder(gradientInput, (g) => {
-        if (gradientPreview) gradientPreview.style.background = g;
-    });
+    // Update the color stops in the existing builder
+    const colorStopsList = DOM.modal.body.querySelector('#color_stops_list');
+    if (colorStopsList && parsed.stops.length > 0) {
+        // Trigger a custom event to update the builder's internal state
+        const event = new CustomEvent('updateColorStops', { detail: parsed.stops });
+        colorStopsList.dispatchEvent(event);
+    }
 }
 
 function closeModal() {
