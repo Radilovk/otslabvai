@@ -479,16 +479,20 @@ h2 {
 /*          GRADIENT PRESET BUTTONS                        */
 /* ======================================================= */
 .btn-gradient-preset {
-    padding: 0.5rem 1rem;
+    padding: 0.5rem;
     border: 2px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: 8px;
     background: var(--bg-secondary);
     color: var(--text-primary);
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-speed);
     font-family: var(--font-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 .btn-gradient-preset:hover {
@@ -500,4 +504,43 @@ h2 {
 
 .btn-gradient-preset:active {
     transform: translateY(0);
+}
+
+.gradient-preview {
+    width: 100%;
+    height: 80px;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: background 0.3s ease;
+}
+
+.gradient-section {
+    margin-top: 1rem;
+}
+
+.gradient-section-title {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.gradient-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.gradient-thumbnail {
+    width: 100%;
+    height: 30px;
+    border-radius: 4px;
+    margin-bottom: 0.25rem;
+}
+
+.gradient-label {
+    font-size: 0.75rem;
 }
