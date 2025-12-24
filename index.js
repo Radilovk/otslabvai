@@ -110,6 +110,7 @@ const generateProductCard = (product) => {
 const generateHeroHTML = component => {
     // Build style attribute for custom background
     let heroStyle = '';
+    let heroClass = '';
     if (component.background_image) {
         // Validate URL to prevent CSS injection and XSS
         const imageUrl = escapeHtml(component.background_image);
@@ -124,6 +125,7 @@ const generateHeroHTML = component => {
             (imageUrl.startsWith('/') && (imageUrl.startsWith('/images/') || imageUrl.startsWith('/assets/')))
         );
         if (isValidUrl) {
+            heroClass = ' hero-custom-bg';
             heroStyle = ` data-bg-image="true" style="background-image: url('${imageUrl}');"`;
         }
     } else if (component.background_gradient) {
@@ -132,22 +134,33 @@ const generateHeroHTML = component => {
         // Only allow safe characters: alphanumeric, spaces, commas, periods, %, #, (), and hyphens
         const gradientPattern = /^(linear-gradient|radial-gradient|conic-gradient|repeating-linear-gradient|repeating-radial-gradient)\([a-zA-Z0-9\s,%.#()-]+\)$/;
         if (gradientPattern.test(gradient)) {
+            heroClass = ' hero-custom-bg';
             heroStyle = ` style="background: ${gradient};"`;
         }
     }
     
     return `
-    <header class="hero-section"${heroStyle}>
+    <header class="hero-section${heroClass}"${heroStyle}>
         <div class="container">
             <div class="hero-content">
                 <h1>${component.title}</h1>
                 <p>${component.subtitle}</p>
                 <div class="hero-cta-group">
                     <button class="btn-hero-primary" onclick="document.getElementById('products')?.scrollIntoView({behavior: 'smooth'})">
-                        🛒 Разгледай продуктите
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        </svg>
+                        Разгледай продуктите
                     </button>
                     <button class="btn-hero-secondary" onclick="document.getElementById('benefits')?.scrollIntoView({behavior: 'smooth'})">
-                        ℹ️ Научи повече
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        Научи повече
                     </button>
                 </div>
                 <div class="hero-stats">
@@ -165,9 +178,24 @@ const generateHeroHTML = component => {
                     </div>
                 </div>
                 <div class="hero-trust-badges">
-                    <div class="trust-badge">✓ Клинично тествано</div>
-                    <div class="trust-badge">✓ GMP сертифицирано</div>
-                    <div class="trust-badge">✓ 30 дни гаранция</div>
+                    <div class="trust-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Клинично тествано
+                    </div>
+                    <div class="trust-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        GMP сертифицирано
+                    </div>
+                    <div class="trust-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        30 дни гаранция
+                    </div>
                 </div>
             </div>
         </div>
@@ -450,11 +478,12 @@ const showAddToCartFeedback = (productId) => {
     if (!btn || btn.classList.contains('added')) return;
     
     btn.classList.add('added');
-    btn.textContent = 'Добавено ✓';
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>Добавено`;
     
     setTimeout(() => {
         btn.classList.remove('added');
-        btn.textContent = 'Добави в количката';
+        btn.innerHTML = originalHTML;
     }, 2000);
 }
 
@@ -1079,15 +1108,15 @@ function addProductBadges() {
         
         // First product - Bestseller
         if (index === 0) {
-            badge = createBadge('⭐ Най-продаван', 'bestseller');
+            badge = createBadge('Най-продаван', 'bestseller', 'star');
         }
         // Second product - New
         else if (index === 1) {
-            badge = createBadge('🆕 Ново', 'new');
+            badge = createBadge('Ново', 'new', 'sparkles');
         }
         // Third product - Limited offer
         else if (index === 2) {
-            badge = createBadge('🔥 Ограничена оферта', 'limited');
+            badge = createBadge('Ограничена оферта', 'limited', 'fire');
         }
         
         if (badge) {
@@ -1097,10 +1126,21 @@ function addProductBadges() {
     });
 }
 
-function createBadge(text, type) {
+function createBadge(text, type, iconType) {
     const badge = document.createElement('div');
     badge.className = `product-badge ${type}`;
-    badge.textContent = text;
+    
+    // Create SVG icon based on type
+    let iconSVG = '';
+    if (iconType === 'star') {
+        iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+    } else if (iconType === 'sparkles') {
+        iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M9.813 3.25a.75.75 0 0 1 .437.695v4.945c0 .174.106.331.268.395l.625.25a.75.75 0 0 1 0 1.398l-.625.25a.422.422 0 0 0-.268.395v4.945a.75.75 0 0 1-1.187.607l-4.382-3.024a.422.422 0 0 1 0-.695l4.382-3.024a.75.75 0 0 1 .75-.142zm9 0a.75.75 0 0 1 .437.695v4.945c0 .174.106.331.268.395l.625.25a.75.75 0 0 1 0 1.398l-.625.25a.422.422 0 0 0-.268.395v4.945a.75.75 0 0 1-1.187.607l-4.382-3.024a.422.422 0 0 1 0-.695l4.382-3.024a.75.75 0 0 1 .75-.142z"></path></svg>';
+    } else if (iconType === 'fire') {
+        iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>';
+    }
+    
+    badge.innerHTML = iconSVG + text;
     return badge;
 }
 
@@ -1117,7 +1157,7 @@ function updateStockUrgency() {
             
             if (quantity > 0 && quantity <= 30) {
                 stock.classList.add('low-stock');
-                stock.textContent = `⚠️ Само ${quantity} бр. налични!`;
+                stock.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Само ${quantity} бр. налични!`;
             } else if (quantity > 30) {
                 stock.classList.add('in-stock');
             }
