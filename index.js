@@ -111,20 +111,26 @@ const generateHeroHTML = component => {
     // Build style attribute for custom background
     let heroStyle = '';
     if (component.background_image) {
-        // Validate URL to prevent CSS injection
+        // Validate URL to prevent CSS injection and XSS
         const imageUrl = escapeHtml(component.background_image);
-        // Only allow http/https URLs and relative paths starting with /images/ or /assets/
-        const isValidUrl = imageUrl.startsWith('https://') || 
-                          imageUrl.startsWith('http://') ||
-                          (imageUrl.startsWith('/') && (imageUrl.startsWith('/images/') || imageUrl.startsWith('/assets/')));
+        // Explicitly block dangerous protocols
+        const hasDangerousProtocol = imageUrl.toLowerCase().startsWith('data:') || 
+                                     imageUrl.toLowerCase().startsWith('javascript:') ||
+                                     imageUrl.toLowerCase().startsWith('vbscript:');
+        // Only allow safe URLs
+        const isValidUrl = !hasDangerousProtocol && (
+            imageUrl.startsWith('https://') || 
+            imageUrl.startsWith('http://') ||
+            (imageUrl.startsWith('/') && (imageUrl.startsWith('/images/') || imageUrl.startsWith('/assets/')))
+        );
         if (isValidUrl) {
             heroStyle = ` data-bg-image="true" style="background-image: url('${imageUrl}');"`;
         }
     } else if (component.background_gradient) {
-        // Validate gradient - check format more thoroughly
+        // Validate gradient - strict character set for security
         const gradient = escapeHtml(component.background_gradient);
-        // Regex validates: gradient function name, opening paren, content with allowed chars, closing paren
-        const gradientPattern = /^(linear-gradient|radial-gradient|conic-gradient|repeating-linear-gradient|repeating-radial-gradient)\([^<>"']*\)$/;
+        // Only allow safe characters: alphanumeric, spaces, commas, periods, %, #, (), and hyphens
+        const gradientPattern = /^(linear-gradient|radial-gradient|conic-gradient|repeating-linear-gradient|repeating-radial-gradient)\([a-zA-Z0-9\s,%.#()-]+\)$/;
         if (gradientPattern.test(gradient)) {
             heroStyle = ` style="background: ${gradient};"`;
         }
