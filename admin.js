@@ -321,8 +321,45 @@ function openModal(title, formTemplateId, data, onSave) {
     }
     currentModalSaveCallback = onSave;
     initModalTabs(DOM.modal.body);
+    
+    // Special handlers for hero banner background type
+    if (formTemplateId === 'form-hero-banner-template') {
+        initHeroBackgroundControls();
+    }
+    
     DOM.modal.container.classList.add('show');
     DOM.modal.backdrop.classList.add('show');
+}
+
+function initHeroBackgroundControls() {
+    const bgTypeSelect = DOM.modal.body.querySelector('#hero_bg_type');
+    const imageGroup = DOM.modal.body.querySelector('#hero_bg_image_group');
+    const gradientGroup = DOM.modal.body.querySelector('#hero_bg_gradient_group');
+    const gradientInput = DOM.modal.body.querySelector('#hero_bg_gradient');
+    
+    if (!bgTypeSelect) return;
+    
+    // Show/hide groups based on selection
+    function updateBackgroundFields() {
+        const type = bgTypeSelect.value;
+        imageGroup.style.display = type === 'image' ? 'block' : 'none';
+        gradientGroup.style.display = type === 'custom_gradient' ? 'block' : 'none';
+    }
+    
+    // Handle gradient preset buttons
+    const presetButtons = DOM.modal.body.querySelectorAll('.btn-gradient-preset');
+    presetButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const gradient = btn.dataset.gradient;
+            if (gradientInput) {
+                gradientInput.value = gradient;
+            }
+        });
+    });
+    
+    bgTypeSelect.addEventListener('change', updateBackgroundFields);
+    updateBackgroundFields();
 }
 
 function closeModal() {
