@@ -107,8 +107,37 @@ const generateProductCard = (product) => {
 // --- END: MODIFIED FUNCTION ---
 
 
-const generateHeroHTML = component => `
-    <header class="hero-section">
+const generateHeroHTML = component => {
+    // Build style attribute for custom background
+    let heroStyle = '';
+    if (component.background_image) {
+        // Validate URL to prevent CSS injection and XSS
+        const imageUrl = escapeHtml(component.background_image);
+        // Explicitly block dangerous protocols
+        const hasDangerousProtocol = imageUrl.toLowerCase().startsWith('data:') || 
+                                     imageUrl.toLowerCase().startsWith('javascript:') ||
+                                     imageUrl.toLowerCase().startsWith('vbscript:');
+        // Only allow safe URLs
+        const isValidUrl = !hasDangerousProtocol && (
+            imageUrl.startsWith('https://') || 
+            imageUrl.startsWith('http://') ||
+            (imageUrl.startsWith('/') && (imageUrl.startsWith('/images/') || imageUrl.startsWith('/assets/')))
+        );
+        if (isValidUrl) {
+            heroStyle = ` data-bg-image="true" style="background-image: url('${imageUrl}');"`;
+        }
+    } else if (component.background_gradient) {
+        // Validate gradient - strict character set for security
+        const gradient = escapeHtml(component.background_gradient);
+        // Only allow safe characters: alphanumeric, spaces, commas, periods, %, #, (), and hyphens
+        const gradientPattern = /^(linear-gradient|radial-gradient|conic-gradient|repeating-linear-gradient|repeating-radial-gradient)\([a-zA-Z0-9\s,%.#()-]+\)$/;
+        if (gradientPattern.test(gradient)) {
+            heroStyle = ` style="background: ${gradient};"`;
+        }
+    }
+    
+    return `
+    <header class="hero-section"${heroStyle}>
         <div class="container">
             <div class="hero-content">
                 <h1>${component.title}</h1>
@@ -143,6 +172,7 @@ const generateHeroHTML = component => `
             </div>
         </div>
     </header>`;
+};
 
 // --- START: MODIFIED FUNCTION ---
 const generateProductCategoryHTML = (component, index) => {
@@ -833,6 +863,7 @@ function initializeGlobalScripts() {
 
     // --- Theme Toggle ---
     const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleMobile = document.getElementById('theme-toggle-mobile');
     
     function setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
@@ -855,6 +886,10 @@ function initializeGlobalScripts() {
     
     if (themeToggle) {
         themeToggle.addEventListener('click', toggleTheme);
+    }
+    
+    if (themeToggleMobile) {
+        themeToggleMobile.addEventListener('click', toggleTheme);
     }
     
     // Listen for system theme changes

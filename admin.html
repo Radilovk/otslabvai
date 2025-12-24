@@ -289,6 +289,35 @@
                 <label for="hero_subtitle">Подзаглавие</label>
                 <input type="text" id="hero_subtitle" data-field="subtitle">
             </div>
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">🎨 Фон на Hero секция</h4>
+            <div class="form-group">
+                <label for="hero_bg_type">Тип на фона</label>
+                <select id="hero_bg_type" data-field="background_type">
+                    <option value="default">По подразбиране (градиент)</option>
+                    <option value="custom_gradient">Персонализиран градиент</option>
+                    <option value="image">Изображение</option>
+                </select>
+                <small class="form-hint">Изберете дали да използвате градиент или изображение за фон</small>
+            </div>
+            <div class="form-group" id="hero_bg_image_group" style="display: none;">
+                <label for="hero_bg_image">URL на фоново изображение</label>
+                <input type="text" id="hero_bg_image" data-field="background_image" placeholder="https://example.com/hero-bg.jpg">
+                <small class="form-hint">Въведете URL адрес на изображение (препоръчителен размер: 1920x800px)</small>
+            </div>
+            <div class="form-group" id="hero_bg_gradient_group" style="display: none;">
+                <label for="hero_bg_gradient">CSS градиент</label>
+                <input type="text" id="hero_bg_gradient" data-field="background_gradient" placeholder="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+                <small class="form-hint">Примери готови градиенти:</small>
+                <div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">Лилав океан</button>
+                    <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)">Розова страст</button>
+                    <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)">Син блясък</button>
+                    <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)">Зелена свежест</button>
+                    <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)">Залез</button>
+                    <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #30cfd0 0%, #330867 100%)">Нощен градиент</button>
+                </div>
+            </div>
         </form>
     </template>
 
