@@ -354,6 +354,9 @@ function initHeroBackgroundControls() {
         }
     }
     
+    // Initialize gradient builder
+    initGradientBuilder(gradientInput, updateGradientPreview);
+    
     // Handle gradient preset buttons
     const presetButtons = DOM.modal.body.querySelectorAll('.btn-gradient-preset');
     presetButtons.forEach(btn => {
@@ -363,6 +366,8 @@ function initHeroBackgroundControls() {
             if (gradientInput) {
                 gradientInput.value = gradient;
                 updateGradientPreview(gradient);
+                // Parse and update builder controls
+                parseGradientToBuilder(gradient);
             }
         });
     });
@@ -380,6 +385,235 @@ function initHeroBackgroundControls() {
     
     bgTypeSelect.addEventListener('change', updateBackgroundFields);
     updateBackgroundFields();
+}
+
+// Gradient Builder Implementation
+function initGradientBuilder(gradientInput, updatePreviewCallback) {
+    const gradientType = DOM.modal.body.querySelector('#gradient_type');
+    const gradientAngle = DOM.modal.body.querySelector('#gradient_angle');
+    const gradientAngleValue = DOM.modal.body.querySelector('#gradient_angle_value');
+    const gradientAngleGroup = DOM.modal.body.querySelector('#gradient_angle_group');
+    const colorStopsList = DOM.modal.body.querySelector('#color_stops_list');
+    const addColorStopBtn = DOM.modal.body.querySelector('#add_color_stop');
+    
+    if (!gradientType || !colorStopsList) return;
+    
+    // State management
+    let colorStops = [
+        { color: '#667eea', position: 0 },
+        { color: '#764ba2', position: 100 }
+    ];
+    
+    // Parse existing gradient if present
+    if (gradientInput && gradientInput.value) {
+        const parsed = parseGradient(gradientInput.value);
+        if (parsed) {
+            gradientType.value = parsed.type;
+            if (parsed.angle !== null) gradientAngle.value = parsed.angle;
+            if (parsed.stops.length > 0) colorStops = parsed.stops;
+        }
+    }
+    
+    function updateGradientCSS() {
+        let gradient;
+        const type = gradientType.value;
+        
+        // Sort color stops by position
+        const sortedStops = [...colorStops].sort((a, b) => a.position - b.position);
+        const stopsStr = sortedStops.map(s => `${s.color} ${s.position}%`).join(', ');
+        
+        if (type === 'linear') {
+            const angle = gradientAngle.value;
+            gradient = `linear-gradient(${angle}deg, ${stopsStr})`;
+        } else {
+            gradient = `radial-gradient(circle, ${stopsStr})`;
+        }
+        
+        if (gradientInput) {
+            gradientInput.value = gradient;
+        }
+        if (updatePreviewCallback) {
+            updatePreviewCallback(gradient);
+        }
+    }
+    
+    function renderColorStops() {
+        colorStopsList.innerHTML = '';
+        colorStops.forEach((stop, index) => {
+            const stopItem = document.createElement('div');
+            stopItem.className = 'color-stop-item';
+            stopItem.innerHTML = `
+                <input type="color" value="${stop.color}" data-index="${index}" class="color-picker">
+                <input type="range" min="0" max="100" value="${stop.position}" data-index="${index}" class="position-slider">
+                <input type="number" min="0" max="100" value="${stop.position}" data-index="${index}" class="position-input">
+                <button type="button" data-index="${index}" class="remove-stop" ${colorStops.length <= 2 ? 'disabled' : ''}>×</button>
+            `;
+            colorStopsList.appendChild(stopItem);
+        });
+        
+        // Attach event listeners
+        colorStopsList.querySelectorAll('.color-picker').forEach(picker => {
+            picker.addEventListener('input', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                colorStops[index].color = e.target.value;
+                updateGradientCSS();
+            });
+        });
+        
+        colorStopsList.querySelectorAll('.position-slider').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                const value = parseInt(e.target.value);
+                colorStops[index].position = value;
+                // Update corresponding number input
+                const numberInput = colorStopsList.querySelector(`.position-input[data-index="${index}"]`);
+                if (numberInput) numberInput.value = value;
+                updateGradientCSS();
+            });
+        });
+        
+        colorStopsList.querySelectorAll('.position-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                const value = parseInt(e.target.value);
+                colorStops[index].position = Math.max(0, Math.min(100, value));
+                // Update corresponding slider
+                const slider = colorStopsList.querySelector(`.position-slider[data-index="${index}"]`);
+                if (slider) slider.value = colorStops[index].position;
+                updateGradientCSS();
+            });
+        });
+        
+        colorStopsList.querySelectorAll('.remove-stop').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                if (colorStops.length > 2) {
+                    colorStops.splice(index, 1);
+                    renderColorStops();
+                    updateGradientCSS();
+                }
+            });
+        });
+    }
+    
+    // Event listeners
+    gradientType.addEventListener('change', () => {
+        gradientAngleGroup.style.display = gradientType.value === 'linear' ? 'block' : 'none';
+        updateGradientCSS();
+    });
+    
+    gradientAngle.addEventListener('input', (e) => {
+        gradientAngleValue.textContent = e.target.value;
+        updateGradientCSS();
+    });
+    
+    addColorStopBtn.addEventListener('click', () => {
+        // Add new color stop in the middle
+        const newPosition = 50;
+        colorStops.push({ color: '#ffffff', position: newPosition });
+        renderColorStops();
+        updateGradientCSS();
+    });
+    
+    // Listen for updates from preset selections
+    colorStopsList.addEventListener('updateColorStops', (e) => {
+        if (e.detail && Array.isArray(e.detail)) {
+            colorStops = [...e.detail];
+            renderColorStops();
+            updateGradientCSS();
+        }
+    });
+    
+    // Initial render
+    gradientAngleGroup.style.display = gradientType.value === 'linear' ? 'block' : 'none';
+    gradientAngleValue.textContent = gradientAngle.value;
+    renderColorStops();
+    updateGradientCSS();
+}
+
+// Parse gradient string to builder controls
+function parseGradient(gradientStr) {
+    // Linear gradient patterns - supports degrees, directions, and keywords
+    const linearMatch = gradientStr.match(/linear-gradient\((?:(\d+)deg|to\s+(\w+)),\s*(.+)\)/);
+    // Radial gradient patterns - supports circle, ellipse
+    const radialMatch = gradientStr.match(/radial-gradient\((?:circle|ellipse)?,?\s*(.+)\)/);
+    
+    if (linearMatch) {
+        // Extract angle - default to 135 if using 'to right' etc
+        let angle = 135;
+        if (linearMatch[1]) {
+            angle = parseInt(linearMatch[1]);
+        } else if (linearMatch[2]) {
+            // Convert direction keywords to angles
+            const directionMap = {
+                'right': 90,
+                'left': 270,
+                'bottom': 180,
+                'top': 0
+            };
+            angle = directionMap[linearMatch[2]] || 135;
+        }
+        const stopsStr = linearMatch[3];
+        const stops = parseColorStops(stopsStr);
+        return { type: 'linear', angle, stops };
+    } else if (radialMatch) {
+        const stopsStr = radialMatch[1];
+        const stops = parseColorStops(stopsStr);
+        return { type: 'radial', angle: null, stops };
+    }
+    
+    return null;
+}
+
+function parseColorStops(stopsStr) {
+    const stops = [];
+    // Enhanced regex to support hex, rgb, rgba, hsl, hsla, and named colors
+    const regex = /(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)|[a-z]+)\s+(\d+)%/gi;
+    let match;
+    
+    while ((match = regex.exec(stopsStr)) !== null) {
+        stops.push({
+            color: match[1],
+            position: parseInt(match[2])
+        });
+    }
+    
+    // Return default stops if parsing fails
+    return stops.length > 0 ? stops : [
+        { color: '#667eea', position: 0 },
+        { color: '#764ba2', position: 100 }
+    ];
+}
+
+// Parse gradient string to builder controls (when preset is selected)
+function parseGradientToBuilder(gradientStr) {
+    // Update the gradient input and preview without re-initializing
+    const parsed = parseGradient(gradientStr);
+    if (!parsed) return;
+    
+    const gradientType = DOM.modal.body.querySelector('#gradient_type');
+    const gradientAngle = DOM.modal.body.querySelector('#gradient_angle');
+    const gradientAngleValue = DOM.modal.body.querySelector('#gradient_angle_value');
+    const gradientAngleGroup = DOM.modal.body.querySelector('#gradient_angle_group');
+    
+    if (gradientType) {
+        gradientType.value = parsed.type;
+        if (gradientAngleGroup) {
+            gradientAngleGroup.style.display = parsed.type === 'linear' ? 'block' : 'none';
+        }
+    }
+    if (gradientAngle && parsed.angle !== null) {
+        gradientAngle.value = parsed.angle;
+        if (gradientAngleValue) gradientAngleValue.textContent = parsed.angle;
+    }
+    
+    // Update the color stops in the existing builder
+    const colorStopsList = DOM.modal.body.querySelector('#color_stops_list');
+    if (colorStopsList && parsed.stops.length > 0) {
+        // Trigger a custom event to update the builder's internal state
+        const event = new CustomEvent('updateColorStops', { detail: parsed.stops });
+        colorStopsList.dispatchEvent(event);
+    }
 }
 
 function closeModal() {

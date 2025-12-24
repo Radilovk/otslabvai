@@ -302,10 +302,44 @@
                 <small class="form-hint">Въведете URL адрес на изображение (препоръчителен размер: 1920x800px)</small>
             </div>
             <div class="form-group" id="hero_bg_gradient_group" style="display: none;">
-                <label for="hero_bg_gradient">CSS градиент</label>
+                <label for="hero_bg_gradient">Градиент</label>
                 <div id="gradient_preview" class="gradient-preview"></div>
-                <input type="text" id="hero_bg_gradient" data-field="background_gradient" placeholder="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
-                <small class="form-hint">Избери готов градиент или въведи собствен CSS градиент:</small>
+                
+                <!-- Custom Gradient Builder -->
+                <div class="gradient-builder" id="gradient-builder">
+                    <h5 class="gradient-section-title">🎨 Градиент Builder</h5>
+                    
+                    <div class="builder-controls">
+                        <!-- Gradient Type -->
+                        <div class="form-group">
+                            <label for="gradient_type">Тип градиент</label>
+                            <select id="gradient_type" class="gradient-control">
+                                <option value="linear">Линеен</option>
+                                <option value="radial">Радиален</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Angle control (for linear) -->
+                        <div class="form-group" id="gradient_angle_group">
+                            <label for="gradient_angle">Ъгъл: <span id="gradient_angle_value">135</span>°</label>
+                            <input type="range" id="gradient_angle" class="gradient-control" min="0" max="360" value="135" step="1">
+                        </div>
+                        
+                        <!-- Color stops container -->
+                        <div class="color-stops-container">
+                            <label>Цветове:</label>
+                            <div id="color_stops_list" class="color-stops-list">
+                                <!-- Color stops will be added here dynamically -->
+                            </div>
+                            <button type="button" id="add_color_stop" class="btn btn-sm btn-secondary" style="margin-top: 0.5rem;">
+                                + Добави цвят
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <input type="text" id="hero_bg_gradient" data-field="background_gradient" placeholder="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" style="margin-top: 1rem;">
+                <small class="form-hint">Или избери готов градиент от списъка по-долу:</small>
                 
                 <div class="gradient-section">
                     <h5 class="gradient-section-title">🎨 Линейни градиенти</h5>
