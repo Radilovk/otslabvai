@@ -296,104 +296,104 @@
             </div>
             <div class="form-group" id="hero_bg_gradient_group" style="display: none;">
                 <label for="hero_bg_gradient">CSS градиент</label>
-                <div id="gradient_preview" style="width: 100%; height: 80px; border-radius: 8px; border: 2px solid var(--border-color); margin-bottom: 1rem; background: linear-gradient(135deg, var(--hero-bg-start), var(--hero-bg-end));"></div>
+                <div id="gradient_preview" class="gradient-preview"></div>
                 <input type="text" id="hero_bg_gradient" data-field="background_gradient" placeholder="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
                 <small class="form-hint">Избери готов градиент или въведи собствен CSS градиент:</small>
                 
                 <div style="margin-top: 1rem;">
-                    <h5 style="margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">🎨 Линейни градиенти</h5>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; margin-bottom: 1rem;">
+                    <h5 class="gradient-section-title">🎨 Линейни градиенти</h5>
+                    <div class="gradient-grid">
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" title="Лилав океан">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Лилав океан</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                            <span class="gradient-label">Лилав океан</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" title="Розова страст">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Розова страст</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                            <span class="gradient-label">Розова страст</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" title="Син блясък">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Син блясък</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                            <span class="gradient-label">Син блясък</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" title="Зелена свежест">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Зелена свежест</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"></div>
+                            <span class="gradient-label">Зелена свежест</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)" title="Залез">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Залез</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"></div>
+                            <span class="gradient-label">Залез</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #30cfd0 0%, #330867 100%)" title="Нощен градиент">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Нощен градиент</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);"></div>
+                            <span class="gradient-label">Нощен градиент</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)" title="Праскова">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Праскова</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);"></div>
+                            <span class="gradient-label">Праскова</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)" title="Пастел">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Пастел</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);"></div>
+                            <span class="gradient-label">Пастел</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)" title="Розов облак">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Розов облак</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);"></div>
+                            <span class="gradient-label">Розов облак</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)" title="Прохладен здрач">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Прохладен здрач</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);"></div>
+                            <span class="gradient-label">Прохладен здрач</span>
                         </button>
                     </div>
                 </div>
                 
                 <div style="margin-top: 1rem;">
-                    <h5 style="margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">🌈 Радиални градиенти</h5>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; margin-bottom: 1rem;">
+                    <h5 class="gradient-section-title">🌈 Радиални градиенти</h5>
+                    <div class="gradient-grid">
                         <button type="button" class="btn-gradient-preset" data-gradient="radial-gradient(circle, #667eea 0%, #764ba2 100%)" title="Лилаво сияние">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: radial-gradient(circle, #667eea 0%, #764ba2 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Лилаво сияние</span>
+                            <div class="gradient-thumbnail" style="background: radial-gradient(circle, #667eea 0%, #764ba2 100%);"></div>
+                            <span class="gradient-label">Лилаво сияние</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="radial-gradient(circle, #f093fb 0%, #f5576c 100%)" title="Розов ореол">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: radial-gradient(circle, #f093fb 0%, #f5576c 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Розов ореол</span>
+                            <div class="gradient-thumbnail" style="background: radial-gradient(circle, #f093fb 0%, #f5576c 100%);"></div>
+                            <span class="gradient-label">Розов ореол</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="radial-gradient(circle, #4facfe 0%, #00f2fe 100%)" title="Син пулс">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: radial-gradient(circle, #4facfe 0%, #00f2fe 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Син пулс</span>
+                            <div class="gradient-thumbnail" style="background: radial-gradient(circle, #4facfe 0%, #00f2fe 100%);"></div>
+                            <span class="gradient-label">Син пулс</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="radial-gradient(circle, #43e97b 0%, #38f9d7 100%)" title="Зелена вълна">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: radial-gradient(circle, #43e97b 0%, #38f9d7 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Зелена вълна</span>
+                            <div class="gradient-thumbnail" style="background: radial-gradient(circle, #43e97b 0%, #38f9d7 100%);"></div>
+                            <span class="gradient-label">Зелена вълна</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="radial-gradient(circle, #fa709a 0%, #fee140 100%)" title="Слънчев залез">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: radial-gradient(circle, #fa709a 0%, #fee140 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Слънчев залез</span>
+                            <div class="gradient-thumbnail" style="background: radial-gradient(circle, #fa709a 0%, #fee140 100%);"></div>
+                            <span class="gradient-label">Слънчев залез</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="radial-gradient(circle, #30cfd0 0%, #330867 100%)" title="Космически вихър">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: radial-gradient(circle, #30cfd0 0%, #330867 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Космически вихър</span>
+                            <div class="gradient-thumbnail" style="background: radial-gradient(circle, #30cfd0 0%, #330867 100%);"></div>
+                            <span class="gradient-label">Космически вихър</span>
                         </button>
                     </div>
                 </div>
                 
                 <div style="margin-top: 1rem;">
-                    <h5 style="margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">✨ Специални ефекти</h5>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem;">
+                    <h5 class="gradient-section-title">✨ Специални ефекти</h5>
+                    <div class="gradient-grid">
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(to right, #667eea 0%, #764ba2 50%, #667eea 100%)" title="Лилава мигла">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(to right, #667eea 0%, #764ba2 50%, #667eea 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Лилава мигла</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(to right, #667eea 0%, #764ba2 50%, #667eea 100%);"></div>
+                            <span class="gradient-label">Лилава мигла</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(45deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #667eea 100%)" title="Дъга">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(45deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #667eea 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Дъга</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(45deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #667eea 100%);"></div>
+                            <span class="gradient-label">Дъга</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="linear-gradient(to bottom, transparent 0%, #667eea 100%)" title="Избледняване">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: linear-gradient(to bottom, transparent 0%, #667eea 100%); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Избледняване</span>
+                            <div class="gradient-thumbnail" style="background: linear-gradient(to bottom, transparent 0%, #667eea 100%);"></div>
+                            <span class="gradient-label">Избледняване</span>
                         </button>
                         <button type="button" class="btn-gradient-preset" data-gradient="conic-gradient(from 0deg, #667eea, #764ba2, #f093fb, #f5576c, #667eea)" title="Конична дъга">
-                            <div style="width: 100%; height: 30px; border-radius: 4px; background: conic-gradient(from 0deg, #667eea, #764ba2, #f093fb, #f5576c, #667eea); margin-bottom: 0.25rem;"></div>
-                            <span style="font-size: 0.75rem;">Конична дъга</span>
+                            <div class="gradient-thumbnail" style="background: conic-gradient(from 0deg, #667eea, #764ba2, #f093fb, #f5576c, #667eea);"></div>
+                            <span class="gradient-label">Конична дъга</span>
                         </button>
                     </div>
                 </div>
