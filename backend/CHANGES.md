@@ -44,6 +44,12 @@ Completely replaced peptide products with weight loss products organized in 4 ca
 - Maintains the same JSON structure for frontend compatibility
 - All content now references weight loss products instead of peptides
 
+#### Category 5: Продукти за отслабване (Weight Loss Products)
+- MeiziMax - 75 BGN
+- Lida Green - 68 BGN
+- Eveslim Cayenne Pepper - 62 BGN
+- Eveslim Birch Bark - 62 BGN
+
 ## Product Details
 Each product includes:
 - Bulgarian name and tagline
@@ -58,6 +64,9 @@ Each product includes:
 ## Notes
 - All JSON structures maintained for compatibility with existing frontend code
 - Product IDs follow the pattern: prod-{product-name}
-- Category IDs: fat-burners, appetite-control, metabolism, detox
+- Category IDs: fat-burners, appetite-control, metabolism, detox, weight-loss-products
 - All text is in Bulgarian language
 - Prices are set (not 0 like in the old peptide products)
+
+## Update History
+- **2025-12-28**: Added 3 new products to weight loss category (Lida Green, Eveslim Cayenne Pepper, Eveslim Birch Bark)
