@@ -521,7 +521,16 @@ const addToCart = (id, name, price, inventory) => {
 
 function renderHeader(settings, navigation) {
     document.title = settings.site_name;
-    DOM.header.logoImg.src = encodeURI(settings.logo_url);
+    
+    // Store logo URLs for theme switching
+    window.logoSettings = {
+        lightLogo: settings.logo_url_light || settings.logo_url.replace('logo.png', 'logoblack.png'),
+        darkLogo: settings.logo_url_dark || settings.logo_url
+    };
+    
+    // Set initial logo based on current theme
+    updateLogoForTheme();
+    
     DOM.header.logoImg.alt = `${settings.site_name} Logo`;
     DOM.header.logoImg.style.display = 'block'; // Show the logo
     DOM.header.brandName.textContent = settings.site_name;
@@ -533,6 +542,24 @@ function renderHeader(settings, navigation) {
     persistentLis.forEach(li => DOM.header.navLinks.appendChild(li));
 
     updateCartCount();
+}
+
+// Helper function to update logo based on current theme
+function updateLogoForTheme() {
+    if (!window.logoSettings) return;
+    
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const logoUrl = currentTheme === 'dark' ? window.logoSettings.darkLogo : window.logoSettings.lightLogo;
+    
+    if (DOM.header.logoImg) {
+        DOM.header.logoImg.src = encodeURI(logoUrl);
+    }
+    
+    // Also update footer logo if it exists
+    const footerLogo = document.querySelector('.footer-logo-container img');
+    if (footerLogo) {
+        footerLogo.src = encodeURI(logoUrl);
+    }
 }
 
 function renderMainContent(pageContent) {
@@ -586,11 +613,22 @@ function renderMainContent(pageContent) {
 }
 
 function renderFooter(settings, footer) {
+    // Store logo URLs if not already done
+    if (!window.logoSettings) {
+        window.logoSettings = {
+            lightLogo: settings.logo_url_light || settings.logo_url.replace('logo.png', 'logoblack.png'),
+            darkLogo: settings.logo_url_dark || settings.logo_url
+        };
+    }
+    
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const logoUrl = currentTheme === 'dark' ? window.logoSettings.darkLogo : window.logoSettings.lightLogo;
+    
     const columnsHTML = footer.columns.map(col => {
         if (col.type === 'logo') {
             return `<div class="footer-column">
                  <a href="#" class="logo-container footer-logo-container">
-                    <img src="${settings.logo_url}" alt="${settings.site_name} Logo">
+                    <img src="${logoUrl}" alt="${settings.site_name} Logo">
                     <div><span class="brand-name">${settings.site_name}</span><span class="brand-slogan">${settings.site_slogan}</span></div>
                 </a>
             </div>`;
@@ -907,6 +945,9 @@ function initializeGlobalScripts() {
         } catch (e) {
             console.warn('Could not save theme preference:', e);
         }
+        
+        // Update logo for the new theme
+        updateLogoForTheme();
         
         // Show toast notification
         const themeLabel = theme === 'dark' ? 'Тъмна тема' : 'Светла тема';

@@ -2,7 +2,9 @@
   "settings": {
     "site_name": "ДА ОТСЛАБНА",
     "site_slogan": "Мисията възможна",
-    "logo_url": "https://radilovk.github.io/face/assets/logo.png"
+    "logo_url": "https://radilovk.github.io/face/assets/logo.png",
+    "logo_url_light": "https://radilovk.github.io/face/assets/logoblack.png",
+    "logo_url_dark": "https://radilovk.github.io/face/assets/logo.png"
   },
   "navigation": [
     {
