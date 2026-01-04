@@ -64,6 +64,20 @@ This directory contains JSON files for the OTSLABVAI weight loss products websit
 
 **Note**: This file is NOT used by the application. Changes here will not appear on the website.
 
+### 4. `orders.json` (RUNTIME DATA FILE)
+**Purpose**: Stores customer orders created through the website.
+
+**Note**: This file is managed by the application at runtime and stored in Cloudflare KV.
+
+## Removed Files
+
+### `page_content_mock.json` (REMOVED)
+**Previously**: This file was a duplicate of `backend/page_content.json` and was used as a fallback for local testing.
+
+**Why removed**: It created confusion and data duplication. The production application should always use the `/page_content.json` API endpoint served by the Cloudflare Worker from KV storage.
+
+**Development note**: For local testing without a deployed worker, developers can temporarily copy `backend/page_content.json` to the root directory as `page_content_mock.json`, but this file should never be committed to the repository.
+
 ## Product Categories
 
 The website has 2 product categories with 9 products total:
