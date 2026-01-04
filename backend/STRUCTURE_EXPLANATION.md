@@ -64,9 +64,23 @@ This directory contains JSON files for the OTSLABVAI weight loss products websit
 
 **Note**: This file is NOT used by the application. Changes here will not appear on the website.
 
+### 4. `orders.json` (RUNTIME DATA FILE)
+**Purpose**: Stores customer orders created through the website.
+
+**Note**: This file is managed by the application at runtime and stored in Cloudflare KV.
+
+## Removed Files
+
+### `page_content_mock.json` (REMOVED)
+**Previously**: This file was a duplicate of `backend/page_content.json` and was used as a fallback for local testing.
+
+**Why removed**: It created confusion and data duplication. The production application should always use the `/page_content.json` API endpoint served by the Cloudflare Worker from KV storage.
+
+**Development note**: For local testing without a deployed worker, developers can temporarily copy `backend/page_content.json` to the root directory as `page_content_mock.json`, but this file should never be committed to the repository.
+
 ## Product Categories
 
-The website has 5 product categories:
+The website has 2 product categories with 9 products total:
 
 ### 1. Изгаряне на мазнини (fat-burners)
 5 products:
@@ -76,25 +90,7 @@ The website has 5 product categories:
 - EthicSport Thermo Master - 64 лв
 - Sport Definition Fat No More - 49 лв
 
-### 2. Контрол на апетита (appetite-control)
-3 products:
-- Глюкоманан - 40 лв
-- 5-HTP - 50 лв
-- Хром пиколинат - 35 лв
-
-### 3. Ускоряване на метаболизма (metabolism)
-3 products:
-- Кофеин - 30 лв
-- Витамин B комплекс - 38 лв
-- Капсаицин - 42 лв
-
-### 4. Детокс и пречистване (detox)
-3 products:
-- Хлорела - 48 лв
-- Бял трън (Milk Thistle) - 44 лв
-- Пробиотици - 52 лв
-
-### 5. Продукти за отслабване (weight-loss-products)
+### 2. Продукти за отслабване (weight-loss-products)
 4 products:
 - MeiziMax - 75 лв
 - Lida Green - 68 лв
@@ -144,10 +140,14 @@ The website has 5 product categories:
 
 ## Recent Changes
 
-**2025-01-04**: Fixed overlapping KV records issue
-- Merged products from `products.json` into `page_content.json`
-- Fat-burners category now shows 5 premium products instead of 3 generic ones
-- All products from `products.json` are now visible on the website
+**2025-01-04**: Removed duplicate products and consolidated data
+- Removed duplicate `page_content_mock.json` file (was identical to `backend/page_content.json`)
+- Removed 3 extra product categories from `page_content.json`: appetite-control, metabolism, detox
+- Kept only 2 categories with 9 products total (matching `products.json`):
+  - Fat-burners (5 products)
+  - Weight-loss-products (4 products)
+- Updated navigation menu to reflect the simplified structure
+- Product data now exists in only one location, eliminating duplication and confusion
 
 ## Upload to Cloudflare KV
 
