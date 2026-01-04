@@ -50,7 +50,9 @@ export default {
       '/checkout.html': { file: 'checkout.html', type: CONTENT_TYPES.html },
       '/quest.html': { file: 'quest.html', type: CONTENT_TYPES.html },
       '/questionnaire.js': { file: 'questionnaire.js', type: CONTENT_TYPES.js },
-      '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css }
+      '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css },
+      '/robots.txt': { file: 'robots.txt', type: 'text/plain; charset=utf-8' },
+      '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' }
     };
     
     try {

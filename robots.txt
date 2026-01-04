@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and backend
+Disallow: /admin.html
+Disallow: /admin.js
+Disallow: /admin.css
+Disallow: /backend/
+
+# Sitemap
+Sitemap: https://port.radilov-k.workers.dev/sitemap.xml
