@@ -18,6 +18,6 @@ yarn-error.log*
 # Cloudflare
 
 # Local data
-page_content.json
+page_content_mock.json
+page_content_mock.json.backup
 orders.json
-index.css.backup
