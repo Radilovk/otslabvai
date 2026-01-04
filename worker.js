@@ -50,7 +50,9 @@ export default {
       '/checkout.html': { file: 'checkout.html', type: CONTENT_TYPES.html },
       '/quest.html': { file: 'quest.html', type: CONTENT_TYPES.html },
       '/questionnaire.js': { file: 'questionnaire.js', type: CONTENT_TYPES.js },
-      '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css }
+      '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css },
+      '/robots.txt': { file: 'robots.txt', type: 'text/plain; charset=utf-8' },
+      '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' }
     };
     
     try {
@@ -91,7 +93,16 @@ export default {
               break;
             
           default:
-            throw new UserFacingError('Not Found', 404);
+            // Try to serve 404.html for unknown routes
+            const notFoundFile = await env.PAGE_CONTENT.get('static_404.html');
+            if (notFoundFile) {
+              response = new Response(notFoundFile, {
+                status: 404,
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
+              });
+            } else {
+              throw new UserFacingError('Not Found', 404);
+            }
         }
       }
 
