@@ -9,7 +9,8 @@
     "deploy": "wrangler deploy",
     "upload-static": "./upload-static-to-kv.sh",
     "upload-static-node": "node upload-static-files.js",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest"
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "validate-backend": "node backend/validate.mjs"
   },
   "dependencies": {
     "express": "^5.1.0"
