@@ -103,6 +103,15 @@
             line-height: 1.6;
         }
         
+        .contact-details a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+        
+        .contact-details a:hover {
+            text-decoration: underline;
+        }
+        
         .contact-form {
             background: var(--bg-secondary);
             padding: 2rem;
@@ -248,7 +257,7 @@
                     <div class="contact-details">
                         <h3>Email</h3>
                         <p>За общи въпроси и поддръжка:<br>
-                        <a href="mailto:info@daotslabna.bg" style="color: var(--color-primary);">info@daotslabna.bg</a></p>
+                        <a href="mailto:info@daotslabna.bg">info@daotslabna.bg</a></p>
                     </div>
                 </div>
                 
@@ -261,7 +270,7 @@
                     <div class="contact-details">
                         <h3>Телефон</h3>
                         <p>Обади се на нашия екип:<br>
-                        <a href="tel:+359888123456" style="color: var(--color-primary);">+359 888 123 456</a><br>
+                        <a href="tel:+359888123456">+359 888 123 456</a><br>
                         Понеделник - Петък: 9:00 - 18:00</p>
                     </div>
                 </div>
@@ -321,12 +330,41 @@
 
     <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
     
+    <div id="toast-container"></div>
+    
     <script type="module" src="index.js"></script>
-    <script>
-        // Simple form handling
+    <script type="module">
+        // Import toast function if available, otherwise define a simple one
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 2rem;
+                right: 2rem;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #00A99D, #00D4C5)' : 'linear-gradient(135deg, #E4007C, #FF1493)'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                font-family: var(--font-secondary);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Simple form handling with toast notification
         document.getElementById('contactForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert('Благодарим Ви за съобщението! Ще се свържем с Вас скоро.');
+            showToast('Благодарим Ви за съобщението! Ще се свържем с Вас скоро.', 'success');
             this.reset();
         });
     </script>
