@@ -23,6 +23,16 @@ declare -a files=(
     "quest.html"
     "questionnaire.js"
     "questionnaire.css"
+    "product.html"
+    "product.js"
+    "about-us.html"
+    "contact.html"
+    "policy.html"
+    "terms.html"
+    "shipping.html"
+    "404.html"
+    "robots.txt"
+    "sitemap.xml"
 )
 
 # Upload each file

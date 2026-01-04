@@ -93,7 +93,16 @@ export default {
               break;
             
           default:
-            throw new UserFacingError('Not Found', 404);
+            // Try to serve 404.html for unknown routes
+            const notFoundFile = await env.PAGE_CONTENT.get('static_404.html');
+            if (notFoundFile) {
+              response = new Response(notFoundFile, {
+                status: 404,
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
+              });
+            } else {
+              throw new UserFacingError('Not Found', 404);
+            }
         }
       }
 

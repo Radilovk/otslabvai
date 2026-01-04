@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="bg" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://radilovk.github.io/face/assets/logo.png">
+    <title>Страницата не е намерена - 404</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    
+    <style>
+        .error-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .error-code {
+            font-family: var(--font-primary);
+            font-size: 8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            line-height: 1;
+        }
+        
+        .error-title {
+            font-family: var(--font-primary);
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+        
+        .error-message {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 600px;
+        }
+        
+        .error-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .error-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-family: var(--font-primary);
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .error-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(228, 0, 124, 0.3);
+        }
+        
+        .error-btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+        
+        .error-btn-secondary:hover {
+            border-color: var(--color-primary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 5rem;
+            }
+            
+            .error-title {
+                font-size: 1.5rem;
+            }
+            
+            .error-message {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <a href="index.html" class="logo-container">
+                <img src="https://radilovk.github.io/face/assets/logo.png" alt="Лого">
+                <div>
+                    <span class="brand-name">ДА ОТСЛАБНА</span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <ul class="nav-links">
+                    <li><a href="index.html">Начало</a></li>
+                    <li><a href="about-us.html">За нас</a></li>
+                    <li><a href="checkout.html">Количка</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="error-container">
+        <div class="error-code">404</div>
+        <h1 class="error-title">Страницата не е намерена</h1>
+        <p class="error-message">
+            Съжаляваме, но страницата, която търсите, не съществува или е била преместена. 
+            Моля, проверете URL адреса или се върнете към началната страница.
+        </p>
+        <div class="error-actions">
+            <a href="index.html" class="error-btn">Към началната страница</a>
+            <a href="about-us.html" class="error-btn error-btn-secondary">За нас</a>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 ДА ОТСЛАБНА. Всички права запазени.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
