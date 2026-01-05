@@ -69,7 +69,8 @@
   - [ ] static_quest.html
   - [ ] static_questionnaire.js
   - [ ] static_questionnaire.css
-- [ ] Проверете че съществува ключ `page_content` с продуктите
+- [ ] Проверете че съществува ключ `page_content` с настройки и съдържание
+- [ ] Проверете че съществува ключ `products` с продуктите
 
 ## Стъпка 5: Тестване на Frontend
 
@@ -99,6 +100,8 @@
 ## Стъпка 7: Проверка на API Endpoints
 
 - [ ] Проверете page_content.json: https://port.radilov-k.workers.dev/page_content.json
+- [ ] JSON се връща с настройки и съдържание
+- [ ] Проверете products: https://port.radilov-k.workers.dev/products
 - [ ] JSON се връща с продуктите
 - [ ] Няма грешки в отговора
 
@@ -157,10 +160,15 @@
 
 2. **При промени в продукти:**
    ```bash
+   wrangler kv:key put --binding=PAGE_CONTENT products --path=backend/products.json
+   ```
+
+3. **При промени в настройки/съдържание:**
+   ```bash
    wrangler kv:key put --binding=PAGE_CONTENT page_content --path=backend/page_content.json
    ```
 
-3. **За локално тестване:**
+4. **За локално тестване:**
    ```bash
    npm start
    ```
