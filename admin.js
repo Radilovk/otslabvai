@@ -48,6 +48,10 @@ const DOM = {
     ordersTableBody: document.getElementById('orders-table-body'),
     orderSearchInput: document.getElementById('order-search-input'),
     refreshOrdersBtn: document.getElementById('refresh-orders-btn'),
+    // Контакти
+    contactsTableBody: document.getElementById('contacts-table-body'),
+    contactSearchInput: document.getElementById('contact-search-input'),
+    refreshContactsBtn: document.getElementById('refresh-contacts-btn'),
     // Добавяне на компонент
     addComponentDropdown: document.getElementById('add-component-dropdown'),
     addComponentToggleBtn: document.querySelector('[data-action="toggle-add-component-menu"]'),
@@ -69,6 +73,7 @@ const DOM = {
     templates: {
         listItem: document.getElementById('list-item-template'),
         orderRow: document.getElementById('order-row-template'),
+        contactRow: document.getElementById('contact-row-template'),
     }
 };
 
@@ -76,6 +81,8 @@ const DOM = {
 let appData = {};
 let ordersData = [];
 let filteredOrdersData = [];
+let contactsData = [];
+let filteredContactsData = [];
 let unsavedChanges = false;
 let activeUndoAction = null;
 let currentModalSaveCallback = null;
@@ -108,6 +115,21 @@ async function fetchOrders() {
         console.error("Грешка при зареждане на поръчки:", error);
         ordersData = [];
         filteredOrdersData = [];
+    }
+}
+
+async function fetchContacts() {
+    try {
+        const response = await fetch(`${API_URL}/contacts?v=${Date.now()}`);
+        if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
+        const rawContacts = await response.json();
+        contactsData = rawContacts.map((contact, index) => ({ ...contact, id: contact.id || `contact_${index}_${Date.now()}` }));
+        filteredContactsData = [...contactsData];
+    } catch (error) {
+        showNotification('Грешка при зареждане на контактите.', 'error');
+        console.error("Грешка при зареждане на контакти:", error);
+        contactsData = [];
+        filteredContactsData = [];
     }
 }
 
@@ -167,6 +189,7 @@ function renderAll() {
     renderPageContent();
     renderFooter();
     filterOrders(); // This will call renderOrders
+    filterContacts(); // This will call renderContacts
 }
 
 function renderGlobalSettings() {
@@ -257,6 +280,40 @@ function renderOrders() {
         const statusSelect = rowTemplate.querySelector('.order-status');
         statusSelect.value = order.status || 'Нова';
         DOM.ordersTableBody.appendChild(rowTemplate);
+    });
+}
+
+function renderContacts() {
+    DOM.contactsTableBody.innerHTML = '';
+    filteredContactsData.forEach((contact) => {
+        const rowTemplate = DOM.templates.contactRow.content.cloneNode(true);
+        const originalIndex = contactsData.findIndex(c => c.id === contact.id);
+        const row = rowTemplate.querySelector('tr');
+        row.dataset.index = originalIndex;
+        
+        rowTemplate.querySelector('.contact-name').textContent = contact.name || '';
+        rowTemplate.querySelector('.contact-email').textContent = contact.email || '';
+        rowTemplate.querySelector('.contact-subject').textContent = contact.subject || '(няма тема)';
+        
+        // Truncate long messages
+        const message = contact.message || '';
+        rowTemplate.querySelector('.contact-message').textContent = message.length > 100 ? message.substring(0, 100) + '...' : message;
+        
+        // Format date
+        const date = new Date(contact.timestamp);
+        const formattedDate = date.toLocaleString('bg-BG', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        rowTemplate.querySelector('.contact-date').textContent = formattedDate;
+        
+        const statusSelect = rowTemplate.querySelector('.contact-status');
+        statusSelect.value = contact.status || 'Нов';
+        
+        DOM.contactsTableBody.appendChild(rowTemplate);
     });
 }
 
@@ -964,6 +1021,24 @@ function setupEventListeners() {
         await fetchOrders();
         filterOrders();
     });
+    
+    DOM.contactsTableBody.addEventListener('change', async e => {
+        if (!e.target.classList.contains('contact-status')) return;
+        const row = e.target.closest('tr');
+        const index = Number(row.dataset.index);
+        const newStatus = e.target.value;
+        contactsData[index].status = newStatus;
+        // Note: We're updating status locally, but there's no PUT endpoint for contacts
+        // If needed, you could add one similar to orders
+        showNotification('Статусът е обновен локално.', 'success');
+    });
+    
+    DOM.contactSearchInput.addEventListener('input', () => filterContacts());
+    DOM.refreshContactsBtn.addEventListener('click', async () => {
+        showNotification('Опресняване на контактите...', 'info');
+        await fetchContacts();
+        filterContacts();
+    });
 
     DOM.undoBtn.addEventListener('click', () => {
         if (activeUndoAction) {
@@ -1153,6 +1228,23 @@ function filterOrders() {
     renderOrders();
 }
 
+function filterContacts() {
+    const searchTerm = DOM.contactSearchInput.value.toLowerCase().trim();
+    if (!searchTerm) {
+        filteredContactsData = [...contactsData];
+    } else {
+        filteredContactsData = contactsData.filter(contact => {
+            const name = (contact.name || '').toLowerCase();
+            const email = (contact.email || '').toLowerCase();
+            const subject = (contact.subject || '').toLowerCase();
+            const message = (contact.message || '').toLowerCase();
+            return name.includes(searchTerm) || email.includes(searchTerm) || 
+                   subject.includes(searchTerm) || message.includes(searchTerm);
+        });
+    }
+    renderContacts();
+}
+
 function initModalTabs(container) {
     const tabNav = container.querySelector('.modal-tab-nav');
     if (!tabNav) return;
@@ -1244,6 +1336,7 @@ async function init() {
     populateAddComponentMenu();
     appData = await fetchData();
     await fetchOrders();
+    await fetchContacts();
     if (appData) {
         renderAll();
     } else {
