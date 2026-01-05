@@ -912,26 +912,29 @@ function initializeGlobalScripts() {
     });
 
     // --- Quest Modal ---
-    function openQuestModal(url) {
-        DOM.questModal.iframe.src = url || 'quest.html';
-        DOM.questModal.container.classList.add('show');
-        DOM.questModal.backdrop.classList.add('show');
-        DOM.body.classList.add('modal-open');
-    }
-    function closeQuestModal() {
-        DOM.questModal.container.classList.remove('show');
-        DOM.questModal.backdrop.classList.remove('show');
-        DOM.questModal.iframe.src = '';
-        DOM.body.classList.remove('modal-open');
-    }
-    DOM.questModal.backdrop.addEventListener('click', closeQuestModal);
-    document.addEventListener('click', e => {
-        const questLink = e.target.closest('a[href$="quest.html"]');
-        if (questLink) {
-            e.preventDefault();
-            openQuestModal(questLink.getAttribute('href'));
+    // Only initialize quest modal if elements exist
+    if (DOM.questModal.backdrop && DOM.questModal.container && DOM.questModal.iframe) {
+        function openQuestModal(url) {
+            DOM.questModal.iframe.src = url || 'quest.html';
+            DOM.questModal.container.classList.add('show');
+            DOM.questModal.backdrop.classList.add('show');
+            DOM.body.classList.add('modal-open');
         }
-    });
+        function closeQuestModal() {
+            DOM.questModal.container.classList.remove('show');
+            DOM.questModal.backdrop.classList.remove('show');
+            DOM.questModal.iframe.src = '';
+            DOM.body.classList.remove('modal-open');
+        }
+        DOM.questModal.backdrop.addEventListener('click', closeQuestModal);
+        document.addEventListener('click', e => {
+            const questLink = e.target.closest('a[href$="quest.html"]');
+            if (questLink) {
+                e.preventDefault();
+                openQuestModal(questLink.getAttribute('href'));
+            }
+        });
+    }
 
     // --- Theme Toggle ---
     const themeToggle = document.getElementById('theme-toggle');
@@ -1079,36 +1082,52 @@ async function main() {
             data = await response.json();
         }
 
-        DOM.mainContainer.innerHTML = ''; 
+        // Check if this is the index page (has main-content-container)
+        const isIndexPage = DOM.mainContainer !== null;
+        
+        if (isIndexPage) {
+            DOM.mainContainer.innerHTML = ''; 
+        }
         
         renderHeader(data.settings, data.navigation);
-        renderMainContent(data.page_content);
+        
+        if (isIndexPage) {
+            renderMainContent(data.page_content);
+        }
+        
         renderFooter(data.settings, data.footer);
         
-        DOM.mainContainer.classList.add('is-loaded');
+        if (isIndexPage) {
+            DOM.mainContainer.classList.add('is-loaded');
+        }
 
         initializePageInteractions(data.settings);
         applyThemeGradients(data.settings);
-        initializeScrollSpy();
-        initializeMarketingFeatures();
+        
+        if (isIndexPage) {
+            initializeScrollSpy();
+            initializeMarketingFeatures();
 
-        // Restore scroll position if returning from product page
-        // Small timeout to ensure DOM is fully rendered before scrolling
-        const savedScrollPosition = sessionStorage.getItem('indexScrollPosition');
-        if (savedScrollPosition) {
-            setTimeout(() => {
-                window.scrollTo(0, parseInt(savedScrollPosition, 10));
-                sessionStorage.removeItem('indexScrollPosition');
-            }, 100);
+            // Restore scroll position if returning from product page
+            // Small timeout to ensure DOM is fully rendered before scrolling
+            const savedScrollPosition = sessionStorage.getItem('indexScrollPosition');
+            if (savedScrollPosition) {
+                setTimeout(() => {
+                    window.scrollTo(0, parseInt(savedScrollPosition, 10));
+                    sessionStorage.removeItem('indexScrollPosition');
+                }, 100);
+            }
         }
 
     } catch (error) {
         console.error("Fatal Error: Could not load or render page content.", error);
-        DOM.mainContainer.innerHTML =
-            `<div class="container" style="text-align: center; color: var(--text-secondary); padding: 5rem 1rem;">
-                <h2>Грешка при зареждане на съдържанието</h2>
-                <p>Не успяхме да се свържем със сървъра. Моля, опреснете страницата или опитайте по-късно.</p>
-             </div>`;
+        if (DOM.mainContainer) {
+            DOM.mainContainer.innerHTML =
+                `<div class="container" style="text-align: center; color: var(--text-secondary); padding: 5rem 1rem;">
+                    <h2>Грешка при зареждане на съдържанието</h2>
+                    <p>Не успяхме да се свържем със сървъра. Моля, опреснете страницата или опитайте по-късно.</p>
+                 </div>`;
+        }
     }
 }
 
