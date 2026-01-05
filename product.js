@@ -352,6 +352,19 @@ function renderHeader(settings, navigation) {
     updateCartCount();
 }
 
+// Helper function to initialize logo from cached settings
+function initializeLogoFromCache() {
+    if (window.__initialLogoSettings && !window.logoSettings) {
+        window.logoSettings = {
+            lightLogo: window.__initialLogoSettings.lightLogo,
+            darkLogo: window.__initialLogoSettings.darkLogo
+        };
+        updateLogoForTheme();
+        return true;
+    }
+    return false;
+}
+
 // Helper function to update logo based on current theme
 function updateLogoForTheme() {
     // Try to use cached logo settings first for instant display
@@ -627,13 +640,7 @@ function initializeGlobalScripts() {
 
 async function main() {
     // Initialize logo immediately using cached values if available
-    if (window.__initialLogoSettings) {
-        window.logoSettings = {
-            lightLogo: window.__initialLogoSettings.lightLogo,
-            darkLogo: window.__initialLogoSettings.darkLogo
-        };
-        updateLogoForTheme();
-    }
+    initializeLogoFromCache();
     
     initializeGlobalScripts();
     
