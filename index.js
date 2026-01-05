@@ -1091,6 +1091,7 @@ async function main() {
         applyThemeGradients(data.settings);
         initializeScrollSpy();
         initializeMarketingFeatures();
+        initIndexContactForm();
 
         // Restore scroll position if returning from product page
         // Small timeout to ensure DOM is fully rendered before scrolling
@@ -1287,6 +1288,60 @@ function initExitIntentModal() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('active')) {
             closeModal();
+        }
+    });
+}
+
+// =======================================================
+//          CONTACT FORM HANDLER (INDEX PAGE)
+// =======================================================
+
+function initIndexContactForm() {
+    const contactForm = document.getElementById('index-contact-form');
+    
+    if (!contactForm) return;
+    
+    contactForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitBtn = contactForm.querySelector('.contact-submit-btn');
+        const originalBtnText = submitBtn.textContent;
+        
+        // Disable button during submission
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Изпращане...';
+        
+        const formData = {
+            name: document.getElementById('contact-name').value.trim(),
+            email: document.getElementById('contact-email').value.trim(),
+            subject: document.getElementById('contact-subject').value.trim(),
+            message: document.getElementById('contact-message').value.trim()
+        };
+        
+        try {
+            const response = await fetch(`${API_URL}/contacts`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            if (response.ok) {
+                showToast('Благодарим Ви за съобщението! Ще се свържем с Вас скоро.', 'success');
+                contactForm.reset();
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                const errorMsg = errorData.error || 'Възникна грешка при изпращане на съобщението';
+                throw new Error(errorMsg);
+            }
+        } catch (error) {
+            console.error('Error submitting contact form:', error);
+            showToast(error.message || 'Възникна грешка при изпращане на съобщението. Моля, опитайте отново.', 'error');
+        } finally {
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
         }
     });
 }
