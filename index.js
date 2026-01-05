@@ -97,7 +97,6 @@ const generateProductCard = (product) => {
         <div class="card-content">
             <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(publicData.tagline)}</p></div>
             <div class="product-price">${Number(publicData.price).toFixed(2)} лв.</div>
-            <div class="product-stock ${inventory > 0 ? '' : 'out-of-stock'}">${inventory > 0 ? `Налично: ${inventory}` : 'Изчерпано'}</div>
             <div class="effects-container">
                 ${(publicData.effects || []).map(generateEffectBar).join('')}
             </div>
@@ -1127,9 +1126,6 @@ function initializeMarketingFeatures() {
     // 3. Product Badges
     addProductBadges();
     
-    // 5. Stock Urgency Indicators
-    updateStockUrgency();
-    
     // 6. Exit Intent Modal
     initExitIntentModal();
 }
@@ -1234,27 +1230,6 @@ function createBadge(text, type, iconType) {
     
     badge.innerHTML = iconSVG + text;
     return badge;
-}
-
-// Update stock urgency styling
-function updateStockUrgency() {
-    const stockElements = document.querySelectorAll('.product-stock');
-    
-    stockElements.forEach(stock => {
-        const text = stock.textContent;
-        const match = text.match(/Налично:\s*(\d+)/);
-        
-        if (match) {
-            const quantity = parseInt(match[1]);
-            
-            if (quantity > 0 && quantity <= 30) {
-                stock.classList.add('low-stock');
-                stock.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Само ${quantity} бр. налични!`;
-            } else if (quantity > 30) {
-                stock.classList.add('in-stock');
-            }
-        }
-    });
 }
 
 // Exit Intent Modal - Shows when user is about to leave

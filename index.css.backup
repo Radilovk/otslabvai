@@ -320,8 +320,6 @@ main { padding-top: var(--header-height); }
 .product-title h3 { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
 .product-title p { font-size: 0.85rem; color: var(--accent); font-weight: 500; }
 .product-price { font-weight: 600; font-size: 0.9rem; color: var(--accent); flex-shrink: 0; }
-.product-stock { font-size: 0.8rem; color: var(--text-secondary); margin-left: 0.5rem; }
-.product-stock.out-of-stock { color: var(--error-color); }
 .add-to-cart-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
 .effects-container { flex: 1 1 100%; order: 3; } /* Changed: visible by default */
 .expand-icon { align-self: center; } /* Align icon */
