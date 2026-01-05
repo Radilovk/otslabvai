@@ -105,6 +105,8 @@ export default {
           case '/products':
               if (request.method === 'GET') {
                   response = await handleGetProducts(request, env);
+              } else if (request.method === 'POST') {
+                  response = await handleSaveProducts(request, env, ctx);
               } else {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
@@ -356,6 +358,25 @@ async function handleGetProducts(request, env) {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
     });
+}
+
+/**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles POST /products
+ */
+async function handleSaveProducts(request, env, ctx) {
+    const contentToSave = await request.text();
+    try {
+        // Проверяваме дали е валиден JSON, преди да запишем
+        JSON.parse(contentToSave);
+        ctx.waitUntil(env.PAGE_CONTENT.put('products', contentToSave));
+        return new Response(JSON.stringify({ success: true, message: 'Products saved.' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } catch (e) {
+        throw new UserFacingError("Invalid JSON provided in the request body.", 400);
+    }
 }
 
 /**
