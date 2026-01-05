@@ -334,6 +334,9 @@
     
     <script type="module" src="index.js"></script>
     <script type="module">
+        // Import API_URL from config
+        import { API_URL } from './config.js';
+        
         // Import toast function if available, otherwise define a simple one
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -361,12 +364,40 @@
             }, 3000);
         }
         
-        // Simple form handling with toast notification
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
+        // Form handling with backend submission
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            showToast('Благодарим Ви за съобщението! Ще се свържем с Вас скоро.', 'success');
-            this.reset();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                subject: document.getElementById('subject').value,
+                message: document.getElementById('message').value
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/contacts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    showToast('Благодарим Ви за съобщението! Ще се свържем с Вас скоро.', 'success');
+                    this.reset();
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMsg = errorData.error || 'Възникна грешка при изпращане на съобщението';
+                    throw new Error(errorMsg);
+                }
+            } catch (error) {
+                console.error('Error submitting contact form:', error);
+                showToast(error.message || 'Възникна грешка при изпращане на съобщението. Моля, опитайте отново.', 'error');
+            }
         });
     </script>
+
 </body>
 </html>

@@ -91,6 +91,16 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
+          
+          case '/contacts':
+              if (request.method === 'GET') {
+                  response = await handleGetContacts(request, env);
+              } else if (request.method === 'POST') {
+                  response = await handleCreateContact(request, env, ctx);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
             
           default:
             // Try to serve 404.html for unknown routes
@@ -217,7 +227,7 @@ async function handleCreateOrder(request, env, ctx) {
     
     // Генерираме уникален ID и timestamp за поръчката
     const newOrder = {
-        id: `order-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `order-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
         timestamp: new Date().toISOString(),
         customer: orderData.customer,
         products: orderData.products,
@@ -265,6 +275,62 @@ async function handleUpdateOrderStatus(request, env, ctx) {
     
     return new Response(JSON.stringify({ success: true, updatedOrder: orders[orderIndex] }), {
         status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles GET /contacts
+ */
+async function handleGetContacts(request, env) {
+    const contactsJson = await env.PAGE_CONTENT.get('contacts');
+    const contacts = contactsJson ? JSON.parse(contactsJson) : [];
+    return new Response(JSON.stringify(contacts), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles POST /contacts (създаване на нов контакт от формата за контакти)
+ */
+async function handleCreateContact(request, env, ctx) {
+    let contactData;
+    try {
+        contactData = await request.json();
+    } catch (e) {
+        throw new UserFacingError("Невалиден JSON формат на заявката.", 400);
+    }
+    
+    if (!contactData || !contactData.name || !contactData.email || !contactData.message) {
+        throw new UserFacingError("Липсват задължителни данни за контакта.", 400);
+    }
+    
+    // Генерираме уникален ID и timestamp за контакта
+    const newContact = {
+        id: `contact-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+        timestamp: new Date().toISOString(),
+        name: contactData.name,
+        email: contactData.email,
+        subject: contactData.subject || '',
+        message: contactData.message,
+        status: 'Нов'
+    };
+    
+    // Четем съществуващите контакти
+    const contactsJson = await env.PAGE_CONTENT.get('contacts');
+    let contacts = contactsJson ? JSON.parse(contactsJson) : [];
+    
+    // Добавяме новия контакт
+    contacts.push(newContact);
+    
+    // Запазваме обратно в KV
+    ctx.waitUntil(env.PAGE_CONTENT.put('contacts', JSON.stringify(contacts, null, 2)));
+    
+    return new Response(JSON.stringify({ success: true, contact: newContact }), {
+        status: 201,
         headers: { 'Content-Type': 'application/json' }
     });
 }

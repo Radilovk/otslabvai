@@ -69,6 +69,7 @@
             <button class="tab-btn" data-tab="tab-content">Съдържание</button>
             <button class="tab-btn" data-tab="tab-footer">Футър</button>
             <button class="tab-btn" data-tab="tab-orders">Поръчки</button>
+            <button class="tab-btn" data-tab="tab-contacts">Контакти</button>
             <button class="tab-btn" data-tab="tab-pages">Страници</button>
         </nav>
 
@@ -137,6 +138,34 @@
                             </tr>
                         </thead>
                         <tbody id="orders-table-body">
+                            <!-- Редовете ще се генерират от JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- Секция: Контакти -->
+            <section id="tab-contacts" class="tab-pane">
+                <div class="orders-header">
+                    <h2>Контакти</h2>
+                    <div class="orders-controls">
+                        <input type="text" id="contact-search-input" placeholder="Търси по име, email...">
+                        <button id="refresh-contacts-btn" class="btn btn-secondary">Опресни</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="contacts-table" class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Име</th>
+                                <th>Email</th>
+                                <th>Тема</th>
+                                <th>Съобщение</th>
+                                <th>Дата</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contacts-table-body">
                             <!-- Редовете ще се генерират от JS -->
                         </tbody>
                     </table>
@@ -235,6 +264,24 @@
                     <option value="Нова">Нова</option>
                     <option value="Обработва се">Обработва се</option>
                     <option value="Изпратена">Изпратена</option>
+                </select>
+            </td>
+        </tr>
+    </template>
+
+    <!-- Шаблон за ред от таблицата с контакти -->
+    <template id="contact-row-template">
+        <tr>
+            <td data-label="Име" class="contact-name"></td>
+            <td data-label="Email" class="contact-email"></td>
+            <td data-label="Тема" class="contact-subject"></td>
+            <td data-label="Съобщение" class="contact-message"></td>
+            <td data-label="Дата" class="contact-date"></td>
+            <td data-label="Статус">
+                <select class="contact-status">
+                    <option value="Нов">Нов</option>
+                    <option value="Прегледан">Прегледан</option>
+                    <option value="Отговорен">Отговорен</option>
                 </select>
             </td>
         </tr>
