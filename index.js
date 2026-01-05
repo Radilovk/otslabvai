@@ -550,14 +550,14 @@ function updateLogoForTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const logoUrl = currentTheme === 'dark' ? window.logoSettings.darkLogo : window.logoSettings.lightLogo;
     
-    if (DOM.header.logoImg) {
-        DOM.header.logoImg.src = encodeURI(logoUrl);
+    if (DOM.header.logoImg && logoUrl) {
+        DOM.header.logoImg.src = logoUrl;
     }
     
     // Also update footer logo if it exists
     const footerLogo = document.querySelector('.footer-logo-container img');
-    if (footerLogo) {
-        footerLogo.src = encodeURI(logoUrl);
+    if (footerLogo && logoUrl) {
+        footerLogo.src = logoUrl;
     }
 }
 
