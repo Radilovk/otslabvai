@@ -527,6 +527,14 @@ function renderHeader(settings, navigation) {
         darkLogo: settings.logo_url_dark || settings.logo_url
     };
     
+    // Cache logo URLs in localStorage for instant loading on next visit
+    try {
+        localStorage.setItem('cachedLogoLight', window.logoSettings.lightLogo);
+        localStorage.setItem('cachedLogoDark', window.logoSettings.darkLogo);
+    } catch (e) {
+        console.warn('Could not cache logo URLs:', e);
+    }
+    
     // Set initial logo based on current theme
     updateLogoForTheme();
     
@@ -545,6 +553,14 @@ function renderHeader(settings, navigation) {
 
 // Helper function to update logo based on current theme
 function updateLogoForTheme() {
+    // Try to use cached logo settings first for instant display
+    if (!window.logoSettings && window.__initialLogoSettings) {
+        window.logoSettings = {
+            lightLogo: window.__initialLogoSettings.lightLogo,
+            darkLogo: window.__initialLogoSettings.darkLogo
+        };
+    }
+    
     if (!window.logoSettings) return;
     
     const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -1066,6 +1082,15 @@ function isValidGradient(gradientStr) {
 //          7. ГЛАВНА ИЗПЪЛНЯВАЩА ФУНКЦИЯ (MAIN)
 // =======================================================
 async function main() {
+    // Initialize logo immediately using cached values if available
+    if (window.__initialLogoSettings) {
+        window.logoSettings = {
+            lightLogo: window.__initialLogoSettings.lightLogo,
+            darkLogo: window.__initialLogoSettings.darkLogo
+        };
+        updateLogoForTheme();
+    }
+    
     initializeGlobalScripts();
     
     try {

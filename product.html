@@ -12,6 +12,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://radilovk.github.io" crossorigin>
+    
+    <!-- Preload logo images for instant display -->
+    <link rel="preload" as="image" href="https://radilovk.github.io/face/assets/logo.png" type="image/png">
+    <link rel="preload" as="image" href="https://radilovk.github.io/face/assets/logoblack.png" type="image/png">
     
     <link rel="stylesheet" href="index.css">
 
@@ -32,6 +37,19 @@
                 }
                 
                 document.documentElement.setAttribute('data-theme', theme);
+                
+                // Load cached logo immediately to prevent flashing
+                var cachedLogoLight = localStorage.getItem('cachedLogoLight');
+                var cachedLogoDark = localStorage.getItem('cachedLogoDark');
+                
+                // Store logo URLs for immediate use when page loads
+                if (cachedLogoLight && cachedLogoDark) {
+                    window.__initialLogoSettings = {
+                        lightLogo: cachedLogoLight,
+                        darkLogo: cachedLogoDark,
+                        theme: theme
+                    };
+                }
             } catch (e) {
                 document.documentElement.setAttribute('data-theme', 'light');
             }
@@ -450,7 +468,7 @@
     <header class="main-header">
         <div class="header-container">
             <a href="index.html" class="logo-container" id="header-logo-link">
-                <img src="" alt="Лого" id="header-logo-img">
+                <img src="https://radilovk.github.io/face/assets/logoblack.png" alt="Лого" id="header-logo-img" style="display: block;">
                 <div>
                     <span class="brand-name" id="header-brand-name">ОТСЛАБВАНЕ</span>
                     <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
