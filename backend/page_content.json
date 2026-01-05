@@ -22,14 +22,6 @@
     {
       "text": "За нас",
       "link": "about-us.html"
-    },
-    {
-      "text": "Условия за доставка",
-      "link": "shipping.html"
-    },
-    {
-      "text": "Контакти",
-      "link": "contact.html"
     }
   ],
   "page_content": [
@@ -1211,10 +1203,6 @@
           {
             "text": "За нас",
             "url": "about-us.html"
-          },
-          {
-            "text": "Контакти",
-            "url": "contact.html"
           },
           {
             "text": "Политика за поверителност",
