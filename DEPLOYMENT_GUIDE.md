@@ -96,6 +96,14 @@ https://port.radilov-k.workers.dev/
 3. Деплойнете worker-а: `npm run deploy`
 
 ### Промяна в продукти:
+1. Редактирайте `backend/products.json`
+2. Качете в KV:
+   ```bash
+   wrangler kv:key put --binding=PAGE_CONTENT products --path=backend/products.json
+   ```
+3. Презаредете frontend-а в браузъра
+
+### Промяна в page_content (настройки, навигация, footer):
 1. Редактирайте `backend/page_content.json`
 2. Качете в KV:
    ```bash
@@ -131,7 +139,8 @@ wrangler tail
 ├── index.css           → Frontend стилове
 ├── worker.js           → Backend Worker (деплойва се с wrangler)
 ├── backend/
-│   └── page_content.json → Продукти и съдържание (качва се в KV като page_content)
+│   ├── products.json      → Продукти (качва се в KV като products)
+│   └── page_content.json  → Настройки и съдържание (качва се в KV като page_content)
 └── upload-static-to-kv.sh → Скрипт за качване на статични файлове
 ```
 
@@ -152,6 +161,11 @@ wrangler tail
    ```
 
 3. **При промени в продукти:**
+   ```bash
+   wrangler kv:key put --binding=PAGE_CONTENT products --path=backend/products.json
+   ```
+
+4. **При промени в настройки/съдържание (page_content):**
    ```bash
    wrangler kv:key put --binding=PAGE_CONTENT page_content --path=backend/page_content.json
    ```

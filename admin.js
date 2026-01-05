@@ -79,6 +79,7 @@ const DOM = {
 
 // Глобално състояние
 let appData = {};
+let productsData = [];
 let ordersData = [];
 let filteredOrdersData = [];
 let contactsData = [];
@@ -100,6 +101,18 @@ async function fetchData() {
         showNotification('Критична грешка при зареждане на данните.', 'error');
         console.error("Грешка при зареждане на page_content:", error);
         return null;
+    }
+}
+
+async function fetchProducts() {
+    try {
+        const response = await fetch(`${API_URL}/products?v=${Date.now()}`);
+        if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
+        productsData = await response.json();
+    } catch (error) {
+        showNotification('Грешка при зареждане на продуктите.', 'error');
+        console.error("Грешка при зареждане на products:", error);
+        productsData = [];
     }
 }
 
@@ -141,18 +154,30 @@ async function saveData() {
     DOM.saveStatus.className = 'save-status is-saving';
 
     try {
+        // Save page content
         const response = await fetch(`${API_URL}/page_content.json`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(appData, null, 2)
         });
 
-        if (response.ok) {
-            setUnsavedChanges(false);
-            showNotification('Промените са записани успешно.', 'success');
-        } else {
-            throw new Error(`Грешка от сървъра: ${response.statusText}`);
+        if (!response.ok) {
+            throw new Error(`Грешка от сървъра при page_content: ${response.statusText}`);
         }
+
+        // Save products separately
+        const productsResponse = await fetch(`${API_URL}/products`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productsData, null, 2)
+        });
+
+        if (!productsResponse.ok) {
+            throw new Error(`Грешка от сървъра при products: ${productsResponse.statusText}`);
+        }
+
+        setUnsavedChanges(false);
+        showNotification('Промените са записани успешно.', 'success');
     } catch (err) {
         showNotification('Грешка при записване на данните.', 'error');
         console.error('Грешка при записване:', err);
@@ -1093,6 +1118,28 @@ function handleAction(action, target, id) {
                     newComponent.type = componentType;
                     newComponent.component_id = `comp_${Date.now()}`;
                     if(!newComponent.title) newComponent.title = `Нова ${componentType.replace(/_/g, ' ')}`;
+                    
+                    // For product_category, handle products separately
+                    if (componentType === 'product_category') {
+                        const newId = newComponent.id || `category-${Date.now()}`;
+                        newComponent.id = newId;
+                        
+                        // Save products to productsData
+                        if (newComponent.products) {
+                            productsData.push({
+                                type: 'product_category',
+                                component_id: newComponent.component_id,
+                                id: newId,
+                                title: newComponent.title,
+                                image: newComponent.image || '',
+                                options: newComponent.options || {},
+                                products: newComponent.products
+                            });
+                            // Remove products from page_content
+                            delete newComponent.products;
+                        }
+                    }
+                    
                     appData.page_content.push(newComponent);
                     DOM.addComponentDropdown.classList.remove('show');
                     return true;
@@ -1101,11 +1148,32 @@ function handleAction(action, target, id) {
         case 'edit-component': {
             const component = id ? appData.page_content.find(c => c.component_id === id) : null;
             if (!component) return;
+            
+            // For product_category, merge products from productsData
+            let componentToEdit = { ...component };
+            if (component.type === 'product_category') {
+                const matchingProductCategory = productsData.find(cat => cat.id === component.id);
+                if (matchingProductCategory) {
+                    componentToEdit.products = matchingProductCategory.products || [];
+                }
+            }
+            
             const correctedType = component.type.replace(/_/g, '-');
             const editTemplateId = `form-${correctedType}-template`;
-            openModal(`Редакция на: ${component.title}`, editTemplateId, component,
+            openModal(`Редакция на: ${component.title}`, editTemplateId, componentToEdit,
                 (form) => {
                     const updatedData = serializeForm(form);
+                    
+                    // For product_category, save products to productsData instead
+                    if (component.type === 'product_category' && updatedData.products) {
+                        const matchingProductCategory = productsData.find(cat => cat.id === component.id);
+                        if (matchingProductCategory) {
+                            matchingProductCategory.products = updatedData.products;
+                        }
+                        // Remove products from the component data that goes to page_content
+                        delete updatedData.products;
+                    }
+                    
                     Object.assign(component, updatedData);
                     return true;
                 });
@@ -1335,6 +1403,7 @@ async function init() {
     setupEventListeners();
     populateAddComponentMenu();
     appData = await fetchData();
+    await fetchProducts();
     await fetchOrders();
     await fetchContacts();
     if (appData) {

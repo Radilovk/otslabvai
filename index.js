@@ -561,7 +561,7 @@ function updateLogoForTheme() {
     }
 }
 
-function renderMainContent(pageContent) {
+function renderMainContent(pageContent, productsData = []) {
     if (!DOM.mainContainer) return;
     
     let contentHtml = '';
@@ -577,7 +577,14 @@ function renderMainContent(pageContent) {
                 contentHtml += generateHeroHTML(component);
                 break;
             case 'product_category':
-                contentHtml += generateProductCategoryHTML(component, index);
+                // Find matching product category from productsData
+                const matchingCategory = productsData.find(cat => cat.id === component.id);
+                if (matchingCategory) {
+                    contentHtml += generateProductCategoryHTML(matchingCategory, index);
+                } else {
+                    // Fallback to component data if no match found
+                    contentHtml += generateProductCategoryHTML(component, index);
+                }
                 break;
             case 'info_card':
                 contentHtml += generateInfoCardHTML(component);
@@ -1081,8 +1088,19 @@ async function main() {
 
         DOM.mainContainer.innerHTML = ''; 
         
+        // Load products separately
+        let productsResponse, productsData;
+        try {
+            productsResponse = await fetch(`${API_URL}/products?v=${Date.now()}`);
+            if (!productsResponse.ok) throw new Error(`HTTP error! Status: ${productsResponse.status}`);
+            productsData = await productsResponse.json();
+        } catch (productsError) {
+            console.warn('Failed to load products from /products endpoint:', productsError);
+            productsData = [];
+        }
+        
         renderHeader(data.settings, data.navigation);
-        renderMainContent(data.page_content);
+        renderMainContent(data.page_content, productsData);
         renderFooter(data.settings, data.footer);
         
         DOM.mainContainer.classList.add('is-loaded');
