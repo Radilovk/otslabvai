@@ -109,10 +109,12 @@ async function fetchProducts() {
         const response = await fetch(`${API_URL}/products?v=${Date.now()}`);
         if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
         productsData = await response.json();
+        return productsData;
     } catch (error) {
         showNotification('Грешка при зареждане на продуктите.', 'error');
         console.error("Грешка при зареждане на products:", error);
         productsData = [];
+        return productsData;
     }
 }
 

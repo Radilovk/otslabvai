@@ -352,7 +352,7 @@ async function handleCreateContact(request, env, ctx) {
 async function handleGetProducts(request, env) {
     const productsJson = await env.PAGE_CONTENT.get('products');
     if (productsJson === null) {
-        throw new UserFacingError("Products not found.", 404);
+        throw new UserFacingError("Продуктите не са намерени.", 404);
     }
     return new Response(productsJson, {
         status: 200,
@@ -370,7 +370,7 @@ async function handleSaveProducts(request, env, ctx) {
         // Проверяваме дали е валиден JSON, преди да запишем
         JSON.parse(contentToSave);
         ctx.waitUntil(env.PAGE_CONTENT.put('products', contentToSave));
-        return new Response(JSON.stringify({ success: true, message: 'Products saved.' }), {
+        return new Response(JSON.stringify({ success: true, message: 'Продуктите са записани успешно.' }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
