@@ -641,13 +641,24 @@ async function main() {
             data = await response.json();
         }
 
+        // Load products separately
+        let productsResponse, productsData;
+        try {
+            productsResponse = await fetch(`${API_URL}/products?v=${Date.now()}`);
+            if (!productsResponse.ok) throw new Error(`HTTP error! Status: ${productsResponse.status}`);
+            productsData = await productsResponse.json();
+        } catch (productsError) {
+            console.warn('Failed to load products from /products endpoint:', productsError);
+            productsData = [];
+        }
+
         // Render header and footer
         renderHeader(data.settings, data.navigation);
         renderFooter(data.settings, data.footer);
 
         // Find the product
         let product = null;
-        for (const component of data.page_content) {
+        for (const component of productsData) {
             if (component.type === 'product_category' && component.products) {
                 product = component.products.find(p => p.product_id === productId);
                 if (product) break;

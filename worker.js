@@ -101,6 +101,14 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
+          
+          case '/products':
+              if (request.method === 'GET') {
+                  response = await handleGetProducts(request, env);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
             
           default:
             // Try to serve 404.html for unknown routes
@@ -336,6 +344,21 @@ async function handleCreateContact(request, env, ctx) {
 }
 
 /**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles GET /products
+ */
+async function handleGetProducts(request, env) {
+    const productsJson = await env.PAGE_CONTENT.get('products');
+    if (productsJson === null) {
+        throw new UserFacingError("Products not found.", 404);
+    }
+    return new Response(productsJson, {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
  * Handles POST /quest-submit
  */
 async function handleQuestSubmit(request, env, ctx) {
@@ -362,14 +385,14 @@ async function handleQuestSubmit(request, env, ctx) {
   
   ctx.waitUntil(saveClientData(env, formData)); // Запазваме данните от въпросника
 
-  const pageContentJSON = await env.PAGE_CONTENT.get('page_content');
+  const productsJSON = await env.PAGE_CONTENT.get('products');
   const mainPromptTemplate = await env.PAGE_CONTENT.get('bot_prompt');
   
-  if (!pageContentJSON || !mainPromptTemplate) {
-      throw new Error("Critical KV data missing: 'page_content' or 'bot_prompt' not found.");
+  if (!productsJSON || !mainPromptTemplate) {
+      throw new Error("Critical KV data missing: 'products' or 'bot_prompt' not found.");
   }
   
-  const productsForAI = transformProductsForAI(JSON.parse(pageContentJSON));
+  const productsForAI = transformProductsForAI(JSON.parse(productsJSON));
   
   const recommendation = await getAIRecommendation(env, formData, productsForAI, mainPromptTemplate);
   
@@ -393,12 +416,12 @@ async function handleQuestSubmit(request, env, ctx) {
 
 // --- AI И ЛОГИКА ЗА ДАННИ ---
 
-function transformProductsForAI(pageContent) {
-  if (!pageContent || !Array.isArray(pageContent.page_content)) {
-    console.error("Invalid pageContent structure for transformation.");
+function transformProductsForAI(productsData) {
+  if (!productsData || !Array.isArray(productsData)) {
+    console.error("Invalid productsData structure for transformation.");
     return [];
   }
-  const allProducts = pageContent.page_content
+  const allProducts = productsData
     .filter(component => component.type === 'product_category' && Array.isArray(component.products))
     .flatMap(category => category.products);
   return allProducts.map(product => ({
