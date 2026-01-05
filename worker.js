@@ -227,7 +227,7 @@ async function handleCreateOrder(request, env, ctx) {
     
     // Генерираме уникален ID и timestamp за поръчката
     const newOrder = {
-        id: `order-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `order-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
         timestamp: new Date().toISOString(),
         customer: orderData.customer,
         products: orderData.products,
@@ -310,7 +310,7 @@ async function handleCreateContact(request, env, ctx) {
     
     // Генерираме уникален ID и timestamp за контакта
     const newContact = {
-        id: `contact-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `contact-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
         timestamp: new Date().toISOString(),
         name: contactData.name,
         email: contactData.email,

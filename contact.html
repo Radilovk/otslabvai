@@ -388,11 +388,13 @@
                     showToast('Благодарим Ви за съобщението! Ще се свържем с Вас скоро.', 'success');
                     this.reset();
                 } else {
-                    throw new Error('Failed to submit contact');
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMsg = errorData.error || 'Възникна грешка при изпращане на съобщението';
+                    throw new Error(errorMsg);
                 }
             } catch (error) {
                 console.error('Error submitting contact form:', error);
-                showToast('Възникна грешка при изпращане на съобщението. Моля, опитайте отново.', 'error');
+                showToast(error.message || 'Възникна грешка при изпращане на съобщението. Моля, опитайте отново.', 'error');
             }
         });
     </script>
