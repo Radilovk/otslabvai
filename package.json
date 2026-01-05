@@ -8,6 +8,7 @@
     "local": "node local/local-worker.js",
     "deploy": "wrangler deploy",
     "upload-static": "./upload-static-to-kv.sh",
+    "upload-backend": "./upload-backend-to-kv.sh",
     "upload-static-node": "node upload-static-files.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "validate-backend": "node backend/validate.mjs"
