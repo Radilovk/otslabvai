@@ -1,5 +1,12 @@
 // ==== ВЕРСИЯ 4.0: ФУНКЦИОНАЛЕН АДМИН ПАНЕЛ ====
 
+// Cache configuration constants
+const CACHE_CONFIG = {
+    PAGE_CONTENT_MAX_AGE: 300,        // 5 minutes
+    PAGE_CONTENT_STALE_WHILE_REVALIDATE: 60,  // 1 minute
+    STATIC_FILE_MAX_AGE: 3600         // 1 hour
+};
+
 class UserFacingError extends Error {
   constructor(message, status) {
     super(message);
@@ -158,7 +165,7 @@ async function serveStaticFile(env, filename, contentType) {
         status: 200,
         headers: { 
             'Content-Type': contentType,
-            'Cache-Control': 'public, max-age=3600'
+            'Cache-Control': `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`
         }
     });
 }
@@ -175,7 +182,7 @@ async function handleGetPageContent(request, env) {
         status: 200,
         headers: { 
             'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=300, stale-while-revalidate=60', // Cache for 5 minutes, allow stale content for 1 minute
+            'Cache-Control': `public, max-age=${CACHE_CONFIG.PAGE_CONTENT_MAX_AGE}, stale-while-revalidate=${CACHE_CONFIG.PAGE_CONTENT_STALE_WHILE_REVALIDATE}`,
             'ETag': await generateETag(pageContent)
         }
     });
@@ -190,8 +197,7 @@ async function handleGetPageContent(request, env) {
 async function generateETag(content) {
     const msgBuffer = new TextEncoder().encode(content);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const hashHex = Array.from(new Uint8Array(hashBuffer), b => b.toString(16).padStart(2, '0')).join('');
     return `"${hashHex.substring(0, 16)}"`;
 }
 
