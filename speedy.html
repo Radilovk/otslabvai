@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<style>
+    /* Контейнер за Спиди */
+    .speedy-widget-container {
+        font-family: Arial, sans-serif;
+        max-width: 100%;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        background: #fdfdfd;
+    }
+
+    /* Стил на самата карта */
+    #speedy-frame {
+        width: 100%;
+        height: 450px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* Блокът с информация какво е избрал клиента */
+    #speedy-result-info {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #e6efff;
+        border-left: 4px solid #005696; /* Спиди синьо */
+        display: none; /* Скрито, докато не се избере офис */
+        font-size: 14px;
+    }
+</style>
+</head>
+<body>
+
+<div class="speedy-widget-container">
+    <label><strong>Избери офис на Спиди (чрез картата):</strong></label>
+    <br><br>
+
+    <!-- КАРТАТА НА СПИДИ -->
+    <iframe id="speedy-frame" 
+            src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&selectOfficeButtonCaption=Избери този офис">
+    </iframe>
+
+    <!-- ТУК СЕ ПОЯВЯВА ИЗБРАНОТО -->
+    <div id="speedy-result-info">
+        <strong>Избран офис:</strong> <span id="view-office-name">-</span><br>
+        <strong>Адрес:</strong> <span id="view-office-addr">-</span>
+    </div>
+
+    <!-- СКРИТО ПОЛЕ (Това се записва във вашата база данни) -->
+    <input type="hidden" name="speedy_office_id" id="final-speedy-id">
+</div>
+
+<script>
+    // Този скрипт слуша кога картата изпраща сигнал, че е избран офис
+    window.addEventListener('message', function(event) {
+        // Сигурност: приемаме данни само от Speedy
+        if (event.origin.indexOf('speedy.bg') !== -1) {
+            var data = event.data;
+            
+            // Ако имаме ID, значи е избран офис
+            if (data && data.id) {
+                // 1. Показваме на клиента какво е избрал
+                document.getElementById('speedy-result-info').style.display = 'block';
+                document.getElementById('view-office-name').textContent = data.name;
+                document.getElementById('view-office-addr').textContent = data.address.fullAddressString;
+                
+                // 2. Попълваме скритото поле за вашата поръчка
+                document.getElementById('final-speedy-id').value = data.id;
+                
+                console.log("Успешно избран офис на Спиди ID: " + data.id);
+            }
+        }
+    }, false);
+</script>
+
+</body>
+</html>

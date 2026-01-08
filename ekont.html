@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<style>
+    .econt-container {
+        font-family: Arial, sans-serif;
+        max-width: 100%;
+        width: 500px;
+    }
+    #office-search {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #0056b3;
+        border-radius: 5px;
+        font-size: 15px;
+    }
+    #status-text {
+        font-size: 12px;
+        color: gray;
+        margin-top: 5px;
+    }
+</style>
+</head>
+<body>
+
+<div class="econt-container">
+    <label for="office-search"><strong>Избери офис на Еконт:</strong></label>
+    <br>
+    
+    <input list="econt-offices-list" id="office-search" placeholder="Пишете град или име..." autocomplete="off">
+    
+    <datalist id="econt-offices-list">
+        <!-- Опциите ще се напълнят автоматично -->
+    </datalist>
+
+    <input type="hidden" id="final-office-id" name="office_id">
+    
+    <div id="status-text">Зареждане на списъка...</div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const input = document.getElementById('office-search');
+        const dataList = document.getElementById('econt-offices-list');
+        const hiddenInput = document.getElementById('final-office-id');
+        const statusText = document.getElementById('status-text');
+
+        let allOffices = [];
+
+        fetch('https://ee.econt.com/services/Nomenclatures/NomenclaturesService.getOffices.json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ countryCode: "BGR" })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.offices) {
+                allOffices = data.offices;
+                statusText.textContent = "Готово. Можете да търсите.";
+                statusText.style.color = "green";
+                
+                let optionsHTML = '';
+                
+                allOffices.forEach(office => {
+                    // Взимаме чистото име (напр. "Бургас Братя Миладинови")
+                    let cleanName = office.name; 
+
+                    // Добавяме пояснение само ако е Еконтомат
+                    if (office.isAPS === true) {
+                        cleanName += " (ЕКОНТОМАТ)";
+                    } else if (office.isMPS === true) {
+                        cleanName += " (МОБИЛЕН)";
+                    }
+
+                    // Адресът за пояснение (ако го има)
+                    const fullAddr = (office.address && office.address.fullAddress) ? office.address.fullAddress : "";
+
+                    // Създаваме опцията
+                    optionsHTML += `<option value="${cleanName}">${fullAddr}</option>`; 
+                });
+                
+                dataList.innerHTML = optionsHTML;
+            }
+        })
+        .catch(err => {
+            statusText.textContent = "Грешка: " + err;
+        });
+
+        // ЛОГИКА ПРИ ИЗБОР
+        input.addEventListener('change', function() {
+            const val = this.value;
+            
+            // Търсим съвпадение
+            const selectedOffice = allOffices.find(o => {
+                let checkName = o.name;
+                if (o.isAPS === true) checkName += " (ЕКОНТОМАТ)";
+                else if (o.isMPS === true) checkName += " (МОБИЛЕН)";
+                
+                return checkName === val;
+            });
+
+            if (selectedOffice) {
+                hiddenInput.value = selectedOffice.code;
+                statusText.textContent = "Избран код: " + selectedOffice.code;
+                statusText.style.color = "#0056b3";
+            } else {
+                hiddenInput.value = "";
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
