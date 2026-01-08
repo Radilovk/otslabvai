@@ -8,6 +8,9 @@
     "theme_gradients": {
       "light": "linear-gradient(135deg, #FFE5F1 0%, #E0F2F1 100%)",
       "dark": "linear-gradient(135deg, #1a0d14 0%, #0a1a1a 100%)"
+    },
+    "promo_banner": {
+      "text": "СПЕЦИАЛНА ОФЕРТА: До 30% отстъпка при поръчка над 100 лв!"
     }
   },
   "navigation": [
@@ -33,7 +36,33 @@
       "type": "hero_banner",
       "component_id": "comp-uuid-hero-001",
       "title": "Елегантна фигура без усилия",
-      "subtitle": "Най-ефективните решения за жени: отслабване, детокс и красота"
+      "subtitle": "Най-ефективните решения за жени: отслабване, детокс и красота",
+      "buttons": {
+        "primary": {
+          "text": "Разгледай продуктите",
+          "action": "scroll",
+          "target": "#products"
+        },
+        "secondary": {
+          "text": "Научи повече",
+          "action": "link",
+          "target": "about-us.html"
+        }
+      },
+      "stats": [
+        {
+          "value": "2,840+",
+          "label": "Доволни клиенти"
+        },
+        {
+          "value": "98%",
+          "label": "Успеваемост"
+        },
+        {
+          "value": "100%",
+          "label": "Естествени съставки"
+        }
+      ]
     },
     {
       "title": "Индивидуален план за промяна",
