@@ -1147,6 +1147,7 @@
         let ekontOfficesLoaded = false;
         let allEcontOffices = [];
         let selectedEcontOffice = null;
+        let ekontChangeHandlerAttached = false;
         
         function loadEcontOffices() {
             const ekontInput = document.getElementById('ekont-office-search');
@@ -1191,27 +1192,30 @@
                 statusText.style.color = "red";
             });
 
-            // Handle office selection
-            ekontInput.addEventListener('change', function() {
-                const val = this.value;
-                
-                selectedEcontOffice = allEcontOffices.find(o => {
-                    let checkName = o.name;
-                    if (o.isAPS === true) checkName += " (ЕКОНТОМАТ)";
-                    else if (o.isMPS === true) checkName += " (МОБИЛЕН)";
+            // Attach event listener only once
+            if (!ekontChangeHandlerAttached) {
+                ekontInput.addEventListener('change', function() {
+                    const val = this.value;
                     
-                    return checkName === val;
-                });
+                    selectedEcontOffice = allEcontOffices.find(o => {
+                        let checkName = o.name;
+                        if (o.isAPS === true) checkName += " (ЕКОНТОМАТ)";
+                        else if (o.isMPS === true) checkName += " (МОБИЛЕН)";
+                        
+                        return checkName === val;
+                    });
 
-                if (selectedEcontOffice) {
-                    hiddenInput.value = selectedEcontOffice.code;
-                    statusText.textContent = "Избран код: " + selectedEcontOffice.code;
-                    statusText.style.color = "#0056b3";
-                } else {
-                    hiddenInput.value = "";
-                    selectedEcontOffice = null;
-                }
-            });
+                    if (selectedEcontOffice) {
+                        hiddenInput.value = selectedEcontOffice.code;
+                        statusText.textContent = "Избран код: " + selectedEcontOffice.code;
+                        statusText.style.color = "#0056b3";
+                    } else {
+                        hiddenInput.value = "";
+                        selectedEcontOffice = null;
+                    }
+                });
+                ekontChangeHandlerAttached = true;
+            }
         }
         
         // --- 5. ВАЛИДАЦИЯ И ИЗПРАЩАНЕ НА ФОРМАТА ---
