@@ -155,6 +155,60 @@
             .product-item { flex-direction: column; align-items: flex-start; }
             .product-controls { width: 100%; flex-direction: row; justify-content: space-between; margin-top: 0.5rem; }
             .summary-section { padding: 1rem; }
+            
+            /* Mobile-optimized courier selection */
+            .courier-widget {
+                padding: 0.75rem;
+                margin-top: 0.75rem;
+            }
+            
+            /* Speedy iframe mobile optimization */
+            #speedy-frame {
+                height: 350px !important;
+            }
+            
+            .speedy-widget-container label,
+            .econt-container label {
+                font-size: 0.95rem;
+            }
+            
+            /* Compact result info for mobile */
+            #speedy-result-info {
+                font-size: 0.85rem;
+                padding: 0.75rem;
+            }
+            
+            /* Better mobile input styling */
+            #ekont-office-search {
+                font-size: 16px !important; /* Prevents zoom on iOS */
+            }
+            
+            #ekont-status-text {
+                font-size: 0.75rem;
+            }
+            
+            /* Compact form groups on mobile */
+            .form-group {
+                margin-bottom: 0.75rem;
+            }
+            
+            h3 {
+                font-size: 1.1rem;
+                margin-top: 1rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+            
+            h4 {
+                font-size: 1rem;
+                margin-top: 0.75rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            
+            /* Optimize checkbox groups for mobile */
+            .checkbox-group {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
         }
         
         /* Success Modal Styles */
@@ -653,16 +707,16 @@
                         <!-- Speedy Office Selection Widget -->
                         <div id="speedy-widget" class="courier-widget" style="display: none; margin-top: 1rem;">
                             <div class="speedy-widget-container">
-                                <label><strong>Избери офис на Спиди (чрез картата):</strong></label>
+                                <label><strong>Избери офис на Спиди:</strong></label>
                                 <br><br>
                                 <iframe id="speedy-frame" 
-                                        src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&selectOfficeButtonCaption=Избери този офис"
+                                        src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&selectOfficeButtonCaption=Избери"
                                         sandbox="allow-scripts allow-same-origin"
                                         style="width: 100%; height: 450px; border: 1px solid #ccc; border-radius: 4px;">
                                 </iframe>
                                 <div id="speedy-result-info" style="margin-top: 10px; padding: 10px; background-color: #e6efff; border-left: 4px solid #005696; display: none; font-size: 14px;">
-                                    <strong>Избран офис:</strong> <span id="view-office-name">-</span><br>
-                                    <strong>Адрес:</strong> <span id="view-office-addr">-</span>
+                                    <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
+                                    <span id="view-office-addr" style="opacity: 0.8;">-</span>
                                 </div>
                                 <input type="hidden" name="speedy_office_id" id="final-speedy-id">
                             </div>
@@ -673,12 +727,12 @@
                             <div class="econt-container">
                                 <label for="ekont-office-search"><strong>Избери офис на Еконт:</strong></label>
                                 <br>
-                                <input list="econt-offices-list" id="ekont-office-search" placeholder="Пишете град или име..." autocomplete="off" style="width: 100%; padding: 10px; border: 2px solid #0056b3; border-radius: 5px; font-size: 15px; margin-top: 0.5rem;">
+                                <input list="econt-offices-list" id="ekont-office-search" placeholder="Град или име на офис..." autocomplete="off" style="width: 100%; padding: 10px; border: 2px solid #0056b3; border-radius: 5px; font-size: 15px; margin-top: 0.5rem;">
                                 <datalist id="econt-offices-list">
                                     <!-- Опциите ще се напълнят автоматично -->
                                 </datalist>
                                 <input type="hidden" id="final-office-id" name="office_id">
-                                <div id="ekont-status-text" style="font-size: 12px; color: gray; margin-top: 5px;">Зареждане на списъка...</div>
+                                <div id="ekont-status-text" style="font-size: 12px; color: gray; margin-top: 5px;">Зареждане...</div>
                             </div>
                         </div>
                     </div>
@@ -1164,7 +1218,7 @@
             .then(data => {
                 if (data && data.offices) {
                     allEcontOffices = data.offices;
-                    statusText.textContent = "Готово. Можете да търсите.";
+                    statusText.textContent = "✓ Готово";
                     statusText.style.color = "green";
                     ekontOfficesLoaded = true;
                     
@@ -1188,7 +1242,7 @@
             })
             .catch(err => {
                 console.error('Error loading Econt offices:', err);
-                statusText.textContent = "Грешка при зареждане на офисите. Моля, опитайте отново.";
+                statusText.textContent = "Грешка при зареждане. Опитайте отново.";
                 statusText.style.color = "red";
             });
 
@@ -1207,7 +1261,7 @@
 
                     if (selectedEcontOffice) {
                         hiddenInput.value = selectedEcontOffice.code;
-                        statusText.textContent = "Избран код: " + selectedEcontOffice.code;
+                        statusText.textContent = "✓ Избран: " + selectedEcontOffice.code;
                         statusText.style.color = "#0056b3";
                     } else {
                         hiddenInput.value = "";
