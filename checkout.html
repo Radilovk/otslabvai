@@ -1245,7 +1245,7 @@
                                 officeName += " (МОБИЛЕН)";
                             }
                             orderData.courierOfficeName = officeName;
-                            orderData.courierOfficeAddress = selectedEcontOffice.address?.fullAddress || '';
+                            orderData.courierOfficeAddress = (selectedEcontOffice.address && selectedEcontOffice.address.fullAddress) ? selectedEcontOffice.address.fullAddress : '';
                         }
                     }
                 } else {
