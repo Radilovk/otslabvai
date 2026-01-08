@@ -663,12 +663,16 @@ async function main() {
         // Load page data
         let response, data;
         try {
-            response = await fetch(`${API_URL}/page_content.json?v=${Date.now()}`);
+            response = await fetch(`${API_URL}/page_content.json`, {
+                cache: 'default' // Use browser cache with proper revalidation
+            });
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             data = await response.json();
         } catch (apiError) {
             console.warn('API failed, trying mock data:', apiError);
-            response = await fetch(`page_content_mock.json?v=${Date.now()}`);
+            response = await fetch('page_content_mock.json', {
+                cache: 'default'
+            });
             if (!response.ok) throw new Error('Mock data also unavailable');
             data = await response.json();
         }

@@ -173,8 +173,23 @@ async function handleGetPageContent(request, env) {
     }
     return new Response(pageContent, {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, max-age=300, stale-while-revalidate=60', // Cache for 5 minutes, allow stale content for 1 minute
+            'ETag': await generateETag(pageContent)
+        }
     });
+}
+
+/**
+ * Generate ETag for content-based caching
+ */
+async function generateETag(content) {
+    const msgBuffer = new TextEncoder().encode(content);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return `"${hashHex.substring(0, 16)}"`;
 }
 
 /**
@@ -205,7 +220,10 @@ async function handleGetOrders(request, env) {
     const orders = ordersJson ? JSON.parse(ordersJson) : [];
     return new Response(JSON.stringify(orders), {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate' // Orders should not be cached
+        }
     });
 }
 
@@ -288,7 +306,10 @@ async function handleGetContacts(request, env) {
     const contacts = contactsJson ? JSON.parse(contactsJson) : [];
     return new Response(JSON.stringify(contacts), {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate' // Contacts should not be cached
+        }
     });
 }
 
