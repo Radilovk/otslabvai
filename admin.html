@@ -308,6 +308,15 @@
             </div>
             
             <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">📢 Промо банер</h4>
+            
+            <div class="form-group">
+                <label for="promo_banner_text">Текст на промо банера</label>
+                <input type="text" id="promo_banner_text" data-field="promo_banner.text" placeholder="СПЕЦИАЛНА ОФЕРТА: До 30% отстъпка при поръчка над 100 лв!">
+                <small class="form-hint">Текстът, който се показва в горния промо банер на страницата</small>
+            </div>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
             <h4 style="margin-bottom: 1rem; color: var(--accent);">🎨 Градиенти за теми</h4>
             
             <!-- Light Theme Gradient -->
@@ -413,6 +422,58 @@
                 <label for="hero_subtitle">Подзаглавие</label>
                 <input type="text" id="hero_subtitle" data-field="subtitle">
             </div>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">🔘 Бутони</h4>
+            
+            <fieldset>
+                <legend>Основен бутон (Primary)</legend>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hero_btn_primary_text">Текст</label>
+                        <input type="text" id="hero_btn_primary_text" data-field="buttons.primary.text" placeholder="Разгледай продуктите">
+                    </div>
+                    <div class="form-group">
+                        <label for="hero_btn_primary_action">Действие</label>
+                        <select id="hero_btn_primary_action" data-field="buttons.primary.action">
+                            <option value="scroll">Скрол до елемент</option>
+                            <option value="link">Линк към страница</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="hero_btn_primary_target">Цел (селектор или URL)</label>
+                    <input type="text" id="hero_btn_primary_target" data-field="buttons.primary.target" placeholder="#products или product.html">
+                    <small class="form-hint">За скрол: CSS селектор (напр. #products). За линк: URL адрес (напр. products.html)</small>
+                </div>
+            </fieldset>
+            
+            <fieldset style="margin-top: 1.5rem;">
+                <legend>Вторичен бутон (Secondary)</legend>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hero_btn_secondary_text">Текст</label>
+                        <input type="text" id="hero_btn_secondary_text" data-field="buttons.secondary.text" placeholder="Научи повече">
+                    </div>
+                    <div class="form-group">
+                        <label for="hero_btn_secondary_action">Действие</label>
+                        <select id="hero_btn_secondary_action" data-field="buttons.secondary.action">
+                            <option value="scroll">Скрол до елемент</option>
+                            <option value="link">Линк към страница</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="hero_btn_secondary_target">Цел (селектор или URL)</label>
+                    <input type="text" id="hero_btn_secondary_target" data-field="buttons.secondary.target" placeholder="#benefits или about-us.html">
+                    <small class="form-hint">За скрол: CSS селектор (напр. #benefits). За линк: URL адрес (напр. about-us.html)</small>
+                </div>
+            </fieldset>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">📊 Статистики</h4>
+            <p style="margin-bottom: 1rem;"><em>Забележка: За редакция на статистиките, моля редактирайте JSON файла директно или свържете се с разработчика.</em></p>
+            
             <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
             <h4 style="margin-bottom: 1rem; color: var(--accent);">🎨 Фон на Hero секция</h4>
             <div class="form-group">

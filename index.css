@@ -424,6 +424,18 @@ img {
 .logo-container img { 
     height: 80px; 
     width: 80px; 
+    /* Hide alt text by using empty font and transparent color */
+    font-size: 0;
+    color: transparent;
+    /* Smooth transition when image loads */
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* While loading, hide the broken image icon */
+.logo-container img:not([src]),
+.logo-container img[src=""] {
+    opacity: 0;
 }
 
 .logo-container .brand-name { 

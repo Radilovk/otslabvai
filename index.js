@@ -143,43 +143,81 @@ const generateHeroHTML = component => {
     }
     // If bgType is 'default' or validation fails, use the default theme-based gradient (no custom class/style)
     
+    // Get buttons configuration with defaults
+    const buttons = component.buttons || {};
+    const primaryBtn = buttons.primary || { text: 'Разгледай продуктите', action: 'scroll', target: '#products' };
+    const secondaryBtn = buttons.secondary || { text: 'Научи повече', action: 'link', target: 'about-us.html' };
+    
+    // Generate primary button (scroll or link)
+    let primaryButtonHTML = '';
+    if (primaryBtn.action === 'link') {
+        primaryButtonHTML = `<a href="${escapeHtml(primaryBtn.target)}" class="btn-hero-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            ${escapeHtml(primaryBtn.text)}
+        </a>`;
+    } else {
+        primaryButtonHTML = `<button class="btn-hero-primary" onclick="document.querySelector('${escapeHtml(primaryBtn.target)}')?.scrollIntoView({behavior: 'smooth'})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            ${escapeHtml(primaryBtn.text)}
+        </button>`;
+    }
+    
+    // Generate secondary button (scroll or link)
+    let secondaryButtonHTML = '';
+    if (secondaryBtn.action === 'link') {
+        secondaryButtonHTML = `<a href="${escapeHtml(secondaryBtn.target)}" class="btn-hero-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            ${escapeHtml(secondaryBtn.text)}
+        </a>`;
+    } else {
+        secondaryButtonHTML = `<button class="btn-hero-secondary" onclick="document.querySelector('${escapeHtml(secondaryBtn.target)}')?.scrollIntoView({behavior: 'smooth'})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            ${escapeHtml(secondaryBtn.text)}
+        </button>`;
+    }
+    
+    // Get stats configuration with defaults
+    const stats = component.stats || [
+        { value: '2,840+', label: 'Доволни клиенти' },
+        { value: '98%', label: 'Успеваемост' },
+        { value: '100%', label: 'Естествени съставки' }
+    ];
+    
+    const statsHTML = stats.map(stat => `
+        <div class="stat-item">
+            <strong>${escapeHtml(stat.value)}</strong>
+            <span>${escapeHtml(stat.label)}</span>
+        </div>
+    `).join('');
+    
     return `
     <header class="hero-section${heroClass}"${heroStyle}>
         <div class="container">
             <div class="hero-content">
-                <h1>${component.title}</h1>
-                <p>${component.subtitle}</p>
+                <h1>${escapeHtml(component.title)}</h1>
+                <p>${escapeHtml(component.subtitle)}</p>
                 <div class="hero-cta-group">
-                    <button class="btn-hero-primary" onclick="document.getElementById('products')?.scrollIntoView({behavior: 'smooth'})">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
-                            <circle cx="9" cy="21" r="1"></circle>
-                            <circle cx="20" cy="21" r="1"></circle>
-                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                        </svg>
-                        Разгледай продуктите
-                    </button>
-                    <button class="btn-hero-secondary" onclick="document.getElementById('benefits')?.scrollIntoView({behavior: 'smooth'})">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="16" x2="12" y2="12"></line>
-                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                        </svg>
-                        Научи повече
-                    </button>
+                    ${primaryButtonHTML}
+                    ${secondaryButtonHTML}
                 </div>
                 <div class="hero-stats">
-                    <div class="stat-item">
-                        <strong>2,840+</strong>
-                        <span>Доволни клиенти</span>
-                    </div>
-                    <div class="stat-item">
-                        <strong>98%</strong>
-                        <span>Успеваемост</span>
-                    </div>
-                    <div class="stat-item">
-                        <strong>100%</strong>
-                        <span>Естествени съставки</span>
-                    </div>
+                    ${statsHTML}
                 </div>
                 <div class="hero-trust-badges">
                     <div class="trust-badge">
@@ -549,6 +587,25 @@ function renderHeader(settings, navigation) {
     persistentLis.forEach(li => DOM.header.navLinks.appendChild(li));
 
     updateCartCount();
+}
+
+function renderPromoBanner(settings) {
+    const promoBanner = document.querySelector('.promo-banner');
+    if (!promoBanner) return;
+    
+    const promoContent = promoBanner.querySelector('.promo-content p');
+    if (!promoContent) return;
+    
+    // Get the promo text from settings
+    const promoText = settings.promo_banner?.text || 'СПЕЦИАЛНА ОФЕРТА: До 30% отстъпка при поръчка над 100 лв!';
+    
+    // Keep the icon and strong tag, update only the text
+    promoContent.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+        </svg>
+        ${escapeHtml(promoText)} <span class="promo-timer" id="promo-timer"></span>
+    `;
 }
 
 // Helper function to initialize logo from cached settings
@@ -1122,6 +1179,7 @@ async function main() {
         }
         
         renderHeader(data.settings, data.navigation);
+        renderPromoBanner(data.settings);
         
         if (isIndexPage) {
             renderMainContent(data.page_content);
