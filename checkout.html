@@ -1124,27 +1124,28 @@
         
         // Speedy widget logic - listen for office selection
         window.addEventListener('message', function(event) {
-            // Accept data only from Speedy
-            if (event.origin.indexOf('speedy.bg') !== -1) {
-                const data = event.data;
+            // Security: Accept data only from Speedy's exact domain
+            if (event.origin !== 'https://services.speedy.bg') return;
+            
+            const data = event.data;
+            
+            if (data && data.id) {
+                // Show selected office info
+                document.getElementById('speedy-result-info').style.display = 'block';
+                document.getElementById('view-office-name').textContent = data.name;
+                document.getElementById('view-office-addr').textContent = data.address.fullAddressString;
                 
-                if (data && data.id) {
-                    // Show selected office info
-                    document.getElementById('speedy-result-info').style.display = 'block';
-                    document.getElementById('view-office-name').textContent = data.name;
-                    document.getElementById('view-office-addr').textContent = data.address.fullAddressString;
-                    
-                    // Store office ID in hidden field
-                    document.getElementById('final-speedy-id').value = data.id;
-                    
-                    console.log("Успешно избран офис на Спиди ID: " + data.id);
-                }
+                // Store office ID in hidden field
+                document.getElementById('final-speedy-id').value = data.id;
+                
+                console.log("Успешно избран офис на Спиди ID: " + data.id);
             }
         }, false);
         
         // Econt office selection logic
         let ekontOfficesLoaded = false;
         let allEcontOffices = [];
+        let selectedEcontOffice = null;
         
         function loadEcontOffices() {
             const ekontInput = document.getElementById('ekont-office-search');
@@ -1184,7 +1185,8 @@
                 }
             })
             .catch(err => {
-                statusText.textContent = "Грешка: " + err;
+                console.error('Error loading Econt offices:', err);
+                statusText.textContent = "Грешка при зареждане на офисите. Моля, опитайте отново.";
                 statusText.style.color = "red";
             });
 
@@ -1192,7 +1194,7 @@
             ekontInput.addEventListener('change', function() {
                 const val = this.value;
                 
-                const selectedOffice = allEcontOffices.find(o => {
+                selectedEcontOffice = allEcontOffices.find(o => {
                     let checkName = o.name;
                     if (o.isAPS === true) checkName += " (ЕКОНТОМАТ)";
                     else if (o.isMPS === true) checkName += " (МОБИЛЕН)";
@@ -1200,12 +1202,13 @@
                     return checkName === val;
                 });
 
-                if (selectedOffice) {
-                    hiddenInput.value = selectedOffice.code;
-                    statusText.textContent = "Избран код: " + selectedOffice.code;
+                if (selectedEcontOffice) {
+                    hiddenInput.value = selectedEcontOffice.code;
+                    statusText.textContent = "Избран код: " + selectedEcontOffice.code;
                     statusText.style.color = "#0056b3";
                 } else {
                     hiddenInput.value = "";
+                    selectedEcontOffice = null;
                 }
             });
         }
@@ -1228,7 +1231,17 @@
                     } else if (ekontRadio.checked) {
                         orderData.courierCompany = 'Econt';
                         orderData.courierOfficeId = document.getElementById('final-office-id').value;
-                        orderData.courierOfficeName = document.getElementById('ekont-office-search').value;
+                        // Use the actual office name from the selected office object
+                        if (selectedEcontOffice) {
+                            let officeName = selectedEcontOffice.name;
+                            if (selectedEcontOffice.isAPS === true) {
+                                officeName += " (ЕКОНТОМАТ)";
+                            } else if (selectedEcontOffice.isMPS === true) {
+                                officeName += " (МОБИЛЕН)";
+                            }
+                            orderData.courierOfficeName = officeName;
+                            orderData.courierOfficeAddress = selectedEcontOffice.address?.fullAddress || '';
+                        }
                     }
                 } else {
                     orderData.deliveryMethod = 'address';
@@ -1312,8 +1325,7 @@
                     }
                 } else if (ekontRadio.checked) {
                     const ekontOfficeId = document.getElementById('final-office-id').value;
-                    const ekontInput = document.getElementById('ekont-office-search').value;
-                    if (!ekontOfficeId || !ekontInput) {
+                    if (!ekontOfficeId) {
                         alert('Моля, изберете офис на Еконт от списъка.');
                         isValid = false;
                     }
