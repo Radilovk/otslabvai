@@ -143,6 +143,14 @@ const generateHeroHTML = component => {
     }
     // If bgType is 'default' or validation fails, use the default theme-based gradient (no custom class/style)
     
+    // Validate CSS selector for scroll targets (prevent XSS in onclick)
+    function validateSelector(selector) {
+        // Allow only safe CSS selectors: #id, .class, or element names
+        // No spaces, quotes, or other potentially dangerous characters
+        const selectorPattern = /^[#.]?[a-zA-Z0-9_-]+$/;
+        return selectorPattern.test(selector) ? selector : '#products';
+    }
+    
     // Get buttons configuration with defaults
     const buttons = component.buttons || {};
     const primaryBtn = buttons.primary || { text: 'Разгледай продуктите', action: 'scroll', target: '#products' };
@@ -160,7 +168,9 @@ const generateHeroHTML = component => {
             ${escapeHtml(primaryBtn.text)}
         </a>`;
     } else {
-        primaryButtonHTML = `<button class="btn-hero-primary" onclick="document.querySelector('${escapeHtml(primaryBtn.target)}')?.scrollIntoView({behavior: 'smooth'})">
+        // Validate selector for security before using in onclick
+        const safeSelector = validateSelector(primaryBtn.target);
+        primaryButtonHTML = `<button class="btn-hero-primary" onclick="document.querySelector('${safeSelector}')?.scrollIntoView({behavior: 'smooth'})">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
                 <circle cx="9" cy="21" r="1"></circle>
                 <circle cx="20" cy="21" r="1"></circle>
@@ -182,7 +192,9 @@ const generateHeroHTML = component => {
             ${escapeHtml(secondaryBtn.text)}
         </a>`;
     } else {
-        secondaryButtonHTML = `<button class="btn-hero-secondary" onclick="document.querySelector('${escapeHtml(secondaryBtn.target)}')?.scrollIntoView({behavior: 'smooth'})">
+        // Validate selector for security before using in onclick
+        const safeSelector = validateSelector(secondaryBtn.target);
+        secondaryButtonHTML = `<button class="btn-hero-secondary" onclick="document.querySelector('${safeSelector}')?.scrollIntoView({behavior: 'smooth'})">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="16" x2="12" y2="12"></line>
