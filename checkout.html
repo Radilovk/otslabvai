@@ -127,6 +127,24 @@
             font-size: 2.5rem;
             margin-bottom: 1.5rem;
         }
+        
+        /* Courier Widget Styles */
+        .courier-widget {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        .speedy-widget-container {
+            font-family: Arial, sans-serif;
+            max-width: 100%;
+        }
+        .econt-container {
+            font-family: Arial, sans-serif;
+            max-width: 100%;
+        }
+        
         @media (max-width: 992px) {
             .checkout-container { flex-direction: column-reverse; }
             .summary-section { position: static; }
@@ -137,6 +155,60 @@
             .product-item { flex-direction: column; align-items: flex-start; }
             .product-controls { width: 100%; flex-direction: row; justify-content: space-between; margin-top: 0.5rem; }
             .summary-section { padding: 1rem; }
+            
+            /* Mobile-optimized courier selection */
+            .courier-widget {
+                padding: 0.75rem;
+                margin-top: 0.75rem;
+            }
+            
+            /* Speedy iframe mobile optimization */
+            #speedy-frame {
+                height: 350px !important;
+            }
+            
+            .speedy-widget-container label,
+            .econt-container label {
+                font-size: 0.95rem;
+            }
+            
+            /* Compact result info for mobile */
+            #speedy-result-info {
+                font-size: 0.85rem;
+                padding: 0.75rem;
+            }
+            
+            /* Better mobile input styling */
+            #ekont-office-search {
+                font-size: 16px !important; /* Prevents zoom on iOS */
+            }
+            
+            #ekont-status-text {
+                font-size: 0.75rem;
+            }
+            
+            /* Compact form groups on mobile */
+            .form-group {
+                margin-bottom: 0.75rem;
+            }
+            
+            h3 {
+                font-size: 1.1rem;
+                margin-top: 1rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+            
+            h4 {
+                font-size: 1rem;
+                margin-top: 0.75rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            
+            /* Optimize checkbox groups for mobile */
+            .checkbox-group {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
         }
         
         /* Success Modal Styles */
@@ -622,7 +694,7 @@
                     </div>
                     
                     <div id="courier-fields" class="hidden-fields">
-                        <h4 style="margin-top: 1rem; margin-bottom: 0.75rem;">Избор на куриер</h4>
+                        <h4 style="margin-top: 1rem; margin-bottom: 0.75rem;">Избор на куриерска фирма</h4>
                         <div class="checkbox-group">
                             <input type="radio" id="courier-speedy" name="courierCompany" value="speedy">
                             <label for="courier-speedy">Speedy</label>
@@ -631,13 +703,37 @@
                             <input type="radio" id="courier-ekont" name="courierCompany" value="ekont">
                             <label for="courier-ekont">Econt</label>
                         </div>
-                        <div class="form-group" style="margin-top: 1rem;">
-                            <label for="courier-office">Офис на куриер</label>
-                            <input type="text" id="courier-office" name="courierOffice" list="courier-offices-list" placeholder="Започнете да пишете град или адрес...">
-                            <datalist id="courier-offices-list">
-                                <!-- Офисите ще се заредят динамично -->
-                            </datalist>
-                            <div class="error-message">Моля, изберете офис на куриер.</div>
+                        
+                        <!-- Speedy Office Selection Widget -->
+                        <div id="speedy-widget" class="courier-widget" style="display: none; margin-top: 1rem;">
+                            <div class="speedy-widget-container">
+                                <label><strong>Избери офис на Спиди:</strong></label>
+                                <br><br>
+                                <iframe id="speedy-frame" 
+                                        src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&selectOfficeButtonCaption=Избери"
+                                        sandbox="allow-scripts allow-same-origin"
+                                        style="width: 100%; height: 450px; border: 1px solid #ccc; border-radius: 4px;">
+                                </iframe>
+                                <div id="speedy-result-info" style="margin-top: 10px; padding: 10px; background-color: #e6efff; border-left: 4px solid #005696; display: none; font-size: 14px;">
+                                    <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
+                                    <span id="view-office-addr" style="opacity: 0.8;">-</span>
+                                </div>
+                                <input type="hidden" name="speedy_office_id" id="final-speedy-id">
+                            </div>
+                        </div>
+                        
+                        <!-- Econt Office Selection Widget -->
+                        <div id="ekont-widget" class="courier-widget" style="display: none; margin-top: 1rem;">
+                            <div class="econt-container">
+                                <label for="ekont-office-search"><strong>Избери офис на Еконт:</strong></label>
+                                <br>
+                                <input list="econt-offices-list" id="ekont-office-search" placeholder="Град или име на офис..." autocomplete="off" style="width: 100%; padding: 10px; border: 2px solid #0056b3; border-radius: 5px; font-size: 15px; margin-top: 0.5rem;">
+                                <datalist id="econt-offices-list">
+                                    <!-- Опциите ще се напълнят автоматично -->
+                                </datalist>
+                                <input type="hidden" id="final-office-id" name="office_id">
+                                <div id="ekont-status-text" style="font-size: 12px; color: gray; margin-top: 5px;">Зареждане...</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1033,7 +1129,6 @@
         const deliveryCourierRadio = document.getElementById('delivery-courier');
         const addressFields = document.getElementById('address-fields');
         const courierFields = document.getElementById('courier-fields');
-        const courierOfficesList = document.getElementById('courier-offices-list');
         
         function toggleDeliveryFields() {
             if (deliveryAddressRadio.checked) {
@@ -1043,8 +1138,6 @@
                 document.getElementById('address').required = true;
                 document.getElementById('city').required = true;
                 document.getElementById('postcode').required = true;
-                // Make courier office not required
-                document.getElementById('courier-office').required = false;
             } else {
                 addressFields.classList.remove('visible');
                 courierFields.classList.add('visible');
@@ -1052,79 +1145,132 @@
                 document.getElementById('address').required = false;
                 document.getElementById('city').required = false;
                 document.getElementById('postcode').required = false;
-                // Make courier office required
-                document.getElementById('courier-office').required = true;
             }
         }
         
         deliveryAddressRadio.addEventListener('change', toggleDeliveryFields);
         deliveryCourierRadio.addEventListener('change', toggleDeliveryFields);
         
-        // Load courier offices based on selection
+        // Handle courier company selection and show appropriate widget
         const speedyRadio = document.getElementById('courier-speedy');
         const ekontRadio = document.getElementById('courier-ekont');
+        const speedyWidget = document.getElementById('speedy-widget');
+        const ekontWidget = document.getElementById('ekont-widget');
         
-        function loadCourierOffices() {
-            const offices = [];
-            
+        function toggleCourierWidgets() {
             if (speedyRadio.checked) {
-                // Speedy offices in major Bulgarian cities
-                offices.push(
-                    'Speedy - София, бул. Цариградско шосе 115',
-                    'Speedy - София, бул. Витоша 1',
-                    'Speedy - София, бул. Сливница 47',
-                    'Speedy - Пловдив, бул. Цар Борис III Обединител 102',
-                    'Speedy - Пловдив, ул. Васил Левски 1',
-                    'Speedy - Варна, бул. Владислав Варненчик 73',
-                    'Speedy - Варна, бул. Сливница 33',
-                    'Speedy - Бургас, ул. Александровска 69',
-                    'Speedy - Бургас, бул. Транспортна 1',
-                    'Speedy - Русе, ул. Александровска 57',
-                    'Speedy - Стара Загора, бул. Патриарх Евтимий 133',
-                    'Speedy - Плевен, ул. Васил Левски 59',
-                    'Speedy - Сливен, бул. Цар Освободител 1',
-                    'Speedy - Велико Търново, ул. Никола Габровски 68',
-                    'Speedy - Шумен, бул. Славянски 17',
-                    'Speedy - Добрич, ул. Независимост 23',
-                    'Speedy - Перник, ул. Кракра 45',
-                    'Speedy - Ямбол, ул. Търговска 82',
-                    'Speedy - Хасково, бул. България 97',
-                    'Speedy - Пазарджик, ул. Иван Вазов 1'
-                );
+                speedyWidget.style.display = 'block';
+                ekontWidget.style.display = 'none';
             } else if (ekontRadio.checked) {
-                // Econt offices in major Bulgarian cities
-                offices.push(
-                    'Econt - София, бул. Цар Борис III 232',
-                    'Econt - София, бул. Александър Малинов 51',
-                    'Econt - София, бул. Христо Ботев 48',
-                    'Econt - Пловдив, бул. Марица 81',
-                    'Econt - Пловдив, бул. Васил Левски 97',
-                    'Econt - Варна, бул. Владислав Варненчик 185',
-                    'Econt - Варна, ул. Devnya 31',
-                    'Econt - Бургас, ул. Александровска 21',
-                    'Econt - Бургас, бул. Стефан Стамболов 45',
-                    'Econt - Русе, ул. Борисова 43',
-                    'Econt - Стара Загора, бул. Цар Симеон Велики 140',
-                    'Econt - Плевен, бул. Данаил Попов 2',
-                    'Econt - Сливен, ул. Хаджи Димитър 73',
-                    'Econt - Велико Търново, ул. Никола Габровски 27',
-                    'Econt - Шумен, бул. Славянски 75',
-                    'Econt - Добрич, ул. Добротица 24',
-                    'Econt - Перник, бул. Кракра Пернишки 2',
-                    'Econt - Ямбол, ул. Индустриална 14',
-                    'Econt - Хасково, ул. Добруджа 2',
-                    'Econt - Пазарджик, бул. България 8'
-                );
+                speedyWidget.style.display = 'none';
+                ekontWidget.style.display = 'block';
+                // Load Econt offices if not already loaded
+                if (!ekontOfficesLoaded) {
+                    loadEcontOffices();
+                }
+            } else {
+                speedyWidget.style.display = 'none';
+                ekontWidget.style.display = 'none';
             }
-            
-            // Update datalist
-            courierOfficesList.innerHTML = offices.map(office => 
-                `<option value="${office}">`
-            ).join('');
         }
         
-        speedyRadio.addEventListener('change', loadCourierOffices);
-        ekontRadio.addEventListener('change', loadCourierOffices);
+        speedyRadio.addEventListener('change', toggleCourierWidgets);
+        ekontRadio.addEventListener('change', toggleCourierWidgets);
+        
+        // Speedy widget logic - listen for office selection
+        window.addEventListener('message', function(event) {
+            // Security: Accept data only from Speedy's exact domain
+            if (event.origin !== 'https://services.speedy.bg') return;
+            
+            const data = event.data;
+            
+            if (data && data.id) {
+                // Show selected office info
+                document.getElementById('speedy-result-info').style.display = 'block';
+                document.getElementById('view-office-name').textContent = data.name;
+                document.getElementById('view-office-addr').textContent = data.address.fullAddressString;
+                
+                // Store office ID in hidden field
+                document.getElementById('final-speedy-id').value = data.id;
+                
+                console.log("Успешно избран офис на Спиди ID: " + data.id);
+            }
+        }, false);
+        
+        // Econt office selection logic
+        let ekontOfficesLoaded = false;
+        let allEcontOffices = [];
+        let selectedEcontOffice = null;
+        let ekontChangeHandlerAttached = false;
+        
+        function loadEcontOffices() {
+            const ekontInput = document.getElementById('ekont-office-search');
+            const ekontDataList = document.getElementById('econt-offices-list');
+            const hiddenInput = document.getElementById('final-office-id');
+            const statusText = document.getElementById('ekont-status-text');
+
+            fetch('https://ee.econt.com/services/Nomenclatures/NomenclaturesService.getOffices.json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ countryCode: "BGR" })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.offices) {
+                    allEcontOffices = data.offices;
+                    statusText.textContent = "✓ Готово";
+                    statusText.style.color = "green";
+                    ekontOfficesLoaded = true;
+                    
+                    let optionsHTML = '';
+                    
+                    allEcontOffices.forEach(office => {
+                        let cleanName = office.name;
+
+                        if (office.isAPS === true) {
+                            cleanName += " (ЕКОНТОМАТ)";
+                        } else if (office.isMPS === true) {
+                            cleanName += " (МОБИЛЕН)";
+                        }
+
+                        const fullAddr = (office.address && office.address.fullAddress) ? office.address.fullAddress : "";
+                        optionsHTML += `<option value="${cleanName}">${fullAddr}</option>`; 
+                    });
+                    
+                    ekontDataList.innerHTML = optionsHTML;
+                }
+            })
+            .catch(err => {
+                console.error('Error loading Econt offices:', err);
+                statusText.textContent = "Грешка при зареждане. Опитайте отново.";
+                statusText.style.color = "red";
+            });
+
+            // Attach event listener only once
+            if (!ekontChangeHandlerAttached) {
+                ekontInput.addEventListener('change', function() {
+                    const val = this.value;
+                    
+                    selectedEcontOffice = allEcontOffices.find(o => {
+                        let checkName = o.name;
+                        if (o.isAPS === true) checkName += " (ЕКОНТОМАТ)";
+                        else if (o.isMPS === true) checkName += " (МОБИЛЕН)";
+                        
+                        return checkName === val;
+                    });
+
+                    if (selectedEcontOffice) {
+                        hiddenInput.value = selectedEcontOffice.code;
+                        statusText.textContent = "✓ Избран: " + selectedEcontOffice.code;
+                        statusText.style.color = "#0056b3";
+                    } else {
+                        hiddenInput.value = "";
+                        selectedEcontOffice = null;
+                    }
+                });
+                ekontChangeHandlerAttached = true;
+            }
+        }
         
         // --- 5. ВАЛИДАЦИЯ И ИЗПРАЩАНЕ НА ФОРМАТА ---
         form.addEventListener('submit', (e) => {
@@ -1132,6 +1278,33 @@
             if (validateForm()) {
                 const formData = new FormData(form);
                 const orderData = Object.fromEntries(formData.entries());
+                
+                // Add delivery details based on selected method
+                if (deliveryCourierRadio.checked) {
+                    orderData.deliveryMethod = 'courier';
+                    if (speedyRadio.checked) {
+                        orderData.courierCompany = 'Speedy';
+                        orderData.courierOfficeId = document.getElementById('final-speedy-id').value;
+                        orderData.courierOfficeName = document.getElementById('view-office-name').textContent;
+                        orderData.courierOfficeAddress = document.getElementById('view-office-addr').textContent;
+                    } else if (ekontRadio.checked) {
+                        orderData.courierCompany = 'Econt';
+                        orderData.courierOfficeId = document.getElementById('final-office-id').value;
+                        // Use the actual office name from the selected office object
+                        if (selectedEcontOffice) {
+                            let officeName = selectedEcontOffice.name;
+                            if (selectedEcontOffice.isAPS === true) {
+                                officeName += " (ЕКОНТОМАТ)";
+                            } else if (selectedEcontOffice.isMPS === true) {
+                                officeName += " (МОБИЛЕН)";
+                            }
+                            orderData.courierOfficeName = officeName;
+                            orderData.courierOfficeAddress = (selectedEcontOffice.address && selectedEcontOffice.address.fullAddress) ? selectedEcontOffice.address.fullAddress : '';
+                        }
+                    }
+                } else {
+                    orderData.deliveryMethod = 'address';
+                }
                 
                 const fullOrder = {
                     customer: orderData,
@@ -1194,17 +1367,27 @@
                 }
             });
             
-            // Validate courier office if courier delivery is selected
+            // Validate courier office selection if courier delivery is selected
             if (deliveryCourierRadio.checked) {
-                const courierOfficeInput = document.getElementById('courier-office');
-                if (courierOfficeInput.value.trim() === '') {
-                    courierOfficeInput.classList.add('is-invalid');
-                    isValid = false;
-                }
                 // Check if a courier is selected
                 if (!speedyRadio.checked && !ekontRadio.checked) {
                     alert('Моля, изберете куриерска фирма (Speedy или Еконт).');
                     isValid = false;
+                }
+                
+                // Check if an office is selected
+                if (speedyRadio.checked) {
+                    const speedyOfficeId = document.getElementById('final-speedy-id').value;
+                    if (!speedyOfficeId) {
+                        alert('Моля, изберете офис на Speedy от картата.');
+                        isValid = false;
+                    }
+                } else if (ekontRadio.checked) {
+                    const ekontOfficeId = document.getElementById('final-office-id').value;
+                    if (!ekontOfficeId) {
+                        alert('Моля, изберете офис на Еконт от списъка.');
+                        isValid = false;
+                    }
                 }
             }
 

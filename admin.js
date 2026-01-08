@@ -277,6 +277,26 @@ function renderOrders() {
         rowTemplate.querySelector('.order-phone').textContent = customer.phone || '';
         rowTemplate.querySelector('.order-email').textContent = customer.email || '';
         rowTemplate.querySelector('.order-products').innerHTML = products;
+        
+        // Format delivery information
+        let deliveryInfo = '';
+        if (customer.deliveryMethod === 'courier') {
+            deliveryInfo = `${customer.courierCompany || 'Куриер'}<br>`;
+            if (customer.courierOfficeName) {
+                deliveryInfo += customer.courierOfficeName;
+            }
+            if (customer.courierOfficeAddress) {
+                deliveryInfo += `<br><small>${customer.courierOfficeAddress}</small>`;
+            }
+        } else {
+            // Personal address delivery
+            deliveryInfo = 'До адрес<br>';
+            if (customer.address) deliveryInfo += `${customer.address}<br>`;
+            if (customer.city) deliveryInfo += `${customer.city}`;
+            if (customer.postcode) deliveryInfo += `, ${customer.postcode}`;
+        }
+        rowTemplate.querySelector('.order-delivery').innerHTML = deliveryInfo;
+        
         const statusSelect = rowTemplate.querySelector('.order-status');
         statusSelect.value = order.status || 'Нова';
         DOM.ordersTableBody.appendChild(rowTemplate);
