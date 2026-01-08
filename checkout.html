@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="https://radilovk.github.io/face/assets/logo.png">
-    <title>Поръчка - Продукти за Отслабване</title>
+    <title>Поръчка - ДА ОТСЛАБНА</title>
     <meta name="description" content="Формуляр за завършване на поръчката.">
     <meta name="robots" content="noindex, nofollow">
     <link rel="canonical" href="https://port.radilov-k.workers.dev/checkout.html">
@@ -150,46 +150,98 @@
             .summary-section { position: static; }
         }
         @media (max-width: 600px) {
-            .checkout-container { padding: 0 0.5rem; }
+            .checkout-container { 
+                padding: 0 0.5rem; 
+                margin: 1rem auto;
+            }
             .form-row { flex-direction: column; }
             .product-item { flex-direction: column; align-items: flex-start; }
             .product-controls { width: 100%; flex-direction: row; justify-content: space-between; margin-top: 0.5rem; }
-            .summary-section { padding: 1rem; }
+            .summary-section { 
+                padding: 1rem; 
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+            
+            /* Prevent horizontal scroll on mobile */
+            body {
+                overflow-x: hidden;
+            }
+            
+            .checkout-page-title {
+                font-size: 1.75rem;
+                margin-bottom: 1rem;
+            }
             
             /* Mobile-optimized courier selection */
             .courier-widget {
                 padding: 0.75rem;
                 margin-top: 0.75rem;
+                max-width: 100%;
+                overflow: hidden;
             }
             
             /* Speedy iframe mobile optimization */
             #speedy-frame {
-                height: 350px !important;
+                width: 100% !important;
+                height: 400px !important;
+                max-width: 100%;
+                border-radius: 8px;
+            }
+            
+            .speedy-widget-container {
+                max-width: 100%;
+                overflow: hidden;
             }
             
             .speedy-widget-container label,
             .econt-container label {
                 font-size: 0.95rem;
+                font-weight: 600;
+                display: block;
+                margin-bottom: 0.5rem;
             }
             
             /* Compact result info for mobile */
             #speedy-result-info {
                 font-size: 0.85rem;
                 padding: 0.75rem;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+            
+            #speedy-result-info strong {
+                display: block;
+                margin-bottom: 0.25rem;
+            }
+            
+            #view-office-name,
+            #view-office-addr {
+                display: block;
+                font-size: 0.85rem;
+                line-height: 1.4;
             }
             
             /* Better mobile input styling */
             #ekont-office-search {
                 font-size: 16px !important; /* Prevents zoom on iOS */
+                width: 100%;
+                box-sizing: border-box;
             }
             
             #ekont-status-text {
                 font-size: 0.75rem;
+                word-wrap: break-word;
             }
             
             /* Compact form groups on mobile */
             .form-group {
                 margin-bottom: 0.75rem;
+            }
+            
+            .form-group input,
+            .form-group select {
+                font-size: 16px; /* Prevents zoom on iOS */
             }
             
             h3 {
@@ -208,6 +260,20 @@
             .checkbox-group {
                 padding: 0.6rem;
                 font-size: 0.9rem;
+                word-wrap: break-word;
+            }
+            
+            .checkbox-group label {
+                font-size: 0.9rem;
+                line-height: 1.4;
+            }
+            
+            /* Make buttons more touch-friendly */
+            .btn-submit,
+            .promo-code-form button {
+                padding: 1rem;
+                font-size: 1rem;
+                min-height: 48px;
             }
         }
         
@@ -875,11 +941,16 @@
                 
                 if (data && data.settings) {
                     const settings = data.settings;
-                    if (settings.logo_url) {
-                        const logoImg = document.getElementById('header-logo-img');
-                        logoImg.src = settings.logo_url;
-                        logoImg.style.display = 'block';
-                    }
+                    
+                    // Store logo settings for theme switching
+                    window.logoSettings = {
+                        lightLogo: settings.logo_url_light || settings.logo_url.replace('logo.png', 'logoblack.png'),
+                        darkLogo: settings.logo_url_dark || settings.logo_url
+                    };
+                    
+                    // Update logo for current theme
+                    updateLogoForTheme();
+                    
                     if (settings.site_name) {
                         document.getElementById('header-brand-name').textContent = settings.site_name;
                     }
@@ -915,6 +986,20 @@
                     const footer = data.footer;
                     const settings = data.settings;
                     
+                    // Store logo settings if not already done
+                    if (!window.logoSettings && settings) {
+                        window.logoSettings = {
+                            lightLogo: settings.logo_url_light || settings.logo_url.replace('logo.png', 'logoblack.png'),
+                            darkLogo: settings.logo_url_dark || settings.logo_url
+                        };
+                    }
+                    
+                    // Get current theme to use correct logo
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const logoUrl = window.logoSettings ? 
+                        (currentTheme === 'dark' ? window.logoSettings.darkLogo : window.logoSettings.lightLogo) : 
+                        settings.logo_url;
+                    
                     // Render footer columns
                     const footerGridEl = document.getElementById('footer-grid-container');
                     if (footerGridEl && footer.columns) {
@@ -922,7 +1007,7 @@
                             if (col.type === 'logo') {
                                 return `<div class="footer-column">
                                      <a href="#" class="logo-container footer-logo-container">
-                                        <img src="${settings.logo_url}" alt="${settings.site_name} Logo">
+                                        <img src="${logoUrl}" alt="${settings.site_name} Logo">
                                         <div><span class="brand-name">${settings.site_name}</span><span class="brand-slogan">${settings.site_slogan}</span></div>
                                     </a>
                                 </div>`;
@@ -952,6 +1037,19 @@
         // --- Theme Toggle ---
         const themeToggle = document.getElementById('theme-toggle');
         
+        function updateLogoForTheme() {
+            const logoImg = document.getElementById('header-logo-img');
+            const footerLogo = document.querySelector('.footer-logo-container img');
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            
+            // Use logo URLs from settings if available
+            if (window.logoSettings) {
+                const logoUrl = currentTheme === 'dark' ? window.logoSettings.darkLogo : window.logoSettings.lightLogo;
+                if (logoImg) logoImg.src = logoUrl;
+                if (footerLogo) footerLogo.src = logoUrl;
+            }
+        }
+        
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             try {
@@ -959,6 +1057,7 @@
             } catch (e) {
                 console.warn('Could not save theme preference:', e);
             }
+            updateLogoForTheme();
         }
         
         function toggleTheme() {
