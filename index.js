@@ -144,11 +144,14 @@ const generateHeroHTML = component => {
     // If bgType is 'default' or validation fails, use the default theme-based gradient (no custom class/style)
     
     // Validate CSS selector for scroll targets (prevent XSS in onclick)
+    // Use allowlist approach - only permit known safe selectors
     function validateSelector(selector) {
-        // Allow only safe CSS selectors: #id, .class, or element names
-        // No spaces, quotes, or other potentially dangerous characters
-        const selectorPattern = /^[#.]?[a-zA-Z0-9_-]+$/;
-        return selectorPattern.test(selector) ? selector : '#products';
+        const allowedSelectors = [
+            '#products', '#weight-loss-products', '#fat-burners',
+            '#benefits', '#timeline', '#ingredients', '#testimonials',
+            '#faq', '#guarantee', '#contact', '#hero', '#about'
+        ];
+        return allowedSelectors.includes(selector) ? selector : '#products';
     }
     
     // Get buttons configuration with defaults
