@@ -93,7 +93,10 @@ let currentModalSaveCallback = null;
 
 async function fetchData() {
     try {
-        const response = await fetch(`${API_URL}/page_content.json?v=${Date.now()}`);
+        // For admin panel, use no-cache to ensure fresh data when explicitly refreshing
+        const response = await fetch(`${API_URL}/page_content.json`, {
+            cache: 'no-cache'
+        });
         if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
         return await response.json();
     } catch (error) {
@@ -105,7 +108,10 @@ async function fetchData() {
 
 async function fetchOrders() {
     try {
-        const response = await fetch(`${API_URL}/orders?v=${Date.now()}`);
+        // For dynamic data like orders, use no-cache to always get fresh data
+        const response = await fetch(`${API_URL}/orders`, {
+            cache: 'no-cache'
+        });
         if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
         const rawOrders = await response.json();
         ordersData = rawOrders.map((order, index) => ({ ...order, id: order.id || `order_${index}_${Date.now()}` }));
@@ -120,7 +126,10 @@ async function fetchOrders() {
 
 async function fetchContacts() {
     try {
-        const response = await fetch(`${API_URL}/contacts?v=${Date.now()}`);
+        // For dynamic data like contacts, use no-cache to always get fresh data
+        const response = await fetch(`${API_URL}/contacts`, {
+            cache: 'no-cache'
+        });
         if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
         const rawContacts = await response.json();
         contactsData = rawContacts.map((contact, index) => ({ ...contact, id: contact.id || `contact_${index}_${Date.now()}` }));

@@ -1,5 +1,12 @@
 // ==== ВЕРСИЯ 4.0: ФУНКЦИОНАЛЕН АДМИН ПАНЕЛ ====
 
+// Cache configuration constants
+const CACHE_CONFIG = {
+    PAGE_CONTENT_MAX_AGE: 300,        // 5 minutes
+    PAGE_CONTENT_STALE_WHILE_REVALIDATE: 60,  // 1 minute
+    STATIC_FILE_MAX_AGE: 3600         // 1 hour
+};
+
 class UserFacingError extends Error {
   constructor(message, status) {
     super(message);
@@ -158,7 +165,7 @@ async function serveStaticFile(env, filename, contentType) {
         status: 200,
         headers: { 
             'Content-Type': contentType,
-            'Cache-Control': 'public, max-age=3600'
+            'Cache-Control': `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`
         }
     });
 }
@@ -173,8 +180,25 @@ async function handleGetPageContent(request, env) {
     }
     return new Response(pageContent, {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': `public, max-age=${CACHE_CONFIG.PAGE_CONTENT_MAX_AGE}, stale-while-revalidate=${CACHE_CONFIG.PAGE_CONTENT_STALE_WHILE_REVALIDATE}`,
+            'ETag': await generateETag(pageContent)
+        }
     });
+}
+
+/**
+ * Generate ETag for content-based caching
+ * Creates a SHA-256 hash of the content and returns the first 16 characters as an ETag
+ * @param {string} content - The content to hash
+ * @returns {Promise<string>} ETag string in the format "hash" (quoted hex string)
+ */
+async function generateETag(content) {
+    const msgBuffer = new TextEncoder().encode(content);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashHex = Array.from(new Uint8Array(hashBuffer), b => b.toString(16).padStart(2, '0')).join('');
+    return `"${hashHex.substring(0, 16)}"`;
 }
 
 /**
@@ -205,7 +229,10 @@ async function handleGetOrders(request, env) {
     const orders = ordersJson ? JSON.parse(ordersJson) : [];
     return new Response(JSON.stringify(orders), {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate' // Orders should not be cached
+        }
     });
 }
 
@@ -288,7 +315,10 @@ async function handleGetContacts(request, env) {
     const contacts = contactsJson ? JSON.parse(contactsJson) : [];
     return new Response(JSON.stringify(contacts), {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate' // Contacts should not be cached
+        }
     });
 }
 

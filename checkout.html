@@ -927,21 +927,58 @@
     
     document.addEventListener('DOMContentLoaded', () => {
 
-        // --- Load header settings from API ---
-        async function loadHeaderSettings() {
-            try {
-                let response, data;
+        // --- Shared cache for page content to avoid duplicate requests ---
+        let pageContentCache = null;
+        let pageContentPromise = null;
+        
+        // --- Load page content once and cache it ---
+        async function loadPageContent() {
+            // Return cached data if available
+            if (pageContentCache) {
+                return pageContentCache;
+            }
+            
+            // Return in-flight promise if already loading
+            if (pageContentPromise) {
+                return pageContentPromise;
+            }
+            
+            // Start loading
+            pageContentPromise = (async () => {
                 try {
-                    response = await fetch(`${API_URL}/page_content.json?v=${Date.now()}`);
-                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                    data = await response.json();
-                } catch (apiError) {
-                    console.warn('API failed, trying mock data:', apiError);
-                    response = await fetch(`page_content_mock.json?v=${Date.now()}`);
-                    if (!response.ok) throw new Error('Mock data also unavailable');
-                    data = await response.json();
+                    let response, data;
+                    try {
+                        response = await fetch(`${API_URL}/page_content.json`, {
+                            cache: 'default'
+                        });
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                        data = await response.json();
+                    } catch (apiError) {
+                        console.warn('API failed, trying mock data:', apiError);
+                        response = await fetch('page_content_mock.json', {
+                            cache: 'default'
+                        });
+                        if (!response.ok) throw new Error('Mock data also unavailable');
+                        data = await response.json();
+                    }
+                    
+                    pageContentCache = data;
+                    return data;
+                } catch (error) {
+                    console.error('Could not load page content:', error);
+                    // Reset both cache and promise for consistent retry behavior
+                    pageContentCache = null;
+                    pageContentPromise = null;
+                    throw error;
                 }
-                
+            })();
+            
+            return pageContentPromise;
+        }
+        
+        // --- Load header settings from cached data ---
+        async function loadHeaderSettings(data) {
+            try {
                 if (data && data.settings) {
                     const settings = data.settings;
                     if (settings.logo_url) {
@@ -963,23 +1000,9 @@
             }
         }
         
-        loadHeaderSettings();
-        
-        // --- Load footer settings from API ---
-        async function loadFooterSettings() {
+        // --- Load footer settings from cached data ---
+        async function loadFooterSettings(data) {
             try {
-                let response, data;
-                try {
-                    response = await fetch(`${API_URL}/page_content.json?v=${Date.now()}`);
-                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                    data = await response.json();
-                } catch (apiError) {
-                    console.warn('API failed, trying mock data:', apiError);
-                    response = await fetch(`page_content_mock.json?v=${Date.now()}`);
-                    if (!response.ok) throw new Error('Mock data also unavailable');
-                    data = await response.json();
-                }
-                
                 if (data && data.footer) {
                     const footer = data.footer;
                     const settings = data.settings;
@@ -1016,7 +1039,14 @@
             }
         }
         
-        loadFooterSettings();
+        // --- Load both header and footer from single API call ---
+        (async () => {
+            const data = await loadPageContent();
+            await Promise.all([
+                loadHeaderSettings(data),
+                loadFooterSettings(data)
+            ]);
+        })();
 
         // --- Theme Toggle ---
         const themeToggle = document.getElementById('theme-toggle');
