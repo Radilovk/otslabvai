@@ -962,6 +962,8 @@
                     return data;
                 } catch (error) {
                     console.error('Could not load page content:', error);
+                    // Reset both cache and promise for consistent retry behavior
+                    pageContentCache = null;
                     pageContentPromise = null;
                     throw error;
                 }

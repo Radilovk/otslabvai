@@ -183,6 +183,9 @@ async function handleGetPageContent(request, env) {
 
 /**
  * Generate ETag for content-based caching
+ * Creates a SHA-256 hash of the content and returns the first 16 characters as an ETag
+ * @param {string} content - The content to hash
+ * @returns {Promise<string>} ETag string in the format "hash" (quoted hex string)
  */
 async function generateETag(content) {
     const msgBuffer = new TextEncoder().encode(content);
