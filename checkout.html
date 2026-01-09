@@ -139,20 +139,20 @@
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            overflow: visible; /* Allow iframe to extend outside */
+            overflow: hidden; /* Contain content within container */
         }
         
-        /* Ensure Speedy widget doesn't expand parent container */
+        /* Ensure Speedy widget contains content */
         #speedy-widget {
-            overflow: visible; /* Critical: allows iframe to extend beyond container */
+            overflow: hidden; /* Contain content within container */
         }
         
-        /* Fixed width iframe that extends beyond container */
+        /* Responsive iframe that fits container */
         #frameOfficeLocator {
-            width: 400px !important;
+            width: 100% !important;
+            max-width: 400px !important;
             height: 400px !important;
-            min-width: 400px !important;
-            max-width: none !important;
+            min-width: 280px !important;
             display: block;
             margin: 0 auto;
             border: 1px solid #ccc;
@@ -168,7 +168,7 @@
         .speedy-widget-container {
             font-family: Arial, sans-serif;
             max-width: 100%;
-            overflow: visible; /* Allow iframe to extend outside */
+            overflow: hidden; /* Contain content within container */
             position: relative;
             display: flex;
             flex-direction: column;
@@ -247,12 +247,12 @@
             .checkout-container { 
                 padding: 0 0.5rem;
                 max-width: 100%;
-                overflow-x: visible;
+                overflow-x: hidden;
             }
             
             .form-section {
                 min-width: 0;
-                overflow-x: visible;
+                overflow-x: hidden;
             }
             
             .form-row { flex-direction: column; }
@@ -268,13 +268,13 @@
                 padding: 0.5rem;
                 margin-top: 0.75rem;
                 max-width: 100%;
-                overflow: visible; /* Allow content to extend outside */
+                overflow: hidden; /* Contain content within container */
                 box-sizing: border-box;
             }
             
             .speedy-widget-container {
                 max-width: 100%;
-                overflow: visible; /* Allow iframe to extend outside container */
+                overflow: hidden; /* Contain content within container */
                 margin: 0 auto;
                 display: flex;
                 flex-direction: column;
@@ -284,16 +284,16 @@
             
             .econt-container {
                 max-width: 100%;
-                overflow: visible; /* Changed from hidden to allow dropdown to display */
+                overflow: hidden; /* Contain content but allow dropdown to display via z-index */
                 position: relative;
             }
             
-            /* Speedy iframe mobile optimization - centered and fixed 400px */
+            /* Speedy iframe mobile optimization - responsive width */
             #frameOfficeLocator {
-                width: 400px !important;
+                width: 100% !important;
+                max-width: 400px !important;
                 height: 400px !important;
-                min-width: 400px !important;
-                max-width: none !important;
+                min-width: 280px !important;
                 position: relative;
                 box-sizing: border-box;
             }
