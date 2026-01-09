@@ -260,7 +260,7 @@ function renderProductDetail(product) {
             <h1>${escapeHtml(publicData.name)}</h1>
             <p class="tagline">${escapeHtml(publicData.tagline)}</p>
             <div class="product-detail-meta">
-                <span class="product-detail-price">${Number(publicData.price).toFixed(2)} лв.</span>
+                <span class="product-detail-price">${Number(publicData.price).toFixed(2)} €</span>
                 <span class="product-detail-stock ${stockClass}">${stockText}</span>
             </div>
         </div>

@@ -914,11 +914,11 @@
             <div class="summary-details">
                 <div class="summary-row">
                     <span>Междинна сума</span>
-                    <span id="summary-subtotal">0.00 лв.</span>
+                    <span id="summary-subtotal">0.00 €</span>
                 </div>
                 <div class="summary-row">
                     <span>Доставка</span>
-                    <span id="summary-shipping">10.00 лв.</span>
+                    <span id="summary-shipping">Изчислява се...</span>
                 </div>
                 <div class="summary-row" id="discount-row" style="display:none;">
                     <span>Отстъпка</span>
@@ -926,7 +926,7 @@
                 </div>
                 <div class="summary-row total">
                     <span>ОБЩО</span>
-                    <span id="summary-total">10.00 лв.</span>
+                    <span id="summary-total">0.00 €</span>
                 </div>
             </div>
         </aside>
@@ -1202,7 +1202,7 @@
                     <img src="${product.image}" alt="${product.name}" class="product-image">
                     <div class="product-info">
                         <h3>${product.name}</h3>
-                        <span>Ед. цена: ${product.price.toFixed(2)} лв.</span>
+                        <span>Ед. цена: ${product.price.toFixed(2)} €</span>
                     </div>
                     <div class="product-controls">
                         <div class="quantity-control">
@@ -1210,7 +1210,7 @@
                             <span class="quantity">${product.quantity}</span>
                             <button class="quantity-btn" data-action="increase">+</button>
                         </div>
-                        <span class="product-price">${(product.price * product.quantity).toFixed(2)} лв.</span>
+                        <span class="product-price">${(product.price * product.quantity).toFixed(2)} €</span>
                     </div>
                     <span class="remove-item-btn" title="Премахни">✖</span>
                 `;
@@ -1221,22 +1221,77 @@
             updateCartCount();
         }
 
+        function calculateShipping() {
+            const subtotal = cartData.reduce((acc, p) => acc + (p.price * p.quantity), 0);
+            
+            // Free shipping for orders over 100 EUR
+            if (subtotal >= 100) {
+                return 0;
+            }
+            
+            // Get delivery method
+            const deliveryCourierRadio = document.getElementById('delivery-courier');
+            const deliveryAddressRadio = document.getElementById('delivery-address');
+            const isToAddress = deliveryAddressRadio && deliveryAddressRadio.checked;
+            const isToCourier = deliveryCourierRadio && deliveryCourierRadio.checked;
+            
+            let basePrice = 0;
+            let codRate = 0;
+            
+            // Determine courier method
+            if (isToCourier) {
+                const speedyRadio = document.getElementById('courier-speedy');
+                const ekontRadio = document.getElementById('courier-ekont');
+                
+                if (ekontRadio && ekontRadio.checked) {
+                    // Econt office/automat
+                    basePrice = 3.10;
+                    codRate = 0.0298;
+                } else if (speedyRadio && speedyRadio.checked) {
+                    // Speedy office/automat
+                    basePrice = 1.52;
+                    codRate = 0.0096;
+                } else {
+                    // Default to Speedy if courier selected but no specific courier chosen yet
+                    basePrice = 1.52;
+                    codRate = 0.0096;
+                }
+            } else if (isToAddress) {
+                // Address delivery - default to Speedy door pricing
+                basePrice = 5.62;
+                codRate = 0.0096;
+            } else {
+                // Default case
+                basePrice = 1.52;
+                codRate = 0.0096;
+            }
+            
+            // Calculate delivery cost using the formula: basePrice + (totalProductAmount * codRate)
+            const deliveryCost = basePrice + (subtotal * codRate);
+            
+            return deliveryCost;
+        }
+
         function updateSummary() {
             const subtotal = cartData.reduce((acc, p) => acc + (p.price * p.quantity), 0);
-            const shipping = subtotal > 0 ? 10.00 : 0.00;
+            const shipping = subtotal > 0 ? calculateShipping() : 0.00;
             const discountAmount = subtotal * activeDiscount;
             const total = subtotal - discountAmount + shipping;
 
-            subtotalEl.textContent = `${subtotal.toFixed(2)} лв.`;
-            shippingEl.textContent = `${shipping.toFixed(2)} лв.`;
+            subtotalEl.textContent = `${subtotal.toFixed(2)} €`;
+            if (subtotal >= 100) {
+                shippingEl.textContent = 'Безплатна';
+            } else {
+                shippingEl.textContent = `${shipping.toFixed(2)} €`;
+            }
             if (activeDiscount > 0) {
                 discountRow.style.display = 'flex';
-                discountEl.textContent = `- ${discountAmount.toFixed(2)} лв.`;
+                discountEl.textContent = `- ${discountAmount.toFixed(2)} €`;
             } else {
                 discountRow.style.display = 'none';
                 discountEl.textContent = '';
             }
-            totalEl.textContent = `${total.toFixed(2)} лв.`;
+            totalEl.textContent = `${total.toFixed(2)} €`;
         }
 
         // --- 4. СЪБИТИЯ (EVENTS) ---
@@ -1308,6 +1363,8 @@
                 document.getElementById('city').required = false;
                 document.getElementById('postcode').required = false;
             }
+            // Update shipping price when delivery method changes
+            updateSummary();
         }
         
         deliveryAddressRadio.addEventListener('change', toggleDeliveryFields);
@@ -1334,6 +1391,8 @@
                 speedyWidget.style.display = 'none';
                 ekontWidget.style.display = 'none';
             }
+            // Update shipping price when courier company changes
+            updateSummary();
         }
         
         speedyRadio.addEventListener('change', toggleCourierWidgets);

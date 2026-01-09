@@ -96,7 +96,7 @@ const generateProductCard = (product) => {
         ${publicData.image_url ? `<div class="product-image"><img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)} - ${escapeHtml(publicData.tagline)}" loading="lazy"></div>` : ''}
         <div class="card-content">
             <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(publicData.tagline)}</p></div>
-            <div class="product-price">${Number(publicData.price).toFixed(2)} лв.</div>
+            <div class="product-price">${Number(publicData.price).toFixed(2)} €</div>
             <div class="effects-container">
                 ${(publicData.effects || []).map(generateEffectBar).join('')}
             </div>
@@ -612,7 +612,7 @@ function renderPromoBanner(settings) {
     if (!promoContent) return;
     
     // Get the promo text from settings
-    const promoText = settings.promo_banner?.text || 'СПЕЦИАЛНА ОФЕРТА: До 30% отстъпка при поръчка над 100 лв!';
+    const promoText = settings.promo_banner?.text || 'СПЕЦИАЛНА ОФЕРТА: До 30% отстъпка при поръчка над 100 €!';
     
     // Keep the icon and strong tag, update only the text
     promoContent.innerHTML = `

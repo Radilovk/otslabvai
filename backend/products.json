@@ -14,7 +14,7 @@
           "public_data": {
             "name": "Lida Green",
             "tagline": "АБСОЛЮТНИЯТ ЛИДЕР: Най-мощният ефект на пазара",
-            "price": 68,
+            "price": 34.77,
             "description": "Lida Green е продуктът-легенда, към който се обръщате, когато всичко друго се е провалило. Това е безкомпромисното решение за бърза и видима промяна. Разработена за максимално въздействие, формулата атакува упоритите мазнини в проблемните зони (корем, ханш, бедра) и елиминира глада за сладко и тестено. Ако търсите не просто отслабване, а пълна трансформация, Lida Green е вашият сигурен път към успеха.",
             "image_url": "/images/products/lida-green.png",
             "research_note": {
@@ -124,7 +124,7 @@
           "public_data": {
             "name": "MeiziMax",
             "tagline": "Японска формула за стройна фигура и сияйна кожа",
-            "price": 75,
+            "price": 38.35,
             "description": "MeiziMax е елегантният избор за отслабване, вдъхновен от японската философия за хармония между тяло и дух. Това е вторият по сила продукт в каталога, но с уникален разкрасяващ ефект. Той не само топи килограмите, но и работи за изчистване на кожата, намаляване на целулита и придаване на сияен тен. Идеален е за дами със заседнал начин на живот, които искат да постигнат фина фигура и безупречна визия.",
             "image_url": "/images/products/meizimax.png",
             "research_note": {
@@ -234,7 +234,7 @@
           "public_data": {
             "name": "Eveslim Birch Bark",
             "tagline": "№1 срещу целулит, отоци и подпухване",
-            "price": 62,
+            "price": 31.70,
             "description": "Eveslim с брезова кора е вашето специализирано оръжие срещу упорития целулит и досадното задържане на вода. Ако често се чувствате подути, краката ви тежат в края на деня, а кожата на бедрата има неравности, този продукт е създаден точно за вас. Той действа като мощен лимфен дренаж, който изчиства тялото отвътре, за да бъде гладко и красиво отвън.",
             "image_url": "/images/products/eveslim-birch.png",
             "research_note": {
@@ -344,7 +344,7 @@
           "public_data": {
             "name": "Eveslim Cayenne Pepper",
             "tagline": "Огнена сила срещу бавен метаболизъм",
-            "price": 62,
+            "price": 31.70,
             "description": "Чувствате ли, че метаболизмът ви е 'заспал'? Крайниците ви са постоянно студени, а килограмите се трупат дори от въздуха? Eveslim с люта чушка е вашето решение. Той действа като 'запалване' за метаболизма, използвайки силата на капсаицина, за да загрее тялото отвътре и да го превърне в машина за изгаряне на калории, дори докато си почивате.",
             "image_url": "/images/products/eveslim-cayenne.png",
             "research_note": {
@@ -466,7 +466,7 @@
           "product_id": "prod-raw-nutrition-essential-fat-burner",
           "public_data": {
             "name": "Essential",
-            "price": 99,
+            "price": 50.61,
             "tagline": "Луксозна формула за енергия и тонус",
             "image_url": "/images/products/raw-nutrition.png",
             "additional_images": "",
@@ -562,7 +562,7 @@
           "product_id": "prod-sport-definition-fat-no-more",
           "public_data": {
             "name": "Fat No More",
-            "price": 49,
+            "price": 25.05,
             "tagline": "Бърз контрол над глада",
             "image_url": "/images/products/sport-definition.png",
             "additional_images": "",
@@ -673,7 +673,7 @@
           "product_id": "prod-trec-nutrition-thermo-fat-burner",
           "public_data": {
             "name": "Thermo Fat Burner",
-            "price": 42,
+            "price": 21.47,
             "tagline": "Лек и балансиран за всеки ден",
             "image_url": "/images/products/trec-nutrition.png",
             "additional_images": "",
@@ -774,7 +774,7 @@
           "product_id": "prod-allnutrition-burn4all",
           "public_data": {
             "name": "Burn4All",
-            "price": 25,
+            "price": 12.78,
             "tagline": "Бюджетен избор за тонус",
             "image_url": "/images/products/allnutrition.png",
             "additional_images": "",
@@ -885,7 +885,7 @@
           "product_id": "prod-ethicsport-thermo-master",
           "public_data": {
             "name": "Thermo Master",
-            "price": 64,
+            "price": 32.72,
             "tagline": "Италиански билков комплекс",
             "image_url": "/images/products/ethicsport.png",
             "additional_images": "",
