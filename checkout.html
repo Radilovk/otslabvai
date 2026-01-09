@@ -139,20 +139,22 @@
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            overflow: hidden; /* Contain content within container */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            overflow-y: visible; /* Allow vertical content like dropdowns */
         }
         
-        /* Ensure Speedy widget contains content */
+        /* Ensure Speedy widget doesn't expand parent container horizontally */
         #speedy-widget {
-            overflow: hidden; /* Contain content within container */
+            overflow-x: hidden; /* Prevent container from expanding horizontally */
+            overflow-y: visible; /* Allow iframe to extend vertically if needed */
         }
         
-        /* Responsive iframe that fits container */
+        /* Fixed width iframe that extends beyond container */
         #frameOfficeLocator {
-            width: 100% !important;
-            max-width: 400px !important;
+            width: 400px !important;
             height: 400px !important;
-            min-width: 280px !important;
+            min-width: 400px !important;
+            max-width: none !important;
             display: block;
             margin: 0 auto;
             border: 1px solid #ccc;
@@ -168,7 +170,8 @@
         .speedy-widget-container {
             font-family: Arial, sans-serif;
             max-width: 100%;
-            overflow: hidden; /* Contain content within container */
+            overflow-x: hidden; /* Prevent horizontal expansion */
+            overflow-y: visible; /* Allow iframe to be visible */
             position: relative;
             display: flex;
             flex-direction: column;
@@ -247,12 +250,12 @@
             .checkout-container { 
                 padding: 0 0.5rem;
                 max-width: 100%;
-                overflow-x: hidden;
+                overflow-x: hidden; /* Prevent horizontal scroll */
             }
             
             .form-section {
                 min-width: 0;
-                overflow-x: hidden;
+                overflow-x: hidden; /* Prevent horizontal scroll */
             }
             
             .form-row { flex-direction: column; }
@@ -268,13 +271,15 @@
                 padding: 0.5rem;
                 margin-top: 0.75rem;
                 max-width: 100%;
-                overflow: hidden; /* Contain content within container */
+                overflow-x: hidden; /* Prevent horizontal expansion */
+                overflow-y: visible; /* Allow vertical content */
                 box-sizing: border-box;
             }
             
             .speedy-widget-container {
                 max-width: 100%;
-                overflow: hidden; /* Contain content within container */
+                overflow-x: hidden; /* Prevent container expansion */
+                overflow-y: visible; /* Allow iframe to be visible */
                 margin: 0 auto;
                 display: flex;
                 flex-direction: column;
@@ -284,16 +289,16 @@
             
             .econt-container {
                 max-width: 100%;
-                overflow: visible; /* Allow dropdown to display outside container */
+                overflow: visible; /* Changed from hidden to allow dropdown to display */
                 position: relative;
             }
             
-            /* Speedy iframe mobile optimization - responsive width */
+            /* Speedy iframe mobile optimization - centered and fixed 400px */
             #frameOfficeLocator {
-                width: 100% !important;
-                max-width: 400px !important;
+                width: 400px !important;
                 height: 400px !important;
-                min-width: 280px !important;
+                min-width: 400px !important;
+                max-width: none !important;
                 position: relative;
                 box-sizing: border-box;
             }
