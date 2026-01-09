@@ -319,7 +319,7 @@
                 margin: 0 auto;
                 display: flex;
                 flex-direction: column;
-                align-items: center;
+                align-items: stretch; /* Changed from center to allow negative margin approach */
                 position: relative;
             }
             
@@ -335,13 +335,10 @@
                 max-width: none !important;
                 height: 400px !important;
                 min-width: 400px !important;
-                position: relative;
                 box-sizing: border-box;
-                /* Center the iframe and let it extend beyond container */
-                left: 50%;
-                transform: translateX(-50%);
-                margin-left: 0;
-                margin-right: 0;
+                /* Use negative margin to center and pull iframe outside container bounds */
+                margin-left: calc((100% - 400px) / 2);
+                margin-right: calc((100% - 400px) / 2);
             }
             
             /* Ensure Econt dropdown has high z-index on mobile */
