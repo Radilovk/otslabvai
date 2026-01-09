@@ -146,6 +146,7 @@
         .econt-container {
             font-family: Arial, sans-serif;
             max-width: 100%;
+            overflow: visible; /* Allow dropdown to extend outside */
         }
         
         /* Econt custom dropdown styles */
@@ -255,22 +256,26 @@
                 position: relative;
             }
             
-            /* Speedy iframe mobile optimization - centered without expanding container */
+            /* Speedy iframe mobile optimization - use viewport-based width to prevent overflow */
             #frameOfficeLocator {
-                width: 400px !important;
+                width: 100% !important;
+                max-width: 400px !important;
                 height: 400px !important;
-                max-width: none; /* Allow iframe to be full 400px even if container is smaller */
-                position: relative;
-                left: 50%;
-                transform: translateX(-50%);
-                margin-left: 0;
-                margin-right: 0;
+                margin: 0 auto;
+                display: block;
                 box-sizing: border-box;
             }
             
-            /* Ensure Econt dropdown has high z-index on mobile */
+            /* Ensure Econt dropdown has high z-index and escapes any overflow clipping on mobile */
             .econt-dropdown {
+                position: fixed !important; /* Use fixed positioning to escape parent overflow */
                 z-index: 9999;
+                max-width: calc(100vw - 2rem); /* Ensure it doesn't overflow viewport */
+            }
+            
+            /* Update wrapper positioning context for fixed dropdown */
+            .econt-dropdown-wrapper {
+                position: relative;
             }
             
             .speedy-widget-container label,
@@ -1445,6 +1450,16 @@
             const hiddenInput = document.getElementById('final-office-id');
             const statusText = document.getElementById('ekont-status-text');
 
+            // Helper function to position dropdown on mobile
+            function positionDropdownOnMobile() {
+                if (window.innerWidth <= 600 && ekontDropdown.style.display === 'block') {
+                    const inputRect = ekontInput.getBoundingClientRect();
+                    ekontDropdown.style.top = `${inputRect.bottom + window.scrollY}px`;
+                    ekontDropdown.style.left = `${inputRect.left}px`;
+                    ekontDropdown.style.width = `${inputRect.width}px`;
+                }
+            }
+
             fetch('https://ee.econt.com/services/Nomenclatures/NomenclaturesService.getOffices.json', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1502,11 +1517,12 @@
                                 <span class="econt-dropdown-item-address">${fullAddr}</span>
                             </div>`;
                         }).join('');
-                        ekontDropdown.style.display = 'block';
                     } else {
                         ekontDropdown.innerHTML = '<div class="econt-dropdown-item-empty">Няма намерени офиси</div>';
-                        ekontDropdown.style.display = 'block';
                     }
+                    
+                    ekontDropdown.style.display = 'block';
+                    positionDropdownOnMobile();
                 });
                 
                 // Click event on dropdown items
@@ -1538,6 +1554,29 @@
                     if (!ekontInput.contains(e.target) && !ekontDropdown.contains(e.target)) {
                         ekontDropdown.style.display = 'none';
                     }
+                });
+                
+                // Throttle function to limit event handler execution
+                let scrollTimeout;
+                let resizeTimeout;
+                
+                // Reposition dropdown on scroll (mobile only) with throttling
+                window.addEventListener('scroll', function() {
+                    if (scrollTimeout) {
+                        return;
+                    }
+                    scrollTimeout = setTimeout(function() {
+                        positionDropdownOnMobile();
+                        scrollTimeout = null;
+                    }, 100);
+                });
+                
+                // Reposition dropdown on window resize with debouncing
+                window.addEventListener('resize', function() {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(function() {
+                        positionDropdownOnMobile();
+                    }, 250);
                 });
                 
                 // Focus event to show dropdown if there's a search value
