@@ -1515,7 +1515,7 @@
                             ekontInput.value = cleanName;
                             hiddenInput.value = office.code;
                             selectedEcontOffice = office;
-                            statusText.textContent = "✓ Избран: " + cleanName + " - " + fullAddr;
+                            statusText.textContent = fullAddr ? "✓ Избран: " + cleanName + " - " + fullAddr : "✓ Избран: " + cleanName;
                             statusText.style.color = "#0056b3";
                             ekontDropdown.style.display = 'none';
                         }
