@@ -161,8 +161,8 @@
             border: 2px solid #0056b3;
             border-top: none;
             border-radius: 0 0 5px 5px;
-            z-index: 1000;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 10000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         
         .econt-dropdown-item {
@@ -849,9 +849,9 @@
                                         width="400px" height="400px"
                                         style="width: 100%; max-width: 400px; height: 400px; border: 1px solid #ccc; border-radius: 4px;">
                                 </iframe>
-                                <div id="speedy-result-info" style="margin-top: 10px; padding: 10px; background-color: #e6efff; border-left: 4px solid #005696; display: none; font-size: 14px;">
+                                <div id="speedy-result-info" style="margin-top: 10px; padding: 10px; background-color: var(--bg-secondary); border-left: 4px solid var(--accent-secondary); color: var(--text-primary); display: none; font-size: 14px;">
                                     <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
-                                    <span id="view-office-addr" style="opacity: 0.8;">-</span>
+                                    <span id="view-office-addr" style="color: var(--text-secondary);">-</span>
                                 </div>
                                 <input type="hidden" name="speedy_office_id" id="final-speedy-id">
                             </div>
@@ -1510,10 +1510,12 @@
                             if (office.isAPS === true) cleanName += " (ЕКОНТОМАТ)";
                             else if (office.isMPS === true) cleanName += " (МОБИЛЕН)";
                             
+                            const fullAddr = (office.address && office.address.fullAddress) ? office.address.fullAddress : "";
+                            
                             ekontInput.value = cleanName;
                             hiddenInput.value = office.code;
                             selectedEcontOffice = office;
-                            statusText.textContent = "✓ Избран: " + office.code;
+                            statusText.textContent = `✓ Избран: ${cleanName}${fullAddr ? ' - ' + fullAddr : ''}`;
                             statusText.style.color = "#0056b3";
                             ekontDropdown.style.display = 'none';
                         }
