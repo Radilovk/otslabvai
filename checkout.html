@@ -31,6 +31,10 @@
     </script>
     <style>
         /* Reuse global CSS variables from index.css */
+        :root {
+            --ekont-dropdown-expansion-height: 200px;
+        }
+        
         body { 
             font-family: var(--font-secondary); 
             background-color: var(--bg-primary); 
@@ -136,6 +140,12 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             overflow: visible; /* Allow iframe to extend outside */
+        }
+        
+        /* Expanded state for ekont-widget when dropdown is shown */
+        #ekont-widget.expanded {
+            padding-bottom: var(--ekont-dropdown-expansion-height);
+            transition: padding-bottom 0.3s ease-in-out;
         }
         .speedy-widget-container {
             font-family: Arial, sans-serif;
@@ -1473,6 +1483,7 @@
                     
                     if (searchValue.length < 2) {
                         ekontDropdown.style.display = 'none';
+                        ekontWidget.classList.remove('expanded');
                         return;
                     }
                     
@@ -1503,9 +1514,11 @@
                             </div>`;
                         }).join('');
                         ekontDropdown.style.display = 'block';
+                        ekontWidget.classList.add('expanded');
                     } else {
                         ekontDropdown.innerHTML = '<div class="econt-dropdown-item-empty">Няма намерени офиси</div>';
                         ekontDropdown.style.display = 'block';
+                        ekontWidget.classList.add('expanded');
                     }
                 });
                 
@@ -1529,6 +1542,7 @@
                             statusText.textContent = `✓ Избран: ${cleanName}${fullAddr ? ' - ' + fullAddr : ''}`;
                             statusText.style.color = "#0056b3";
                             ekontDropdown.style.display = 'none';
+                            ekontWidget.classList.remove('expanded');
                         }
                     }
                 });
@@ -1537,6 +1551,7 @@
                 document.addEventListener('click', function(e) {
                     if (!ekontInput.contains(e.target) && !ekontDropdown.contains(e.target)) {
                         ekontDropdown.style.display = 'none';
+                        ekontWidget.classList.remove('expanded');
                     }
                 });
                 
