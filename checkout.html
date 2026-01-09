@@ -145,6 +145,54 @@
             max-width: 100%;
         }
         
+        /* Econt custom dropdown styles */
+        .econt-dropdown-wrapper {
+            position: relative;
+        }
+        
+        .econt-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--bg-secondary);
+            border: 2px solid #0056b3;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .econt-dropdown-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+        
+        .econt-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .econt-dropdown-item:hover {
+            background-color: rgba(0, 86, 179, 0.1);
+        }
+        
+        .econt-dropdown-item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            display: block;
+        }
+        
+        .econt-dropdown-item-address {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: block;
+            margin-top: 2px;
+        }
+        
         @media (max-width: 992px) {
             .checkout-container { flex-direction: column-reverse; }
             .summary-section { position: static; }
@@ -183,7 +231,13 @@
                 box-sizing: border-box;
             }
             
-            .speedy-widget-container,
+            .speedy-widget-container {
+                max-width: 100%;
+                overflow-x: hidden;
+                margin: 0 auto;
+                text-align: center;
+            }
+            
             .econt-container {
                 max-width: 100%;
                 overflow-x: hidden;
@@ -798,10 +852,10 @@
                             <div class="econt-container">
                                 <label for="ekont-office-search"><strong>Избери офис на Еконт:</strong></label>
                                 <br>
-                                <input list="econt-offices-list" id="ekont-office-search" placeholder="Град или име на офис..." autocomplete="off" style="width: 100%; padding: 10px; border: 2px solid #0056b3; border-radius: 5px; font-size: 15px; margin-top: 0.5rem;">
-                                <datalist id="econt-offices-list">
-                                    <!-- Опциите ще се напълнят автоматично -->
-                                </datalist>
+                                <div class="econt-dropdown-wrapper">
+                                    <input type="text" id="ekont-office-search" placeholder="Град или име на офис..." autocomplete="off" style="width: 100%; padding: 10px; border: 2px solid #0056b3; border-radius: 5px; font-size: 15px; margin-top: 0.5rem;">
+                                    <div id="econt-offices-dropdown" class="econt-dropdown" style="display: none;"></div>
+                                </div>
                                 <input type="hidden" id="final-office-id" name="office_id">
                                 <div id="ekont-status-text" style="font-size: 12px; color: gray; margin-top: 5px;">Зареждане...</div>
                             </div>
@@ -1306,7 +1360,7 @@
         
         function loadEcontOffices() {
             const ekontInput = document.getElementById('ekont-office-search');
-            const ekontDataList = document.getElementById('econt-offices-list');
+            const ekontDropdown = document.getElementById('econt-offices-dropdown');
             const hiddenInput = document.getElementById('final-office-id');
             const statusText = document.getElementById('ekont-status-text');
 
@@ -1322,23 +1376,6 @@
                     statusText.textContent = "✓ Готово";
                     statusText.style.color = "green";
                     ekontOfficesLoaded = true;
-                    
-                    let optionsHTML = '';
-                    
-                    allEcontOffices.forEach(office => {
-                        let cleanName = office.name;
-
-                        if (office.isAPS === true) {
-                            cleanName += " (ЕКОНТОМАТ)";
-                        } else if (office.isMPS === true) {
-                            cleanName += " (МОБИЛЕН)";
-                        }
-
-                        const fullAddr = (office.address && office.address.fullAddress) ? office.address.fullAddress : "";
-                        optionsHTML += `<option value="${cleanName}">${fullAddr}</option>`; 
-                    });
-                    
-                    ekontDataList.innerHTML = optionsHTML;
                 }
             })
             .catch(err => {
@@ -1347,28 +1384,86 @@
                 statusText.style.color = "red";
             });
 
-            // Attach event listener only once
+            // Attach event listeners only once
             if (!ekontChangeHandlerAttached) {
-                ekontInput.addEventListener('change', function() {
-                    const val = this.value;
+                // Input event for filtering
+                ekontInput.addEventListener('input', function() {
+                    const searchValue = this.value.toLowerCase().trim();
                     
-                    selectedEcontOffice = allEcontOffices.find(o => {
-                        let checkName = o.name;
-                        if (o.isAPS === true) checkName += " (ЕКОНТОМАТ)";
-                        else if (o.isMPS === true) checkName += " (МОБИЛЕН)";
+                    if (searchValue.length < 2) {
+                        ekontDropdown.style.display = 'none';
+                        return;
+                    }
+                    
+                    // Filter offices based on search value
+                    const filteredOffices = allEcontOffices.filter(office => {
+                        let cleanName = office.name;
+                        if (office.isAPS === true) cleanName += " (ЕКОНТОМАТ)";
+                        else if (office.isMPS === true) cleanName += " (МОБИЛЕН)";
                         
-                        return checkName === val;
+                        const fullAddr = (office.address && office.address.fullAddress) ? office.address.fullAddress : "";
+                        
+                        return cleanName.toLowerCase().includes(searchValue) || 
+                               fullAddr.toLowerCase().includes(searchValue);
                     });
-
-                    if (selectedEcontOffice) {
-                        hiddenInput.value = selectedEcontOffice.code;
-                        statusText.textContent = "✓ Избран: " + selectedEcontOffice.code;
-                        statusText.style.color = "#0056b3";
+                    
+                    // Display filtered results
+                    if (filteredOffices.length > 0) {
+                        ekontDropdown.innerHTML = filteredOffices.map(office => {
+                            let cleanName = office.name;
+                            if (office.isAPS === true) cleanName += " (ЕКОНТОМАТ)";
+                            else if (office.isMPS === true) cleanName += " (МОБИЛЕН)";
+                            
+                            const fullAddr = (office.address && office.address.fullAddress) ? office.address.fullAddress : "";
+                            
+                            return `<div class="econt-dropdown-item" data-office-code="${office.code}">
+                                <span class="econt-dropdown-item-name">${cleanName}</span>
+                                <span class="econt-dropdown-item-address">${fullAddr}</span>
+                            </div>`;
+                        }).join('');
+                        ekontDropdown.style.display = 'block';
                     } else {
-                        hiddenInput.value = "";
-                        selectedEcontOffice = null;
+                        ekontDropdown.innerHTML = '<div class="econt-dropdown-item" style="cursor: default;">Няма намерени офиси</div>';
+                        ekontDropdown.style.display = 'block';
                     }
                 });
+                
+                // Click event on dropdown items
+                ekontDropdown.addEventListener('click', function(e) {
+                    const item = e.target.closest('.econt-dropdown-item');
+                    if (item && item.dataset.officeCode) {
+                        const officeCode = item.dataset.officeCode;
+                        const office = allEcontOffices.find(o => o.code === officeCode);
+                        
+                        if (office) {
+                            let cleanName = office.name;
+                            if (office.isAPS === true) cleanName += " (ЕКОНТОМАТ)";
+                            else if (office.isMPS === true) cleanName += " (МОБИЛЕН)";
+                            
+                            ekontInput.value = cleanName;
+                            hiddenInput.value = office.code;
+                            selectedEcontOffice = office;
+                            statusText.textContent = "✓ Избран: " + office.code;
+                            statusText.style.color = "#0056b3";
+                            ekontDropdown.style.display = 'none';
+                        }
+                    }
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!ekontInput.contains(e.target) && !ekontDropdown.contains(e.target)) {
+                        ekontDropdown.style.display = 'none';
+                    }
+                });
+                
+                // Focus event to show dropdown if there's a search value
+                ekontInput.addEventListener('focus', function() {
+                    if (this.value.length >= 2) {
+                        ekontInput.dispatchEvent(new Event('input'));
+                    }
+                });
+                
                 ekontChangeHandlerAttached = true;
             }
         }
