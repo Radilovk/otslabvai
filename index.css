@@ -151,6 +151,9 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -moz-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
 }
 
 html {
@@ -177,6 +180,7 @@ a {
     text-decoration: none;
     color: var(--color-primary);
     transition: color var(--transition-speed);
+    -webkit-tap-highlight-color: transparent;
 }
 
 a:hover {
@@ -255,6 +259,7 @@ img {
     cursor: pointer;
     transition: all var(--transition-speed);
     border: 2px solid transparent;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-primary {
@@ -476,6 +481,7 @@ img {
     position: relative;
     padding: 5px 0;
     transition: color var(--transition-speed);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .nav-links a::after {
@@ -528,6 +534,7 @@ img {
     transition: all var(--transition-speed);
     position: relative;
     overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .theme-toggle-btn:hover {
@@ -584,6 +591,7 @@ img {
     text-decoration: none;
     color: var(--accent);
     flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .cart-icon-btn:hover {
@@ -630,6 +638,7 @@ img {
     border: none; 
     cursor: pointer; 
     z-index: 1003; 
+    -webkit-tap-highlight-color: transparent;
 }
 
 .menu-toggle span { 
@@ -949,6 +958,7 @@ main {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-hero-primary svg {
@@ -1001,6 +1011,7 @@ main {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-hero-secondary svg {
@@ -1295,6 +1306,7 @@ main {
     display: block; /* Make it a proper link block */
     text-decoration: none; /* Remove underline from link */
     color: inherit; /* Inherit text color */
+    -webkit-tap-highlight-color: transparent;
 }
 
 .product-card::before {
@@ -1530,6 +1542,7 @@ main {
     text-decoration: none;
     font-size: 1.2rem; 
     color: var(--color-white);
+    -webkit-tap-highlight-color: transparent;
 }
 
 #back-to-top:hover { 
@@ -2313,6 +2326,7 @@ body.modal-open { overflow: hidden; }
     align-items: center;
     gap: 8px;
     animation: bounce 2s ease-in-out infinite;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .sticky-cta-btn svg {
@@ -2504,6 +2518,7 @@ body.modal-open { overflow: hidden; }
     padding: 0;
     width: 30px;
     height: 30px;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .exit-modal-close:hover {
@@ -2622,6 +2637,7 @@ body.modal-open { overflow: hidden; }
     box-shadow: 0 8px 20px rgba(228, 0, 124, 0.3);
     width: 100%;
     margin-bottom: 15px;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .exit-cta-btn:hover {
