@@ -193,6 +193,13 @@
             margin-top: 2px;
         }
         
+        .econt-dropdown-item-empty {
+            padding: 10px;
+            cursor: default;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        
         @media (max-width: 992px) {
             .checkout-container { flex-direction: column-reverse; }
             .summary-section { position: static; }
@@ -1423,7 +1430,7 @@
                         }).join('');
                         ekontDropdown.style.display = 'block';
                     } else {
-                        ekontDropdown.innerHTML = '<div class="econt-dropdown-item" style="cursor: default;">Няма намерени офиси</div>';
+                        ekontDropdown.innerHTML = '<div class="econt-dropdown-item-empty">Няма намерени офиси</div>';
                         ekontDropdown.style.display = 'block';
                     }
                 });
