@@ -1450,6 +1450,16 @@
             const hiddenInput = document.getElementById('final-office-id');
             const statusText = document.getElementById('ekont-status-text');
 
+            // Helper function to position dropdown on mobile
+            function positionDropdownOnMobile() {
+                if (window.innerWidth <= 600 && ekontDropdown.style.display === 'block') {
+                    const inputRect = ekontInput.getBoundingClientRect();
+                    ekontDropdown.style.top = `${inputRect.bottom + window.scrollY}px`;
+                    ekontDropdown.style.left = `${inputRect.left}px`;
+                    ekontDropdown.style.width = `${inputRect.width}px`;
+                }
+            }
+
             fetch('https://ee.econt.com/services/Nomenclatures/NomenclaturesService.getOffices.json', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1507,29 +1517,12 @@
                                 <span class="econt-dropdown-item-address">${fullAddr}</span>
                             </div>`;
                         }).join('');
-                        
-                        // Position dropdown relative to input on mobile
-                        if (window.innerWidth <= 600) {
-                            const inputRect = ekontInput.getBoundingClientRect();
-                            ekontDropdown.style.top = `${inputRect.bottom + window.scrollY}px`;
-                            ekontDropdown.style.left = `${inputRect.left}px`;
-                            ekontDropdown.style.width = `${inputRect.width}px`;
-                        }
-                        
-                        ekontDropdown.style.display = 'block';
                     } else {
                         ekontDropdown.innerHTML = '<div class="econt-dropdown-item-empty">Няма намерени офиси</div>';
-                        
-                        // Position dropdown relative to input on mobile
-                        if (window.innerWidth <= 600) {
-                            const inputRect = ekontInput.getBoundingClientRect();
-                            ekontDropdown.style.top = `${inputRect.bottom + window.scrollY}px`;
-                            ekontDropdown.style.left = `${inputRect.left}px`;
-                            ekontDropdown.style.width = `${inputRect.width}px`;
-                        }
-                        
-                        ekontDropdown.style.display = 'block';
                     }
+                    
+                    ekontDropdown.style.display = 'block';
+                    positionDropdownOnMobile();
                 });
                 
                 // Click event on dropdown items
@@ -1563,23 +1556,27 @@
                     }
                 });
                 
-                // Reposition dropdown on scroll (mobile only)
+                // Throttle function to limit event handler execution
+                let scrollTimeout;
+                let resizeTimeout;
+                
+                // Reposition dropdown on scroll (mobile only) with throttling
                 window.addEventListener('scroll', function() {
-                    if (window.innerWidth <= 600 && ekontDropdown.style.display === 'block') {
-                        const inputRect = ekontInput.getBoundingClientRect();
-                        ekontDropdown.style.top = `${inputRect.bottom + window.scrollY}px`;
-                        ekontDropdown.style.left = `${inputRect.left}px`;
+                    if (scrollTimeout) {
+                        return;
                     }
+                    scrollTimeout = setTimeout(function() {
+                        positionDropdownOnMobile();
+                        scrollTimeout = null;
+                    }, 100);
                 });
                 
-                // Reposition dropdown on window resize
+                // Reposition dropdown on window resize with debouncing
                 window.addEventListener('resize', function() {
-                    if (window.innerWidth <= 600 && ekontDropdown.style.display === 'block') {
-                        const inputRect = ekontInput.getBoundingClientRect();
-                        ekontDropdown.style.top = `${inputRect.bottom + window.scrollY}px`;
-                        ekontDropdown.style.left = `${inputRect.left}px`;
-                        ekontDropdown.style.width = `${inputRect.width}px`;
-                    }
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(function() {
+                        positionDropdownOnMobile();
+                    }, 250);
                 });
                 
                 // Focus event to show dropdown if there's a search value
