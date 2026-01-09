@@ -135,10 +135,13 @@
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 8px;
+            overflow: visible; /* Allow iframe to extend outside */
         }
         .speedy-widget-container {
             font-family: Arial, sans-serif;
             max-width: 100%;
+            overflow: visible; /* Allow iframe to extend outside */
+            position: relative;
         }
         .econt-container {
             font-family: Arial, sans-serif;
@@ -161,7 +164,7 @@
             border: 2px solid #0056b3;
             border-top: none;
             border-radius: 0 0 5px 5px;
-            z-index: 10000;
+            z-index: 100000; /* Increased from 10000 to ensure it's above everything */
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         
@@ -799,15 +802,15 @@
                     
                     <h3 style="margin-top: 1.5rem; margin-bottom: 1rem;">Метод на доставка</h3>
                     <div class="checkbox-group">
-                        <input type="radio" id="delivery-address" name="deliveryMethod" value="address" checked>
+                        <input type="radio" id="delivery-address" name="deliveryMethod" value="address">
                         <label for="delivery-address">Доставка до личен адрес</label>
                     </div>
                     <div class="checkbox-group">
-                        <input type="radio" id="delivery-courier" name="deliveryMethod" value="courier">
+                        <input type="radio" id="delivery-courier" name="deliveryMethod" value="courier" checked>
                         <label for="delivery-courier">Доставка до офис на куриер</label>
                     </div>
                     
-                    <div id="address-fields" class="hidden-fields visible">
+                    <div id="address-fields" class="hidden-fields">
                         <div class="form-group">
                             <label for="address">Адрес (улица, номер, бл., вх., ет., ап.)</label>
                             <input type="text" id="address" name="address" required>
@@ -830,7 +833,7 @@
                     <div id="courier-fields" class="hidden-fields">
                         <h4 style="margin-top: 1rem; margin-bottom: 0.75rem;">Избор на куриерска фирма</h4>
                         <div class="checkbox-group">
-                            <input type="radio" id="courier-speedy" name="courierCompany" value="speedy">
+                            <input type="radio" id="courier-speedy" name="courierCompany" value="speedy" checked>
                             <label for="courier-speedy">Speedy</label>
                         </div>
                         <div class="checkbox-group">
@@ -847,7 +850,7 @@
                                         src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=Избор"
                                         sandbox="allow-scripts allow-same-origin"
                                         width="400px" height="400px"
-                                        style="width: 100%; max-width: 400px; height: 400px; border: 1px solid #ccc; border-radius: 4px;">
+                                        style="width: 400px; height: 400px; border: 1px solid #ccc; border-radius: 4px; display: block; margin: 0 auto;">
                                 </iframe>
                                 <div id="speedy-result-info" style="margin-top: 10px; padding: 10px; background-color: var(--bg-secondary); border-left: 4px solid var(--accent-secondary); color: var(--text-primary); display: none; font-size: 14px;">
                                     <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
@@ -1680,6 +1683,7 @@
         renderProducts();
         updateCartCount();
         toggleDeliveryFields(); // Initialize delivery method visibility
+        toggleCourierWidgets(); // Initialize courier widget visibility (Speedy is default)
         
         // --- Success Modal Functions ---
         const successModal = document.getElementById('success-modal');
