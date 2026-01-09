@@ -139,12 +139,14 @@
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            overflow: visible; /* Allow iframe to extend outside */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            overflow-y: visible; /* Allow vertical content like dropdowns */
         }
         
-        /* Ensure Speedy widget doesn't expand parent container */
+        /* Ensure Speedy widget doesn't expand parent container horizontally */
         #speedy-widget {
-            overflow: visible; /* Critical: allows iframe to extend beyond container */
+            overflow-x: hidden; /* Prevent container from expanding horizontally */
+            overflow-y: visible; /* Allow iframe to extend vertically if needed */
         }
         
         /* Fixed width iframe that extends beyond container */
@@ -168,7 +170,8 @@
         .speedy-widget-container {
             font-family: Arial, sans-serif;
             max-width: 100%;
-            overflow: visible; /* Allow iframe to extend outside */
+            overflow-x: hidden; /* Prevent horizontal expansion */
+            overflow-y: visible; /* Allow iframe to be visible */
             position: relative;
             display: flex;
             flex-direction: column;
@@ -247,12 +250,12 @@
             .checkout-container { 
                 padding: 0 0.5rem;
                 max-width: 100%;
-                overflow-x: visible;
+                overflow-x: hidden; /* Prevent horizontal scroll */
             }
             
             .form-section {
                 min-width: 0;
-                overflow-x: visible;
+                overflow-x: hidden; /* Prevent horizontal scroll */
             }
             
             .form-row { flex-direction: column; }
@@ -268,13 +271,15 @@
                 padding: 0.5rem;
                 margin-top: 0.75rem;
                 max-width: 100%;
-                overflow: visible; /* Allow content to extend outside */
+                overflow-x: hidden; /* Prevent horizontal expansion */
+                overflow-y: visible; /* Allow vertical content */
                 box-sizing: border-box;
             }
             
             .speedy-widget-container {
                 max-width: 100%;
-                overflow: visible; /* Allow iframe to extend outside container */
+                overflow-x: hidden; /* Prevent container expansion */
+                overflow-y: visible; /* Allow iframe to be visible */
                 margin: 0 auto;
                 display: flex;
                 flex-direction: column;
