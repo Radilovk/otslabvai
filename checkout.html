@@ -237,13 +237,13 @@
                 padding: 0.5rem;
                 margin-top: 0.75rem;
                 max-width: 100%;
-                overflow-x: visible;
+                overflow: visible; /* Allow content to extend outside */
                 box-sizing: border-box;
             }
             
             .speedy-widget-container {
                 max-width: 100%;
-                overflow-x: visible;
+                overflow: visible; /* Allow iframe to extend outside container */
                 margin: 0 auto;
                 text-align: center;
                 position: relative;
@@ -251,18 +251,26 @@
             
             .econt-container {
                 max-width: 100%;
-                overflow-x: hidden;
+                overflow: visible; /* Changed from hidden to allow dropdown to display */
+                position: relative;
             }
             
-            /* Speedy iframe mobile optimization */
+            /* Speedy iframe mobile optimization - centered without expanding container */
             #frameOfficeLocator {
                 width: 400px !important;
                 height: 400px !important;
-                max-width: 400px;
+                max-width: none; /* Allow iframe to be full 400px even if container is smaller */
                 position: relative;
                 left: 50%;
                 transform: translateX(-50%);
+                margin-left: 0;
+                margin-right: 0;
                 box-sizing: border-box;
+            }
+            
+            /* Ensure Econt dropdown has high z-index on mobile */
+            .econt-dropdown {
+                z-index: 9999 !important;
             }
             
             .speedy-widget-container label,
