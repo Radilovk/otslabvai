@@ -403,7 +403,7 @@
                 (variant) => `
                     <li>
                         <a href="${variant.url}" target="_blank" rel="noopener noreferrer">
-                            ${variant.title} <small>- ${variant.description}${variant.price ? ` - ${variant.price} лв.` : ""}</small>
+                            ${variant.title} <small>- ${variant.description}${variant.price ? ` - ${variant.price} €` : ""}</small>
                         </a>
                     </li>
                 `,
