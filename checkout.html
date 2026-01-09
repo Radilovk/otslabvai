@@ -33,7 +33,6 @@
         /* Reuse global CSS variables from index.css */
         :root {
             --ekont-dropdown-expansion-height: 200px;
-            --speedy-iframe-mobile-width: 400px;
         }
         
         body { 
@@ -170,20 +169,12 @@
         .speedy-widget-container {
             font-family: Arial, sans-serif;
             max-width: 100%;
-            overflow: visible; /* Allow iframe to overflow on mobile */
+            overflow-x: hidden; /* Prevent horizontal expansion */
+            overflow-y: visible; /* Allow iframe to be visible */
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-        
-        /* Default iframe wrapper for overflow control */
-        .iframe-overflow-wrapper {
-            width: 100%;
-            position: relative;
-            overflow: visible;
-            display: flex;
-            justify-content: center;
         }
         
         /* Speedy result info styling */
@@ -313,13 +304,15 @@
                 padding: 0.5rem;
                 margin-top: 0.75rem;
                 max-width: 100%;
-                overflow: visible; /* Allow iframe to overflow */
+                overflow-x: hidden; /* Prevent horizontal expansion */
+                overflow-y: visible; /* Allow vertical content */
                 box-sizing: border-box;
             }
             
             .speedy-widget-container {
                 max-width: 100%;
-                overflow: visible; /* Allow iframe to overflow */
+                overflow-x: hidden; /* Prevent container expansion */
+                overflow-y: visible; /* Allow iframe to be visible */
                 margin: 0 auto;
                 display: flex;
                 flex-direction: column;
@@ -333,18 +326,13 @@
                 position: relative;
             }
             
-            /* Speedy iframe mobile optimization - fixed 400px width with overflow */
-            .iframe-overflow-wrapper {
-                width: 100%;
-                position: relative;
-                overflow: visible; /* Allow iframe to overflow */
-                display: flex;
-                justify-content: center;
-            }
-            
+            /* Speedy iframe mobile optimization - responsive width */
             #frameOfficeLocator {
-                width: var(--speedy-iframe-mobile-width) !important;
-                height: var(--speedy-iframe-mobile-width) !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 400px !important;
+                min-width: 0 !important;
+                position: relative;
                 box-sizing: border-box;
             }
             
@@ -934,13 +922,11 @@
                             <div class="speedy-widget-container">
                                 <label><strong>Избери офис на Спиди:</strong></label>
                                 <br><br>
-                                <div class="iframe-overflow-wrapper">
-                                    <iframe id="frameOfficeLocator" name="frameOfficeLocator" 
-                                            src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=Избор"
-                                            sandbox="allow-scripts allow-same-origin"
-                                            style="width: 100%; height: 400px;">
-                                    </iframe>
-                                </div>
+                                <iframe id="frameOfficeLocator" name="frameOfficeLocator" 
+                                        src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=Избор"
+                                        sandbox="allow-scripts allow-same-origin"
+                                        style="width: 100%; height: 400px;">
+                                </iframe>
                                 <div id="speedy-result-info" style="display: none;">
                                     <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
                                     <span id="view-office-addr">-</span>
