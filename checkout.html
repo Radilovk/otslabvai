@@ -234,15 +234,16 @@
                 padding: 0.5rem;
                 margin-top: 0.75rem;
                 max-width: 100%;
-                overflow-x: hidden;
+                overflow-x: visible;
                 box-sizing: border-box;
             }
             
             .speedy-widget-container {
                 max-width: 100%;
-                overflow-x: hidden;
+                overflow-x: visible;
                 margin: 0 auto;
                 text-align: center;
+                position: relative;
             }
             
             .econt-container {
@@ -252,10 +253,12 @@
             
             /* Speedy iframe mobile optimization */
             #frameOfficeLocator {
-                width: 100% !important;
+                width: 400px !important;
                 height: 400px !important;
-                max-width: 100%;
-                min-width: 400px;
+                max-width: none;
+                position: relative;
+                left: 50%;
+                transform: translateX(-50%);
                 box-sizing: border-box;
             }
             
@@ -844,7 +847,7 @@
                                         src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=Избор"
                                         sandbox="allow-scripts allow-same-origin"
                                         width="400px" height="400px"
-                                        style="width: 100%; min-width: 400px; height: 400px; border: 1px solid #ccc; border-radius: 4px;">
+                                        style="width: 100%; max-width: 400px; height: 400px; border: 1px solid #ccc; border-radius: 4px;">
                                 </iframe>
                                 <div id="speedy-result-info" style="margin-top: 10px; padding: 10px; background-color: #e6efff; border-left: 4px solid #005696; display: none; font-size: 14px;">
                                     <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
