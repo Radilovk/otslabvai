@@ -142,6 +142,24 @@
             overflow: visible; /* Allow iframe to extend outside */
         }
         
+        /* Ensure Speedy widget doesn't expand parent container */
+        #speedy-widget {
+            overflow: visible; /* Critical: allows iframe to extend beyond container */
+        }
+        
+        /* Fixed width iframe that extends beyond container */
+        #frameOfficeLocator {
+            width: 400px !important;
+            height: 400px !important;
+            min-width: 400px !important;
+            max-width: none !important;
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
         /* Expanded state for ekont-widget when dropdown is shown */
         #ekont-widget.expanded {
             padding-bottom: var(--ekont-dropdown-expansion-height);
@@ -152,6 +170,9 @@
             max-width: 100%;
             overflow: visible; /* Allow iframe to extend outside */
             position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .econt-container {
             font-family: Arial, sans-serif;
@@ -255,7 +276,9 @@
                 max-width: 100%;
                 overflow: visible; /* Allow iframe to extend outside container */
                 margin: 0 auto;
-                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
                 position: relative;
             }
             
@@ -265,16 +288,13 @@
                 position: relative;
             }
             
-            /* Speedy iframe mobile optimization - centered without expanding container */
+            /* Speedy iframe mobile optimization - centered and fixed 400px */
             #frameOfficeLocator {
                 width: 400px !important;
                 height: 400px !important;
-                max-width: none; /* Allow iframe to be full 400px even if container is smaller */
+                min-width: 400px !important;
+                max-width: none !important;
                 position: relative;
-                left: 50%;
-                transform: translateX(-50%);
-                margin-left: 0;
-                margin-right: 0;
                 box-sizing: border-box;
             }
             
@@ -867,8 +887,7 @@
                                 <iframe id="frameOfficeLocator" name="frameOfficeLocator" 
                                         src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=Избор"
                                         sandbox="allow-scripts allow-same-origin"
-                                        width="400px" height="400px"
-                                        style="width: 400px; height: 400px; border: 1px solid #ccc; border-radius: 4px; display: block; margin: 0 auto;">
+                                        width="400" height="400">
                                 </iframe>
                                 <div id="speedy-result-info" style="margin-top: 10px; padding: 10px; background-color: var(--bg-secondary); border-left: 4px solid var(--accent-secondary); color: var(--text-primary); display: none; font-size: 14px;">
                                     <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
