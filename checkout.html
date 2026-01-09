@@ -1257,11 +1257,12 @@
                     codRate = 0.0096;
                 }
             } else if (isToAddress) {
-                // Address delivery - default to Speedy door pricing
-                basePrice = 5.62;
-                codRate = 0.0096;
+                // Address delivery - use Econt door pricing by default (most common/economical)
+                // Users can contact if they prefer Speedy door delivery
+                basePrice = 4.55;
+                codRate = 0.0298;
             } else {
-                // Default case
+                // Default case - Speedy office
                 basePrice = 1.52;
                 codRate = 0.0096;
             }
