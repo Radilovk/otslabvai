@@ -149,12 +149,11 @@
             overflow-y: visible; /* Allow iframe to extend vertically if needed */
         }
         
-        /* Fixed width iframe that extends beyond container */
+        /* Responsive iframe for Speedy widget */
         #frameOfficeLocator {
-            width: 400px !important;
+            width: 100%;
+            max-width: 400px;
             height: 400px !important;
-            min-width: 400px !important;
-            max-width: none !important;
             display: block;
             margin: 0 auto;
             border: 1px solid #ccc;
@@ -327,12 +326,12 @@
                 position: relative;
             }
             
-            /* Speedy iframe mobile optimization - centered and fixed 400px */
+            /* Speedy iframe mobile optimization - responsive width */
             #frameOfficeLocator {
-                width: 400px !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 height: 400px !important;
-                min-width: 400px !important;
-                max-width: none !important;
+                min-width: unset !important;
                 position: relative;
                 box-sizing: border-box;
             }
@@ -926,7 +925,7 @@
                                 <iframe id="frameOfficeLocator" name="frameOfficeLocator" 
                                         src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=Избор"
                                         sandbox="allow-scripts allow-same-origin"
-                                        width="400" height="400">
+                                        style="width: 100%; height: 400px;">
                                 </iframe>
                                 <div id="speedy-result-info" style="display: none;">
                                     <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
