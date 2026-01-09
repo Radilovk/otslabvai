@@ -177,6 +177,40 @@
             flex-direction: column;
             align-items: center;
         }
+        
+        /* Speedy result info styling */
+        #speedy-result-info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: var(--bg-secondary);
+            border-left: 4px solid var(--accent-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            box-sizing: border-box;
+        }
+        
+        #view-office-name {
+            display: inline-block;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+        
+        #view-office-addr {
+            color: var(--text-secondary);
+            display: block;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            margin-top: 0.25rem;
+        }
+        
         .econt-container {
             font-family: Arial, sans-serif;
             max-width: 100%;
@@ -894,9 +928,9 @@
                                         sandbox="allow-scripts allow-same-origin"
                                         width="400" height="400">
                                 </iframe>
-                                <div id="speedy-result-info" style="margin-top: 10px; padding: 10px; background-color: var(--bg-secondary); border-left: 4px solid var(--accent-secondary); color: var(--text-primary); display: none; font-size: 14px;">
+                                <div id="speedy-result-info" style="display: none;">
                                     <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
-                                    <span id="view-office-addr" style="color: var(--text-secondary);">-</span>
+                                    <span id="view-office-addr">-</span>
                                 </div>
                                 <input type="hidden" name="speedy_office_id" id="final-speedy-id">
                             </div>
