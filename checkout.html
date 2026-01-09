@@ -33,6 +33,7 @@
         /* Reuse global CSS variables from index.css */
         :root {
             --ekont-dropdown-expansion-height: 200px;
+            --speedy-iframe-mobile-width: 400px;
         }
         
         body { 
@@ -342,13 +343,13 @@
             }
             
             #frameOfficeLocator {
-                width: 400px !important;
-                max-width: 400px !important;
-                height: 400px !important;
-                min-width: 400px !important;
+                width: var(--speedy-iframe-mobile-width) !important;
+                max-width: var(--speedy-iframe-mobile-width) !important;
+                height: var(--speedy-iframe-mobile-width) !important;
+                min-width: var(--speedy-iframe-mobile-width) !important;
                 position: relative;
                 left: 50%;
-                margin-left: -200px; /* Center the 400px iframe */
+                transform: translateX(-50%); /* Center the iframe horizontally */
                 box-sizing: border-box;
             }
             
