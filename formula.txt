@@ -1,0 +1,41 @@
+function calculateExactDeliveryPrice(totalProductAmount, courierMethod) {
+    let basePrice = 0;
+    let codRate = 0; // Cash on Delivery rate as a percentage
+
+    switch (courierMethod) {
+        case 'econt_office':
+            // Econt Office-to-office or Econtomat price up to 0.5kg
+            basePrice = 3.10; 
+            // COD Fee for cash payment is 2.98%
+            codRate = 0.0298; 
+            break;
+        case 'econt_door':
+            // Econt Door-to-door price up to 0.5kg
+            basePrice = 4.55;
+            codRate = 0.0298;
+            break;
+        case 'speedy_office':
+        case 'speedy_automat':
+            // Speedy special promo price office/locker to locker up to 3kg
+            basePrice = 1.52;
+            // COD Fee for domestic shipments is 0.96%
+            codRate = 0.0096;
+            break;
+        case 'speedy_door':
+            // Speedy Door to door intown delivery up to 1kg (using Econt's general price list for a proxy)
+            basePrice = 5.62; 
+            codRate = 0.0096;
+            break;
+        default:
+            return "0.00";
+    }
+
+    // Total cost = base price + (total amount including shipping * COD rate)
+    // Simplified for fixed formula calculation:
+    let deliveryCost = basePrice + (totalProductAmount * codRate);
+
+    return deliveryCost.toFixed(2); // Price in EUR
+}
+
+// Пример: Продукт за 20.00 EUR до автомат на Спиди:
+// calculateExactDeliveryPrice(20.00, 'speedy_automat') -> 1.71 EUR
