@@ -299,24 +299,27 @@
                 max-width: 100%;
             }
             
+            /* Allow speedy widget to have iframe extend outside on mobile */
+            #speedy-widget {
+                overflow: visible; /* Allow iframe to extend outside */
+            }
+            
             /* Mobile-optimized courier selection */
             .courier-widget {
                 padding: 0.5rem;
                 margin-top: 0.75rem;
                 max-width: 100%;
-                overflow-x: hidden; /* Prevent horizontal expansion */
-                overflow-y: visible; /* Allow vertical content */
+                overflow: visible; /* Allow iframe to extend outside */
                 box-sizing: border-box;
             }
             
             .speedy-widget-container {
                 max-width: 100%;
-                overflow-x: hidden; /* Prevent container expansion */
-                overflow-y: visible; /* Allow iframe to be visible */
+                overflow: visible; /* Allow iframe to extend outside container */
                 margin: 0 auto;
                 display: flex;
                 flex-direction: column;
-                align-items: center;
+                align-items: stretch; /* Changed from center to allow negative margin approach */
                 position: relative;
             }
             
@@ -326,14 +329,13 @@
                 position: relative;
             }
             
-            /* Speedy iframe mobile optimization - responsive width */
+            /* Speedy iframe mobile optimization - fixed 400px width that extends outside container */
             #frameOfficeLocator {
-                width: 100% !important;
-                max-width: 100% !important;
+                width: 400px !important;
                 height: 400px !important;
-                min-width: 0 !important;
-                position: relative;
                 box-sizing: border-box;
+                /* Center using calc - when container < 400px, negative margins center the wider iframe */
+                margin: 0 calc((100% - 400px) / 2);
             }
             
             /* Ensure Econt dropdown has high z-index on mobile */
