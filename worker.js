@@ -225,7 +225,7 @@ async function handleSavePageContent(request, env, ctx) {
  */
 async function handleGetOrders(request, env) {
     // Връщаме съществуващите поръчки или празен масив
-    const ordersJson = await env.PAGE_CONTENT.get('orders');
+    const ordersJson = await env.ORDERS.get('orders');
     const orders = ordersJson ? JSON.parse(ordersJson) : [];
     return new Response(JSON.stringify(orders), {
         status: 200,
@@ -288,7 +288,7 @@ async function handleUpdateOrderStatus(request, env, ctx) {
         throw new UserFacingError("Липсват ID на поръчка или нов статус.", 400);
     }
     
-    const ordersJson = await env.PAGE_CONTENT.get('orders');
+    const ordersJson = await env.ORDERS.get('orders');
     let orders = ordersJson ? JSON.parse(ordersJson) : [];
     
     const orderIndex = orders.findIndex(o => o.id === updateData.id);
@@ -298,7 +298,7 @@ async function handleUpdateOrderStatus(request, env, ctx) {
     
     orders[orderIndex].status = updateData.status;
     
-    ctx.waitUntil(env.PAGE_CONTENT.put('orders', JSON.stringify(orders, null, 2)));
+    ctx.waitUntil(env.ORDERS.put('orders', JSON.stringify(orders, null, 2)));
     
     return new Response(JSON.stringify({ success: true, updatedOrder: orders[orderIndex] }), {
         status: 200,
@@ -497,9 +497,9 @@ async function getAIRecommendation(env, formData, productList, mainPromptTemplat
 
 async function saveClientData(env, formData) {
   try {
-    const list = await env.PAGE_CONTENT.get('clients', { type: 'json' }) || [];
+    const list = await env.ORDERS.get('clients', { type: 'json' }) || [];
     list.push(formData);
-    await env.PAGE_CONTENT.put('clients', JSON.stringify(list, null, 2));
+    await env.ORDERS.put('clients', JSON.stringify(list, null, 2));
   } catch (e) {
     console.error("Failed to save client data to KV:", e);
   }
@@ -508,9 +508,9 @@ async function saveClientData(env, formData) {
 // --- НОВА ФУНКЦИЯ ЗА ЗАПИС НА ПОРЪЧКИ ---
 async function saveOrder(env, orderData) {
   try {
-    const list = await env.PAGE_CONTENT.get('orders', { type: 'json' }) || [];
+    const list = await env.ORDERS.get('orders', { type: 'json' }) || [];
     list.push(orderData);
-    await env.PAGE_CONTENT.put('orders', JSON.stringify(list, null, 2));
+    await env.ORDERS.put('orders', JSON.stringify(list, null, 2));
   } catch (e) {
     console.error("Failed to save order data to KV:", e);
   }
@@ -518,13 +518,13 @@ async function saveOrder(env, orderData) {
 
 async function saveAIResult(env, clientId, recommendation) {
   try {
-    const resultsList = await env.PAGE_CONTENT.get('results', { type: 'json' }) || [];
+    const resultsList = await env.ORDERS.get('results', { type: 'json' }) || [];
     resultsList.push({
       clientId: clientId,
       timestamp: new Date().toISOString(),
       recommendation: recommendation
     });
-    await env.PAGE_CONTENT.put('results', JSON.stringify(resultsList, null, 2));
+    await env.ORDERS.put('results', JSON.stringify(resultsList, null, 2));
   } catch (e) {
     console.error("Failed to save AI result to KV:", e);
   }
