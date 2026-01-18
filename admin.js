@@ -1468,16 +1468,27 @@ function setProperty(obj, path, value) {
  */
 async function uploadImageToGitHub(file) {
     // Configuration for GitHub upload
-    // NOTE: In production, these should be environment variables or secure configuration
-    const GITHUB_TOKEN = prompt('Моля въведете GitHub Personal Access Token:\n\n(Token трябва да има \'repo\' permissions)');
-    
-    if (!GITHUB_TOKEN) {
-        throw new Error('GitHub token е необходим за качване на изображения');
-    }
-    
     const GITHUB_OWNER = 'Radilovk';  // Repository owner
     const GITHUB_REPO = 'otslabvai';  // Repository name
     const GITHUB_BRANCH = 'main';      // Branch to upload to
+    
+    // Try to get token from sessionStorage first (temporary storage for session)
+    let GITHUB_TOKEN = sessionStorage.getItem('github_upload_token');
+    
+    if (!GITHUB_TOKEN) {
+        GITHUB_TOKEN = prompt(
+            'Моля въведете GitHub Personal Access Token:\n\n' +
+            '(Token трябва да има \'repo\' permissions)\n' +
+            'Token-ът ще бъде запазен само за тази сесия.'
+        );
+        
+        if (!GITHUB_TOKEN) {
+            throw new Error('GitHub token е необходим за качване на изображения');
+        }
+        
+        // Store token in sessionStorage (cleared when browser closes)
+        sessionStorage.setItem('github_upload_token', GITHUB_TOKEN);
+    }
     
     // Generate unique filename
     const timestamp = Date.now();
@@ -1510,7 +1521,7 @@ async function uploadImageToGitHub(file) {
     const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: {
-            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
             'Content-Type': 'application/json',
             'Accept': 'application/vnd.github.v3+json'
         },
@@ -1519,6 +1530,12 @@ async function uploadImageToGitHub(file) {
     
     if (!response.ok) {
         const error = await response.json();
+        
+        // If token is invalid, clear it from storage
+        if (response.status === 401 || response.status === 403) {
+            sessionStorage.removeItem('github_upload_token');
+        }
+        
         throw new Error(error.message || `GitHub API error: ${response.status}`);
     }
     
