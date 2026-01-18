@@ -1222,6 +1222,56 @@ function handleAction(action, target, id) {
             fileInput.click();
             break;
         }
+        case 'upload-product-image': {
+            const fileInput = document.getElementById('image-upload-input');
+            const targetFieldPath = target.dataset.targetField;
+            const inputElement = target.closest('.form-group').querySelector(`[data-field="${targetFieldPath}"]`);
+            
+            fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showNotification('Моля изберете изображение', 'error');
+                    return;
+                }
+                
+                // Validate file size (max 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    showNotification('Изображението е твърде голямо. Максимален размер: 2MB', 'error');
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    target.disabled = true;
+                    target.textContent = '⏳ Качване...';
+                    
+                    // Upload the file
+                    const imageUrl = await uploadImageToGitHub(file);
+                    
+                    // Update the input field with the URL
+                    if (inputElement) {
+                        inputElement.value = imageUrl;
+                    }
+                    
+                    showNotification('Изображението е качено успешно!', 'success');
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showNotification(`Грешка при качване: ${error.message}`, 'error');
+                } finally {
+                    // Reset button state
+                    target.disabled = false;
+                    target.textContent = '📤 Upload';
+                    // Clear file input
+                    fileInput.value = '';
+                }
+            };
+            
+            fileInput.click();
+            break;
+        }
     }
 }
 
@@ -1408,7 +1458,80 @@ function setProperty(obj, path, value) {
 }
 
 // =======================================================
-//          8. ИНИЦИАЛИЗАЦИЯ НА ПРИЛОЖЕНИЕТО
+//          8. IMAGE UPLOAD TO GITHUB
+// =======================================================
+
+/**
+ * Uploads an image file to GitHub repository
+ * @param {File} file - The image file to upload
+ * @returns {Promise<string>} - The URL of the uploaded image
+ */
+async function uploadImageToGitHub(file) {
+    // Configuration for GitHub upload
+    // NOTE: In production, these should be environment variables or secure configuration
+    const GITHUB_TOKEN = prompt('Моля въведете GitHub Personal Access Token:\n\n(Token трябва да има \'repo\' permissions)');
+    
+    if (!GITHUB_TOKEN) {
+        throw new Error('GitHub token е необходим за качване на изображения');
+    }
+    
+    const GITHUB_OWNER = 'Radilovk';  // Repository owner
+    const GITHUB_REPO = 'otslabvai';  // Repository name
+    const GITHUB_BRANCH = 'main';      // Branch to upload to
+    
+    // Generate unique filename
+    const timestamp = Date.now();
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filename = `product-${timestamp}-${sanitizedName}`;
+    const filepath = `images/products/${filename}`;
+    
+    // Convert file to base64
+    const fileContent = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            // Remove the data:image/...;base64, prefix
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+    
+    // Prepare the API request
+    const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${filepath}`;
+    
+    const payload = {
+        message: `Upload product image: ${filename}`,
+        content: fileContent,
+        branch: GITHUB_BRANCH
+    };
+    
+    // Make the API request
+    const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `GitHub API error: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    // Return the raw GitHub URL for the image
+    const imageUrl = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${filepath}`;
+    
+    return imageUrl;
+}
+
+// =======================================================
+//          9. ИНИЦИАЛИЗАЦИЯ НА ПРИЛОЖЕНИЕТО
 // =======================================================
 
 async function init() {

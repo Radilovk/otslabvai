@@ -775,7 +775,13 @@
                         <legend>Изображения на продукта</legend>
                         <div class="form-group">
                             <label>Основно изображение (URL)</label>
-                            <input type="text" data-field="public_data.image_url" placeholder="https://example.com/image.jpg">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="text" data-field="public_data.image_url" placeholder="https://example.com/image.jpg" style="flex: 1;">
+                                <button type="button" class="btn btn-sm btn-secondary" data-action="upload-product-image" data-target-field="public_data.image_url">
+                                    📤 Upload
+                                </button>
+                            </div>
+                            <small style="color: var(--text-secondary); font-size: 0.85rem;">Въведете URL или качете изображение (препоръчителен размер: 800x800px)</small>
                         </div>
                         <div class="form-group">
                             <label>Допълнителни изображения (по едно на ред)</label>
@@ -1109,6 +1115,9 @@
             <!-- Тук може да се добави редактор за колоните, ако е нужно в бъдеще -->
         </form>
     </template>
+
+    <!-- Hidden file input for image uploads -->
+    <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
 
     <!-- Връзка към външния JavaScript файл. type="module" е важен за модерния JS. -->
     <script src="admin.js" type="module"></script>
