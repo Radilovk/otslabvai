@@ -822,6 +822,27 @@ function populateForm(form, data) {
             });
         }
     }
+    
+    // Специално за hero banner - попълва stats и trust_badges
+    if (data.stats) {
+        const statsContainer = form.querySelector('[data-sub-container="hero-stats"]');
+        if (statsContainer) {
+            statsContainer.innerHTML = '';
+            data.stats.forEach(stat => {
+                addNestedItem(statsContainer, 'hero-stat-editor-template', stat);
+            });
+        }
+    }
+    
+    if (data.trust_badges) {
+        const trustBadgesContainer = form.querySelector('[data-sub-container="hero-trust-badges"]');
+        if (trustBadgesContainer) {
+            trustBadgesContainer.innerHTML = '';
+            data.trust_badges.forEach(badge => {
+                addNestedItem(trustBadgesContainer, 'hero-trust-badge-editor-template', badge);
+            });
+        }
+    }
 }
 
 function serializeForm(form) {
@@ -907,6 +928,32 @@ function serializeForm(form) {
             data.products.push(productData);
         });
     }
+    
+    // Специално за hero banner - събира stats и trust_badges
+    const heroStatsContainer = form.querySelector('[data-sub-container="hero-stats"]');
+    if (heroStatsContainer) {
+        data.stats = [];
+        heroStatsContainer.querySelectorAll(':scope > .nested-sub-item[data-type="hero-stat"]').forEach(statNode => {
+            const statData = {};
+            statNode.querySelectorAll('[data-field]').forEach(input => {
+                statData[input.dataset.field] = input.value;
+            });
+            data.stats.push(statData);
+        });
+    }
+    
+    const heroTrustBadgesContainer = form.querySelector('[data-sub-container="hero-trust-badges"]');
+    if (heroTrustBadgesContainer) {
+        data.trust_badges = [];
+        heroTrustBadgesContainer.querySelectorAll(':scope > .nested-sub-item[data-type="hero-trust-badge"]').forEach(badgeNode => {
+            const badgeData = {};
+            badgeNode.querySelectorAll('[data-field]').forEach(input => {
+                badgeData[input.dataset.field] = input.value;
+            });
+            data.trust_badges.push(badgeData);
+        });
+    }
+    
     return data;
 }
 
@@ -1175,6 +1222,56 @@ function handleAction(action, target, id) {
             fileInput.click();
             break;
         }
+        case 'upload-product-image': {
+            const fileInput = document.getElementById('image-upload-input');
+            const targetFieldPath = target.dataset.targetField;
+            const inputElement = target.closest('.form-group').querySelector(`[data-field="${targetFieldPath}"]`);
+            
+            fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showNotification('Моля изберете изображение', 'error');
+                    return;
+                }
+                
+                // Validate file size (max 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    showNotification('Изображението е твърде голямо. Максимален размер: 2MB', 'error');
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    target.disabled = true;
+                    target.textContent = '⏳ Качване...';
+                    
+                    // Upload the file
+                    const imageUrl = await uploadImageToGitHub(file);
+                    
+                    // Update the input field with the URL
+                    if (inputElement) {
+                        inputElement.value = imageUrl;
+                    }
+                    
+                    showNotification('Изображението е качено успешно!', 'success');
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showNotification(`Грешка при качване: ${error.message}`, 'error');
+                } finally {
+                    // Reset button state
+                    target.disabled = false;
+                    target.textContent = '📤 Upload';
+                    // Clear file input
+                    fileInput.value = '';
+                }
+            };
+            
+            fileInput.click();
+            break;
+        }
     }
 }
 
@@ -1184,6 +1281,11 @@ function handleAction(action, target, id) {
 
 function initSortable(element, dataArray) {
     if(!element) return;
+    // Check if Sortable is available (library might be blocked or not loaded)
+    if (typeof Sortable === 'undefined') {
+        console.warn('Sortable.js library not available - drag and drop will not work');
+        return;
+    }
     new Sortable(element, {
         handle: '.handle',
         animation: 150,
@@ -1356,7 +1458,97 @@ function setProperty(obj, path, value) {
 }
 
 // =======================================================
-//          8. ИНИЦИАЛИЗАЦИЯ НА ПРИЛОЖЕНИЕТО
+//          8. IMAGE UPLOAD TO GITHUB
+// =======================================================
+
+/**
+ * Uploads an image file to GitHub repository
+ * @param {File} file - The image file to upload
+ * @returns {Promise<string>} - The URL of the uploaded image
+ */
+async function uploadImageToGitHub(file) {
+    // Configuration for GitHub upload
+    const GITHUB_OWNER = 'Radilovk';  // Repository owner
+    const GITHUB_REPO = 'otslabvai';  // Repository name
+    const GITHUB_BRANCH = 'main';      // Branch to upload to
+    
+    // Try to get token from sessionStorage first (temporary storage for session)
+    let GITHUB_TOKEN = sessionStorage.getItem('github_upload_token');
+    
+    if (!GITHUB_TOKEN) {
+        GITHUB_TOKEN = prompt(
+            'Моля въведете GitHub Personal Access Token:\n\n' +
+            '(Token трябва да има \'repo\' permissions)\n' +
+            'Token-ът ще бъде запазен само за тази сесия.'
+        );
+        
+        if (!GITHUB_TOKEN) {
+            throw new Error('GitHub token е необходим за качване на изображения');
+        }
+        
+        // Store token in sessionStorage (cleared when browser closes)
+        sessionStorage.setItem('github_upload_token', GITHUB_TOKEN);
+    }
+    
+    // Generate unique filename
+    const timestamp = Date.now();
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filename = `product-${timestamp}-${sanitizedName}`;
+    const filepath = `images/products/${filename}`;
+    
+    // Convert file to base64
+    const fileContent = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            // Remove the data:image/...;base64, prefix
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+    
+    // Prepare the API request
+    const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${filepath}`;
+    
+    const payload = {
+        message: `Upload product image: ${filename}`,
+        content: fileContent,
+        branch: GITHUB_BRANCH
+    };
+    
+    // Make the API request
+    const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        
+        // If token is invalid, clear it from storage
+        if (response.status === 401 || response.status === 403) {
+            sessionStorage.removeItem('github_upload_token');
+        }
+        
+        throw new Error(error.message || `GitHub API error: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    // Return the raw GitHub URL for the image
+    const imageUrl = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${filepath}`;
+    
+    return imageUrl;
+}
+
+// =======================================================
+//          9. ИНИЦИАЛИЗАЦИЯ НА ПРИЛОЖЕНИЕТО
 // =======================================================
 
 async function init() {
