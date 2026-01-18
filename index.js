@@ -221,6 +221,22 @@ const generateHeroHTML = component => {
         </div>
     `).join('');
     
+    // Get trust badges configuration with defaults
+    const trustBadges = component.trust_badges || [
+        { text: 'Клинично тествано' },
+        { text: 'GMP сертифицирано' },
+        { text: '30 дни гаранция' }
+    ];
+    
+    const trustBadgesHTML = trustBadges.map(badge => `
+        <div class="trust-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            ${escapeHtml(badge.text)}
+        </div>
+    `).join('');
+    
     return `
     <header class="hero-section${heroClass}"${heroStyle}>
         <div class="container">
@@ -235,24 +251,7 @@ const generateHeroHTML = component => {
                     ${statsHTML}
                 </div>
                 <div class="hero-trust-badges">
-                    <div class="trust-badge">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        Клинично тествано
-                    </div>
-                    <div class="trust-badge">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        GMP сертифицирано
-                    </div>
-                    <div class="trust-badge">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        30 дни гаранция
-                    </div>
+                    ${trustBadgesHTML}
                 </div>
             </div>
         </div>

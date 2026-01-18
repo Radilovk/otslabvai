@@ -472,7 +472,23 @@
             
             <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
             <h4 style="margin-bottom: 1rem; color: var(--accent);">📊 Статистики</h4>
-            <p style="margin-bottom: 1rem;"><em>Забележка: За редакция на статистиките, моля редактирайте JSON файла директно или свържете се с разработчика.</em></p>
+            <fieldset>
+                <legend>Статистики в Hero секция</legend>
+                <div class="nested-sublist-container" data-sub-container="hero-stats">
+                    <!-- Статистиките ще се генерират тук от JS -->
+                </div>
+                <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="hero-stat-editor-template" data-container="[data-sub-container='hero-stats']">Добави статистика</button>
+            </fieldset>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">🛡️ Trust Badges</h4>
+            <fieldset>
+                <legend>Trust Badges (доверителни знаци)</legend>
+                <div class="nested-sublist-container" data-sub-container="hero-trust-badges">
+                    <!-- Trust badges ще се генерират тук от JS -->
+                </div>
+                <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="hero-trust-badge-editor-template" data-container="[data-sub-container='hero-trust-badges']">Добави trust badge</button>
+            </fieldset>
             
             <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
             <h4 style="margin-bottom: 1rem; color: var(--accent);">🎨 Фон на Hero секция</h4>
@@ -930,6 +946,32 @@
                 <textarea data-field="answer" rows="3" placeholder="Отговорът на въпроса"></textarea>
             </div>
             <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий въпроса">×</button>
+        </div>
+    </template>
+
+    <!-- Вложен шаблон за редактор на HERO СТАТИСТИКА -->
+    <template id="hero-stat-editor-template">
+        <div class="nested-sub-item" data-type="hero-stat">
+             <div class="form-group">
+                <label>Стойност</label>
+                <input type="text" data-field="value" placeholder="Напр. 2,840+ или 98%">
+            </div>
+             <div class="form-group">
+                <label>Етикет</label>
+                <input type="text" data-field="label" placeholder="Напр. Доволни клиенти">
+            </div>
+            <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий статистиката">×</button>
+        </div>
+    </template>
+
+    <!-- Вложен шаблон за редактор на HERO TRUST BADGE -->
+    <template id="hero-trust-badge-editor-template">
+        <div class="nested-sub-item" data-type="hero-trust-badge">
+             <div class="form-group">
+                <label>Текст на badge</label>
+                <input type="text" data-field="text" placeholder="Напр. Клинично тествано">
+            </div>
+            <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий badge">×</button>
         </div>
     </template>
     

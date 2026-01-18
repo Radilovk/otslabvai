@@ -822,6 +822,27 @@ function populateForm(form, data) {
             });
         }
     }
+    
+    // Специално за hero banner - попълва stats и trust_badges
+    if (data.stats) {
+        const statsContainer = form.querySelector('[data-sub-container="hero-stats"]');
+        if (statsContainer) {
+            statsContainer.innerHTML = '';
+            data.stats.forEach(stat => {
+                addNestedItem(statsContainer, 'hero-stat-editor-template', stat);
+            });
+        }
+    }
+    
+    if (data.trust_badges) {
+        const trustBadgesContainer = form.querySelector('[data-sub-container="hero-trust-badges"]');
+        if (trustBadgesContainer) {
+            trustBadgesContainer.innerHTML = '';
+            data.trust_badges.forEach(badge => {
+                addNestedItem(trustBadgesContainer, 'hero-trust-badge-editor-template', badge);
+            });
+        }
+    }
 }
 
 function serializeForm(form) {
@@ -907,6 +928,32 @@ function serializeForm(form) {
             data.products.push(productData);
         });
     }
+    
+    // Специално за hero banner - събира stats и trust_badges
+    const heroStatsContainer = form.querySelector('[data-sub-container="hero-stats"]');
+    if (heroStatsContainer) {
+        data.stats = [];
+        heroStatsContainer.querySelectorAll(':scope > .nested-sub-item[data-type="hero-stat"]').forEach(statNode => {
+            const statData = {};
+            statNode.querySelectorAll('[data-field]').forEach(input => {
+                statData[input.dataset.field] = input.value;
+            });
+            data.stats.push(statData);
+        });
+    }
+    
+    const heroTrustBadgesContainer = form.querySelector('[data-sub-container="hero-trust-badges"]');
+    if (heroTrustBadgesContainer) {
+        data.trust_badges = [];
+        heroTrustBadgesContainer.querySelectorAll(':scope > .nested-sub-item[data-type="hero-trust-badge"]').forEach(badgeNode => {
+            const badgeData = {};
+            badgeNode.querySelectorAll('[data-field]').forEach(input => {
+                badgeData[input.dataset.field] = input.value;
+            });
+            data.trust_badges.push(badgeData);
+        });
+    }
+    
     return data;
 }
 
