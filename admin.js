@@ -1231,6 +1231,11 @@ function handleAction(action, target, id) {
 
 function initSortable(element, dataArray) {
     if(!element) return;
+    // Check if Sortable is available (library might be blocked or not loaded)
+    if (typeof Sortable === 'undefined') {
+        console.warn('Sortable.js library not available - drag and drop will not work');
+        return;
+    }
     new Sortable(element, {
         handle: '.handle',
         animation: 150,
