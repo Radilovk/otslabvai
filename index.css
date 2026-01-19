@@ -3321,6 +3321,6 @@ body.modal-open { overflow: hidden; }
     }
     
     .ingredient-card-full {
-        height: 120px;
+        min-height: 120px;
     }
 }
