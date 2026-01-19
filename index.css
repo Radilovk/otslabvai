@@ -2899,7 +2899,7 @@ body.modal-open { overflow: hidden; }
 .ingredient-card-mini .card-inner {
     position: relative;
     width: 100%;
-    height: 100%;
+    min-height: 120px;
     transition: transform 0.6s;
     transform-style: preserve-3d;
 }
@@ -2912,7 +2912,7 @@ body.modal-open { overflow: hidden; }
 .ingredient-card-mini .card-back {
     position: absolute;
     width: 100%;
-    height: 100%;
+    min-height: 120px;
     backface-visibility: hidden;
     display: flex;
     flex-direction: column;
@@ -2936,6 +2936,7 @@ body.modal-open { overflow: hidden; }
 .ingredient-card-mini .card-back {
     transform: rotateY(180deg);
     padding: 15px;
+    overflow-y: auto;
 }
 
 .ingredient-card-mini .card-back p {
@@ -3138,7 +3139,7 @@ body.modal-open { overflow: hidden; }
 
 .ingredient-card-full {
     background-color: transparent;
-    height: 140px;
+    min-height: 140px;
     perspective: 1000px;
     cursor: pointer;
 }
@@ -3146,7 +3147,7 @@ body.modal-open { overflow: hidden; }
 .ingredient-card-full .card-inner {
     position: relative;
     width: 100%;
-    height: 100%;
+    min-height: 140px;
     text-align: center;
     transition: transform 0.6s;
     transform-style: preserve-3d;
@@ -3163,7 +3164,7 @@ body.modal-open { overflow: hidden; }
 .ingredient-card-full .card-back {
     position: absolute;
     width: 100%;
-    height: 100%;
+    min-height: 140px;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     display: flex;
@@ -3196,6 +3197,7 @@ body.modal-open { overflow: hidden; }
     background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
     color: var(--color-white);
     transform: rotateY(180deg);
+    overflow-y: auto;
 }
 
 .ingredient-card-full .card-back p {
