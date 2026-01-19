@@ -812,6 +812,14 @@ function initializePageInteractions(settings = {}) {
     // --- Ingredient Card Flip (Lipolor style) - supports both mini and full versions ---
     document.querySelectorAll('.ingredient-card, .ingredient-card-mini, .ingredient-card-full').forEach(card => {
         const toggleFlip = () => {
+            // Close all other cards first
+            document.querySelectorAll('.ingredient-card.is-flipped, .ingredient-card-mini.is-flipped, .ingredient-card-full.is-flipped').forEach(otherCard => {
+                if (otherCard !== card) {
+                    otherCard.classList.remove('is-flipped');
+                }
+            });
+            
+            // Toggle current card
             card.classList.toggle('is-flipped');
         };
 
