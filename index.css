@@ -2396,24 +2396,6 @@ body.modal-open { overflow: hidden; }
     overflow: visible;
 }
 
-.product-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--accent);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: -1;
-    border-radius: inherit;
-}
-
-.product-card:hover::before {
-    opacity: 0.05;
-}
-
 /* Media Queries for Mobile */
 @media (max-width: 768px) {
     .sticky-cta {
