@@ -987,7 +987,7 @@
             "label_image": "https://fitness1.bg/label/suppfacts986de.jpg"
           },
           "system_data": {
-            "application_type": "",
+            "application_type": "Oral / Tablets",
             "inventory": 35,
             "goals": [
               "natural",
@@ -998,7 +998,8 @@
             "synergy_products": [],
             "safety_warnings": "Няма.",
             "manufacturer": "EthicSport",
-            "doses_count": 25
+            "doses_count": 25,
+            "capsules_count": 50
           }
         },
         {
