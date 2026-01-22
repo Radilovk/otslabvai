@@ -103,7 +103,8 @@
                 "description": "Оригинална формула",
                 "url": "#"
               }
-            ]
+            ],
+            "label_image": "/images/products/lida-green.png?type=label"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -213,7 +214,8 @@
                 "description": "Стандартна опаковка",
                 "url": "#"
               }
-            ]
+            ],
+            "label_image": "/images/products/meizimax.png?type=label"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -323,7 +325,8 @@
                 "description": "Курс за детокс и гладка кожа",
                 "url": "#"
               }
-            ]
+            ],
+            "label_image": "/images/products/eveslim-birch.png?type=label"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -433,7 +436,8 @@
                 "description": "Загряващ курс",
                 "url": "#"
               }
-            ]
+            ],
+            "label_image": "/images/products/eveslim-cayenne.png?type=label"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
