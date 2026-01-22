@@ -14,7 +14,7 @@
           "public_data": {
             "name": "Lida Green",
             "tagline": "АБСОЛЮТНИЯТ ЛИДЕР: Най-мощният ефект на пазара",
-            "price": 34.77,
+            "price": 17.78,
             "description": "Lida Green е продуктът-легенда, към който се обръщате, когато всичко друго се е провалило. Това е безкомпромисното решение за бърза и видима промяна. Разработена за максимално въздействие, формулата атакува упоритите мазнини в проблемните зони (корем, ханш, бедра) и елиминира глада за сладко и тестено. Ако търсите не просто отслабване, а пълна трансформация, Lida Green е вашият сигурен път към успеха.",
             "image_url": "/images/products/lida-green.png",
             "research_note": {
@@ -33,10 +33,6 @@
               {
                 "label": "Бързина на ефекта",
                 "value": 100
-              },
-              {
-                "label": "Отводняване",
-                "value": 90
               }
             ],
             "about_content": {
@@ -104,7 +100,9 @@
                 "url": "#"
               }
             ],
-            "label_image": "/images/products/lida-green.png?type=label"
+            "label_image": "/images/products/lida-green.png?type=label",
+            "price_bgn": 34.77,
+            "currency": "EUR"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -125,7 +123,7 @@
           "public_data": {
             "name": "MeiziMax",
             "tagline": "Японска формула за стройна фигура и сияйна кожа",
-            "price": 38.35,
+            "price": 19.61,
             "description": "MeiziMax е елегантният избор за отслабване, вдъхновен от японската философия за хармония между тяло и дух. Това е вторият по сила продукт в каталога, но с уникален разкрасяващ ефект. Той не само топи килограмите, но и работи за изчистване на кожата, намаляване на целулита и придаване на сияен тен. Идеален е за дами със заседнал начин на живот, които искат да постигнат фина фигура и безупречна визия.",
             "image_url": "/images/products/meizimax.png",
             "research_note": {
@@ -144,10 +142,6 @@
               {
                 "label": "Чиста кожа и детокс",
                 "value": 90
-              },
-              {
-                "label": "Анти-целулит",
-                "value": 80
               }
             ],
             "about_content": {
@@ -215,7 +209,9 @@
                 "url": "#"
               }
             ],
-            "label_image": "/images/products/meizimax.png?type=label"
+            "label_image": "/images/products/meizimax.png?type=label",
+            "price_bgn": 38.35,
+            "currency": "EUR"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -236,7 +232,7 @@
           "public_data": {
             "name": "Eveslim Birch Bark",
             "tagline": "№1 срещу целулит, отоци и подпухване",
-            "price": 31.7,
+            "price": 16.21,
             "description": "Eveslim с брезова кора е вашето специализирано оръжие срещу упорития целулит и досадното задържане на вода. Ако често се чувствате подути, краката ви тежат в края на деня, а кожата на бедрата има неравности, този продукт е създаден точно за вас. Той действа като мощен лимфен дренаж, който изчиства тялото отвътре, за да бъде гладко и красиво отвън.",
             "image_url": "/images/products/eveslim-birch.png",
             "research_note": {
@@ -255,10 +251,6 @@
               {
                 "label": "Детокс",
                 "value": 90
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
               }
             ],
             "about_content": {
@@ -326,7 +318,9 @@
                 "url": "#"
               }
             ],
-            "label_image": "/images/products/eveslim-birch.png?type=label"
+            "label_image": "/images/products/eveslim-birch.png?type=label",
+            "price_bgn": 31.7,
+            "currency": "EUR"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -347,7 +341,7 @@
           "public_data": {
             "name": "Eveslim Cayenne Pepper",
             "tagline": "Огнена сила срещу бавен метаболизъм",
-            "price": 31.7,
+            "price": 16.21,
             "description": "Чувствате ли, че метаболизмът ви е 'заспал'? Крайниците ви са постоянно студени, а килограмите се трупат дори от въздуха? Eveslim с люта чушка е вашето решение. Той действа като 'запалване' за метаболизма, използвайки силата на капсаицина, за да загрее тялото отвътре и да го превърне в машина за изгаряне на калории, дори докато си почивате.",
             "image_url": "/images/products/eveslim-cayenne.png",
             "research_note": {
@@ -366,10 +360,6 @@
               {
                 "label": "Контрол на апетита",
                 "value": 80
-              },
-              {
-                "label": "Стягане",
-                "value": 70
               }
             ],
             "about_content": {
@@ -437,7 +427,9 @@
                 "url": "#"
               }
             ],
-            "label_image": "/images/products/eveslim-cayenne.png?type=label"
+            "label_image": "/images/products/eveslim-cayenne.png?type=label",
+            "price_bgn": 31.7,
+            "currency": "EUR"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -470,7 +462,7 @@
           "product_id": "prod-raw-nutrition-essential-fat-burner",
           "public_data": {
             "name": "Essential",
-            "price": 50.61,
+            "price": 25.88,
             "tagline": "Луксозна формула за енергия и тонус",
             "image_url": "/images/products/raw-nutrition.png",
             "additional_images": "",
@@ -499,16 +491,16 @@
             },
             "effects": [
               {
-                "label": "Енергия и тонус",
-                "value": 90
-              },
-              {
-                "label": "Изгаряне на мазнини",
+                "label": "Термогенеза",
                 "value": 70
               },
               {
-                "label": "Контрол на апетита",
-                "value": 70
+                "label": "Енергия",
+                "value": 80
+              },
+              {
+                "label": "Метаболизъм",
+                "value": 75
               }
             ],
             "ingredients": [
@@ -547,7 +539,9 @@
                 "answer": "Продуктът е достатъчно балансиран за по-продължителен прием. Препоръчваме цикъл от 8-12 седмици прием, последван от 2-4 седмици почивка, за да се запази чувствителността на рецепторите."
               }
             ],
-            "label_image": "https://fitness1.bg/label/suppfacts5c0f6.jpg"
+            "label_image": "https://fitness1.bg/label/suppfacts5c0f6.jpg",
+            "price_bgn": 50.61,
+            "currency": "EUR"
           },
           "system_data": {
             "application_type": "",
@@ -570,7 +564,7 @@
           "product_id": "prod-sport-definition-fat-no-more",
           "public_data": {
             "name": "Fat No More",
-            "price": 25.05,
+            "price": 12.81,
             "tagline": "Бърз контрол над глада",
             "image_url": "/images/products/sport-definition.png",
             "additional_images": "",
@@ -595,8 +589,8 @@
             },
             "effects": [
               {
-                "label": "Потискане на апетита",
-                "value": 80
+                "label": "Термогенеза",
+                "value": 85
               },
               {
                 "label": "Енергия",
@@ -604,7 +598,7 @@
               },
               {
                 "label": "Изгаряне на мазнини",
-                "value": 70
+                "value": 85
               }
             ],
             "ingredients": [
@@ -663,7 +657,9 @@
                 "answer": "Идеален е за хора, които имат нужда от силен първоначален тласък, за да започнат диета, или за тези, които са достигнали 'плато' в отслабването и имат нужда да раздвижат метаболизма си."
               }
             ],
-            "label_image": "https://fitness1.bg/label/supp-factsc3c6c.jpg"
+            "label_image": "https://fitness1.bg/label/supp-factsc3c6c.jpg",
+            "price_bgn": 25.05,
+            "currency": "EUR"
           },
           "system_data": {
             "application_type": "",
@@ -685,7 +681,7 @@
           "product_id": "prod-trec-nutrition-thermo-fat-burner",
           "public_data": {
             "name": "Thermo Fat Burner",
-            "price": 21.47,
+            "price": 10.98,
             "tagline": "Лек и балансиран за всеки ден",
             "image_url": "/images/products/trec-nutrition.png",
             "additional_images": "",
@@ -696,16 +692,16 @@
             },
             "effects": [
               {
-                "label": "Отводняване",
-                "value": 70
-              },
-              {
-                "label": "Метаболизъм",
-                "value": 60
+                "label": "Термогенеза",
+                "value": 85
               },
               {
                 "label": "Енергия",
-                "value": 60
+                "value": 80
+              },
+              {
+                "label": "Изгаряне на мазнини",
+                "value": 85
               }
             ],
             "about_content": {
@@ -768,7 +764,9 @@
                 "answer": "Ако след 1-2 месеца прием усетите, че ефектът намалява или искате да ускорите резултатите, може да помислите за преминаване към продукт от среден клас като 'Fat No More' или 'Essential'."
               }
             ],
-            "label_image": "https://fitness1.bg/label/chrome_apNU0cuqc177367.jpg"
+            "label_image": "https://fitness1.bg/label/chrome_apNU0cuqc177367.jpg",
+            "price_bgn": 21.47,
+            "currency": "EUR"
           },
           "system_data": {
             "application_type": "",
@@ -790,7 +788,7 @@
           "product_id": "prod-allnutrition-burn4all",
           "public_data": {
             "name": "Burn4All",
-            "price": 12.78,
+            "price": 6.53,
             "tagline": "Бюджетен избор за тонус",
             "image_url": "/images/products/allnutrition.png",
             "additional_images": "",
@@ -801,16 +799,16 @@
             },
             "effects": [
               {
+                "label": "Термогенеза",
+                "value": 85
+              },
+              {
                 "label": "Енергия",
-                "value": 60
+                "value": 80
               },
               {
                 "label": "Метаболизъм",
-                "value": 60
-              },
-              {
-                "label": "Цена/Качество",
-                "value": 100
+                "value": 75
               }
             ],
             "about_content": {
@@ -883,7 +881,9 @@
                 "answer": "Препоръчителната доза е 3 капсули дневно. Можете да ги приемете наведнъж сутрин или да ги разделите - например 2 преди закуска и 1 преди обяд."
               }
             ],
-            "label_image": "https://fitness1.bg/label/PGRcE8v3fa1f.jpg"
+            "label_image": "https://fitness1.bg/label/PGRcE8v3fa1f.jpg",
+            "price_bgn": 12.78,
+            "currency": "EUR"
           },
           "system_data": {
             "application_type": "",
@@ -905,7 +905,7 @@
           "product_id": "prod-ethicsport-thermo-master",
           "public_data": {
             "name": "Thermo Master",
-            "price": 32.72,
+            "price": 16.73,
             "tagline": "Италиански билков комплекс",
             "image_url": "/images/products/ethicsport.png",
             "additional_images": "",
@@ -916,16 +916,16 @@
             },
             "effects": [
               {
-                "label": "Детокс",
+                "label": "Термогенеза",
+                "value": 85
+              },
+              {
+                "label": "Енергия",
                 "value": 80
               },
               {
-                "label": "Натурален състав",
-                "value": 100
-              },
-              {
                 "label": "Метаболизъм",
-                "value": 70
+                "value": 75
               }
             ],
             "about_content": {
@@ -988,7 +988,9 @@
                 "answer": "Да, благодарение на своя натурален и балансиран състав, Thermo Master е напълно безопасен за продължителен прием от няколко месеца без нужда от почивка."
               }
             ],
-            "label_image": "https://fitness1.bg/label/suppfacts986de.jpg"
+            "label_image": "https://fitness1.bg/label/suppfacts986de.jpg",
+            "price_bgn": 32.72,
+            "currency": "EUR"
           },
           "system_data": {
             "application_type": "Oral / Tablets",
@@ -1009,9 +1011,9 @@
         {
           "product_id": "prod-16905",
           "public_data": {
-            "name": "Fat No More",
+            "name": "Sport Definition Fat No More",
             "tagline": "Sport Definition - Термогенен фет бърнер",
-            "price": 38.95,
+            "price": 19.91,
             "description": "Fat No More е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_16905/SD_Fat_No_More_120cap_600px1_kamera1-aab4bde-original.png",
             "label_image": "/images/products/product_16905/supp-factsc3c6c.jpg",
@@ -1025,12 +1027,8 @@
                 "value": 80
               },
               {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
+                "label": "Изгаряне на мазнини",
+                "value": 85
               }
             ],
             "ingredients": [
@@ -1056,7 +1054,9 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "price_bgn": 38.95,
+            "currency": "EUR"
           },
           "system_data": {
             "manufacturer": "Sport Definition",
@@ -1081,7 +1081,7 @@
           "public_data": {
             "name": "Thermo Caps | Thermogenic Fat Burner for Women",
             "tagline": "Nutriversum - Термогенен фет бърнер",
-            "price": 34.95,
+            "price": 17.87,
             "description": "Thermo Caps | Thermogenic Fat Burner for Women е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_24527/Thermo_Caps_120-740d2a8-original.png",
             "label_image": "/images/products/product_24527/supp-factsf9e51.jpg",
@@ -1095,12 +1095,8 @@
                 "value": 80
               },
               {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
+                "label": "Изгаряне на мазнини",
+                "value": 85
               }
             ],
             "ingredients": [
@@ -1126,7 +1122,9 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "price_bgn": 34.95,
+            "currency": "EUR"
           },
           "system_data": {
             "manufacturer": "Nutriversum",
@@ -1151,7 +1149,7 @@
           "public_data": {
             "name": "Essential Fat Burner | Thermogenic",
             "tagline": "RAW Nutrition - Термогенен фет бърнер",
-            "price": 98.95,
+            "price": 50.59,
             "description": "Essential Fat Burner | Thermogenic е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_37086/EssentialFatBurner_720x-db2bd27-original.png",
             "label_image": "/images/products/product_37086/i_view64_Eava43gfvZ9336c.jpg",
@@ -1165,12 +1163,8 @@
                 "value": 80
               },
               {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
+                "label": "Изгаряне на мазнини",
+                "value": 85
               }
             ],
             "ingredients": [
@@ -1196,7 +1190,9 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "price_bgn": 98.95,
+            "currency": "EUR"
           },
           "system_data": {
             "manufacturer": "RAW Nutrition",
@@ -1221,7 +1217,7 @@
           "public_data": {
             "name": "Burn4All Extreme | High Thermogenesis",
             "tagline": "AllNutrition - Термогенен фет бърнер",
-            "price": 30.99,
+            "price": 15.84,
             "description": "Burn4All Extreme | High Thermogenesis е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_24605/allnutrition-burn4all-extreme-8d74e05-original.png",
             "label_image": "/images/products/product_24605/PGRcE8v3fa1f.jpg",
@@ -1235,12 +1231,8 @@
                 "value": 80
               },
               {
-                "label": "Фокус",
+                "label": "Метаболизъм",
                 "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
               }
             ],
             "ingredients": [
@@ -1266,7 +1258,9 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "price_bgn": 30.99,
+            "currency": "EUR"
           },
           "system_data": {
             "manufacturer": "AllNutrition",
@@ -1291,7 +1285,7 @@
           "public_data": {
             "name": "Fat Transporter | Lipotropic Fat Burner",
             "tagline": "Trec Nutrition - Термогенен фет бърнер",
-            "price": 83.95,
+            "price": 42.92,
             "description": "Fat Transporter | Lipotropic Fat Burner е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_5177/Fat_Transporter_i574_d1200x1200-a444781-original.png",
             "label_image": "/images/products/product_5177/chrome_LUdG2tSj84db77f.jpg",
@@ -1305,12 +1299,8 @@
                 "value": 80
               },
               {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
+                "label": "Изгаряне на мазнини",
+                "value": 85
               }
             ],
             "ingredients": [
@@ -1336,7 +1326,9 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "price_bgn": 83.95,
+            "currency": "EUR"
           },
           "system_data": {
             "manufacturer": "Trec Nutrition",
@@ -1361,26 +1353,22 @@
           "public_data": {
             "name": "Lipo 6 / L-Carnitine",
             "tagline": "Nutrex - Термогенен фет бърнер",
-            "price": 73.0,
+            "price": 37.32,
             "description": "Lipo 6 / L-Carnitine е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_31/Screenshot2025-07-24105715e2782.jpg",
             "label_image": "/images/products/product_31/Screenshot2025-07-24105715e2782.jpg",
             "effects": [
               {
                 "label": "Термогенеза",
-                "value": 85
+                "value": 70
               },
               {
                 "label": "Енергия",
                 "value": 80
               },
               {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
+                "label": "Изгаряне на мазнини",
+                "value": 85
               }
             ],
             "ingredients": [
@@ -1406,7 +1394,9 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "price_bgn": 73.0,
+            "currency": "EUR"
           },
           "system_data": {
             "manufacturer": "Nutrex",
@@ -1431,26 +1421,22 @@
           "public_data": {
             "name": "Lipo 6 Black",
             "tagline": "Nutrex - Термогенен фет бърнер",
-            "price": 97.0,
+            "price": 49.6,
             "description": "Lipo 6 Black е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_742/Lipo6-BlackUC-60-0b247b3-original.webp",
             "label_image": "/images/products/product_742/204WDg1ecebc.jpg",
             "effects": [
               {
                 "label": "Термогенеза",
-                "value": 85
+                "value": 70
               },
               {
                 "label": "Енергия",
                 "value": 80
               },
               {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
+                "label": "Изгаряне на мазнини",
+                "value": 85
               }
             ],
             "ingredients": [
@@ -1476,7 +1462,9 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "price_bgn": 97.0,
+            "currency": "EUR"
           },
           "system_data": {
             "manufacturer": "Nutrex",
