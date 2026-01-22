@@ -6,21 +6,34 @@ Validate products have all required fields and generate a report.
 import json
 from fix_products_json import load_products_json
 
+# Validation constants
+MIN_DESCRIPTION_LENGTH = 50
+
 def validate_product(product, is_bestseller=False):
-    """Validate a product has all required fields"""
+    """
+    Validate a product has all required fields.
+    
+    Args:
+        product: Product dictionary to validate
+        is_bestseller: If True, skips detailed validation (bestsellers are pre-validated)
+    
+    Returns:
+        List of validation issues (empty if all valid)
+    """
     issues = []
     
     public_data = product.get('public_data', {})
     system_data = product.get('system_data', {})
     
-    # Skip detailed validation for bestsellers
+    # Skip detailed validation for bestsellers (as per requirements)
+    # Bestsellers are manually curated and pre-validated
     if is_bestseller:
         return []
     
     # 1. General description
     description = public_data.get('description', '')
-    if not description or len(description) < 50:
-        issues.append('Липсва подробно общо описание (минимум 50 символа)')
+    if not description or len(description) < MIN_DESCRIPTION_LENGTH:
+        issues.append(f'Липсва подробно общо описание (минимум {MIN_DESCRIPTION_LENGTH} символа)')
     
     # 2. Price
     price = public_data.get('price')

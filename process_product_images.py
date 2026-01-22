@@ -87,15 +87,14 @@ def load_excel_products():
     return df
 
 def find_product_by_id(products_data, product_id):
-    """Find a product in the loaded JSON by matching with product ID"""
-    # This is a placeholder - we need to implement proper matching
-    # based on product names or other identifiers
-    for category in products_data['categories']:
-        if category.get('type') == 'product_category':
-            for product in category.get('products', []):
-                # Check if product matches somehow
-                # For now, return None - will implement based on actual data
-                pass
+    """
+    Find a product in the loaded JSON by matching with product ID.
+    
+    Note: This function is not currently used as we match products
+    via Excel data and product names instead of internal IDs.
+    Kept for potential future use.
+    """
+    # TODO: Implement ID-based product matching if needed
     return None
 
 def identify_image_type(filename):
