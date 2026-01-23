@@ -116,6 +116,16 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
+          
+          case '/ai-settings':
+              if (request.method === 'GET') {
+                  response = await handleGetAISettings(request, env);
+              } else if (request.method === 'POST') {
+                  response = await handleSaveAISettings(request, env, ctx);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
             
           default:
             // Try to serve 404.html for unknown routes
@@ -374,29 +384,60 @@ async function handleCreateContact(request, env, ctx) {
 }
 
 /**
- * Handles POST /ai-assistant (AI Assistant for product information extraction)
+ * Handles GET /ai-settings (Get AI configuration)
  */
-async function handleAIAssistant(request, env) {
-    let productData;
+async function handleGetAISettings(request, env) {
+    const settingsJson = await env.PAGE_CONTENT.get('ai_settings');
+    const settings = settingsJson ? JSON.parse(settingsJson) : getDefaultAISettings();
+    
+    return new Response(JSON.stringify(settings), {
+        status: 200,
+        headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
+        }
+    });
+}
+
+/**
+ * Handles POST /ai-settings (Save AI configuration)
+ */
+async function handleSaveAISettings(request, env, ctx) {
+    let settings;
     try {
-        productData = await request.json();
+        settings = await request.json();
     } catch (e) {
         throw new UserFacingError("Невалиден JSON формат на заявката.", 400);
     }
     
-    if (!productData || !productData.productName) {
-        throw new UserFacingError("Липсва име на продукта.", 400);
+    // Validate settings
+    if (!settings.provider || !['cloudflare', 'openai', 'google'].includes(settings.provider)) {
+        throw new UserFacingError("Невалиден AI доставчик.", 400);
     }
     
-    if (!env.ACCOUNT_ID || !env.AI_TOKEN) {
-        throw new UserFacingError("AI функционалността не е конфигурирана.", 500);
-    }
+    // Save to KV
+    ctx.waitUntil(env.PAGE_CONTENT.put('ai_settings', JSON.stringify(settings, null, 2)));
     
-    // Създаваме промпт за AI модела
-    const prompt = `Ти си експерт по хранителни добавки и продукти за отслабване. Анализирай следната информация за продукт и попълни всички възможни полета в JSON формат базирайки се на твоите знания за този тип продукти.
+    return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * Get default AI settings
+ */
+function getDefaultAISettings() {
+    return {
+        provider: 'cloudflare',
+        model: '@cf/meta/llama-3.1-70b-instruct',
+        apiKey: '',
+        temperature: 0.3,
+        maxTokens: 4096,
+        promptTemplate: `Ти си експерт по хранителни добавки и продукти за отслабване. Анализирай следната информация за продукт и попълни всички възможни полета в JSON формат базирайки се на твоите знания за този тип продукти.
 
 Въведена информация:
-${JSON.stringify(productData, null, 2)}
+{{productData}}
 
 Моля попълни JSON обект със следните полета (на български език):
 {
@@ -461,71 +502,63 @@ ${JSON.stringify(productData, null, 2)}
 - Използвай български език
 - Бъди точен, грамотен и маркетингово компетентен
 - Ако липсва информация за поле, използвай null или празен масив []
-- Базирай се на твоите знания за подобни продукти`;
+- Базирай се на твоите знания за подобни продукти`
+    };
+}
 
+/**
+ * Handles POST /ai-assistant (AI Assistant for product information extraction)
+ */
+async function handleAIAssistant(request, env) {
+    let requestData;
     try {
-        const model = '@cf/meta/llama-3.1-70b-instruct';
-        const cfEndpoint = `https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/ai/run/${model}`;
-        
-        const payload = {
-            messages: [{ role: 'user', content: prompt }],
-            max_tokens: 4096,
-            temperature: 0.3
-        };
-        
-        const response = await fetch(cfEndpoint, {
-            method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${env.AI_TOKEN}`, 
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        const resultText = await response.text();
-        
-        if (!response.ok) {
-            console.error("AI API Request Failed. Status:", response.status, "Body:", resultText);
-            throw new UserFacingError("AI сървърът върна грешка. Моля, опитайте отново.", 500);
-        }
-        
-        const aiEnvelope = JSON.parse(resultText);
-        if (!aiEnvelope.result || !aiEnvelope.result.response) {
-            throw new Error("AI response is missing the 'result.response' field.");
-        }
-        
-        let aiResponseText = aiEnvelope.result.response;
-        
-        // Извличаме JSON от отговора
+        requestData = await request.json();
+    } catch (e) {
+        throw new UserFacingError("Невалиден JSON формат на заявката.", 400);
+    }
+    
+    const { productData, settings } = requestData;
+    
+    if (!productData || !productData.productName) {
+        throw new UserFacingError("Липсва име на продукта.", 400);
+    }
+    
+    // Get AI settings (use provided settings or load from KV)
+    let aiSettings = settings;
+    if (!aiSettings) {
+        const settingsJson = await env.PAGE_CONTENT.get('ai_settings');
+        aiSettings = settingsJson ? JSON.parse(settingsJson) : getDefaultAISettings();
+    }
+    
+    // Validate API key
+    if (!aiSettings.apiKey && aiSettings.provider !== 'cloudflare') {
+        throw new UserFacingError("Липсва API ключ за избрания AI доставчик.", 400);
+    }
+    
+    // For Cloudflare, check environment variables
+    if (aiSettings.provider === 'cloudflare' && (!env.ACCOUNT_ID || !env.AI_TOKEN)) {
+        throw new UserFacingError("Cloudflare AI не е конфигуриран.", 500);
+    }
+    
+    // Create prompt from template
+    const prompt = aiSettings.promptTemplate.replace('{{productData}}', JSON.stringify(productData, null, 2));
+    
+    try {
         let extractedData;
-        if (typeof aiResponseText === 'string') {
-            // Try to find and extract valid JSON from the response
-            let jsonStr = aiResponseText.trim();
-            
-            // If response starts with markdown code blocks, remove them
-            if (jsonStr.startsWith('```')) {
-                jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-            }
-            
-            // Find the start and end of the JSON object
-            const startIdx = jsonStr.indexOf('{');
-            const endIdx = jsonStr.lastIndexOf('}');
-            
-            if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) {
-                console.error("AI returned a string without JSON structure:", aiResponseText);
-                throw new UserFacingError('AI отговори с текст без JSON структура. Моля опитайте отново или опростете заявката.');
-            }
-            
-            try {
-                // Extract the JSON substring and parse it
-                jsonStr = jsonStr.substring(startIdx, endIdx + 1);
-                extractedData = JSON.parse(jsonStr);
-            } catch (parseError) {
-                console.error("Failed to parse JSON from AI response:", jsonStr, parseError);
-                throw new UserFacingError('AI отговори с невалиден JSON формат. Моля опитайте отново.');
-            }
-        } else {
-            extractedData = aiResponseText;
+        
+        // Call appropriate AI provider
+        switch (aiSettings.provider) {
+            case 'cloudflare':
+                extractedData = await callCloudflareAI(env, aiSettings, prompt);
+                break;
+            case 'openai':
+                extractedData = await callOpenAI(aiSettings, prompt);
+                break;
+            case 'google':
+                extractedData = await callGoogleAI(aiSettings, prompt);
+                break;
+            default:
+                throw new UserFacingError("Невалиден AI доставчик.", 400);
         }
         
         return new Response(JSON.stringify({
@@ -539,7 +572,158 @@ ${JSON.stringify(productData, null, 2)}
     } catch (e) {
         console.error("AI Assistant error:", e);
         if (e instanceof UserFacingError) throw e;
-        throw new UserFacingError("Грешка при обработка на AI заявката.", 500);
+        throw new UserFacingError(`Грешка при обработка на AI заявката: ${e.message}`, 500);
+    }
+}
+
+/**
+ * Call Cloudflare AI
+ */
+async function callCloudflareAI(env, settings, prompt) {
+    const model = settings.model || '@cf/meta/llama-3.1-70b-instruct';
+    const cfEndpoint = `https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/ai/run/${model}`;
+    
+    const payload = {
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: settings.maxTokens || 4096,
+        temperature: settings.temperature || 0.3
+    };
+    
+    const response = await fetch(cfEndpoint, {
+        method: 'POST',
+        headers: { 
+            'Authorization': `Bearer ${env.AI_TOKEN}`, 
+            'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify(payload)
+    });
+    
+    const resultText = await response.text();
+    
+    if (!response.ok) {
+        console.error("Cloudflare AI Request Failed. Status:", response.status, "Body:", resultText);
+        throw new Error("Cloudflare AI сървърът върна грешка.");
+    }
+    
+    const aiEnvelope = JSON.parse(resultText);
+    if (!aiEnvelope.result || !aiEnvelope.result.response) {
+        throw new Error("AI response is missing the 'result.response' field.");
+    }
+    
+    return extractJSONFromResponse(aiEnvelope.result.response);
+}
+
+/**
+ * Call OpenAI API
+ */
+async function callOpenAI(settings, prompt) {
+    const model = settings.model || 'gpt-4';
+    const endpoint = 'https://api.openai.com/v1/chat/completions';
+    
+    const payload = {
+        model: model,
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: settings.maxTokens || 4096,
+        temperature: settings.temperature || 0.3
+    };
+    
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 
+            'Authorization': `Bearer ${settings.apiKey}`, 
+            'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify(payload)
+    });
+    
+    const resultText = await response.text();
+    
+    if (!response.ok) {
+        console.error("OpenAI Request Failed. Status:", response.status, "Body:", resultText);
+        throw new Error("OpenAI API върна грешка.");
+    }
+    
+    const result = JSON.parse(resultText);
+    if (!result.choices || !result.choices[0] || !result.choices[0].message) {
+        throw new Error("OpenAI response is missing expected fields.");
+    }
+    
+    return extractJSONFromResponse(result.choices[0].message.content);
+}
+
+/**
+ * Call Google AI (Gemini)
+ */
+async function callGoogleAI(settings, prompt) {
+    const model = settings.model || 'gemini-pro';
+    const endpoint = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${settings.apiKey}`;
+    
+    const payload = {
+        contents: [{
+            parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+            temperature: settings.temperature || 0.3,
+            maxOutputTokens: settings.maxTokens || 4096
+        }
+    };
+    
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify(payload)
+    });
+    
+    const resultText = await response.text();
+    
+    if (!response.ok) {
+        console.error("Google AI Request Failed. Status:", response.status, "Body:", resultText);
+        throw new Error("Google AI API върна грешка.");
+    }
+    
+    const result = JSON.parse(resultText);
+    if (!result.candidates || !result.candidates[0] || !result.candidates[0].content) {
+        throw new Error("Google AI response is missing expected fields.");
+    }
+    
+    const textContent = result.candidates[0].content.parts[0].text;
+    return extractJSONFromResponse(textContent);
+}
+
+/**
+ * Extract JSON from AI response text
+ */
+function extractJSONFromResponse(responseText) {
+    if (typeof responseText !== 'string') {
+        return responseText;
+    }
+    
+    // Try to find and extract valid JSON from the response
+    let jsonStr = responseText.trim();
+    
+    // If response starts with markdown code blocks, remove them
+    if (jsonStr.startsWith('```')) {
+        jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+    }
+    
+    // Find the start and end of the JSON object
+    const startIdx = jsonStr.indexOf('{');
+    const endIdx = jsonStr.lastIndexOf('}');
+    
+    if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) {
+        console.error("AI returned a string without JSON structure:", responseText);
+        throw new UserFacingError('AI отговори с текст без JSON структура.');
+    }
+    
+    try {
+        // Extract the JSON substring and parse it
+        jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+        return JSON.parse(jsonStr);
+    } catch (parseError) {
+        console.error("Failed to parse JSON from AI response:", jsonStr, parseError);
+        throw new UserFacingError('AI отговори с невалиден JSON формат.');
     }
 }
 

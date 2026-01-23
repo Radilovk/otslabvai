@@ -1115,6 +1115,25 @@ function setupEventListeners() {
         await fetchContacts();
         filterContacts();
     });
+    
+    // AI Settings event listeners
+    const saveAISettingsBtn = document.getElementById('save-ai-settings-btn');
+    const testAISettingsBtn = document.getElementById('test-ai-settings-btn');
+    const resetAISettingsBtn = document.getElementById('reset-ai-settings-btn');
+    const aiProviderSelect = document.getElementById('ai-provider');
+    
+    if (saveAISettingsBtn) {
+        saveAISettingsBtn.addEventListener('click', saveAISettings);
+    }
+    if (testAISettingsBtn) {
+        testAISettingsBtn.addEventListener('click', testAISettings);
+    }
+    if (resetAISettingsBtn) {
+        resetAISettingsBtn.addEventListener('click', resetAISettings);
+    }
+    if (aiProviderSelect) {
+        aiProviderSelect.addEventListener('change', updateModelPlaceholder);
+    }
 
     DOM.undoBtn.addEventListener('click', () => {
         if (activeUndoAction) {
@@ -1587,7 +1606,10 @@ async function handleAIAssistant(productEditor) {
         const response = await fetch(`${API_URL}/ai-assistant`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(currentData)
+            body: JSON.stringify({
+                productData: currentData,
+                settings: aiSettings
+            })
         });
         
         if (!response.ok) {
@@ -1718,6 +1740,279 @@ async function handleAIAssistant(productEditor) {
 }
 
 // =======================================================
+//          AI SETTINGS MANAGEMENT
+// =======================================================
+
+let aiSettings = null;
+
+/**
+ * Load AI settings from localStorage and server
+ */
+async function loadAISettings() {
+    try {
+        // Try to load from server first
+        const response = await fetch(`${API_URL}/ai-settings`);
+        if (response.ok) {
+            const serverSettings = await response.json();
+            aiSettings = serverSettings;
+            
+            // Load API key from localStorage (not stored on server for security)
+            const storedApiKey = localStorage.getItem('ai_api_key');
+            if (storedApiKey) {
+                aiSettings.apiKey = storedApiKey;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load AI settings:', error);
+    }
+    
+    // If no settings loaded, use defaults
+    if (!aiSettings) {
+        aiSettings = {
+            provider: 'cloudflare',
+            model: '@cf/meta/llama-3.1-70b-instruct',
+            apiKey: localStorage.getItem('ai_api_key') || '',
+            temperature: 0.3,
+            maxTokens: 4096,
+            promptTemplate: getDefaultPromptTemplate()
+        };
+    }
+    
+    // Populate UI if on AI settings tab
+    populateAISettingsUI();
+}
+
+/**
+ * Save AI settings
+ */
+async function saveAISettings() {
+    try {
+        // Collect settings from UI
+        const settings = {
+            provider: document.getElementById('ai-provider').value,
+            model: document.getElementById('ai-model').value,
+            temperature: parseFloat(document.getElementById('ai-temperature').value),
+            maxTokens: parseInt(document.getElementById('ai-max-tokens').value),
+            promptTemplate: document.getElementById('ai-prompt-template').value,
+            apiKey: '' // Don't send to server
+        };
+        
+        // Save API key to localStorage only
+        const apiKey = document.getElementById('ai-api-key').value;
+        if (apiKey) {
+            localStorage.setItem('ai_api_key', apiKey);
+            settings.apiKey = apiKey;
+        }
+        
+        // Save to server (without API key)
+        const serverSettings = { ...settings };
+        delete serverSettings.apiKey;
+        
+        const response = await fetch(`${API_URL}/ai-settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(serverSettings)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to save settings');
+        }
+        
+        aiSettings = settings;
+        showNotification('✅ AI настройките са запазени успешно!', 'success');
+        
+    } catch (error) {
+        console.error('Failed to save AI settings:', error);
+        showNotification('❌ Грешка при запазване на настройките', 'error');
+    }
+}
+
+/**
+ * Test AI settings
+ */
+async function testAISettings() {
+    try {
+        const testBtn = document.getElementById('test-ai-settings-btn');
+        testBtn.disabled = true;
+        testBtn.textContent = '⏳ Тестване...';
+        
+        // Collect current settings
+        const settings = {
+            provider: document.getElementById('ai-provider').value,
+            model: document.getElementById('ai-model').value,
+            apiKey: document.getElementById('ai-api-key').value || localStorage.getItem('ai_api_key'),
+            temperature: parseFloat(document.getElementById('ai-temperature').value),
+            maxTokens: parseInt(document.getElementById('ai-max-tokens').value),
+            promptTemplate: document.getElementById('ai-prompt-template').value
+        };
+        
+        // Test with a simple product
+        const testProduct = {
+            productName: 'Витамин C'
+        };
+        
+        const response = await fetch(`${API_URL}/ai-assistant`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productData: testProduct,
+                settings: settings
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Test failed');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('✅ AI тестът премина успешно! Моделът работи правилно.', 'success', 6000);
+        } else {
+            throw new Error('Invalid response');
+        }
+        
+    } catch (error) {
+        console.error('AI test failed:', error);
+        showNotification(`❌ AI тестът се провали: ${error.message}`, 'error', 6000);
+    } finally {
+        const testBtn = document.getElementById('test-ai-settings-btn');
+        testBtn.disabled = false;
+        testBtn.textContent = '🧪 Тествай AI';
+    }
+}
+
+/**
+ * Reset AI settings to default
+ */
+function resetAISettings() {
+    if (!confirm('Сигурни ли сте, че искате да възстановите настройките по подразбиране?')) {
+        return;
+    }
+    
+    document.getElementById('ai-provider').value = 'cloudflare';
+    document.getElementById('ai-model').value = '@cf/meta/llama-3.1-70b-instruct';
+    document.getElementById('ai-api-key').value = '';
+    document.getElementById('ai-temperature').value = '0.3';
+    document.getElementById('ai-max-tokens').value = '4096';
+    document.getElementById('ai-prompt-template').value = getDefaultPromptTemplate();
+    
+    updateModelPlaceholder();
+    showNotification('🔄 Настройките са възстановени по подразбиране', 'info');
+}
+
+/**
+ * Populate AI settings UI
+ */
+function populateAISettingsUI() {
+    if (!aiSettings) return;
+    
+    const providerSelect = document.getElementById('ai-provider');
+    const modelInput = document.getElementById('ai-model');
+    const apiKeyInput = document.getElementById('ai-api-key');
+    const temperatureInput = document.getElementById('ai-temperature');
+    const maxTokensInput = document.getElementById('ai-max-tokens');
+    const promptInput = document.getElementById('ai-prompt-template');
+    
+    if (providerSelect) providerSelect.value = aiSettings.provider;
+    if (modelInput) modelInput.value = aiSettings.model;
+    if (apiKeyInput && aiSettings.apiKey) apiKeyInput.value = aiSettings.apiKey;
+    if (temperatureInput) temperatureInput.value = aiSettings.temperature;
+    if (maxTokensInput) maxTokensInput.value = aiSettings.maxTokens;
+    if (promptInput) promptInput.value = aiSettings.promptTemplate;
+}
+
+/**
+ * Update model placeholder based on provider
+ */
+function updateModelPlaceholder() {
+    const provider = document.getElementById('ai-provider').value;
+    const modelInput = document.getElementById('ai-model');
+    
+    const placeholders = {
+        'cloudflare': '@cf/meta/llama-3.1-70b-instruct',
+        'openai': 'gpt-4 or gpt-3.5-turbo',
+        'google': 'gemini-pro'
+    };
+    
+    if (modelInput) {
+        modelInput.placeholder = placeholders[provider] || '';
+    }
+}
+
+/**
+ * Get default prompt template
+ */
+function getDefaultPromptTemplate() {
+    return `Ти си експерт по хранителни добавки и продукти за отслабване. Анализирай следната информация за продукт и попълни всички възможни полета в JSON формат базирайки се на твоите знания за този тип продукти.
+
+Въведена информация:
+{{productData}}
+
+Моля попълни JSON обект със следните полета (на български език):
+{
+  "name": "Пълно име на продукта",
+  "manufacturer": "Производител (ако е известен)",
+  "price": "Приблизителна цена в лева като число (или null ако не знаеш)",
+  "tagline": "Кратък маркетингов слоган (до 60 символа)",
+  "description": "Подробно маркетингово описание (100-200 думи)",
+  "packaging_info": {
+    "capsules_or_grams": "Брой капсули или грамаж",
+    "doses_per_package": "Брой дози в опаковка"
+  },
+  "effects": [
+    {
+      "label": "Ефект 1",
+      "value": "Стойност от 0 до 10"
+    },
+    {
+      "label": "Ефект 2", 
+      "value": "Стойност от 0 до 10"
+    },
+    {
+      "label": "Ефект 3",
+      "value": "Стойност от 0 до 10"
+    }
+  ],
+  "about_content": {
+    "title": "За продукта",
+    "description": "Подробно описание",
+    "benefits": [
+      {
+        "icon": "✓",
+        "text": "Полза 1"
+      }
+    ]
+  },
+  "ingredients": [
+    {
+      "name": "Съставка 1",
+      "amount": "Количество",
+      "description": "Описание на съставката"
+    }
+  ],
+  "recommended_intake": "Препоръчителен прием и дозировка",
+  "contraindications": "Противопоказания и предупреждения",
+  "additional_advice": "Допълнителни съвети и информация",
+  "faq": [
+    {
+      "question": "Често задаван въпрос 1",
+      "answer": "Отговор"
+    }
+  ]
+}
+
+ВАЖНО:
+- Отговори САМО с валиден JSON обект
+- Не добавяй коментари или друг текст извън JSON
+- Използвай български език
+- Бъди точен, грамотен и маркетингово компетентен
+- Ако липсва информация за поле, използвай null или празен масив []
+- Базирай се на твоите знания за подобни продукти`;
+}
+
+// =======================================================
 //          9. ИНИЦИАЛИЗАЦИЯ НА ПРИЛОЖЕНИЕТО
 // =======================================================
 
@@ -1728,6 +2023,7 @@ async function init() {
     appData = await fetchData();
     await fetchOrders();
     await fetchContacts();
+    await loadAISettings();
     if (appData) {
         renderAll();
     } else {
