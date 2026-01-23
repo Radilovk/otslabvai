@@ -140,6 +140,15 @@ The website has 2 product categories with 9 products total:
 
 ## Recent Changes
 
+**2026-01-23**: Fixed products.json structure
+- Corrected `backend/products.json` to match the documented structure
+- Changed from malformed single category object to proper `{"product_categories": [...]}` format
+- Both files now have 2 categories with 9 products total:
+  - weight-loss-products: "БЕСТСЕЛЪРИ ЗА ОТСЛАБВАНЕ" (4 products)
+  - fat-burners: "ЕНЕРГИЯ И ПОДДРЪЖКА" (5 products)
+- Updated `fix_products_json.py` to handle the correct structure
+- Product data is now consistent between `products.json` and `page_content.json`
+
 **2025-01-04**: Removed duplicate products and consolidated data
 - Removed duplicate `page_content_mock.json` file (was identical to `backend/page_content.json`)
 - Removed 3 extra product categories from `page_content.json`: appetite-control, metabolism, detox
