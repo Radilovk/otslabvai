@@ -197,8 +197,13 @@ def main():
     print("- True thermogenic fat burners (synthetic/mixed): 7 products with caffeine + L-Carnitine")
     print("\n")
     
+    # Use relative path for better portability
+    import os
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    page_content_path = os.path.join(script_dir, 'backend', 'page_content.json')
+    
     # Update ONLY page_content.json (single source of truth)
-    page_content_updated = update_page_content_json('/home/runner/work/otslabvai/otslabvai/backend/page_content.json')
+    page_content_updated = update_page_content_json(page_content_path)
     
     print("\n" + "=" * 80)
     print(f"SUMMARY: Updated {page_content_updated} products in page_content.json")
