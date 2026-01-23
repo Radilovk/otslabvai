@@ -1591,8 +1591,15 @@ async function handleAIAssistant(productEditor) {
         });
         
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'AI заявката се провали');
+            let errorMessage = 'AI заявката се провали';
+            try {
+                const error = await response.json();
+                errorMessage = error.error || errorMessage;
+            } catch (jsonError) {
+                // If response is not JSON, use status text
+                errorMessage = `Сървър грешка: ${response.status} ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
         }
         
         const result = await response.json();
@@ -1606,7 +1613,8 @@ async function handleAIAssistant(productEditor) {
         // Попълваме празните полета с AI данни
         const fillField = (selector, value) => {
             const input = productEditor.querySelector(selector);
-            if (input && !input.value && value) {
+            // Only fill if field is empty and value is not null/undefined
+            if (input && !input.value && value !== null && value !== undefined && value !== '') {
                 input.value = value;
             }
         };
@@ -1634,10 +1642,14 @@ async function handleAIAssistant(productEditor) {
             // Добавяме ползи (benefits)
             if (aiData.about_content.benefits && Array.isArray(aiData.about_content.benefits)) {
                 const benefitsContainer = productEditor.querySelector('[data-sub-container="about-benefits"]');
-                if (benefitsContainer && benefitsContainer.children.length === 0) {
-                    aiData.about_content.benefits.forEach(benefit => {
-                        addNestedItem(benefitsContainer, 'about-benefit-editor-template', benefit);
-                    });
+                if (benefitsContainer) {
+                    // Check if there are actual benefit items, not just empty container
+                    const existingBenefits = benefitsContainer.querySelectorAll('.nested-sub-item[data-type="about-benefit"]');
+                    if (existingBenefits.length === 0) {
+                        aiData.about_content.benefits.forEach(benefit => {
+                            addNestedItem(benefitsContainer, 'about-benefit-editor-template', benefit);
+                        });
+                    }
                 }
             }
         }
@@ -1645,37 +1657,49 @@ async function handleAIAssistant(productEditor) {
         // Добавяме ефекти
         if (aiData.effects && Array.isArray(aiData.effects)) {
             const effectsContainer = productEditor.querySelector('[data-sub-container="effects"]');
-            if (effectsContainer && effectsContainer.children.length === 0) {
-                aiData.effects.forEach(effect => {
-                    addNestedItem(effectsContainer, 'effect-editor-template', effect);
-                });
+            if (effectsContainer) {
+                const existingEffects = effectsContainer.querySelectorAll('.nested-sub-item[data-type="effect"]');
+                if (existingEffects.length === 0) {
+                    aiData.effects.forEach(effect => {
+                        addNestedItem(effectsContainer, 'effect-editor-template', effect);
+                    });
+                }
             }
         }
         
         // Добавяме съставки
         if (aiData.ingredients && Array.isArray(aiData.ingredients)) {
             const ingredientsContainer = productEditor.querySelector('[data-sub-container="ingredients"]');
-            if (ingredientsContainer && ingredientsContainer.children.length === 0) {
-                aiData.ingredients.forEach(ingredient => {
-                    addNestedItem(ingredientsContainer, 'ingredient-editor-template', ingredient);
-                });
+            if (ingredientsContainer) {
+                const existingIngredients = ingredientsContainer.querySelectorAll('.nested-sub-item[data-type="ingredient"]');
+                if (existingIngredients.length === 0) {
+                    aiData.ingredients.forEach(ingredient => {
+                        addNestedItem(ingredientsContainer, 'ingredient-editor-template', ingredient);
+                    });
+                }
             }
         }
         
         // Добавяме FAQ
         if (aiData.faq && Array.isArray(aiData.faq)) {
             const faqContainer = productEditor.querySelector('[data-sub-container="faq"]');
-            if (faqContainer && faqContainer.children.length === 0) {
-                aiData.faq.forEach(faqItem => {
-                    addNestedItem(faqContainer, 'faq-editor-template', faqItem);
-                });
+            if (faqContainer) {
+                const existingFaq = faqContainer.querySelectorAll('.nested-sub-item[data-type="faq"]');
+                if (existingFaq.length === 0) {
+                    aiData.faq.forEach(faqItem => {
+                        addNestedItem(faqContainer, 'faq-editor-template', faqItem);
+                    });
+                }
             }
         }
         
-        // Актуализираме заглавието на продукта
+        // Актуализираме заглавието на продукта само ако е празно или е "Нов Продукт"
         const titleSpan = productEditor.querySelector('.product-editor-title');
         if (titleSpan && aiData.name) {
-            titleSpan.textContent = aiData.name;
+            const currentTitle = titleSpan.textContent.trim();
+            if (!currentTitle || currentTitle === 'Нов Продукт') {
+                titleSpan.textContent = aiData.name;
+            }
         }
         
         showNotification('✅ AI Асистентът успешно попълни информацията за продукта!', 'success', 6000);

@@ -393,7 +393,7 @@ async function handleAIAssistant(request, env) {
     }
     
     // Създаваме промпт за AI модела
-    const prompt = `Ти си експерт по хранителни добавки и продукти за отслабване. Анализирай следната информация за продукт и попълни всички възможни полета в JSON формат. Търси в интернет ако е необходимо.
+    const prompt = `Ти си експерт по хранителни добавки и продукти за отслабване. Анализирай следната информация за продукт и попълни всички възможни полета в JSON формат базирайки се на твоите знания за този тип продукти.
 
 Въведена информация:
 ${JSON.stringify(productData, null, 2)}
@@ -401,8 +401,8 @@ ${JSON.stringify(productData, null, 2)}
 Моля попълни JSON обект със следните полета (на български език):
 {
   "name": "Пълно име на продукта",
-  "manufacturer": "Производител",
-  "price": "Приблизителна цена в лева (число)",
+  "manufacturer": "Производител (ако е известен)",
+  "price": "Приблизителна цена в лева като число (или null ако не знаеш)",
   "tagline": "Кратък маркетингов слоган (до 60 символа)",
   "description": "Подробно маркетингово описание (100-200 думи)",
   "packaging_info": {
@@ -460,7 +460,8 @@ ${JSON.stringify(productData, null, 2)}
 - Не добавяй коментари или друг текст извън JSON
 - Използвай български език
 - Бъди точен, грамотен и маркетингово компетентен
-- Ако липсва информация, използвай "null" или празен масив []`;
+- Ако липсва информация за поле, използвай null или празен масив []
+- Базирай се на твоите знания за подобни продукти`;
 
     try {
         const model = '@cf/meta/llama-3.1-70b-instruct';
@@ -498,12 +499,18 @@ ${JSON.stringify(productData, null, 2)}
         // Извличаме JSON от отговора
         let extractedData;
         if (typeof aiResponseText === 'string') {
-            const jsonMatch = aiResponseText.match(/{[\s\S]*}/);
+            // Use non-greedy match to find the first complete JSON object
+            const jsonMatch = aiResponseText.match(/{[^{}]*(?:{[^{}]*}[^{}]*)*}/);
             if (!jsonMatch) {
                 console.error("AI returned a string without JSON structure:", aiResponseText);
-                throw new UserFacingError('AI отговори без валидна JSON структура.');
+                throw new UserFacingError('AI отговори с текст без JSON структура. Моля опитайте отново или опростете заявката.');
             }
-            extractedData = JSON.parse(jsonMatch[0]);
+            try {
+                extractedData = JSON.parse(jsonMatch[0]);
+            } catch (parseError) {
+                console.error("Failed to parse JSON from AI response:", jsonMatch[0], parseError);
+                throw new UserFacingError('AI отговори с невалиден JSON формат. Моля опитайте отново.');
+            }
         } else {
             extractedData = aiResponseText;
         }
