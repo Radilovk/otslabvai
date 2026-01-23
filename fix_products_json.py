@@ -7,8 +7,19 @@ import json
 
 def load_products_json(filepath):
     """Load the products.json file with the correct structure."""
+    # Read the file content first
     with open(filepath, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+        content = f.read()
+    
+    # Try to parse as JSON first
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError:
+        # If JSON parsing fails, return empty structure
+        return {
+            'categories': [],
+            'footer': None
+        }
     
     # Handle both old malformed structure and new correct structure
     if 'product_categories' in data:
@@ -17,8 +28,8 @@ def load_products_json(filepath):
         footer = data.get('footer', None)
     else:
         # Try to handle old malformed structure if it still exists
+        # (This is a fallback for legacy data that shouldn't normally be needed)
         try:
-            content = f.read()
             lines = content.split('\n')
             
             # Find the line that ends the main array (2-space indent + "],")
@@ -33,7 +44,6 @@ def load_products_json(filepath):
             
             # Split content
             array_part = '\n'.join(lines[:main_array_end])
-            rest_part = '\n'.join(lines[main_array_end:])
             
             # De-indent array part by 4 spaces
             array_lines = []
