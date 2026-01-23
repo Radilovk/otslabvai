@@ -190,7 +190,8 @@
                 "description": "Оригинална формула",
                 "url": "#"
               }
-            ]
+            ],
+            "thumbnail_url": "/images/products/lida-green-thumb.jpg"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -296,7 +297,8 @@
                 "description": "Стандартна опаковка",
                 "url": "#"
               }
-            ]
+            ],
+            "thumbnail_url": "/images/products/meizimax-thumb.jpg"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -402,7 +404,8 @@
                 "description": "Курс за детокс и гладка кожа",
                 "url": "#"
               }
-            ]
+            ],
+            "thumbnail_url": "/images/products/eveslim-birch-thumb.jpg"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -508,7 +511,8 @@
                 "description": "Загряващ курс",
                 "url": "#"
               }
-            ]
+            ],
+            "thumbnail_url": "/images/products/eveslim-cayenne-thumb.jpg"
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -623,7 +627,8 @@
                 "question": "Може ли да се приема за дълъг период от време?",
                 "answer": "Да, благодарение на своя натурален и балансиран състав, Thermo Master е напълно безопасен за продължителен прием от няколко месеца без нужда от почивка."
               }
-            ]
+            ],
+            "thumbnail_url": "/images/products/ethicsport-thumb.jpg"
           },
           "system_data": {
             "application_type": "",
@@ -689,7 +694,8 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "thumbnail_url": "/images/products/product_16905/SD_Fat_No_More_120cap_600px1_kamera1-aab4bde-original-thumb.jpg"
           },
           "system_data": {
             "manufacturer": "Sport Definition",
@@ -755,7 +761,8 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "thumbnail_url": "/images/products/product_24527/Thermo_Caps_120-740d2a8-original-thumb.jpg"
           },
           "system_data": {
             "manufacturer": "Nutriversum",
@@ -826,7 +833,8 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "thumbnail_url": "/images/products/product_37086/EssentialFatBurner_720x-db2bd27-original-thumb.jpg"
           },
           "system_data": {
             "manufacturer": "RAW Nutrition",
@@ -892,7 +900,8 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "thumbnail_url": "/images/products/product_24605/allnutrition-burn4all-extreme-8d74e05-original-thumb.jpg"
           },
           "system_data": {
             "manufacturer": "AllNutrition",
@@ -958,7 +967,8 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "thumbnail_url": "/images/products/product_5177/Fat_Transporter_i574_d1200x1200-a444781-original-thumb.jpg"
           },
           "system_data": {
             "manufacturer": "Trec Nutrition",
@@ -1024,7 +1034,8 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "thumbnail_url": "/images/products/product_31/Screenshot2025-07-24105715e2782-thumb.jpg"
           },
           "system_data": {
             "manufacturer": "Nutrex",
@@ -1090,7 +1101,8 @@
               }
             ],
             "faq": [],
-            "variants": []
+            "variants": [],
+            "thumbnail_url": "/images/products/product_742/Lipo6-BlackUC-60-0b247b3-original-thumb.jpg"
           },
           "system_data": {
             "manufacturer": "Nutrex",
