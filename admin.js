@@ -1300,24 +1300,32 @@ function handleAction(action, target, id) {
                 const files = Array.from(e.target.files);
                 if (files.length === 0) return;
                 
-                // Validate file types
+                // Collect all validation errors
+                const validationErrors = [];
                 for (const file of files) {
                     if (!file.type.startsWith('image/')) {
-                        showNotification('Моля изберете само изображения', 'error');
-                        return;
-                    }
-                    
-                    // Validate file size (max 2MB per file)
-                    if (file.size > 2 * 1024 * 1024) {
-                        showNotification(`Изображението "${file.name}" е твърде голямо. Максимален размер: 2MB`, 'error');
-                        return;
+                        validationErrors.push(`"${file.name}" не е изображение`);
+                    } else if (file.size > 2 * 1024 * 1024) {
+                        validationErrors.push(`"${file.name}" е твърде голям (макс. 2MB)`);
                     }
                 }
                 
+                // Show all validation errors if any
+                if (validationErrors.length > 0) {
+                    showNotification('Грешки при валидация:\n' + validationErrors.join('\n'), 'error');
+                    return;
+                }
+                
                 try {
+                    // Bulgarian pluralization helper
+                    const getImageWord = (count) => {
+                        if (count === 1) return 'изображение';
+                        return 'изображения';
+                    };
+                    
                     // Show loading state
                     target.disabled = true;
-                    target.textContent = `⏳ Качване ${files.length} изображение/я...`;
+                    target.textContent = `⏳ Качване на ${files.length} ${getImageWord(files.length)}...`;
                     
                     // Upload all files
                     const uploadPromises = files.map(file => uploadImageToGitHub(file));
@@ -1333,7 +1341,7 @@ function handleAction(action, target, id) {
                     const allUrls = [...existingUrls, ...imageUrls];
                     textareaElement.value = allUrls.join('\n');
                     
-                    showNotification(`${files.length} изображение/я качени успешно!`, 'success');
+                    showNotification(`${files.length} ${getImageWord(files.length)} ${files.length === 1 ? 'качено' : 'качени'} успешно!`, 'success');
                 } catch (error) {
                     console.error('Upload error:', error);
                     showNotification(`Грешка при качване: ${error.message}`, 'error');
