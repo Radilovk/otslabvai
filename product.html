@@ -141,6 +141,8 @@
             height: auto;
             display: block;
             transition: transform 0.3s ease;
+            object-fit: contain;
+            max-height: 500px;
         }
         
         .main-product-image:hover img {
@@ -389,6 +391,13 @@
             
             .product-detail-image {
                 margin: 20px auto;
+                max-width: 100%;
+            }
+            
+            .main-product-image img {
+                max-height: 350px;
+                width: auto;
+                margin: 0 auto;
             }
             
             .thumbnail {
@@ -439,6 +448,10 @@
             
             .product-detail-price {
                 font-size: 1.3rem;
+            }
+            
+            .main-product-image img {
+                max-height: 280px;
             }
             
             .order-now-btn {
