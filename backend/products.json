@@ -576,19 +576,15 @@
             "label_image": "/images/products/product_16905/supp-factsc3c6c.jpg",
             "effects": [
               {
-                "label": "Термогенеза",
+                "label": "Премахване на мазнини",
+                "value": 90
+              },
+              {
+                "label": "Метаболизъм",
                 "value": 85
               },
               {
-                "label": "Енергия",
-                "value": 80
-              },
-              {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
+                "label": "Контрол на апетита",
                 "value": 80
               }
             ],
@@ -651,19 +647,15 @@
             "label_image": "/images/products/product_24527/supp-factsf9e51.jpg",
             "effects": [
               {
+                "label": "Женска формула",
+                "value": 95
+              },
+              {
                 "label": "Термогенеза",
                 "value": 85
               },
               {
                 "label": "Енергия",
-                "value": 80
-              },
-              {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
                 "value": 80
               }
             ],
@@ -721,20 +713,16 @@
             "label_image": "/images/products/product_37086/i_view64_Eava43gfvZ9336c.jpg",
             "effects": [
               {
-                "label": "Термогенеза",
+                "label": "Премиум съставки",
+                "value": 95
+              },
+              {
+                "label": "Дълготрайна енергия",
+                "value": 90
+              },
+              {
+                "label": "Чист фокус",
                 "value": 85
-              },
-              {
-                "label": "Енергия",
-                "value": 80
-              },
-              {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
               }
             ],
             "ingredients": [
@@ -796,20 +784,16 @@
             "label_image": "/images/products/product_24605/PGRcE8v3fa1f.jpg",
             "effects": [
               {
-                "label": "Термогенеза",
+                "label": "Екстремна термогенеза",
+                "value": 95
+              },
+              {
+                "label": "Бързо изгаряне",
+                "value": 90
+              },
+              {
+                "label": "Интензивност",
                 "value": 85
-              },
-              {
-                "label": "Енергия",
-                "value": 80
-              },
-              {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
               }
             ],
             "ingredients": [
@@ -866,20 +850,16 @@
             "label_image": "/images/products/product_5177/chrome_LUdG2tSj84db77f.jpg",
             "effects": [
               {
-                "label": "Термогенеза",
+                "label": "Липотропно действие",
+                "value": 95
+              },
+              {
+                "label": "Транспорт на мазнини",
+                "value": 90
+              },
+              {
+                "label": "Детоксикация",
                 "value": 85
-              },
-              {
-                "label": "Енергия",
-                "value": 80
-              },
-              {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
               }
             ],
             "ingredients": [
@@ -936,20 +916,16 @@
             "label_image": "/images/products/product_31/Screenshot2025-07-24105715e2782.jpg",
             "effects": [
               {
-                "label": "Термогенеза",
+                "label": "L-Carnitine формула",
+                "value": 95
+              },
+              {
+                "label": "Изгаряне на калории",
+                "value": 90
+              },
+              {
+                "label": "Издръжливост",
                 "value": 85
-              },
-              {
-                "label": "Енергия",
-                "value": 80
-              },
-              {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
               }
             ],
             "ingredients": [
@@ -1006,20 +982,16 @@
             "label_image": "/images/products/product_742/204WDg1ecebc.jpg",
             "effects": [
               {
-                "label": "Термогенеза",
-                "value": 85
+                "label": "Екстра сила",
+                "value": 98
               },
               {
-                "label": "Енергия",
-                "value": 80
+                "label": "Максимална мощ",
+                "value": 95
               },
               {
-                "label": "Фокус",
-                "value": 75
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
+                "label": "Бърз ефект",
+                "value": 92
               }
             ],
             "ingredients": [
