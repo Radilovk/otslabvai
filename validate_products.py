@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
 Validate products have all required fields and generate a report.
+
+UPDATED: Now uses backend/page_content.json (single source of truth).
+backend/products.json has been DEPRECATED.
 """
 
 import json
-from fix_products_json import load_products_json
 
 # Validation constants
 MIN_DESCRIPTION_LENGTH = 50
@@ -89,15 +91,18 @@ def main():
     print("="*80)
     print("PRODUCT VALIDATION REPORT")
     print("="*80)
+    print("⚠️  Using backend/page_content.json (single source of truth)")
+    print()
     
-    # Load products
-    data = load_products_json('backend/products.json')
+    # Load products from page_content.json
+    with open('backend/page_content.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
     
     all_issues = {}
     total_products = 0
     products_with_issues = 0
     
-    for category in data['categories']:
+    for category in data.get('page_content', []):
         if category.get('type') != 'product_category':
             continue
         
