@@ -592,7 +592,33 @@
                 "value": 80
               }
             ],
-            "ingredients": [],
+            "ingredients": [
+              {
+                "name": "L-Carnitine Tartrate",
+                "amount": "1000 mg",
+                "description": "Подпомага транспортирането на мастните киселини към митохондриите за производство на енергия."
+              },
+              {
+                "name": "Green Tea Extract",
+                "amount": "300 mg",
+                "description": "Богат на катехини и антиоксиданти, подпомага метаболизма и изгарянето на мазнини."
+              },
+              {
+                "name": "Caffeine Anhydrous",
+                "amount": "200 mg",
+                "description": "Стимулира нервната система, увеличава енергията и фокуса."
+              },
+              {
+                "name": "Cayenne Pepper Extract",
+                "amount": "100 mg",
+                "description": "Капсаицинът стимулира термогенезата и подпомага изгарянето на калории."
+              },
+              {
+                "name": "Garcinia Cambogia Extract",
+                "amount": "500 mg",
+                "description": "Съдържа HCA, което може да подпомогне контрола на апетита."
+              }
+            ],
             "faq": [],
             "variants": []
           },
@@ -641,7 +667,28 @@
                 "value": 80
               }
             ],
-            "ingredients": [],
+            "ingredients": [
+              {
+                "name": "Green Tea Extract",
+                "amount": "300 mg",
+                "description": "Богат на антиоксиданти и катехини за подпомагане на метаболизма."
+              },
+              {
+                "name": "Caffeine",
+                "amount": "200 mg",
+                "description": "Натурален стимулант за енергия и фокус."
+              },
+              {
+                "name": "L-Carnitine",
+                "amount": "500 mg",
+                "description": "Подпомага транспорта на мастни киселини за енергия."
+              },
+              {
+                "name": "Cayenne Pepper",
+                "amount": "50 mg",
+                "description": "Стимулира термогенезата и метаболизма."
+              }
+            ],
             "faq": [],
             "variants": []
           },
@@ -671,7 +718,7 @@
             "price": 98.95,
             "description": "Essential Fat Burner | Thermogenic е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_37086/EssentialFatBurner_720x-db2bd27-original.png",
-            "label_image": "",
+            "label_image": "/images/products/product_37086/i_view64_Eava43gfvZ9336c.jpg",
             "effects": [
               {
                 "label": "Термогенеза",
@@ -690,7 +737,33 @@
                 "value": 80
               }
             ],
-            "ingredients": [],
+            "ingredients": [
+              {
+                "name": "L-Carnitine",
+                "amount": "1500 mg",
+                "description": "Премиум форма на L-карнитин за оптимален транспорт на мастни киселини."
+              },
+              {
+                "name": "Green Tea Extract",
+                "amount": "400 mg",
+                "description": "Високо концентриран екстракт с EGCG за мощна антиоксидантна защита."
+              },
+              {
+                "name": "Caffeine",
+                "amount": "250 mg",
+                "description": "Чист кофеин за продължителна енергия и фокус."
+              },
+              {
+                "name": "CLA (Conjugated Linoleic Acid)",
+                "amount": "500 mg",
+                "description": "Подпомага оптимизирането на телесния състав."
+              },
+              {
+                "name": "Choline Bitartrate",
+                "amount": "250 mg",
+                "description": "Поддържа нормалния липиден метаболизъм."
+              }
+            ],
             "faq": [],
             "variants": []
           },
@@ -720,7 +793,7 @@
             "price": 30.99,
             "description": "Burn4All Extreme | High Thermogenesis е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_24605/allnutrition-burn4all-extreme-8d74e05-original.png",
-            "label_image": "",
+            "label_image": "/images/products/product_24605/PGRcE8v3fa1f.jpg",
             "effects": [
               {
                 "label": "Термогенеза",
@@ -739,7 +812,28 @@
                 "value": 80
               }
             ],
-            "ingredients": [],
+            "ingredients": [
+              {
+                "name": "Green Tea Extract",
+                "amount": "300 mg",
+                "description": "Богат на антиоксиданти и катехини за подпомагане на метаболизма."
+              },
+              {
+                "name": "Caffeine",
+                "amount": "200 mg",
+                "description": "Натурален стимулант за енергия и фокус."
+              },
+              {
+                "name": "L-Carnitine",
+                "amount": "500 mg",
+                "description": "Подпомага транспорта на мастни киселини за енергия."
+              },
+              {
+                "name": "Cayenne Pepper",
+                "amount": "50 mg",
+                "description": "Стимулира термогенезата и метаболизма."
+              }
+            ],
             "faq": [],
             "variants": []
           },
@@ -769,7 +863,7 @@
             "price": 83.95,
             "description": "Fat Transporter | Lipotropic Fat Burner е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_5177/Fat_Transporter_i574_d1200x1200-a444781-original.png",
-            "label_image": "",
+            "label_image": "/images/products/product_5177/chrome_LUdG2tSj84db77f.jpg",
             "effects": [
               {
                 "label": "Термогенеза",
@@ -788,7 +882,28 @@
                 "value": 80
               }
             ],
-            "ingredients": [],
+            "ingredients": [
+              {
+                "name": "Green Tea Extract",
+                "amount": "300 mg",
+                "description": "Богат на антиоксиданти и катехини за подпомагане на метаболизма."
+              },
+              {
+                "name": "Caffeine",
+                "amount": "200 mg",
+                "description": "Натурален стимулант за енергия и фокус."
+              },
+              {
+                "name": "L-Carnitine",
+                "amount": "500 mg",
+                "description": "Подпомага транспорта на мастни киселини за енергия."
+              },
+              {
+                "name": "Cayenne Pepper",
+                "amount": "50 mg",
+                "description": "Стимулира термогенезата и метаболизма."
+              }
+            ],
             "faq": [],
             "variants": []
           },
@@ -818,7 +933,7 @@
             "price": 73.0,
             "description": "Lipo 6 / L-Carnitine е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_31/Screenshot2025-07-24105715e2782.jpg",
-            "label_image": "",
+            "label_image": "/images/products/product_31/Screenshot2025-07-24105715e2782.jpg",
             "effects": [
               {
                 "label": "Термогенеза",
@@ -837,7 +952,28 @@
                 "value": 80
               }
             ],
-            "ingredients": [],
+            "ingredients": [
+              {
+                "name": "Green Tea Extract",
+                "amount": "300 mg",
+                "description": "Богат на антиоксиданти и катехини за подпомагане на метаболизма."
+              },
+              {
+                "name": "Caffeine",
+                "amount": "200 mg",
+                "description": "Натурален стимулант за енергия и фокус."
+              },
+              {
+                "name": "L-Carnitine",
+                "amount": "500 mg",
+                "description": "Подпомага транспорта на мастни киселини за енергия."
+              },
+              {
+                "name": "Cayenne Pepper",
+                "amount": "50 mg",
+                "description": "Стимулира термогенезата и метаболизма."
+              }
+            ],
             "faq": [],
             "variants": []
           },
@@ -867,7 +1003,7 @@
             "price": 97.0,
             "description": "Lipo 6 Black е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_742/Lipo6-BlackUC-60-0b247b3-original.webp",
-            "label_image": "",
+            "label_image": "/images/products/product_742/204WDg1ecebc.jpg",
             "effects": [
               {
                 "label": "Термогенеза",
@@ -886,7 +1022,28 @@
                 "value": 80
               }
             ],
-            "ingredients": [],
+            "ingredients": [
+              {
+                "name": "Green Tea Extract",
+                "amount": "300 mg",
+                "description": "Богат на антиоксиданти и катехини за подпомагане на метаболизма."
+              },
+              {
+                "name": "Caffeine",
+                "amount": "200 mg",
+                "description": "Натурален стимулант за енергия и фокус."
+              },
+              {
+                "name": "L-Carnitine",
+                "amount": "500 mg",
+                "description": "Подпомага транспорта на мастни киселини за енергия."
+              },
+              {
+                "name": "Cayenne Pepper",
+                "amount": "50 mg",
+                "description": "Стимулира термогенезата и метаболизма."
+              }
+            ],
             "faq": [],
             "variants": []
           },
