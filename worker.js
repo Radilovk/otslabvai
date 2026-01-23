@@ -499,16 +499,29 @@ ${JSON.stringify(productData, null, 2)}
         // Извличаме JSON от отговора
         let extractedData;
         if (typeof aiResponseText === 'string') {
-            // Use non-greedy match to find the first complete JSON object
-            const jsonMatch = aiResponseText.match(/{[^{}]*(?:{[^{}]*}[^{}]*)*}/);
-            if (!jsonMatch) {
+            // Try to find and extract valid JSON from the response
+            let jsonStr = aiResponseText.trim();
+            
+            // If response starts with markdown code blocks, remove them
+            if (jsonStr.startsWith('```')) {
+                jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+            }
+            
+            // Find the start and end of the JSON object
+            const startIdx = jsonStr.indexOf('{');
+            const endIdx = jsonStr.lastIndexOf('}');
+            
+            if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) {
                 console.error("AI returned a string without JSON structure:", aiResponseText);
                 throw new UserFacingError('AI отговори с текст без JSON структура. Моля опитайте отново или опростете заявката.');
             }
+            
             try {
-                extractedData = JSON.parse(jsonMatch[0]);
+                // Extract the JSON substring and parse it
+                jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+                extractedData = JSON.parse(jsonStr);
             } catch (parseError) {
-                console.error("Failed to parse JSON from AI response:", jsonMatch[0], parseError);
+                console.error("Failed to parse JSON from AI response:", jsonStr, parseError);
                 throw new UserFacingError('AI отговори с невалиден JSON формат. Моля опитайте отново.');
             }
         } else {
