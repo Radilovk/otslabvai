@@ -1115,6 +1115,25 @@ function setupEventListeners() {
         await fetchContacts();
         filterContacts();
     });
+    
+    // AI Settings event listeners
+    const saveAISettingsBtn = document.getElementById('save-ai-settings-btn');
+    const testAISettingsBtn = document.getElementById('test-ai-settings-btn');
+    const resetAISettingsBtn = document.getElementById('reset-ai-settings-btn');
+    const aiProviderSelect = document.getElementById('ai-provider');
+    
+    if (saveAISettingsBtn) {
+        saveAISettingsBtn.addEventListener('click', saveAISettings);
+    }
+    if (testAISettingsBtn) {
+        testAISettingsBtn.addEventListener('click', testAISettings);
+    }
+    if (resetAISettingsBtn) {
+        resetAISettingsBtn.addEventListener('click', resetAISettings);
+    }
+    if (aiProviderSelect) {
+        aiProviderSelect.addEventListener('change', updateModelPlaceholder);
+    }
 
     DOM.undoBtn.addEventListener('click', () => {
         if (activeUndoAction) {
@@ -1270,6 +1289,13 @@ function handleAction(action, target, id) {
             };
             
             fileInput.click();
+            break;
+        }
+        case 'ai-assistant': {
+            const productEditor = target.closest('.nested-item[data-type="product"]');
+            if (!productEditor) return;
+            
+            handleAIAssistant(productEditor);
             break;
         }
     }
@@ -1547,6 +1573,445 @@ async function uploadImageToGitHub(file) {
     return imageUrl;
 }
 
+/**
+ * Handles AI Assistant functionality for product auto-fill
+ * @param {HTMLElement} productEditor - The product editor element
+ */
+async function handleAIAssistant(productEditor) {
+    try {
+        // Показваме индикатор за зареждане
+        const aiBtn = productEditor.querySelector('.ai-assistant-btn');
+        const originalText = aiBtn.textContent;
+        aiBtn.disabled = true;
+        aiBtn.textContent = '⏳ AI обработва...';
+        
+        // Събираме текущите данни от продуктовия редактор
+        const currentData = {
+            productName: productEditor.querySelector('[data-field="public_data.name"]')?.value || '',
+            price: productEditor.querySelector('[data-field="public_data.price"]')?.value || '',
+            tagline: productEditor.querySelector('[data-field="public_data.tagline"]')?.value || '',
+            description: productEditor.querySelector('[data-field="public_data.description"]')?.value || '',
+            manufacturer: productEditor.querySelector('[data-field="system_data.manufacturer"]')?.value || '',
+        };
+        
+        // Проверяваме дали има поне име на продукта
+        if (!currentData.productName.trim()) {
+            showNotification('Моля, въведете поне име на продукта преди да използвате AI Асистент.', 'error');
+            aiBtn.disabled = false;
+            aiBtn.textContent = originalText;
+            return;
+        }
+        
+        // Извикваме AI API
+        const response = await fetch(`${API_URL}/ai-assistant`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productData: currentData,
+                settings: aiSettings
+            })
+        });
+        
+        if (!response.ok) {
+            let errorMessage = 'AI заявката се провали';
+            try {
+                const error = await response.json();
+                errorMessage = error.error || errorMessage;
+            } catch (jsonError) {
+                // If response is not JSON, use status text
+                errorMessage = `Сървър грешка: ${response.status} ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+            throw new Error('Невалиден отговор от AI');
+        }
+        
+        const aiData = result.data;
+        
+        // Попълваме празните полета с AI данни
+        const fillField = (selector, value) => {
+            const input = productEditor.querySelector(selector);
+            // Only fill if field is empty and value is not null/undefined
+            if (input && !input.value && value !== null && value !== undefined && value !== '') {
+                input.value = value;
+            }
+        };
+        
+        // Основни полета
+        fillField('[data-field="public_data.name"]', aiData.name);
+        fillField('[data-field="public_data.price"]', aiData.price);
+        fillField('[data-field="public_data.tagline"]', aiData.tagline);
+        fillField('[data-field="public_data.description"]', aiData.description);
+        
+        // Опаковка
+        if (aiData.packaging_info) {
+            fillField('[data-field="public_data.packaging.capsules_or_grams"]', aiData.packaging_info.capsules_or_grams);
+            fillField('[data-field="public_data.packaging.doses_per_package"]', aiData.packaging_info.doses_per_package);
+        }
+        
+        // Системни данни
+        fillField('[data-field="system_data.manufacturer"]', aiData.manufacturer);
+        
+        // За продукта (About Content)
+        if (aiData.about_content) {
+            fillField('[data-field="public_data.about_content.title"]', aiData.about_content.title);
+            fillField('[data-field="public_data.about_content.description"]', aiData.about_content.description);
+            
+            // Добавяме ползи (benefits)
+            if (aiData.about_content.benefits && Array.isArray(aiData.about_content.benefits)) {
+                const benefitsContainer = productEditor.querySelector('[data-sub-container="about-benefits"]');
+                if (benefitsContainer) {
+                    // Check if there are actual benefit items, not just empty container
+                    const existingBenefits = benefitsContainer.querySelectorAll('.nested-sub-item[data-type="about-benefit"]');
+                    if (existingBenefits.length === 0) {
+                        aiData.about_content.benefits.forEach(benefit => {
+                            addNestedItem(benefitsContainer, 'about-benefit-editor-template', benefit);
+                        });
+                    }
+                }
+            }
+        }
+        
+        // Добавяме ефекти
+        if (aiData.effects && Array.isArray(aiData.effects)) {
+            const effectsContainer = productEditor.querySelector('[data-sub-container="effects"]');
+            if (effectsContainer) {
+                const existingEffects = effectsContainer.querySelectorAll('.nested-sub-item[data-type="effect"]');
+                if (existingEffects.length === 0) {
+                    aiData.effects.forEach(effect => {
+                        addNestedItem(effectsContainer, 'effect-editor-template', effect);
+                    });
+                }
+            }
+        }
+        
+        // Добавяме съставки
+        if (aiData.ingredients && Array.isArray(aiData.ingredients)) {
+            const ingredientsContainer = productEditor.querySelector('[data-sub-container="ingredients"]');
+            if (ingredientsContainer) {
+                const existingIngredients = ingredientsContainer.querySelectorAll('.nested-sub-item[data-type="ingredient"]');
+                if (existingIngredients.length === 0) {
+                    aiData.ingredients.forEach(ingredient => {
+                        addNestedItem(ingredientsContainer, 'ingredient-editor-template', ingredient);
+                    });
+                }
+            }
+        }
+        
+        // Добавяме FAQ
+        if (aiData.faq && Array.isArray(aiData.faq)) {
+            const faqContainer = productEditor.querySelector('[data-sub-container="faq"]');
+            if (faqContainer) {
+                const existingFaq = faqContainer.querySelectorAll('.nested-sub-item[data-type="faq"]');
+                if (existingFaq.length === 0) {
+                    aiData.faq.forEach(faqItem => {
+                        addNestedItem(faqContainer, 'faq-editor-template', faqItem);
+                    });
+                }
+            }
+        }
+        
+        // Актуализираме заглавието на продукта само ако е празно или е "Нов Продукт"
+        const titleSpan = productEditor.querySelector('.product-editor-title');
+        if (titleSpan && aiData.name) {
+            const currentTitle = titleSpan.textContent.trim();
+            if (!currentTitle || currentTitle === 'Нов Продукт') {
+                titleSpan.textContent = aiData.name;
+            }
+        }
+        
+        showNotification('✅ AI Асистентът успешно попълни информацията за продукта!', 'success', 6000);
+        
+    } catch (error) {
+        console.error('AI Assistant error:', error);
+        showNotification(`❌ Грешка при AI обработка: ${error.message}`, 'error', 6000);
+    } finally {
+        // Възстановяваме бутона
+        const aiBtn = productEditor.querySelector('.ai-assistant-btn');
+        if (aiBtn) {
+            aiBtn.disabled = false;
+            aiBtn.textContent = '🤖 AI Асистент';
+        }
+    }
+}
+
+// =======================================================
+//          AI SETTINGS MANAGEMENT
+// =======================================================
+
+let aiSettings = null;
+
+/**
+ * Load AI settings from localStorage and server
+ */
+async function loadAISettings() {
+    try {
+        // Try to load from server first
+        const response = await fetch(`${API_URL}/ai-settings`);
+        if (response.ok) {
+            const serverSettings = await response.json();
+            aiSettings = serverSettings;
+            
+            // Load API key from localStorage (not stored on server for security)
+            const storedApiKey = localStorage.getItem('ai_api_key');
+            if (storedApiKey) {
+                aiSettings.apiKey = storedApiKey;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load AI settings:', error);
+    }
+    
+    // If no settings loaded, use defaults
+    if (!aiSettings) {
+        aiSettings = {
+            provider: 'cloudflare',
+            model: '@cf/meta/llama-3.1-70b-instruct',
+            apiKey: localStorage.getItem('ai_api_key') || '',
+            temperature: 0.3,
+            maxTokens: 4096,
+            promptTemplate: getDefaultPromptTemplate()
+        };
+    }
+    
+    // Populate UI if on AI settings tab
+    populateAISettingsUI();
+}
+
+/**
+ * Save AI settings
+ */
+async function saveAISettings() {
+    try {
+        // Collect settings from UI
+        const settings = {
+            provider: document.getElementById('ai-provider').value,
+            model: document.getElementById('ai-model').value,
+            temperature: parseFloat(document.getElementById('ai-temperature').value),
+            maxTokens: parseInt(document.getElementById('ai-max-tokens').value),
+            promptTemplate: document.getElementById('ai-prompt-template').value,
+            apiKey: '' // Don't send to server
+        };
+        
+        // Save API key to localStorage only
+        const apiKey = document.getElementById('ai-api-key').value;
+        if (apiKey) {
+            localStorage.setItem('ai_api_key', apiKey);
+            settings.apiKey = apiKey;
+        }
+        
+        // Save to server (without API key)
+        const serverSettings = { ...settings };
+        delete serverSettings.apiKey;
+        
+        const response = await fetch(`${API_URL}/ai-settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(serverSettings)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to save settings');
+        }
+        
+        aiSettings = settings;
+        showNotification('✅ AI настройките са запазени успешно!', 'success');
+        
+    } catch (error) {
+        console.error('Failed to save AI settings:', error);
+        showNotification('❌ Грешка при запазване на настройките', 'error');
+    }
+}
+
+/**
+ * Test AI settings
+ */
+async function testAISettings() {
+    try {
+        const testBtn = document.getElementById('test-ai-settings-btn');
+        testBtn.disabled = true;
+        testBtn.textContent = '⏳ Тестване...';
+        
+        // Collect current settings
+        const settings = {
+            provider: document.getElementById('ai-provider').value,
+            model: document.getElementById('ai-model').value,
+            apiKey: document.getElementById('ai-api-key').value || localStorage.getItem('ai_api_key'),
+            temperature: parseFloat(document.getElementById('ai-temperature').value),
+            maxTokens: parseInt(document.getElementById('ai-max-tokens').value),
+            promptTemplate: document.getElementById('ai-prompt-template').value
+        };
+        
+        // Test with a simple product
+        const testProduct = {
+            productName: 'Витамин C'
+        };
+        
+        const response = await fetch(`${API_URL}/ai-assistant`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productData: testProduct,
+                settings: settings
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Test failed');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('✅ AI тестът премина успешно! Моделът работи правилно.', 'success', 6000);
+        } else {
+            throw new Error('Invalid response');
+        }
+        
+    } catch (error) {
+        console.error('AI test failed:', error);
+        showNotification(`❌ AI тестът се провали: ${error.message}`, 'error', 6000);
+    } finally {
+        const testBtn = document.getElementById('test-ai-settings-btn');
+        testBtn.disabled = false;
+        testBtn.textContent = '🧪 Тествай AI';
+    }
+}
+
+/**
+ * Reset AI settings to default
+ */
+function resetAISettings() {
+    if (!confirm('Сигурни ли сте, че искате да възстановите настройките по подразбиране?')) {
+        return;
+    }
+    
+    document.getElementById('ai-provider').value = 'cloudflare';
+    document.getElementById('ai-model').value = '@cf/meta/llama-3.1-70b-instruct';
+    document.getElementById('ai-api-key').value = '';
+    document.getElementById('ai-temperature').value = '0.3';
+    document.getElementById('ai-max-tokens').value = '4096';
+    document.getElementById('ai-prompt-template').value = getDefaultPromptTemplate();
+    
+    updateModelPlaceholder();
+    showNotification('🔄 Настройките са възстановени по подразбиране', 'info');
+}
+
+/**
+ * Populate AI settings UI
+ */
+function populateAISettingsUI() {
+    if (!aiSettings) return;
+    
+    const providerSelect = document.getElementById('ai-provider');
+    const modelInput = document.getElementById('ai-model');
+    const apiKeyInput = document.getElementById('ai-api-key');
+    const temperatureInput = document.getElementById('ai-temperature');
+    const maxTokensInput = document.getElementById('ai-max-tokens');
+    const promptInput = document.getElementById('ai-prompt-template');
+    
+    if (providerSelect) providerSelect.value = aiSettings.provider;
+    if (modelInput) modelInput.value = aiSettings.model;
+    if (apiKeyInput && aiSettings.apiKey) apiKeyInput.value = aiSettings.apiKey;
+    if (temperatureInput) temperatureInput.value = aiSettings.temperature;
+    if (maxTokensInput) maxTokensInput.value = aiSettings.maxTokens;
+    if (promptInput) promptInput.value = aiSettings.promptTemplate;
+}
+
+/**
+ * Update model placeholder based on provider
+ */
+function updateModelPlaceholder() {
+    const provider = document.getElementById('ai-provider').value;
+    const modelInput = document.getElementById('ai-model');
+    
+    const placeholders = {
+        'cloudflare': '@cf/meta/llama-3.1-70b-instruct',
+        'openai': 'gpt-4 or gpt-3.5-turbo',
+        'google': 'gemini-pro'
+    };
+    
+    if (modelInput) {
+        modelInput.placeholder = placeholders[provider] || '';
+    }
+}
+
+/**
+ * Get default prompt template
+ */
+function getDefaultPromptTemplate() {
+    return `Ти си експерт по хранителни добавки и продукти за отслабване. Анализирай следната информация за продукт и попълни всички възможни полета в JSON формат базирайки се на твоите знания за този тип продукти.
+
+Въведена информация:
+{{productData}}
+
+Моля попълни JSON обект със следните полета (на български език):
+{
+  "name": "Пълно име на продукта",
+  "manufacturer": "Производител (ако е известен)",
+  "price": "Приблизителна цена в лева като число (или null ако не знаеш)",
+  "tagline": "Кратък маркетингов слоган (до 60 символа)",
+  "description": "Подробно маркетингово описание (100-200 думи)",
+  "packaging_info": {
+    "capsules_or_grams": "Брой капсули или грамаж",
+    "doses_per_package": "Брой дози в опаковка"
+  },
+  "effects": [
+    {
+      "label": "Ефект 1",
+      "value": "Стойност от 0 до 10"
+    },
+    {
+      "label": "Ефект 2", 
+      "value": "Стойност от 0 до 10"
+    },
+    {
+      "label": "Ефект 3",
+      "value": "Стойност от 0 до 10"
+    }
+  ],
+  "about_content": {
+    "title": "За продукта",
+    "description": "Подробно описание",
+    "benefits": [
+      {
+        "icon": "✓",
+        "text": "Полза 1"
+      }
+    ]
+  },
+  "ingredients": [
+    {
+      "name": "Съставка 1",
+      "amount": "Количество",
+      "description": "Описание на съставката"
+    }
+  ],
+  "recommended_intake": "Препоръчителен прием и дозировка",
+  "contraindications": "Противопоказания и предупреждения",
+  "additional_advice": "Допълнителни съвети и информация",
+  "faq": [
+    {
+      "question": "Често задаван въпрос 1",
+      "answer": "Отговор"
+    }
+  ]
+}
+
+ВАЖНО:
+- Отговори САМО с валиден JSON обект
+- Не добавяй коментари или друг текст извън JSON
+- Използвай български език
+- Бъди точен, грамотен и маркетингово компетентен
+- Ако липсва информация за поле, използвай null или празен масив []
+- Базирай се на твоите знания за подобни продукти`;
+}
+
 // =======================================================
 //          9. ИНИЦИАЛИЗАЦИЯ НА ПРИЛОЖЕНИЕТО
 // =======================================================
@@ -1558,6 +2023,7 @@ async function init() {
     appData = await fetchData();
     await fetchOrders();
     await fetchContacts();
+    await loadAISettings();
     if (appData) {
         renderAll();
     } else {
