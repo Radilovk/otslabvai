@@ -237,13 +237,13 @@ function renderProductDetail(product) {
                 <div class="product-detail-image">
                     <div class="product-image-gallery">
                         <div class="main-product-image" data-zoom-image="${escapeHtml(images[0])}">
-                            <img src="${escapeHtml(images[0])}" alt="${escapeHtml(publicData.name)}" loading="lazy" id="main-product-img">
+                            <img src="${escapeHtml(images[0])}" alt="${escapeHtml(publicData.name)}" loading="lazy" decoding="async" id="main-product-img">
                         </div>
                         ${images.length > 1 ? `
                             <div class="image-thumbnails">
                                 ${images.map((img, idx) => `
                                     <div class="thumbnail ${idx === 0 ? 'active' : ''}" data-image="${escapeHtml(img)}">
-                                        <img src="${escapeHtml(img)}" alt="${escapeHtml(publicData.name)} - Изглед ${idx + 1}">
+                                        <img src="${escapeHtml(img)}" alt="${escapeHtml(publicData.name)} - Изглед ${idx + 1}" loading="lazy" decoding="async">
                                     </div>
                                 `).join('')}
                             </div>
