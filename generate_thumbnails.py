@@ -9,7 +9,6 @@ import os
 import json
 from pathlib import Path
 from PIL import Image
-import sys
 
 # Configuration
 THUMBNAIL_SIZE = (300, 300)  # Max width/height for thumbnails
