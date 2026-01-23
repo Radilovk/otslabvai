@@ -114,20 +114,16 @@
             },
             "effects": [
               {
-                "label": "Спиране на глада",
+                "label": "Контрол на апетита",
                 "value": 100
               },
               {
-                "label": "Сваляне на килограми",
+                "label": "Отслабване",
                 "value": 100
               },
               {
                 "label": "Бързина на ефекта",
-                "value": 100
-              },
-              {
-                "label": "Отводняване",
-                "value": 90
+                "value": 95
               }
             ],
             "about_content": {
@@ -224,20 +220,16 @@
             },
             "effects": [
               {
-                "label": "Намаляване на апетита",
+                "label": "Контрол на апетита",
                 "value": 90
               },
               {
-                "label": "Сваляне на килограми",
+                "label": "Детоксикация",
                 "value": 90
               },
               {
-                "label": "Чиста кожа и детокс",
-                "value": 90
-              },
-              {
-                "label": "Анти-целулит",
-                "value": 80
+                "label": "Подобрена кожа",
+                "value": 85
               }
             ],
             "about_content": {
@@ -334,20 +326,16 @@
             },
             "effects": [
               {
-                "label": "Премахване на целулит",
+                "label": "Анти-целулит",
                 "value": 100
               },
               {
-                "label": "Спадане на отоци",
-                "value": 100
+                "label": "Отводняване",
+                "value": 95
               },
               {
-                "label": "Детокс",
-                "value": 90
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
+                "label": "Детоксикация",
+                "value": 85
               }
             ],
             "about_content": {
@@ -444,20 +432,16 @@
             },
             "effects": [
               {
-                "label": "Термогенеза (загряване)",
+                "label": "Термогенеза",
                 "value": 90
               },
               {
-                "label": "Събуждане на метаболизма",
-                "value": 90
+                "label": "Метаболизъм",
+                "value": 85
               },
               {
-                "label": "Контрол на апетита",
+                "label": "Кръвообращение",
                 "value": 80
-              },
-              {
-                "label": "Стягане",
-                "value": 70
               }
             ],
             "about_content": {
@@ -558,7 +542,7 @@
           "public_data": {
             "name": "Thermo Master",
             "price": 32.72,
-            "tagline": "Италиански билков комплекс",
+            "tagline": "Италиански билков комплекс за метаболизъм",
             "image_url": "/images/products/ethicsport.png",
             "additional_images": "",
             "description": "Thermo Master на италианската марка EthicSport е създаден за дамите, които вярват в силата на природата. Този висококачествен билков комплекс залага на холистичния подход към отслабването – без агресивни стимуланти, без химия, само чисти, концентрирани екстракти. Той не форсира тялото, а нежно го балансира и стимулира естествените му процеси на детоксикация и изгаряне на мазнини.",
@@ -568,15 +552,15 @@
             },
             "effects": [
               {
-                "label": "Детокс",
-                "value": 80
-              },
-              {
-                "label": "Натурален състав",
+                "label": "Натурална формула",
                 "value": 100
               },
               {
                 "label": "Метаболизъм",
+                "value": 75
+              },
+              {
+                "label": "Детоксикация",
                 "value": 70
               }
             ],
@@ -658,23 +642,23 @@
           "product_id": "prod-16905",
           "public_data": {
             "name": "Fat No More",
-            "tagline": "Sport Definition - Термогенен фет бърнер",
+            "tagline": "Sport Definition - Термогенен фет бърнер с L-Carnitine",
             "price": 38.95,
             "description": "Fat No More е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_16905/SD_Fat_No_More_120cap_600px1_kamera1-aab4bde-original.png",
             "label_image": "/images/products/product_16905/supp-factsc3c6c.jpg",
             "effects": [
               {
-                "label": "Премахване на мазнини",
-                "value": 90
-              },
-              {
-                "label": "Метаболизъм",
+                "label": "Термогенеза",
                 "value": 85
               },
               {
-                "label": "Контрол на апетита",
+                "label": "Енергия",
                 "value": 80
+              },
+              {
+                "label": "Транспорт на мазнини",
+                "value": 85
               }
             ],
             "ingredients": [
@@ -729,16 +713,12 @@
           "product_id": "prod-24527",
           "public_data": {
             "name": "Thermo Caps | Thermogenic Fat Burner for Women",
-            "tagline": "Nutriversum - Термогенен фет бърнер",
+            "tagline": "Nutriversum - Термогенен фет бърнер за жени",
             "price": 34.95,
             "description": "Thermo Caps | Thermogenic Fat Burner for Women е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_24527/Thermo_Caps_120-740d2a8-original.png",
             "label_image": "/images/products/product_24527/supp-factsf9e51.jpg",
             "effects": [
-              {
-                "label": "Женска формула",
-                "value": 95
-              },
               {
                 "label": "Термогенеза",
                 "value": 85
@@ -746,6 +726,10 @@
               {
                 "label": "Енергия",
                 "value": 80
+              },
+              {
+                "label": "Женска формула",
+                "value": 90
               }
             ],
             "ingredients": [
@@ -795,22 +779,22 @@
           "product_id": "prod-37086",
           "public_data": {
             "name": "Essential Fat Burner | Thermogenic",
-            "tagline": "RAW Nutrition - Термогенен фет бърнер",
+            "tagline": "RAW Nutrition - Премиум термогенен фет бърнер",
             "price": 98.95,
             "description": "Essential Fat Burner | Thermogenic е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_37086/EssentialFatBurner_720x-db2bd27-original.png",
             "label_image": "/images/products/product_37086/i_view64_Eava43gfvZ9336c.jpg",
             "effects": [
               {
-                "label": "Премиум съставки",
-                "value": 95
-              },
-              {
-                "label": "Дълготрайна енергия",
+                "label": "Термогенеза",
                 "value": 90
               },
               {
-                "label": "Чист фокус",
+                "label": "Енергия",
+                "value": 85
+              },
+              {
+                "label": "Фокус",
                 "value": 85
               }
             ],
@@ -866,23 +850,23 @@
           "product_id": "prod-24605",
           "public_data": {
             "name": "Burn4All Extreme | High Thermogenesis",
-            "tagline": "AllNutrition - Термогенен фет бърнер",
+            "tagline": "AllNutrition - Екстремен термогенен фет бърнер",
             "price": 30.99,
             "description": "Burn4All Extreme | High Thermogenesis е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_24605/allnutrition-burn4all-extreme-8d74e05-original.png",
             "label_image": "/images/products/product_24605/PGRcE8v3fa1f.jpg",
             "effects": [
               {
-                "label": "Екстремна термогенеза",
+                "label": "Термогенеза",
                 "value": 95
               },
               {
-                "label": "Бързо изгаряне",
+                "label": "Енергия",
                 "value": 90
               },
               {
                 "label": "Интензивност",
-                "value": 85
+                "value": 90
               }
             ],
             "ingredients": [
@@ -932,22 +916,22 @@
           "product_id": "prod-5177",
           "public_data": {
             "name": "Fat Transporter | Lipotropic Fat Burner",
-            "tagline": "Trec Nutrition - Термогенен фет бърнер",
+            "tagline": "Trec Nutrition - Липотропен термогенен фет бърнер",
             "price": 83.95,
             "description": "Fat Transporter | Lipotropic Fat Burner е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_5177/Fat_Transporter_i574_d1200x1200-a444781-original.png",
             "label_image": "/images/products/product_5177/chrome_LUdG2tSj84db77f.jpg",
             "effects": [
               {
-                "label": "Липотропно действие",
-                "value": 95
-              },
-              {
                 "label": "Транспорт на мазнини",
                 "value": 90
               },
               {
-                "label": "Детоксикация",
+                "label": "Термогенеза",
+                "value": 85
+              },
+              {
+                "label": "Метаболизъм",
                 "value": 85
               }
             ],
@@ -998,23 +982,23 @@
           "product_id": "prod-31",
           "public_data": {
             "name": "Lipo 6 / L-Carnitine",
-            "tagline": "Nutrex - Термогенен фет бърнер",
+            "tagline": "Nutrex - Термогенен фет бърнер с L-Carnitine",
             "price": 73.0,
             "description": "Lipo 6 / L-Carnitine е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_31/Screenshot2025-07-24105715e2782.jpg",
             "label_image": "/images/products/product_31/Screenshot2025-07-24105715e2782.jpg",
             "effects": [
               {
-                "label": "L-Carnitine формула",
-                "value": 95
-              },
-              {
-                "label": "Изгаряне на калории",
+                "label": "Транспорт на мазнини",
                 "value": 90
               },
               {
-                "label": "Издръжливост",
+                "label": "Термогенеза",
                 "value": 85
+              },
+              {
+                "label": "Издръжливост",
+                "value": 80
               }
             ],
             "ingredients": [
@@ -1064,23 +1048,23 @@
           "product_id": "prod-742",
           "public_data": {
             "name": "Lipo 6 Black",
-            "tagline": "Nutrex - Термогенен фет бърнер",
+            "tagline": "Nutrex - Максимална сила термогенен фет бърнер",
             "price": 97.0,
             "description": "Lipo 6 Black е мощен термогенен продукт за отслабване и увеличаване на енергията.",
             "image_url": "/images/products/product_742/Lipo6-BlackUC-60-0b247b3-original.webp",
             "label_image": "/images/products/product_742/204WDg1ecebc.jpg",
             "effects": [
               {
-                "label": "Екстра сила",
-                "value": 98
-              },
-              {
-                "label": "Максимална мощ",
+                "label": "Термогенеза",
                 "value": 95
               },
               {
-                "label": "Бърз ефект",
+                "label": "Енергия",
                 "value": 92
+              },
+              {
+                "label": "Интензивност",
+                "value": 95
               }
             ],
             "ingredients": [
