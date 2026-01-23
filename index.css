@@ -2125,6 +2125,11 @@ body.modal-open { overflow: hidden; }
         padding: 20px;
     }
     
+    /* Optimize product images for mobile */
+    .product-image img {
+        max-height: 220px;
+    }
+    
     /* Reduce animation intensity on mobile */
     .hero-section {
         min-height: 450px;
@@ -2160,6 +2165,11 @@ body.modal-open { overflow: hidden; }
     .hero-cta-group {
         flex-direction: column;
         gap: 15px;
+    }
+    
+    /* Further optimize product images for very small screens */
+    .product-image img {
+        max-height: 180px;
     }
     
     .btn-hero-primary,
