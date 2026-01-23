@@ -90,10 +90,13 @@ const generateProductCard = (product) => {
     const publicData = product.public_data;
     const inventory = product.system_data?.inventory ?? 0;
     const productId = product.product_id; // Използваме надеждния уникален ID
+    
+    // Use thumbnail for index page, fallback to original image
+    const imageUrl = publicData.thumbnail_url || publicData.image_url;
 
     return `
     <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}">
-        ${publicData.image_url ? `<div class="product-image"><img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)} - ${escapeHtml(publicData.tagline)}" loading="lazy"></div>` : ''}
+        ${imageUrl ? `<div class="product-image"><img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(publicData.name)} - ${escapeHtml(publicData.tagline)}" loading="lazy"></div>` : ''}
         <div class="card-content">
             <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(publicData.tagline)}</p></div>
             <div class="product-price">${Number(publicData.price).toFixed(2)} €</div>
