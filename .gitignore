@@ -21,3 +21,4 @@ yarn-error.log*
 page_content_mock.json
 page_content_mock.json.backup
 orders.json
+__pycache__/
