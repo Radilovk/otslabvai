@@ -1272,6 +1272,13 @@ function handleAction(action, target, id) {
             fileInput.click();
             break;
         }
+        case 'ai-assistant': {
+            const productEditor = target.closest('.nested-item[data-type="product"]');
+            if (!productEditor) return;
+            
+            handleAIAssistant(productEditor);
+            break;
+        }
     }
 }
 
@@ -1545,6 +1552,145 @@ async function uploadImageToGitHub(file) {
     const imageUrl = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${filepath}`;
     
     return imageUrl;
+}
+
+/**
+ * Handles AI Assistant functionality for product auto-fill
+ * @param {HTMLElement} productEditor - The product editor element
+ */
+async function handleAIAssistant(productEditor) {
+    try {
+        // Показваме индикатор за зареждане
+        const aiBtn = productEditor.querySelector('.ai-assistant-btn');
+        const originalText = aiBtn.textContent;
+        aiBtn.disabled = true;
+        aiBtn.textContent = '⏳ AI обработва...';
+        
+        // Събираме текущите данни от продуктовия редактор
+        const currentData = {
+            productName: productEditor.querySelector('[data-field="public_data.name"]')?.value || '',
+            price: productEditor.querySelector('[data-field="public_data.price"]')?.value || '',
+            tagline: productEditor.querySelector('[data-field="public_data.tagline"]')?.value || '',
+            description: productEditor.querySelector('[data-field="public_data.description"]')?.value || '',
+            manufacturer: productEditor.querySelector('[data-field="system_data.manufacturer"]')?.value || '',
+        };
+        
+        // Проверяваме дали има поне име на продукта
+        if (!currentData.productName.trim()) {
+            showNotification('Моля, въведете поне име на продукта преди да използвате AI Асистент.', 'error');
+            aiBtn.disabled = false;
+            aiBtn.textContent = originalText;
+            return;
+        }
+        
+        // Извикваме AI API
+        const response = await fetch(`${API_URL}/ai-assistant`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(currentData)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'AI заявката се провали');
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+            throw new Error('Невалиден отговор от AI');
+        }
+        
+        const aiData = result.data;
+        
+        // Попълваме празните полета с AI данни
+        const fillField = (selector, value) => {
+            const input = productEditor.querySelector(selector);
+            if (input && !input.value && value) {
+                input.value = value;
+            }
+        };
+        
+        // Основни полета
+        fillField('[data-field="public_data.name"]', aiData.name);
+        fillField('[data-field="public_data.price"]', aiData.price);
+        fillField('[data-field="public_data.tagline"]', aiData.tagline);
+        fillField('[data-field="public_data.description"]', aiData.description);
+        
+        // Опаковка
+        if (aiData.packaging_info) {
+            fillField('[data-field="public_data.packaging.capsules_or_grams"]', aiData.packaging_info.capsules_or_grams);
+            fillField('[data-field="public_data.packaging.doses_per_package"]', aiData.packaging_info.doses_per_package);
+        }
+        
+        // Системни данни
+        fillField('[data-field="system_data.manufacturer"]', aiData.manufacturer);
+        
+        // За продукта (About Content)
+        if (aiData.about_content) {
+            fillField('[data-field="public_data.about_content.title"]', aiData.about_content.title);
+            fillField('[data-field="public_data.about_content.description"]', aiData.about_content.description);
+            
+            // Добавяме ползи (benefits)
+            if (aiData.about_content.benefits && Array.isArray(aiData.about_content.benefits)) {
+                const benefitsContainer = productEditor.querySelector('[data-sub-container="about-benefits"]');
+                if (benefitsContainer && benefitsContainer.children.length === 0) {
+                    aiData.about_content.benefits.forEach(benefit => {
+                        addNestedItem(benefitsContainer, 'about-benefit-editor-template', benefit);
+                    });
+                }
+            }
+        }
+        
+        // Добавяме ефекти
+        if (aiData.effects && Array.isArray(aiData.effects)) {
+            const effectsContainer = productEditor.querySelector('[data-sub-container="effects"]');
+            if (effectsContainer && effectsContainer.children.length === 0) {
+                aiData.effects.forEach(effect => {
+                    addNestedItem(effectsContainer, 'effect-editor-template', effect);
+                });
+            }
+        }
+        
+        // Добавяме съставки
+        if (aiData.ingredients && Array.isArray(aiData.ingredients)) {
+            const ingredientsContainer = productEditor.querySelector('[data-sub-container="ingredients"]');
+            if (ingredientsContainer && ingredientsContainer.children.length === 0) {
+                aiData.ingredients.forEach(ingredient => {
+                    addNestedItem(ingredientsContainer, 'ingredient-editor-template', ingredient);
+                });
+            }
+        }
+        
+        // Добавяме FAQ
+        if (aiData.faq && Array.isArray(aiData.faq)) {
+            const faqContainer = productEditor.querySelector('[data-sub-container="faq"]');
+            if (faqContainer && faqContainer.children.length === 0) {
+                aiData.faq.forEach(faqItem => {
+                    addNestedItem(faqContainer, 'faq-editor-template', faqItem);
+                });
+            }
+        }
+        
+        // Актуализираме заглавието на продукта
+        const titleSpan = productEditor.querySelector('.product-editor-title');
+        if (titleSpan && aiData.name) {
+            titleSpan.textContent = aiData.name;
+        }
+        
+        showNotification('✅ AI Асистентът успешно попълни информацията за продукта!', 'success', 6000);
+        
+    } catch (error) {
+        console.error('AI Assistant error:', error);
+        showNotification(`❌ Грешка при AI обработка: ${error.message}`, 'error', 6000);
+    } finally {
+        // Възстановяваме бутона
+        const aiBtn = productEditor.querySelector('.ai-assistant-btn');
+        if (aiBtn) {
+            aiBtn.disabled = false;
+            aiBtn.textContent = '🤖 AI Асистент';
+        }
+    }
 }
 
 // =======================================================

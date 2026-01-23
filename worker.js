@@ -108,6 +108,14 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
+          
+          case '/ai-assistant':
+              if (request.method === 'POST') {
+                  response = await handleAIAssistant(request, env);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
             
           default:
             // Try to serve 404.html for unknown routes
@@ -363,6 +371,156 @@ async function handleCreateContact(request, env, ctx) {
         status: 201,
         headers: { 'Content-Type': 'application/json' }
     });
+}
+
+/**
+ * Handles POST /ai-assistant (AI Assistant for product information extraction)
+ */
+async function handleAIAssistant(request, env) {
+    let productData;
+    try {
+        productData = await request.json();
+    } catch (e) {
+        throw new UserFacingError("Невалиден JSON формат на заявката.", 400);
+    }
+    
+    if (!productData || !productData.productName) {
+        throw new UserFacingError("Липсва име на продукта.", 400);
+    }
+    
+    if (!env.ACCOUNT_ID || !env.AI_TOKEN) {
+        throw new UserFacingError("AI функционалността не е конфигурирана.", 500);
+    }
+    
+    // Създаваме промпт за AI модела
+    const prompt = `Ти си експерт по хранителни добавки и продукти за отслабване. Анализирай следната информация за продукт и попълни всички възможни полета в JSON формат. Търси в интернет ако е необходимо.
+
+Въведена информация:
+${JSON.stringify(productData, null, 2)}
+
+Моля попълни JSON обект със следните полета (на български език):
+{
+  "name": "Пълно име на продукта",
+  "manufacturer": "Производител",
+  "price": "Приблизителна цена в лева (число)",
+  "tagline": "Кратък маркетингов слоган (до 60 символа)",
+  "description": "Подробно маркетингово описание (100-200 думи)",
+  "packaging_info": {
+    "capsules_or_grams": "Брой капсули или грамаж",
+    "doses_per_package": "Брой дози в опаковка"
+  },
+  "effects": [
+    {
+      "label": "Ефект 1",
+      "value": "Стойност от 0 до 10"
+    },
+    {
+      "label": "Ефект 2", 
+      "value": "Стойност от 0 до 10"
+    },
+    {
+      "label": "Ефект 3",
+      "value": "Стойност от 0 до 10"
+    }
+  ],
+  "about_content": {
+    "title": "За продукта",
+    "description": "Подробно описание",
+    "benefits": [
+      {
+        "icon": "✓",
+        "text": "Полза 1"
+      },
+      {
+        "icon": "✓",
+        "text": "Полза 2"
+      }
+    ]
+  },
+  "ingredients": [
+    {
+      "name": "Съставка 1",
+      "amount": "Количество",
+      "description": "Описание на съставката"
+    }
+  ],
+  "recommended_intake": "Препоръчителен прием и дозировка",
+  "contraindications": "Противопоказания и предупреждения",
+  "additional_advice": "Допълнителни съвети и информация",
+  "faq": [
+    {
+      "question": "Често задаван въпрос 1",
+      "answer": "Отговор"
+    }
+  ]
+}
+
+ВАЖНО:
+- Отговори САМО с валиден JSON обект
+- Не добавяй коментари или друг текст извън JSON
+- Използвай български език
+- Бъди точен, грамотен и маркетингово компетентен
+- Ако липсва информация, използвай "null" или празен масив []`;
+
+    try {
+        const model = '@cf/meta/llama-3.1-70b-instruct';
+        const cfEndpoint = `https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/ai/run/${model}`;
+        
+        const payload = {
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 4096,
+            temperature: 0.3
+        };
+        
+        const response = await fetch(cfEndpoint, {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${env.AI_TOKEN}`, 
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const resultText = await response.text();
+        
+        if (!response.ok) {
+            console.error("AI API Request Failed. Status:", response.status, "Body:", resultText);
+            throw new UserFacingError("AI сървърът върна грешка. Моля, опитайте отново.", 500);
+        }
+        
+        const aiEnvelope = JSON.parse(resultText);
+        if (!aiEnvelope.result || !aiEnvelope.result.response) {
+            throw new Error("AI response is missing the 'result.response' field.");
+        }
+        
+        let aiResponseText = aiEnvelope.result.response;
+        
+        // Извличаме JSON от отговора
+        let extractedData;
+        if (typeof aiResponseText === 'string') {
+            const jsonMatch = aiResponseText.match(/{[\s\S]*}/);
+            if (!jsonMatch) {
+                console.error("AI returned a string without JSON structure:", aiResponseText);
+                throw new UserFacingError('AI отговори без валидна JSON структура.');
+            }
+            extractedData = JSON.parse(jsonMatch[0]);
+        } else {
+            extractedData = aiResponseText;
+        }
+        
+        return new Response(JSON.stringify({
+            success: true,
+            data: extractedData
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+    } catch (e) {
+        console.error("AI Assistant error:", e);
+        if (e instanceof UserFacingError) throw e;
+        throw new UserFacingError("Грешка при обработка на AI заявката.", 500);
+    }
 }
 
 /**

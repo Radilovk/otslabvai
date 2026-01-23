@@ -742,7 +742,12 @@
         <div class="nested-item" data-type="product">
             <div class="nested-item-header">
                 <span class="product-editor-title">Нов Продукт</span>
-                <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий продукта">×</button>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button type="button" class="btn btn-sm btn-primary ai-assistant-btn" data-action="ai-assistant" title="AI Асистент за попълване на продукт">
+                        🤖 AI Асистент
+                    </button>
+                    <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий продукта">×</button>
+                </div>
             </div>
             
             <nav class="modal-tab-nav">
