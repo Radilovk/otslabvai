@@ -1,5 +1,51 @@
 {
-  "total_products": 16,
-  "products_with_issues": 0,
-  "issues": {}
+  "total_products": 9,
+  "products_with_issues": 5,
+  "issues": {
+    "prod-raw-nutrition-essential-fat-burner": {
+      "name": "Essential",
+      "category": "ЕНЕРГИЯ И ПОДДРЪЖКА",
+      "issues": [
+        "Липсва производител",
+        "Липсва брой дози",
+        "Липсва снимка на етикета"
+      ]
+    },
+    "prod-sport-definition-fat-no-more": {
+      "name": "Fat No More",
+      "category": "ЕНЕРГИЯ И ПОДДРЪЖКА",
+      "issues": [
+        "Липсва производител",
+        "Липсва брой дози",
+        "Липсва снимка на етикета"
+      ]
+    },
+    "prod-trec-nutrition-thermo-fat-burner": {
+      "name": "Thermo Fat Burner",
+      "category": "ЕНЕРГИЯ И ПОДДРЪЖКА",
+      "issues": [
+        "Липсва производител",
+        "Липсва брой дози",
+        "Липсва снимка на етикета"
+      ]
+    },
+    "prod-allnutrition-burn4all": {
+      "name": "Burn4All",
+      "category": "ЕНЕРГИЯ И ПОДДРЪЖКА",
+      "issues": [
+        "Липсва производител",
+        "Липсва брой дози",
+        "Липсва снимка на етикета"
+      ]
+    },
+    "prod-ethicsport-thermo-master": {
+      "name": "Thermo Master",
+      "category": "ЕНЕРГИЯ И ПОДДРЪЖКА",
+      "issues": [
+        "Липсва производител",
+        "Липсва брой дози",
+        "Липсва снимка на етикета"
+      ]
+    }
+  }
 }

@@ -1,3 +1,5 @@
+{
+  "product_categories": [
     {
       "type": "product_category",
       "component_id": "cat_weight_loss_products",
@@ -14,7 +16,7 @@
           "public_data": {
             "name": "Lida Green",
             "tagline": "АБСОЛЮТНИЯТ ЛИДЕР: Най-мощният ефект на пазара",
-            "price": 17.78,
+            "price": 34.77,
             "description": "Lida Green е продуктът-легенда, към който се обръщате, когато всичко друго се е провалило. Това е безкомпромисното решение за бърза и видима промяна. Разработена за максимално въздействие, формулата атакува упоритите мазнини в проблемните зони (корем, ханш, бедра) и елиминира глада за сладко и тестено. Ако търсите не просто отслабване, а пълна трансформация, Lida Green е вашият сигурен път към успеха.",
             "image_url": "/images/products/lida-green.png",
             "research_note": {
@@ -23,16 +25,20 @@
             },
             "effects": [
               {
-                "label": "Контрол на апетита",
+                "label": "Спиране на глада",
                 "value": 100
               },
               {
-                "label": "Отслабване",
+                "label": "Сваляне на килограми",
                 "value": 100
               },
               {
-                "label": "Термогенеза",
-                "value": 95
+                "label": "Бързина на ефекта",
+                "value": 100
+              },
+              {
+                "label": "Отводняване",
+                "value": 90
               }
             ],
             "about_content": {
@@ -99,10 +105,7 @@
                 "description": "Оригинална формула",
                 "url": "#"
               }
-            ],
-            "label_image": "/images/products/lida-green.png?type=label",
-            "price_bgn": 34.77,
-            "currency": "EUR"
+            ]
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -123,7 +126,7 @@
           "public_data": {
             "name": "MeiziMax",
             "tagline": "Японска формула за стройна фигура и сияйна кожа",
-            "price": 19.61,
+            "price": 38.35,
             "description": "MeiziMax е елегантният избор за отслабване, вдъхновен от японската философия за хармония между тяло и дух. Това е вторият по сила продукт в каталога, но с уникален разкрасяващ ефект. Той не само топи килограмите, но и работи за изчистване на кожата, намаляване на целулита и придаване на сияен тен. Идеален е за дами със заседнал начин на живот, които искат да постигнат фина фигура и безупречна визия.",
             "image_url": "/images/products/meizimax.png",
             "research_note": {
@@ -132,16 +135,20 @@
             },
             "effects": [
               {
-                "label": "Контрол на апетита",
+                "label": "Намаляване на апетита",
                 "value": 90
               },
               {
-                "label": "Отслабване",
+                "label": "Сваляне на килограми",
                 "value": 90
               },
               {
-                "label": "Детоксикация",
+                "label": "Чиста кожа и детокс",
                 "value": 90
+              },
+              {
+                "label": "Анти-целулит",
+                "value": 80
               }
             ],
             "about_content": {
@@ -208,10 +215,7 @@
                 "description": "Стандартна опаковка",
                 "url": "#"
               }
-            ],
-            "label_image": "/images/products/meizimax.png?type=label",
-            "price_bgn": 38.35,
-            "currency": "EUR"
+            ]
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -232,7 +236,7 @@
           "public_data": {
             "name": "Eveslim Birch Bark",
             "tagline": "№1 срещу целулит, отоци и подпухване",
-            "price": 16.21,
+            "price": 31.70,
             "description": "Eveslim с брезова кора е вашето специализирано оръжие срещу упорития целулит и досадното задържане на вода. Ако често се чувствате подути, краката ви тежат в края на деня, а кожата на бедрата има неравности, този продукт е създаден точно за вас. Той действа като мощен лимфен дренаж, който изчиства тялото отвътре, за да бъде гладко и красиво отвън.",
             "image_url": "/images/products/eveslim-birch.png",
             "research_note": {
@@ -241,16 +245,20 @@
             },
             "effects": [
               {
-                "label": "Анти-целулит",
+                "label": "Премахване на целулит",
                 "value": 100
               },
               {
-                "label": "Отводняване",
+                "label": "Спадане на отоци",
                 "value": 100
               },
               {
-                "label": "Детоксикация",
+                "label": "Детокс",
                 "value": 90
+              },
+              {
+                "label": "Отслабване",
+                "value": 80
               }
             ],
             "about_content": {
@@ -317,10 +325,7 @@
                 "description": "Курс за детокс и гладка кожа",
                 "url": "#"
               }
-            ],
-            "label_image": "/images/products/eveslim-birch.png?type=label",
-            "price_bgn": 31.7,
-            "currency": "EUR"
+            ]
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -341,7 +346,7 @@
           "public_data": {
             "name": "Eveslim Cayenne Pepper",
             "tagline": "Огнена сила срещу бавен метаболизъм",
-            "price": 16.21,
+            "price": 31.70,
             "description": "Чувствате ли, че метаболизмът ви е 'заспал'? Крайниците ви са постоянно студени, а килограмите се трупат дори от въздуха? Eveslim с люта чушка е вашето решение. Той действа като 'запалване' за метаболизма, използвайки силата на капсаицина, за да загрее тялото отвътре и да го превърне в машина за изгаряне на калории, дори докато си почивате.",
             "image_url": "/images/products/eveslim-cayenne.png",
             "research_note": {
@@ -350,7 +355,11 @@
             },
             "effects": [
               {
-                "label": "Термогенеза",
+                "label": "Термогенеза (загряване)",
+                "value": 90
+              },
+              {
+                "label": "Събуждане на метаболизма",
                 "value": 90
               },
               {
@@ -358,8 +367,8 @@
                 "value": 80
               },
               {
-                "label": "Отслабване",
-                "value": 85
+                "label": "Стягане",
+                "value": 70
               }
             ],
             "about_content": {
@@ -426,10 +435,7 @@
                 "description": "Загряващ курс",
                 "url": "#"
               }
-            ],
-            "label_image": "/images/products/eveslim-cayenne.png?type=label",
-            "price_bgn": 31.7,
-            "currency": "EUR"
+            ]
           },
           "system_data": {
             "application_type": "Oral / Capsules",
@@ -462,7 +468,7 @@
           "product_id": "prod-raw-nutrition-essential-fat-burner",
           "public_data": {
             "name": "Essential",
-            "price": 25.88,
+            "price": 50.61,
             "tagline": "Луксозна формула за енергия и тонус",
             "image_url": "/images/products/raw-nutrition.png",
             "additional_images": "",
@@ -491,15 +497,15 @@
             },
             "effects": [
               {
-                "label": "Енергия",
-                "value": 80
+                "label": "Енергия и тонус",
+                "value": 90
               },
               {
-                "label": "Метаболизъм",
-                "value": 75
+                "label": "Изгаряне на мазнини",
+                "value": 70
               },
               {
-                "label": "Термогенеза",
+                "label": "Контрол на апетита",
                 "value": 70
               }
             ],
@@ -538,10 +544,7 @@
                 "question": "Колко време мога да го приемам?",
                 "answer": "Продуктът е достатъчно балансиран за по-продължителен прием. Препоръчваме цикъл от 8-12 седмици прием, последван от 2-4 седмици почивка, за да се запази чувствителността на рецепторите."
               }
-            ],
-            "label_image": "https://fitness1.bg/label/suppfacts5c0f6.jpg",
-            "price_bgn": 50.61,
-            "currency": "EUR"
+            ]
           },
           "system_data": {
             "application_type": "",
@@ -554,17 +557,14 @@
             "target_profile": "Заети дами, търсещи енергия и поддръжка на фигурата.",
             "protocol_hint": "Приемайте 2-3 капсули сутрин (1 доза).",
             "synergy_products": [],
-            "safety_warnings": "Не приемайте вечер.",
-            "doses_count": 60,
-            "capsules_count": 60,
-            "manufacturer": "RAW Nutrition"
+            "safety_warnings": "Не приемайте вечер."
           }
         },
         {
           "product_id": "prod-sport-definition-fat-no-more",
           "public_data": {
             "name": "Fat No More",
-            "price": 12.81,
+            "price": 25.05,
             "tagline": "Бърз контрол над глада",
             "image_url": "/images/products/sport-definition.png",
             "additional_images": "",
@@ -589,16 +589,16 @@
             },
             "effects": [
               {
-                "label": "Термогенеза",
-                "value": 85
-              },
-              {
-                "label": "Метаболизъм",
-                "value": 85
+                "label": "Потискане на апетита",
+                "value": 80
               },
               {
                 "label": "Енергия",
                 "value": 80
+              },
+              {
+                "label": "Изгаряне на мазнини",
+                "value": 70
               }
             ],
             "ingredients": [
@@ -656,10 +656,7 @@
                 "question": "За кого е най-подходящ този продукт?",
                 "answer": "Идеален е за хора, които имат нужда от силен първоначален тласък, за да започнат диета, или за тези, които са достигнали 'плато' в отслабването и имат нужда да раздвижат метаболизма си."
               }
-            ],
-            "label_image": "https://fitness1.bg/label/supp-factsc3c6c.jpg",
-            "price_bgn": 25.05,
-            "currency": "EUR"
+            ]
           },
           "system_data": {
             "application_type": "",
@@ -671,17 +668,14 @@
             "target_profile": "Дами, търсещи бърз контрол на апетита.",
             "protocol_hint": "3 капсули дневно (1 преди закуска, 2 преди тренировка/обяд).",
             "synergy_products": [],
-            "safety_warnings": "Внимание с кофеина.",
-            "manufacturer": "Sport Definition",
-            "doses_count": 40,
-            "capsules_count": 120
+            "safety_warnings": "Внимание с кофеина."
           }
         },
         {
           "product_id": "prod-trec-nutrition-thermo-fat-burner",
           "public_data": {
             "name": "Thermo Fat Burner",
-            "price": 10.98,
+            "price": 21.47,
             "tagline": "Лек и балансиран за всеки ден",
             "image_url": "/images/products/trec-nutrition.png",
             "additional_images": "",
@@ -692,16 +686,16 @@
             },
             "effects": [
               {
-                "label": "Термогенеза",
-                "value": 85
+                "label": "Отводняване",
+                "value": 70
               },
               {
                 "label": "Метаболизъм",
-                "value": 85
+                "value": 60
               },
               {
                 "label": "Енергия",
-                "value": 80
+                "value": 60
               }
             ],
             "about_content": {
@@ -763,10 +757,7 @@
                 "question": "Кога е време да премина към по-силен продукт?",
                 "answer": "Ако след 1-2 месеца прием усетите, че ефектът намалява или искате да ускорите резултатите, може да помислите за преминаване към продукт от среден клас като 'Fat No More' или 'Essential'."
               }
-            ],
-            "label_image": "https://fitness1.bg/label/chrome_apNU0cuqc177367.jpg",
-            "price_bgn": 21.47,
-            "currency": "EUR"
+            ]
           },
           "system_data": {
             "application_type": "",
@@ -778,17 +769,14 @@
             "target_profile": "Начинаещи.",
             "protocol_hint": "2 капсули дневно с много вода.",
             "synergy_products": [],
-            "safety_warnings": "Няма.",
-            "manufacturer": "Trec Nutrition",
-            "doses_count": 60,
-            "capsules_count": 120
+            "safety_warnings": "Няма."
           }
         },
         {
           "product_id": "prod-allnutrition-burn4all",
           "public_data": {
             "name": "Burn4All",
-            "price": 6.53,
+            "price": 12.78,
             "tagline": "Бюджетен избор за тонус",
             "image_url": "/images/products/allnutrition.png",
             "additional_images": "",
@@ -799,16 +787,16 @@
             },
             "effects": [
               {
-                "label": "Термогенеза",
-                "value": 85
-              },
-              {
                 "label": "Енергия",
-                "value": 80
+                "value": 60
               },
               {
                 "label": "Метаболизъм",
-                "value": 75
+                "value": 60
+              },
+              {
+                "label": "Цена/Качество",
+                "value": 100
               }
             ],
             "about_content": {
@@ -880,10 +868,7 @@
                 "question": "Колко капсули да приемам?",
                 "answer": "Препоръчителната доза е 3 капсули дневно. Можете да ги приемете наведнъж сутрин или да ги разделите - например 2 преди закуска и 1 преди обяд."
               }
-            ],
-            "label_image": "https://fitness1.bg/label/PGRcE8v3fa1f.jpg",
-            "price_bgn": 12.78,
-            "currency": "EUR"
+            ]
           },
           "system_data": {
             "application_type": "",
@@ -895,17 +880,14 @@
             "target_profile": "Бюджетно ориентирани клиенти.",
             "protocol_hint": "3 капсули дневно.",
             "synergy_products": [],
-            "safety_warnings": "Няма.",
-            "manufacturer": "AllNutrition",
-            "doses_count": 40,
-            "capsules_count": 120
+            "safety_warnings": "Няма."
           }
         },
         {
           "product_id": "prod-ethicsport-thermo-master",
           "public_data": {
             "name": "Thermo Master",
-            "price": 16.73,
+            "price": 32.72,
             "tagline": "Италиански билков комплекс",
             "image_url": "/images/products/ethicsport.png",
             "additional_images": "",
@@ -916,16 +898,16 @@
             },
             "effects": [
               {
-                "label": "Термогенеза",
-                "value": 85
-              },
-              {
-                "label": "Енергия",
+                "label": "Детокс",
                 "value": 80
               },
               {
+                "label": "Натурален състав",
+                "value": 100
+              },
+              {
                 "label": "Метаболизъм",
-                "value": 75
+                "value": 70
               }
             ],
             "about_content": {
@@ -987,13 +969,10 @@
                 "question": "Може ли да се приема за дълъг период от време?",
                 "answer": "Да, благодарение на своя натурален и балансиран състав, Thermo Master е напълно безопасен за продължителен прием от няколко месеца без нужда от почивка."
               }
-            ],
-            "label_image": "https://fitness1.bg/label/suppfacts986de.jpg",
-            "price_bgn": 32.72,
-            "currency": "EUR"
+            ]
           },
           "system_data": {
-            "application_type": "Oral / Tablets",
+            "application_type": "",
             "inventory": 35,
             "goals": [
               "natural",
@@ -1002,489 +981,10 @@
             "target_profile": "Любители на натурални продукти.",
             "protocol_hint": "3 капсули дневно (сутрин или преди обяд).",
             "synergy_products": [],
-            "safety_warnings": "Няма.",
-            "manufacturer": "EthicSport",
-            "doses_count": 25,
-            "capsules_count": 50
-          }
-        },
-        {
-          "product_id": "prod-16905",
-          "public_data": {
-            "name": "Sport Definition Fat No More",
-            "tagline": "Sport Definition - Термогенен фет бърнер",
-            "price": 19.91,
-            "description": "Fat No More е мощен термогенен продукт за отслабване и увеличаване на енергията.",
-            "image_url": "/images/products/product_16905/SD_Fat_No_More_120cap_600px1_kamera1-aab4bde-original.png",
-            "label_image": "/images/products/product_16905/supp-factsc3c6c.jpg",
-            "effects": [
-              {
-                "label": "Термогенеза",
-                "value": 85
-              },
-              {
-                "label": "Метаболизъм",
-                "value": 85
-              },
-              {
-                "label": "Енергия",
-                "value": 80
-              }
-            ],
-            "ingredients": [
-              {
-                "name": "Кофеин",
-                "amount": "200 mg",
-                "description": "Стимулира централната нервна система и увеличава метаболизма"
-              },
-              {
-                "name": "Зелен чай екстракт",
-                "amount": "300 mg",
-                "description": "Богат на катехини с термогенен ефект"
-              },
-              {
-                "name": "L-Карнитин",
-                "amount": "500 mg",
-                "description": "Подпомага транспорта на мастни киселини към митохондриите"
-              },
-              {
-                "name": "Витамин B6",
-                "amount": "2 mg",
-                "description": "Подпомага енергийния метаболизъм"
-              }
-            ],
-            "faq": [],
-            "variants": [],
-            "price_bgn": 38.95,
-            "currency": "EUR"
-          },
-          "system_data": {
-            "manufacturer": "Sport Definition",
-            "application_type": "Oral / Capsules",
-            "capsules_count": 120,
-            "doses_count": 40,
-            "weight_grams": null,
-            "goals": [
-              "weight-loss",
-              "energy",
-              "thermogenesis"
-            ],
-            "target_profile": "Хора, които искат да увеличат енергията и да ускорят метаболизма.",
-            "protocol_hint": "Приемайте 1 капсули дневно с храна.",
-            "synergy_products": [],
-            "safety_warnings": "Не превишавайте препоръчителната доза.",
-            "inventory": 15
-          }
-        },
-        {
-          "product_id": "prod-24527",
-          "public_data": {
-            "name": "Thermo Caps | Thermogenic Fat Burner for Women",
-            "tagline": "Nutriversum - Термогенен фет бърнер",
-            "price": 17.87,
-            "description": "Thermo Caps | Thermogenic Fat Burner for Women е мощен термогенен продукт за отслабване и увеличаване на енергията.",
-            "image_url": "/images/products/product_24527/Thermo_Caps_120-740d2a8-original.png",
-            "label_image": "/images/products/product_24527/supp-factsf9e51.jpg",
-            "effects": [
-              {
-                "label": "Термогенеза",
-                "value": 85
-              },
-              {
-                "label": "Метаболизъм",
-                "value": 85
-              },
-              {
-                "label": "Енергия",
-                "value": 80
-              }
-            ],
-            "ingredients": [
-              {
-                "name": "Кофеин",
-                "amount": "200 mg",
-                "description": "Стимулира централната нервна система и увеличава метаболизма"
-              },
-              {
-                "name": "Зелен чай екстракт",
-                "amount": "300 mg",
-                "description": "Богат на катехини с термогенен ефект"
-              },
-              {
-                "name": "L-Карнитин",
-                "amount": "500 mg",
-                "description": "Подпомага транспорта на мастни киселини към митохондриите"
-              },
-              {
-                "name": "Витамин B6",
-                "amount": "2 mg",
-                "description": "Подпомага енергийния метаболизъм"
-              }
-            ],
-            "faq": [],
-            "variants": [],
-            "price_bgn": 34.95,
-            "currency": "EUR"
-          },
-          "system_data": {
-            "manufacturer": "Nutriversum",
-            "application_type": "Oral / Capsules",
-            "capsules_count": 120,
-            "doses_count": 30,
-            "weight_grams": null,
-            "goals": [
-              "weight-loss",
-              "energy",
-              "thermogenesis"
-            ],
-            "target_profile": "Хора, които искат да увеличат енергията и да ускорят метаболизма.",
-            "protocol_hint": "Приемайте 1 капсули дневно с храна.",
-            "synergy_products": [],
-            "safety_warnings": "Не превишавайте препоръчителната доза.",
-            "inventory": 15
-          }
-        },
-        {
-          "product_id": "prod-37086",
-          "public_data": {
-            "name": "Essential Fat Burner | Thermogenic",
-            "tagline": "RAW Nutrition - Термогенен фет бърнер",
-            "price": 50.59,
-            "description": "Essential Fat Burner | Thermogenic е мощен термогенен продукт за отслабване и увеличаване на енергията.",
-            "image_url": "/images/products/product_37086/EssentialFatBurner_720x-db2bd27-original.png",
-            "label_image": "/images/products/product_37086/i_view64_Eava43gfvZ9336c.jpg",
-            "effects": [
-              {
-                "label": "Термогенеза",
-                "value": 85
-              },
-              {
-                "label": "Метаболизъм",
-                "value": 85
-              },
-              {
-                "label": "Енергия",
-                "value": 80
-              }
-            ],
-            "ingredients": [
-              {
-                "name": "Кофеин",
-                "amount": "200 mg",
-                "description": "Стимулира централната нервна система и увеличава метаболизма"
-              },
-              {
-                "name": "Зелен чай екстракт",
-                "amount": "300 mg",
-                "description": "Богат на катехини с термогенен ефект"
-              },
-              {
-                "name": "L-Карнитин",
-                "amount": "500 mg",
-                "description": "Подпомага транспорта на мастни киселини към митохондриите"
-              },
-              {
-                "name": "Витамин B6",
-                "amount": "2 mg",
-                "description": "Подпомага енергийния метаболизъм"
-              }
-            ],
-            "faq": [],
-            "variants": [],
-            "price_bgn": 98.95,
-            "currency": "EUR"
-          },
-          "system_data": {
-            "manufacturer": "RAW Nutrition",
-            "application_type": "Oral / Capsules",
-            "capsules_count": 60,
-            "doses_count": 30,
-            "weight_grams": null,
-            "goals": [
-              "weight-loss",
-              "energy",
-              "thermogenesis"
-            ],
-            "target_profile": "Хора, които искат да увеличат енергията и да ускорят метаболизма.",
-            "protocol_hint": "Приемайте 1 капсули дневно с храна.",
-            "synergy_products": [],
-            "safety_warnings": "Не превишавайте препоръчителната доза.",
-            "inventory": 15
-          }
-        },
-        {
-          "product_id": "prod-24605",
-          "public_data": {
-            "name": "Burn4All Extreme | High Thermogenesis",
-            "tagline": "AllNutrition - Термогенен фет бърнер",
-            "price": 15.84,
-            "description": "Burn4All Extreme | High Thermogenesis е мощен термогенен продукт за отслабване и увеличаване на енергията.",
-            "image_url": "/images/products/product_24605/allnutrition-burn4all-extreme-8d74e05-original.png",
-            "label_image": "/images/products/product_24605/PGRcE8v3fa1f.jpg",
-            "effects": [
-              {
-                "label": "Термогенеза",
-                "value": 85
-              },
-              {
-                "label": "Енергия",
-                "value": 80
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
-              }
-            ],
-            "ingredients": [
-              {
-                "name": "Кофеин",
-                "amount": "200 mg",
-                "description": "Стимулира централната нервна система и увеличава метаболизма"
-              },
-              {
-                "name": "Зелен чай екстракт",
-                "amount": "300 mg",
-                "description": "Богат на катехини с термогенен ефект"
-              },
-              {
-                "name": "L-Карнитин",
-                "amount": "500 mg",
-                "description": "Подпомага транспорта на мастни киселини към митохондриите"
-              },
-              {
-                "name": "Витамин B6",
-                "amount": "2 mg",
-                "description": "Подпомага енергийния метаболизъм"
-              }
-            ],
-            "faq": [],
-            "variants": [],
-            "price_bgn": 30.99,
-            "currency": "EUR"
-          },
-          "system_data": {
-            "manufacturer": "AllNutrition",
-            "application_type": "Oral / Capsules",
-            "capsules_count": 120,
-            "doses_count": 40,
-            "weight_grams": null,
-            "goals": [
-              "weight-loss",
-              "energy",
-              "thermogenesis"
-            ],
-            "target_profile": "Хора, които искат да увеличат енергията и да ускорят метаболизма.",
-            "protocol_hint": "Приемайте 1 капсули дневно с храна.",
-            "synergy_products": [],
-            "safety_warnings": "Не превишавайте препоръчителната доза.",
-            "inventory": 15
-          }
-        },
-        {
-          "product_id": "prod-5177",
-          "public_data": {
-            "name": "Fat Transporter | Lipotropic Fat Burner",
-            "tagline": "Trec Nutrition - Термогенен фет бърнер",
-            "price": 42.92,
-            "description": "Fat Transporter | Lipotropic Fat Burner е мощен термогенен продукт за отслабване и увеличаване на енергията.",
-            "image_url": "/images/products/product_5177/Fat_Transporter_i574_d1200x1200-a444781-original.png",
-            "label_image": "/images/products/product_5177/chrome_LUdG2tSj84db77f.jpg",
-            "effects": [
-              {
-                "label": "Термогенеза",
-                "value": 85
-              },
-              {
-                "label": "Метаболизъм",
-                "value": 85
-              },
-              {
-                "label": "Енергия",
-                "value": 80
-              }
-            ],
-            "ingredients": [
-              {
-                "name": "Кофеин",
-                "amount": "200 mg",
-                "description": "Стимулира централната нервна система и увеличава метаболизма"
-              },
-              {
-                "name": "Зелен чай екстракт",
-                "amount": "300 mg",
-                "description": "Богат на катехини с термогенен ефект"
-              },
-              {
-                "name": "L-Карнитин",
-                "amount": "500 mg",
-                "description": "Подпомага транспорта на мастни киселини към митохондриите"
-              },
-              {
-                "name": "Витамин B6",
-                "amount": "2 mg",
-                "description": "Подпомага енергийния метаболизъм"
-              }
-            ],
-            "faq": [],
-            "variants": [],
-            "price_bgn": 83.95,
-            "currency": "EUR"
-          },
-          "system_data": {
-            "manufacturer": "Trec Nutrition",
-            "application_type": "Oral / Capsules",
-            "capsules_count": 180,
-            "doses_count": 90,
-            "weight_grams": null,
-            "goals": [
-              "weight-loss",
-              "energy",
-              "thermogenesis"
-            ],
-            "target_profile": "Хора, които искат да увеличат енергията и да ускорят метаболизма.",
-            "protocol_hint": "Приемайте -1 капсули дневно с храна.",
-            "synergy_products": [],
-            "safety_warnings": "Не превишавайте препоръчителната доза.",
-            "inventory": 15
-          }
-        },
-        {
-          "product_id": "prod-31",
-          "public_data": {
-            "name": "Lipo 6 / L-Carnitine",
-            "tagline": "Nutrex - Термогенен фет бърнер",
-            "price": 37.32,
-            "description": "Lipo 6 / L-Carnitine е мощен термогенен продукт за отслабване и увеличаване на енергията.",
-            "image_url": "/images/products/product_31/Screenshot2025-07-24105715e2782.jpg",
-            "label_image": "/images/products/product_31/Screenshot2025-07-24105715e2782.jpg",
-            "effects": [
-              {
-                "label": "Метаболизъм",
-                "value": 85
-              },
-              {
-                "label": "Енергия",
-                "value": 80
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
-              }
-            ],
-            "ingredients": [
-              {
-                "name": "Кофеин безводен",
-                "amount": "200 mg",
-                "description": "Увеличава енергията и концентрацията"
-              },
-              {
-                "name": "Синефрин",
-                "amount": "20 mg",
-                "description": "Термогенен алкалоид от горчив портокал"
-              },
-              {
-                "name": "Йохимбин HCl",
-                "amount": "3 mg",
-                "description": "Подпомага липолизата"
-              },
-              {
-                "name": "Гугулстерони",
-                "amount": "25 mg",
-                "description": "Подпомага функцията на щитовидната жлеза"
-              }
-            ],
-            "faq": [],
-            "variants": [],
-            "price_bgn": 73.0,
-            "currency": "EUR"
-          },
-          "system_data": {
-            "manufacturer": "Nutrex",
-            "application_type": "Oral / Capsules",
-            "capsules_count": 120,
-            "doses_count": 60,
-            "weight_grams": null,
-            "goals": [
-              "weight-loss",
-              "energy",
-              "thermogenesis"
-            ],
-            "target_profile": "Хора, които искат да увеличат енергията и да ускорят метаболизма.",
-            "protocol_hint": "Приемайте -1 капсули дневно с храна.",
-            "synergy_products": [],
-            "safety_warnings": "Не превишавайте препоръчителната доза.",
-            "inventory": 15
-          }
-        },
-        {
-          "product_id": "prod-742",
-          "public_data": {
-            "name": "Lipo 6 Black",
-            "tagline": "Nutrex - Термогенен фет бърнер",
-            "price": 49.6,
-            "description": "Lipo 6 Black е мощен термогенен продукт за отслабване и увеличаване на енергията.",
-            "image_url": "/images/products/product_742/Lipo6-BlackUC-60-0b247b3-original.webp",
-            "label_image": "/images/products/product_742/204WDg1ecebc.jpg",
-            "effects": [
-              {
-                "label": "Метаболизъм",
-                "value": 85
-              },
-              {
-                "label": "Енергия",
-                "value": 80
-              },
-              {
-                "label": "Отслабване",
-                "value": 80
-              }
-            ],
-            "ingredients": [
-              {
-                "name": "Кофеин безводен",
-                "amount": "200 mg",
-                "description": "Увеличава енергията и концентрацията"
-              },
-              {
-                "name": "Синефрин",
-                "amount": "20 mg",
-                "description": "Термогенен алкалоид от горчив портокал"
-              },
-              {
-                "name": "Йохимбин HCl",
-                "amount": "3 mg",
-                "description": "Подпомага липолизата"
-              },
-              {
-                "name": "Гугулстерони",
-                "amount": "25 mg",
-                "description": "Подпомага функцията на щитовидната жлеза"
-              }
-            ],
-            "faq": [],
-            "variants": [],
-            "price_bgn": 97.0,
-            "currency": "EUR"
-          },
-          "system_data": {
-            "manufacturer": "Nutrex",
-            "application_type": "Oral / Capsules",
-            "capsules_count": 120,
-            "doses_count": 40,
-            "weight_grams": null,
-            "goals": [
-              "weight-loss",
-              "energy",
-              "thermogenesis"
-            ],
-            "target_profile": "Хора, които искат да увеличат енергията и да ускорят метаболизма.",
-            "protocol_hint": "Приемайте 1 капсули дневно с храна.",
-            "synergy_products": [],
-            "safety_warnings": "Не превишавайте препоръчителната доза.",
-            "inventory": 15
+            "safety_warnings": "Няма."
           }
         }
       ]
     }
-  ],
-  "footer": null
+  ]
+}
