@@ -71,7 +71,6 @@
             <button class="tab-btn" data-tab="tab-orders">Поръчки</button>
             <button class="tab-btn" data-tab="tab-contacts">Контакти</button>
             <button class="tab-btn" data-tab="tab-pages">Страници</button>
-            <button class="tab-btn" data-tab="tab-ai-settings">AI Настройки</button>
         </nav>
 
         <!-- КОНТЕЙНЕР ЗА СЪДЪРЖАНИЕТО НА ТАБОВЕТЕ -->
@@ -208,95 +207,6 @@
                         Информационните страници съдържат задължителна правна информация за онлайн магазини в България. 
                         За промяна на съдържанието, редактирайте директно HTML файловете: <code>policy.html</code>, <code>shipping.html</code> и <code>terms.html</code>.
                     </p>
-                </div>
-            </section>
-            
-            <!-- Секция: AI Настройки -->
-            <section id="tab-ai-settings" class="tab-pane">
-                <h2>AI Асистент - Настройки</h2>
-                <p class="instructions">Конфигурирайте AI модела, промпта и API ключовете за асистента при попълване на продукти.</p>
-                
-                <div id="ai-settings-container" class="item-list">
-                    <div class="list-item" style="background: var(--bg-secondary); padding: 2rem; border-radius: 12px; margin-bottom: 1.5rem;">
-                        <h3 style="margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="font-size: 1.5rem;">⚙️</span>
-                            Конфигурация на AI модела
-                        </h3>
-                        
-                        <div class="form-group" style="margin-bottom: 1.5rem;">
-                            <label for="ai-provider" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">AI Доставчик</label>
-                            <select id="ai-provider" class="ai-setting-field" style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); width: 100%; max-width: 400px;">
-                                <option value="cloudflare">Cloudflare AI (Llama 3.1 70B)</option>
-                                <option value="openai">OpenAI (GPT-4)</option>
-                                <option value="google">Google AI (Gemini Pro)</option>
-                            </select>
-                            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">Изберете AI доставчик за генериране на продуктова информация</small>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 1.5rem;">
-                            <label for="ai-model" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">AI Модел</label>
-                            <input type="text" id="ai-model" class="ai-setting-field" placeholder="@cf/meta/llama-3.1-70b-instruct" style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); width: 100%;">
-                            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">Конкретен модел за използване (зависи от избрания доставчик)</small>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 1.5rem;">
-                            <label for="ai-api-key" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">API Ключ</label>
-                            <input type="password" id="ai-api-key" class="ai-setting-field" placeholder="Въведете API ключ" style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); width: 100%;">
-                            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
-                                API ключът се съхранява криптиран в браузъра и се изпраща само към сървъра при заявки
-                            </small>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 1.5rem;">
-                            <label for="ai-temperature" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Temperature (Креативност)</label>
-                            <input type="number" id="ai-temperature" class="ai-setting-field" min="0" max="2" step="0.1" value="0.3" style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); width: 100%; max-width: 200px;">
-                            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">0.0 = консервативен, 2.0 = креативен (препоръчително: 0.3)</small>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 1.5rem;">
-                            <label for="ai-max-tokens" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Максимум токени</label>
-                            <input type="number" id="ai-max-tokens" class="ai-setting-field" min="1024" max="8192" step="512" value="4096" style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); width: 100%; max-width: 200px;">
-                            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">Максимална дължина на отговора (препоръчително: 4096)</small>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 1.5rem;">
-                            <label for="ai-prompt-template" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Промпт шаблон</label>
-                            <textarea id="ai-prompt-template" class="ai-setting-field" rows="12" style="padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); width: 100%; font-family: 'Courier New', monospace; font-size: 0.9rem; line-height: 1.5;"></textarea>
-                            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
-                                Използвайте <code>{{productData}}</code> за данни за продукта. Промптът определя как AI генерира информация.
-                            </small>
-                        </div>
-                        
-                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                            <button id="save-ai-settings-btn" class="btn btn-success" style="min-width: 150px;">
-                                💾 Запази настройките
-                            </button>
-                            <button id="test-ai-settings-btn" class="btn btn-primary" style="min-width: 150px;">
-                                🧪 Тествай AI
-                            </button>
-                            <button id="reset-ai-settings-btn" class="btn btn-secondary" style="min-width: 150px;">
-                                🔄 Възстанови по подразбиране
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 1.5rem; padding: 1.25rem; background: var(--bg-secondary); border-radius: 8px; border-left: 4px solid #667eea;">
-                        <h4 style="margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="16" x2="12" y2="12"></line>
-                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                            </svg>
-                            Информация
-                        </h4>
-                        <ul style="margin: 0.5rem 0 0 1.5rem; color: var(--text-secondary); line-height: 1.6;">
-                            <li><strong>Cloudflare AI:</strong> Безплатен/евтин вариант, Llama 3.1 70B модел</li>
-                            <li><strong>OpenAI:</strong> GPT-4 или GPT-3.5-turbo, най-качествен но платен</li>
-                            <li><strong>Google AI:</strong> Gemini Pro модел, баланс между качество и цена</li>
-                            <li>API ключовете се съхраняват локално в браузъра (localStorage)</li>
-                            <li>Промптът определя как AI генерира информация за продукти</li>
-                        </ul>
-                    </div>
                 </div>
             </section>
         </main>
@@ -832,12 +742,7 @@
         <div class="nested-item" data-type="product">
             <div class="nested-item-header">
                 <span class="product-editor-title">Нов Продукт</span>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <button type="button" class="btn btn-sm btn-primary ai-assistant-btn" data-action="ai-assistant" title="AI Асистент за попълване на продукт">
-                        🤖 AI Асистент
-                    </button>
-                    <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий продукта">×</button>
-                </div>
+                <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий продукта">×</button>
             </div>
             
             <nav class="modal-tab-nav">
