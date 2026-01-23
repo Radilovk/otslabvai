@@ -1291,6 +1291,64 @@ function handleAction(action, target, id) {
             fileInput.click();
             break;
         }
+        case 'upload-additional-images': {
+            const fileInput = document.getElementById('image-upload-input-multiple');
+            const targetFieldPath = target.dataset.targetField;
+            const textareaElement = target.closest('.form-group').querySelector(`[data-field="${targetFieldPath}"]`);
+            
+            fileInput.onchange = async (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+                
+                // Validate file types
+                for (const file of files) {
+                    if (!file.type.startsWith('image/')) {
+                        showNotification('Моля изберете само изображения', 'error');
+                        return;
+                    }
+                    
+                    // Validate file size (max 2MB per file)
+                    if (file.size > 2 * 1024 * 1024) {
+                        showNotification(`Изображението "${file.name}" е твърде голямо. Максимален размер: 2MB`, 'error');
+                        return;
+                    }
+                }
+                
+                try {
+                    // Show loading state
+                    target.disabled = true;
+                    target.textContent = `⏳ Качване ${files.length} изображение/я...`;
+                    
+                    // Upload all files
+                    const uploadPromises = files.map(file => uploadImageToGitHub(file));
+                    const imageUrls = await Promise.all(uploadPromises);
+                    
+                    // Get existing URLs from textarea
+                    const existingUrls = textareaElement.value
+                        .split('\n')
+                        .map(url => url.trim())
+                        .filter(url => url);
+                    
+                    // Append new URLs
+                    const allUrls = [...existingUrls, ...imageUrls];
+                    textareaElement.value = allUrls.join('\n');
+                    
+                    showNotification(`${files.length} изображение/я качени успешно!`, 'success');
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showNotification(`Грешка при качване: ${error.message}`, 'error');
+                } finally {
+                    // Reset button state
+                    target.disabled = false;
+                    target.textContent = '📤 Upload';
+                    // Clear file input
+                    fileInput.value = '';
+                }
+            };
+            
+            fileInput.click();
+            break;
+        }
         case 'ai-assistant': {
             const productEditor = target.closest('.nested-item[data-type="product"]');
             if (!productEditor) return;
