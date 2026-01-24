@@ -77,7 +77,8 @@ function extractJSONFromResponse(responseText) {
                 // Matches: ""WHITESPACE"{ or ""WHITESPACE"[
                 .replace(/"(\s*)(\{|\[)/g, '",$1$2')
                 // Fix missing comma between consecutive strings in arrays
-                // Matches: ""WHITESPACE"" (but not in object properties with :)
+                // Matches: "string1"WHITESPACE"string2" where no colon follows first string
+                // Uses lookahead to ensure we're in array context, not object key-value pairs
                 .replace(/"(\s+)"(?=[^:]*(?:\]|,))/g, '",$1"')
                 // Remove any trailing comma right before the final }
                 .replace(/,(\s*)$/g, '$1');
@@ -188,6 +189,7 @@ describe('extractJSONFromResponse', () => {
     });
 
     test('should handle missing comma between object and string', () => {
+        // Testing mixed-type arrays (object + string) - simulates AI output with inconsistent types
         const input = '{"items": [{"id": 1}"text"]}';
         const result = extractJSONFromResponse(input);
         expect(result).toEqual({ items: [{ id: 1 }, "text"] });
