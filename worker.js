@@ -441,9 +441,19 @@ function getDefaultAISettings() {
 Въведена информация:
 {{productData}}
 
-ВАЖНО: Отговори САМО с валиден JSON обект в ТОЧНО същия формат като примера по-долу. НЕ добавяй текст, коментари или обяснения преди или след JSON-а.
+КРИТИЧНО ВАЖНО - ИЗИСКВАНИЯ ЗА JSON ФОРМАТ:
+1. Отговори САМО с валиден JSON обект - БЕЗ текст преди или след него
+2. Използвай САМО двойни кавички (") - НИКОГА не използвай единични кавички (')
+3. Поставяй запетая (,) след ВСЕКИ елемент в масив, ОСВЕН последния
+4. Поставяй запетая (,) след ВСЯКО property в обект, ОСВЕН последното
+5. НЕ поставяй запетая преди затварящи скоби } или ]
+6. НЕ добавяй коментари в JSON-а
+7. Всички string стойности трябва да са в двойни кавички
+8. Всички property names трябва да са в двойни кавички
+9. Escape-вай специални символи в strings (\", \\, \n, \t)
+10. null стойности трябва да са без кавички
 
-Следвай ТОЧНО този пример за структура и форматиране (с правилни запетаи, без коментари):
+Следвай ТОЧНО този пример за структура и форматиране:
 
 {
   "name": "L-карнитин течна форма 3000mg",
@@ -530,7 +540,14 @@ function getDefaultAISettings() {
   "safety_warnings": "Не превишавайте дозата. При проблеми с щитовидната жлеза или бъбреците, консултирайте се с лекар преди употреба."
 }
 
-Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта, базирайки се на въведената информация и твоите знания.`
+ПРОВЕРКА ПРЕДИ ОТГОВОР:
+- Валиден ли е JSON-ът? Провери със JSON validator
+- Има ли запетаи след всички елементи в масиви (освен последния)?
+- Има ли запетаи след всички properties в обекти (освен последното)?
+- Използвани ли са САМО двойни кавички?
+- Няма ли запетаи преди } или ]?
+
+Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта, базирайки се на въведената информация и твоите знания. Отговори САМО с JSON обекта - без допълнителен текст.`
     };
 }
 
@@ -612,7 +629,16 @@ async function callCloudflareAI(env, settings, prompt) {
     const cfEndpoint = `https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/ai/run/${model}`;
     
     const payload = {
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+            { 
+                role: 'system', 
+                content: 'You are a helpful assistant that always responds with valid JSON. Never include explanatory text, only return the JSON object. Always use double quotes, never single quotes. Always include commas between array elements and object properties.'
+            },
+            { 
+                role: 'user', 
+                content: prompt 
+            }
+        ],
         max_tokens: settings.maxTokens || 4096,
         temperature: settings.temperature || 0.3
     };
@@ -650,9 +676,19 @@ async function callOpenAI(settings, prompt) {
     
     const payload = {
         model: model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+            { 
+                role: 'system', 
+                content: 'You are a helpful assistant that always responds with valid JSON. Never include explanatory text, only return the JSON object.'
+            },
+            { 
+                role: 'user', 
+                content: prompt 
+            }
+        ],
         max_tokens: settings.maxTokens || 4096,
-        temperature: settings.temperature || 0.3
+        temperature: settings.temperature || 0.3,
+        response_format: { type: "json_object" }  // Force JSON mode (GPT-4 and GPT-3.5-turbo support this)
     };
     
     const response = await fetch(endpoint, {
@@ -686,13 +722,20 @@ async function callGoogleAI(settings, prompt) {
     const model = settings.model || 'gemini-pro';
     const endpoint = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${settings.apiKey}`;
     
+    // Add system instruction to the prompt for Gemini
+    const enhancedPrompt = `SYSTEM INSTRUCTION: You are a helpful assistant that always responds with valid JSON. Never include explanatory text, only return the JSON object. Always use double quotes, never single quotes. Always include commas between array elements and object properties.
+
+USER REQUEST:
+${prompt}`;
+    
     const payload = {
         contents: [{
-            parts: [{ text: prompt }]
+            parts: [{ text: enhancedPrompt }]
         }],
         generationConfig: {
             temperature: settings.temperature || 0.3,
-            maxOutputTokens: settings.maxTokens || 4096
+            maxOutputTokens: settings.maxTokens || 4096,
+            responseMimeType: "application/json"  // Force JSON output for Gemini
         }
     };
     
