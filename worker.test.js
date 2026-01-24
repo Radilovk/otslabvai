@@ -6,18 +6,16 @@
  * Attempt aggressive JSON repair for common AI mistakes
  */
 function attemptJSONRepair(jsonStr) {
-    // More aggressive repairs
+    // More aggressive repairs - but still conservative
     let repaired = jsonStr
         // Remove all trailing commas more aggressively
         .replace(/,(\s*[}\]])/g, '$1')
-        // Fix cases where there's no comma between string values
-        .replace(/"(\s+)"/g, '", "')
-        // Ensure proper structure for common patterns
+        // Ensure proper structure for common patterns - missing commas between objects/arrays
         .replace(/\}(\s*)\{/g, '},$1{')
         .replace(/\](\s*)\[/g, '],$1[')
-        // Remove any non-printable characters that might cause issues
-        .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
-        // Fix common quote issues - remove smart quotes if present
+        // Remove any non-printable characters except newlines (newlines in strings should stay)
+        .replace(/[\x00-\x09\x0B-\x1F\x7F-\x9F]/g, '')
+        // Fix common quote issues - replace smart quotes with regular quotes
         .replace(/[\u201C\u201D]/g, '"')
         .replace(/[\u2018\u2019]/g, "'");
     
@@ -66,19 +64,8 @@ function extractJSONFromResponse(responseText) {
                 // Fix missing commas between array elements (common AI error)
                 // Matches: }"WHITESPACE"{ or ]"WHITESPACE"[ 
                 .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
-                // Fix missing commas between object properties
-                // Matches: "value""WHITESPACE""key": 
-                .replace(/"(\s*)"([^"]+)"(\s*):/g, '",$1"$2"$3:')
                 // Remove any trailing comma right before the final }
-                .replace(/,(\s*)$/g, '$1')
-                // Fix unescaped newlines within string values (replace with \n)
-                .replace(/"([^"]*)\n([^"]*)"/g, (match, p1, p2) => {
-                    // Only fix if this looks like it's inside a string value, not between keys
-                    if (p1 && p2 && !p1.endsWith(':') && !p2.startsWith(':')) {
-                        return `"${p1}\\n${p2}"`;
-                    }
-                    return match;
-                });
+                .replace(/,(\s*)$/g, '$1');
             
             return JSON.parse(sanitizedJson);
         } catch (sanitizeError) {

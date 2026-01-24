@@ -1753,7 +1753,7 @@ async function handleAIAssistant(productEditor) {
         fillField('[data-field="system_data.synergy_products"]', aiData.synergy_products);
         fillField('[data-field="system_data.safety_warnings"]', aiData.safety_warnings);
         
-        // Допълнителна информация (може да се добави като коментар или в описанието)
+        // Допълнителна информация (добавяме като част от about_content description)
         if (aiData.recommended_intake || aiData.contraindications || aiData.additional_advice) {
             let additionalInfo = '';
             if (aiData.recommended_intake) {
@@ -1766,10 +1766,11 @@ async function handleAIAssistant(productEditor) {
                 additionalInfo += `\n\nДопълнителни съвети: ${aiData.additional_advice}`;
             }
             
-            // Добавяме към описанието ако е празно
-            const descField = productEditor.querySelector('[data-field="public_data.description"]');
-            if (descField && !descField.value && additionalInfo) {
-                descField.value = (aiData.description || '') + additionalInfo;
+            // Добавяме към about_content description ако е празно
+            const aboutDescField = productEditor.querySelector('[data-field="public_data.about_content.description"]');
+            if (aboutDescField && !aboutDescField.value && additionalInfo) {
+                const aboutDesc = aiData.about_content?.description || '';
+                aboutDescField.value = aboutDesc + additionalInfo;
             }
         }
         
