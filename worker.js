@@ -731,8 +731,8 @@ function extractJSONFromResponse(responseText) {
             // Remove trailing commas before closing braces and brackets
             // This handles cases like: {"key": "value",} or ["item1", "item2",]
             let sanitizedJson = jsonStr
-                // First: Remove multiple consecutive commas
-                .replace(/,+/g, ',')
+                // First: Remove multiple consecutive commas (2 or more)
+                .replace(/,{2,}/g, ',')
                 // Then: Remove trailing commas before }
                 .replace(/,(\s*})/g, '$1')
                 // Then: Remove trailing commas before ]
