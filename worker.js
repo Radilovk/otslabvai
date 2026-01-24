@@ -9,6 +9,9 @@ const CACHE_CONFIG = {
     STATIC_FILE_MAX_AGE: 3600         // 1 hour
 };
 
+// AI System message for enforcing JSON format
+const AI_SYSTEM_MESSAGE = 'You are a helpful assistant that always responds with valid JSON. Never include explanatory text, only return the JSON object. Always use double quotes, never single quotes. Always include commas between array elements and object properties.';
+
 class UserFacingError extends Error {
   constructor(message, status) {
     super(message);
@@ -632,7 +635,7 @@ async function callCloudflareAI(env, settings, prompt) {
         messages: [
             { 
                 role: 'system', 
-                content: 'You are a helpful assistant that always responds with valid JSON. Never include explanatory text, only return the JSON object. Always use double quotes, never single quotes. Always include commas between array elements and object properties.'
+                content: AI_SYSTEM_MESSAGE
             },
             { 
                 role: 'user', 
@@ -679,7 +682,7 @@ async function callOpenAI(settings, prompt) {
         messages: [
             { 
                 role: 'system', 
-                content: 'You are a helpful assistant that always responds with valid JSON. Never include explanatory text, only return the JSON object.'
+                content: AI_SYSTEM_MESSAGE
             },
             { 
                 role: 'user', 
@@ -722,8 +725,9 @@ async function callGoogleAI(settings, prompt) {
     const model = settings.model || 'gemini-pro';
     const endpoint = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${settings.apiKey}`;
     
-    // Add system instruction to the prompt for Gemini
-    const enhancedPrompt = `SYSTEM INSTRUCTION: You are a helpful assistant that always responds with valid JSON. Never include explanatory text, only return the JSON object. Always use double quotes, never single quotes. Always include commas between array elements and object properties.
+    // Gemini doesn't support separate system messages like OpenAI/Cloudflare,
+    // so we prepend the system instruction to the user prompt
+    const enhancedPrompt = `SYSTEM INSTRUCTION: ${AI_SYSTEM_MESSAGE}
 
 USER REQUEST:
 ${prompt}`;
