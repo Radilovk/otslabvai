@@ -1,5 +1,7 @@
 // ==== ВЕРСИЯ 4.0: ФУНКЦИОНАЛЕН АДМИН ПАНЕЛ ====
 
+import { jsonrepair } from 'jsonrepair';
+
 // Cache configuration constants
 const CACHE_CONFIG = {
     PAGE_CONTENT_MAX_AGE: 300,        // 5 minutes
@@ -719,23 +721,24 @@ async function callGoogleAI(settings, prompt) {
 }
 
 /**
- * Extract JSON from AI response text - simplified version
- * With example-based prompt, AI should produce clean JSON, so we only need basic cleanup
+ * Extract JSON from AI response text using robust JSON repair library
+ * This replaces the regex-based approach with a proper JSON parser/repairer
  */
 function extractJSONFromResponse(responseText) {
     if (typeof responseText !== 'string') {
         return responseText;
     }
     
-    // Trim and extract JSON
+    // Trim the response
     let jsonStr = responseText.trim();
     
     // Remove markdown code blocks if present
     if (jsonStr.startsWith('```')) {
         jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+        jsonStr = jsonStr.trim();
     }
     
-    // Find JSON object boundaries
+    // Find JSON object boundaries (first { to last })
     const startIdx = jsonStr.indexOf('{');
     const endIdx = jsonStr.lastIndexOf('}');
     
@@ -744,33 +747,24 @@ function extractJSONFromResponse(responseText) {
         throw new UserFacingError('AI отговори с текст без JSON структура.');
     }
     
+    // Extract just the JSON portion
     jsonStr = jsonStr.substring(startIdx, endIdx + 1);
     
     try {
-        // Try parsing as-is first
+        // First try parsing as-is (fast path for valid JSON)
         return JSON.parse(jsonStr);
     } catch (parseError) {
-        console.warn("Initial JSON parse failed, applying simple fixes:", parseError.message);
+        console.warn("Initial JSON parse failed, attempting repair:", parseError.message);
         
         try {
-            // Apply only essential fixes for common AI mistakes
-            let fixed = jsonStr
-                // Fix: Remove trailing commas before } or ]
-                .replace(/,(\s*[}\]])/g, '$1')
-                // Fix: Add missing commas between } or ] and { or [
-                .replace(/([}\]])(\s+)([{[])/g, '$1,$2$3')
-                // Fix: Add missing commas between } or ] and " (only when there's whitespace = array/object elements)
-                .replace(/([}\]])(\s+)"/g, '$1,$2"')
-                // Fix: Add missing commas between consecutive strings (in arrays)
-                // Use negative lookbehind/lookahead to avoid matching escaped quotes \"
-                .replace(/(?<!\\)"(\s*)"(?!\\)/g, '",$1"')
-                // Fix: Replace smart quotes with regular quotes
-                .replace(/[\u201C\u201D]/g, '"')
-                .replace(/[\u2018\u2019]/g, "'");
-            
-            return JSON.parse(fixed);
-        } catch (fixError) {
-            console.error("JSON parsing failed:", parseError.message);
+            // Use jsonrepair library to fix malformed JSON
+            // This handles: missing commas, trailing commas, unquoted keys, 
+            // single quotes, comments, and many other common issues
+            const repairedJson = jsonrepair(jsonStr);
+            return JSON.parse(repairedJson);
+        } catch (repairError) {
+            console.error("JSON repair failed:", repairError.message);
+            console.error("Original JSON:", jsonStr.substring(0, 500) + '...');
             throw new UserFacingError(
                 `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
             );
