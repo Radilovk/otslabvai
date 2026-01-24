@@ -765,6 +765,15 @@ function extractJSONFromResponse(responseText) {
                 // Fix missing commas between array elements (common AI error)
                 // Matches: }"WHITESPACE"{ or ]"WHITESPACE"[ 
                 .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
+                // Fix missing comma between closing brace/bracket and opening quote
+                // Matches: }"WHITESPACE"" or ]"WHITESPACE""
+                .replace(/(\}|\])(\s*)"/g, '$1,$2"')
+                // Fix missing comma between closing quote and opening brace/bracket
+                // Matches: ""WHITESPACE"{ or ""WHITESPACE"[
+                .replace(/"(\s*)(\{|\[)/g, '",$1$2')
+                // Fix missing comma between consecutive strings in arrays
+                // Matches: ""WHITESPACE"" (but not in object properties with :)
+                .replace(/"(\s+)"(?=[^:]*(?:\]|,))/g, '",$1"')
                 // Remove any trailing comma right before the final }
                 .replace(/,(\s*)$/g, '$1');
             
@@ -804,6 +813,12 @@ function attemptJSONRepair(jsonStr) {
         // Ensure proper structure for common patterns - missing commas between objects/arrays
         .replace(/\}(\s*)\{/g, '},$1{')
         .replace(/\](\s*)\[/g, '],$1[')
+        // Fix missing comma between closing brace/bracket and opening quote
+        .replace(/(\}|\])(\s*)"/g, '$1,$2"')
+        // Fix missing comma between closing quote and opening brace/bracket
+        .replace(/"(\s*)(\{|\[)/g, '",$1$2')
+        // Fix missing comma between consecutive strings (conservative - only in array context)
+        .replace(/"(\s+)"(?=[^:]*(?:\]|,))/g, '",$1"')
         // Remove any non-printable characters except newlines (newlines in strings should stay)
         .replace(/[\x00-\x09\x0B-\x1F\x7F-\x9F]/g, '')
         // Fix common quote issues - replace smart quotes with regular quotes
