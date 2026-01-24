@@ -690,9 +690,14 @@ async function callOpenAI(settings, prompt) {
             }
         ],
         max_tokens: settings.maxTokens || 4096,
-        temperature: settings.temperature || 0.3,
-        response_format: { type: "json_object" }  // Force JSON mode (GPT-4 and GPT-3.5-turbo support this)
+        temperature: settings.temperature || 0.3
     };
+    
+    // Add JSON mode for supported models (GPT-4, GPT-3.5-turbo, GPT-4-turbo)
+    // Other models will rely on the system message for JSON formatting
+    if (model.includes('gpt-4') || model.includes('gpt-3.5-turbo')) {
+        payload.response_format = { type: "json_object" };
+    }
     
     const response = await fetch(endpoint, {
         method: 'POST',
@@ -732,15 +737,22 @@ async function callGoogleAI(settings, prompt) {
 USER REQUEST:
 ${prompt}`;
     
+    const generationConfig = {
+        temperature: settings.temperature || 0.3,
+        maxOutputTokens: settings.maxTokens || 4096
+    };
+    
+    // Add JSON MIME type for supported Gemini models (gemini-1.5-pro and later)
+    // Older models will rely on the system instruction for JSON formatting
+    if (model.includes('gemini-1.5') || model.includes('gemini-2')) {
+        generationConfig.responseMimeType = "application/json";
+    }
+    
     const payload = {
         contents: [{
             parts: [{ text: enhancedPrompt }]
         }],
-        generationConfig: {
-            temperature: settings.temperature || 0.3,
-            maxOutputTokens: settings.maxTokens || 4096,
-            responseMimeType: "application/json"  // Force JSON output for Gemini
-        }
+        generationConfig: generationConfig
     };
     
     const response = await fetch(endpoint, {
