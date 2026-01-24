@@ -439,95 +439,96 @@ function getDefaultAISettings() {
 Въведена информация:
 {{productData}}
 
-Моля попълни JSON обект със ВСИЧКИ следните полета (на български език):
+ВАЖНО: Отговори САМО с валиден JSON обект в ТОЧНО същия формат като примера по-долу. НЕ добавяй текст, коментари или обяснения преди или след JSON-а.
+
+Следвай ТОЧНО този пример за структура и форматиране (с правилни запетаи, без коментари):
+
 {
-  "name": "Пълно име на продукта",
-  "manufacturer": "Производител (ако е известен)",
-  "price": "Приблизителна цена в лева като число (или null ако не знаеш)",
-  "tagline": "Кратък маркетингов слоган (до 60 символа)",
-  "description": "Подробно маркетингово описание (100-200 думи)",
-  "image_url": "URL на основно изображение на продукта (или null)",
+  "name": "L-карнитин течна форма 3000mg",
+  "manufacturer": "Nutrend",
+  "price": 42.50,
+  "tagline": "Ефективно изгаряне на мазнини и енергия",
+  "description": "L-карнитин е естествена аминокиселина, която играе ключова роля в транспортирането на мастните киселини към митохондриите, където се превръщат в енергия. Течната форма осигурява бърза абсорбция и максимална биологична достъпност. Идеален за хора, които искат да намалят мазнините, увеличат енергията и подобрят спортните си резултати.",
+  "image_url": null,
   "packaging_info": {
-    "capsules_or_grams": "Брой капсули или грамаж",
-    "doses_per_package": "Брой дози в опаковка"
+    "capsules_or_grams": "500ml течна форма",
+    "doses_per_package": "20 дози по 25ml"
   },
   "effects": [
     {
-      "label": "Ефект 1",
+      "label": "Изгаряне на мазнини",
       "value": 8
     },
     {
-      "label": "Ефект 2", 
-      "value": 7
+      "label": "Енергия и издръжливост",
+      "value": 9
     },
     {
-      "label": "Ефект 3",
-      "value": 9
+      "label": "Възстановяване след тренировка",
+      "value": 7
     }
   ],
   "about_content": {
-    "title": "За продукта",
-    "description": "Подробно описание",
+    "title": "За L-карнитина",
+    "description": "L-карнитинът е незаменим помощник в процеса на отслабване и подобряване на спортните резултати. Той работи на клетъчно ниво, като улеснява използването на мазнините като гориво. Това води до по-ефективно горене на калории, по-добра издръжливост и по-бързо възстановяване след физическа активност.",
     "benefits": [
       {
-        "title": "Заглавие на полза 1",
-        "text": "Описание на полза 1"
+        "title": "Ускорява метаболизма на мазнините",
+        "text": "Транспортира мастните киселини към митохондриите, където се използват за производство на енергия, вместо да се натрупват като мазнини."
       },
       {
-        "title": "Заглавие на полза 2",
-        "text": "Описание на полза 2"
+        "title": "Повишава енергията и издръжливостта",
+        "text": "Осигурява постоянен източник на енергия по време на тренировки, намалява умората и подобрява физическата работоспособност."
+      },
+      {
+        "title": "Подпомага възстановяването",
+        "text": "Намалява мускулните болки след тренировка и ускорява възстановителните процеси в организма."
       }
     ]
   },
   "ingredients": [
     {
-      "name": "Съставка 1",
-      "amount": "Количество",
-      "description": "Описание на съставката"
+      "name": "L-карнитин",
+      "amount": "3000mg на доза",
+      "description": "Чиста форма на L-карнитин с висока биологична достъпност, осигуряваща оптимален транспорт на мастни киселини."
     },
     {
-      "name": "Съставка 2",
-      "amount": "Количество",
-      "description": "Описание на съставката"
+      "name": "Витамин B6",
+      "amount": "1.4mg",
+      "description": "Подпомага метаболизма на протеините и аминокиселините, увеличава усвояването на L-карнитина."
     }
   ],
   "research_note": {
-    "text": "Кратък текст за научното изследване",
-    "url": "URL към научно изследване (или null)"
+    "text": "Научни изследвания показват, че L-карнитинът подобрява използването на мазнините като енергиен източник и повишава физическата работоспособност.",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/?term=l-carnitine+fat+metabolism"
   },
-  "recommended_intake": "Препоръчителен прием и дозировка",
-  "contraindications": "Противопоказания и предупреждения",
-  "additional_advice": "Допълнителни съвети и информация",
+  "recommended_intake": "Приемайте 1 доза (25ml) дневно, за предпочитане 30-60 минути преди тренировка. В дни без тренировка - сутрин на гладно. Разклатете добре преди употреба.",
+  "contraindications": "Не е подходящ за бременни и кърмачки. Не превишавайте препоръчителната дневна доза. Не използвайте като заместител на разнообразното хранене. Съхранявайте на хладно и сухо място, далеч от достъп на деца.",
+  "additional_advice": "За най-добри резултати комбинирайте L-карнитина с балансирана диета и редовна физическа активност. Пийте достатъчно вода - поне 2-3 литра дневно. Ефектът е най-силен при хора, които тренират редовно.",
   "faq": [
     {
-      "question": "Често задаван въпрос 1",
-      "answer": "Отговор"
+      "question": "Кога да приемам L-карнитин - преди или след тренировка?",
+      "answer": "Най-добре е да го приемете 30-60 минути преди тренировка, за да осигурите максимална концентрация в кръвта по време на физическата активност."
     },
     {
-      "question": "Често задаван въпрос 2",
-      "answer": "Отговор"
+      "question": "Мога ли да комбинирам L-карнитин с други хранителни добавки?",
+      "answer": "Да, L-карнитинът се комбинира добре с протеини, BCAA, витамини и други спортни добавки. Избягвайте комбинация с големи дози кофеин."
+    },
+    {
+      "question": "След колко време ще видя резултати?",
+      "answer": "При редовна употреба и правилен режим на тренировки, първите резултати се забелязват след 2-3 седмици. За оптимални резултати се препоръчва курс от поне 8-12 седмици."
     }
   ],
-  "application_type": "Injectable или Oral или Topical или Intranasal",
-  "inventory": 100,
-  "goals": "цел1, цел2, цел3",
-  "target_profile": "Описание на идеален потребител",
-  "protocol_hint": "Техническа насока за протокол на приложение",
-  "synergy_products": "prod-id1, prod-id2",
-  "safety_warnings": "Предупреждения за безопасност"
+  "application_type": "Oral",
+  "inventory": 50,
+  "goals": "отслабване, енергия, спортни резултати",
+  "target_profile": "Активни хора, спортуващи редовно, желаещи да намалят мазнините и да повишат енергията си",
+  "protocol_hint": "Прием 30-60 минути преди тренировка или сутрин на гладно. Курс 8-12 седмици с 2 седмици почивка.",
+  "synergy_products": null,
+  "safety_warnings": "Не превишавайте дозата. При проблеми с щитовидната жлеза или бъбреците, консултирайте се с лекар преди употреба."
 }
 
-КРИТИЧНО ВАЖНО ЗА JSON ФОРМАТИРАНЕТО:
-- Отговори САМО с валиден JSON обект - НЕ добавяй текст преди или след JSON
-- НЕ слагай запетаи след последния елемент в обект или масив
-- НЕ слагай множество запетаи подред
-- Използвай само прости двойни кавички " за стрингове
-- За числови стойности не използвай кавички (например value: 8 вместо value: "8")
-- Не използвай коментари в JSON
-- Ако липсва информация за поле, използвай null за стрингове, [] за масиви, или {} за обекти
-- Използвай български език за всички текстови полета
-- Бъди точен, грамотен и маркетингово компетентен
-- Попълни ВСИЧКИ полета - не пропускай нито едно`
+Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта, базирайки се на въведената информация и твоите знания.`
     };
 }
 
@@ -718,22 +719,23 @@ async function callGoogleAI(settings, prompt) {
 }
 
 /**
- * Extract JSON from AI response text with robust sanitization
+ * Extract JSON from AI response text - simplified version
+ * With example-based prompt, AI should produce clean JSON, so we only need basic cleanup
  */
 function extractJSONFromResponse(responseText) {
     if (typeof responseText !== 'string') {
         return responseText;
     }
     
-    // Try to find and extract valid JSON from the response
+    // Trim and extract JSON
     let jsonStr = responseText.trim();
     
-    // If response starts with markdown code blocks, remove them
+    // Remove markdown code blocks if present
     if (jsonStr.startsWith('```')) {
         jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
     }
     
-    // Find the start and end of the JSON object
+    // Find JSON object boundaries
     const startIdx = jsonStr.indexOf('{');
     const endIdx = jsonStr.lastIndexOf('}');
     
@@ -742,96 +744,35 @@ function extractJSONFromResponse(responseText) {
         throw new UserFacingError('AI отговори с текст без JSON структура.');
     }
     
-    // Extract the JSON substring
     jsonStr = jsonStr.substring(startIdx, endIdx + 1);
     
     try {
-        // First attempt: Try parsing as-is
+        // Try parsing as-is first
         return JSON.parse(jsonStr);
     } catch (parseError) {
-        // If initial parse fails, try to fix common AI JSON errors
-        console.warn("Initial JSON parse failed, attempting to sanitize:", parseError.message);
-        console.warn("Error position:", parseError.message.match(/position (\d+)/)?.[1]);
+        console.warn("Initial JSON parse failed, applying simple fixes:", parseError.message);
         
         try {
-            // Apply comprehensive sanitization for common AI JSON errors
-            let sanitizedJson = jsonStr
-                // Remove multiple consecutive commas (2 or more)
-                .replace(/,{2,}/g, ',')
-                // Remove trailing commas before } (with optional whitespace/newlines)
-                .replace(/,(\s*})/g, '$1')
-                // Remove trailing commas before ] (with optional whitespace/newlines)
-                .replace(/,(\s*])/g, '$1')
-                // Fix missing commas between array/object elements (comprehensive patterns)
-                // Pattern: } or ] followed by { or [ (with or without whitespace)
-                .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
-                // Fix missing comma between closing brace/bracket and opening quote
-                // Matches: }"WHITESPACE"" or ]"WHITESPACE"" (with or without whitespace)
-                .replace(/(\}|\])(\s*)"/g, '$1,$2"')
-                // Fix missing comma between closing quote and opening brace/bracket
-                // Matches: ""WHITESPACE"{ or ""WHITESPACE"[ (with or without whitespace)
-                .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-                // Fix missing comma between consecutive strings (in arrays and between properties)
-                // Matches: "string1"WHITESPACE"string2" - handles zero or more whitespace
-                .replace(/"(\s*)"/g, '",$1"')
-                // Remove any trailing comma right before the final }
-                .replace(/,(\s*)$/g, '$1');
+            // Apply only essential fixes for common AI mistakes
+            let fixed = jsonStr
+                // Fix: Remove trailing commas before } or ]
+                .replace(/,(\s*[}\]])/g, '$1')
+                // Fix: Add missing commas between } or ] and { or [
+                .replace(/([}\]])(\s+)([{[])/g, '$1,$2$3')
+                // Fix: Add missing commas between } or ] and " (only when there's whitespace = array/object elements)
+                .replace(/([}\]])(\s+)"/g, '$1,$2"')
+                // Fix: Replace smart quotes with regular quotes
+                .replace(/[\u201C\u201D]/g, '"')
+                .replace(/[\u2018\u2019]/g, "'");
             
-            return JSON.parse(sanitizedJson);
-        } catch (sanitizeError) {
-            console.error("Failed to parse JSON even after sanitization.");
-            console.error("Original error:", parseError.message);
-            console.error("Sanitization error:", sanitizeError.message);
-            console.error("JSON snippet around error:", jsonStr.substring(
-                Math.max(0, parseInt(parseError.message.match(/position (\d+)/)?.[1] || 0) - 100),
-                Math.min(jsonStr.length, parseInt(parseError.message.match(/position (\d+)/)?.[1] || 0) + 100)
-            ));
-            
-            // Try one more aggressive fix: use a JSON repair library approach
-            try {
-                // Last resort: try to extract just valid parts and rebuild
-                const repairedJson = attemptJSONRepair(jsonStr);
-                return JSON.parse(repairedJson);
-            } catch (repairError) {
-                console.error("JSON repair also failed:", repairError.message);
-                throw new UserFacingError(
-                    `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
-                );
-            }
+            return JSON.parse(fixed);
+        } catch (fixError) {
+            console.error("JSON parsing failed:", parseError.message);
+            throw new UserFacingError(
+                `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
+            );
         }
     }
-}
-
-/**
- * Attempt aggressive JSON repair for common AI mistakes
- */
-function attemptJSONRepair(jsonStr) {
-    // More aggressive repairs - but still conservative
-    let repaired = jsonStr
-        // Remove all trailing commas more aggressively (including multiple commas)
-        .replace(/,+(\s*[}\]])/g, '$1')
-        // Remove multiple consecutive commas anywhere
-        .replace(/,{2,}/g, ',')
-        // Fix missing commas: } or ] followed by { or [ (with or without whitespace)
-        .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
-        // Fix missing commas: } or ] followed by " (with or without whitespace)
-        .replace(/(\}|\])(\s*)"/g, '$1,$2"')
-        // Fix missing commas: " followed by { or [ (with or without whitespace)
-        .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-        // Fix missing comma between consecutive strings (in arrays and between properties)
-        // Handles zero or more whitespace between quotes
-        .replace(/"(\s*)"/g, '",$1"')
-        // Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
-        .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
-        // Fix common quote issues - replace smart quotes with regular quotes
-        .replace(/[\u201C\u201D]/g, '"')
-        .replace(/[\u2018\u2019]/g, "'")
-        // Fix escaped newlines that might confuse JSON parser
-        .replace(/\\\n/g, '\\n')
-        // Remove trailing commas before closing braces/brackets (one more time after all fixes)
-        .replace(/,(\s*[}\]])/g, '$1');
-    
-    return repaired;
 }
 
 /**

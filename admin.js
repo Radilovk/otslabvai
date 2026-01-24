@@ -1788,6 +1788,11 @@ async function handleAIAssistant(productEditor) {
             fillField('[data-field="public_data.packaging.doses_per_package"]', aiData.packaging_info.doses_per_package);
         }
         
+        // Допълнителна информация - сега има отделни полета
+        fillField('[data-field="public_data.recommended_intake"]', aiData.recommended_intake);
+        fillField('[data-field="public_data.contraindications"]', aiData.contraindications);
+        fillField('[data-field="public_data.additional_advice"]', aiData.additional_advice);
+        
         // Системни данни - ВСЕ полета
         fillField('[data-field="system_data.manufacturer"]', aiData.manufacturer);
         fillField('[data-field="system_data.application_type"]', aiData.application_type);
@@ -1797,27 +1802,6 @@ async function handleAIAssistant(productEditor) {
         fillField('[data-field="system_data.protocol_hint"]', aiData.protocol_hint);
         fillField('[data-field="system_data.synergy_products"]', aiData.synergy_products);
         fillField('[data-field="system_data.safety_warnings"]', aiData.safety_warnings);
-        
-        // Допълнителна информация (добавяме като част от about_content description)
-        if (aiData.recommended_intake || aiData.contraindications || aiData.additional_advice) {
-            let additionalInfo = '';
-            if (aiData.recommended_intake) {
-                additionalInfo += `\n\nПрепоръчителен прием: ${aiData.recommended_intake}`;
-            }
-            if (aiData.contraindications) {
-                additionalInfo += `\n\nПротивопоказания: ${aiData.contraindications}`;
-            }
-            if (aiData.additional_advice) {
-                additionalInfo += `\n\nДопълнителни съвети: ${aiData.additional_advice}`;
-            }
-            
-            // Добавяме към about_content description ако е празно
-            const aboutDescField = productEditor.querySelector('[data-field="public_data.about_content.description"]');
-            if (aboutDescField && !aboutDescField.value && additionalInfo) {
-                const aboutDesc = aiData.about_content?.description || '';
-                aboutDescField.value = aboutDesc + additionalInfo;
-            }
-        }
         
         // За продукта (About Content)
         if (aiData.about_content) {

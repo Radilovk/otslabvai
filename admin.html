@@ -900,6 +900,35 @@
                     </div>
                     
                     <fieldset>
+                        <legend>Опаковка</legend>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Капсули/Грамаж</label>
+                                <input type="text" data-field="public_data.packaging.capsules_or_grams" placeholder="60 капсули или 500ml">
+                            </div>
+                            <div class="form-group">
+                                <label>Дози в опаковка</label>
+                                <input type="text" data-field="public_data.packaging.doses_per_package" placeholder="30 дози">
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <div class="form-group">
+                        <label>Препоръчителен прием</label>
+                        <textarea data-field="public_data.recommended_intake" rows="3" placeholder="Как и кога да се приема продуктът"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Противопоказания</label>
+                        <textarea data-field="public_data.contraindications" rows="3" placeholder="Предупреждения и противопоказания"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Допълнителни съвети</label>
+                        <textarea data-field="public_data.additional_advice" rows="3" placeholder="Допълнителна информация и съвети"></textarea>
+                    </div>
+                    
+                    <fieldset>
                         <legend>Източник (Research Note)</legend>
                         <div class="form-row">
                              <div class="form-group">
@@ -956,6 +985,10 @@
 
                 <!-- ТАБ 2: СИСТЕМНИ ДАННИ -->
                 <div class="modal-tab-pane product-tab-system">
+                    <div class="form-group">
+                        <label>Производител</label>
+                        <input type="text" data-field="system_data.manufacturer" placeholder="Име на производител">
+                    </div>
                     <div class="form-group">
                         <label>Тип приложение</label>
                         <select data-field="system_data.application_type">
