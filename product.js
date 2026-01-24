@@ -320,8 +320,8 @@ function renderProductDetail(product) {
 
         ${aboutContentHTML}
         ${ingredientsHTML}
-        ${protocolHintHTML}
         ${safetyWarningsHTML}
+        ${protocolHintHTML}
         ${targetProfileHTML}
         ${faqHTML}
     `;

@@ -3295,18 +3295,10 @@ body.modal-open { overflow: hidden; }
 
 /* Target Profile Section */
 .product-target-profile-section {
-    margin-top: 30px;
     padding: 30px;
     background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
     border-radius: var(--border-radius);
     border-left: 4px solid var(--accent);
-}
-
-.product-target-profile-section h3 {
-    font-size: 1.5rem;
-    color: var(--text-primary);
-    margin-bottom: 15px;
-    font-family: var(--font-primary);
 }
 
 .target-profile-text {
@@ -3318,18 +3310,10 @@ body.modal-open { overflow: hidden; }
 
 /* Protocol Hint Section (Reception/Usage) */
 .product-protocol-hint-section {
-    margin-top: 30px;
     padding: 30px;
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
-}
-
-.product-protocol-hint-section h3 {
-    font-size: 1.5rem;
-    color: var(--text-primary);
-    margin-bottom: 15px;
-    font-family: var(--font-primary);
 }
 
 .protocol-hint-text {
@@ -3341,7 +3325,6 @@ body.modal-open { overflow: hidden; }
 
 /* Safety Warnings Section */
 .product-safety-warnings-section {
-    margin-top: 30px;
     padding: 30px;
     background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 159, 64, 0.1) 100%);
     border-radius: var(--border-radius);
@@ -3349,10 +3332,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .product-safety-warnings-section h3 {
-    font-size: 1.5rem;
     color: #ff6b6b;
-    margin-bottom: 15px;
-    font-family: var(--font-primary);
     display: flex;
     align-items: center;
     gap: 10px;
