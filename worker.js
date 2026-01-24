@@ -530,7 +530,7 @@ function getDefaultAISettings() {
 - Използвай български език за всички текстови полета
 - Бъди точен, грамотен и маркетингово компетентен
 - Попълни ВСИЧКИ полета - не пропускай нито едно
-- ПровериJSON-а за валидност преди да отговориш`
+- Провери JSON-а за валидност преди да отговориш`
     };
 }
 
@@ -779,9 +779,9 @@ function extractJSONFromResponse(responseText) {
                 // But NOT if followed by a colon (which would indicate object property)
                 // And NOT if followed by closing bracket/brace
                 .replace(/"(\s*)(?![,:\]}])"/g, '",$1"')
-                // Step 7: Fix missing comma between number/boolean/null and next element
-                // Pattern: number/true/false/null followed by " or { or [
-                .replace(/([\d]|true|false|null)(\s*)(?!,)(["{[])/g, '$1,$2$3')
+                // Step 7: Fix missing comma between primitives and next elements  
+                // Handle numbers/bool/null followed by strings, objects, or arrays
+                .replace(/(\d+|true|false|null)(\s*)(?!,)(["{[])/g, '$1,$2$3')
                 // Step 8: Clean up any double commas that might have been introduced
                 .replace(/,{2,}/g, ',')
                 // Step 9: Remove trailing commas one more time after all fixes
@@ -837,8 +837,9 @@ function attemptJSONRepair(jsonStr) {
         .replace(/"(\s*)(?![,:\]}])([{[])/g, '",$1$2')
         // Step 9: Fix missing comma between consecutive string values (but not before colon or closing)
         .replace(/"(\s*)(?![,:\]}])"/g, '",$1"')
-        // Step 10: Fix missing comma between primitives (numbers, booleans, null) and next elements
-        .replace(/([\d]|true|false|null)(\s*)(?!,)(["{[])/g, '$1,$2$3')
+        // Step 10: Fix missing comma between primitives and next elements
+        // Handle numbers/bool/null followed by strings, objects, or arrays
+        .replace(/(\d+|true|false|null)(\s*)(?!,)(["{[])/g, '$1,$2$3')
         // Step 11: Fix missing commas after closing quote when followed by a word (property key)
         .replace(/"(\s*)([a-zA-Z_])/g, '",$1$2')
         // Step 12: Clean up any double commas introduced
