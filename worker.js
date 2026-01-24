@@ -719,22 +719,23 @@ async function callGoogleAI(settings, prompt) {
 }
 
 /**
- * Extract JSON from AI response text with robust sanitization
+ * Extract JSON from AI response text - simplified version
+ * With example-based prompt, AI should produce clean JSON, so we only need basic cleanup
  */
 function extractJSONFromResponse(responseText) {
     if (typeof responseText !== 'string') {
         return responseText;
     }
     
-    // Try to find and extract valid JSON from the response
+    // Trim and extract JSON
     let jsonStr = responseText.trim();
     
-    // If response starts with markdown code blocks, remove them
+    // Remove markdown code blocks if present
     if (jsonStr.startsWith('```')) {
         jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
     }
     
-    // Find the start and end of the JSON object
+    // Find JSON object boundaries
     const startIdx = jsonStr.indexOf('{');
     const endIdx = jsonStr.lastIndexOf('}');
     
@@ -743,107 +744,35 @@ function extractJSONFromResponse(responseText) {
         throw new UserFacingError('AI отговори с текст без JSON структура.');
     }
     
-    // Extract the JSON substring
     jsonStr = jsonStr.substring(startIdx, endIdx + 1);
     
     try {
-        // First attempt: Try parsing as-is
+        // Try parsing as-is first
         return JSON.parse(jsonStr);
     } catch (parseError) {
-        // If initial parse fails, try to fix common AI JSON errors
-        console.warn("Initial JSON parse failed, attempting to sanitize:", parseError.message);
-        console.warn("Error position:", parseError.message.match(/position (\d+)/)?.[1]);
+        console.warn("Initial JSON parse failed, applying simple fixes:", parseError.message);
         
         try {
-            // Apply comprehensive sanitization for common AI JSON errors
-            let sanitizedJson = jsonStr
-                // Step 1: Remove multiple consecutive commas (2 or more)
-                .replace(/,{2,}/g, ',')
-                // Step 2: Remove trailing commas before } or ] (with optional whitespace/newlines)
+            // Apply only essential fixes for common AI mistakes
+            let fixed = jsonStr
+                // Fix: Remove trailing commas before } or ]
                 .replace(/,(\s*[}\]])/g, '$1')
-                // Step 3: Fix missing commas between object/array closings and openings
-                // Pattern: } or ] followed by { or [ (with or without whitespace)
+                // Fix: Add missing commas between } or ] and { or [
                 .replace(/([}\]])(\s*)([{[])/g, '$1,$2$3')
-                // Step 4: Fix missing comma between closing brace/bracket and opening quote
-                // Pattern: } or ] followed by " (with or without whitespace)
-                // But NOT if it's already followed by a comma
+                // Fix: Add missing commas between } or ] and "
                 .replace(/([}\]])(\s*)(?!,)"/g, '$1,$2"')
-                // Step 5: Fix missing comma after closing quote when followed by opening brace/bracket
-                // Pattern: " followed by { or [ (with or without whitespace)
-                // But NOT if there's already a comma or closing bracket
-                .replace(/"(\s*)(?![,}\]])([{[])/g, '",$1$2')
-                // Step 6: Fix missing comma between consecutive string values (in arrays)
-                // Pattern: "value1" followed by "value2" (with or without whitespace)
-                // But NOT if followed by a colon (which would indicate object property)
-                // And NOT if followed by closing bracket/brace
-                .replace(/"(\s*)(?![,:\]\}])"/g, '",$1"')
-                // Step 7: Fix missing comma between primitives and next elements  
-                // Handle numbers/bool/null followed by strings, objects, or arrays
-                .replace(/(\d+|true|false|null)(\s*)(?!,)(["{[])/g, '$1,$2$3')
-                // Step 8: Clean up any double commas that might have been introduced
-                .replace(/,{2,}/g, ',')
-                // Step 9: Remove trailing commas one more time after all fixes
-                .replace(/,(\s*[}\]])/g, '$1');
+                // Fix: Replace smart quotes with regular quotes
+                .replace(/[\u201C\u201D]/g, '"')
+                .replace(/[\u2018\u2019]/g, "'");
             
-            return JSON.parse(sanitizedJson);
-        } catch (sanitizeError) {
-            console.error("Failed to parse JSON even after sanitization.");
-            console.error("Original error:", parseError.message);
-            console.error("Sanitization error:", sanitizeError.message);
-            console.error("JSON snippet around error:", jsonStr.substring(
-                Math.max(0, parseInt(parseError.message.match(/position (\d+)/)?.[1] || 0) - 100),
-                Math.min(jsonStr.length, parseInt(parseError.message.match(/position (\d+)/)?.[1] || 0) + 100)
-            ));
-            
-            // Try one more aggressive fix: use a JSON repair library approach
-            try {
-                // Last resort: try to extract just valid parts and rebuild
-                const repairedJson = attemptJSONRepair(jsonStr);
-                return JSON.parse(repairedJson);
-            } catch (repairError) {
-                console.error("JSON repair also failed:", repairError.message);
-                throw new UserFacingError(
-                    `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
-                );
-            }
+            return JSON.parse(fixed);
+        } catch (fixError) {
+            console.error("JSON parsing failed:", parseError.message);
+            throw new UserFacingError(
+                `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
+            );
         }
     }
-}
-
-/**
- * Attempt aggressive JSON repair for common AI mistakes
- */
-function attemptJSONRepair(jsonStr) {
-    // More aggressive repairs - but still conservative
-    let repaired = jsonStr
-        // Step 1: Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
-        .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
-        // Step 2: Fix common quote issues - replace smart quotes with regular quotes
-        .replace(/[\u201C\u201D]/g, '"')
-        .replace(/[\u2018\u2019]/g, "'")
-        // Step 3: Fix escaped newlines that might confuse JSON parser
-        .replace(/\\\n/g, '\\n')
-        // Step 4: Remove multiple consecutive commas anywhere
-        .replace(/,{2,}/g, ',')
-        // Step 5: Remove all trailing commas (including multiple commas before } or ])
-        .replace(/,+(\s*[}\]])/g, '$1')
-        // Step 6: Fix missing commas between object/array closings and openings
-        .replace(/([}\]])(\s*)(?!,)([{[])/g, '$1,$2$3')
-        // Step 7: Fix missing commas between closing and opening quotes
-        .replace(/([}\]])(\s*)(?!,)"/g, '$1,$2"')
-        // Step 8: Fix missing commas after quotes before opening brace/bracket
-        .replace(/"(\s*)(?![,:\]\}])([{[])/g, '",$1$2')
-        // Step 9: Fix missing comma between consecutive string values (but not before colon or closing)
-        .replace(/"(\s*)(?![,:\]\}])"/g, '",$1"')
-        // Step 10: Fix missing comma between primitives and next elements
-        // Handle numbers/bool/null followed by strings, objects, or arrays
-        .replace(/(\d+|true|false|null)(\s*)(?!,)(["{[])/g, '$1,$2$3')
-        // Step 11: Clean up any double commas introduced
-        .replace(/,{2,}/g, ',')
-        // Step 12: Final cleanup of trailing commas
-        .replace(/,(\s*[}\]])/g, '$1');
-    
-    return repaired;
 }
 
 /**
