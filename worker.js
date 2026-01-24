@@ -762,7 +762,8 @@ function extractJSONFromResponse(responseText) {
                 // Fix: Add missing commas between } or ] and " (only when there's whitespace = array/object elements)
                 .replace(/([}\]])(\s+)"/g, '$1,$2"')
                 // Fix: Add missing commas between consecutive strings (in arrays)
-                .replace(/"(\s*)"/g, '",$1"')
+                // Use negative lookbehind/lookahead to avoid matching escaped quotes \"
+                .replace(/(?<!\\)"(\s*)"(?!\\)/g, '",$1"')
                 // Fix: Replace smart quotes with regular quotes
                 .replace(/[\u201C\u201D]/g, '"')
                 .replace(/[\u2018\u2019]/g, "'");
