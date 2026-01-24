@@ -2820,7 +2820,10 @@ body.modal-open { overflow: hidden; }
 
 .product-about-section,
 .product-ingredients-section,
-.product-faq-section {
+.product-faq-section,
+.product-target-profile-section,
+.product-protocol-hint-section,
+.product-safety-warnings-section {
     margin-top: 30px;
     padding-top: 30px;
     border-top: 1px solid var(--border-color);
@@ -2828,7 +2831,10 @@ body.modal-open { overflow: hidden; }
 
 .product-about-section h3,
 .product-ingredients-section h3,
-.product-faq-section h3 {
+.product-faq-section h3,
+.product-target-profile-section h3,
+.product-protocol-hint-section h3,
+.product-safety-warnings-section h3 {
     font-size: 1.5rem;
     color: var(--text-primary);
     margin-bottom: 20px;
@@ -3287,17 +3293,90 @@ body.modal-open { overflow: hidden; }
     margin: 0;
 }
 
+/* Target Profile Section */
+.product-target-profile-section {
+    padding: 30px;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--accent);
+}
+
+.target-profile-text {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Protocol Hint Section (Reception/Usage) */
+.product-protocol-hint-section {
+    padding: 30px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.protocol-hint-text {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Safety Warnings Section */
+.product-safety-warnings-section {
+    padding: 30px;
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 159, 64, 0.1) 100%);
+    border-radius: var(--border-radius);
+    border: 2px solid rgba(255, 107, 107, 0.3);
+}
+
+.product-safety-warnings-section h3 {
+    color: #ff6b6b;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.safety-warnings-content {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.safety-warnings-content .warning-icon {
+    flex-shrink: 0;
+    stroke: #ff6b6b;
+    width: 28px;
+    height: 28px;
+    margin-top: 3px;
+}
+
+.safety-warnings-text {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: 1rem;
+    margin: 0;
+    flex: 1;
+}
+
 /* Responsive adjustments for expansion sections */
 @media (max-width: 768px) {
     .product-about-section,
     .product-ingredients-section,
-    .product-faq-section {
+    .product-faq-section,
+    .product-target-profile-section,
+    .product-protocol-hint-section,
+    .product-safety-warnings-section {
         padding: 30px 20px;
     }
     
     .product-about-section h3,
     .product-ingredients-section h3,
-    .product-faq-section h3 {
+    .product-faq-section h3,
+    .product-target-profile-section h3,
+    .product-protocol-hint-section h3,
+    .product-safety-warnings-section h3 {
         font-size: 1.5rem;
     }
     

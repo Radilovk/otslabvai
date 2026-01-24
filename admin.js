@@ -847,6 +847,7 @@ function populateForm(form, data) {
 
 function serializeForm(form) {
     const data = {};
+    // Debug: console.log('[serializeForm] Starting form serialization');
     form.querySelectorAll('[data-field]').forEach(input => {
         // Пропускаме полета от шаблони за вложени елементи
         if (input.closest('.nested-item-template, .nested-sub-item-template')) return;
@@ -862,8 +863,10 @@ function serializeForm(form) {
         } else {
             value = input.value;
         }
+        // Debug: if (path === 'title') console.log('[serializeForm] Found title field with value:', value);
         setProperty(data, path, value);
     });
+    // Debug: console.log('[serializeForm] Serialized data:', data);
 
     // Специално за продуктова категория - събира данните от всички продукти
     const productsContainer = form.querySelector('#products-editor');
@@ -1201,7 +1204,12 @@ function handleAction(action, target, id) {
             openModal(`Редакция на: ${component.title}`, editTemplateId, component,
                 (form) => {
                     const updatedData = serializeForm(form);
+                    // Debug: console.log('Updating component:', component.component_id, 'with data:', updatedData);
+                    // Debug: if (updatedData.title !== undefined && updatedData.title !== '') {
+                    //     console.log('Title being updated from:', component.title, 'to:', updatedData.title);
+                    // }
                     Object.assign(component, updatedData);
+                    // Debug: console.log('Component after update:', component);
                     return true;
                 });
             break;

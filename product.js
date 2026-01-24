@@ -125,7 +125,8 @@ function renderProductDetail(product) {
     }
 
     const publicData = product.public_data;
-    const inventory = product.system_data?.inventory ?? 0;
+    const systemData = product.system_data || {};
+    const inventory = systemData.inventory ?? 0;
     const productId = product.product_id;
 
     // Update page title
@@ -197,6 +198,37 @@ function renderProductDetail(product) {
                     </div>
                 `;
                 }).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    // Generate Target Profile section (Ideal User Profile)
+    const targetProfileHTML = systemData.target_profile ? `
+        <div class="product-target-profile-section">
+            <h3>Идеален профил на потребителя</h3>
+            <p class="target-profile-text">${escapeHtml(systemData.target_profile)}</p>
+        </div>
+    ` : '';
+
+    // Generate Protocol Hint section (Technical Protocol Guidelines)
+    const protocolHintHTML = systemData.protocol_hint ? `
+        <div class="product-protocol-hint-section">
+            <h3>Прием</h3>
+            <p class="protocol-hint-text">${escapeHtml(systemData.protocol_hint)}</p>
+        </div>
+    ` : '';
+
+    // Generate Safety Warnings section
+    const safetyWarningsHTML = systemData.safety_warnings ? `
+        <div class="product-safety-warnings-section">
+            <h3>Предупреждения за безопасност</h3>
+            <div class="safety-warnings-content">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="warning-icon" aria-hidden="true">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <p class="safety-warnings-text">${escapeHtml(systemData.safety_warnings)}</p>
             </div>
         </div>
     ` : '';
@@ -288,6 +320,9 @@ function renderProductDetail(product) {
 
         ${aboutContentHTML}
         ${ingredientsHTML}
+        ${safetyWarningsHTML}
+        ${protocolHintHTML}
+        ${targetProfileHTML}
         ${faqHTML}
     `;
 
