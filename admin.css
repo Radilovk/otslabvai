@@ -377,6 +377,42 @@ h2 {
 .nested-item { background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
 .nested-item-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bg-light); padding-bottom: 0.75rem; margin-bottom: 1rem; }
 .nested-item-header span { font-size: 1.1rem; font-weight: 500; }
+
+/* Product Item Collapse Styles */
+.product-item-collapsible .nested-item-header {
+    cursor: pointer;
+    user-select: none;
+}
+.product-item-collapsible .product-content {
+    max-height: 3000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+    opacity: 1;
+}
+.product-item-collapsible.collapsed .product-content {
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.3s ease-in, opacity 0.3s ease-in;
+}
+.product-item-collapsible .nested-item-header {
+    margin-bottom: 0;
+}
+.product-item-collapsible:not(.collapsed) .nested-item-header {
+    margin-bottom: 1rem;
+}
+.collapse-toggle {
+    display: inline-block;
+    transition: transform 0.3s ease;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+.product-item-collapsible.collapsed .collapse-toggle {
+    transform: rotate(-90deg);
+}
+.product-header-clickable {
+    cursor: pointer;
+}
+
 .nested-sublist-container {
     display: flex;
     flex-direction: column;

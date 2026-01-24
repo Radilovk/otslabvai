@@ -829,9 +829,13 @@
 
     <!-- Вложен шаблон за редактор на ЕДИН ПРОДУКТ (с табове) -->
     <template id="product-editor-template">
-        <div class="nested-item" data-type="product">
-            <div class="nested-item-header">
-                <span class="product-editor-title">Нов Продукт</span>
+        <div class="nested-item product-item-collapsible collapsed" data-type="product">
+            <div class="nested-item-header product-header-clickable">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="handle" title="Премести">☰</span>
+                    <span class="collapse-toggle" title="Разгъни/Сгъни">▼</span>
+                    <span class="product-editor-title">Нов Продукт</span>
+                </div>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
                     <button type="button" class="btn btn-sm btn-primary ai-assistant-btn" data-action="ai-assistant" title="AI Асистент за попълване на продукт">
                         🤖 AI Асистент
@@ -840,6 +844,7 @@
                 </div>
             </div>
             
+            <div class="product-content">
             <nav class="modal-tab-nav">
                 <button type="button" class="modal-tab-btn active" data-modal-tab=".product-tab-public">Публични данни</button>
                 <button type="button" class="modal-tab-btn" data-modal-tab=".product-tab-system">Системни данни</button>
@@ -987,6 +992,7 @@
                         <textarea data-field="system_data.safety_warnings" rows="3"></textarea>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </template>

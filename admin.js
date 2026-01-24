@@ -820,6 +820,8 @@ function populateForm(form, data) {
             data.products.forEach(productData => {
                 addNestedItem(productsContainer, 'product-editor-template', productData);
             });
+            // Инициализиране на drag-and-drop за продуктите
+            initSortableProducts(productsContainer, data.products);
         }
     }
     
@@ -872,7 +874,7 @@ function serializeForm(form) {
     const productsContainer = form.querySelector('#products-editor');
     if (productsContainer) {
         data.products = [];
-        productsContainer.querySelectorAll(':scope > .nested-item[data-type="product"]').forEach(productNode => {
+        productsContainer.querySelectorAll(':scope > .nested-item[data-type="product"]').forEach((productNode, index) => {
             const productData = {};
             // Сериализираме основните полета на продукта
             productNode.querySelectorAll('[data-field]').forEach(input => {
@@ -889,6 +891,9 @@ function serializeForm(form) {
                 }
                 setProperty(productData, path, value);
             });
+            
+            // Задаваме display_order според текущата позиция
+            productData.display_order = index;
 
             // Сериализираме вложените списъци
             ['effects', 'about-benefits', 'ingredients', 'faq'].forEach(subListName => {
@@ -1401,6 +1406,34 @@ function initSortable(element, dataArray) {
     });
 }
 
+function initSortableProducts(element, productsArray) {
+    if(!element) return;
+    // Check if Sortable is available (library might be blocked or not loaded)
+    if (typeof Sortable === 'undefined') {
+        console.warn('Sortable.js library not available - drag and drop will not work');
+        return;
+    }
+    new Sortable(element, {
+        handle: '.handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        draggable: '.nested-item[data-type="product"]',
+        onEnd: (evt) => {
+            const { oldIndex, newIndex } = evt;
+            if (oldIndex === newIndex) return;
+            const [movedItem] = productsArray.splice(oldIndex, 1);
+            productsArray.splice(newIndex, 0, movedItem);
+            
+            // Update display_order for all products
+            productsArray.forEach((product, index) => {
+                product.display_order = index;
+            });
+            
+            setUnsavedChanges(true);
+        }
+    });
+}
+
 function showNotification(message, type = 'info', duration = 4000) {
     const note = document.createElement('div');
     note.className = `notification ${type}`;
@@ -1499,6 +1532,18 @@ function initNestedItemUI(itemElement, data) {
         }
         // Инициализираме вложените табове в продукта
         initModalTabs(itemElement);
+        
+        // Добавяме collapse/expand функционалност
+        const header = itemElement.querySelector('.product-header-clickable');
+        if (header) {
+            header.addEventListener('click', (e) => {
+                // Не затваряме/отваряме ако е кликнато върху бутон или handle
+                if (e.target.closest('button, .handle, .ai-assistant-btn, .delete-nested-btn')) {
+                    return;
+                }
+                itemElement.classList.toggle('collapsed');
+            });
+        }
     }
 }
 
