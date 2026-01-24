@@ -849,8 +849,8 @@ function serializeForm(form) {
     const data = {};
     // Debug: console.log('[serializeForm] Starting form serialization');
     form.querySelectorAll('[data-field]').forEach(input => {
-        // Пропускаме полета от шаблони за вложени елементи
-        if (input.closest('.nested-item-template, .nested-sub-item-template')) return;
+        // Пропускаме полета от шаблони за вложени елементи и от вложени елементи
+        if (input.closest('.nested-item-template, .nested-sub-item-template, .nested-item, .nested-sub-item')) return;
 
         const path = input.dataset.field;
         let value;
