@@ -2,7 +2,27 @@
  * Tests for worker.js JSON extraction functionality
  */
 
-// Mock the extractJSONFromResponse function
+/**
+ * Attempt aggressive JSON repair for common AI mistakes
+ */
+function attemptJSONRepair(jsonStr) {
+    // More aggressive repairs - but still conservative
+    let repaired = jsonStr
+        // Remove all trailing commas more aggressively
+        .replace(/,(\s*[}\]])/g, '$1')
+        // Ensure proper structure for common patterns - missing commas between objects/arrays
+        .replace(/\}(\s*)\{/g, '},$1{')
+        .replace(/\](\s*)\[/g, '],$1[')
+        // Remove any non-printable characters except newlines (newlines in strings should stay)
+        .replace(/[\x00-\x09\x0B-\x1F\x7F-\x9F]/g, '')
+        // Fix common quote issues - replace smart quotes with regular quotes
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/[\u2018\u2019]/g, "'");
+    
+    return repaired;
+}
+
+// Mock the extractJSONFromResponse function with enhanced sanitization
 function extractJSONFromResponse(responseText) {
     if (typeof responseText !== 'string') {
         return responseText;
@@ -33,18 +53,30 @@ function extractJSONFromResponse(responseText) {
     } catch (parseError) {
         // If initial parse fails, try to fix common AI JSON errors
         try {
-            // Remove trailing commas before closing braces and brackets
+            // Apply comprehensive sanitization for common AI JSON errors
             let sanitizedJson = jsonStr
-                // First: Remove multiple consecutive commas (2 or more)
+                // Remove multiple consecutive commas (2 or more)
                 .replace(/,{2,}/g, ',')
-                // Then: Remove trailing commas before }
+                // Remove trailing commas before } (with optional whitespace/newlines)
                 .replace(/,(\s*})/g, '$1')
-                // Then: Remove trailing commas before ]
-                .replace(/,(\s*])/g, '$1');
+                // Remove trailing commas before ] (with optional whitespace/newlines)
+                .replace(/,(\s*])/g, '$1')
+                // Fix missing commas between array elements (common AI error)
+                // Matches: }"WHITESPACE"{ or ]"WHITESPACE"[ 
+                .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
+                // Remove any trailing comma right before the final }
+                .replace(/,(\s*)$/g, '$1');
             
             return JSON.parse(sanitizedJson);
         } catch (sanitizeError) {
-            throw new Error('AI отговори с невалиден JSON формат.');
+            // Try one more aggressive fix: use a JSON repair library approach
+            try {
+                // Last resort: try to extract just valid parts and rebuild
+                const repairedJson = attemptJSONRepair(jsonStr);
+                return JSON.parse(repairedJson);
+            } catch (repairError) {
+                throw new Error(`AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`);
+            }
         }
     }
 }
@@ -115,5 +147,28 @@ describe('extractJSONFromResponse', () => {
         const input = '{"name": "Product",,}';
         const result = extractJSONFromResponse(input);
         expect(result).toEqual({ name: 'Product' });
+    });
+
+    test('should handle missing commas between array elements', () => {
+        const input = '{"items": [{"a": 1}{"b": 2}]}';
+        const result = extractJSONFromResponse(input);
+        expect(result).toEqual({ items: [{ a: 1 }, { b: 2 }] });
+    });
+
+    test('should handle smart quotes', () => {
+        const input = '{"name": "Product"}'; // Using smart quotes (unicode)
+        const result = extractJSONFromResponse(input);
+        expect(result).toEqual({ name: 'Product' });
+    });
+
+    test('should handle missing commas between object properties in array', () => {
+        const input = '{"effects": [{"label": "Effect1", "value": 8}{"label": "Effect2", "value": 9}]}';
+        const result = extractJSONFromResponse(input);
+        expect(result).toEqual({
+            effects: [
+                { label: 'Effect1', value: 8 },
+                { label: 'Effect2', value: 9 }
+            ]
+        });
     });
 });

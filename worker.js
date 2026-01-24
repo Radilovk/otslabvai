@@ -434,18 +434,19 @@ function getDefaultAISettings() {
         apiKey: '',
         temperature: 0.3,
         maxTokens: 4096,
-        promptTemplate: `Ти си експерт по хранителни добавки и продукти за отслабване. Анализирай следната информация за продукт и попълни всички възможни полета в JSON формат базирайки се на твоите знания за този тип продукти.
+        promptTemplate: `Ти си експерт по хранителни добавки и продукти за отслабване. Анализирай следната информация за продукт и попълни ВСИЧКИ възможни полета в JSON формат базирайки се на твоите знания за този тип продукти.
 
 Въведена информация:
 {{productData}}
 
-Моля попълни JSON обект със следните полета (на български език):
+Моля попълни JSON обект със ВСИЧКИ следните полета (на български език):
 {
   "name": "Пълно име на продукта",
   "manufacturer": "Производител (ако е известен)",
   "price": "Приблизителна цена в лева като число (или null ако не знаеш)",
   "tagline": "Кратък маркетингов слоган (до 60 символа)",
   "description": "Подробно маркетингово описание (100-200 думи)",
+  "image_url": "URL на основно изображение на продукта (или null)",
   "packaging_info": {
     "capsules_or_grams": "Брой капсули или грамаж",
     "doses_per_package": "Брой дози в опаковка"
@@ -453,15 +454,15 @@ function getDefaultAISettings() {
   "effects": [
     {
       "label": "Ефект 1",
-      "value": "Стойност от 0 до 10"
+      "value": 8
     },
     {
       "label": "Ефект 2", 
-      "value": "Стойност от 0 до 10"
+      "value": 7
     },
     {
       "label": "Ефект 3",
-      "value": "Стойност от 0 до 10"
+      "value": 9
     }
   ],
   "about_content": {
@@ -469,12 +470,12 @@ function getDefaultAISettings() {
     "description": "Подробно описание",
     "benefits": [
       {
-        "icon": "✓",
-        "text": "Полза 1"
+        "title": "Заглавие на полза 1",
+        "text": "Описание на полза 1"
       },
       {
-        "icon": "✓",
-        "text": "Полза 2"
+        "title": "Заглавие на полза 2",
+        "text": "Описание на полза 2"
       }
     ]
   },
@@ -483,8 +484,17 @@ function getDefaultAISettings() {
       "name": "Съставка 1",
       "amount": "Количество",
       "description": "Описание на съставката"
+    },
+    {
+      "name": "Съставка 2",
+      "amount": "Количество",
+      "description": "Описание на съставката"
     }
   ],
+  "research_note": {
+    "text": "Кратък текст за научното изследване",
+    "url": "URL към научно изследване (или null)"
+  },
   "recommended_intake": "Препоръчителен прием и дозировка",
   "contraindications": "Противопоказания и предупреждения",
   "additional_advice": "Допълнителни съвети и информация",
@@ -492,17 +502,32 @@ function getDefaultAISettings() {
     {
       "question": "Често задаван въпрос 1",
       "answer": "Отговор"
+    },
+    {
+      "question": "Често задаван въпрос 2",
+      "answer": "Отговор"
     }
-  ]
+  ],
+  "application_type": "Injectable или Oral или Topical или Intranasal",
+  "inventory": 100,
+  "goals": "цел1, цел2, цел3",
+  "target_profile": "Описание на идеален потребител",
+  "protocol_hint": "Техническа насока за протокол на приложение",
+  "synergy_products": "prod-id1, prod-id2",
+  "safety_warnings": "Предупреждения за безопасност"
 }
 
-ВАЖНО:
-- Отговори САМО с валиден JSON обект
-- Не добавяй коментари или друг текст извън JSON
-- Използвай български език
+КРИТИЧНО ВАЖНО ЗА JSON ФОРМАТИРАНЕТО:
+- Отговори САМО с валиден JSON обект - НЕ добавяй текст преди или след JSON
+- НЕ слагай запетаи след последния елемент в обект или масив
+- НЕ слагай множество запетаи подред
+- Използвай само прости двойни кавички " за стрингове
+- За числови стойности не използвай кавички (например value: 8 вместо value: "8")
+- Не използвай коментари в JSON
+- Ако липсва информация за поле, използвай null за стрингове, [] за масиви, или {} за обекти
+- Използвай български език за всички текстови полета
 - Бъди точен, грамотен и маркетингово компетентен
-- Ако липсва информация за поле, използвай null или празен масив []
-- Базирай се на твоите знания за подобни продукти`
+- Попълни ВСИЧКИ полета - не пропускай нито едно`
     };
 }
 
@@ -693,7 +718,7 @@ async function callGoogleAI(settings, prompt) {
 }
 
 /**
- * Extract JSON from AI response text
+ * Extract JSON from AI response text with robust sanitization
  */
 function extractJSONFromResponse(responseText) {
     if (typeof responseText !== 'string') {
@@ -726,24 +751,66 @@ function extractJSONFromResponse(responseText) {
     } catch (parseError) {
         // If initial parse fails, try to fix common AI JSON errors
         console.warn("Initial JSON parse failed, attempting to sanitize:", parseError.message);
+        console.warn("Error position:", parseError.message.match(/position (\d+)/)?.[1]);
         
         try {
-            // Remove trailing commas before closing braces and brackets
-            // This handles cases like: {"key": "value",} or ["item1", "item2",]
+            // Apply comprehensive sanitization for common AI JSON errors
             let sanitizedJson = jsonStr
-                // First: Remove multiple consecutive commas (2 or more)
+                // Remove multiple consecutive commas (2 or more)
                 .replace(/,{2,}/g, ',')
-                // Then: Remove trailing commas before }
+                // Remove trailing commas before } (with optional whitespace/newlines)
                 .replace(/,(\s*})/g, '$1')
-                // Then: Remove trailing commas before ]
-                .replace(/,(\s*])/g, '$1');
+                // Remove trailing commas before ] (with optional whitespace/newlines)
+                .replace(/,(\s*])/g, '$1')
+                // Fix missing commas between array elements (common AI error)
+                // Matches: }"WHITESPACE"{ or ]"WHITESPACE"[ 
+                .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
+                // Remove any trailing comma right before the final }
+                .replace(/,(\s*)$/g, '$1');
             
             return JSON.parse(sanitizedJson);
         } catch (sanitizeError) {
-            console.error("Failed to parse JSON even after sanitization:", jsonStr, sanitizeError);
-            throw new UserFacingError('AI отговори с невалиден JSON формат.');
+            console.error("Failed to parse JSON even after sanitization.");
+            console.error("Original error:", parseError.message);
+            console.error("Sanitization error:", sanitizeError.message);
+            console.error("JSON snippet around error:", jsonStr.substring(
+                Math.max(0, parseInt(parseError.message.match(/position (\d+)/)?.[1] || 0) - 100),
+                Math.min(jsonStr.length, parseInt(parseError.message.match(/position (\d+)/)?.[1] || 0) + 100)
+            ));
+            
+            // Try one more aggressive fix: use a JSON repair library approach
+            try {
+                // Last resort: try to extract just valid parts and rebuild
+                const repairedJson = attemptJSONRepair(jsonStr);
+                return JSON.parse(repairedJson);
+            } catch (repairError) {
+                console.error("JSON repair also failed:", repairError.message);
+                throw new UserFacingError(
+                    `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
+                );
+            }
         }
     }
+}
+
+/**
+ * Attempt aggressive JSON repair for common AI mistakes
+ */
+function attemptJSONRepair(jsonStr) {
+    // More aggressive repairs - but still conservative
+    let repaired = jsonStr
+        // Remove all trailing commas more aggressively
+        .replace(/,(\s*[}\]])/g, '$1')
+        // Ensure proper structure for common patterns - missing commas between objects/arrays
+        .replace(/\}(\s*)\{/g, '},$1{')
+        .replace(/\](\s*)\[/g, '],$1[')
+        // Remove any non-printable characters except newlines (newlines in strings should stay)
+        .replace(/[\x00-\x09\x0B-\x1F\x7F-\x9F]/g, '')
+        // Fix common quote issues - replace smart quotes with regular quotes
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/[\u2018\u2019]/g, "'");
+    
+    return repaired;
 }
 
 /**

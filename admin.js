@@ -1666,6 +1666,13 @@ async function handleAIAssistant(productEditor) {
             tagline: productEditor.querySelector('[data-field="public_data.tagline"]')?.value || '',
             description: productEditor.querySelector('[data-field="public_data.description"]')?.value || '',
             manufacturer: productEditor.querySelector('[data-field="system_data.manufacturer"]')?.value || '',
+            application_type: productEditor.querySelector('[data-field="system_data.application_type"]')?.value || '',
+            inventory: productEditor.querySelector('[data-field="system_data.inventory"]')?.value || '',
+            goals: productEditor.querySelector('[data-field="system_data.goals"]')?.value || '',
+            target_profile: productEditor.querySelector('[data-field="system_data.target_profile"]')?.value || '',
+            protocol_hint: productEditor.querySelector('[data-field="system_data.protocol_hint"]')?.value || '',
+            synergy_products: productEditor.querySelector('[data-field="system_data.synergy_products"]')?.value || '',
+            safety_warnings: productEditor.querySelector('[data-field="system_data.safety_warnings"]')?.value || '',
         };
         
         // Проверяваме дали има поне име на продукта
@@ -1715,11 +1722,20 @@ async function handleAIAssistant(productEditor) {
             }
         };
         
-        // Основни полета
+        // Основни публични полета
         fillField('[data-field="public_data.name"]', aiData.name);
         fillField('[data-field="public_data.price"]', aiData.price);
         fillField('[data-field="public_data.tagline"]', aiData.tagline);
         fillField('[data-field="public_data.description"]', aiData.description);
+        
+        // Изображения
+        fillField('[data-field="public_data.image_url"]', aiData.image_url);
+        
+        // Research Note (източник)
+        if (aiData.research_note) {
+            fillField('[data-field="public_data.research_note.text"]', aiData.research_note.text);
+            fillField('[data-field="public_data.research_note.url"]', aiData.research_note.url);
+        }
         
         // Опаковка
         if (aiData.packaging_info) {
@@ -1727,8 +1743,36 @@ async function handleAIAssistant(productEditor) {
             fillField('[data-field="public_data.packaging.doses_per_package"]', aiData.packaging_info.doses_per_package);
         }
         
-        // Системни данни
+        // Системни данни - ВСЕ полета
         fillField('[data-field="system_data.manufacturer"]', aiData.manufacturer);
+        fillField('[data-field="system_data.application_type"]', aiData.application_type);
+        fillField('[data-field="system_data.inventory"]', aiData.inventory);
+        fillField('[data-field="system_data.goals"]', aiData.goals);
+        fillField('[data-field="system_data.target_profile"]', aiData.target_profile);
+        fillField('[data-field="system_data.protocol_hint"]', aiData.protocol_hint);
+        fillField('[data-field="system_data.synergy_products"]', aiData.synergy_products);
+        fillField('[data-field="system_data.safety_warnings"]', aiData.safety_warnings);
+        
+        // Допълнителна информация (добавяме като част от about_content description)
+        if (aiData.recommended_intake || aiData.contraindications || aiData.additional_advice) {
+            let additionalInfo = '';
+            if (aiData.recommended_intake) {
+                additionalInfo += `\n\nПрепоръчителен прием: ${aiData.recommended_intake}`;
+            }
+            if (aiData.contraindications) {
+                additionalInfo += `\n\nПротивопоказания: ${aiData.contraindications}`;
+            }
+            if (aiData.additional_advice) {
+                additionalInfo += `\n\nДопълнителни съвети: ${aiData.additional_advice}`;
+            }
+            
+            // Добавяме към about_content description ако е празно
+            const aboutDescField = productEditor.querySelector('[data-field="public_data.about_content.description"]');
+            if (aboutDescField && !aboutDescField.value && additionalInfo) {
+                const aboutDesc = aiData.about_content?.description || '';
+                aboutDescField.value = aboutDesc + additionalInfo;
+            }
+        }
         
         // За продукта (About Content)
         if (aiData.about_content) {
