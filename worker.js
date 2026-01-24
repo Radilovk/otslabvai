@@ -519,15 +519,18 @@ function getDefaultAISettings() {
 
 КРИТИЧНО ВАЖНО ЗА JSON ФОРМАТИРАНЕТО:
 - Отговори САМО с валиден JSON обект - НЕ добавяй текст преди или след JSON
-- НЕ слагай запетаи след последния елемент в обект или масив
+- ЗАДЪЛЖИТЕЛНО: Слагай запетая между ВСИЧКИ елементи в масив освен след последния
+- ЗАДЪЛЖИТЕЛНО: Слагай запетая между ВСИЧКИ свойства в обект освен след последното
+- НЕ слагай запетаи след последния елемент в обект или масив (преди } или ])
 - НЕ слагай множество запетаи подред
-- Използвай само прости двойни кавички " за стрингове
-- За числови стойности не използвай кавички (например value: 8 вместо value: "8")
+- Използвай само прости двойни кавички " за стрингове (НЕ използвай ' или умни кавички)
+- За числови стойности НЕ използвай кавички (например value: 8 вместо value: "8")
 - Не използвай коментари в JSON
 - Ако липсва информация за поле, използвай null за стрингове, [] за масиви, или {} за обекти
 - Използвай български език за всички текстови полета
 - Бъди точен, грамотен и маркетингово компетентен
-- Попълни ВСИЧКИ полета - не пропускай нито едно`
+- Попълни ВСИЧКИ полета - не пропускай нито едно
+- ПровериJSON-а за валидност преди да отговориш`
     };
 }
 
@@ -756,26 +759,33 @@ function extractJSONFromResponse(responseText) {
         try {
             // Apply comprehensive sanitization for common AI JSON errors
             let sanitizedJson = jsonStr
-                // Remove multiple consecutive commas (2 or more)
+                // Step 1: Remove multiple consecutive commas (2 or more)
                 .replace(/,{2,}/g, ',')
-                // Remove trailing commas before } (with optional whitespace/newlines)
-                .replace(/,(\s*})/g, '$1')
-                // Remove trailing commas before ] (with optional whitespace/newlines)
-                .replace(/,(\s*])/g, '$1')
-                // Fix missing commas between array/object elements (comprehensive patterns)
+                // Step 2: Remove trailing commas before } or ] (with optional whitespace/newlines)
+                .replace(/,(\s*[}\]])/g, '$1')
+                // Step 3: Fix missing commas between object/array closings and openings
                 // Pattern: } or ] followed by { or [ (with or without whitespace)
-                .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
-                // Fix missing comma between closing brace/bracket and opening quote
-                // Matches: }"WHITESPACE"" or ]"WHITESPACE"" (with or without whitespace)
-                .replace(/(\}|\])(\s*)"/g, '$1,$2"')
-                // Fix missing comma between closing quote and opening brace/bracket
-                // Matches: ""WHITESPACE"{ or ""WHITESPACE"[ (with or without whitespace)
-                .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-                // Fix missing comma between consecutive strings (in arrays and between properties)
-                // Matches: "string1"WHITESPACE"string2" - handles zero or more whitespace
-                .replace(/"(\s*)"/g, '",$1"')
-                // Remove any trailing comma right before the final }
-                .replace(/,(\s*)$/g, '$1');
+                .replace(/([}\]])(\s*)([{[])/g, '$1,$2$3')
+                // Step 4: Fix missing comma between closing brace/bracket and opening quote
+                // Pattern: } or ] followed by " (with or without whitespace)
+                // But NOT if it's already followed by a comma
+                .replace(/([}\]])(\s*)(?!,)"/g, '$1,$2"')
+                // Step 5: Fix missing comma after closing quote when followed by opening brace/bracket
+                // Pattern: " followed by { or [ (with or without whitespace)
+                // But NOT if there's already a comma or closing bracket
+                .replace(/"(\s*)(?![,}\]])([{[])/g, '",$1$2')
+                // Step 6: Fix missing comma between consecutive string values (in arrays)
+                // Pattern: "value1" followed by "value2" (with or without whitespace)
+                // But NOT if followed by a colon (which would indicate object property)
+                // And NOT if followed by closing bracket/brace
+                .replace(/"(\s*)(?![,:\]}])"/g, '",$1"')
+                // Step 7: Fix missing comma between number/boolean/null and next element
+                // Pattern: number/true/false/null followed by " or { or [
+                .replace(/([\d]|true|false|null)(\s*)(?!,)(["{[])/g, '$1,$2$3')
+                // Step 8: Clean up any double commas that might have been introduced
+                .replace(/,{2,}/g, ',')
+                // Step 9: Remove trailing commas one more time after all fixes
+                .replace(/,(\s*[}\]])/g, '$1');
             
             return JSON.parse(sanitizedJson);
         } catch (sanitizeError) {
@@ -808,27 +818,32 @@ function extractJSONFromResponse(responseText) {
 function attemptJSONRepair(jsonStr) {
     // More aggressive repairs - but still conservative
     let repaired = jsonStr
-        // Remove all trailing commas more aggressively (including multiple commas)
-        .replace(/,+(\s*[}\]])/g, '$1')
-        // Remove multiple consecutive commas anywhere
-        .replace(/,{2,}/g, ',')
-        // Fix missing commas: } or ] followed by { or [ (with or without whitespace)
-        .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
-        // Fix missing commas: } or ] followed by " (with or without whitespace)
-        .replace(/(\}|\])(\s*)"/g, '$1,$2"')
-        // Fix missing commas: " followed by { or [ (with or without whitespace)
-        .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-        // Fix missing comma between consecutive strings (in arrays and between properties)
-        // Handles zero or more whitespace between quotes
-        .replace(/"(\s*)"/g, '",$1"')
-        // Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
+        // Step 1: Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
         .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
-        // Fix common quote issues - replace smart quotes with regular quotes
+        // Step 2: Fix common quote issues - replace smart quotes with regular quotes
         .replace(/[\u201C\u201D]/g, '"')
         .replace(/[\u2018\u2019]/g, "'")
-        // Fix escaped newlines that might confuse JSON parser
+        // Step 3: Fix escaped newlines that might confuse JSON parser
         .replace(/\\\n/g, '\\n')
-        // Remove trailing commas before closing braces/brackets (one more time after all fixes)
+        // Step 4: Remove multiple consecutive commas anywhere
+        .replace(/,{2,}/g, ',')
+        // Step 5: Remove all trailing commas (including multiple commas before } or ])
+        .replace(/,+(\s*[}\]])/g, '$1')
+        // Step 6: Fix missing commas between object/array closings and openings
+        .replace(/([}\]])(\s*)(?!,)([{[])/g, '$1,$2$3')
+        // Step 7: Fix missing commas between closing and opening quotes
+        .replace(/([}\]])(\s*)(?!,)"/g, '$1,$2"')
+        // Step 8: Fix missing commas after quotes before opening brace/bracket
+        .replace(/"(\s*)(?![,:\]}])([{[])/g, '",$1$2')
+        // Step 9: Fix missing comma between consecutive string values (but not before colon or closing)
+        .replace(/"(\s*)(?![,:\]}])"/g, '",$1"')
+        // Step 10: Fix missing comma between primitives (numbers, booleans, null) and next elements
+        .replace(/([\d]|true|false|null)(\s*)(?!,)(["{[])/g, '$1,$2$3')
+        // Step 11: Fix missing commas after closing quote when followed by a word (property key)
+        .replace(/"(\s*)([a-zA-Z_])/g, '",$1$2')
+        // Step 12: Clean up any double commas introduced
+        .replace(/,{2,}/g, ',')
+        // Step 13: Final cleanup of trailing commas
         .replace(/,(\s*[}\]])/g, '$1');
     
     return repaired;
