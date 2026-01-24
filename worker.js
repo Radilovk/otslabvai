@@ -778,7 +778,7 @@ function extractJSONFromResponse(responseText) {
                 // Pattern: "value1" followed by "value2" (with or without whitespace)
                 // But NOT if followed by a colon (which would indicate object property)
                 // And NOT if followed by closing bracket/brace
-                .replace(/"(\s*)(?![,:\]}])"/g, '",$1"')
+                .replace(/"(\s*)(?![,:\]\}])"/g, '",$1"')
                 // Step 7: Fix missing comma between primitives and next elements  
                 // Handle numbers/bool/null followed by strings, objects, or arrays
                 .replace(/(\d+|true|false|null)(\s*)(?!,)(["{[])/g, '$1,$2$3')
@@ -834,17 +834,15 @@ function attemptJSONRepair(jsonStr) {
         // Step 7: Fix missing commas between closing and opening quotes
         .replace(/([}\]])(\s*)(?!,)"/g, '$1,$2"')
         // Step 8: Fix missing commas after quotes before opening brace/bracket
-        .replace(/"(\s*)(?![,:\]}])([{[])/g, '",$1$2')
+        .replace(/"(\s*)(?![,:\]\}])([{[])/g, '",$1$2')
         // Step 9: Fix missing comma between consecutive string values (but not before colon or closing)
-        .replace(/"(\s*)(?![,:\]}])"/g, '",$1"')
+        .replace(/"(\s*)(?![,:\]\}])"/g, '",$1"')
         // Step 10: Fix missing comma between primitives and next elements
         // Handle numbers/bool/null followed by strings, objects, or arrays
         .replace(/(\d+|true|false|null)(\s*)(?!,)(["{[])/g, '$1,$2$3')
-        // Step 11: Fix missing commas after closing quote when followed by a word (property key)
-        .replace(/"(\s*)([a-zA-Z_])/g, '",$1$2')
-        // Step 12: Clean up any double commas introduced
+        // Step 11: Clean up any double commas introduced
         .replace(/,{2,}/g, ',')
-        // Step 13: Final cleanup of trailing commas
+        // Step 12: Final cleanup of trailing commas
         .replace(/,(\s*[}\]])/g, '$1');
     
     return repaired;
