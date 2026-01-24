@@ -263,6 +263,14 @@ const generateProductCategoryHTML = (component, index) => {
     const isCollapsible = component.options.is_collapsible;
     const isExpanded = component.options.is_expanded_by_default;
     const productGridId = `product-grid-${component.id || index}`;
+    
+    // Sort products by display_order if it exists, otherwise maintain current order
+    const sortedProducts = (component.products || []).slice().sort((a, b) => {
+        const orderA = a.display_order !== undefined ? a.display_order : 999999;
+        const orderB = b.display_order !== undefined ? b.display_order : 999999;
+        return orderA - orderB;
+    });
+    
     return `
     <section id="${component.id}" class="category-section fade-in-up ${isCollapsible ? '' : 'not-collapsible'}">
         <div class="container">
@@ -274,7 +282,7 @@ const generateProductCategoryHTML = (component, index) => {
                 ${component.image ? `<div class="category-image-wrapper"><img src="${component.image}" alt="${component.title}" loading="lazy"></div>` : ''}
             </div>
             <div class="product-grid" id="${productGridId}">
-                ${(component.products || []).map(generateProductCard).join('')}
+                ${sortedProducts.map(generateProductCard).join('')}
             </div>
         </div>
     </section>`;
