@@ -6,8 +6,8 @@
       "es2020",
       "webworker"
     ],
-    "module": "NodeNext",
-    "moduleResolution": "nodenext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "noEmit": true,
     "skipLibCheck": true
   },
