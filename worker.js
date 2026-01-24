@@ -772,8 +772,8 @@ function extractJSONFromResponse(responseText) {
                 // Matches: ""WHITESPACE"{ or ""WHITESPACE"[ (with or without whitespace)
                 .replace(/"(\s*)(\{|\[)/g, '",$1$2')
                 // Fix missing comma between consecutive strings (in arrays and between properties)
-                // Matches: "string1"WHITESPACE"string2" - simpler pattern that handles both cases
-                .replace(/"(\s+)"/g, '",$1"')
+                // Matches: "string1"WHITESPACE"string2" - handles zero or more whitespace
+                .replace(/"(\s*)"/g, '",$1"')
                 // Remove any trailing comma right before the final }
                 .replace(/,(\s*)$/g, '$1');
             
@@ -819,7 +819,8 @@ function attemptJSONRepair(jsonStr) {
         // Fix missing commas: " followed by { or [ (with or without whitespace)
         .replace(/"(\s*)(\{|\[)/g, '",$1$2')
         // Fix missing comma between consecutive strings (in arrays and between properties)
-        .replace(/"(\s+)"/g, '",$1"')
+        // Handles zero or more whitespace between quotes
+        .replace(/"(\s*)"/g, '",$1"')
         // Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
         .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
         // Fix common quote issues - replace smart quotes with regular quotes

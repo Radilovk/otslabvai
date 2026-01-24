@@ -18,8 +18,9 @@ function attemptJSONRepair(jsonStr) {
         .replace(/(\}|\])(\s*)"/g, '$1,$2"')
         // Fix missing commas: " followed by { or [ (with or without whitespace)
         .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-        // Fix missing comma between consecutive strings in arrays (with whitespace)
-        .replace(/"(\s+)"(?=[^:]*(?:\]|,))/g, '",$1"')
+        // Fix missing comma between consecutive strings (in arrays and between properties)
+        // Handles zero or more whitespace between quotes
+        .replace(/"(\s*)"/g, '",$1"')
         // Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
         .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
         // Fix common quote issues - replace smart quotes with regular quotes
@@ -85,10 +86,9 @@ function extractJSONFromResponse(responseText) {
                 // Fix missing comma between closing quote and opening brace/bracket
                 // Matches: ""WHITESPACE"{ or ""WHITESPACE"[ (with or without whitespace)
                 .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-                // Fix missing comma between consecutive strings in arrays
-                // Matches: "string1"WHITESPACE"string2" where no colon follows first string
-                // Uses lookahead to ensure we're in array context, not object key-value pairs
-                .replace(/"(\s+)"(?=[^:]*(?:\]|,))/g, '",$1"')
+                // Fix missing comma between consecutive strings (in arrays and between properties)
+                // Matches: "string1"WHITESPACE"string2" - handles zero or more whitespace
+                .replace(/"(\s*)"/g, '",$1"')
                 // Remove any trailing comma right before the final }
                 .replace(/,(\s*)$/g, '$1');
             
@@ -389,5 +389,38 @@ describe('extractJSONFromResponse', () => {
         expect(result.about_content.benefits).toHaveLength(2);
         expect(result.faq).toHaveLength(2);
         expect(result.ingredients).toHaveLength(2);
+    });
+
+    test('should handle missing comma with zero whitespace between strings', () => {
+        // This is the specific bug we're fixing - AI generates ""value1""value2"" with NO whitespace
+        const input = `{
+            "items": ["item1""item2"],
+            "data": {
+                "field1": "value1""field2": "value2"
+            }
+        }`;
+        const result = extractJSONFromResponse(input);
+        expect(result).toEqual({
+            items: ['item1', 'item2'],
+            data: {
+                field1: 'value1',
+                field2: 'value2'
+            }
+        });
+    });
+
+    test('should handle missing comma with zero whitespace in ingredient properties', () => {
+        // Real-world scenario: ingredient object with missing comma and no whitespace
+        const input = `{
+            "ingredients": [
+                {"name": "L-карнитин""amount": "500mg"},
+                {"name": "Креатин""amount": "100mg"}
+            ]
+        }`;
+        const result = extractJSONFromResponse(input);
+        expect(result.ingredients).toEqual([
+            { name: 'L-карнитин', amount: '500mg' },
+            { name: 'Креатин', amount: '100mg' }
+        ]);
     });
 });
