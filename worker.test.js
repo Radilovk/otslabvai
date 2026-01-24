@@ -423,4 +423,15 @@ describe('extractJSONFromResponse', () => {
             { name: 'Креатин', amount: '100mg' }
         ]);
     });
+
+    test('should NOT corrupt valid JSON with empty strings', () => {
+        // Important: valid JSON should pass through unchanged, even with empty strings
+        // The sanitization only runs on INVALID JSON
+        const validJSON = '{"items": ["", "value"], "key": ""}';
+        const result = extractJSONFromResponse(validJSON);
+        expect(result).toEqual({
+            items: ['', 'value'],  // Empty string preserved
+            key: ''  // Empty string preserved
+        });
+    });
 });
