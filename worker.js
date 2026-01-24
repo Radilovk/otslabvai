@@ -1,11 +1,16 @@
 // ==== ВЕРСИЯ 4.0: ФУНКЦИОНАЛЕН АДМИН ПАНЕЛ ====
 
+import { jsonrepair } from 'jsonrepair';
+
 // Cache configuration constants
 const CACHE_CONFIG = {
     PAGE_CONTENT_MAX_AGE: 300,        // 5 minutes
     PAGE_CONTENT_STALE_WHILE_REVALIDATE: 60,  // 1 minute
     STATIC_FILE_MAX_AGE: 3600         // 1 hour
 };
+
+// AI System message for enforcing JSON format
+const AI_SYSTEM_MESSAGE = 'You are a helpful assistant that always responds with valid JSON. Never include explanatory text, only return the JSON object. Always use double quotes, never single quotes. Always include commas between array elements and object properties.';
 
 class UserFacingError extends Error {
   constructor(message, status) {
@@ -439,9 +444,19 @@ function getDefaultAISettings() {
 Въведена информация:
 {{productData}}
 
-ВАЖНО: Отговори САМО с валиден JSON обект в ТОЧНО същия формат като примера по-долу. НЕ добавяй текст, коментари или обяснения преди или след JSON-а.
+КРИТИЧНО ВАЖНО - ИЗИСКВАНИЯ ЗА JSON ФОРМАТ:
+1. Отговори САМО с валиден JSON обект - БЕЗ текст преди или след него
+2. Използвай САМО двойни кавички (") - НИКОГА не използвай единични кавички (')
+3. Поставяй запетая (,) след ВСЕКИ елемент в масив, ОСВЕН последния
+4. Поставяй запетая (,) след ВСЯКО property в обект, ОСВЕН последното
+5. НЕ поставяй запетая преди затварящи скоби } или ]
+6. НЕ добавяй коментари в JSON-а
+7. Всички string стойности трябва да са в двойни кавички
+8. Всички property names трябва да са в двойни кавички
+9. Escape-вай специални символи в strings (\", \\, \n, \t)
+10. null стойности трябва да са без кавички
 
-Следвай ТОЧНО този пример за структура и форматиране (с правилни запетаи, без коментари):
+Следвай ТОЧНО този пример за структура и форматиране:
 
 {
   "name": "L-карнитин течна форма 3000mg",
@@ -528,7 +543,14 @@ function getDefaultAISettings() {
   "safety_warnings": "Не превишавайте дозата. При проблеми с щитовидната жлеза или бъбреците, консултирайте се с лекар преди употреба."
 }
 
-Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта, базирайки се на въведената информация и твоите знания.`
+ПРОВЕРКА ПРЕДИ ОТГОВОР:
+- Валиден ли е JSON-ът? Провери със JSON validator
+- Има ли запетаи след всички елементи в масиви (освен последния)?
+- Има ли запетаи след всички properties в обекти (освен последното)?
+- Използвани ли са САМО двойни кавички?
+- Няма ли запетаи преди } или ]?
+
+Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта, базирайки се на въведената информация и твоите знания. Отговори САМО с JSON обекта - без допълнителен текст.`
     };
 }
 
@@ -610,7 +632,16 @@ async function callCloudflareAI(env, settings, prompt) {
     const cfEndpoint = `https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/ai/run/${model}`;
     
     const payload = {
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+            { 
+                role: 'system', 
+                content: AI_SYSTEM_MESSAGE
+            },
+            { 
+                role: 'user', 
+                content: prompt 
+            }
+        ],
         max_tokens: settings.maxTokens || 4096,
         temperature: settings.temperature || 0.3
     };
@@ -648,10 +679,25 @@ async function callOpenAI(settings, prompt) {
     
     const payload = {
         model: model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+            { 
+                role: 'system', 
+                content: AI_SYSTEM_MESSAGE
+            },
+            { 
+                role: 'user', 
+                content: prompt 
+            }
+        ],
         max_tokens: settings.maxTokens || 4096,
         temperature: settings.temperature || 0.3
     };
+    
+    // Add JSON mode for supported models (GPT-4, GPT-3.5-turbo, GPT-4-turbo)
+    // Other models will rely on the system message for JSON formatting
+    if (model.includes('gpt-4') || model.includes('gpt-3.5-turbo')) {
+        payload.response_format = { type: "json_object" };
+    }
     
     const response = await fetch(endpoint, {
         method: 'POST',
@@ -684,14 +730,29 @@ async function callGoogleAI(settings, prompt) {
     const model = settings.model || 'gemini-pro';
     const endpoint = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${settings.apiKey}`;
     
+    // Gemini doesn't support separate system messages like OpenAI/Cloudflare,
+    // so we prepend the system instruction to the user prompt
+    const enhancedPrompt = `SYSTEM INSTRUCTION: ${AI_SYSTEM_MESSAGE}
+
+USER REQUEST:
+${prompt}`;
+    
+    const generationConfig = {
+        temperature: settings.temperature || 0.3,
+        maxOutputTokens: settings.maxTokens || 4096
+    };
+    
+    // Add JSON MIME type for supported Gemini models (gemini-1.5-pro and later)
+    // Older models will rely on the system instruction for JSON formatting
+    if (model.includes('gemini-1.5') || model.includes('gemini-2')) {
+        generationConfig.responseMimeType = "application/json";
+    }
+    
     const payload = {
         contents: [{
-            parts: [{ text: prompt }]
+            parts: [{ text: enhancedPrompt }]
         }],
-        generationConfig: {
-            temperature: settings.temperature || 0.3,
-            maxOutputTokens: settings.maxTokens || 4096
-        }
+        generationConfig: generationConfig
     };
     
     const response = await fetch(endpoint, {
@@ -719,23 +780,24 @@ async function callGoogleAI(settings, prompt) {
 }
 
 /**
- * Extract JSON from AI response text - simplified version
- * With example-based prompt, AI should produce clean JSON, so we only need basic cleanup
+ * Extract JSON from AI response text using robust JSON repair library
+ * This replaces the regex-based approach with a proper JSON parser/repairer
  */
 function extractJSONFromResponse(responseText) {
     if (typeof responseText !== 'string') {
         return responseText;
     }
     
-    // Trim and extract JSON
+    // Trim the response
     let jsonStr = responseText.trim();
     
     // Remove markdown code blocks if present
     if (jsonStr.startsWith('```')) {
         jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+        jsonStr = jsonStr.trim();
     }
     
-    // Find JSON object boundaries
+    // Find JSON object boundaries (first { to last })
     const startIdx = jsonStr.indexOf('{');
     const endIdx = jsonStr.lastIndexOf('}');
     
@@ -744,30 +806,24 @@ function extractJSONFromResponse(responseText) {
         throw new UserFacingError('AI отговори с текст без JSON структура.');
     }
     
+    // Extract just the JSON portion
     jsonStr = jsonStr.substring(startIdx, endIdx + 1);
     
     try {
-        // Try parsing as-is first
+        // First try parsing as-is (fast path for valid JSON)
         return JSON.parse(jsonStr);
     } catch (parseError) {
-        console.warn("Initial JSON parse failed, applying simple fixes:", parseError.message);
+        console.warn("Initial JSON parse failed, attempting repair:", parseError.message);
         
         try {
-            // Apply only essential fixes for common AI mistakes
-            let fixed = jsonStr
-                // Fix: Remove trailing commas before } or ]
-                .replace(/,(\s*[}\]])/g, '$1')
-                // Fix: Add missing commas between } or ] and { or [
-                .replace(/([}\]])(\s+)([{[])/g, '$1,$2$3')
-                // Fix: Add missing commas between } or ] and " (only when there's whitespace = array/object elements)
-                .replace(/([}\]])(\s+)"/g, '$1,$2"')
-                // Fix: Replace smart quotes with regular quotes
-                .replace(/[\u201C\u201D]/g, '"')
-                .replace(/[\u2018\u2019]/g, "'");
-            
-            return JSON.parse(fixed);
-        } catch (fixError) {
-            console.error("JSON parsing failed:", parseError.message);
+            // Use jsonrepair library to fix malformed JSON
+            // This handles: missing commas, trailing commas, unquoted keys, 
+            // single quotes, comments, and many other common issues
+            const repairedJson = jsonrepair(jsonStr);
+            return JSON.parse(repairedJson);
+        } catch (repairError) {
+            console.error("JSON repair failed:", repairError.message);
+            console.error("Original JSON:", jsonStr.substring(0, 500) + '...');
             throw new UserFacingError(
                 `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
             );
