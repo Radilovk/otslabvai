@@ -717,13 +717,32 @@ function extractJSONFromResponse(responseText) {
         throw new UserFacingError('AI отговори с текст без JSON структура.');
     }
     
+    // Extract the JSON substring
+    jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+    
     try {
-        // Extract the JSON substring and parse it
-        jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+        // First attempt: Try parsing as-is
         return JSON.parse(jsonStr);
     } catch (parseError) {
-        console.error("Failed to parse JSON from AI response:", jsonStr, parseError);
-        throw new UserFacingError('AI отговори с невалиден JSON формат.');
+        // If initial parse fails, try to fix common AI JSON errors
+        console.warn("Initial JSON parse failed, attempting to sanitize:", parseError.message);
+        
+        try {
+            // Remove trailing commas before closing braces and brackets
+            // This handles cases like: {"key": "value",} or ["item1", "item2",]
+            let sanitizedJson = jsonStr
+                // First: Remove multiple consecutive commas
+                .replace(/,+/g, ',')
+                // Then: Remove trailing commas before }
+                .replace(/,(\s*})/g, '$1')
+                // Then: Remove trailing commas before ]
+                .replace(/,(\s*])/g, '$1');
+            
+            return JSON.parse(sanitizedJson);
+        } catch (sanitizeError) {
+            console.error("Failed to parse JSON even after sanitization:", jsonStr, sanitizeError);
+            throw new UserFacingError('AI отговори с невалиден JSON формат.');
+        }
     }
 }
 
