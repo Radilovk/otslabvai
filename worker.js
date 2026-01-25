@@ -441,12 +441,28 @@ function getDefaultAISettings() {
 
 КРИТИЧНО ВАЖНО ЗА JSON ФОРМАТИРАНЕТО:
 1. Отговори САМО с валиден JSON обект - БЕЗ текст, коментари или обяснения преди или след него
-2. Използвай ЗАПЕТАЯ между всички елементи в масиви: [{"a": 1}, {"b": 2}, {"c": 3}]
-3. Използвай ЗАПЕТАЯ между всички свойства в обекти: {"a": 1, "b": 2, "c": 3}
+2. ВИНАГИ използвай запетая (,) между елементите в масиви
+3. ВИНАГИ използвай запетая (,) между свойствата в обекти
 4. НЕ слагай запетая след последния елемент в масив или обект
-5. Следвай ТОЧНО форматирането на примера по-долу
+5. Провери 2-3 пъти дали има запетаи след ВСЕКИ елемент в масивите освен последния
+6. Особено внимателно форматирай масиви като effects, ingredients, benefits, faq
+7. Следвай ТОЧНО форматирането на примера по-долу
 
-Пример за правилно форматиран JSON обект:
+ПРИМЕР ЗА ВАЛИДЕН JSON С МАСИВИ (забележи запетаите между елементите):
+{
+  "effects": [
+    {"label": "Първи ефект", "value": 8},
+    {"label": "Втори ефект", "value": 9},
+    {"label": "Трети ефект", "value": 7}
+  ],
+  "ingredients": [
+    {"name": "Първа съставка", "amount": "100mg", "description": "Описание 1"},
+    {"name": "Втора съставка", "amount": "200mg", "description": "Описание 2"}
+  ]
+}
+
+Пълен пример за правилно форматиран JSON обект:
+
 
 {
   "name": "L-карнитин течна форма 3000mg",
@@ -533,11 +549,18 @@ function getDefaultAISettings() {
   "safety_warnings": "Не превишавайте дозата. При проблеми с щитовидната жлеза или бъбреците, консултирайте се с лекар преди употреба."
 }
 
-ВАЖНО: Твоят отговор ТРЯБВА да е валиден JSON с:
-- Запетаи между всички елементи в масиви
-- Запетаи между всички свойства в обекти  
-- БЕЗ запетая след последния елемент
-- БЕЗ коментари или текст извън JSON структурата
+НАЙ-ВАЖНО: Провери отговора си 3 пъти преди да го изпратиш!
+✅ ИМА ЛИ ЗАПЕТАЯ след всеки елемент в масива "effects" освен последния?
+✅ ИМА ЛИ ЗАПЕТАЯ след всеки елемент в масива "ingredients" освен последния?
+✅ ИМА ЛИ ЗАПЕТАЯ след всеки елемент в масива "benefits" освен последния?
+✅ ИМА ЛИ ЗАПЕТАЯ след всеки елемент в масива "faq" освен последния?
+✅ НЯМА ЛИ ЗАПЕТАЯ след последния елемент в който и да е масив или обект?
+
+ФОРМАТ НА ОТГОВОРА:
+- Отговори само с JSON обекта, БЕЗ текст или обяснения
+- Започни директно с { и завърши с }
+- НЕ използвай markdown code blocks
+- Провери запетаите в масивите 3 пъти!
 
 Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта.`
     };
@@ -730,8 +753,8 @@ async function callGoogleAI(settings, prompt) {
 }
 
 /**
- * Extract JSON from AI response text - simplified version
- * With example-based prompt, AI should produce clean JSON, so we only need basic cleanup
+ * Extract JSON from AI response text with enhanced error recovery
+ * Handles common AI mistakes in JSON formatting, especially with nested arrays and objects
  */
 function extractJSONFromResponse(responseText) {
     if (typeof responseText !== 'string') {
@@ -761,24 +784,40 @@ function extractJSONFromResponse(responseText) {
         // Try parsing as-is first
         return JSON.parse(jsonStr);
     } catch (parseError) {
-        console.warn("Initial JSON parse failed, applying simple fixes:", parseError.message);
+        console.warn("Initial JSON parse failed, applying comprehensive fixes:", parseError.message);
         
         try {
-            // Apply only essential fixes for common AI mistakes
+            // Apply comprehensive fixes for common AI mistakes
             let fixed = jsonStr
+                // Fix: Replace smart quotes with regular quotes (do this first)
+                .replace(/[\u201C\u201D]/g, '"')
+                .replace(/[\u2018\u2019]/g, "'")
                 // Fix: Remove trailing commas before } or ]
                 .replace(/,(\s*[}\]])/g, '$1')
-                // Fix: Add missing commas between } or ] and { or [
-                .replace(/([}\]])(\s+)([{[])/g, '$1,$2$3')
-                // Fix: Add missing commas between } or ] and " (only when there's whitespace = array/object elements)
-                .replace(/([}\]])(\s+)"/g, '$1,$2"')
-                // Fix: Replace smart quotes with regular quotes
-                .replace(/[\u201C\u201D]/g, '"')
-                .replace(/[\u2018\u2019]/g, "'");
+                // Fix: Add missing commas between } and { (object in array)
+                .replace(/\}(\s*)\{/g, '},$1{')
+                // Fix: Add missing commas between } and [ (nested array after object)
+                .replace(/\}(\s*)\[/g, '},$1[')
+                // Fix: Add missing commas between ] and { (object after array)
+                .replace(/\](\s*)\{/g, '],$1{')
+                // Fix: Add missing commas between ] and [ (array after array)
+                .replace(/\](\s*)\[/g, '],$1[')
+                // Fix: Add missing commas after } followed by " (object property after object)
+                .replace(/\}(\s*)"/g, '},$1"')
+                // Fix: Add missing commas after ] followed by " (object property after array)
+                .replace(/\](\s*)"/g, '],$1"')
+                // Fix: Add missing commas after string value followed by " (property after property)
+                .replace(/"(\s*)"(?=\w+":)/g, '",$1"')
+                // Fix: Ensure proper comma between number/boolean and next property
+                .replace(/([0-9]|true|false|null)(\s*)"(\w+)":/g, '$1,$2"$3":');
             
             return JSON.parse(fixed);
         } catch (fixError) {
-            console.error("JSON parsing failed:", parseError.message);
+            // If comprehensive fix failed, log both errors for debugging
+            console.error("Original JSON parsing error:", parseError.message);
+            console.error("After fix JSON parsing error:", fixError.message);
+            console.error("JSON string after fixes (first 500 chars):", fixed.substring(0, 500));
+            
             throw new UserFacingError(
                 `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
             );
