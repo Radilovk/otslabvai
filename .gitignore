@@ -22,3 +22,4 @@ page_content_mock.json
 page_content_mock.json.backup
 orders.json
 __pycache__/
+backend/*.backup
