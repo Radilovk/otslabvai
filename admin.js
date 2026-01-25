@@ -1372,9 +1372,21 @@ function handleAction(action, target, id) {
         }
         case 'upload-simple-image': {
             const fileInput = document.getElementById('image-upload-input');
+            if (!fileInput) {
+                showNotification('Грешка: Елементът за качване не е намерен', 'error');
+                console.error('File input #image-upload-input not found');
+                break;
+            }
+            
             const targetFieldPath = target.dataset.targetField;
             const inputElement = target.closest('.form-group').querySelector(`[data-field="${targetFieldPath}"]`) ||
                                 target.closest('.modal-form').querySelector(`[data-field="${targetFieldPath}"]`);
+            
+            if (!inputElement) {
+                showNotification('Грешка: Полето за изображение не е намерено', 'error');
+                console.error(`Input field with data-field="${targetFieldPath}" not found`);
+                break;
+            }
             
             fileInput.onchange = async (e) => {
                 const file = e.target.files[0];
@@ -1401,9 +1413,7 @@ function handleAction(action, target, id) {
                     const imageUrl = await uploadImageToGitHub(file);
                     
                     // Update the input field with the URL
-                    if (inputElement) {
-                        inputElement.value = imageUrl;
-                    }
+                    inputElement.value = imageUrl;
                     
                     showNotification('Изображението е качено успешно!', 'success');
                 } catch (error) {
