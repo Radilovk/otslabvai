@@ -439,9 +439,14 @@ function getDefaultAISettings() {
 Въведена информация:
 {{productData}}
 
-ВАЖНО: Отговори САМО с валиден JSON обект в ТОЧНО същия формат като примера по-долу. НЕ добавяй текст, коментари или обяснения преди или след JSON-а.
+КРИТИЧНО ВАЖНО ЗА JSON ФОРМАТИРАНЕТО:
+1. Отговори САМО с валиден JSON обект - БЕЗ текст, коментари или обяснения преди или след него
+2. Използвай ЗАПЕТАЯ между всички елементи в масиви: [{"a": 1}, {"b": 2}, {"c": 3}]
+3. Използвай ЗАПЕТАЯ между всички свойства в обекти: {"a": 1, "b": 2, "c": 3}
+4. НЕ слагай запетая след последния елемент в масив или обект
+5. Следвай ТОЧНО форматирането на примера по-долу
 
-Следвай ТОЧНО този пример за структура и форматиране (с правилни запетаи, без коментари):
+Пример за правилно форматиран JSON обект:
 
 {
   "name": "L-карнитин течна форма 3000mg",
@@ -528,7 +533,13 @@ function getDefaultAISettings() {
   "safety_warnings": "Не превишавайте дозата. При проблеми с щитовидната жлеза или бъбреците, консултирайте се с лекар преди употреба."
 }
 
-Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта, базирайки се на въведената информация и твоите знания.`
+ВАЖНО: Твоят отговор ТРЯБВА да е валиден JSON с:
+- Запетаи между всички елементи в масиви
+- Запетаи между всички свойства в обекти  
+- БЕЗ запетая след последния елемент
+- БЕЗ коментари или текст извън JSON структурата
+
+Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта.`
     };
 }
 
@@ -719,61 +730,23 @@ async function callGoogleAI(settings, prompt) {
 }
 
 /**
- * Attempt aggressive JSON repair for common AI mistakes
- * 
- * Note: This function uses aggressive pattern matching and may not handle
- * all edge cases perfectly (e.g., escaped quotes within strings). However,
- * it's designed for AI-generated product data which typically doesn't contain
- * such edge cases. This is only called as a last resort after standard parsing
- * and sanitization have failed.
- */
-function attemptJSONRepair(jsonStr) {
-    // More aggressive repairs - but still conservative
-    let repaired = jsonStr
-        // Remove all trailing commas more aggressively (including multiple commas)
-        .replace(/,+(\s*[}\]])/g, '$1')
-        // Remove multiple consecutive commas anywhere
-        .replace(/,{2,}/g, ',')
-        // Fix missing commas: } or ] followed by { or [ (with or without whitespace)
-        .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
-        // Fix missing commas: } or ] followed by " (with or without whitespace)
-        .replace(/(\}|\])(\s*)"/g, '$1,$2"')
-        // Fix missing commas: " followed by { or [ (with or without whitespace)
-        .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-        // Fix missing comma between consecutive strings (in arrays and between properties)
-        // Handles zero or more whitespace between quotes
-        .replace(/"(\s*)"/g, '",$1"')
-        // Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
-        .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
-        // Fix common quote issues - replace smart quotes with regular quotes
-        .replace(/[\u201C\u201D]/g, '"')
-        .replace(/[\u2018\u2019]/g, "'")
-        // Fix escaped newlines that might confuse JSON parser
-        .replace(/\\\n/g, '\\n')
-        // Remove trailing commas before closing braces/brackets (one more time after all fixes)
-        .replace(/,(\s*[}\]])/g, '$1');
-    
-    return repaired;
-}
-
-/**
- * Extract JSON from AI response text - enhanced version with robust error recovery
- * Handles common AI JSON formatting issues with multi-stage repair
+ * Extract JSON from AI response text - simplified version
+ * With example-based prompt, AI should produce clean JSON, so we only need basic cleanup
  */
 function extractJSONFromResponse(responseText) {
     if (typeof responseText !== 'string') {
         return responseText;
     }
     
-    // Try to find and extract valid JSON from the response
+    // Trim and extract JSON
     let jsonStr = responseText.trim();
     
-    // If response starts with markdown code blocks, remove them
+    // Remove markdown code blocks if present
     if (jsonStr.startsWith('```')) {
         jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
     }
     
-    // Find the start and end of the JSON object
+    // Find JSON object boundaries
     const startIdx = jsonStr.indexOf('{');
     const endIdx = jsonStr.lastIndexOf('}');
     
@@ -782,57 +755,33 @@ function extractJSONFromResponse(responseText) {
         throw new UserFacingError('AI отговори с текст без JSON структура.');
     }
     
-    // Extract the JSON substring
     jsonStr = jsonStr.substring(startIdx, endIdx + 1);
     
     try {
-        // First attempt: Try parsing as-is
+        // Try parsing as-is first
         return JSON.parse(jsonStr);
     } catch (parseError) {
-        console.warn("Initial JSON parse failed, applying fixes:", parseError.message);
+        console.warn("Initial JSON parse failed, applying simple fixes:", parseError.message);
         
-        // If initial parse fails, try to fix common AI JSON errors
         try {
-            // Apply comprehensive sanitization for common AI JSON errors
-            let sanitizedJson = jsonStr
-                // Remove multiple consecutive commas (2 or more)
-                .replace(/,{2,}/g, ',')
-                // Remove trailing commas before } (with optional whitespace/newlines)
-                .replace(/,(\s*})/g, '$1')
-                // Remove trailing commas before ] (with optional whitespace/newlines)
-                .replace(/,(\s*])/g, '$1')
-                // Fix missing commas between array/object elements (comprehensive patterns)
-                // Pattern 1: } followed by { with whitespace
-                .replace(/\}(\s+)\{/g, '},$1{')
-                // Pattern 2: ] followed by [ with whitespace
-                .replace(/\](\s+)\[/g, '],$1[')
-                // Pattern 3: } or ] followed by { or [ (with or without whitespace)
-                .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
-                // Fix missing comma between closing brace/bracket and opening quote
-                // Matches: }"WHITESPACE" or ]"WHITESPACE" (with or without whitespace)
-                .replace(/(\}|\])(\s*)"/g, '$1,$2"')
-                // Fix missing comma between closing quote and opening brace/bracket
-                // Matches: ""WHITESPACE"{ or ""WHITESPACE"[ (with or without whitespace)
-                .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-                // Fix missing comma between consecutive strings (in arrays and between properties)
-                // Matches: "string1"WHITESPACE"string2" - handles zero or more whitespace
-                .replace(/"(\s*)"/g, '",$1"')
-                // Remove any trailing comma right before the final }
-                .replace(/,(\s*)$/g, '$1');
+            // Apply only essential fixes for common AI mistakes
+            let fixed = jsonStr
+                // Fix: Remove trailing commas before } or ]
+                .replace(/,(\s*[}\]])/g, '$1')
+                // Fix: Add missing commas between } or ] and { or [
+                .replace(/([}\]])(\s+)([{[])/g, '$1,$2$3')
+                // Fix: Add missing commas between } or ] and " (only when there's whitespace = array/object elements)
+                .replace(/([}\]])(\s+)"/g, '$1,$2"')
+                // Fix: Replace smart quotes with regular quotes
+                .replace(/[\u201C\u201D]/g, '"')
+                .replace(/[\u2018\u2019]/g, "'");
             
-            return JSON.parse(sanitizedJson);
-        } catch (sanitizeError) {
-            // Try one more aggressive fix: use a JSON repair library approach
-            try {
-                // Last resort: try to extract just valid parts and rebuild
-                const repairedJson = attemptJSONRepair(jsonStr);
-                return JSON.parse(repairedJson);
-            } catch (repairError) {
-                console.error("JSON parsing failed after all repair attempts:", parseError.message);
-                throw new UserFacingError(
-                    `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
-                );
-            }
+            return JSON.parse(fixed);
+        } catch (fixError) {
+            console.error("JSON parsing failed:", parseError.message);
+            throw new UserFacingError(
+                `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
+            );
         }
     }
 }
