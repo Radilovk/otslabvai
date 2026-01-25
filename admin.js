@@ -1438,6 +1438,13 @@ function handleAction(action, target, id) {
             handleAIAssistant(productEditor);
             break;
         }
+        case 'move-product': {
+            const productEditor = target.closest('.nested-item[data-type="product"]');
+            if (!productEditor) return;
+            
+            handleMoveProduct(productEditor);
+            break;
+        }
     }
 }
 
@@ -1945,6 +1952,138 @@ async function handleAIAssistant(productEditor) {
             aiBtn.textContent = '🤖 AI Асистент';
         }
     }
+}
+
+/**
+ * Handles moving a product to a different category
+ * @param {HTMLElement} productEditor - The product editor element
+ */
+function handleMoveProduct(productEditor) {
+    // Get all product categories
+    const categories = appData.page_content.filter(item => item.type === 'product_category');
+    
+    if (categories.length < 2) {
+        showNotification('Няма други категории, в които да преместите продукта.', 'info');
+        return;
+    }
+    
+    // Find the current category
+    const currentCategory = categories.find(cat => {
+        const productsContainer = document.querySelector(`[data-component-id="${cat.component_id}"] #products-editor`);
+        return productsContainer && productsContainer.contains(productEditor);
+    });
+    
+    // Get product data
+    const productData = {};
+    productEditor.querySelectorAll('[data-field]').forEach(input => {
+        const path = input.dataset.field;
+        let value;
+        if (input.type === 'checkbox') {
+            value = input.checked;
+        } else if (input.type === 'number') {
+            value = input.value !== '' ? parseFloat(input.value) : null;
+        } else if (path.includes('goals') || path.includes('synergy_products')) {
+            value = input.value.split(',').map(s => s.trim()).filter(Boolean);
+        } else {
+            value = input.value;
+        }
+        setProperty(productData, path, value);
+    });
+    
+    // Serialize nested lists (effects, ingredients, etc.)
+    ['effects', 'about-benefits', 'ingredients', 'faq'].forEach(subListName => {
+        const subContainer = productEditor.querySelector(`[data-sub-container="${subListName}"]`);
+        if (subContainer) {
+            const items = [];
+            subContainer.querySelectorAll(':scope > .nested-sub-item').forEach(subItem => {
+                const itemData = {};
+                subItem.querySelectorAll('[data-field]').forEach(input => {
+                    const path = input.dataset.field;
+                    let value;
+                    if (input.type === 'checkbox') {
+                        value = input.checked;
+                    } else if (input.type === 'number') {
+                        value = input.value !== '' ? parseFloat(input.value) : null;
+                    } else {
+                        value = input.value;
+                    }
+                    setProperty(itemData, path, value);
+                });
+                items.push(itemData);
+            });
+            
+            if (subListName === 'about-benefits') {
+                if (!productData.public_data) productData.public_data = {};
+                if (!productData.public_data.about_content) productData.public_data.about_content = {};
+                productData.public_data.about_content.benefits = items;
+            } else {
+                if (!productData.public_data) productData.public_data = {};
+                productData.public_data[subListName] = items;
+            }
+        }
+    });
+    
+    const productName = productData.public_data?.name || 'Неименуван продукт';
+    
+    // Create a simple selection modal
+    const modalBody = document.createElement('div');
+    modalBody.innerHTML = `
+        <p style="margin-bottom: 1rem;">Изберете категория, в която да преместите продукта "${productName}":</p>
+        <div class="form-group">
+            <label>Целева категория</label>
+            <select id="target-category-select" class="form-control" style="width: 100%; padding: 0.5rem;">
+                ${categories.map(cat => {
+                    const isCurrent = currentCategory && cat.component_id === currentCategory.component_id;
+                    return `<option value="${cat.component_id}" ${isCurrent ? 'disabled' : ''}>${cat.title}${isCurrent ? ' (текуща)' : ''}</option>`;
+                }).join('')}
+            </select>
+        </div>
+    `;
+    
+    // Manually set up modal instead of using openModal
+    DOM.modal.title.textContent = 'Премести продукт';
+    DOM.modal.body.innerHTML = '';
+    DOM.modal.body.appendChild(modalBody);
+    
+    currentModalSaveCallback = () => {
+        const targetCategoryId = modalBody.querySelector('#target-category-select').value;
+        const targetCategory = categories.find(cat => cat.component_id === targetCategoryId);
+        
+        if (!targetCategory) {
+            showNotification('Невалидна категория.', 'error');
+            return false;
+        }
+        
+        // Remove from current category
+        if (currentCategory) {
+            const productIndex = currentCategory.products.findIndex(p => p.product_id === productData.product_id);
+            if (productIndex !== -1) {
+                currentCategory.products.splice(productIndex, 1);
+                // Update display order for remaining products
+                currentCategory.products.forEach((p, idx) => {
+                    p.display_order = idx;
+                });
+            }
+        }
+        
+        // Add to target category
+        if (!targetCategory.products) {
+            targetCategory.products = [];
+        }
+        productData.display_order = targetCategory.products.length;
+        targetCategory.products.push(productData);
+        
+        // Remove the product editor from the DOM
+        productEditor.remove();
+        
+        setUnsavedChanges(true);
+        showNotification(`Продуктът "${productName}" е преместен успешно в категория "${targetCategory.title}".`, 'success');
+        
+        return true;
+    };
+    
+    DOM.modal.container.classList.add('show');
+    DOM.modal.backdrop.classList.add('show');
 }
 
 // =======================================================
