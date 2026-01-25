@@ -753,8 +753,42 @@ async function callGoogleAI(settings, prompt) {
 }
 
 /**
+ * Attempt aggressive JSON repair for common AI mistakes
+ * This is used as a last resort when basic fixes fail
+ */
+function attemptJSONRepair(jsonStr) {
+    // More aggressive repairs - but still conservative
+    let repaired = jsonStr
+        // Remove all trailing commas more aggressively (including multiple commas)
+        .replace(/,+(\s*[}\]])/g, '$1')
+        // Remove multiple consecutive commas anywhere
+        .replace(/,{2,}/g, ',')
+        // Fix missing commas: } or ] followed by { or [ (with or without whitespace)
+        .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
+        // Fix missing commas: } or ] followed by " (with or without whitespace)
+        .replace(/(\}|\])(\s*)"/g, '$1,$2"')
+        // Fix missing commas: " followed by { or [ (with or without whitespace)
+        .replace(/"(\s*)(\{|\[)/g, '",$1$2')
+        // Fix missing comma between consecutive strings (in arrays and between properties)
+        // Handles zero or more whitespace between quotes
+        .replace(/"(\s*)"/g, '",$1"')
+        // Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
+        .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
+        // Fix common quote issues - replace smart quotes with regular quotes
+        .replace(/[\u201C\u201D]/g, '"')
+        .replace(/[\u2018\u2019]/g, "'")
+        // Fix escaped newlines that might confuse JSON parser
+        .replace(/\\\n/g, '\\n')
+        // Remove trailing commas before closing braces/brackets (one more time after all fixes)
+        .replace(/,(\s*[}\]])/g, '$1');
+    
+    return repaired;
+}
+
+/**
  * Extract JSON from AI response text with enhanced error recovery
  * Handles common AI mistakes in JSON formatting, especially with nested arrays and objects
+ * Uses a three-stage approach: parse as-is, apply basic fixes, apply aggressive repair
  */
 function extractJSONFromResponse(responseText) {
     if (typeof responseText !== 'string') {
@@ -781,41 +815,56 @@ function extractJSONFromResponse(responseText) {
     jsonStr = jsonStr.substring(startIdx, endIdx + 1);
     
     try {
-        // Try parsing as-is first
+        // Stage 1: Try parsing as-is first
         return JSON.parse(jsonStr);
     } catch (parseError) {
         console.warn("Initial JSON parse failed, applying comprehensive fixes:", parseError.message);
         
         try {
-            // Apply comprehensive fixes for common AI mistakes
-            let fixed = jsonStr
-                // Fix: Replace smart quotes with regular quotes (do this first)
-                .replace(/[\u201C\u201D]/g, '"')
-                .replace(/[\u2018\u2019]/g, "'")
-                // Fix: Remove trailing commas before } or ]
-                .replace(/,(\s*[}\]])/g, '$1')
-                // Fix: Add missing commas between } and { (object in array)
-                .replace(/\}(\s*)\{/g, '},$1{')
-                // Fix: Add missing commas between } and [ (nested array after object)
-                .replace(/\}(\s*)\[/g, '},$1[')
-                // Fix: Add missing commas between ] and { (object after array)
-                .replace(/\](\s*)\{/g, '],$1{')
-                // Fix: Add missing commas between ] and [ (array after array)
-                .replace(/\](\s*)\[/g, '],$1[')
-                // Fix: Add missing commas after } followed by " (object property after object)
-                .replace(/\}(\s*)"/g, '},$1"')
-                // Fix: Add missing commas after ] followed by " (object property after array)
-                .replace(/\](\s*)"/g, '],$1"');
+            // Stage 2: Apply comprehensive sanitization for common AI JSON errors
+            let sanitizedJson = jsonStr
+                // Remove multiple consecutive commas (2 or more)
+                .replace(/,{2,}/g, ',')
+                // Remove trailing commas before } (with optional whitespace/newlines)
+                .replace(/,(\s*})/g, '$1')
+                // Remove trailing commas before ] (with optional whitespace/newlines)
+                .replace(/,(\s*])/g, '$1')
+                // Fix missing commas between array/object elements (comprehensive patterns)
+                // Pattern 1: } followed by { with whitespace
+                .replace(/\}(\s+)\{/g, '},$1{')
+                // Pattern 2: ] followed by [ with whitespace
+                .replace(/\](\s+)\[/g, '],$1[')
+                // Pattern 3: } or ] followed by { or [ (with or without whitespace)
+                .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
+                // Fix missing comma between closing brace/bracket and opening quote
+                // Matches: }"WHITESPACE"" or ]"WHITESPACE"" (with or without whitespace)
+                .replace(/(\}|\])(\s*)"/g, '$1,$2"')
+                // Fix missing comma between closing quote and opening brace/bracket
+                // Matches: ""WHITESPACE"{ or ""WHITESPACE"[ (with or without whitespace)
+                .replace(/"(\s*)(\{|\[)/g, '",$1$2')
+                // Fix missing comma between consecutive strings (in arrays and between properties)
+                // Matches: "string1"WHITESPACE"string2" - handles zero or more whitespace
+                .replace(/"(\s*)"/g, '",$1"')
+                // Remove any trailing comma right before the final }
+                .replace(/,(\s*)$/g, '$1');
             
-            return JSON.parse(fixed);
-        } catch (fixError) {
-            // If comprehensive fix failed, log both errors for debugging
-            console.error("Original JSON parsing error:", parseError.message);
-            console.error("After fix JSON parsing error:", fixError.message);
-            
-            throw new UserFacingError(
-                `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
-            );
+            return JSON.parse(sanitizedJson);
+        } catch (sanitizeError) {
+            // Stage 3: Try aggressive repair as last resort
+            try {
+                console.warn("Sanitization failed, attempting aggressive JSON repair:", sanitizeError.message);
+                const repairedJson = attemptJSONRepair(jsonStr);
+                return JSON.parse(repairedJson);
+            } catch (repairError) {
+                // All attempts failed, throw the original error with context
+                console.error("Original JSON parsing error:", parseError.message);
+                console.error("After sanitization error:", sanitizeError.message);
+                console.error("After aggressive repair error:", repairError.message);
+                
+                throw new UserFacingError(
+                    `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
+                );
+            }
         }
     }
 }
