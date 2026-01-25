@@ -756,36 +756,26 @@ main {
 }
 
 [data-theme="light"] .hero-section.hero-custom-bg .stat-item strong {
-    color: #ffffff;
-    background: #000000;
-    -webkit-text-fill-color: #ffffff;
-    padding: 8px 16px;
-    border-radius: 8px;
-    text-shadow: none;
+    color: #000000;
+    text-shadow: 0 2px 10px rgba(255, 255, 255, 0.8),
+                 0 1px 4px rgba(255, 255, 255, 0.9);
+    background: none;
+    -webkit-text-fill-color: #000000;
 }
 
 [data-theme="light"] .hero-section.hero-custom-bg .stat-item span {
-    color: #ffffff;
-    background: #000000;
-    padding: 6px 14px;
-    border-radius: 6px;
-    text-shadow: none;
+    color: #000000;
+    text-shadow: 0 1px 6px rgba(255, 255, 255, 0.9);
 }
 
-/* General light theme styles for stat-item (without custom background) */
+/* General light theme styles for stat-item */
 [data-theme="light"] .stat-item strong {
-    color: #ffffff;
-    background: #000000;
-    -webkit-text-fill-color: #ffffff;
-    padding: 8px 16px;
-    border-radius: 8px;
+    color: #000000;
+    -webkit-text-fill-color: #000000;
 }
 
 [data-theme="light"] .stat-item span {
-    color: #ffffff;
-    background: #000000;
-    padding: 6px 14px;
-    border-radius: 6px;
+    color: #000000;
 }
 
 /* Theme-aware text colors for custom gradients - Dark theme */
