@@ -1370,6 +1370,57 @@ function handleAction(action, target, id) {
             fileInput.click();
             break;
         }
+        case 'upload-simple-image': {
+            const fileInput = document.getElementById('image-upload-input');
+            const targetFieldPath = target.dataset.targetField;
+            const inputElement = target.closest('.form-group').querySelector(`[data-field="${targetFieldPath}"]`) ||
+                                target.closest('.modal-form').querySelector(`[data-field="${targetFieldPath}"]`);
+            
+            fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showNotification('Моля изберете изображение', 'error');
+                    return;
+                }
+                
+                // Validate file size (max 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    showNotification('Изображението е твърде голямо. Максимален размер: 2MB', 'error');
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    target.disabled = true;
+                    target.textContent = '⏳ Качване...';
+                    
+                    // Upload the file
+                    const imageUrl = await uploadImageToGitHub(file);
+                    
+                    // Update the input field with the URL
+                    if (inputElement) {
+                        inputElement.value = imageUrl;
+                    }
+                    
+                    showNotification('Изображението е качено успешно!', 'success');
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showNotification(`Грешка при качване: ${error.message}`, 'error');
+                } finally {
+                    // Reset button state
+                    target.disabled = false;
+                    target.textContent = '📤 Upload';
+                    // Clear file input
+                    fileInput.value = '';
+                }
+            };
+            
+            fileInput.click();
+            break;
+        }
         case 'ai-assistant': {
             const productEditor = target.closest('.nested-item[data-type="product"]');
             if (!productEditor) return;

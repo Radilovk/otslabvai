@@ -394,7 +394,30 @@
             </div>
             <div class="form-group">
                 <label for="logo_url">URL на логото</label>
-                <input type="text" id="logo_url" data-field="logo_url">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="logo_url" data-field="logo_url" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="logo_url">
+                        📤 Upload
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="logo_url_light">URL на логото (светла тема)</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="logo_url_light" data-field="logo_url_light" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="logo_url_light">
+                        📤 Upload
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="logo_url_dark">URL на логото (тъмна тема)</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="logo_url_dark" data-field="logo_url_dark" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="logo_url_dark">
+                        📤 Upload
+                    </button>
+                </div>
             </div>
             
             <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
@@ -593,8 +616,13 @@
             </div>
             <div class="form-group" id="hero_bg_image_group" style="display: none;">
                 <label for="hero_bg_image">URL на фоново изображение</label>
-                <input type="text" id="hero_bg_image" data-field="background_image" placeholder="https://example.com/hero-bg.jpg">
-                <small class="form-hint">Въведете URL адрес на изображение (препоръчителен размер: 1920x800px)</small>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="hero_bg_image" data-field="background_image" placeholder="https://example.com/hero-bg.jpg" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="background_image">
+                        📤 Upload
+                    </button>
+                </div>
+                <small class="form-hint">Въведете URL адрес на изображение или качете изображение (препоръчителен размер: 1920x800px)</small>
             </div>
             <div class="form-group" id="hero_bg_gradient_group" style="display: none;">
                 <label for="hero_bg_gradient">Градиент</label>
@@ -746,7 +774,12 @@
             </div>
             <div class="form-group">
                 <label for="info_image">URL на изображение</label>
-                <input type="text" id="info_image" data-field="image">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="info_image" data-field="image" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="image">
+                        📤 Upload
+                    </button>
+                </div>
             </div>
              <div class="form-group">
                 <label for="info_content">Съдържание (текст)</label>
@@ -795,7 +828,12 @@
                     </div>
                      <div class="form-group">
                         <label for="cat_image">URL на изображение (опционално)</label>
-                        <input type="text" id="cat_image" data-field="image">
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="text" id="cat_image" data-field="image" style="flex: 1;">
+                            <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="image">
+                                📤 Upload
+                            </button>
+                        </div>
                     </div>
                     <h4>Опции</h4>
                     <div class="form-group checkbox-group">
