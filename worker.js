@@ -805,18 +805,13 @@ function extractJSONFromResponse(responseText) {
                 // Fix: Add missing commas after } followed by " (object property after object)
                 .replace(/\}(\s*)"/g, '},$1"')
                 // Fix: Add missing commas after ] followed by " (object property after array)
-                .replace(/\](\s*)"/g, '],$1"')
-                // Fix: Add missing commas after string value followed by " (property after property)
-                .replace(/"(\s*)"(?=\w+":)/g, '",$1"')
-                // Fix: Ensure proper comma between number/boolean and next property
-                .replace(/([0-9]|true|false|null)(\s*)"(\w+)":/g, '$1,$2"$3":');
+                .replace(/\](\s*)"/g, '],$1"');
             
             return JSON.parse(fixed);
         } catch (fixError) {
             // If comprehensive fix failed, log both errors for debugging
             console.error("Original JSON parsing error:", parseError.message);
             console.error("After fix JSON parsing error:", fixError.message);
-            console.error("JSON string after fixes (first 500 chars):", fixed.substring(0, 500));
             
             throw new UserFacingError(
                 `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
