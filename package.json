@@ -13,8 +13,7 @@
     "validate-backend": "node backend/validate.mjs"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "jsonrepair": "^3.13.2"
+    "express": "^5.1.0"
   },
   "type": "module",
   "devDependencies": {
