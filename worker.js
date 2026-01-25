@@ -720,6 +720,12 @@ async function callGoogleAI(settings, prompt) {
 
 /**
  * Attempt aggressive JSON repair for common AI mistakes
+ * 
+ * Note: This function uses aggressive pattern matching and may not handle
+ * all edge cases perfectly (e.g., escaped quotes within strings). However,
+ * it's designed for AI-generated product data which typically doesn't contain
+ * such edge cases. This is only called as a last resort after standard parsing
+ * and sanitization have failed.
  */
 function attemptJSONRepair(jsonStr) {
     // More aggressive repairs - but still conservative
