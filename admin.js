@@ -1981,7 +1981,7 @@ function handleMoveProduct(productEditor) {
         if (input.type === 'checkbox') {
             value = input.checked;
         } else if (input.type === 'number') {
-            value = input.value ? parseFloat(input.value) : null;
+            value = input.value !== '' ? parseFloat(input.value) : null;
         } else if (path.includes('goals') || path.includes('synergy_products')) {
             value = input.value.split(',').map(s => s.trim()).filter(Boolean);
         } else {
@@ -2003,7 +2003,7 @@ function handleMoveProduct(productEditor) {
                     if (input.type === 'checkbox') {
                         value = input.checked;
                     } else if (input.type === 'number') {
-                        value = input.value ? parseFloat(input.value) : null;
+                        value = input.value !== '' ? parseFloat(input.value) : null;
                     } else {
                         value = input.value;
                     }
@@ -2040,7 +2040,12 @@ function handleMoveProduct(productEditor) {
         </div>
     `;
     
-    openModal('Премести продукт', null, null, () => {
+    // Manually set up modal instead of using openModal
+    DOM.modal.title.textContent = 'Премести продукт';
+    DOM.modal.body.innerHTML = '';
+    DOM.modal.body.appendChild(modalBody);
+    
+    currentModalSaveCallback = () => {
         const targetCategoryId = modalBody.querySelector('#target-category-select').value;
         const targetCategory = categories.find(cat => cat.component_id === targetCategoryId);
         
@@ -2075,11 +2080,10 @@ function handleMoveProduct(productEditor) {
         showNotification(`Продуктът "${productName}" е преместен успешно в категория "${targetCategory.title}".`, 'success');
         
         return true;
-    });
+    };
     
-    // Replace modal body content
-    DOM.modal.body.innerHTML = '';
-    DOM.modal.body.appendChild(modalBody);
+    DOM.modal.container.classList.add('show');
+    DOM.modal.backdrop.classList.add('show');
 }
 
 // =======================================================
