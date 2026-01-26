@@ -2014,6 +2014,10 @@ async function handleAIAssistant(productEditor) {
                 const existingEffects = effectsContainer.querySelectorAll('.nested-sub-item[data-type="effect"]');
                 if (existingEffects.length === 0) {
                     aiData.effects.forEach(effect => {
+                        // Валидираме и ограничаваме стойността на ефектите между 10 и 100
+                        if (effect.value !== undefined && effect.value !== null) {
+                            effect.value = Math.max(10, Math.min(100, Number(effect.value)));
+                        }
                         addNestedItem(effectsContainer, 'effect-editor-template', effect);
                     });
                 }
