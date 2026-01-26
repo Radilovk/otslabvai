@@ -631,10 +631,27 @@ async function handleValidatePromo(request, env, ctx) {
     
     // Ако трябва да увеличим броя използвания
     if (validationData.incrementUsage) {
-        const promoIndex = promoCodes.findIndex(pc => pc.id === promoCode.id);
+        // Re-fetch to minimize race condition window
+        const freshPromoCodesJson = await env.PAGE_CONTENT.get('promo_codes');
+        const freshPromoCodes = freshPromoCodesJson ? JSON.parse(freshPromoCodesJson) : [];
+        const promoIndex = freshPromoCodes.findIndex(pc => pc.id === promoCode.id);
+        
         if (promoIndex !== -1) {
-            promoCodes[promoIndex].usedCount += 1;
-            ctx.waitUntil(env.PAGE_CONTENT.put('promo_codes', JSON.stringify(promoCodes, null, 2)));
+            // Double-check usage limit with fresh data
+            if (freshPromoCodes[promoIndex].maxUses && 
+                freshPromoCodes[promoIndex].usedCount >= freshPromoCodes[promoIndex].maxUses) {
+                return new Response(JSON.stringify({ 
+                    valid: false, 
+                    error: 'Промо кодът е изчерпан.' 
+                }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+            
+            freshPromoCodes[promoIndex].usedCount += 1;
+            // Note: In high-traffic scenarios, consider using Durable Objects for atomic operations
+            ctx.waitUntil(env.PAGE_CONTENT.put('promo_codes', JSON.stringify(freshPromoCodes, null, 2)));
         }
     }
     

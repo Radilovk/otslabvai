@@ -1359,7 +1359,18 @@
         function updateSummary() {
             const subtotal = cartData.reduce((acc, p) => acc + (p.price * p.quantity), 0);
             const shipping = subtotal > 0 ? calculateShipping() : 0.00;
-            const discountAmount = subtotal * activeDiscount;
+            
+            // Calculate discount based on type
+            let discountAmount = 0;
+            if (activePromoCode) {
+                if (activePromoCode.discountType === 'percentage') {
+                    discountAmount = subtotal * activeDiscount;
+                } else {
+                    // Fixed amount discount
+                    discountAmount = Math.min(activeDiscount, subtotal); // Don't exceed subtotal
+                }
+            }
+            
             const total = subtotal - discountAmount + shipping;
 
             subtotalEl.textContent = `${subtotal.toFixed(2)} €`;
@@ -1712,11 +1723,15 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ code: activePromoCode.code, incrementUsage: true })
-                }) : Promise.resolve();
+                }) : Promise.resolve({ ok: true });
 
                 Promise.all([orderPromise, promoPromise])
-                .then(([orderRes]) => {
+                .then(([orderRes, promoRes]) => {
                     if (!orderRes.ok) throw new Error('Server error');
+                    // Log promo response issue but don't fail order if promo increment fails
+                    if (activePromoCode && !promoRes.ok) {
+                        console.warn('Warning: Promo code usage count may not have been updated');
+                    }
                     return orderRes.json();
                 })
                 .then(() => {

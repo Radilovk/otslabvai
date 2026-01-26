@@ -2547,8 +2547,24 @@ function openPromoCodeModal(mode, promoData = null) {
         const maxUses = document.getElementById('promo-max-uses').value;
         const active = document.getElementById('promo-active').checked;
         
+        // Validation
         if (!code || isNaN(discount)) {
             alert('Моля, попълнете всички задължителни полета.');
+            return false;
+        }
+        
+        if (discount < 0) {
+            alert('Отстъпката не може да бъде отрицателна.');
+            return false;
+        }
+        
+        if (discount === 0) {
+            alert('Отстъпката трябва да е по-голяма от 0.');
+            return false;
+        }
+        
+        if (discountType === 'percentage' && discount > 100) {
+            alert('Процентната отстъпка не може да е повече от 100%.');
             return false;
         }
         
