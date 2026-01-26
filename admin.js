@@ -1547,6 +1547,17 @@ function handleAction(action, target, id) {
             handleMoveProduct(productEditor);
             break;
         }
+        case 'export-product': {
+            const productEditor = target.closest('.nested-item[data-type="product"]');
+            if (!productEditor) return;
+            
+            handleExportProduct(productEditor);
+            break;
+        }
+        case 'export-all-products': {
+            handleExportAllProducts();
+            break;
+        }
     }
 }
 
@@ -2174,6 +2185,97 @@ function handleMoveProduct(productEditor) {
     
     DOM.modal.container.classList.add('show');
     DOM.modal.backdrop.classList.add('show');
+}
+
+/**
+ * Exports a single product to JSON file
+ * @param {HTMLElement} productEditor - The product editor element
+ */
+function handleExportProduct(productEditor) {
+    // Get all product categories
+    const categories = appData.page_content.filter(item => item.type === 'product_category');
+    
+    // Get the product_id from the form
+    const productIdInput = productEditor.querySelector('[data-field="product_id"]');
+    if (!productIdInput) {
+        showNotification('Не може да се намери ID на продукта.', 'error');
+        return;
+    }
+    const productId = productIdInput.value;
+    
+    // Find the product object in the categories
+    let productToExport = null;
+    for (const cat of categories) {
+        if (cat.products) {
+            productToExport = cat.products.find(p => p.product_id === productId);
+            if (productToExport) break;
+        }
+    }
+    
+    if (!productToExport) {
+        showNotification('Не може да се намери продукта за експорт.', 'error');
+        return;
+    }
+    
+    // Create JSON string
+    const jsonString = JSON.stringify(productToExport, null, 2);
+    
+    // Create download
+    const productName = productToExport.public_data?.name || 'product';
+    const fileName = `${productName.replace(/[^a-zA-Z0-9-_]/g, '_')}_${productId}.json`;
+    
+    downloadJSON(jsonString, fileName);
+    
+    showNotification(`Продуктът "${productName}" е експортиран успешно.`, 'success');
+}
+
+/**
+ * Exports all products from all categories to a single JSON file
+ */
+function handleExportAllProducts() {
+    // Get all product categories
+    const categories = appData.page_content.filter(item => item.type === 'product_category');
+    
+    // Collect all products
+    const allProducts = [];
+    categories.forEach(cat => {
+        if (cat.products && Array.isArray(cat.products)) {
+            allProducts.push(...cat.products);
+        }
+    });
+    
+    if (allProducts.length === 0) {
+        showNotification('Няма продукти за експорт.', 'info');
+        return;
+    }
+    
+    // Create JSON string
+    const jsonString = JSON.stringify(allProducts, null, 2);
+    
+    // Create download
+    const timestamp = new Date().toISOString().split('T')[0];
+    const fileName = `all_products_${timestamp}.json`;
+    
+    downloadJSON(jsonString, fileName);
+    
+    showNotification(`Експортирани ${allProducts.length} продукта успешно.`, 'success');
+}
+
+/**
+ * Helper function to download JSON data as a file
+ * @param {string} jsonString - JSON string to download
+ * @param {string} fileName - Name of the file
+ */
+function downloadJSON(jsonString, fileName) {
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 // =======================================================
