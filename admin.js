@@ -2213,7 +2213,7 @@ function handleExportProduct(productEditor) {
     }
     
     if (!productToExport) {
-        showNotification('Не може да се намери продукта за експорт.', 'error');
+        showNotification('Не може да се намери продуктът за експорт.', 'error');
         return;
     }
     
@@ -2222,7 +2222,9 @@ function handleExportProduct(productEditor) {
     
     // Create download
     const productName = productToExport.public_data?.name || 'product';
-    const fileName = `${productName.replace(/[^a-zA-Z0-9-_]/g, '_')}_${productId}.json`;
+    // Sanitize filename: keep Cyrillic, Latin, numbers, spaces, hyphens and underscores
+    const sanitizedName = productName.replace(/[^\u0400-\u04FFa-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_');
+    const fileName = `${sanitizedName || 'product'}_${productId}.json`;
     
     downloadJSON(jsonString, fileName);
     
@@ -2239,7 +2241,7 @@ function handleExportAllProducts() {
     // Collect all products
     const allProducts = [];
     categories.forEach(cat => {
-        if (cat.products && Array.isArray(cat.products)) {
+        if (cat.products) {
             allProducts.push(...cat.products);
         }
     });
