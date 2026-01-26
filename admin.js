@@ -1547,6 +1547,17 @@ function handleAction(action, target, id) {
             handleMoveProduct(productEditor);
             break;
         }
+        case 'export-product': {
+            const productEditor = target.closest('.nested-item[data-type="product"]');
+            if (!productEditor) return;
+            
+            handleExportProduct(productEditor);
+            break;
+        }
+        case 'export-all-products': {
+            handleExportAllProducts();
+            break;
+        }
     }
 }
 
@@ -2083,63 +2094,40 @@ function handleMoveProduct(productEditor) {
         return;
     }
     
-    // Find the current category
-    const currentCategory = categories.find(cat => {
+    // Find the current category and the actual product object
+    let currentCategory = null;
+    let productToMove = null;
+    let productIndex = -1;
+    
+    // Get the product_id from the form
+    const productIdInput = productEditor.querySelector('[data-field="product_id"]');
+    if (!productIdInput) {
+        showNotification('Не може да се намери ID на продукта.', 'error');
+        return;
+    }
+    const productId = productIdInput.value;
+    
+    // Find the category containing this product
+    for (const cat of categories) {
         const productsContainer = document.querySelector(`[data-component-id="${cat.component_id}"] #products-editor`);
-        return productsContainer && productsContainer.contains(productEditor);
-    });
-    
-    // Get product data
-    const productData = {};
-    productEditor.querySelectorAll('[data-field]').forEach(input => {
-        const path = input.dataset.field;
-        let value;
-        if (input.type === 'checkbox') {
-            value = input.checked;
-        } else if (input.type === 'number') {
-            value = input.value !== '' ? parseFloat(input.value) : null;
-        } else if (path.includes('goals') || path.includes('synergy_products')) {
-            value = input.value.split(',').map(s => s.trim()).filter(Boolean);
-        } else {
-            value = input.value;
-        }
-        setProperty(productData, path, value);
-    });
-    
-    // Serialize nested lists (effects, ingredients, etc.)
-    ['effects', 'about-benefits', 'ingredients', 'faq'].forEach(subListName => {
-        const subContainer = productEditor.querySelector(`[data-sub-container="${subListName}"]`);
-        if (subContainer) {
-            const items = [];
-            subContainer.querySelectorAll(':scope > .nested-sub-item').forEach(subItem => {
-                const itemData = {};
-                subItem.querySelectorAll('[data-field]').forEach(input => {
-                    const path = input.dataset.field;
-                    let value;
-                    if (input.type === 'checkbox') {
-                        value = input.checked;
-                    } else if (input.type === 'number') {
-                        value = input.value !== '' ? parseFloat(input.value) : null;
-                    } else {
-                        value = input.value;
-                    }
-                    setProperty(itemData, path, value);
-                });
-                items.push(itemData);
-            });
-            
-            if (subListName === 'about-benefits') {
-                if (!productData.public_data) productData.public_data = {};
-                if (!productData.public_data.about_content) productData.public_data.about_content = {};
-                productData.public_data.about_content.benefits = items;
-            } else {
-                if (!productData.public_data) productData.public_data = {};
-                productData.public_data[subListName] = items;
+        if (productsContainer && productsContainer.contains(productEditor)) {
+            currentCategory = cat;
+            if (cat.products) {
+                productIndex = cat.products.findIndex(p => p.product_id === productId);
+                if (productIndex !== -1) {
+                    productToMove = cat.products[productIndex];
+                }
             }
+            break;
         }
-    });
+    }
     
-    const productName = productData.public_data?.name || 'Неименуван продукт';
+    if (!currentCategory || !productToMove) {
+        showNotification('Не може да се намери продуктът в текущата категория.', 'error');
+        return;
+    }
+    
+    const productName = productToMove.public_data?.name || 'Неименуван продукт';
     
     // Create a simple selection modal
     const modalBody = document.createElement('div');
@@ -2173,23 +2161,18 @@ function handleMoveProduct(productEditor) {
         }
         
         // Remove from current category
-        if (currentCategory) {
-            const productIndex = currentCategory.products.findIndex(p => p.product_id === productData.product_id);
-            if (productIndex !== -1) {
-                currentCategory.products.splice(productIndex, 1);
-                // Update display order for remaining products
-                currentCategory.products.forEach((p, idx) => {
-                    p.display_order = idx;
-                });
-            }
-        }
+        currentCategory.products.splice(productIndex, 1);
+        // Update display order for remaining products
+        currentCategory.products.forEach((p, idx) => {
+            p.display_order = idx;
+        });
         
         // Add to target category
         if (!targetCategory.products) {
             targetCategory.products = [];
         }
-        productData.display_order = targetCategory.products.length;
-        targetCategory.products.push(productData);
+        productToMove.display_order = targetCategory.products.length;
+        targetCategory.products.push(productToMove);
         
         // Remove the product editor from the DOM
         productEditor.remove();
@@ -2202,6 +2185,99 @@ function handleMoveProduct(productEditor) {
     
     DOM.modal.container.classList.add('show');
     DOM.modal.backdrop.classList.add('show');
+}
+
+/**
+ * Exports a single product to JSON file
+ * @param {HTMLElement} productEditor - The product editor element
+ */
+function handleExportProduct(productEditor) {
+    // Get all product categories
+    const categories = appData.page_content.filter(item => item.type === 'product_category');
+    
+    // Get the product_id from the form
+    const productIdInput = productEditor.querySelector('[data-field="product_id"]');
+    if (!productIdInput) {
+        showNotification('Не може да се намери ID на продукта.', 'error');
+        return;
+    }
+    const productId = productIdInput.value;
+    
+    // Find the product object in the categories
+    let productToExport = null;
+    for (const cat of categories) {
+        if (cat.products) {
+            productToExport = cat.products.find(p => p.product_id === productId);
+            if (productToExport) break;
+        }
+    }
+    
+    if (!productToExport) {
+        showNotification('Не може да се намери продуктът за експорт.', 'error');
+        return;
+    }
+    
+    // Create JSON string
+    const jsonString = JSON.stringify(productToExport, null, 2);
+    
+    // Create download
+    const productName = productToExport.public_data?.name || 'product';
+    // Sanitize filename: keep Cyrillic, Latin, numbers, spaces, hyphens and underscores
+    const sanitizedName = productName.replace(/[^\u0400-\u04FFa-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_');
+    const fileName = `${sanitizedName || 'product'}_${productId}.json`;
+    
+    downloadJSON(jsonString, fileName);
+    
+    showNotification(`Продуктът "${productName}" е експортиран успешно.`, 'success');
+}
+
+/**
+ * Exports all products from all categories to a single JSON file
+ */
+function handleExportAllProducts() {
+    // Get all product categories
+    const categories = appData.page_content.filter(item => item.type === 'product_category');
+    
+    // Collect all products
+    const allProducts = [];
+    categories.forEach(cat => {
+        if (cat.products) {
+            allProducts.push(...cat.products);
+        }
+    });
+    
+    if (allProducts.length === 0) {
+        showNotification('Няма продукти за експорт.', 'info');
+        return;
+    }
+    
+    // Create JSON string
+    const jsonString = JSON.stringify(allProducts, null, 2);
+    
+    // Create download
+    const timestamp = new Date().toISOString().split('T')[0];
+    const fileName = `all_products_${timestamp}.json`;
+    
+    downloadJSON(jsonString, fileName);
+    
+    showNotification(`Експортирани ${allProducts.length} продукта успешно.`, 'success');
+}
+
+/**
+ * Helper function to download JSON data as a file
+ * @param {string} jsonString - JSON string to download
+ * @param {string} fileName - Name of the file
+ */
+function downloadJSON(jsonString, fileName) {
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 // =======================================================

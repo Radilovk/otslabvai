@@ -906,6 +906,7 @@
                     <div class="header-actions" style="justify-content: flex-start; margin-top: 1rem;">
                         <button type="button" class="btn btn-secondary" data-action="add-nested-item" data-container="#products-editor" data-template="product-editor-template">Добави продукт</button>
                         <button type="button" class="btn btn-primary" data-action="import-product">Импортирай продукт (JSON)</button>
+                        <button type="button" class="btn btn-success" data-action="export-all-products">Експорт на всички продукти (JSON)</button>
                         <input type="file" id="product-import-input" style="display: none;" accept=".json">
                     </div>
                 </div>
@@ -932,6 +933,9 @@
                     </button>
                     <button type="button" class="btn btn-sm btn-secondary" data-action="move-product" title="Премести към друга категория">
                         📁 Премести
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="export-product" title="Експорт в JSON">
+                        💾 Експорт
                     </button>
                     <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий продукта">×</button>
                 </div>
