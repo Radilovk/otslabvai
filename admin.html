@@ -70,6 +70,7 @@
             <button class="tab-btn" data-tab="tab-footer">Футър</button>
             <button class="tab-btn" data-tab="tab-orders">Поръчки</button>
             <button class="tab-btn" data-tab="tab-contacts">Контакти</button>
+            <button class="tab-btn" data-tab="tab-promo-codes">Промо Кодове</button>
             <button class="tab-btn" data-tab="tab-pages">Страници</button>
             <button class="tab-btn" data-tab="tab-ai-settings">AI Настройки</button>
         </nav>
@@ -168,6 +169,36 @@
                             </tr>
                         </thead>
                         <tbody id="contacts-table-body">
+                            <!-- Редовете ще се генерират от JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- Секция: Промо Кодове -->
+            <section id="tab-promo-codes" class="tab-pane">
+                <div class="orders-header">
+                    <h2>Промо Кодове</h2>
+                    <div class="orders-controls">
+                        <input type="text" id="promo-search-input" placeholder="Търси по код...">
+                        <button id="add-promo-btn" class="btn btn-primary">+ Нов Промо Код</button>
+                        <button id="refresh-promo-btn" class="btn btn-secondary">Опресни</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="promo-codes-table" class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Код</th>
+                                <th>Отстъпка</th>
+                                <th>Описание</th>
+                                <th>Валидност</th>
+                                <th>Използвания</th>
+                                <th>Активен</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="promo-codes-table-body">
                             <!-- Редовете ще се генерират от JS -->
                         </tbody>
                     </table>
@@ -375,6 +406,27 @@
                     <option value="Прегледан">Прегледан</option>
                     <option value="Отговорен">Отговорен</option>
                 </select>
+            </td>
+        </tr>
+    </template>
+
+    <!-- Шаблон за ред от таблицата с промо кодове -->
+    <template id="promo-code-row-template">
+        <tr data-promo-id="">
+            <td data-label="Код" class="promo-code"></td>
+            <td data-label="Отстъпка" class="promo-discount"></td>
+            <td data-label="Описание" class="promo-description"></td>
+            <td data-label="Валидност" class="promo-validity"></td>
+            <td data-label="Използвания" class="promo-usage"></td>
+            <td data-label="Активен" class="promo-active">
+                <label class="switch">
+                    <input type="checkbox" class="promo-active-toggle">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+            <td data-label="Действия" class="promo-actions">
+                <button class="btn btn-sm btn-secondary promo-edit-btn">Редактирай</button>
+                <button class="btn btn-sm btn-danger promo-delete-btn">Изтрий</button>
             </td>
         </tr>
     </template>
