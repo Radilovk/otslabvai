@@ -2083,63 +2083,40 @@ function handleMoveProduct(productEditor) {
         return;
     }
     
-    // Find the current category
-    const currentCategory = categories.find(cat => {
+    // Find the current category and the actual product object
+    let currentCategory = null;
+    let productToMove = null;
+    let productIndex = -1;
+    
+    // Get the product_id from the form
+    const productIdInput = productEditor.querySelector('[data-field="product_id"]');
+    if (!productIdInput) {
+        showNotification('Не може да се намери ID на продукта.', 'error');
+        return;
+    }
+    const productId = productIdInput.value;
+    
+    // Find the category containing this product
+    for (const cat of categories) {
         const productsContainer = document.querySelector(`[data-component-id="${cat.component_id}"] #products-editor`);
-        return productsContainer && productsContainer.contains(productEditor);
-    });
-    
-    // Get product data
-    const productData = {};
-    productEditor.querySelectorAll('[data-field]').forEach(input => {
-        const path = input.dataset.field;
-        let value;
-        if (input.type === 'checkbox') {
-            value = input.checked;
-        } else if (input.type === 'number') {
-            value = input.value !== '' ? parseFloat(input.value) : null;
-        } else if (path.includes('goals') || path.includes('synergy_products')) {
-            value = input.value.split(',').map(s => s.trim()).filter(Boolean);
-        } else {
-            value = input.value;
-        }
-        setProperty(productData, path, value);
-    });
-    
-    // Serialize nested lists (effects, ingredients, etc.)
-    ['effects', 'about-benefits', 'ingredients', 'faq'].forEach(subListName => {
-        const subContainer = productEditor.querySelector(`[data-sub-container="${subListName}"]`);
-        if (subContainer) {
-            const items = [];
-            subContainer.querySelectorAll(':scope > .nested-sub-item').forEach(subItem => {
-                const itemData = {};
-                subItem.querySelectorAll('[data-field]').forEach(input => {
-                    const path = input.dataset.field;
-                    let value;
-                    if (input.type === 'checkbox') {
-                        value = input.checked;
-                    } else if (input.type === 'number') {
-                        value = input.value !== '' ? parseFloat(input.value) : null;
-                    } else {
-                        value = input.value;
-                    }
-                    setProperty(itemData, path, value);
-                });
-                items.push(itemData);
-            });
-            
-            if (subListName === 'about-benefits') {
-                if (!productData.public_data) productData.public_data = {};
-                if (!productData.public_data.about_content) productData.public_data.about_content = {};
-                productData.public_data.about_content.benefits = items;
-            } else {
-                if (!productData.public_data) productData.public_data = {};
-                productData.public_data[subListName] = items;
+        if (productsContainer && productsContainer.contains(productEditor)) {
+            currentCategory = cat;
+            if (cat.products) {
+                productIndex = cat.products.findIndex(p => p.product_id === productId);
+                if (productIndex !== -1) {
+                    productToMove = cat.products[productIndex];
+                }
             }
+            break;
         }
-    });
+    }
     
-    const productName = productData.public_data?.name || 'Неименуван продукт';
+    if (!currentCategory || !productToMove) {
+        showNotification('Не може да се намери продуктът в текущата категория.', 'error');
+        return;
+    }
+    
+    const productName = productToMove.public_data?.name || 'Неименуван продукт';
     
     // Create a simple selection modal
     const modalBody = document.createElement('div');
@@ -2173,23 +2150,18 @@ function handleMoveProduct(productEditor) {
         }
         
         // Remove from current category
-        if (currentCategory) {
-            const productIndex = currentCategory.products.findIndex(p => p.product_id === productData.product_id);
-            if (productIndex !== -1) {
-                currentCategory.products.splice(productIndex, 1);
-                // Update display order for remaining products
-                currentCategory.products.forEach((p, idx) => {
-                    p.display_order = idx;
-                });
-            }
-        }
+        currentCategory.products.splice(productIndex, 1);
+        // Update display order for remaining products
+        currentCategory.products.forEach((p, idx) => {
+            p.display_order = idx;
+        });
         
         // Add to target category
         if (!targetCategory.products) {
             targetCategory.products = [];
         }
-        productData.display_order = targetCategory.products.length;
-        targetCategory.products.push(productData);
+        productToMove.display_order = targetCategory.products.length;
+        targetCategory.products.push(productToMove);
         
         // Remove the product editor from the DOM
         productEditor.remove();
