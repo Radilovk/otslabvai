@@ -109,6 +109,28 @@ export default {
               }
               break;
           
+          case '/promo-codes':
+              if (request.method === 'GET') {
+                  response = await handleGetPromoCodes(request, env);
+              } else if (request.method === 'POST') {
+                  response = await handleCreatePromoCode(request, env, ctx);
+              } else if (request.method === 'PUT') {
+                  response = await handleUpdatePromoCode(request, env, ctx);
+              } else if (request.method === 'DELETE') {
+                  response = await handleDeletePromoCode(request, env, ctx);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
+          
+          case '/validate-promo':
+              if (request.method === 'POST') {
+                  response = await handleValidatePromo(request, env, ctx);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
+          
           case '/ai-assistant':
               if (request.method === 'POST') {
                   response = await handleAIAssistant(request, env);
@@ -379,6 +401,270 @@ async function handleCreateContact(request, env, ctx) {
     
     return new Response(JSON.stringify({ success: true, contact: newContact }), {
         status: 201,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles GET /promo-codes
+ */
+async function handleGetPromoCodes(request, env) {
+    const promoCodesJson = await env.PAGE_CONTENT.get('promo_codes');
+    const promoCodes = promoCodesJson ? JSON.parse(promoCodesJson) : [];
+    return new Response(JSON.stringify(promoCodes), {
+        status: 200,
+        headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+        }
+    });
+}
+
+/**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles POST /promo-codes (създаване на нов промо код)
+ */
+async function handleCreatePromoCode(request, env, ctx) {
+    let promoData;
+    try {
+        promoData = await request.json();
+    } catch (e) {
+        throw new UserFacingError("Невалиден JSON формат на заявката.", 400);
+    }
+    
+    if (!promoData || !promoData.code || promoData.discount === undefined) {
+        throw new UserFacingError("Липсват задължителни данни за промо кода.", 400);
+    }
+    
+    // Генерираме уникален ID
+    const newPromoCode = {
+        id: `promo-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+        code: promoData.code.toUpperCase().trim(),
+        discount: parseFloat(promoData.discount),
+        discountType: promoData.discountType || 'percentage',
+        description: promoData.description || '',
+        validFrom: promoData.validFrom || new Date().toISOString(),
+        validUntil: promoData.validUntil || null,
+        maxUses: promoData.maxUses ? parseInt(promoData.maxUses) : null,
+        usedCount: 0,
+        active: promoData.active !== false,
+        createdAt: new Date().toISOString()
+    };
+    
+    // Четем съществуващите промо кодове
+    const promoCodesJson = await env.PAGE_CONTENT.get('promo_codes');
+    let promoCodes = promoCodesJson ? JSON.parse(promoCodesJson) : [];
+    
+    // Проверяваме дали кодът вече съществува
+    if (promoCodes.some(pc => pc.code === newPromoCode.code)) {
+        throw new UserFacingError("Промо код с такъв код вече съществува.", 400);
+    }
+    
+    // Добавяме новия промо код
+    promoCodes.push(newPromoCode);
+    
+    // Запазваме обратно в KV
+    ctx.waitUntil(env.PAGE_CONTENT.put('promo_codes', JSON.stringify(promoCodes, null, 2)));
+    
+    return new Response(JSON.stringify({ success: true, promoCode: newPromoCode }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles PUT /promo-codes (актуализация на промо код)
+ */
+async function handleUpdatePromoCode(request, env, ctx) {
+    const updateData = await request.json();
+    if (!updateData || !updateData.id) {
+        throw new UserFacingError("Липсва ID на промо кода.", 400);
+    }
+    
+    const promoCodesJson = await env.PAGE_CONTENT.get('promo_codes');
+    let promoCodes = promoCodesJson ? JSON.parse(promoCodesJson) : [];
+    
+    const promoIndex = promoCodes.findIndex(pc => pc.id === updateData.id);
+    if (promoIndex === -1) {
+        throw new UserFacingError(`Промо код с ID ${updateData.id} не е намерен.`, 404);
+    }
+    
+    // Ако се променя кодът, проверяваме дали новият код не съществува вече
+    if (updateData.code && updateData.code.toUpperCase() !== promoCodes[promoIndex].code) {
+        if (promoCodes.some(pc => pc.code === updateData.code.toUpperCase() && pc.id !== updateData.id)) {
+            throw new UserFacingError("Промо код с такъв код вече съществува.", 400);
+        }
+    }
+    
+    // Актуализираме полетата
+    promoCodes[promoIndex] = {
+        ...promoCodes[promoIndex],
+        code: updateData.code ? updateData.code.toUpperCase().trim() : promoCodes[promoIndex].code,
+        discount: updateData.discount !== undefined ? parseFloat(updateData.discount) : promoCodes[promoIndex].discount,
+        discountType: updateData.discountType || promoCodes[promoIndex].discountType,
+        description: updateData.description !== undefined ? updateData.description : promoCodes[promoIndex].description,
+        validFrom: updateData.validFrom || promoCodes[promoIndex].validFrom,
+        validUntil: updateData.validUntil !== undefined ? updateData.validUntil : promoCodes[promoIndex].validUntil,
+        maxUses: updateData.maxUses !== undefined ? (updateData.maxUses ? parseInt(updateData.maxUses) : null) : promoCodes[promoIndex].maxUses,
+        active: updateData.active !== undefined ? updateData.active : promoCodes[promoIndex].active,
+        usedCount: updateData.usedCount !== undefined ? parseInt(updateData.usedCount) : promoCodes[promoIndex].usedCount
+    };
+    
+    ctx.waitUntil(env.PAGE_CONTENT.put('promo_codes', JSON.stringify(promoCodes, null, 2)));
+    
+    return new Response(JSON.stringify({ success: true, promoCode: promoCodes[promoIndex] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles DELETE /promo-codes (изтриване на промо код)
+ */
+async function handleDeletePromoCode(request, env, ctx) {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    
+    if (!id) {
+        throw new UserFacingError("Липсва ID на промо кода за изтриване.", 400);
+    }
+    
+    const promoCodesJson = await env.PAGE_CONTENT.get('promo_codes');
+    let promoCodes = promoCodesJson ? JSON.parse(promoCodesJson) : [];
+    
+    const promoIndex = promoCodes.findIndex(pc => pc.id === id);
+    if (promoIndex === -1) {
+        throw new UserFacingError(`Промо код с ID ${id} не е намерен.`, 404);
+    }
+    
+    const deletedPromoCode = promoCodes[promoIndex];
+    promoCodes.splice(promoIndex, 1);
+    
+    ctx.waitUntil(env.PAGE_CONTENT.put('promo_codes', JSON.stringify(promoCodes, null, 2)));
+    
+    return new Response(JSON.stringify({ success: true, deletedPromoCode }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles POST /validate-promo (валидация на промо код при поръчка)
+ */
+async function handleValidatePromo(request, env, ctx) {
+    let validationData;
+    try {
+        validationData = await request.json();
+    } catch (e) {
+        throw new UserFacingError("Невалиден JSON формат на заявката.", 400);
+    }
+    
+    if (!validationData || !validationData.code) {
+        throw new UserFacingError("Липсва промо код за валидация.", 400);
+    }
+    
+    const code = validationData.code.toUpperCase().trim();
+    
+    // Четем промо кодовете
+    const promoCodesJson = await env.PAGE_CONTENT.get('promo_codes');
+    let promoCodes = promoCodesJson ? JSON.parse(promoCodesJson) : [];
+    
+    const promoCode = promoCodes.find(pc => pc.code === code);
+    
+    if (!promoCode) {
+        return new Response(JSON.stringify({ 
+            valid: false, 
+            error: 'Невалиден промо код.' 
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+    
+    // Проверяваме дали е активен
+    if (!promoCode.active) {
+        return new Response(JSON.stringify({ 
+            valid: false, 
+            error: 'Промо кодът не е активен.' 
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+    
+    // Проверяваме валидност по дата
+    const now = new Date();
+    if (promoCode.validFrom && new Date(promoCode.validFrom) > now) {
+        return new Response(JSON.stringify({ 
+            valid: false, 
+            error: 'Промо кодът все още не е валиден.' 
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+    
+    if (promoCode.validUntil && new Date(promoCode.validUntil) < now) {
+        return new Response(JSON.stringify({ 
+            valid: false, 
+            error: 'Промо кодът е изтекъл.' 
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+    
+    // Проверяваме използвания
+    if (promoCode.maxUses && promoCode.usedCount >= promoCode.maxUses) {
+        return new Response(JSON.stringify({ 
+            valid: false, 
+            error: 'Промо кодът е изчерпан.' 
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+    
+    // Ако трябва да увеличим броя използвания
+    if (validationData.incrementUsage) {
+        // Re-fetch to minimize race condition window
+        const freshPromoCodesJson = await env.PAGE_CONTENT.get('promo_codes');
+        const freshPromoCodes = freshPromoCodesJson ? JSON.parse(freshPromoCodesJson) : [];
+        const promoIndex = freshPromoCodes.findIndex(pc => pc.id === promoCode.id);
+        
+        if (promoIndex !== -1) {
+            // Double-check usage limit with fresh data
+            if (freshPromoCodes[promoIndex].maxUses && 
+                freshPromoCodes[promoIndex].usedCount >= freshPromoCodes[promoIndex].maxUses) {
+                return new Response(JSON.stringify({ 
+                    valid: false, 
+                    error: 'Промо кодът е изчерпан.' 
+                }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+            
+            freshPromoCodes[promoIndex].usedCount += 1;
+            // Note: In high-traffic scenarios, consider using Durable Objects for atomic operations
+            ctx.waitUntil(env.PAGE_CONTENT.put('promo_codes', JSON.stringify(freshPromoCodes, null, 2)));
+        }
+    }
+    
+    return new Response(JSON.stringify({ 
+        valid: true, 
+        promoCode: {
+            code: promoCode.code,
+            discount: promoCode.discount,
+            discountType: promoCode.discountType,
+            description: promoCode.description
+        }
+    }), {
+        status: 200,
         headers: { 'Content-Type': 'application/json' }
     });
 }

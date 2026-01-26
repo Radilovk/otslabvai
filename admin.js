@@ -52,6 +52,11 @@ const DOM = {
     contactsTableBody: document.getElementById('contacts-table-body'),
     contactSearchInput: document.getElementById('contact-search-input'),
     refreshContactsBtn: document.getElementById('refresh-contacts-btn'),
+    // Промо Кодове
+    promoCodesTableBody: document.getElementById('promo-codes-table-body'),
+    promoSearchInput: document.getElementById('promo-search-input'),
+    addPromoBtn: document.getElementById('add-promo-btn'),
+    refreshPromoBtn: document.getElementById('refresh-promo-btn'),
     // Добавяне на компонент
     addComponentDropdown: document.getElementById('add-component-dropdown'),
     addComponentToggleBtn: document.querySelector('[data-action="toggle-add-component-menu"]'),
@@ -74,6 +79,7 @@ const DOM = {
         listItem: document.getElementById('list-item-template'),
         orderRow: document.getElementById('order-row-template'),
         contactRow: document.getElementById('contact-row-template'),
+        promoCodeRow: document.getElementById('promo-code-row-template'),
     }
 };
 
@@ -83,6 +89,8 @@ let ordersData = [];
 let filteredOrdersData = [];
 let contactsData = [];
 let filteredContactsData = [];
+let promoCodesData = [];
+let filteredPromoCodesData = [];
 let unsavedChanges = false;
 let activeUndoAction = null;
 let currentModalSaveCallback = null;
@@ -139,6 +147,24 @@ async function fetchContacts() {
         console.error("Грешка при зареждане на контакти:", error);
         contactsData = [];
         filteredContactsData = [];
+    }
+}
+
+async function fetchPromoCodes() {
+    try {
+        // For dynamic data like promo codes, use no-cache to always get fresh data
+        const response = await fetch(`${API_URL}/promo-codes`, {
+            cache: 'no-cache'
+        });
+        if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
+        const rawPromoCodes = await response.json();
+        promoCodesData = rawPromoCodes.map((promo, index) => ({ ...promo, id: promo.id || `promo_${index}_${Date.now()}` }));
+        filteredPromoCodesData = [...promoCodesData];
+    } catch (error) {
+        showNotification('Грешка при зареждане на промо кодовете.', 'error');
+        console.error("Грешка при зареждане на промо кодове:", error);
+        promoCodesData = [];
+        filteredPromoCodesData = [];
     }
 }
 
@@ -343,6 +369,42 @@ function renderContacts() {
         statusSelect.value = contact.status || 'Нов';
         
         DOM.contactsTableBody.appendChild(rowTemplate);
+    });
+}
+
+function renderPromoCodes() {
+    DOM.promoCodesTableBody.innerHTML = '';
+    filteredPromoCodesData.forEach((promo) => {
+        const rowTemplate = DOM.templates.promoCodeRow.content.cloneNode(true);
+        const row = rowTemplate.querySelector('tr');
+        row.dataset.promoId = promo.id;
+        
+        rowTemplate.querySelector('.promo-code').textContent = promo.code || '';
+        
+        // Format discount
+        const discountText = promo.discountType === 'percentage' 
+            ? `${promo.discount}%` 
+            : `${promo.discount} €`;
+        rowTemplate.querySelector('.promo-discount').textContent = discountText;
+        
+        rowTemplate.querySelector('.promo-description').textContent = promo.description || '';
+        
+        // Format validity period
+        const validFrom = promo.validFrom ? new Date(promo.validFrom).toLocaleDateString('bg-BG') : '';
+        const validUntil = promo.validUntil ? new Date(promo.validUntil).toLocaleDateString('bg-BG') : 'Безсрочен';
+        rowTemplate.querySelector('.promo-validity').textContent = `${validFrom} - ${validUntil}`;
+        
+        // Format usage
+        const usageText = promo.maxUses 
+            ? `${promo.usedCount}/${promo.maxUses}` 
+            : `${promo.usedCount}/∞`;
+        rowTemplate.querySelector('.promo-usage').textContent = usageText;
+        
+        // Set active toggle
+        const activeToggle = rowTemplate.querySelector('.promo-active-toggle');
+        activeToggle.checked = promo.active;
+        
+        DOM.promoCodesTableBody.appendChild(rowTemplate);
     });
 }
 
@@ -1124,6 +1186,46 @@ function setupEventListeners() {
         filterContacts();
     });
     
+    // Promo Codes event listeners
+    DOM.refreshPromoBtn.addEventListener('click', async () => {
+        showNotification('Опресняване на промо кодовете...', 'info');
+        await fetchPromoCodes();
+        filterPromoCodes();
+    });
+    
+    DOM.addPromoBtn.addEventListener('click', () => {
+        openPromoCodeModal('add');
+    });
+    
+    DOM.promoSearchInput.addEventListener('input', filterPromoCodes);
+    
+    // Promo codes table actions
+    DOM.promoCodesTableBody.addEventListener('click', async (e) => {
+        const row = e.target.closest('tr');
+        if (!row) return;
+        
+        const promoId = row.dataset.promoId;
+        const promo = promoCodesData.find(p => p.id === promoId);
+        
+        if (e.target.classList.contains('promo-edit-btn')) {
+            openPromoCodeModal('edit', promo);
+        } else if (e.target.classList.contains('promo-delete-btn')) {
+            if (confirm(`Сигурни ли сте, че искате да изтриете промо кода "${promo.code}"?`)) {
+                await deletePromoCode(promoId);
+            }
+        }
+    });
+    
+    // Promo codes active toggle
+    DOM.promoCodesTableBody.addEventListener('change', async (e) => {
+        if (e.target.classList.contains('promo-active-toggle')) {
+            const row = e.target.closest('tr');
+            const promoId = row.dataset.promoId;
+            const isActive = e.target.checked;
+            await updatePromoCodeStatus(promoId, isActive);
+        }
+    });
+    
     // AI Settings event listeners
     const saveAISettingsBtn = document.getElementById('save-ai-settings-btn');
     const testAISettingsBtn = document.getElementById('test-ai-settings-btn');
@@ -1575,6 +1677,20 @@ function filterContacts() {
         });
     }
     renderContacts();
+}
+
+function filterPromoCodes() {
+    const searchTerm = DOM.promoSearchInput.value.toLowerCase().trim();
+    if (!searchTerm) {
+        filteredPromoCodesData = [...promoCodesData];
+    } else {
+        filteredPromoCodesData = promoCodesData.filter(promo => {
+            const code = (promo.code || '').toLowerCase();
+            const description = (promo.description || '').toLowerCase();
+            return code.includes(searchTerm) || description.includes(searchTerm);
+        });
+    }
+    renderPromoCodes();
 }
 
 function initModalTabs(container) {
@@ -2360,6 +2476,220 @@ function getDefaultPromptTemplate() {
 }
 
 // =======================================================
+//          8. PROMO CODE MANAGEMENT FUNCTIONS
+// =======================================================
+
+function openPromoCodeModal(mode, promoData = null) {
+    const isEdit = mode === 'edit';
+    const title = isEdit ? 'Редакция на промо код' : 'Нов промо код';
+    
+    DOM.modal.title.textContent = title;
+    
+    const form = document.createElement('form');
+    form.className = 'modal-form';
+    form.innerHTML = `
+        <div class="form-group">
+            <label for="promo-code-input">Код *</label>
+            <input type="text" id="promo-code-input" required value="${isEdit ? promoData.code : ''}" ${isEdit ? 'disabled' : ''}>
+            ${isEdit ? '<small>Кодът не може да бъде променен</small>' : ''}
+        </div>
+        <div class="form-group">
+            <label for="promo-discount">Отстъпка *</label>
+            <input type="number" id="promo-discount" required min="0" max="100" value="${isEdit ? promoData.discount : ''}">
+        </div>
+        <div class="form-group">
+            <label for="promo-discount-type">Тип отстъпка *</label>
+            <select id="promo-discount-type">
+                <option value="percentage" ${isEdit && promoData.discountType === 'percentage' ? 'selected' : ''}>Процент (%)</option>
+                <option value="fixed" ${isEdit && promoData.discountType === 'fixed' ? 'selected' : ''}>Фиксирана сума (€)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="promo-description">Описание</label>
+            <textarea id="promo-description" rows="2">${isEdit ? (promoData.description || '') : ''}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="promo-valid-from">Валиден от</label>
+            <input type="datetime-local" id="promo-valid-from" value="${isEdit && promoData.validFrom ? new Date(promoData.validFrom).toISOString().slice(0, 16) : ''}">
+        </div>
+        <div class="form-group">
+            <label for="promo-valid-until">Валиден до</label>
+            <input type="datetime-local" id="promo-valid-until" value="${isEdit && promoData.validUntil ? new Date(promoData.validUntil).toISOString().slice(0, 16) : ''}">
+        </div>
+        <div class="form-group">
+            <label for="promo-max-uses">Максимален брой използвания</label>
+            <input type="number" id="promo-max-uses" min="0" value="${isEdit && promoData.maxUses ? promoData.maxUses : ''}" placeholder="Празно = неограничено">
+        </div>
+        ${isEdit ? `
+        <div class="form-group">
+            <label for="promo-used-count">Текущ брой използвания</label>
+            <input type="number" id="promo-used-count" min="0" value="${promoData.usedCount || 0}">
+        </div>
+        ` : ''}
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="promo-active" ${isEdit ? (promoData.active ? 'checked' : '') : 'checked'}>
+                Активен
+            </label>
+        </div>
+    `;
+    
+    DOM.modal.body.innerHTML = '';
+    DOM.modal.body.appendChild(form);
+    
+    currentModalSaveCallback = async () => {
+        const code = document.getElementById('promo-code-input').value.trim().toUpperCase();
+        const discount = parseFloat(document.getElementById('promo-discount').value);
+        const discountType = document.getElementById('promo-discount-type').value;
+        const description = document.getElementById('promo-description').value.trim();
+        const validFrom = document.getElementById('promo-valid-from').value;
+        const validUntil = document.getElementById('promo-valid-until').value;
+        const maxUses = document.getElementById('promo-max-uses').value;
+        const active = document.getElementById('promo-active').checked;
+        
+        // Validation
+        if (!code || isNaN(discount)) {
+            alert('Моля, попълнете всички задължителни полета.');
+            return false;
+        }
+        
+        if (discount < 0) {
+            alert('Отстъпката не може да бъде отрицателна.');
+            return false;
+        }
+        
+        if (discount === 0) {
+            alert('Отстъпката трябва да е по-голяма от 0.');
+            return false;
+        }
+        
+        if (discountType === 'percentage' && discount > 100) {
+            alert('Процентната отстъпка не може да е повече от 100%.');
+            return false;
+        }
+        
+        const promoPayload = {
+            code,
+            discount,
+            discountType,
+            description,
+            validFrom: validFrom ? new Date(validFrom).toISOString() : null,
+            validUntil: validUntil ? new Date(validUntil).toISOString() : null,
+            maxUses: maxUses ? parseInt(maxUses) : null,
+            active
+        };
+        
+        if (isEdit) {
+            promoPayload.id = promoData.id;
+            promoPayload.usedCount = parseInt(document.getElementById('promo-used-count').value);
+            await updatePromoCode(promoPayload);
+        } else {
+            await createPromoCode(promoPayload);
+        }
+        
+        return true;
+    };
+    
+    DOM.modal.container.classList.add('open');
+    DOM.modal.backdrop.classList.add('open');
+}
+
+async function createPromoCode(promoData) {
+    try {
+        const response = await fetch(`${API_URL}/promo-codes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(promoData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Грешка при създаване на промо код');
+        }
+        
+        showNotification('Промо кодът е създаден успешно!', 'success');
+        await fetchPromoCodes();
+        filterPromoCodes();
+    } catch (error) {
+        showNotification(error.message, 'error');
+        console.error('Грешка при създаване на промо код:', error);
+    }
+}
+
+async function updatePromoCode(promoData) {
+    try {
+        const response = await fetch(`${API_URL}/promo-codes`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(promoData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Грешка при актуализация на промо код');
+        }
+        
+        showNotification('Промо кодът е актуализиран успешно!', 'success');
+        await fetchPromoCodes();
+        filterPromoCodes();
+    } catch (error) {
+        showNotification(error.message, 'error');
+        console.error('Грешка при актуализация на промо код:', error);
+    }
+}
+
+async function deletePromoCode(promoId) {
+    try {
+        const response = await fetch(`${API_URL}/promo-codes?id=${promoId}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Грешка при изтриване на промо код');
+        }
+        
+        showNotification('Промо кодът е изтрит успешно!', 'success');
+        await fetchPromoCodes();
+        filterPromoCodes();
+    } catch (error) {
+        showNotification(error.message, 'error');
+        console.error('Грешка при изтриване на промо код:', error);
+    }
+}
+
+async function updatePromoCodeStatus(promoId, isActive) {
+    try {
+        const promo = promoCodesData.find(p => p.id === promoId);
+        if (!promo) return;
+        
+        const response = await fetch(`${API_URL}/promo-codes`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: promoId,
+                active: isActive
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Грешка при промяна на статус');
+        }
+        
+        showNotification(`Промо кодът е ${isActive ? 'активиран' : 'деактивиран'}!`, 'success');
+        await fetchPromoCodes();
+        filterPromoCodes();
+    } catch (error) {
+        showNotification(error.message, 'error');
+        console.error('Грешка при промяна на статус:', error);
+        // Revert the toggle
+        await fetchPromoCodes();
+        filterPromoCodes();
+    }
+}
+
+// =======================================================
 //          9. ИНИЦИАЛИЗАЦИЯ НА ПРИЛОЖЕНИЕТО
 // =======================================================
 
@@ -2370,9 +2700,11 @@ async function init() {
     appData = await fetchData();
     await fetchOrders();
     await fetchContacts();
+    await fetchPromoCodes();
     await loadAISettings();
     if (appData) {
         renderAll();
+        renderPromoCodes();
     } else {
         document.querySelector('.admin-container').innerHTML = '<h1>Грешка при зареждане на данните. Проверете конзолата.</h1>';
     }

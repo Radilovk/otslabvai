@@ -1,0 +1,41 @@
+[
+  {
+    "id": "promo-1",
+    "code": "SAVE10",
+    "discount": 10,
+    "discountType": "percentage",
+    "description": "10% отстъпка",
+    "validFrom": "2024-01-01T00:00:00.000Z",
+    "validUntil": "2026-12-31T23:59:59.999Z",
+    "maxUses": null,
+    "usedCount": 0,
+    "active": true,
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "promo-2",
+    "code": "WELCOME5",
+    "discount": 5,
+    "discountType": "percentage",
+    "description": "5% отстъпка за нови клиенти",
+    "validFrom": "2024-01-01T00:00:00.000Z",
+    "validUntil": "2026-12-31T23:59:59.999Z",
+    "maxUses": 100,
+    "usedCount": 0,
+    "active": true,
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "promo-3",
+    "code": "SAVE20",
+    "discount": 20,
+    "discountType": "percentage",
+    "description": "20% отстъпка за първа поръчка",
+    "validFrom": "2024-01-01T00:00:00.000Z",
+    "validUntil": "2026-12-31T23:59:59.999Z",
+    "maxUses": null,
+    "usedCount": 15,
+    "active": true,
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  }
+]
