@@ -2144,16 +2144,18 @@ function handleMoveProduct(productEditor) {
     // Create a simple selection modal
     const modalBody = document.createElement('div');
     modalBody.innerHTML = `
-        <p style="margin-bottom: 1rem;">Изберете категория, в която да преместите продукта "${productName}":</p>
-        <div class="form-group">
-            <label>Целева категория</label>
-            <select id="target-category-select" class="form-control" style="width: 100%; padding: 0.5rem;">
-                ${categories.map(cat => {
-                    const isCurrent = currentCategory && cat.component_id === currentCategory.component_id;
-                    return `<option value="${cat.component_id}" ${isCurrent ? 'disabled' : ''}>${cat.title}${isCurrent ? ' (текуща)' : ''}</option>`;
-                }).join('')}
-            </select>
-        </div>
+        <form>
+            <p style="margin-bottom: 1rem;">Изберете категория, в която да преместите продукта "${productName}":</p>
+            <div class="form-group">
+                <label>Целева категория</label>
+                <select id="target-category-select" class="form-control" style="width: 100%; padding: 0.5rem;">
+                    ${categories.map(cat => {
+                        const isCurrent = currentCategory && cat.component_id === currentCategory.component_id;
+                        return `<option value="${cat.component_id}" ${isCurrent ? 'disabled' : ''}>${cat.title}${isCurrent ? ' (текуща)' : ''}</option>`;
+                    }).join('')}
+                </select>
+            </div>
+        </form>
     `;
     
     // Manually set up modal instead of using openModal
