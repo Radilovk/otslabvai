@@ -1245,8 +1245,8 @@
 
         // --- 1. Зареждане на количката от localStorage ---
         const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
-        const PROMO_CODES = { 'SAVE10': 0.10, 'WELCOME5': 0.05 };
         let activeDiscount = 0;
+        let activePromoCode = null;
 
         // --- 2. ЕЛЕМЕНТИ ОТ DOM ---
         const productListEl = document.getElementById('product-list');
@@ -1414,14 +1414,43 @@
             }
         });
 
-        applyPromoBtn.addEventListener('click', () => {
+        applyPromoBtn.addEventListener('click', async () => {
             const code = promoInput.value.trim().toUpperCase();
-            if (PROMO_CODES[code]) {
-                activeDiscount = PROMO_CODES[code];
-                updateSummary();
-                alert('Промо кодът е приложен.');
-            } else {
-                alert('Невалиден промо код.');
+            if (!code) {
+                alert('Моля, въведете промо код.');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/validate-promo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                
+                const result = await response.json();
+                
+                if (result.valid) {
+                    activePromoCode = result.promoCode;
+                    if (result.promoCode.discountType === 'percentage') {
+                        activeDiscount = result.promoCode.discount / 100;
+                    } else {
+                        // For future fixed amount discounts
+                        activeDiscount = result.promoCode.discount;
+                    }
+                    updateSummary();
+                    alert(`Промо кодът е приложен! ${result.promoCode.description || ''}`);
+                    promoInput.disabled = true;
+                    applyPromoBtn.disabled = true;
+                } else {
+                    alert(result.error || 'Невалиден промо код.');
+                    activeDiscount = 0;
+                    activePromoCode = null;
+                    updateSummary();
+                }
+            } catch (err) {
+                console.error('Грешка при валидация на промо код:', err);
+                alert('Възникна грешка при валидация на промо кода.');
             }
         });
 
@@ -1665,19 +1694,30 @@
                     summary: {
                         subtotal: subtotalEl.textContent,
                         shipping: shippingEl.textContent,
+                        discount: activePromoCode ? discountEl.textContent : null,
                         total: totalEl.textContent
                     },
+                    promoCode: activePromoCode ? activePromoCode.code : null,
                     status: 'Нова'
                 };
 
-                fetch(`${API_URL}/orders`, {
+                // If promo code is applied, increment usage count
+                const orderPromise = fetch(`${API_URL}/orders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(fullOrder)
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error('Server error');
-                    return res.json();
+                });
+                
+                const promoPromise = activePromoCode ? fetch(`${API_URL}/validate-promo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: activePromoCode.code, incrementUsage: true })
+                }) : Promise.resolve();
+
+                Promise.all([orderPromise, promoPromise])
+                .then(([orderRes]) => {
+                    if (!orderRes.ok) throw new Error('Server error');
+                    return orderRes.json();
                 })
                 .then(() => {
                     localStorage.removeItem('cart');
