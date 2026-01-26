@@ -1,6 +1,7 @@
 name = "port-worker"
 main = "worker.js"
 compatibility_date = "2024-04-05"
+compatibility_flags = ["nodejs_compat"]
 
 # KV пространствата съхраняват поръчките и съдържанието на сайта.
 [[kv_namespaces]]
