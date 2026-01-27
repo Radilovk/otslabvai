@@ -91,14 +91,37 @@ Upload функцията използва GitHub Contents API:
 3. **Име на файл**: Автоматично се генерира и не може да се променя (за уникалност)
 4. **Authentication**: Използва се Bearer token authentication (GitHub API v3 стандарт)
 
+## 3. Автоматична конфигурация на GitHub API Token
+
+### Функционалност
+Вместо да въвеждате GitHub token всеки път, сега можете да го съхраните в KV и той ще се използва автоматично.
+
+### Как работи:
+1. GitHub API токенът се съхранява в Cloudflare KV с ключ `api_token`
+2. При опит за качване на изображение, админ панелът автоматично извлича токена от backend
+3. Токенът се кешира в sessionStorage за по-бърз достъп
+4. Ако токенът не е конфигуриран, все още можете да го въведете ръчно
+
+### Как да конфигурирате токена:
+```bash
+./set-api-token.sh
+```
+
+Или директно с wrangler:
+```bash
+echo "your_github_token" | wrangler kv:key put --binding="PAGE_CONTENT" "api_token" --path=-
+```
+
+**Вижте `API_TOKEN_CONFIG.md` за пълна документация.**
+
 ## Бъдещи подобрения
 
 - [x] Запазване на GitHub token в sessionStorage (безопасно за сесията)
 - [x] Използване на Bearer token authentication
 - [x] Автоматично изтриване на невалиден token
+- [x] Съхранение на GitHub token в KV за автоматично използване
 - [ ] Batch upload за множество изображения
 - [ ] Преглед на качените изображения
 - [ ] Изтриване на стари изображения
 - [ ] Оптимизация и компресия на изображения преди upload
 - [ ] Upload на допълнителни изображения (не само основното)
-- [ ] Move repository credentials to config file
