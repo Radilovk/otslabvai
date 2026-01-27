@@ -26,6 +26,19 @@ if [ -z "$GITHUB_TOKEN" ]; then
     exit 1
 fi
 
+# Validate token format
+if [[ ! "$GITHUB_TOKEN" =~ ^(ghp_|github_pat_) ]]; then
+    echo "⚠️  Warning: Token doesn't start with 'ghp_' or 'github_pat_'"
+    echo "GitHub Personal Access Tokens typically start with one of these prefixes."
+    echo ""
+    read -p "Do you want to continue anyway? (y/N): " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ Cancelled"
+        exit 1
+    fi
+fi
+
 echo "🔐 Setting API token in Cloudflare KV..."
 
 # Use wrangler to set the KV value

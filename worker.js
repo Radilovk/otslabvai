@@ -720,9 +720,16 @@ async function handleSaveAISettings(request, env, ctx) {
 
 /**
  * Handles GET /api-token (Get GitHub API token for image upload)
+ * Returns token from environment variable (more secure than KV)
  */
 async function handleGetApiToken(request, env) {
-    const apiToken = await env.PAGE_CONTENT.get('api_token');
+    // First try to get from environment variable (most secure)
+    let apiToken = env.GITHUB_API_TOKEN || null;
+    
+    // Fallback to KV storage for backward compatibility
+    if (!apiToken) {
+        apiToken = await env.PAGE_CONTENT.get('api_token');
+    }
     
     return new Response(JSON.stringify({ 
         api_token: apiToken || null 
