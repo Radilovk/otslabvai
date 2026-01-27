@@ -148,6 +148,14 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
+          
+          case '/api-token':
+              if (request.method === 'GET') {
+                  response = await handleGetApiToken(env);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
             
           default:
             // Try to serve 404.html for unknown routes
@@ -707,6 +715,30 @@ async function handleSaveAISettings(request, env, ctx) {
     return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * Handles GET /api-token (Get GitHub API token for image upload)
+ * Returns token from environment variable (more secure than KV)
+ */
+async function handleGetApiToken(env) {
+    // First try to get from environment variable (most secure)
+    let apiToken = env.GITHUB_API_TOKEN || null;
+    
+    // Fallback to KV storage for backward compatibility
+    if (!apiToken) {
+        apiToken = await env.PAGE_CONTENT.get('api_token');
+    }
+    
+    return new Response(JSON.stringify({ 
+        api_token: apiToken || null 
+    }), {
+        status: 200,
+        headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
+        }
     });
 }
 
