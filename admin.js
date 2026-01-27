@@ -1804,6 +1804,24 @@ async function uploadImageToGitHub(file) {
     // Try to get token from sessionStorage first (temporary storage for session)
     let GITHUB_TOKEN = sessionStorage.getItem('github_upload_token');
     
+    // If not in sessionStorage, try to fetch from backend KV storage
+    if (!GITHUB_TOKEN) {
+        try {
+            const response = await fetch(`${API_URL}/api-token`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.api_token) {
+                    GITHUB_TOKEN = data.api_token;
+                    // Cache in sessionStorage for subsequent uploads
+                    sessionStorage.setItem('github_upload_token', GITHUB_TOKEN);
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to fetch API token from backend:', error);
+        }
+    }
+    
+    // If still no token, prompt the user
     if (!GITHUB_TOKEN) {
         GITHUB_TOKEN = prompt(
             'Моля въведете GitHub Personal Access Token:\n\n' +
