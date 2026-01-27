@@ -151,7 +151,7 @@ export default {
           
           case '/api-token':
               if (request.method === 'GET') {
-                  response = await handleGetApiToken(request, env);
+                  response = await handleGetApiToken(env);
               } else {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
@@ -722,7 +722,7 @@ async function handleSaveAISettings(request, env, ctx) {
  * Handles GET /api-token (Get GitHub API token for image upload)
  * Returns token from environment variable (more secure than KV)
  */
-async function handleGetApiToken(request, env) {
+async function handleGetApiToken(env) {
     // First try to get from environment variable (most secure)
     let apiToken = env.GITHUB_API_TOKEN || null;
     

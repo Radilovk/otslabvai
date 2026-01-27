@@ -41,10 +41,23 @@ fi
 
 echo "🔐 Setting API token in Cloudflare KV..."
 
-# Use wrangler to set the KV value
-echo "$GITHUB_TOKEN" | wrangler kv:key put --binding="$KV_NAMESPACE" "$TOKEN_KEY" --path=-
+# Create a temporary file with restricted permissions for secure token passing
+TEMP_FILE=$(mktemp)
+chmod 600 "$TEMP_FILE"
 
-if [ $? -eq 0 ]; then
+# Write token to temporary file
+echo "$GITHUB_TOKEN" > "$TEMP_FILE"
+
+# Use wrangler to set the KV value from the file
+wrangler kv:key put --binding="$KV_NAMESPACE" "$TOKEN_KEY" --path="$TEMP_FILE"
+
+# Store the exit code before cleanup
+EXIT_CODE=$?
+
+# Securely delete the temporary file
+rm -f "$TEMP_FILE"
+
+if [ $EXIT_CODE -eq 0 ]; then
     echo "✅ API token successfully stored in KV!"
     echo ""
     echo "The token is now available for the admin panel to use when uploading images."
