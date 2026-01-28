@@ -169,6 +169,16 @@ body {
     /* Add padding-top to account for fixed header */
     padding-top: var(--header-height);
 }
+
+/* Prevent flashing of content that's dynamically loaded */
+.content-loading {
+    opacity: 0;
+    transition: opacity 0.3s ease-in;
+}
+
+.content-loaded {
+    opacity: 1;
+}
         
 body.nav-open {
     overflow: hidden;
@@ -268,6 +278,11 @@ img {
     color: var(--color-white);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(228, 0, 124, 0.4);
+}
+
+.btn-back {
+    display: inline-block;
+    margin-bottom: 2rem;
 }
 
 .btn-large {
@@ -2149,6 +2164,15 @@ body.modal-open { overflow: hidden; }
     .hero-section {
         min-height: 450px;
         padding: 40px 0;
+    }
+    
+    /* Fix category-section spacing on mobile */
+    .category-section {
+        padding: 40px 0;
+    }
+    
+    .category-section:first-of-type {
+        padding-top: 15px;
     }
 }
 
