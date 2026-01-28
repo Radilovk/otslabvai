@@ -1397,6 +1397,8 @@ main {
 .product-image {
     width: 100%;
     margin-bottom: 1.5rem;
+    border-radius: var(--border-radius);
+    overflow: hidden;
     position: relative;
 }
 
@@ -1406,14 +1408,13 @@ main {
     display: block;
     object-fit: contain;
     max-height: 250px;
-    border-radius: var(--border-radius);
 }
 
 /* Product Image Highlight Effects */
 .product-image::after {
     content: "";
     position: absolute;
-    bottom: -4px; /* Move 4 pixels down from the image */
+    bottom: 0;
     left: 0;
     right: 0;
     height: 4px;
@@ -1483,124 +1484,6 @@ main {
 
 .product-card.highlight-animation-color-shift .product-image::after {
     animation: highlight-color-shift 4s linear infinite;
-}
-
-/* Top Products - Special Glow Effect */
-/* For top products, create a glow that extends from all sides of the image */
-.product-card.top-product .product-image::before {
-    content: "";
-    position: absolute;
-    top: -8px;
-    left: -8px;
-    right: -8px;
-    bottom: -8px;
-    background: transparent;
-    border-radius: var(--border-radius);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-    z-index: -1;
-}
-
-/* Top Product - Magenta Glow (extends from all sides) */
-.product-card.top-product.highlight-magenta .product-image::before {
-    box-shadow: 
-        0 0 20px rgba(228, 0, 124, 0.6),
-        0 0 40px rgba(228, 0, 124, 0.4),
-        0 0 60px rgba(228, 0, 124, 0.2);
-    opacity: 1;
-}
-
-/* Top Product - Cyan Glow (extends from all sides) */
-.product-card.top-product.highlight-cyan .product-image::before {
-    box-shadow: 
-        0 0 20px rgba(0, 169, 157, 0.6),
-        0 0 40px rgba(0, 169, 157, 0.4),
-        0 0 60px rgba(0, 169, 157, 0.2);
-    opacity: 1;
-}
-
-/* Top Product - White Glow (extends from all sides) */
-.product-card.top-product.highlight-white .product-image::before {
-    box-shadow: 
-        0 0 20px rgba(255, 255, 255, 0.6),
-        0 0 40px rgba(255, 255, 255, 0.4),
-        0 0 60px rgba(255, 255, 255, 0.2);
-    opacity: 1;
-}
-
-/* Top Product Glow Animations */
-@keyframes top-product-glow-pulse {
-    0%, 100% {
-        box-shadow: 
-            0 0 15px rgba(228, 0, 124, 0.4),
-            0 0 30px rgba(228, 0, 124, 0.3),
-            0 0 45px rgba(228, 0, 124, 0.15);
-    }
-    50% {
-        box-shadow: 
-            0 0 25px rgba(228, 0, 124, 0.7),
-            0 0 50px rgba(228, 0, 124, 0.5),
-            0 0 75px rgba(228, 0, 124, 0.3);
-    }
-}
-
-@keyframes top-product-glow-pulse-cyan {
-    0%, 100% {
-        box-shadow: 
-            0 0 15px rgba(0, 169, 157, 0.4),
-            0 0 30px rgba(0, 169, 157, 0.3),
-            0 0 45px rgba(0, 169, 157, 0.15);
-    }
-    50% {
-        box-shadow: 
-            0 0 25px rgba(0, 169, 157, 0.7),
-            0 0 50px rgba(0, 169, 157, 0.5),
-            0 0 75px rgba(0, 169, 157, 0.3);
-    }
-}
-
-@keyframes top-product-glow-pulse-white {
-    0%, 100% {
-        box-shadow: 
-            0 0 15px rgba(255, 255, 255, 0.4),
-            0 0 30px rgba(255, 255, 255, 0.3),
-            0 0 45px rgba(255, 255, 255, 0.15);
-    }
-    50% {
-        box-shadow: 
-            0 0 25px rgba(255, 255, 255, 0.7),
-            0 0 50px rgba(255, 255, 255, 0.5),
-            0 0 75px rgba(255, 255, 255, 0.3);
-    }
-}
-
-/* Apply pulse animation to top products with magenta */
-.product-card.top-product.highlight-magenta.highlight-animation-pulse .product-image::before {
-    animation: top-product-glow-pulse 2s ease-in-out infinite;
-}
-
-/* Apply pulse animation to top products with cyan */
-.product-card.top-product.highlight-cyan.highlight-animation-pulse .product-image::before {
-    animation: top-product-glow-pulse-cyan 2s ease-in-out infinite;
-}
-
-/* Apply pulse animation to top products with white */
-.product-card.top-product.highlight-white.highlight-animation-pulse .product-image::before {
-    animation: top-product-glow-pulse-white 2s ease-in-out infinite;
-}
-
-/* Apply glow animation to top products */
-.product-card.top-product.highlight-magenta.highlight-animation-glow .product-image::before {
-    animation: top-product-glow-pulse 2.5s ease-in-out infinite;
-}
-
-.product-card.top-product.highlight-cyan.highlight-animation-glow .product-image::before {
-    animation: top-product-glow-pulse-cyan 2.5s ease-in-out infinite;
-}
-
-.product-card.top-product.highlight-white.highlight-animation-glow .product-image::before {
-    animation: top-product-glow-pulse-white 2.5s ease-in-out infinite;
 }
 
 
