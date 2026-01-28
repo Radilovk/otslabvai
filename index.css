@@ -1444,22 +1444,20 @@ main {
 /* Highlight Animations */
 @keyframes highlight-pulse {
     0%, 100% {
-        opacity: 0.4;
         transform: scaleX(0.95);
+        filter: brightness(0.7);
     }
     50% {
-        opacity: 1;
         transform: scaleX(1);
+        filter: brightness(1.2);
     }
 }
 
 @keyframes highlight-glow {
     0%, 100% {
-        opacity: 0.5;
-        filter: brightness(1);
+        filter: brightness(0.8);
     }
     50% {
-        opacity: 1;
         filter: brightness(1.5);
     }
 }
