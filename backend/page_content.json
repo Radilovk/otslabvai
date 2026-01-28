@@ -11,6 +11,12 @@
     },
     "promo_banner": {
       "text": "СПЕЦИАЛНА ОФЕРТА: До 30% отстъпка при поръчка над 100 €!"
+    },
+    "about_us_page": {
+      "hero_title": "За нас",
+      "hero_subtitle": "Вашият надежден партньор на пътя към здравословен живот",
+      "main_image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
+      "main_image_alt": "Научни изследвания"
     }
   },
   "navigation": [

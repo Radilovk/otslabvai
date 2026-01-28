@@ -180,15 +180,15 @@
 
     <div class="about-hero">
         <div class="container">
-            <h1>За нас</h1>
-            <p>Вашият надежден партньор на пътя към здравословен живот</p>
+            <h1 id="about-hero-title">За нас</h1>
+            <p id="about-hero-subtitle">Вашият надежден партньор на пътя към здравословен живот</p>
         </div>
     </div>
 
     <main class="container" style="padding-bottom: 3rem;">
         <div class="about-content">
             <div class="about-image">
-                <img src="https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp" alt="Научни изследвания" loading="lazy">
+                <img id="about-main-image" src="https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp" alt="Научни изследвания" loading="lazy">
             </div>
             <div class="about-text">
                 <h2>Науката зад отслабването</h2>
@@ -217,5 +217,54 @@
     <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
     
     <script type="module" src="index.js"></script>
+    <script type="module">
+        // Load About Us page settings from page_content.json
+        import { API_URL } from './config.js';
+        
+        async function loadAboutUsSettings() {
+            try {
+                const response = await fetch(`${API_URL}/page_content.json`, {
+                    cache: 'default'
+                });
+                if (!response.ok) throw new Error('Failed to load settings');
+                const data = await response.json();
+                
+                // Apply About Us page settings if available
+                if (data.settings && data.settings.about_us_page) {
+                    const aboutSettings = data.settings.about_us_page;
+                    
+                    // Update hero title and subtitle
+                    const heroTitle = document.getElementById('about-hero-title');
+                    const heroSubtitle = document.getElementById('about-hero-subtitle');
+                    const mainImage = document.getElementById('about-main-image');
+                    
+                    if (heroTitle && aboutSettings.hero_title) {
+                        heroTitle.textContent = aboutSettings.hero_title;
+                    }
+                    
+                    if (heroSubtitle && aboutSettings.hero_subtitle) {
+                        heroSubtitle.textContent = aboutSettings.hero_subtitle;
+                    }
+                    
+                    if (mainImage && aboutSettings.main_image) {
+                        mainImage.src = aboutSettings.main_image;
+                        if (aboutSettings.main_image_alt) {
+                            mainImage.alt = aboutSettings.main_image_alt;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('Could not load About Us settings:', error);
+                // Fallback to default hardcoded values
+            }
+        }
+        
+        // Load settings when page is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadAboutUsSettings);
+        } else {
+            loadAboutUsSettings();
+        }
+    </script>
 </body>
 </html>
