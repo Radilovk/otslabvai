@@ -302,13 +302,13 @@ img {
     height: 1em;
     border-style: solid;
     border-width: 0.2em 0.2em 0 0;
-    border-color: var(--color-primary);
+    border-color: var(--color-secondary);
     transform: rotate(-135deg);
     transition: all var(--transition-speed);
 }
 
 .btn-back:hover::before {
-    border-color: var(--color-secondary);
+    border-color: var(--color-primary);
     transform: rotate(-135deg) scale(1.2);
 }
 
