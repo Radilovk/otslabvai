@@ -559,6 +559,38 @@
                     </div>
                 </div>
             </div>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">📄 Страница "За нас"</h4>
+            
+            <div class="form-group">
+                <label for="about_us_hero_title">Заглавие на Hero секция</label>
+                <input type="text" id="about_us_hero_title" data-field="about_us_page.hero_title" placeholder="За нас">
+                <small class="form-hint">Заглавието в горната секция на страницата "За нас"</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="about_us_hero_subtitle">Подзаглавие на Hero секция</label>
+                <input type="text" id="about_us_hero_subtitle" data-field="about_us_page.hero_subtitle" placeholder="Вашият надежден партньор на пътя към здравословен живот">
+                <small class="form-hint">Подзаглавието в горната секция на страницата "За нас"</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="about_us_main_image">URL на главното изображение</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="about_us_main_image" data-field="about_us_page.main_image" style="flex: 1;" placeholder="https://...">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="about_us_main_image">
+                        📤 Upload
+                    </button>
+                </div>
+                <small class="form-hint">Главното изображение на страницата "За нас"</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="about_us_main_image_alt">Alt текст на изображението</label>
+                <input type="text" id="about_us_main_image_alt" data-field="about_us_page.main_image_alt" placeholder="Научни изследвания">
+                <small class="form-hint">Описание на изображението за SEO и достъпност</small>
+            </div>
         </form>
     </template>
     
