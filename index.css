@@ -1183,6 +1183,12 @@ main {
     padding: 60px 0; 
 }
 
+/* First category section should be closer to hero section */
+.category-section:first-of-type {
+    padding-top: 30px;
+}
+
+
 .category-header { 
     cursor: pointer; 
     outline: none; 
