@@ -847,7 +847,7 @@
         <!-- Форма за попълване -->
         <main class="form-section">
             <h1 class="checkout-page-title">Завършване на поръчката</h1>
-            <a href="index.html" class="btn btn-primary" style="display:inline-block;margin-bottom:1rem;">&larr; Обратно към магазина</a>
+            <a href="index.html" class="btn btn-primary btn-back">&larr; Обратно към магазина</a>
             <form id="checkout-form" novalidate>
                 <div class="form-step">
                     <h2>Информация за контакт</h2>
@@ -1146,26 +1146,32 @@
                 if (data && data.navigation) {
                     const navLinksContainer = document.getElementById('main-nav-links');
                     if (navLinksContainer) {
-                        // Find theme toggle and cart link elements (they should remain at the end)
-                        const themeToggleLi = navLinksContainer.querySelector('li:has(#theme-toggle)');
-                        const cartLinkLi = navLinksContainer.querySelector('li:has(.cart-link)');
+                        // Find theme toggle and cart link elements by their IDs/classes more explicitly
+                        const themeToggleBtn = document.getElementById('theme-toggle');
+                        const themeToggleLi = themeToggleBtn ? themeToggleBtn.closest('li') : null;
+                        const cartLink = navLinksContainer.querySelector('.cart-link');
+                        const cartLinkLi = cartLink ? cartLink.closest('li') : null;
                         
-                        // Clear existing nav links but preserve theme toggle and cart link
-                        navLinksContainer.innerHTML = '';
+                        // Remove only navigation link items (not theme toggle or cart)
+                        const navLinks = Array.from(navLinksContainer.querySelectorAll('li')).filter(li => {
+                            return li !== themeToggleLi && li !== cartLinkLi;
+                        });
+                        navLinks.forEach(li => li.remove());
                         
-                        // Add navigation items
+                        // Add navigation items before theme toggle
                         data.navigation.forEach(item => {
                             const li = document.createElement('li');
                             const a = document.createElement('a');
                             a.href = item.link;
                             a.textContent = item.text;
                             li.appendChild(a);
-                            navLinksContainer.appendChild(li);
+                            // Insert before theme toggle if it exists, otherwise append
+                            if (themeToggleLi) {
+                                navLinksContainer.insertBefore(li, themeToggleLi);
+                            } else {
+                                navLinksContainer.appendChild(li);
+                            }
                         });
-                        
-                        // Re-add theme toggle and cart link at the end
-                        if (themeToggleLi) navLinksContainer.appendChild(themeToggleLi);
-                        if (cartLinkLi) navLinksContainer.appendChild(cartLinkLi);
                     }
                 }
             } catch (error) {
