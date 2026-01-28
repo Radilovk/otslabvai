@@ -32,6 +32,10 @@ const DOM = {
 
 const promoBanner = document.querySelector('.promo-banner');
 
+// Global settings storage
+let globalSettings = {};
+
+
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -90,9 +94,23 @@ const generateProductCard = (product) => {
     const publicData = product.public_data;
     const inventory = product.system_data?.inventory ?? 0;
     const productId = product.product_id; // Използваме надеждния уникален ID
+    
+    // Get highlight classes from global settings
+    let highlightClasses = '';
+    if (globalSettings.product_effects) {
+        const { highlight_color, highlight_animation } = globalSettings.product_effects;
+        
+        if (highlight_color && highlight_color !== 'off') {
+            highlightClasses += ` highlight-${highlight_color}`;
+        }
+        
+        if (highlight_animation && highlight_animation !== 'none') {
+            highlightClasses += ` highlight-animation-${highlight_animation}`;
+        }
+    }
 
     return `
-    <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}">
+    <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up${highlightClasses}" data-product-id="${escapeHtml(productId)}">
         ${publicData.image_url ? `<div class="product-image"><img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)} - ${escapeHtml(publicData.tagline)}" loading="lazy" decoding="async"></div>` : ''}
         <div class="card-content">
             <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(publicData.tagline)}</p></div>
@@ -1207,6 +1225,9 @@ async function main() {
 
         // Check if this is the index page (has main-content-container)
         const isIndexPage = DOM.mainContainer !== null;
+        
+        // Store settings globally
+        globalSettings = data.settings || {};
         
         if (isIndexPage) {
             DOM.mainContainer.innerHTML = ''; 

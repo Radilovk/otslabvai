@@ -591,6 +591,31 @@
                 <input type="text" id="about_us_main_image_alt" data-field="about_us_page.main_image_alt" placeholder="Научни изследвания">
                 <small class="form-hint">Описание на изображението за SEO и достъпност</small>
             </div>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">✨ Ефекти на продуктите</h4>
+            
+            <div class="form-group">
+                <label for="product_highlight_color">Цвят на подсветката под продуктите</label>
+                <select id="product_highlight_color" data-field="product_effects.highlight_color">
+                    <option value="off">Изключено</option>
+                    <option value="magenta">Magenta</option>
+                    <option value="cyan">Cyan</option>
+                    <option value="white">Бяло</option>
+                </select>
+                <small class="form-hint">Изберете цвят на подсветката под снимките на продуктите на началната страница</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="product_highlight_animation">Анимация на подсветката</label>
+                <select id="product_highlight_animation" data-field="product_effects.highlight_animation">
+                    <option value="none">Без анимация</option>
+                    <option value="pulse">Пулсираща</option>
+                    <option value="glow">Плавно светене</option>
+                    <option value="color-shift">Смяна на цвета</option>
+                </select>
+                <small class="form-hint">Изберете вид анимация за подсветката</small>
+            </div>
         </form>
     </template>
     
