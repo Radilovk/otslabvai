@@ -23,7 +23,7 @@
     },
     {
       "text": "За нас",
-      "link": "#about-us"
+      "link": "about-us.html"
     }
   ],
   "page_content": [
@@ -97,11 +97,11 @@
         "links": [
           {
             "text": "За нас",
-            "url": "#about-us"
+            "url": "about-us.html"
           },
           {
             "text": "Контакти",
-            "url": "#contact"
+            "url": "contact.html"
           },
           {
             "text": "Политика за поверителност",
