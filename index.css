@@ -1414,7 +1414,7 @@ main {
 .product-image::after {
     content: "";
     position: absolute;
-    bottom: 0;
+    bottom: -3px;
     left: 0;
     right: 0;
     height: 4px;
@@ -1425,19 +1425,19 @@ main {
 /* Highlight Colors */
 .product-card.highlight-magenta .product-image::after {
     background: linear-gradient(90deg, transparent, #E4007C, transparent);
-    box-shadow: 0 0 15px #E4007C;
+    box-shadow: 0 -5px 20px #E4007C;
     opacity: 0.8;
 }
 
 .product-card.highlight-cyan .product-image::after {
     background: linear-gradient(90deg, transparent, #00A99D, transparent);
-    box-shadow: 0 0 15px #00A99D;
+    box-shadow: 0 -5px 20px #00A99D;
     opacity: 0.8;
 }
 
 .product-card.highlight-white .product-image::after {
     background: linear-gradient(90deg, transparent, #FFFFFF, transparent);
-    box-shadow: 0 0 15px #FFFFFF;
+    box-shadow: 0 -5px 20px #FFFFFF;
     opacity: 0.8;
 }
 
