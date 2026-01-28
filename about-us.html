@@ -217,5 +217,72 @@
     <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
     
     <script type="module" src="index.js"></script>
+    <script type="module">
+        // Load About Us content from page_content.json
+        import { API_URL } from './config.js';
+        
+        async function loadAboutUsContent() {
+            try {
+                const response = await fetch(`${API_URL}/page_content.json`);
+                const data = await response.json();
+                
+                // Find the about-us info card
+                const aboutUsCard = data.page_content?.find(item => item.id === 'about-us');
+                
+                if (aboutUsCard) {
+                    // Update image and alt text
+                    const imgElement = document.querySelector('.about-image img');
+                    if (imgElement && aboutUsCard.image) {
+                        imgElement.src = aboutUsCard.image;
+                        // Update alt text based on title or keep default
+                        imgElement.alt = aboutUsCard.title || 'За нас';
+                    }
+                    
+                    // Update title
+                    const titleElement = document.querySelector('.about-text h2');
+                    if (titleElement && aboutUsCard.title) {
+                        titleElement.textContent = aboutUsCard.title;
+                    }
+                    
+                    // Update content - convert \n to paragraphs
+                    const contentContainer = document.querySelector('.about-text');
+                    if (contentContainer && aboutUsCard.content) {
+                        // Clear existing paragraphs
+                        const existingParagraphs = contentContainer.querySelectorAll('p');
+                        existingParagraphs.forEach(p => p.remove());
+                        
+                        // Create new paragraphs from content
+                        const paragraphs = aboutUsCard.content.split('\n\n').filter(p => p.trim());
+                        paragraphs.forEach(text => {
+                            const p = document.createElement('p');
+                            p.textContent = text;
+                            contentContainer.insertBefore(p, contentContainer.querySelector('.cta-button'));
+                        });
+                    }
+                    
+                    // Update button if exists
+                    const buttonElement = document.querySelector('.cta-button');
+                    if (buttonElement && aboutUsCard.button) {
+                        if (aboutUsCard.button.text) {
+                            buttonElement.textContent = aboutUsCard.button.text;
+                        }
+                        if (aboutUsCard.button.url) {
+                            buttonElement.href = aboutUsCard.button.url;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading About Us content:', error);
+                // Keep hardcoded content as fallback
+            }
+        }
+        
+        // Load content when page is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadAboutUsContent);
+        } else {
+            loadAboutUsContent();
+        }
+    </script>
 </body>
 </html>
