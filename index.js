@@ -84,7 +84,7 @@ const generateEffectBar = effect => `
 
 // --- START: MODIFIED FUNCTION ---
 // Product cards are now clickable links that navigate to product detail page
-const generateProductCard = (product) => {
+const generateProductCard = (product, categoryId = '') => {
     // Проверка за сигурност: ако продуктът няма public_data, не го рендираме.
     if (!product.public_data) {
         console.warn(`Продукт с ID '${product.product_id}' няма 'public_data' и няма да бъде рендиран.`);
@@ -94,6 +94,9 @@ const generateProductCard = (product) => {
     const publicData = product.public_data;
     const inventory = product.system_data?.inventory ?? 0;
     const productId = product.product_id; // Използваме надеждния уникален ID
+    
+    // Check if this is a top product (from weight-loss-products category)
+    const isTopProduct = categoryId === 'weight-loss-products';
     
     // Get highlight classes from global settings
     let highlightClasses = '';
@@ -107,6 +110,11 @@ const generateProductCard = (product) => {
         if (highlight_animation && highlight_animation !== 'none') {
             highlightClasses += ` highlight-animation-${highlight_animation}`;
         }
+    }
+    
+    // Add top-product class if this is a top product
+    if (isTopProduct) {
+        highlightClasses += ' top-product';
     }
 
     return `
@@ -281,6 +289,7 @@ const generateProductCategoryHTML = (component, index) => {
     const isCollapsible = component.options.is_collapsible;
     const isExpanded = component.options.is_expanded_by_default;
     const productGridId = `product-grid-${component.id || index}`;
+    const categoryId = component.id;
     
     // Sort products by display_order if it exists, otherwise maintain current order
     const sortedProducts = (component.products || []).slice().sort((a, b) => {
@@ -300,7 +309,7 @@ const generateProductCategoryHTML = (component, index) => {
                 ${component.image ? `<div class="category-image-wrapper"><img src="${component.image}" alt="${component.title}" loading="lazy"></div>` : ''}
             </div>
             <div class="product-grid" id="${productGridId}">
-                ${sortedProducts.map(generateProductCard).join('')}
+                ${sortedProducts.map(product => generateProductCard(product, categoryId)).join('')}
             </div>
         </div>
     </section>`;
