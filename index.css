@@ -292,7 +292,7 @@ img {
     align-items: center;
     transition: all var(--transition-speed);
     position: fixed;
-    z-index: 1003;
+    z-index: 1000;
     top: 90px;
     left: 20px;
     text-decoration: none;
@@ -308,18 +308,6 @@ img {
     box-shadow: 0 4px 12px rgba(0, 169, 157, 0.3);
 }
 
-/* Dark theme support for back button */
-[data-theme="dark"] .btn-back {
-    background: var(--accent-dark);
-    border-color: var(--accent-dark);
-    box-shadow: 0 2px 8px rgba(228, 0, 124, 0.3);
-}
-
-[data-theme="dark"] .btn-back:hover {
-    background: var(--accent-secondary-dark);
-    border-color: var(--accent-secondary-dark);
-}
-
 /* Responsive adjustments for mobile */
 @media (max-width: 768px) {
     .btn-back {
@@ -328,15 +316,6 @@ img {
         top: 80px;
         left: 15px;
         font-size: 1.1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .btn-back {
-        width: 40px;
-        height: 40px;
-        top: 75px;
-        left: 12px;
     }
 }
 
