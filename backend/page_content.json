@@ -17,6 +17,10 @@
       "hero_subtitle": "Вашият надежден партньор на пътя към здравословен живот",
       "main_image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
       "main_image_alt": "Научни изследвания"
+    },
+    "product_effects": {
+      "highlight_color": "magenta",
+      "highlight_animation": "pulse"
     }
   },
   "navigation": [

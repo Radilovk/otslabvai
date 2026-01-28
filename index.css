@@ -1399,6 +1399,7 @@ main {
     margin-bottom: 1.5rem;
     border-radius: var(--border-radius);
     overflow: hidden;
+    position: relative;
 }
 
 .product-image img {
@@ -1408,6 +1409,83 @@ main {
     object-fit: contain;
     max-height: 250px;
 }
+
+/* Product Image Highlight Effects */
+.product-image::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Highlight Colors */
+.product-card.highlight-magenta .product-image::after {
+    background: linear-gradient(90deg, transparent, #E4007C, transparent);
+    box-shadow: 0 0 15px #E4007C;
+    opacity: 0.8;
+}
+
+.product-card.highlight-cyan .product-image::after {
+    background: linear-gradient(90deg, transparent, #00A99D, transparent);
+    box-shadow: 0 0 15px #00A99D;
+    opacity: 0.8;
+}
+
+.product-card.highlight-white .product-image::after {
+    background: linear-gradient(90deg, transparent, #FFFFFF, transparent);
+    box-shadow: 0 0 15px #FFFFFF;
+    opacity: 0.8;
+}
+
+/* Highlight Animations */
+@keyframes highlight-pulse {
+    0%, 100% {
+        transform: scaleX(0.95);
+        filter: brightness(0.7);
+    }
+    50% {
+        transform: scaleX(1);
+        filter: brightness(1.2);
+    }
+}
+
+@keyframes highlight-glow {
+    0%, 100% {
+        filter: brightness(0.8);
+    }
+    50% {
+        filter: brightness(1.5);
+    }
+}
+
+@keyframes highlight-color-shift {
+    0% {
+        filter: hue-rotate(0deg);
+    }
+    50% {
+        filter: hue-rotate(180deg);
+    }
+    100% {
+        filter: hue-rotate(360deg);
+    }
+}
+
+.product-card.highlight-animation-pulse .product-image::after {
+    animation: highlight-pulse 2s ease-in-out infinite;
+}
+
+.product-card.highlight-animation-glow .product-image::after {
+    animation: highlight-glow 2.5s ease-in-out infinite;
+}
+
+.product-card.highlight-animation-color-shift .product-image::after {
+    animation: highlight-color-shift 4s linear infinite;
+}
+
 
 .card-content { 
     /* Renamed from card-header - no longer a button/accordion */
