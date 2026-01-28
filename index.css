@@ -1397,8 +1397,6 @@ main {
 .product-image {
     width: 100%;
     margin-bottom: 1.5rem;
-    border-radius: var(--border-radius);
-    overflow: hidden;
     position: relative;
 }
 
@@ -1408,6 +1406,7 @@ main {
     display: block;
     object-fit: contain;
     max-height: 250px;
+    border-radius: var(--border-radius);
 }
 
 /* Product Image Highlight Effects */
@@ -1592,7 +1591,7 @@ main {
 }
 
 /* Apply glow animation to top products */
-.product-card.top-product.highlight-animation-glow .product-image::before {
+.product-card.top-product.highlight-magenta.highlight-animation-glow .product-image::before {
     animation: top-product-glow-pulse 2.5s ease-in-out infinite;
 }
 
