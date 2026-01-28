@@ -218,7 +218,7 @@
     
     <script type="module" src="index.js"></script>
     <script type="module">
-        // Load About Us content from site_content.json
+        // Load About Us content from page_content.json
         import { API_URL } from './config.js';
         
         async function loadAboutUsContent() {
@@ -230,10 +230,12 @@
                 const aboutUsCard = data.page_content?.find(item => item.id === 'about-us');
                 
                 if (aboutUsCard) {
-                    // Update image
+                    // Update image and alt text
                     const imgElement = document.querySelector('.about-image img');
                     if (imgElement && aboutUsCard.image) {
                         imgElement.src = aboutUsCard.image;
+                        // Update alt text based on title or keep default
+                        imgElement.alt = aboutUsCard.title || 'За нас';
                     }
                     
                     // Update title
@@ -245,9 +247,6 @@
                     // Update content - convert \n to paragraphs
                     const contentContainer = document.querySelector('.about-text');
                     if (contentContainer && aboutUsCard.content) {
-                        // Keep the title
-                        const title = contentContainer.querySelector('h2');
-                        
                         // Clear existing paragraphs
                         const existingParagraphs = contentContainer.querySelectorAll('p');
                         existingParagraphs.forEach(p => p.remove());
