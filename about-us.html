@@ -186,7 +186,7 @@
     </div>
 
     <main class="container" style="padding-bottom: 3rem;">
-        <a href="index.html" class="btn-back" aria-label="Обратно към началната страница">&larr;</a>
+        <a href="index.html" class="btn-back" aria-label="Обратно към началната страница"></a>
         <div class="about-content">
             <div class="about-image">
                 <img id="about-main-image" src="https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp" alt="Научни изследвания" loading="lazy">
@@ -229,7 +229,7 @@
             
             try {
                 const response = await fetch(`${API_URL}/page_content.json`, {
-                    cache: 'default'
+                    cache: 'no-cache'
                 });
                 if (!response.ok) throw new Error('Failed to load settings');
                 const data = await response.json();

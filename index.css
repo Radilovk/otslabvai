@@ -281,41 +281,49 @@ img {
 }
 
 .btn-back {
-    width: 44px;
-    height: 44px;
-    background: var(--color-primary);
-    border: 2px solid var(--color-primary);
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all var(--transition-speed);
     position: fixed;
     z-index: 1000;
     top: 90px;
     left: 20px;
+    width: 2.5em;
+    height: 2.5em;
+    cursor: pointer;
     text-decoration: none;
-    font-size: 1.2rem;
-    color: var(--color-white);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all var(--transition-speed);
 }
 
-.btn-back:hover {
-    background: var(--color-secondary);
+.btn-back::before {
+    content: '';
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border-style: solid;
+    border-width: 0.2em 0.2em 0 0;
+    border-color: var(--color-primary);
+    transform: rotate(-135deg);
+    transition: all var(--transition-speed);
+}
+
+.btn-back:hover::before {
     border-color: var(--color-secondary);
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 169, 157, 0.3);
+    transform: rotate(-135deg) scale(1.2);
 }
 
 /* Responsive adjustments for mobile */
 @media (max-width: 768px) {
     .btn-back {
-        width: 40px;
-        height: 40px;
         top: 80px;
         left: 15px;
-        font-size: 1.1rem;
+        width: 2em;
+        height: 2em;
+    }
+    
+    .btn-back::before {
+        width: 0.9em;
+        height: 0.9em;
     }
 }
 
