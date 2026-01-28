@@ -180,12 +180,13 @@
 
     <div class="about-hero">
         <div class="container">
-            <h1 id="about-hero-title">За нас</h1>
-            <p id="about-hero-subtitle">Вашият надежден партньор на пътя към здравословен живот</p>
+            <h1 id="about-hero-title" class="content-loading">За нас</h1>
+            <p id="about-hero-subtitle" class="content-loading">Вашият надежден партньор на пътя към здравословен живот</p>
         </div>
     </div>
 
     <main class="container" style="padding-bottom: 3rem;">
+        <a href="index.html" class="btn btn-primary" style="display:inline-block;margin-bottom:2rem;">&larr; Обратно към началната страница</a>
         <div class="about-content">
             <div class="about-image">
                 <img id="about-main-image" src="https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp" alt="Научни изследвания" loading="lazy">
@@ -222,6 +223,10 @@
         import { API_URL } from './config.js';
         
         async function loadAboutUsSettings() {
+            const heroTitle = document.getElementById('about-hero-title');
+            const heroSubtitle = document.getElementById('about-hero-subtitle');
+            const mainImage = document.getElementById('about-main-image');
+            
             try {
                 const response = await fetch(`${API_URL}/page_content.json`, {
                     cache: 'default'
@@ -232,11 +237,6 @@
                 // Apply About Us page settings if available
                 if (data.settings && data.settings.about_us_page) {
                     const aboutSettings = data.settings.about_us_page;
-                    
-                    // Update hero title and subtitle
-                    const heroTitle = document.getElementById('about-hero-title');
-                    const heroSubtitle = document.getElementById('about-hero-subtitle');
-                    const mainImage = document.getElementById('about-main-image');
                     
                     if (heroTitle && aboutSettings.hero_title) {
                         heroTitle.textContent = aboutSettings.hero_title;
@@ -256,6 +256,10 @@
             } catch (error) {
                 console.warn('Could not load About Us settings:', error);
                 // Fallback to default hardcoded values
+            } finally {
+                // Always show the content after loading attempt
+                if (heroTitle) heroTitle.classList.add('content-loaded');
+                if (heroSubtitle) heroSubtitle.classList.add('content-loaded');
             }
         }
         

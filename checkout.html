@@ -805,7 +805,7 @@
     <header class="main-header">
         <div class="header-container">
             <a href="index.html" class="logo-container" id="header-logo-link">
-                <img src="" alt="Лого" id="header-logo-img">
+                <img src="https://radilovk.github.io/face/assets/logoblack.png" alt="Лого" id="header-logo-img" style="display: block;">
                 <div>
                     <span class="brand-name" id="header-brand-name">ДА ОТСЛАБНА</span>
                     <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
@@ -813,7 +813,7 @@
             </a>
             <nav class="main-nav">
                 <ul class="nav-links" id="main-nav-links">
-                    <li><a href="index.html">Начало</a></li>
+                    <!-- Navigation links will be dynamically added here -->
                     <li>
                         <button id="theme-toggle" class="theme-toggle-btn" aria-label="Превключи тема">
                             <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1139,6 +1139,33 @@
                         const sloganEl = document.getElementById('header-brand-slogan');
                         sloganEl.textContent = settings.site_slogan;
                         sloganEl.style.display = 'block';
+                    }
+                }
+                
+                // Render navigation
+                if (data && data.navigation) {
+                    const navLinksContainer = document.getElementById('main-nav-links');
+                    if (navLinksContainer) {
+                        // Find theme toggle and cart link elements (they should remain at the end)
+                        const themeToggleLi = navLinksContainer.querySelector('li:has(#theme-toggle)');
+                        const cartLinkLi = navLinksContainer.querySelector('li:has(.cart-link)');
+                        
+                        // Clear existing nav links but preserve theme toggle and cart link
+                        navLinksContainer.innerHTML = '';
+                        
+                        // Add navigation items
+                        data.navigation.forEach(item => {
+                            const li = document.createElement('li');
+                            const a = document.createElement('a');
+                            a.href = item.link;
+                            a.textContent = item.text;
+                            li.appendChild(a);
+                            navLinksContainer.appendChild(li);
+                        });
+                        
+                        // Re-add theme toggle and cart link at the end
+                        if (themeToggleLi) navLinksContainer.appendChild(themeToggleLi);
+                        if (cartLinkLi) navLinksContainer.appendChild(cartLinkLi);
                     }
                 }
             } catch (error) {
