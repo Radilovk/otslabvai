@@ -1361,7 +1361,7 @@ main {
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
     padding: 30px;
-    overflow: visible;
+    overflow: hidden;
     transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
     position: relative;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
