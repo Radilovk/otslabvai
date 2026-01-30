@@ -280,6 +280,7 @@ const generateProductCategoryHTML = (component, index) => {
                     ${isCollapsible ? '<span class="category-expand-icon"></span>' : ''}
                 </h2>
                 ${component.image ? `<div class="category-image-wrapper"><img src="${component.image}" alt="${component.title}" loading="lazy"></div>` : ''}
+                ${component.description ? `<p class="category-description">${component.description}</p>` : ''}
             </div>
             <div class="product-grid" id="${productGridId}">
                 ${sortedProducts.map(generateProductCard).join('')}

@@ -106,6 +106,7 @@
       "component_id": "cat_weight_loss_products",
       "id": "weight-loss-products",
       "title": "ТОП продукти за отслабване",
+      "description": "Открийте нашата селекция от най-ефективните продукти за отслабване, които ще ви помогнат да постигнете желаните резултати бързо и безопасно.",
       "image": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769317585751-ChatGPT_Im_age_Jan_25__2026__06_58_37_AM.png",
       "options": {
         "is_collapsible": true,
@@ -850,6 +851,7 @@
       "component_id": "comp-uuid-prodcat-001",
       "id": "fat-burners",
       "title": "Избрани продукти за отслабване",
+      "description": "Подбрани продукти от висококачествени натурални съставки, които подпомагат метаболизма и ускоряват процеса на отслабване.",
       "image": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769313937562-ChatGPT_Image_Jan_25__2026__05_09_31_AM.png",
       "options": {
         "is_collapsible": true,
