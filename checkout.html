@@ -223,7 +223,7 @@
         /* Econt custom dropdown styles */
         .econt-dropdown-wrapper {
             position: relative;
-            z-index: 1000; /* High enough to appear above form elements, below modals */
+            z-index: 1000; /* Above form elements, below modals (z-index: 10000) */
         }
         
         .econt-dropdown {
@@ -237,7 +237,7 @@
             border: 2px solid #0056b3;
             border-top: none;
             border-radius: 0 0 5px 5px;
-            z-index: 1001; /* Higher z-index to appear above all form elements */
+            z-index: 1001; /* Above wrapper (1000) and form elements, below modals (10000) */
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         
