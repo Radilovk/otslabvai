@@ -969,7 +969,7 @@ main {
     transition: transform 0.3s ease;
 }
 
-.stat-item .stat-icon {
+.stat-icon {
     margin-bottom: 10px;
     color: var(--color-primary);
     transition: transform 0.3s ease;
