@@ -139,14 +139,19 @@
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            overflow-x: hidden; /* Prevent horizontal scroll */
-            overflow-y: visible; /* Allow vertical content like dropdowns */
+            overflow: visible; /* Allow dropdowns to extend beyond container */
+            position: relative; /* Establish positioning context */
         }
         
         /* Ensure Speedy widget doesn't expand parent container horizontally */
         #speedy-widget {
             overflow-x: hidden; /* Prevent container from expanding horizontally */
             overflow-y: visible; /* Allow iframe to extend vertically if needed */
+        }
+        
+        /* Ekont widget should allow dropdowns to overflow */
+        #ekont-widget {
+            overflow: visible; /* Allow dropdowns to extend beyond container */
         }
         
         /* Responsive iframe for Speedy widget */
@@ -218,6 +223,7 @@
         /* Econt custom dropdown styles */
         .econt-dropdown-wrapper {
             position: relative;
+            z-index: 10000; /* Ensure wrapper has high z-index */
         }
         
         .econt-dropdown {
@@ -231,7 +237,7 @@
             border: 2px solid #0056b3;
             border-top: none;
             border-radius: 0 0 5px 5px;
-            z-index: 9999; /* High enough to display above other elements including modals */
+            z-index: 10001; /* Higher z-index to appear above all form elements */
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         
