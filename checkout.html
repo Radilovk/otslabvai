@@ -61,7 +61,7 @@
         .checkbox-group label { margin-bottom: 0; color: var(--text-primary); font-weight: 400; cursor: pointer; }
         .checkbox-group input { width: auto; }
         .hidden-fields { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
-        .hidden-fields.visible { max-height: 1000px; margin-top: 1rem;}
+        .hidden-fields.visible { max-height: 1000px; margin-top: 1rem; overflow: visible; /* Allow dropdowns to extend beyond */}
         /* Summary Section Styles */
         .product-list { list-style: none; }
         .product-item { display: flex; gap: 1rem; align-items: center; padding: 1rem 0; border-bottom: 1px solid var(--border-color); }
@@ -290,11 +290,13 @@
                 padding: 0 0.5rem;
                 max-width: 100%;
                 overflow-x: hidden; /* Prevent horizontal scroll */
+                overflow-y: visible; /* Allow dropdowns to extend vertically */
             }
             
             .form-section {
                 min-width: 0;
                 overflow-x: hidden; /* Prevent horizontal scroll */
+                overflow-y: visible; /* Allow dropdowns to extend vertically */
             }
             
             .form-row { flex-direction: column; }
