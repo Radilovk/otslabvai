@@ -72,6 +72,10 @@ const addToCart = (id, name, price, inventory, image) => {
             return;
         }
         cart[idx].quantity++;
+        // Update image if it's missing in existing cart item
+        if (!cart[idx].image && image) {
+            cart[idx].image = image;
+        }
     } else {
         if (maxQty === 0) {
             showToast('Продуктът е изчерпан.', 'error');
