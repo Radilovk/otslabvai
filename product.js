@@ -81,7 +81,7 @@ const addToCart = (id, name, price, inventory, image) => {
             showToast('Продуктът е изчерпан.', 'error');
             return;
         }
-        cart.push({ id, name, price: Number(price), quantity: 1, inventory: maxQty, image });
+        cart.push({ id, name, price: Number(price), quantity: 1, inventory: maxQty, image: image || '' });
     }
     saveCart(cart);
     updateCartCount();
