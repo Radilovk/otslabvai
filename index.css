@@ -969,8 +969,18 @@ main {
     transition: transform 0.3s ease;
 }
 
+.stat-icon {
+    margin-bottom: 10px;
+    color: var(--color-primary);
+    transition: transform 0.3s ease;
+}
+
 .stat-item:hover {
     transform: translateY(-5px);
+}
+
+.stat-item:hover .stat-icon {
+    transform: scale(1.1);
 }
 
 .stat-item strong {

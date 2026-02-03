@@ -106,6 +106,21 @@ const generateProductCard = (product) => {
 // --- END: MODIFIED FUNCTION ---
 
 
+// Helper function to generate SVG icons for stats
+const getStatIconSVG = (iconName) => {
+    const icons = {
+        'users': '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+        'chart': '<line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line>',
+        'leaf': '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>',
+        'heart': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>',
+        'star': '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>',
+        'shield': '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>',
+        'award': '<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>'
+    };
+    
+    return icons[iconName] || '';
+};
+
 const generateHeroHTML = component => {
     // Build style attribute for custom background
     let heroStyle = '';
@@ -209,13 +224,16 @@ const generateHeroHTML = component => {
     
     // Get stats configuration with defaults
     const stats = component.stats || [
-        { value: '2,840+', label: 'Доволни клиенти' },
-        { value: '98%', label: 'Успеваемост' },
-        { value: '100%', label: 'Естествени съставки' }
+        { value: '2,840+', label: 'Доволни клиенти', icon: 'users' },
+        { value: '98%', label: 'Успеваемост', icon: 'chart' },
+        { value: '100%', label: 'Естествени съставки', icon: 'leaf' }
     ];
     
     const statsHTML = stats.map(stat => `
         <div class="stat-item">
+            ${stat.icon ? `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
+                ${getStatIconSVG(stat.icon)}
+            </svg>` : ''}
             <strong>${escapeHtml(stat.value)}</strong>
             <span>${escapeHtml(stat.label)}</span>
         </div>

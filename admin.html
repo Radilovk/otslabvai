@@ -1226,13 +1226,26 @@
     <!-- Вложен шаблон за редактор на HERO СТАТИСТИКА -->
     <template id="hero-stat-editor-template">
         <div class="nested-sub-item" data-type="hero-stat">
-             <div class="form-group">
+            <div class="form-group">
                 <label>Стойност</label>
                 <input type="text" data-field="value" placeholder="Напр. 2,840+ или 98%">
             </div>
-             <div class="form-group">
+            <div class="form-group">
                 <label>Етикет</label>
                 <input type="text" data-field="label" placeholder="Напр. Доволни клиенти">
+            </div>
+            <div class="form-group">
+                <label>Икона</label>
+                <select data-field="icon">
+                    <option value="">Без икона</option>
+                    <option value="users">Потребители (👥)</option>
+                    <option value="chart">Графика (📊)</option>
+                    <option value="leaf">Лист (🌿)</option>
+                    <option value="heart">Сърце (❤️)</option>
+                    <option value="star">Звезда (⭐)</option>
+                    <option value="shield">Щит (🛡️)</option>
+                    <option value="award">Награда (🏆)</option>
+                </select>
             </div>
             <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий статистиката">×</button>
         </div>
