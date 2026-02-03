@@ -1315,7 +1315,7 @@
                 itemEl.className = 'product-item';
                 itemEl.dataset.id = product.id;
                 itemEl.innerHTML = `
-                    ${product.image ? `<img src="${product.image}" alt="${product.name}" class="product-image">` : ''}
+                    <img src="${product.image}" alt="${product.name}" class="product-image">
                     <div class="product-info">
                         <h3>${product.name}</h3>
                         <span>Ед. цена: ${product.price.toFixed(2)} €</span>

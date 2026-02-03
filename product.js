@@ -62,7 +62,7 @@ const showToast = (message, type = 'info', duration = 3000) => {
     }, duration);
 };
 
-const addToCart = (id, name, price, inventory, image) => {
+const addToCart = (id, name, price, inventory) => {
     const maxQty = Number(inventory) || 0;
     const cart = getCart();
     const idx = cart.findIndex(i => i.id === id);
@@ -77,7 +77,7 @@ const addToCart = (id, name, price, inventory, image) => {
             showToast('Продуктът е изчерпан.', 'error');
             return;
         }
-        cart.push({ id, name, price: Number(price), quantity: 1, inventory: maxQty, image });
+        cart.push({ id, name, price: Number(price), quantity: 1, inventory: maxQty });
     }
     saveCart(cart);
     updateCartCount();
@@ -335,7 +335,6 @@ function renderProductDetail(product) {
         DOM.addToCartBtn.dataset.name = publicData.name;
         DOM.addToCartBtn.dataset.price = publicData.price;
         DOM.addToCartBtn.dataset.inventory = inventory;
-        DOM.addToCartBtn.dataset.image = publicData.image_url || '';
         
         if (inventory > 0) {
             DOM.addToCartBtn.addEventListener('click', () => {
@@ -343,8 +342,7 @@ function renderProductDetail(product) {
                     DOM.addToCartBtn.dataset.id,
                     DOM.addToCartBtn.dataset.name,
                     DOM.addToCartBtn.dataset.price,
-                    DOM.addToCartBtn.dataset.inventory,
-                    DOM.addToCartBtn.dataset.image
+                    DOM.addToCartBtn.dataset.inventory
                 );
             });
         } else {

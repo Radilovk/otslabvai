@@ -552,7 +552,7 @@ const showAddToCartFeedback = (productId) => {
     }, 2000);
 }
 
-const addToCart = (id, name, price, inventory, image) => {
+const addToCart = (id, name, price, inventory) => {
     const maxQty = Number(inventory) || 0;
     const cart = getCart();
     const idx = cart.findIndex(i => i.id === id);
@@ -567,7 +567,7 @@ const addToCart = (id, name, price, inventory, image) => {
             showToast('Продуктът е изчерпан.', 'error');
             return;
         }
-        cart.push({ id, name, price: Number(price), quantity: 1, inventory: maxQty, image });
+        cart.push({ id, name, price: Number(price), quantity: 1, inventory: maxQty });
     }
     saveCart(cart);
     updateCartCount();
