@@ -552,7 +552,7 @@ const showAddToCartFeedback = (productId) => {
     }, 2000);
 }
 
-const addToCart = (id, name, price, inventory) => {
+const addToCart = (id, name, price, inventory, image) => {
     const maxQty = Number(inventory) || 0;
     const cart = getCart();
     const idx = cart.findIndex(i => i.id === id);
@@ -562,12 +562,16 @@ const addToCart = (id, name, price, inventory) => {
             return;
         }
         cart[idx].quantity++;
+        // Update image if it's missing in existing cart item
+        if (!cart[idx].image && image) {
+            cart[idx].image = image;
+        }
     } else {
         if (maxQty === 0) {
             showToast('Продуктът е изчерпан.', 'error');
             return;
         }
-        cart.push({ id, name, price: Number(price), quantity: 1, inventory: maxQty });
+        cart.push({ id, name, price: Number(price), quantity: 1, inventory: maxQty, image: image || '' });
     }
     saveCart(cart);
     updateCartCount();
