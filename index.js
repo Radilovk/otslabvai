@@ -799,13 +799,8 @@ function renderMainContent(pageContent) {
             return; // Skip rendering this component
         }
         
-        // Filter product categories by category_id
-        if (component.type === 'product_category') {
-            const componentCategory = component.category_id || 'weight-loss';
-            if (componentCategory !== currentCategory) {
-                return; // Skip categories that don't match the current category
-            }
-        }
+        // Note: Category filtering removed to display all categories on the main page
+        // This allows users to see all product categories (weight-loss, health, antiaging) without needing URL parameters
         
         switch (component.type) {
             case 'hero_banner':
