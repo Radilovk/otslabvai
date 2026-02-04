@@ -110,12 +110,8 @@ function applyCategoryTheme(categoryId) {
     
     const html = document.documentElement;
     
-    // Remove all category attributes first
-    Object.values(CATEGORY_DEFINITIONS).forEach(cat => {
-        if (cat.categoryAttribute) {
-            html.removeAttribute(`data-category`);
-        }
-    });
+    // Remove data-category attribute if it exists
+    html.removeAttribute('data-category');
     
     // Apply new category attribute if not default
     if (category.categoryAttribute) {
@@ -127,16 +123,20 @@ function applyCategoryTheme(categoryId) {
         el.textContent = category.name;
     });
     
-    // Update page title
+    // Update page title - replace any existing category name
     const titleElement = document.querySelector('title');
-    if (titleElement && titleElement.textContent.includes('ДА ОТСЛАБНА')) {
-        titleElement.textContent = titleElement.textContent.replace('ДА ОТСЛАБНА', category.name);
-    } else if (titleElement && !titleElement.textContent.includes(category.name)) {
-        // If title doesn't contain any brand, add it
+    if (titleElement) {
         const currentTitle = titleElement.textContent;
-        if (currentTitle.includes(' - ')) {
-            titleElement.textContent = currentTitle.replace(/^[^-]+ - /, `${category.name} - `);
-        }
+        let newTitle = currentTitle;
+        
+        // Replace any known category name with the new one
+        Object.values(CATEGORY_DEFINITIONS).forEach(cat => {
+            if (currentTitle.includes(cat.name)) {
+                newTitle = currentTitle.replace(cat.name, category.name);
+            }
+        });
+        
+        titleElement.textContent = newTitle;
     }
 }
 

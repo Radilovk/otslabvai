@@ -177,7 +177,7 @@
     
     /* Typography */
     --font-primary: 'Helvetica Neue', sans-serif;
-    --font-secondary: 'Helvetica Neue', sans-serif;
+    --font-secondary: 'Helvetica Neue', sans-serif; /* Keeping same for consistency in antiaging theme */
     
     /* Hero gradients */
     --hero-bg-start-light: #F4F6F8;
