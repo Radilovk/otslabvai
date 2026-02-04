@@ -21,16 +21,12 @@
   },
   "navigation": [
     {
-      "text": "Отслабване",
-      "link": "index.html?category=weight-loss"
+      "text": "Топ продукти за отслабване",
+      "link": "#weight-loss-products"
     },
     {
-      "text": "Здраве",
-      "link": "index.html?category=health"
-    },
-    {
-      "text": "Антиейджинг",
-      "link": "index.html?category=antiaging"
+      "text": "Отслабване, изчистване",
+      "link": "#fat-burners"
     },
     {
       "text": "За нас",
