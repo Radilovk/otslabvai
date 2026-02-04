@@ -800,7 +800,7 @@ function renderMainContent(pageContent) {
         }
         
         // Note: Category filtering removed to display all categories on the main page
-        // This allows users to see all product categories (weight-loss, health, antiaging) without needing URL parameters
+        // This allows users to see all available product categories without needing URL parameters
         
         switch (component.type) {
             case 'hero_banner':
