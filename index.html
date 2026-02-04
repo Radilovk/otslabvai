@@ -35,7 +35,25 @@
     <script>
         (function() {
             try {
-                // Check if user has a saved preference
+                // Initialize category first
+                var urlParams = new URLSearchParams(window.location.search);
+                var urlCategory = urlParams.get('category');
+                var savedCategory = localStorage.getItem('selectedCategory');
+                var category = urlCategory || savedCategory || 'weight-loss';
+                
+                // Save category if from URL
+                if (urlCategory) {
+                    localStorage.setItem('selectedCategory', urlCategory);
+                }
+                
+                // Apply category theme attribute
+                if (category === 'health') {
+                    document.documentElement.setAttribute('data-category', 'health');
+                } else if (category === 'antiaging') {
+                    document.documentElement.setAttribute('data-category', 'antiaging');
+                }
+                
+                // Check if user has a saved theme preference
                 var savedTheme = localStorage.getItem('theme');
                 var theme;
                 
@@ -66,7 +84,7 @@
                     };
                 }
             } catch (e) {
-                // Fallback to light theme
+                // Fallback to light theme and default category
                 document.documentElement.setAttribute('data-theme', 'light');
             }
         })();
