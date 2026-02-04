@@ -107,6 +107,7 @@
     {
       "type": "product_category",
       "component_id": "cat_weight_loss_products",
+      "category_id": "weight-loss",
       "id": "weight-loss-products",
       "title": "ТОП продукти за отслабване",
       "description": "Открийте нашата селекция от най-ефективните продукти за отслабване, които ще ви помогнат да постигнете желаните резултати бързо и безопасно.",
@@ -822,6 +823,7 @@
     {
       "type": "product_category",
       "component_id": "comp-uuid-prodcat-001",
+      "category_id": "weight-loss",
       "id": "fat-burners",
       "title": "Избрани продукти за отслабване",
       "description": "Подбрани продукти от висококачествени натурални съставки, които подпомагат метаболизма и ускоряват процеса на отслабване.",
@@ -1751,6 +1753,34 @@
           "description": ""
         }
       }
+    },
+    {
+      "type": "product_category",
+      "component_id": "cat_health_products",
+      "category_id": "health",
+      "id": "health-products",
+      "title": "Здраве - Витални добавки за здравословен живот",
+      "description": "Подбрани продукти за укрепване на имунната система, подобряване на общото здраве и витален тонус.",
+      "image": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769317585751-ChatGPT_Im_age_Jan_25__2026__06_58_37_AM.png",
+      "options": {
+        "is_collapsible": true,
+        "is_expanded_by_default": true
+      },
+      "products": []
+    },
+    {
+      "type": "product_category",
+      "component_id": "cat_antiaging_products",
+      "category_id": "antiaging",
+      "id": "antiaging-products",
+      "title": "Антиейджинг - Революционни решения за младост",
+      "description": "Научно доказани продукти за забавяне на стареенето, подобряване на кожата и запазване на младостта.",
+      "image": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769317585751-ChatGPT_Im_age_Jan_25__2026__06_58_37_AM.png",
+      "options": {
+        "is_collapsible": true,
+        "is_expanded_by_default": true
+      },
+      "products": []
     }
   ],
   "footer": {

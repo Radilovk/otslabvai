@@ -65,6 +65,93 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
+// =======================================================
+//          CATEGORY MANAGEMENT SYSTEM
+// =======================================================
+
+// Category definitions
+const CATEGORY_DEFINITIONS = {
+    'weight-loss': {
+        id: 'weight-loss',
+        name: 'ДА ОТСЛАБНА',
+        categoryAttribute: null // Default category, no special attribute
+    },
+    'health': {
+        id: 'health',
+        name: 'Здраве',
+        categoryAttribute: 'health'
+    },
+    'antiaging': {
+        id: 'antiaging',
+        name: 'Антиейджинг',
+        categoryAttribute: 'antiaging'
+    }
+};
+
+// Get current category from URL or localStorage
+function getCurrentCategory() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlCategory = urlParams.get('category');
+    
+    if (urlCategory && CATEGORY_DEFINITIONS[urlCategory]) {
+        // Save to localStorage for persistence
+        localStorage.setItem('selectedCategory', urlCategory);
+        return urlCategory;
+    }
+    
+    // Fall back to localStorage or default
+    return localStorage.getItem('selectedCategory') || 'weight-loss';
+}
+
+// Apply category theme
+function applyCategoryTheme(categoryId) {
+    const category = CATEGORY_DEFINITIONS[categoryId];
+    if (!category) return;
+    
+    const html = document.documentElement;
+    
+    // Remove data-category attribute if it exists
+    html.removeAttribute('data-category');
+    
+    // Apply new category attribute if not default
+    if (category.categoryAttribute) {
+        html.setAttribute('data-category', category.categoryAttribute);
+    }
+    
+    // Update all brand names on the page
+    document.querySelectorAll('#header-brand-name, .brand-name').forEach(el => {
+        el.textContent = category.name;
+    });
+    
+    // Update page title - replace any existing category name
+    const titleElement = document.querySelector('title');
+    if (titleElement) {
+        const currentTitle = titleElement.textContent;
+        let newTitle = currentTitle;
+        
+        // Replace any known category name with the new one
+        Object.values(CATEGORY_DEFINITIONS).forEach(cat => {
+            if (currentTitle.includes(cat.name)) {
+                newTitle = currentTitle.replace(cat.name, category.name);
+            }
+        });
+        
+        titleElement.textContent = newTitle;
+    }
+}
+
+// Initialize category on page load
+function initializeCategory() {
+    const categoryId = getCurrentCategory();
+    applyCategoryTheme(categoryId);
+    
+    // Listen for category changes via URL
+    window.addEventListener('popstate', () => {
+        const newCategory = getCurrentCategory();
+        applyCategoryTheme(newCategory);
+    });
+}
+
 
 // =======================================================
 //          2. ГЕНЕРАТОРИ НА HTML (GENERATOR FUNCTIONS)
@@ -603,7 +690,12 @@ const addToCart = (id, name, price, inventory, image) => {
 // =======================================================
 
 function renderHeader(settings, navigation) {
-    document.title = settings.site_name;
+    // Get dynamic brand name based on current category
+    const currentCategory = getCurrentCategory();
+    const categoryDef = CATEGORY_DEFINITIONS[currentCategory];
+    const brandName = categoryDef ? categoryDef.name : settings.site_name;
+    
+    document.title = brandName;
     
     // Store logo URLs for theme switching
     window.logoSettings = {
@@ -622,9 +714,9 @@ function renderHeader(settings, navigation) {
     // Set initial logo based on current theme
     updateLogoForTheme();
     
-    DOM.header.logoImg.alt = `${settings.site_name} Logo`;
+    DOM.header.logoImg.alt = `${brandName} Logo`;
     DOM.header.logoImg.style.display = 'block'; // Show the logo
-    DOM.header.brandName.textContent = settings.site_name;
+    DOM.header.brandName.textContent = brandName;
     DOM.header.brandSlogan.textContent = settings.site_slogan;
 
     const navItemsHTML = navigation.map(item => `<li><a href="${item.link}">${item.text}</a></li>`).join('');
@@ -696,12 +788,23 @@ function updateLogoForTheme() {
 function renderMainContent(pageContent) {
     if (!DOM.mainContainer) return;
     
+    // Get current category
+    const currentCategory = getCurrentCategory();
+    
     let contentHtml = '';
     pageContent.forEach((component, index) => {
         // Filter out the individual analysis info card (containing analyzis.png image)
         // Note: The filename 'analyzis.png' is intentionally kept as-is to match the existing asset
         if (component.type === 'info_card' && component.image && component.image.includes('analyzis.png')) {
             return; // Skip rendering this component
+        }
+        
+        // Filter product categories by category_id
+        if (component.type === 'product_category') {
+            const componentCategory = component.category_id || 'weight-loss';
+            if (componentCategory !== currentCategory) {
+                return; // Skip categories that don't match the current category
+            }
         }
         
         switch (component.type) {
@@ -755,12 +858,17 @@ function renderFooter(settings, footer) {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const logoUrl = currentTheme === 'dark' ? window.logoSettings.darkLogo : window.logoSettings.lightLogo;
     
+    // Get dynamic brand name based on current category
+    const currentCategory = getCurrentCategory();
+    const categoryDef = CATEGORY_DEFINITIONS[currentCategory];
+    const brandName = categoryDef ? categoryDef.name : settings.site_name;
+    
     const columnsHTML = footer.columns.map(col => {
         if (col.type === 'logo') {
             return `<div class="footer-column">
                  <a href="#" class="logo-container footer-logo-container">
-                    <img src="${logoUrl}" alt="${settings.site_name} Logo">
-                    <div><span class="brand-name">${settings.site_name}</span><span class="brand-slogan">${settings.site_slogan}</span></div>
+                    <img src="${logoUrl}" alt="${brandName} Logo">
+                    <div><span class="brand-name">${brandName}</span><span class="brand-slogan">${settings.site_slogan}</span></div>
                 </a>
             </div>`;
         }
@@ -771,7 +879,10 @@ function renderFooter(settings, footer) {
         return '';
     }).join('');
     DOM.footer.gridContainer.innerHTML = columnsHTML;
-    DOM.footer.copyrightContainer.innerHTML = footer.copyright_text;
+    
+    // Update copyright text with dynamic brand name
+    const copyrightWithBrand = footer.copyright_text.replace('ДА ОТСЛАБНА', brandName);
+    DOM.footer.copyrightContainer.innerHTML = copyrightWithBrand;
 }
 
 
@@ -1206,6 +1317,9 @@ function isValidGradient(gradientStr) {
 //          7. ГЛАВНА ИЗПЪЛНЯВАЩА ФУНКЦИЯ (MAIN)
 // =======================================================
 async function main() {
+    // Initialize category theme first (before anything else)
+    initializeCategory();
+    
     // Initialize logo immediately using cached values if available
     initializeLogoFromCache();
     
