@@ -681,7 +681,7 @@ img {
 .cart-icon-fixed-mobile {
     display: none; /* Hidden by default, shown only on mobile */
     position: fixed;
-    top: 20px;
+    top: 80px; /* Position below the header to avoid overlapping */
     right: 20px;
     z-index: 1004;
     background: var(--bg-primary);
