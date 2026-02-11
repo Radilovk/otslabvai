@@ -6,6 +6,16 @@ Disallow: /admin.html
 Disallow: /admin.js
 Disallow: /admin.css
 Disallow: /backend/
+Disallow: /__pycache__/
+
+# Allow important pages
+Allow: /index.html
+Allow: /product.html
+Allow: /about-us.html
+Allow: /contact.html
+Allow: /shipping.html
+Allow: /terms.html
+Allow: /policy.html
 
 # Sitemap
-Sitemap: https://port.radilov-k.workers.dev/sitemap.xml
+Sitemap: https://daotslabna.com/sitemap.xml
