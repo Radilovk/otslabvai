@@ -677,6 +677,66 @@ img {
     background: var(--color-secondary);
 }
 
+/* -- Fixed Mobile Cart Icon -- */
+.cart-icon-fixed-mobile {
+    display: none; /* Hidden by default, shown only on mobile */
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1004;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    width: 46px;
+    height: 46px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-speed);
+    text-decoration: none;
+    color: var(--accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cart-icon-fixed-mobile:hover {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--color-white);
+    transform: scale(1.05);
+}
+
+.cart-icon-fixed-mobile svg {
+    width: 22px;
+    height: 22px;
+    transition: all 0.3s ease;
+}
+
+.cart-icon-fixed-mobile .cart-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.cart-icon-fixed-mobile:hover .cart-badge {
+    background: var(--color-secondary);
+}
+
+/* Hide fixed cart when menu is open */
+body.nav-open .cart-icon-fixed-mobile {
+    display: none !important;
+}
+
 /* -- Search Container -- */
 .search-container {
     position: relative;
@@ -2391,6 +2451,16 @@ body.modal-open { overflow: hidden; }
         display: none;
     }
 
+    /* Hide header cart icon on mobile and show fixed version */
+    .header-actions .cart-icon-btn {
+        display: none;
+    }
+
+    /* Show fixed mobile cart icon */
+    .cart-icon-fixed-mobile {
+        display: flex;
+    }
+
     /* Search dropdown responsive */
     .search-dropdown {
         width: 280px;
@@ -2431,6 +2501,59 @@ body.modal-open { overflow: hidden; }
         font-size: 0.9rem;
         color: var(--text-secondary);
         font-weight: 600;
+    }
+    
+    /* Cart link in mobile menu */
+    .nav-links .cart-link-mobile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+        width: 80%;
+    }
+    
+    .cart-link-mobile-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+    
+    .cart-link-mobile a {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: var(--accent);
+        color: white;
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all var(--transition-speed);
+        position: relative;
+    }
+    
+    .cart-link-mobile a:hover {
+        background: var(--color-secondary);
+        transform: translateY(-2px);
+    }
+    
+    .cart-link-mobile a .cart-badge {
+        position: relative;
+        top: unset;
+        right: unset;
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
     }
     
     .about-grid {

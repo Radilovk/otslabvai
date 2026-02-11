@@ -538,9 +538,24 @@ const getCart = () => JSON.parse(localStorage.getItem('cart') || '[]');
 const saveCart = cart => localStorage.setItem('cart', JSON.stringify(cart));
 
 const updateCartCount = () => {
-    if (!DOM.header.cartCount) return;
     const count = getCart().reduce((acc, item) => acc + item.quantity, 0);
-    DOM.header.cartCount.textContent = count;
+    
+    // Update header cart count
+    if (DOM.header.cartCount) {
+        DOM.header.cartCount.textContent = count;
+    }
+    
+    // Update mobile fixed cart count
+    const cartCountMobile = document.getElementById('cart-count-mobile');
+    if (cartCountMobile) {
+        cartCountMobile.textContent = count;
+    }
+    
+    // Update mobile menu cart count
+    const cartCountMenu = document.getElementById('cart-count-menu');
+    if (cartCountMenu) {
+        cartCountMenu.textContent = count;
+    }
 };
 
 const showToast = (message, type = 'info', duration = 3000) => {
