@@ -112,6 +112,26 @@
                 </ul>
             </nav>
             <div class="header-actions">
+                <div class="search-container">
+                    <button id="search-toggle" class="search-toggle-btn" aria-label="Търсене" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                    <div id="search-dropdown" class="search-dropdown">
+                        <div class="search-input-wrapper">
+                            <input type="text" id="site-search-input" class="search-input" placeholder="Търси продукти..." aria-label="Търси в сайта">
+                            <button id="search-clear" class="search-clear-btn" aria-label="Изчисти търсенето" style="display: none;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="search-results" class="search-results"></div>
+                    </div>
+                </div>
                 <button id="theme-toggle" class="theme-toggle-btn" aria-label="Превключи тема">
                     <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="5"></circle>

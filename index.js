@@ -1241,6 +1241,8 @@ async function main() {
         
         if (isIndexPage) {
             renderMainContent(data.page_content);
+            // Extract products for search functionality
+            extractProductsForSearch(data.page_content);
         }
         
         renderFooter(data.settings, data.footer);
@@ -1251,6 +1253,9 @@ async function main() {
 
         initializePageInteractions(data.settings);
         applyThemeGradients(data.settings);
+        
+        // Initialize search functionality
+        initializeSearch();
         
         if (isIndexPage) {
             initializeScrollSpy();
@@ -1454,6 +1459,179 @@ function initExitIntentModal() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('active')) {
             closeModal();
+        }
+    });
+}
+
+// =======================================================
+//          8. SITE SEARCH FUNCTIONALITY
+// =======================================================
+
+// Global variable to store all products for search
+let allProducts = [];
+
+// Initialize search functionality
+function initializeSearch() {
+    const searchToggle = document.getElementById('search-toggle');
+    const searchDropdown = document.getElementById('search-dropdown');
+    const searchInput = document.getElementById('site-search-input');
+    const searchClear = document.getElementById('search-clear');
+    const searchResults = document.getElementById('search-results');
+
+    if (!searchToggle || !searchDropdown || !searchInput) return;
+
+    // Toggle search dropdown
+    searchToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isExpanded = searchToggle.getAttribute('aria-expanded') === 'true';
+        
+        if (isExpanded) {
+            closeSearch();
+        } else {
+            openSearch();
+        }
+    });
+
+    // Open search function
+    function openSearch() {
+        searchDropdown.classList.add('active');
+        searchToggle.setAttribute('aria-expanded', 'true');
+        setTimeout(() => searchInput.focus(), 100);
+    }
+
+    // Close search function
+    function closeSearch() {
+        searchDropdown.classList.remove('active');
+        searchToggle.setAttribute('aria-expanded', 'false');
+        searchInput.value = '';
+        searchClear.style.display = 'none';
+        searchResults.innerHTML = '';
+    }
+
+    // Close search when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchDropdown.contains(e.target) && e.target !== searchToggle && !searchToggle.contains(e.target)) {
+            closeSearch();
+        }
+    });
+
+    // Prevent closing when clicking inside dropdown
+    searchDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
+    // Search input handler
+    searchInput.addEventListener('input', debounce((e) => {
+        const query = e.target.value.trim();
+        
+        if (query.length > 0) {
+            searchClear.style.display = 'flex';
+            performSearch(query);
+        } else {
+            searchClear.style.display = 'none';
+            searchResults.innerHTML = '';
+        }
+    }, 300));
+
+    // Clear button handler
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClear.style.display = 'none';
+        searchResults.innerHTML = '';
+        searchInput.focus();
+    });
+
+    // Keyboard navigation
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeSearch();
+        } else if (e.key === 'Enter') {
+            const firstResult = searchResults.querySelector('.search-result-item');
+            if (firstResult) {
+                firstResult.click();
+            }
+        }
+    });
+}
+
+// Perform search through products
+function performSearch(query) {
+    const searchResults = document.getElementById('search-results');
+    if (!searchResults) return;
+
+    const lowerQuery = query.toLowerCase();
+    
+    // Filter products that match the search query
+    const results = allProducts.filter(product => {
+        const name = product.public_data?.name?.toLowerCase() || '';
+        const tagline = product.public_data?.tagline?.toLowerCase() || '';
+        const description = product.public_data?.description?.toLowerCase() || '';
+        
+        return name.includes(lowerQuery) || 
+               tagline.includes(lowerQuery) || 
+               description.includes(lowerQuery);
+    });
+
+    // Display results
+    if (results.length === 0) {
+        searchResults.innerHTML = `
+            <div class="search-no-results">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <p>Не са намерени продукти за "${escapeHtml(query)}"</p>
+            </div>
+        `;
+    } else {
+        searchResults.innerHTML = results.map(product => {
+            const publicData = product.public_data;
+            const productId = product.product_id;
+            const price = Number(publicData.price).toFixed(2);
+            
+            // Highlight matching text
+            const highlightText = (text) => {
+                if (!text) return '';
+                const regex = new RegExp(`(${escapeHtml(query)})`, 'gi');
+                return escapeHtml(text).replace(regex, '<mark>$1</mark>');
+            };
+
+            return `
+                <a href="product.html?id=${encodeURIComponent(productId)}" class="search-result-item">
+                    ${publicData.image_url ? `
+                        <img src="${escapeHtml(publicData.image_url)}" 
+                             alt="${escapeHtml(publicData.name)}" 
+                             class="search-result-image"
+                             loading="lazy">
+                    ` : ''}
+                    <div class="search-result-info">
+                        <div class="search-result-name">${highlightText(publicData.name)}</div>
+                        <div class="search-result-tagline">${escapeHtml(publicData.tagline || '')}</div>
+                    </div>
+                    <div class="search-result-price">${price} €</div>
+                </a>
+            `;
+        }).join('');
+
+        // Add click handlers to close search when result is clicked
+        searchResults.querySelectorAll('.search-result-item').forEach(item => {
+            item.addEventListener('click', () => {
+                // Save scroll position before navigating
+                sessionStorage.setItem('indexScrollPosition', window.scrollY.toString());
+            });
+        });
+    }
+}
+
+// Extract all products from page content for search
+function extractProductsForSearch(pageContent) {
+    allProducts = [];
+    
+    if (!pageContent) return;
+
+    pageContent.forEach(component => {
+        if (component.type === 'product_category' && component.products) {
+            allProducts.push(...component.products);
         }
     });
 }
