@@ -374,19 +374,8 @@ function addProductStructuredData(product, publicData) {
     const inventory = product.private_data?.inventory ?? 0;
     const availability = inventory > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock";
     
-    // Build aggregateRating if effects are available
-    let aggregateRating = null;
-    if (publicData.effects && publicData.effects.length > 0) {
-        const avgRating = publicData.effects.reduce((sum, effect) => sum + (effect.score || 0), 0) / publicData.effects.length;
-        const normalizedRating = (avgRating / 10) * 5; // Convert 0-10 scale to 0-5 scale
-        aggregateRating = {
-            "@type": "AggregateRating",
-            "ratingValue": normalizedRating.toFixed(1),
-            "ratingCount": "100",
-            "bestRating": "5",
-            "worstRating": "1"
-        };
-    }
+    // Note: AggregateRating removed as there is no actual review system
+    // Effects scores are internal metrics, not user reviews
     
     const structuredData = {
         "@context": "https://schema.org",
@@ -410,10 +399,6 @@ function addProductStructuredData(product, publicData) {
             }
         }
     };
-    
-    if (aggregateRating) {
-        structuredData.aggregateRating = aggregateRating;
-    }
     
     // Add breadcrumb structured data
     const breadcrumbData = {
