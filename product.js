@@ -358,6 +358,125 @@ function renderProductDetail(product) {
 
     // Initialize interactive elements
     initializeProductInteractions();
+    
+    // Add structured data for SEO
+    addProductStructuredData(product, publicData);
+}
+
+// Add structured data (JSON-LD) for product SEO
+function addProductStructuredData(product, publicData) {
+    // Remove existing structured data if any
+    const existingScript = document.querySelector('script[type="application/ld+json"][data-type="product"]');
+    if (existingScript) {
+        existingScript.remove();
+    }
+    
+    const inventory = product.private_data?.inventory ?? 0;
+    const availability = inventory > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock";
+    
+    // Note: AggregateRating removed as there is no actual review system
+    // Effects scores are internal metrics, not user reviews
+    
+    const structuredData = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": publicData.name,
+        "description": publicData.description,
+        "image": publicData.image_url,
+        "brand": {
+            "@type": "Brand",
+            "name": publicData.brand || "ДА ОТСЛАБНА"
+        },
+        "offers": {
+            "@type": "Offer",
+            "url": window.location.href,
+            "priceCurrency": "BGN",
+            "price": publicData.price.toFixed(2),
+            "availability": availability,
+            "seller": {
+                "@type": "Organization",
+                "name": "ДА ОТСЛАБНА"
+            }
+        }
+    };
+    
+    // Add breadcrumb structured data
+    const breadcrumbData = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Начало",
+                "item": window.location.origin + "/"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Продукти",
+                "item": window.location.origin + "/"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": publicData.name
+            }
+        ]
+    };
+    
+    // Inject structured data scripts
+    const productScript = document.createElement('script');
+    productScript.type = 'application/ld+json';
+    productScript.setAttribute('data-type', 'product');
+    productScript.textContent = JSON.stringify(structuredData);
+    document.head.appendChild(productScript);
+    
+    const breadcrumbScript = document.createElement('script');
+    breadcrumbScript.type = 'application/ld+json';
+    breadcrumbScript.setAttribute('data-type', 'breadcrumb');
+    breadcrumbScript.textContent = JSON.stringify(breadcrumbData);
+    document.head.appendChild(breadcrumbScript);
+    
+    // Update page meta tags dynamically
+    updateProductMetaTags(publicData);
+}
+
+// Update meta tags dynamically for product pages
+function updateProductMetaTags(publicData) {
+    // Update title
+    document.title = `${publicData.name} - ДА ОТСЛАБНА`;
+    
+    // Update or create meta description
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.name = 'description';
+        document.head.appendChild(metaDesc);
+    }
+    const description = publicData.tagline || publicData.description.substring(0, 155);
+    metaDesc.content = description;
+    
+    // Update Open Graph tags
+    updateOrCreateMetaTag('property', 'og:title', publicData.name);
+    updateOrCreateMetaTag('property', 'og:description', description);
+    updateOrCreateMetaTag('property', 'og:image', publicData.image_url);
+    updateOrCreateMetaTag('property', 'og:url', window.location.href);
+    
+    // Update Twitter Card tags
+    updateOrCreateMetaTag('name', 'twitter:title', publicData.name);
+    updateOrCreateMetaTag('name', 'twitter:description', description);
+    updateOrCreateMetaTag('name', 'twitter:image', publicData.image_url);
+}
+
+function updateOrCreateMetaTag(attribute, value, content) {
+    let meta = document.querySelector(`meta[${attribute}="${value}"]`);
+    if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute(attribute, value);
+        document.head.appendChild(meta);
+    }
+    meta.content = content;
 }
 
 function renderHeader(settings, navigation) {

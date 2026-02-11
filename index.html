@@ -9,13 +9,16 @@
     <meta name="keywords" content="отслабване, продукти за отслабване, фет бърнър, термогенни добавки, контрол на апетита, метаболизъм, детокс, изгаряне на мазнини">
     <meta name="robots" content="index, follow">
     <meta name="author" content="ДА ОТСЛАБНА">
-    <link rel="canonical" href="https://port.radilov-k.workers.dev/">
+    <link rel="canonical" href="https://daotslabna.com/">
+    <link rel="alternate" hreflang="bg" href="https://daotslabna.com/">
+    <link rel="alternate" hreflang="x-default" href="https://daotslabna.com/">
     <meta property="og:title" content="Продукти за Отслабване - Ефективни Решения">
     <meta property="og:description" content="Открийте ефективни продукти за отслабване. Висококачествени добавки и решения за контрол на теглото и здравословен начин на живот.">
     <meta property="og:image" content="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="bg_BG">
-    <meta property="og:url" content="https://port.radilov-k.workers.dev/">
+    <meta property="og:url" content="https://daotslabna.com/">
+    <meta property="og:site_name" content="ДА ОТСЛАБНА">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Продукти за Отслабване - Ефективни Решения">
     <meta name="twitter:description" content="Открийте ефективни продукти за отслабване. Висококачествени добавки и решения за контрол на теглото и здравословен начин на живот.">
@@ -109,6 +112,26 @@
                 </ul>
             </nav>
             <div class="header-actions">
+                <div class="search-container">
+                    <button id="search-toggle" class="search-toggle-btn" aria-label="Търсене" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                    <div id="search-dropdown" class="search-dropdown">
+                        <div class="search-input-wrapper">
+                            <input type="text" id="site-search-input" class="search-input" placeholder="Търси продукти..." aria-label="Търси в сайта">
+                            <button id="search-clear" class="search-clear-btn" aria-label="Изчисти търсенето" style="display: none;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="search-results" class="search-results"></div>
+                    </div>
+                </div>
                 <button id="theme-toggle" class="theme-toggle-btn" aria-label="Превключи тема">
                     <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="5"></circle>
@@ -256,11 +279,13 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "ДА ОТСЛАБНА",
-      "url": "https://port.radilov-k.workers.dev/",
+      "alternateName": "ДА ОТСЛАБНА - Мисията възможна",
+      "url": "https://daotslabna.com/",
       "description": "Онлайн магазин за продукти за отслабване и контрол на теглото",
+      "inLanguage": "bg-BG",
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://port.radilov-k.workers.dev/?q={search_term_string}",
+        "target": "https://daotslabna.com/?q={search_term_string}",
         "query-input": "required name=search_term_string"
       }
     }
@@ -270,10 +295,43 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "ДА ОТСЛАБНА",
-      "url": "https://port.radilov-k.workers.dev/",
-      "logo": "https://radilovk.github.io/face/assets/logo.png",
+      "url": "https://daotslabna.com/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://radilovk.github.io/face/assets/logo.png",
+        "width": 250,
+        "height": 60
+      },
       "description": "Качествени продукти за отслабване, контрол на теглото и здравословен начин на живот",
-      "sameAs": []
+      "sameAs": [],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Customer Service",
+        "availableLanguage": "Bulgarian"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "ДА ОТСЛАБНА - Начална страница",
+      "description": "Открийте ефективни продукти за отслабване. Висококачествени добавки и решения за контрол на теглото и здравословен начин на живот.",
+      "url": "https://daotslabna.com/",
+      "inLanguage": "bg-BG",
+      "isPartOf": {
+        "@type": "WebSite",
+        "url": "https://daotslabna.com/"
+      },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [{
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Начало",
+          "item": "https://daotslabna.com/"
+        }]
+      }
     }
     </script>
 
