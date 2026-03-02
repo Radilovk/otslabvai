@@ -939,10 +939,14 @@
                     <div id="products-editor" class="nested-list-container">
                         <!-- Продуктите ще се генерират тук от JS -->
                     </div>
-                    <div class="header-actions" style="justify-content: flex-start; margin-top: 1rem;">
+                    <div class="header-actions" style="justify-content: flex-start; margin-top: 1rem; flex-wrap: wrap; gap: 0.5rem;">
                         <button type="button" class="btn btn-secondary" data-action="add-nested-item" data-container="#products-editor" data-template="product-editor-template">Добави продукт</button>
                         <button type="button" class="btn btn-primary" data-action="import-product">Импортирай продукт (JSON)</button>
+                        <button type="button" class="btn btn-secondary" data-action="import-products-csv" title="Импортирай продукти от CSV файл" aria-label="Импортирай продукти от CSV файл">📥 Импортирай CSV</button>
+                        <button type="button" class="btn btn-secondary" data-action="export-products-csv" title="Експортирай всички продукти от категорията в CSV" aria-label="Експортирай продукти в CSV">📤 Експортирай CSV</button>
+                        <button type="button" class="btn btn-secondary" data-action="download-csv-template" title="Изтегли шаблон за импорт на продукти в CSV формат" aria-label="Изтегли CSV шаблон">📋 CSV Шаблон</button>
                         <input type="file" id="product-import-input" style="display: none;" accept=".json">
+                        <input type="file" id="product-csv-import-input" style="display: none;" accept=".csv">
                     </div>
                 </div>
             </div>

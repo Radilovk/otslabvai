@@ -1356,6 +1356,21 @@ function handleAction(action, target, id) {
             fileInput.click();
             break;
         }
+        case 'import-products-csv': {
+            const csvFileInput = target.parentElement.querySelector('#product-csv-import-input');
+            csvFileInput.onchange = (e) => handleProductCSVImport(e, target);
+            csvFileInput.click();
+            break;
+        }
+        case 'export-products-csv': {
+            const productsContainer = target.closest('.modal-tab-pane').querySelector('#products-editor');
+            exportProductsToCSV(productsContainer);
+            break;
+        }
+        case 'download-csv-template': {
+            downloadCSVTemplate();
+            break;
+        }
         case 'upload-product-image': {
             const fileInput = document.getElementById('image-upload-input');
             const targetFieldPath = target.dataset.targetField;
@@ -1772,6 +1787,344 @@ function handleProductImport(event, triggerButton) {
         showNotification('Неуспешно прочитане на файла.', 'error');
     };
     reader.readAsText(file);
+}
+
+// =======================================================
+//          CSV IMPORT / EXPORT / TEMPLATE
+// =======================================================
+
+/**
+ * CSV columns definition: { key, header, description }
+ * Arrays (effects, benefits, ingredients, faq) are stored as JSON strings in a single cell.
+ */
+const CSV_COLUMNS = [
+    { key: 'product_id',                               header: 'product_id',                               description: 'Уникален идентификатор на продукта (напр. prod-omega-3). Само малки букви, цифри и тирета. Не се променя след създаване.' },
+    { key: 'public_data.name',                         header: 'name',                                     description: 'Пълно търговско наименование на продукта.' },
+    { key: 'public_data.price',                        header: 'price',                                    description: 'Продажна цена в евро (число с до 2 десетични знака, напр. 29.99).' },
+    { key: 'public_data.tagline',                      header: 'tagline',                                  description: 'Кратък слоган/мото на продукта (до 100 знака).' },
+    { key: 'public_data.image_url',                    header: 'image_url',                                description: 'URL на основното изображение на продукта (препоръчителен размер 800x800 px).' },
+    { key: 'public_data.additional_images',            header: 'additional_images',                        description: 'URL адреси на допълнителни изображения, разделени с вертикална черта | (pipe).' },
+    { key: 'public_data.description',                  header: 'description',                              description: 'Кратко описание на продукта (показва се в списъка с продукти).' },
+    { key: 'public_data.packaging.capsules_or_grams',  header: 'packaging_capsules_or_grams',              description: 'Количество в опаковка (напр. "60 капсули", "500 мл").' },
+    { key: 'public_data.packaging.doses_per_package',  header: 'packaging_doses_per_package',              description: 'Брой дози в опаковка (напр. "30 дози").' },
+    { key: 'public_data.recommended_intake',           header: 'recommended_intake',                       description: 'Препоръчителен начин и честота на прием.' },
+    { key: 'public_data.contraindications',            header: 'contraindications',                        description: 'Предупреждения и противопоказания за употреба.' },
+    { key: 'public_data.additional_advice',            header: 'additional_advice',                        description: 'Допълнителна информация, съвети и препоръки.' },
+    { key: 'public_data.research_note.text',           header: 'research_note_text',                       description: 'Текст на научния/изследователски източник.' },
+    { key: 'public_data.research_note.url',            header: 'research_note_url',                        description: 'URL на научния/изследователски източник.' },
+    { key: 'public_data.about_content.title',          header: 'about_title',                              description: 'Заглавие на секцията "За продукта".' },
+    { key: 'public_data.about_content.description',    header: 'about_description',                        description: 'Подробно описание в секцията "За продукта".' },
+    { key: 'public_data.effects',                      header: 'effects_json',                             description: 'Масив с ефекти в JSON формат. Пример: [{"label":"Енергия","value":85},{"label":"Фокус","value":70}]. Стойността е число от 0 до 100.' },
+    { key: 'public_data.about_content.benefits',       header: 'benefits_json',                            description: 'Масив с ползи в JSON формат. Пример: [{"icon":"✓","title":"Заглавие","description":"Описание"}].' },
+    { key: 'public_data.ingredients',                  header: 'ingredients_json',                         description: 'Масив от съставки в JSON формат. Пример: [{"name":"Магнезий","amount":"300мг","benefit":"Подкрепя мускулите"}].' },
+    { key: 'public_data.faq',                          header: 'faq_json',                                 description: 'Масив от въпроси/отговори в JSON формат. Пример: [{"question":"Кога?","answer":"Сутрин."}].' },
+    { key: 'system_data.manufacturer',                 header: 'manufacturer',                             description: 'Наименование на производителя.' },
+    { key: 'system_data.application_type',             header: 'application_type',                         description: 'Тип приложение: Injectable | Intranasal | Topical | Oral | Injectable / Oral / Topical' },
+    { key: 'system_data.inventory',                    header: 'inventory',                                description: 'Наличен брой единици (цяло число >= 0).' },
+    { key: 'system_data.goals',                        header: 'goals',                                    description: 'Цели/ефекти, разделени с запетая (напр. "anti-aging, recovery, cognitive").' },
+    { key: 'system_data.target_profile',               header: 'target_profile',                           description: 'Описание на идеалния потребителски профил.' },
+    { key: 'system_data.protocol_hint',                header: 'protocol_hint',                            description: 'Технически насоки за протокол на приложение (за специалисти).' },
+    { key: 'system_data.synergy_products',             header: 'synergy_products',                         description: 'ID-та на синергични продукти, разделени с запетая (напр. "prod-semax, prod-selank").' },
+    { key: 'system_data.safety_warnings',              header: 'safety_warnings',                          description: 'Предупреждения за безопасност (за вътрешна употреба).' },
+];
+
+/**
+ * Escapes a value for safe inclusion in a CSV cell.
+ * @param {*} val
+ * @returns {string}
+ */
+function csvEscape(val) {
+    if (val === null || val === undefined) return '';
+    const str = String(val);
+    if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+}
+
+/**
+ * Parses a single CSV line respecting quoted fields.
+ * @param {string} line
+ * @returns {string[]}
+ */
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (inQuotes) {
+            if (ch === '"') {
+                if (line[i + 1] === '"') { current += '"'; i++; }
+                else { inQuotes = false; }
+            } else {
+                current += ch;
+            }
+        } else {
+            if (ch === '"') { inQuotes = true; }
+            else if (ch === ',') { result.push(current); current = ''; }
+            else { current += ch; }
+        }
+    }
+    result.push(current);
+    return result;
+}
+
+/**
+ * Reads a flat product object from a CSV row (using CSV_COLUMNS mapping).
+ * @param {string[]} headers - CSV header row
+ * @param {string[]} values  - CSV data row
+ * @returns {object} product object
+ */
+function csvRowToProduct(headers, values) {
+    const flat = {};
+    headers.forEach((h, i) => { flat[h] = values[i] !== undefined ? values[i] : ''; });
+
+    const product = {};
+    CSV_COLUMNS.forEach(({ key, header }) => {
+        const raw = flat[header];
+        if (raw === undefined || raw === '') return;
+
+        // Array fields stored as JSON
+        if (header.endsWith('_json')) {
+            try {
+                setProperty(product, key, JSON.parse(raw));
+            } catch (_) {
+                // ignore malformed JSON
+            }
+        } else if (key === 'public_data.additional_images') {
+            // pipe-separated URLs → newline-separated string (matches textarea format)
+            setProperty(product, key, raw.split('|').map(s => s.trim()).filter(Boolean).join('\n'));
+        } else if (key === 'system_data.inventory') {
+            const n = parseInt(raw, 10);
+            setProperty(product, key, isNaN(n) ? 0 : n);
+        } else if (key === 'public_data.price') {
+            const n = parseFloat(raw);
+            setProperty(product, key, isNaN(n) ? '' : n);
+        } else {
+            setProperty(product, key, raw);
+        }
+    });
+    return product;
+}
+
+/**
+ * Reads a product object and returns a CSV row (array of escaped strings).
+ * @param {object} product
+ * @returns {string[]}
+ */
+function productToCSVRow(product) {
+    return CSV_COLUMNS.map(({ key, header }) => {
+        let val = getProperty(product, key);
+        if (val === undefined || val === null) return '';
+
+        if (header.endsWith('_json')) {
+            return Array.isArray(val) ? JSON.stringify(val) : '';
+        }
+        if (key === 'public_data.additional_images') {
+            // newline-separated → pipe-separated
+            if (typeof val === 'string') {
+                return val.split('\n').map(s => s.trim()).filter(Boolean).join('|');
+            }
+            return '';
+        }
+        return String(val);
+    });
+}
+
+/**
+ * Downloads the CSV template with a header row (field names) and a description row.
+ */
+function downloadCSVTemplate() {
+    const headerRow = CSV_COLUMNS.map(c => csvEscape(c.header)).join(',');
+    const descRow   = CSV_COLUMNS.map(c => csvEscape(c.description)).join(',');
+    const exampleRow = CSV_COLUMNS.map(({ key, header }) => {
+        const examples = {
+            'product_id':                     'prod-omega-3',
+            'name':                           'Omega-3 Premium',
+            'price':                          '29.99',
+            'tagline':                        'Чиста омега-3 за здраво сърце',
+            'image_url':                      'https://example.com/omega3.jpg',
+            'additional_images':              'https://example.com/img2.jpg|https://example.com/img3.jpg',
+            'description':                    'Висококачествена омега-3 от дълбоководни риби.',
+            'packaging_capsules_or_grams':    '60 капсули',
+            'packaging_doses_per_package':    '30 дози',
+            'recommended_intake':             '2 капсули дневно с храна.',
+            'contraindications':              'Не е подходящо при алергия към риба.',
+            'additional_advice':              'Съхранявайте на хладно и сухо място.',
+            'research_note_text':             'Изследване в NEJM, 2023',
+            'research_note_url':              'https://www.nejm.org/doi/example',
+            'about_title':                    'За Omega-3 Premium',
+            'about_description':             'Подробно описание на продукта...',
+            'effects_json':                   '[{"label":"Сърдечно-съдово здраве","value":90},{"label":"Мозъчна функция","value":75}]',
+            'benefits_json':                  '[{"icon":"❤️","title":"Сърце","description":"Поддържа здравето на сърцето"}]',
+            'ingredients_json':               '[{"name":"EPA","amount":"360мг","benefit":"Противовъзпалително действие"}]',
+            'faq_json':                       '[{"question":"Кога да приемам?","answer":"С храна сутрин."}]',
+            'manufacturer':                   'Nordic Naturals',
+            'application_type':               'Oral',
+            'inventory':                      '100',
+            'goals':                          'heart-health, cognitive, anti-aging',
+            'target_profile':                 'Възрастни над 30 години с активен начин на живот.',
+            'protocol_hint':                  '2 капсули/ден с основно хранене, минимален курс 3 месеца.',
+            'synergy_products':               'prod-vitamin-d, prod-magnesium',
+            'safety_warnings':                'Консултирайте се с лекар при употреба на антикоагуланти.',
+        };
+        return csvEscape(examples[header] || '');
+    }).join(',');
+
+    const csvContent = '\uFEFF' + [headerRow, descRow, exampleRow].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'product_import_template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showNotification('CSV шаблонът е изтеглен.', 'success');
+}
+
+/**
+ * Handles CSV file import: parses the file and adds products to the editor.
+ * @param {Event} event
+ * @param {HTMLElement} triggerButton
+ */
+function handleProductCSVImport(event, triggerButton) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            // Normalise line endings and strip BOM
+            const text = e.target.result.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            const lines = text.split('\n').filter(l => l.trim() !== '');
+
+            if (lines.length < 2) {
+                throw new Error('CSV файлът трябва да съдържа поне заглавен ред и един ред с данни.');
+            }
+
+            const headers = parseCSVLine(lines[0]);
+
+            // Skip description row if present (second row contains description text for first column)
+            // The template file includes a description row as the second row; detect it by checking
+            // that its first cell is longer than a product_id would be and does not look like an ID.
+            const MIN_DESCRIPTION_CELL_LENGTH = 30;
+            let dataStartIndex = 1;
+            if (lines.length > 2) {
+                const secondRowFirstCell = parseCSVLine(lines[1])[0] || '';
+                if (secondRowFirstCell.length > MIN_DESCRIPTION_CELL_LENGTH && !secondRowFirstCell.match(/^prod-/i)) {
+                    dataStartIndex = 2;
+                }
+            }
+
+            const productsContainer = triggerButton.closest('.modal-tab-pane').querySelector('#products-editor');
+            const existingIds = Array.from(productsContainer.querySelectorAll('[data-field="product_id"]')).map(inp => inp.value);
+
+            let imported = 0;
+            for (let i = dataStartIndex; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                if (values.every(v => v.trim() === '')) continue; // skip empty rows
+
+                const productData = csvRowToProduct(headers, values);
+
+                if (!productData.product_id) {
+                    productData.product_id = `prod-import-${Date.now()}-${i}`;
+                }
+
+                // Ensure unique ID
+                let newId = productData.product_id;
+                while (existingIds.includes(newId)) {
+                    newId = `${newId}-copy`;
+                }
+                productData.product_id = newId;
+                existingIds.push(newId);
+
+                addNestedItem(productsContainer, 'product-editor-template', productData);
+                imported++;
+            }
+
+            showNotification(`${imported} продукт(а) са импортирани от CSV.`, 'success');
+        } catch (error) {
+            showNotification(`Грешка при CSV импорт: ${error.message}`, 'error');
+            console.error(error);
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.onerror = () => { showNotification('Неуспешно прочитане на CSV файла.', 'error'); };
+    reader.readAsText(file, 'UTF-8');
+}
+
+/**
+ * Exports all products from the editor container to a CSV file.
+ * @param {HTMLElement} productsContainer
+ */
+function exportProductsToCSV(productsContainer) {
+    const productNodes = productsContainer.querySelectorAll(':scope > .nested-item[data-type="product"]');
+    if (productNodes.length === 0) {
+        showNotification('Няма продукти за експортиране.', 'error');
+        return;
+    }
+
+    const products = [];
+    productNodes.forEach(node => {
+        const productData = {};
+        node.querySelectorAll('[data-field]').forEach(input => {
+            const path = input.dataset.field;
+            let value;
+            if (input.type === 'checkbox') {
+                value = input.checked;
+            } else if (input.tagName === 'SELECT') {
+                value = input.value;
+            } else {
+                value = input.value;
+            }
+
+            if (path.includes('goals') || path.includes('synergy_products')) {
+                value = value.split(',').map(s => s.trim()).filter(Boolean);
+            }
+            setProperty(productData, path, value);
+        });
+
+        // Collect array sub-lists
+        const subLists = ['effects', 'about-benefits', 'ingredients', 'faq'];
+        subLists.forEach(subListName => {
+            const subContainer = node.querySelector(`[data-sub-container="${subListName}"]`);
+            if (!subContainer) return;
+            const items = [];
+            subContainer.querySelectorAll(':scope > .nested-sub-item').forEach(subItem => {
+                const subData = {};
+                subItem.querySelectorAll('[data-field]').forEach(inp => {
+                    subData[inp.dataset.field] = inp.type === 'checkbox' ? inp.checked : inp.value;
+                });
+                items.push(subData);
+            });
+            if (subListName === 'effects') setProperty(productData, 'public_data.effects', items);
+            else if (subListName === 'about-benefits') setProperty(productData, 'public_data.about_content.benefits', items);
+            else if (subListName === 'ingredients') setProperty(productData, 'public_data.ingredients', items);
+            else if (subListName === 'faq') setProperty(productData, 'public_data.faq', items);
+        });
+
+        products.push(productData);
+    });
+
+    const headerRow = CSV_COLUMNS.map(c => csvEscape(c.header)).join(',');
+    const dataRows = products.map(p => productToCSVRow(p).map(csvEscape).join(','));
+    const csvContent = '\uFEFF' + [headerRow, ...dataRows].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const timestamp = new Date().toISOString().slice(0, 10);
+    link.download = `products_export_${timestamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showNotification(`${products.length} продукт(а) са експортирани.`, 'success');
 }
 
 function getProperty(obj, path) {
