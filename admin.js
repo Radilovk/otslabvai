@@ -958,7 +958,7 @@ function serializeForm(form) {
             productData.display_order = index;
 
             // Сериализираме вложените списъци
-            ['effects', 'about-benefits', 'ingredients', 'faq'].forEach(subListName => {
+            ['effects', 'about-benefits', 'ingredients', 'faq', 'variants'].forEach(subListName => {
                 const subContainer = productNode.querySelector(`[data-sub-container="${subListName}"]`);
                 if (subContainer) {
                     const subList = [];
@@ -973,12 +973,18 @@ function serializeForm(form) {
                         dataType = 'ingredient';
                     } else if (subListName === 'faq') {
                         dataType = 'faq';
+                    } else if (subListName === 'variants') {
+                        dataType = 'variant';
                     }
                     
                     subContainer.querySelectorAll(`:scope > .nested-sub-item[data-type="${dataType}"]`).forEach(subItemNode => {
                         const subItemData = {};
                         subItemNode.querySelectorAll('[data-field]').forEach(input => {
-                            subItemData[input.dataset.field] = (input.type === 'number' ? (input.value ? parseFloat(input.value) : null) : input.value);
+                            if (input.type === 'checkbox') {
+                                subItemData[input.dataset.field] = input.checked;
+                            } else {
+                                subItemData[input.dataset.field] = (input.type === 'number' ? (input.value ? parseFloat(input.value) : null) : input.value);
+                            }
                         });
                         subList.push(subItemData);
                     });
@@ -992,6 +998,8 @@ function serializeForm(form) {
                         setProperty(productData, `public_data.ingredients`, subList);
                     } else if (subListName === 'faq') {
                         setProperty(productData, `public_data.faq`, subList);
+                    } else if (subListName === 'variants') {
+                        setProperty(productData, `public_data.variants`, subList);
                     }
                 }
             });
@@ -1048,7 +1056,7 @@ function addNestedItem(container, templateId, data) {
             }
         });
         // Попълваме вложените списъци
-        ['effects', 'about-benefits', 'ingredients', 'faq'].forEach(subListName => {
+        ['effects', 'about-benefits', 'ingredients', 'faq', 'variants'].forEach(subListName => {
             const subContainer = itemElement.querySelector(`[data-sub-container="${subListName}"]`);
             let subData = null;
             
@@ -1061,6 +1069,8 @@ function addNestedItem(container, templateId, data) {
                 subData = getProperty(data, `public_data.ingredients`);
             } else if (subListName === 'faq') {
                 subData = getProperty(data, `public_data.faq`);
+            } else if (subListName === 'variants') {
+                subData = getProperty(data, `public_data.variants`);
             }
             
             if (subContainer && Array.isArray(subData)) {
@@ -1075,6 +1085,8 @@ function addNestedItem(container, templateId, data) {
                         subTemplateId = 'ingredient-editor-template';
                     } else if (subListName === 'faq') {
                         subTemplateId = 'faq-editor-template';
+                    } else if (subListName === 'variants') {
+                        subTemplateId = 'variant-editor-template';
                     }
                     
                     if (subTemplateId) {
@@ -2092,7 +2104,7 @@ function exportProductsToCSV(productsContainer) {
         });
 
         // Collect array sub-lists
-        const subLists = ['effects', 'about-benefits', 'ingredients', 'faq'];
+        const subLists = ['effects', 'about-benefits', 'ingredients', 'faq', 'variants'];
         subLists.forEach(subListName => {
             const subContainer = node.querySelector(`[data-sub-container="${subListName}"]`);
             if (!subContainer) return;
@@ -2108,6 +2120,7 @@ function exportProductsToCSV(productsContainer) {
             else if (subListName === 'about-benefits') setProperty(productData, 'public_data.about_content.benefits', items);
             else if (subListName === 'ingredients') setProperty(productData, 'public_data.ingredients', items);
             else if (subListName === 'faq') setProperty(productData, 'public_data.faq', items);
+            else if (subListName === 'variants') setProperty(productData, 'public_data.variants', items);
         });
 
         products.push(productData);
@@ -2487,7 +2500,7 @@ function handleMoveProduct(productEditor) {
     });
     
     // Serialize nested lists (effects, ingredients, etc.)
-    ['effects', 'about-benefits', 'ingredients', 'faq'].forEach(subListName => {
+    ['effects', 'about-benefits', 'ingredients', 'faq', 'variants'].forEach(subListName => {
         const subContainer = productEditor.querySelector(`[data-sub-container="${subListName}"]`);
         if (subContainer) {
             const items = [];

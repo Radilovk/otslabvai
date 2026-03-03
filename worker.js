@@ -54,6 +54,8 @@ export default {
       '/admin.html': { file: 'admin.html', type: CONTENT_TYPES.html },
       '/admin.js': { file: 'admin.js', type: CONTENT_TYPES.js },
       '/admin.css': { file: 'admin.css', type: CONTENT_TYPES.css },
+      '/product.html': { file: 'product.html', type: CONTENT_TYPES.html },
+      '/product.js': { file: 'product.js', type: CONTENT_TYPES.js },
       '/checkout.html': { file: 'checkout.html', type: CONTENT_TYPES.html },
       '/quest.html': { file: 'quest.html', type: CONTENT_TYPES.html },
       '/questionnaire.js': { file: 'questionnaire.js', type: CONTENT_TYPES.js },

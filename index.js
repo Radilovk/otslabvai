@@ -89,12 +89,20 @@ const generateProductCard = (product) => {
 
     const publicData = product.public_data;
     const inventory = product.system_data?.inventory ?? 0;
-    const productId = product.product_id; // Използваме надеждния уникален ID
+    const productId = product.product_id;
+    const variants = publicData.variants || [];
+    const variantBadge = variants.length > 1 
+        ? `<span class="variant-badge">${variants.length} вкуса</span>` 
+        : '';
+    const brandLabel = publicData.brand 
+        ? `<span class="brand-label">${escapeHtml(publicData.brand)}</span>` 
+        : '';
 
     return `
-    <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}">
-        ${publicData.image_url ? `<div class="product-image"><img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)} - ${escapeHtml(publicData.tagline)}" loading="lazy" decoding="async"></div>` : ''}
+    <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}" data-brand="${escapeHtml(publicData.brand || '')}" data-price="${Number(publicData.price)}" data-goals="${escapeHtml((product.system_data?.goals || []).join(','))}">
+        ${publicData.image_url ? `<div class="product-image">${variantBadge}<img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)} - ${escapeHtml(publicData.tagline)}" loading="lazy" decoding="async"></div>` : ''}
         <div class="card-content">
+            ${brandLabel}
             <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(publicData.tagline)}</p></div>
             <div class="product-price">${Number(publicData.price).toFixed(2)} €</div>
             <div class="effects-container">
@@ -282,6 +290,7 @@ const generateProductCategoryHTML = (component, index) => {
     const isCollapsible = component.options.is_collapsible;
     const isExpanded = component.options.is_expanded_by_default;
     const productGridId = `product-grid-${component.id || index}`;
+    const enableFilters = component.options && component.options.enable_filters;
     
     // Sort products by display_order if it exists, otherwise maintain current order
     const sortedProducts = (component.products || []).slice().sort((a, b) => {
@@ -289,6 +298,58 @@ const generateProductCategoryHTML = (component, index) => {
         const orderB = b.display_order !== undefined ? b.display_order : 999999;
         return orderA - orderB;
     });
+
+    // Build filter bar HTML if enabled
+    let filterBarHTML = '';
+    if (enableFilters) {
+        // Extract unique brands
+        const brands = [...new Set(sortedProducts.map(p => p.public_data?.brand).filter(Boolean))].sort();
+        // Extract unique goals
+        const goalsSet = new Set();
+        sortedProducts.forEach(p => {
+            (p.system_data?.goals || []).forEach(g => goalsSet.add(g));
+        });
+        const goals = [...goalsSet].sort();
+
+        filterBarHTML = `
+        <div class="product-filter-bar" data-grid-id="${productGridId}">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="filter-brand-${index}">Марка</label>
+                    <select id="filter-brand-${index}" class="filter-select" data-filter="brand">
+                        <option value="">Всички марки</option>
+                        ${brands.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-goal-${index}">Цел</label>
+                    <select id="filter-goal-${index}" class="filter-select" data-filter="goal">
+                        <option value="">Всички цели</option>
+                        ${goals.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-sort-${index}">Подреди по</label>
+                    <select id="filter-sort-${index}" class="filter-select" data-filter="sort">
+                        <option value="default">По подразбиране</option>
+                        <option value="price-asc">Цена (ниска → висока)</option>
+                        <option value="price-desc">Цена (висока → ниска)</option>
+                        <option value="effectiveness">Ефективност</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-search-${index}">Търсене</label>
+                    <input type="text" id="filter-search-${index}" class="filter-input" data-filter="search" placeholder="Търси продукт...">
+                </div>
+            </div>
+            <div class="filter-results-count" id="filter-count-${productGridId}"></div>
+        </div>`;
+    }
+
+    // For filterable categories with many products, show limited initially
+    const INITIAL_SHOW = enableFilters ? 24 : sortedProducts.length;
+    const initialProducts = sortedProducts.slice(0, INITIAL_SHOW);
+    const hasMore = sortedProducts.length > INITIAL_SHOW;
     
     return `
     <section id="${component.id}" class="category-section fade-in-up ${isCollapsible ? '' : 'not-collapsible'}">
@@ -301,11 +362,37 @@ const generateProductCategoryHTML = (component, index) => {
                 ${component.image ? `<div class="category-image-wrapper"><img src="${component.image}" alt="${component.title}" loading="lazy"></div>` : ''}
                 ${component.description ? `<p class="category-description">${component.description}</p>` : ''}
             </div>
-            <div class="product-grid" id="${productGridId}">
-                ${sortedProducts.map(generateProductCard).join('')}
+            ${filterBarHTML}
+            <div class="product-grid" id="${productGridId}" ${enableFilters ? `data-all-products='${encodeProductsForAttr(sortedProducts)}' data-page-size="24"` : ''}>
+                ${initialProducts.map(generateProductCard).join('')}
             </div>
+            ${hasMore ? `<div class="load-more-container" id="load-more-${productGridId}">
+                <button class="btn-load-more" data-grid-id="${productGridId}">Зареди още продукти (${sortedProducts.length - INITIAL_SHOW} остават)</button>
+            </div>` : ''}
         </div>
     </section>`;
+}
+
+// Encode products data for the filterable grid (stores as base64 JSON to avoid HTML issues)
+function encodeProductsForAttr(products) {
+    try {
+        // Store minimal data needed for filtering
+        const minimalProducts = products.map(p => ({
+            product_id: p.product_id,
+            name: p.public_data?.name || '',
+            price: p.public_data?.price || 0,
+            brand: p.public_data?.brand || '',
+            image_url: p.public_data?.image_url || '',
+            tagline: p.public_data?.tagline || '',
+            effects: p.public_data?.effects || [],
+            goals: p.system_data?.goals || [],
+            variants: p.public_data?.variants || [],
+            inventory: p.system_data?.inventory ?? 0
+        }));
+        return btoa(unescape(encodeURIComponent(JSON.stringify(minimalProducts))));
+    } catch (e) {
+        return '';
+    }
 }
 // --- END: MODIFIED FUNCTION ---
 
@@ -1288,6 +1375,11 @@ async function main() {
         // Initialize search functionality
         initializeSearch();
         
+        // Initialize product filters for filterable categories
+        if (isIndexPage) {
+            initProductFilters();
+        }
+        
         if (isIndexPage) {
             initializeScrollSpy();
             initializeMarketingFeatures();
@@ -1712,6 +1804,155 @@ function extractProductsForSearch(pageContent) {
         if (component.type === 'product_category' && component.products) {
             allProducts.push(...component.products);
         }
+    });
+}
+
+// =======================================================
+//          PRODUCT FILTER & SORT SYSTEM
+// =======================================================
+
+function initProductFilters() {
+    document.querySelectorAll('.product-filter-bar').forEach(filterBar => {
+        const gridId = filterBar.dataset.gridId;
+        const grid = document.getElementById(gridId);
+        if (!grid) return;
+
+        const brandSelect = filterBar.querySelector('[data-filter="brand"]');
+        const goalSelect = filterBar.querySelector('[data-filter="goal"]');
+        const sortSelect = filterBar.querySelector('[data-filter="sort"]');
+        const searchInput = filterBar.querySelector('[data-filter="search"]');
+        const countEl = document.getElementById(`filter-count-${gridId}`);
+
+        // Get all product cards in this grid
+        function getAllCards() {
+            return Array.from(grid.querySelectorAll('.product-card'));
+        }
+
+        function applyFilters() {
+            const brand = brandSelect ? brandSelect.value : '';
+            const goal = goalSelect ? goalSelect.value : '';
+            const sortBy = sortSelect ? sortSelect.value : 'default';
+            const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+            const cards = getAllCards();
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const cardBrand = card.dataset.brand || '';
+                const cardGoals = card.dataset.goals || '';
+                const cardName = card.querySelector('h3')?.textContent?.toLowerCase() || '';
+
+                let visible = true;
+                if (brand && cardBrand !== brand) visible = false;
+                if (goal && !cardGoals.split(',').includes(goal)) visible = false;
+                if (search && !cardName.includes(search)) visible = false;
+
+                card.style.display = visible ? '' : 'none';
+                if (visible) visibleCount++;
+            });
+
+            // Sort visible cards
+            if (sortBy !== 'default') {
+                const visibleCards = cards.filter(c => c.style.display !== 'none');
+                visibleCards.sort((a, b) => {
+                    if (sortBy === 'price-asc') {
+                        return parseFloat(a.dataset.price || 0) - parseFloat(b.dataset.price || 0);
+                    } else if (sortBy === 'price-desc') {
+                        return parseFloat(b.dataset.price || 0) - parseFloat(a.dataset.price || 0);
+                    } else if (sortBy === 'effectiveness') {
+                        const aEffects = a.querySelectorAll('.effect-bar');
+                        const bEffects = b.querySelectorAll('.effect-bar');
+                        const aMax = aEffects.length > 0 ? Math.max(...Array.from(aEffects).map(e => parseFloat(e.dataset.width) || 0)) : 0;
+                        const bMax = bEffects.length > 0 ? Math.max(...Array.from(bEffects).map(e => parseFloat(e.dataset.width) || 0)) : 0;
+                        return bMax - aMax;
+                    }
+                    return 0;
+                });
+                visibleCards.forEach(card => grid.appendChild(card));
+            }
+
+            if (countEl) {
+                countEl.textContent = `Показани: ${visibleCount} от ${cards.length} продукта`;
+            }
+        }
+
+        if (brandSelect) brandSelect.addEventListener('change', applyFilters);
+        if (goalSelect) goalSelect.addEventListener('change', applyFilters);
+        if (sortSelect) sortSelect.addEventListener('change', applyFilters);
+        if (searchInput) searchInput.addEventListener('input', debounce(applyFilters, 300));
+
+        // Initial count
+        const totalCards = getAllCards().length;
+        if (countEl) {
+            countEl.textContent = `Показани: ${totalCards} от ${totalCards} продукта`;
+        }
+    });
+
+    // Load More button handlers
+    document.querySelectorAll('.btn-load-more').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const gridId = btn.dataset.gridId;
+            const grid = document.getElementById(gridId);
+            if (!grid) return;
+
+            // Decode all products data
+            const encodedData = grid.dataset.allProducts;
+            if (!encodedData) return;
+
+            try {
+                const allProductsData = JSON.parse(decodeURIComponent(escape(atob(encodedData))));
+                const currentCount = grid.querySelectorAll('.product-card').length;
+                const pageSize = parseInt(grid.dataset.pageSize) || 24;
+                const nextBatch = allProductsData.slice(currentCount, currentCount + pageSize);
+
+                // Generate cards for next batch
+                nextBatch.forEach(p => {
+                    const product = {
+                        product_id: p.product_id,
+                        public_data: {
+                            name: p.name,
+                            price: p.price,
+                            brand: p.brand,
+                            image_url: p.image_url,
+                            tagline: p.tagline,
+                            effects: p.effects,
+                            variants: p.variants
+                        },
+                        system_data: {
+                            inventory: p.inventory,
+                            goals: p.goals
+                        }
+                    };
+                    const cardHTML = generateProductCard(product);
+                    grid.insertAdjacentHTML('beforeend', cardHTML);
+                });
+
+                // Animate new cards
+                grid.querySelectorAll('.product-card:not(.visible)').forEach(card => {
+                    card.classList.add('visible');
+                });
+
+                // Update or hide button
+                const remaining = allProductsData.length - (currentCount + nextBatch.length);
+                if (remaining <= 0) {
+                    btn.parentElement.style.display = 'none';
+                } else {
+                    btn.textContent = `Зареди още продукти (${remaining} остават)`;
+                }
+
+                // Re-apply filters if any are active
+                const filterBar = document.querySelector(`.product-filter-bar[data-grid-id="${gridId}"]`);
+                if (filterBar) {
+                    const countEl = document.getElementById(`filter-count-${gridId}`);
+                    const totalCards = grid.querySelectorAll('.product-card').length;
+                    if (countEl) {
+                        countEl.textContent = `Показани: ${totalCards} от ${allProductsData.length} продукта`;
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading more products:', e);
+            }
+        });
     });
 }
 

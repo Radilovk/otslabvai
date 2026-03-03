@@ -1004,6 +1004,10 @@
                         <label>Слоган</label>
                         <input type="text" data-field="public_data.tagline">
                     </div>
+                    <div class="form-group">
+                        <label>Марка (Brand)</label>
+                        <input type="text" data-field="public_data.brand" placeholder="Напр. OstroVit, AllNutrition, 6PAK Nutrition">
+                    </div>
                     <fieldset>
                         <legend>Изображения на продукта</legend>
                         <div class="form-group">
@@ -1114,6 +1118,22 @@
                         </div>
                         <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="faq-editor-template" data-container="[data-sub-container='faq']">Добави въпрос</button>
                     </fieldset>
+
+                    <fieldset>
+                        <legend>Варианти (Вкусове / Разфасовки)</legend>
+                        <small style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">
+                            Добавете различни вкусове или разфасовки за този продукт. Всеки вариант може да има собствен SKU, цена и изображение.
+                        </small>
+                        <div class="nested-sublist-container" data-sub-container="variants">
+                            <!-- Вариантите ще се генерират тук от JS -->
+                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="variant-editor-template" data-container="[data-sub-container='variants']">Добави вариант</button>
+                    </fieldset>
+
+                    <div class="form-group">
+                        <label>Линк към хранителна информация (Label URL)</label>
+                        <input type="text" data-field="public_data.label_url" placeholder="https://fitness1.bg/label/supp-facts...">
+                    </div>
                 </div>
 
                 <!-- ТАБ 2: СИСТЕМНИ ДАННИ -->
@@ -1224,6 +1244,40 @@
                 <textarea data-field="answer" rows="3" placeholder="Отговорът на въпроса"></textarea>
             </div>
             <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий въпроса">×</button>
+        </div>
+    </template>
+
+    <!-- Вложен шаблон за редактор на ВАРИАНТ (Flavor/Packaging) -->
+    <template id="variant-editor-template">
+        <div class="nested-sub-item" data-type="variant">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Вкус / Разфасовка</label>
+                    <input type="text" data-field="option_name" placeholder="Напр. Ягода, Шоколад, 500г">
+                </div>
+                <div class="form-group">
+                    <label>SKU код</label>
+                    <input type="text" data-field="sku" placeholder="Напр. 73101">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Цена (€)</label>
+                    <input type="number" step="0.01" data-field="price" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>EAN код</label>
+                    <input type="text" data-field="ean" placeholder="Баркод">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Изображение (URL)</label>
+                <input type="text" data-field="image_url" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label><input type="checkbox" data-field="available" checked> Наличен</label>
+            </div>
+            <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий варианта">×</button>
         </div>
     </template>
 
