@@ -290,18 +290,62 @@ function renderProductDetail(product) {
         }
     }
 
+    // Generate variant selector HTML
+    const variants = publicData.variants || [];
+    let variantSelectorHTML = '';
+    if (variants.length > 1) {
+        variantSelectorHTML = `
+            <div class="product-variant-selector">
+                <h3>Изберете вкус / разфасовка</h3>
+                <div class="variant-options">
+                    ${variants.map((v, idx) => `
+                        <button class="variant-option ${idx === 0 ? 'active' : ''}" 
+                                data-variant-idx="${idx}"
+                                data-variant-sku="${escapeHtml(v.sku)}"
+                                data-variant-price="${v.price}"
+                                data-variant-image="${escapeHtml(v.image_url || '')}"
+                                data-variant-name="${escapeHtml(v.option_name || 'Стандартна')}">
+                            ${escapeHtml(v.option_name || 'Стандартна')}
+                            ${Math.abs(v.price - publicData.price) > 0.005 ? `<span class="variant-price">${Number(v.price).toFixed(2)} €</span>` : ''}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } else if (variants.length === 1 && variants[0].option_name && variants[0].option_name !== 'Стандартна') {
+        variantSelectorHTML = `
+            <div class="product-variant-selector">
+                <p class="single-variant-label">Вкус: <strong>${escapeHtml(variants[0].option_name)}</strong></p>
+            </div>
+        `;
+    }
+
+    // Brand display
+    const brandHTML = publicData.brand ? `<span class="product-detail-brand">${escapeHtml(publicData.brand)}</span>` : '';
+
+    // Label (nutrition facts) link
+    const labelHTML = publicData.label_url ? `
+        <div class="product-label-link">
+            <a href="${escapeHtml(publicData.label_url)}" target="_blank" rel="noopener">📋 Хранителна информация</a>
+        </div>
+    ` : '';
+
     // Build the product detail HTML
     const productHTML = `
         <div class="product-detail-header">
+            ${brandHTML}
             <h1>${escapeHtml(publicData.name)}</h1>
             <p class="tagline">${escapeHtml(publicData.tagline)}</p>
             <div class="product-detail-meta">
-                <span class="product-detail-price">${Number(publicData.price).toFixed(2)} €</span>
+                <span class="product-detail-price" id="product-price-display">${Number(publicData.price).toFixed(2)} €</span>
                 <span class="product-detail-stock ${stockClass}">${stockText}</span>
             </div>
         </div>
 
         ${imagesHTML}
+
+        ${variantSelectorHTML}
+        ${labelHTML}
 
         ${(publicData.effects && publicData.effects.length > 0) ? `
             <div class="product-detail-effects">
@@ -332,11 +376,50 @@ function renderProductDetail(product) {
 
     DOM.productContent.innerHTML = productHTML;
 
+    // Setup variant selector interaction
+    if (variants.length > 1) {
+        const variantButtons = DOM.productContent.querySelectorAll('.variant-option');
+        variantButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active state
+                variantButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update price display
+                const variantPrice = parseFloat(btn.dataset.variantPrice);
+                const priceDisplay = document.getElementById('product-price-display');
+                if (priceDisplay && variantPrice) {
+                    priceDisplay.textContent = `${variantPrice.toFixed(2)} €`;
+                }
+
+                // Update main image if variant has different image
+                const variantImage = btn.dataset.variantImage;
+                if (variantImage && /^https?:\/\//.test(variantImage)) {
+                    const mainImg = document.getElementById('main-product-img');
+                    if (mainImg) mainImg.src = variantImage;
+                    const mainImgContainer = DOM.productContent.querySelector('.main-product-image');
+                    if (mainImgContainer) mainImgContainer.dataset.zoomImage = variantImage;
+                }
+
+                // Update add to cart button data
+                if (DOM.addToCartBtn) {
+                    DOM.addToCartBtn.dataset.price = variantPrice;
+                    DOM.addToCartBtn.dataset.id = `${productId}_${btn.dataset.variantSku}`;
+                    const variantName = btn.dataset.variantName;
+                    DOM.addToCartBtn.dataset.name = `${publicData.name} - ${variantName}`;
+                    if (btn.dataset.variantImage) {
+                        DOM.addToCartBtn.dataset.image = btn.dataset.variantImage;
+                    }
+                }
+            });
+        });
+    }
+
     // Setup add to cart button
     if (DOM.addToCartBtn) {
         DOM.addToCartBtn.disabled = inventory <= 0;
-        DOM.addToCartBtn.dataset.id = productId;
-        DOM.addToCartBtn.dataset.name = publicData.name;
+        DOM.addToCartBtn.dataset.id = variants.length > 0 ? `${productId}_${variants[0].sku}` : productId;
+        DOM.addToCartBtn.dataset.name = variants.length > 1 ? `${publicData.name} - ${variants[0].option_name || 'Стандартна'}` : publicData.name;
         DOM.addToCartBtn.dataset.price = publicData.price;
         DOM.addToCartBtn.dataset.inventory = inventory;
         DOM.addToCartBtn.dataset.image = publicData.image_url || '';
@@ -479,7 +562,7 @@ function updateOrCreateMetaTag(attribute, value, content) {
     meta.content = content;
 }
 
-function renderHeader(settings, navigation) {
+function renderHeader(settings, navigation, pageContent) {
     document.title = settings.site_name;
     
     // Store logo URLs for theme switching
@@ -504,12 +587,47 @@ function renderHeader(settings, navigation) {
     DOM.header.brandName.textContent = settings.site_name;
     DOM.header.brandSlogan.textContent = settings.site_slogan;
 
-    const navItemsHTML = navigation.map(item => `<li><a href="index.html${item.link}">${item.text}</a></li>`).join('');
+    // Build navigation: auto-generate from product categories + keep non-category links
+    const navItems = buildNavigationItems(navigation, pageContent);
+    const navItemsHTML = navItems.map(item => {
+        // For anchor links (#section), prefix with index.html since we're on product page
+        const href = item.link.startsWith('#') ? `index.html${item.link}` : item.link;
+        return `<li><a href="${href}">${item.text}</a></li>`;
+    }).join('');
     const persistentLis = DOM.header.navLinks.querySelectorAll('li:nth-last-child(-n+2)');
     DOM.header.navLinks.innerHTML = navItemsHTML;
     persistentLis.forEach(li => DOM.header.navLinks.appendChild(li));
 
     updateCartCount();
+}
+
+/**
+ * Builds navigation items by auto-including all product categories from page_content.
+ * Product categories are derived from actual page_content components (source of truth),
+ * then non-category links from the static navigation array are appended.
+ */
+function buildNavigationItems(navigation, pageContent) {
+    const navItems = [];
+    
+    if (Array.isArray(pageContent)) {
+        pageContent.forEach(component => {
+            if (component.type === 'product_category' && component.id && component.title) {
+                navItems.push({
+                    text: component.title,
+                    link: `#${component.id}`
+                });
+            }
+        });
+    }
+    
+    if (Array.isArray(navigation)) {
+        navigation.forEach(item => {
+            if (item.link && item.link.startsWith('#')) return;
+            navItems.push(item);
+        });
+    }
+    
+    return navItems;
 }
 
 // Helper function to initialize logo from cached settings
@@ -838,7 +956,7 @@ async function main() {
         }
 
         // Render header and footer
-        renderHeader(data.settings, data.navigation);
+        renderHeader(data.settings, data.navigation, data.page_content);
         renderFooter(data.settings, data.footer);
 
         // Find the product

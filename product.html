@@ -479,6 +479,99 @@
                 height: 40px;
             }
         }
+
+        /* Variant Selector Styles */
+        .product-variant-selector {
+            margin: 1.5rem 0;
+            padding: 1.25rem;
+            background: var(--card-bg, #f9f9f9);
+            border-radius: 12px;
+            border: 1px solid var(--border-color, #e0e0e0);
+        }
+
+        .product-variant-selector h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary, #333);
+        }
+
+        .variant-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .variant-option {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color, #ddd);
+            border-radius: 25px;
+            background: var(--bg-color, #fff);
+            color: var(--text-primary, #333);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .variant-option:hover {
+            border-color: var(--primary-color, #e91e9a);
+            background: rgba(233, 30, 154, 0.05);
+        }
+
+        .variant-option.active {
+            border-color: var(--primary-color, #e91e9a);
+            background: var(--primary-color, #e91e9a);
+            color: #fff;
+        }
+
+        .variant-option .variant-price {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .single-variant-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary, #666);
+        }
+
+        .product-detail-brand {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary-color, #e91e9a);
+            margin-bottom: 0.5rem;
+        }
+
+        .product-label-link {
+            margin: 1rem 0;
+        }
+
+        .product-label-link a {
+            color: var(--primary-color, #e91e9a);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .product-label-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .variant-options {
+                gap: 0.4rem;
+            }
+            .variant-option {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
