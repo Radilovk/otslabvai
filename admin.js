@@ -1113,15 +1113,16 @@ function setupEventListeners() {
         handleAction(action, target, id);
     });
 
-    DOM.modal.saveBtn.addEventListener('click', () => {
+    DOM.modal.saveBtn.addEventListener('click', async () => {
         if (currentModalSaveCallback) {
             const form = DOM.modal.body.querySelector('form');
             if (form) {
-                const success = currentModalSaveCallback(form);
+                const result = currentModalSaveCallback(form);
+                const success = (result instanceof Promise) ? await result : result;
                 if (success) {
                     setUnsavedChanges(true);
                     renderAll();
-                    closeModal();
+                    showNotification('Промените са запазени. Натиснете "Запази всичко" за да ги съхраните.', 'success');
                 }
             }
         }
