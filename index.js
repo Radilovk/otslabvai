@@ -1307,6 +1307,10 @@ async function main() {
                 const RESTORE_DELAY_MS = 200;
 
                 const doRestore = () => {
+                    // Reveal all animated elements instantly (no-transition is active) so the
+                    // restored scroll position shows fully-visible content, not opacity-0 elements.
+                    document.querySelectorAll('.fade-in-up').forEach(el => el.classList.add('is-visible'));
+
                     if (savedCategoryStates) {
                         try {
                             const categoryStates = JSON.parse(savedCategoryStates);
