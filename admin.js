@@ -1139,6 +1139,8 @@ function setupEventListeners() {
         
         DOM.tabPanes.forEach(pane => pane.classList.remove('active'));
         document.getElementById(target.dataset.tab).classList.add('active');
+        
+        try { localStorage.setItem('adminActiveTab', target.dataset.tab); } catch (e) {}
     });
 
     DOM.saveBtn.addEventListener('click', saveData);
@@ -3087,6 +3089,20 @@ async function init() {
     if (appData) {
         renderAll();
         renderPromoCodes();
+        try {
+            const savedTab = localStorage.getItem('adminActiveTab');
+            if (savedTab) {
+                const tabBtn = DOM.tabNav.querySelector(`[data-tab="${savedTab}"]`);
+                const tabPane = document.getElementById(savedTab);
+                if (tabBtn && tabPane) {
+                    const currentActive = DOM.tabNav.querySelector('.active');
+                    if (currentActive) currentActive.classList.remove('active');
+                    tabBtn.classList.add('active');
+                    DOM.tabPanes.forEach(pane => pane.classList.remove('active'));
+                    tabPane.classList.add('active');
+                }
+            }
+        } catch (e) {}
     } else {
         document.querySelector('.admin-container').innerHTML = '<h1>Грешка при зареждане на данните. Проверете конзолата.</h1>';
     }
