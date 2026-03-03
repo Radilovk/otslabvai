@@ -306,7 +306,7 @@ function renderProductDetail(product) {
                                 data-variant-image="${escapeHtml(v.image_url || '')}"
                                 data-variant-name="${escapeHtml(v.option_name || 'Стандартна')}">
                             ${escapeHtml(v.option_name || 'Стандартна')}
-                            ${v.price !== publicData.price ? `<span class="variant-price">${Number(v.price).toFixed(2)} €</span>` : ''}
+                            ${Math.abs(v.price - publicData.price) > 0.005 ? `<span class="variant-price">${Number(v.price).toFixed(2)} €</span>` : ''}
                         </button>
                     `).join('')}
                 </div>

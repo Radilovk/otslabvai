@@ -389,7 +389,7 @@ function encodeProductsForAttr(products) {
             variants: p.public_data?.variants || [],
             inventory: p.system_data?.inventory ?? 0
         }));
-        return btoa(unescape(encodeURIComponent(JSON.stringify(minimalProducts))));
+        return btoa(new TextEncoder().encode(JSON.stringify(minimalProducts)).reduce((s, b) => s + String.fromCharCode(b), ''));
     } catch (e) {
         return '';
     }
@@ -1900,7 +1900,7 @@ function initProductFilters() {
             if (!encodedData) return;
 
             try {
-                const allProductsData = JSON.parse(decodeURIComponent(escape(atob(encodedData))));
+                const allProductsData = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(encodedData), c => c.charCodeAt(0))));
                 const currentCount = grid.querySelectorAll('.product-card').length;
                 const pageSize = parseInt(grid.dataset.pageSize) || 24;
                 const nextBatch = allProductsData.slice(currentCount, currentCount + pageSize);
