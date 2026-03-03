@@ -184,6 +184,10 @@ body.nav-open {
     overflow: hidden;
 }
 
+body.no-transition .product-grid {
+    transition: none !important;
+}
+
 a {
     text-decoration: none;
     color: var(--color-primary);
@@ -1656,7 +1660,7 @@ main {
 }
 
 .category-header[aria-expanded="true"] + .product-grid { 
-    max-height: 5000px; 
+    max-height: 15000px; 
     opacity: 1; 
     margin-top: 2rem; 
 }
@@ -2028,7 +2032,7 @@ body.modal-open { overflow: hidden; }
     flex-shrink: 0;
     width: 48px;
     height: 48px;
-    color: var(--color-primary);
+    color: var(--color-secondary);
 }
 
 .benefit-item h4 {
@@ -3341,7 +3345,7 @@ body.modal-open { overflow: hidden; }
 
 .product-benefits .benefit-item svg {
     flex-shrink: 0;
-    stroke: var(--accent);
+    stroke: var(--accent-secondary);
     width: 32px;
     height: 32px;
 }
@@ -3561,7 +3565,7 @@ body.modal-open { overflow: hidden; }
     flex-shrink: 0;
     width: 48px;
     height: 48px;
-    color: var(--accent);
+    color: var(--accent-secondary);
 }
 
 .product-benefits-full .benefit-item h4 {

@@ -2360,6 +2360,12 @@ async function handleAIAssistant(productEditor) {
         fillField('[data-field="system_data.protocol_hint"]', aiData.protocol_hint);
         fillField('[data-field="system_data.synergy_products"]', aiData.synergy_products);
         fillField('[data-field="system_data.safety_warnings"]', aiData.safety_warnings);
+
+        // Ensure inventory is always a positive sample value
+        const inventoryInput = productEditor.querySelector('[data-field="system_data.inventory"]');
+        if (inventoryInput && (!inventoryInput.value || inventoryInput.value === '0')) {
+            inventoryInput.value = 10;
+        }
         
         // За продукта (About Content)
         if (aiData.about_content) {
