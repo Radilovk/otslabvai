@@ -394,7 +394,7 @@ function renderProductDetail(product) {
 
                 // Update main image if variant has different image
                 const variantImage = btn.dataset.variantImage;
-                if (variantImage) {
+                if (variantImage && /^https?:\/\//.test(variantImage)) {
                     const mainImg = document.getElementById('main-product-img');
                     if (mainImg) mainImg.src = variantImage;
                     const mainImgContainer = DOM.productContent.querySelector('.main-product-image');

@@ -1901,26 +1901,29 @@ function initProductFilters() {
 
             try {
                 const allProductsData = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(encodedData), c => c.charCodeAt(0))));
+                if (!Array.isArray(allProductsData)) return;
+                
                 const currentCount = grid.querySelectorAll('.product-card').length;
                 const pageSize = parseInt(grid.dataset.pageSize) || 24;
                 const nextBatch = allProductsData.slice(currentCount, currentCount + pageSize);
 
                 // Generate cards for next batch
                 nextBatch.forEach(p => {
+                    if (!p || !p.product_id) return;
                     const product = {
-                        product_id: p.product_id,
+                        product_id: String(p.product_id),
                         public_data: {
-                            name: p.name,
-                            price: p.price,
-                            brand: p.brand,
-                            image_url: p.image_url,
-                            tagline: p.tagline,
-                            effects: p.effects,
-                            variants: p.variants
+                            name: String(p.name || ''),
+                            price: Number(p.price) || 0,
+                            brand: String(p.brand || ''),
+                            image_url: String(p.image_url || ''),
+                            tagline: String(p.tagline || ''),
+                            effects: Array.isArray(p.effects) ? p.effects : [],
+                            variants: Array.isArray(p.variants) ? p.variants : []
                         },
                         system_data: {
-                            inventory: p.inventory,
-                            goals: p.goals
+                            inventory: Number(p.inventory) || 0,
+                            goals: Array.isArray(p.goals) ? p.goals : []
                         }
                     };
                     const cardHTML = generateProductCard(product);
