@@ -537,8 +537,13 @@ const generateContactHTML = component => `
 const getCart = () => JSON.parse(localStorage.getItem('cart') || '[]');
 const saveCart = cart => localStorage.setItem('cart', JSON.stringify(cart));
 
-const saveNavigationState = () => {
+const saveNavigationState = (productId = null) => {
     sessionStorage.setItem('indexScrollPosition', window.scrollY.toString());
+    if (productId) {
+        sessionStorage.setItem('lastViewedProduct', productId);
+    } else {
+        sessionStorage.removeItem('lastViewedProduct');
+    }
     const categoryStates = {};
     document.querySelectorAll('.category-section[id] .category-header[aria-expanded]').forEach(header => {
         const section = header.closest('.category-section');
@@ -862,7 +867,8 @@ function initializePageInteractions(settings = {}) {
     document.body.addEventListener('click', (e) => {
         const productCard = e.target.closest('.product-card');
         if (productCard) {
-            saveNavigationState();
+            const productId = productCard.getAttribute('data-product-id');
+            saveNavigationState(productId);
         }
     });
 
@@ -1289,13 +1295,21 @@ async function main() {
             // Restore category expanded states and scroll position if returning from product page
             const savedScrollPosition = sessionStorage.getItem('indexScrollPosition');
             const savedCategoryStates = sessionStorage.getItem('categoryStates');
-            if (savedScrollPosition || savedCategoryStates) {
-                setTimeout(() => {
+            const lastViewedProduct = sessionStorage.getItem('lastViewedProduct');
+            // Validate product ID format to prevent selector injection (alphanumeric, hyphens, underscores only)
+            const safeLastViewedProduct = /^[a-zA-Z0-9_-]+$/.test(lastViewedProduct) ? lastViewedProduct : null;
+            if (savedScrollPosition || savedCategoryStates || safeLastViewedProduct) {
+                // Disable smooth scroll and transitions immediately so restoration is instant
+                document.documentElement.style.scrollBehavior = 'auto';
+                document.body.classList.add('no-transition');
+
+                // Delay to allow lazy-loaded images to finish initial layout before scrolling
+                const RESTORE_DELAY_MS = 200;
+
+                const doRestore = () => {
                     if (savedCategoryStates) {
                         try {
                             const categoryStates = JSON.parse(savedCategoryStates);
-                            // Disable transitions for instant restore
-                            document.body.classList.add('no-transition');
                             Object.entries(categoryStates).forEach(([id, expanded]) => {
                                 const section = document.getElementById(id);
                                 if (section) {
@@ -1303,17 +1317,34 @@ async function main() {
                                     if (header) header.setAttribute('aria-expanded', expanded);
                                 }
                             });
-                            // Force layout then re-enable transitions
+                            // Force synchronous layout so grids are at full height before scroll
                             document.body.offsetHeight;
-                            document.body.classList.remove('no-transition');
                         } catch (_) { /* Ignore malformed sessionStorage data */ }
                         sessionStorage.removeItem('categoryStates');
                     }
-                    if (savedScrollPosition) {
-                        window.scrollTo(0, parseInt(savedScrollPosition, 10));
+
+                    // Prefer scrolling to the exact product card element (resilient to image-loading layout shifts)
+                    const productCard = safeLastViewedProduct
+                        ? document.querySelector(`.product-card[data-product-id="${CSS.escape(safeLastViewedProduct)}"]`)
+                        : null;
+                    if (productCard) {
+                        productCard.scrollIntoView({ behavior: 'instant', block: 'center' });
+                        sessionStorage.removeItem('lastViewedProduct');
                         sessionStorage.removeItem('indexScrollPosition');
+                    } else if (savedScrollPosition) {
+                        window.scrollTo({ top: parseInt(savedScrollPosition, 10), behavior: 'instant' });
+                        sessionStorage.removeItem('indexScrollPosition');
+                        sessionStorage.removeItem('lastViewedProduct');
                     }
-                }, 100);
+
+                    // Re-enable transitions and smooth scroll after a frame
+                    requestAnimationFrame(() => {
+                        document.body.classList.remove('no-transition');
+                        document.documentElement.style.scrollBehavior = '';
+                    });
+                };
+
+                setTimeout(doRestore, RESTORE_DELAY_MS);
             }
         }
 
@@ -1678,6 +1709,11 @@ function extractProductsForSearch(pageContent) {
             allProducts.push(...component.products);
         }
     });
+}
+
+// Prevent the browser from auto-restoring scroll position so our custom restoration takes effect
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
 }
 
 // Старт на приложението
