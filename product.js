@@ -562,7 +562,7 @@ function updateOrCreateMetaTag(attribute, value, content) {
     meta.content = content;
 }
 
-function renderHeader(settings, navigation) {
+function renderHeader(settings, navigation, pageContent) {
     document.title = settings.site_name;
     
     // Store logo URLs for theme switching
@@ -587,12 +587,47 @@ function renderHeader(settings, navigation) {
     DOM.header.brandName.textContent = settings.site_name;
     DOM.header.brandSlogan.textContent = settings.site_slogan;
 
-    const navItemsHTML = navigation.map(item => `<li><a href="index.html${item.link}">${item.text}</a></li>`).join('');
+    // Build navigation: auto-generate from product categories + keep non-category links
+    const navItems = buildNavigationItems(navigation, pageContent);
+    const navItemsHTML = navItems.map(item => {
+        // For anchor links (#section), prefix with index.html since we're on product page
+        const href = item.link.startsWith('#') ? `index.html${item.link}` : item.link;
+        return `<li><a href="${href}">${item.text}</a></li>`;
+    }).join('');
     const persistentLis = DOM.header.navLinks.querySelectorAll('li:nth-last-child(-n+2)');
     DOM.header.navLinks.innerHTML = navItemsHTML;
     persistentLis.forEach(li => DOM.header.navLinks.appendChild(li));
 
     updateCartCount();
+}
+
+/**
+ * Builds navigation items by auto-including all product categories from page_content.
+ * Product categories are derived from actual page_content components (source of truth),
+ * then non-category links from the static navigation array are appended.
+ */
+function buildNavigationItems(navigation, pageContent) {
+    const navItems = [];
+    
+    if (Array.isArray(pageContent)) {
+        pageContent.forEach(component => {
+            if (component.type === 'product_category' && component.id && component.title) {
+                navItems.push({
+                    text: component.title,
+                    link: `#${component.id}`
+                });
+            }
+        });
+    }
+    
+    if (Array.isArray(navigation)) {
+        navigation.forEach(item => {
+            if (item.link && item.link.startsWith('#')) return;
+            navItems.push(item);
+        });
+    }
+    
+    return navItems;
 }
 
 // Helper function to initialize logo from cached settings
@@ -921,7 +956,7 @@ async function main() {
         }
 
         // Render header and footer
-        renderHeader(data.settings, data.navigation);
+        renderHeader(data.settings, data.navigation, data.page_content);
         renderFooter(data.settings, data.footer);
 
         // Find the product

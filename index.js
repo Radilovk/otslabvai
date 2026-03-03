@@ -171,7 +171,7 @@ const generateHeroHTML = component => {
     // Use allowlist approach - only permit known safe selectors
     function validateSelector(selector) {
         const allowedSelectors = [
-            '#products', '#weight-loss-products', '#fat-burners',
+            '#products', '#weight-loss-products', '#fat-burners', '#all-products',
             '#benefits', '#timeline', '#ingredients', '#testimonials',
             '#faq', '#guarantee', '#contact', '#hero', '#about'
         ];
@@ -719,7 +719,7 @@ const addToCart = (id, name, price, inventory, image) => {
 //          4. РЕНДЪРИ НА СЪДЪРЖАНИЕ (RENDERERS)
 // =======================================================
 
-function renderHeader(settings, navigation) {
+function renderHeader(settings, navigation, pageContent) {
     document.title = settings.site_name;
     
     // Store logo URLs for theme switching
@@ -744,12 +744,47 @@ function renderHeader(settings, navigation) {
     DOM.header.brandName.textContent = settings.site_name;
     DOM.header.brandSlogan.textContent = settings.site_slogan;
 
-    const navItemsHTML = navigation.map(item => `<li><a href="${item.link}">${item.text}</a></li>`).join('');
+    // Build navigation: auto-generate from product categories + keep non-category links
+    const navItems = buildNavigationItems(navigation, pageContent);
+    const navItemsHTML = navItems.map(item => `<li><a href="${item.link}">${item.text}</a></li>`).join('');
     const persistentLis = DOM.header.navLinks.querySelectorAll('li:nth-last-child(-n+2)');
     DOM.header.navLinks.innerHTML = navItemsHTML;
     persistentLis.forEach(li => DOM.header.navLinks.appendChild(li));
 
     updateCartCount();
+}
+
+/**
+ * Builds navigation items by auto-including all product categories from page_content.
+ * Product categories are derived from actual page_content components (source of truth),
+ * then non-category links from the static navigation array are appended.
+ * This ensures the menu always stays in sync with the actual categories.
+ */
+function buildNavigationItems(navigation, pageContent) {
+    const navItems = [];
+    
+    if (Array.isArray(pageContent)) {
+        // Extract product categories from page_content (the source of truth)
+        pageContent.forEach(component => {
+            if (component.type === 'product_category' && component.id && component.title) {
+                navItems.push({
+                    text: component.title,
+                    link: `#${component.id}`
+                });
+            }
+        });
+    }
+    
+    // Add non-category links from static navigation (e.g., "За нас", "Контакти")
+    if (Array.isArray(navigation)) {
+        navigation.forEach(item => {
+            // Skip items that point to a product category section (already added above)
+            if (item.link && item.link.startsWith('#')) return;
+            navItems.push(item);
+        });
+    }
+    
+    return navItems;
 }
 
 function renderPromoBanner(settings) {
@@ -1354,7 +1389,7 @@ async function main() {
             DOM.mainContainer.innerHTML = ''; 
         }
         
-        renderHeader(data.settings, data.navigation);
+        renderHeader(data.settings, data.navigation, data.page_content);
         renderPromoBanner(data.settings);
         
         if (isIndexPage) {
