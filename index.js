@@ -537,6 +537,16 @@ const generateContactHTML = component => `
 const getCart = () => JSON.parse(localStorage.getItem('cart') || '[]');
 const saveCart = cart => localStorage.setItem('cart', JSON.stringify(cart));
 
+const saveNavigationState = () => {
+    sessionStorage.setItem('indexScrollPosition', window.scrollY.toString());
+    const categoryStates = {};
+    document.querySelectorAll('.category-section[id] .category-header[aria-expanded]').forEach(header => {
+        const section = header.closest('.category-section');
+        if (section && section.id) categoryStates[section.id] = header.getAttribute('aria-expanded');
+    });
+    sessionStorage.setItem('categoryStates', JSON.stringify(categoryStates));
+};
+
 const updateCartCount = () => {
     const count = getCart().reduce((acc, item) => acc + item.quantity, 0);
     
@@ -848,11 +858,11 @@ function initializePageInteractions(settings = {}) {
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in-up').forEach(el => scrollObserver.observe(el));
 
-    // --- Save scroll position before navigating to product page (using event delegation) ---
+    // --- Save scroll position and category states before navigating to product page ---
     document.body.addEventListener('click', (e) => {
         const productCard = e.target.closest('.product-card');
         if (productCard) {
-            sessionStorage.setItem('indexScrollPosition', window.scrollY.toString());
+            saveNavigationState();
         }
     });
 
@@ -1276,13 +1286,33 @@ async function main() {
             initializeScrollSpy();
             initializeMarketingFeatures();
 
-            // Restore scroll position if returning from product page
-            // Small timeout to ensure DOM is fully rendered before scrolling
+            // Restore category expanded states and scroll position if returning from product page
             const savedScrollPosition = sessionStorage.getItem('indexScrollPosition');
-            if (savedScrollPosition) {
+            const savedCategoryStates = sessionStorage.getItem('categoryStates');
+            if (savedScrollPosition || savedCategoryStates) {
                 setTimeout(() => {
-                    window.scrollTo(0, parseInt(savedScrollPosition, 10));
-                    sessionStorage.removeItem('indexScrollPosition');
+                    if (savedCategoryStates) {
+                        try {
+                            const categoryStates = JSON.parse(savedCategoryStates);
+                            // Disable transitions for instant restore
+                            document.body.classList.add('no-transition');
+                            Object.entries(categoryStates).forEach(([id, expanded]) => {
+                                const section = document.getElementById(id);
+                                if (section) {
+                                    const header = section.querySelector('.category-header[aria-expanded]');
+                                    if (header) header.setAttribute('aria-expanded', expanded);
+                                }
+                            });
+                            // Force layout then re-enable transitions
+                            document.body.offsetHeight;
+                            document.body.classList.remove('no-transition');
+                        } catch (_) { /* Ignore malformed sessionStorage data */ }
+                        sessionStorage.removeItem('categoryStates');
+                    }
+                    if (savedScrollPosition) {
+                        window.scrollTo(0, parseInt(savedScrollPosition, 10));
+                        sessionStorage.removeItem('indexScrollPosition');
+                    }
                 }, 100);
             }
         }
@@ -1631,8 +1661,7 @@ function performSearch(query) {
         // Add click handlers to close search when result is clicked
         searchResults.querySelectorAll('.search-result-item').forEach(item => {
             item.addEventListener('click', () => {
-                // Save scroll position before navigating
-                sessionStorage.setItem('indexScrollPosition', window.scrollY.toString());
+                saveNavigationState();
             });
         });
     }
