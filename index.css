@@ -188,6 +188,11 @@ body.no-transition .product-grid {
     transition: none !important;
 }
 
+body.no-transition * {
+    transition: none !important;
+    animation: none !important;
+}
+
 a {
     text-decoration: none;
     color: var(--color-primary);
