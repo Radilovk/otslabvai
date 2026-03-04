@@ -3,11 +3,11 @@
 /* ======================================================= */
 
 :root {
-    /* LIFE BioHack Color Palette - Premium Bio-Quantum */
-    --color-primary: #1A56DB; /* Electric Royal Blue */
-    --color-secondary: #E89B2B; /* Luminous Amber Gold */
-    --color-dark: #020817;
-    --color-light: #F0F4FF;
+    /* LIFE BioHack Color Palette - Biotech Teal / Coral */
+    --color-primary: #06B6D4; /* Medical Teal / Cyan */
+    --color-secondary: #FF6B6B; /* Vital Coral (CTA only) */
+    --color-dark: #0F172A;
+    --color-light: #F8FAFC;
     --color-white: #FFFFFF;
     --color-gray: #64748B;
 
@@ -25,15 +25,15 @@
     --bg-secondary-dark: #070D20;
     --text-primary-dark: #E2E8F0;
     --text-secondary-dark: #94A3B8;
-    --accent-dark: #60A5FA;
-    --accent-rgb-dark: 96, 165, 250;
-    --accent-secondary-dark: #FCD34D;
-    --accent-secondary-rgb-dark: 252, 211, 77;
-    --border-color-dark: rgba(96, 165, 250, 0.14);
-    --shadow-dark: rgba(96, 165, 250, 0.28);
-    --spotlight-color-dark: rgba(96, 165, 250, 0.07);
-    --note-color-dark: #FCD34D;
-    --success-color-dark: #60A5FA;
+    --accent-dark: #22D3EE;
+    --accent-rgb-dark: 34, 211, 238;
+    --accent-secondary-dark: #FF6B6B;
+    --accent-secondary-rgb-dark: 255, 107, 107;
+    --border-color-dark: rgba(34, 211, 238, 0.14);
+    --shadow-dark: rgba(34, 211, 238, 0.28);
+    --spotlight-color-dark: rgba(34, 211, 238, 0.07);
+    --note-color-dark: #22D3EE;
+    --success-color-dark: #22D3EE;
     --error-color-dark: #EF4444;
     --skeleton-bg-dark: #0F1629;
     --skeleton-highlight-dark: #1A2540;
@@ -41,43 +41,43 @@
     --header-bg-dark: rgba(2, 6, 26, 0.92);
     --header-height: 70px;
     --overlay-bg-dark: rgba(0,0,0,0.6);
-    --header-gradient-start-light: rgba(240, 244, 255, 0.98);
-    --header-gradient-end-light: rgba(228, 234, 255, 0.98);
-    --header-border-light: rgba(26, 86, 219, 0.08);
-    --header-border-scrolled-light: rgba(26, 86, 219, 0.18);
-    --header-scrolled-bg-light: rgba(240, 244, 255, 0.98);
-    --hero-bg-start-light: #EBF0FF;
-    --hero-bg-end-light: #FFF8E8;
+    --header-gradient-start-light: rgba(255, 255, 255, 0.98);
+    --header-gradient-end-light: rgba(248, 250, 252, 0.98);
+    --header-border-light: rgba(6, 182, 212, 0.08);
+    --header-border-scrolled-light: rgba(6, 182, 212, 0.18);
+    --header-scrolled-bg-light: rgba(255, 255, 255, 0.98);
+    --hero-bg-start-light: #F8FAFC;
+    --hero-bg-end-light: #F0FDFF;
     --header-gradient-start-dark: rgba(2, 6, 26, 0.97);
     --header-gradient-end-dark: rgba(1, 4, 18, 0.97);
-    --header-border-dark: rgba(96, 165, 250, 0.15);
-    --header-border-scrolled-dark: rgba(96, 165, 250, 0.30);
+    --header-border-dark: rgba(34, 211, 238, 0.15);
+    --header-border-scrolled-dark: rgba(34, 211, 238, 0.30);
     --header-scrolled-bg-dark: rgba(2, 6, 26, 0.99);
     --hero-bg-start-dark: #020817;
     --hero-bg-end-dark: #050215;
     
     /* Theme gradient variables - default values */
-    --theme-gradient-light: linear-gradient(135deg, #EBF0FF 0%, #FFF8E8 100%);
+    --theme-gradient-light: linear-gradient(135deg, #F8FAFC 0%, #F0FDFF 100%);
     --theme-gradient-dark: linear-gradient(135deg, #020817 0%, #050215 100%);
     
-    /* Light Theme Variables - Premium Bio-Quantum */
-    --bg-primary-light: #F0F4FF;
-    --bg-secondary-light: #E4EAFF;
-    --text-primary-light: #0A0F1E;
+    /* Light Theme Variables - Medical Teal/Cyan */
+    --bg-primary-light: #FFFFFF;
+    --bg-secondary-light: #F8FAFC;
+    --text-primary-light: #0F172A;
     --text-secondary-light: #475569;
-    --accent-light: #1A56DB;
-    --accent-rgb-light: 26, 86, 219;
-    --accent-secondary-light: #E89B2B;
-    --accent-secondary-rgb-light: 232, 155, 43;
-    --border-color-light: rgba(10, 15, 30, 0.08);
-    --shadow-light: rgba(26, 86, 219, 0.15);
-    --spotlight-color-light: rgba(26, 86, 219, 0.04);
-    --note-color-light: #B8711E;
-    --success-color-light: #1A56DB;
+    --accent-light: #06B6D4;
+    --accent-rgb-light: 6, 182, 212;
+    --accent-secondary-light: #FF6B6B;
+    --accent-secondary-rgb-light: 255, 107, 107;
+    --border-color-light: rgba(15, 23, 42, 0.08);
+    --shadow-light: rgba(6, 182, 212, 0.15);
+    --spotlight-color-light: rgba(6, 182, 212, 0.04);
+    --note-color-light: #0891B2;
+    --success-color-light: #06B6D4;
     --error-color-light: #DC2626;
-    --skeleton-bg-light: #DDE5FF;
-    --skeleton-highlight-light: #EEF2FF;
-    --header-bg-light: rgba(240, 244, 255, 0.96);
+    --skeleton-bg-light: #E0F7FA;
+    --skeleton-highlight-light: #F0FDFF;
+    --header-bg-light: rgba(255, 255, 255, 0.96);
     --overlay-bg-light: rgba(0, 0, 0, 0.45);
     
     /* Promo banner height */
@@ -288,7 +288,7 @@ img {
     background-color: var(--color-secondary);
     color: var(--color-white);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(26, 86, 219, 0.4);
+    box-shadow: 0 5px 15px rgba(6, 182, 212, 0.4);
 }
 
 .btn-back {
@@ -452,7 +452,7 @@ img {
     border-bottom: 2px solid var(--header-border);
     z-index: 1001; /* Higher than promo banner to stay on top */
     transition: all var(--transition-speed);
-    box-shadow: 0 4px 20px rgba(26, 86, 219, 0.08);
+    box-shadow: 0 4px 20px rgba(6, 182, 212, 0.08);
 }
 
 /* Scrolled (sticky) header style */
@@ -462,7 +462,7 @@ img {
     -webkit-backdrop-filter: blur(20px) saturate(200%);
     border-bottom-color: var(--header-border-scrolled);
     padding: 5px 0;
-    box-shadow: 0 8px 32px rgba(26, 86, 219, 0.15);
+    box-shadow: 0 8px 32px rgba(6, 182, 212, 0.15);
 }
 
 .header-container {
@@ -1080,8 +1080,8 @@ main {
     right: 0;
     bottom: 0;
     background: linear-gradient(135deg, 
-        rgba(26, 86, 219, 0.15) 0%, 
-        rgba(232, 155, 43, 0.15) 100%);
+        rgba(6, 182, 212, 0.15) 0%, 
+        rgba(255, 107, 107, 0.15) 100%);
     backdrop-filter: blur(2px);
     z-index: 0;
 }
@@ -1125,26 +1125,26 @@ main {
 }
 
 [data-theme="light"] .hero-section.hero-custom-bg .stat-item strong {
-    color: #000000;
+    color: #0F172A;
     text-shadow: 0 2px 10px rgba(255, 255, 255, 0.8),
                  0 1px 4px rgba(255, 255, 255, 0.9);
     background: none;
-    -webkit-text-fill-color: #000000;
+    -webkit-text-fill-color: #0F172A;
 }
 
 [data-theme="light"] .hero-section.hero-custom-bg .stat-item span {
-    color: #000000;
+    color: #0F172A;
     text-shadow: 0 1px 6px rgba(255, 255, 255, 0.9);
 }
 
 /* General light theme styles for stat-item */
 [data-theme="light"] .stat-item strong {
-    color: #000000;
-    -webkit-text-fill-color: #000000;
+    color: #0F172A;
+    -webkit-text-fill-color: #0F172A;
 }
 
 [data-theme="light"] .stat-item span {
-    color: #000000;
+    color: #0F172A;
 }
 
 /* Theme-aware text colors for custom gradients - Dark theme */
@@ -1213,7 +1213,7 @@ main {
     height: 200%;
     background: radial-gradient(
         circle at center,
-        rgba(26, 86, 219, 0.08) 0%,
+        rgba(6, 182, 212, 0.08) 0%,
         transparent 50%
     );
     animation: heroGradientPulse 15s ease-in-out infinite;
@@ -1224,7 +1224,7 @@ main {
 [data-theme="dark"] .hero-section::after {
     background: radial-gradient(
         circle at center,
-        rgba(96, 165, 250, 0.07) 0%,
+        rgba(34, 211, 238, 0.07) 0%,
         transparent 50%
     );
 }
@@ -1340,7 +1340,7 @@ main {
 }
 
 .btn-hero-primary {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background: linear-gradient(135deg, #FF6B6B, #FF4757);
     color: white;
     border: none;
     padding: 16px 40px;
@@ -1349,12 +1349,13 @@ main {
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(26, 86, 219, 0.3);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
     position: relative;
     overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    animation: ctaPulse 3s ease-in-out infinite;
 }
 
 .btn-hero-primary svg {
@@ -1382,7 +1383,8 @@ main {
 
 .btn-hero-primary:hover {
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 12px 30px rgba(26, 86, 219, 0.5);
+    box-shadow: 0 12px 30px rgba(255, 107, 107, 0.6);
+    animation: none;
 }
 
 .btn-hero-primary:active {
@@ -1392,7 +1394,7 @@ main {
 .btn-hero-secondary {
     background: linear-gradient(135deg, 
         rgba(255, 255, 255, 0.95) 0%, 
-        rgba(248, 249, 250, 0.95) 100%);
+        rgba(248, 250, 252, 0.95) 100%);
     color: var(--text-primary);
     border: 2px solid var(--accent);
     padding: 16px 40px;
@@ -1401,7 +1403,7 @@ main {
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(26, 86, 219, 0.15);
+    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.15);
     position: relative;
     overflow: hidden;
     display: inline-flex;
@@ -1424,7 +1426,7 @@ main {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(26, 86, 219, 0.1), transparent);
+    background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.1), transparent);
     transition: left 0.5s ease;
 }
 
@@ -1436,10 +1438,10 @@ main {
     border-color: var(--accent);
     color: var(--accent);
     background: linear-gradient(135deg, 
-        rgba(255, 235, 245, 1) 0%, 
-        rgba(240, 248, 255, 1) 100%);
+        rgba(240, 253, 255, 1) 0%, 
+        rgba(224, 247, 250, 1) 100%);
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(26, 86, 219, 0.25);
+    box-shadow: 0 8px 25px rgba(6, 182, 212, 0.25);
 }
 
 [data-theme="dark"] .btn-hero-secondary {
@@ -1447,14 +1449,14 @@ main {
         rgba(7, 13, 32, 0.95) 0%, 
         rgba(5, 13, 32, 0.95) 100%);
     color: var(--text-primary);
-    box-shadow: 0 4px 15px rgba(232, 155, 43, 0.15);
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.15);
 }
 
 [data-theme="dark"] .btn-hero-secondary:hover {
     background: linear-gradient(135deg, 
         rgba(5, 13, 32, 1) 0%, 
         rgba(2, 8, 40, 1) 100%);
-    box-shadow: 0 8px 25px rgba(232, 155, 43, 0.25);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.25);
 }
 
 /* Hero Trust Badges */
@@ -1501,7 +1503,7 @@ main {
     height: 100%;
     background: linear-gradient(90deg, 
         transparent, 
-        rgba(26, 86, 219, 0.1), 
+        rgba(6, 182, 212, 0.1), 
         transparent);
     transition: left 0.6s ease;
 }
@@ -1514,18 +1516,18 @@ main {
     border-color: var(--accent);
     color: var(--accent);
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 8px 20px rgba(26, 86, 219, 0.25);
+    box-shadow: 0 8px 20px rgba(6, 182, 212, 0.25);
 }
 
 [data-theme="dark"] .trust-badge {
     background: rgba(7, 13, 32, 0.8);
-    box-shadow: 0 4px 15px rgba(232, 155, 43, 0.1);
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.1);
 }
 
 [data-theme="dark"] .trust-badge:hover {
     border-color: var(--accent-secondary);
     color: var(--accent-secondary);
-    box-shadow: 0 8px 20px rgba(232, 155, 43, 0.3);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
 }
 
 .hero-guarantee {
@@ -1720,7 +1722,7 @@ main {
 
 [data-theme="dark"] .product-card {
     background: linear-gradient(145deg, #030D24 0%, #020A1C 100%);
-    border-color: rgba(96, 165, 250, 0.12);
+    border-color: rgba(34, 211, 238, 0.12);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
@@ -1745,12 +1747,12 @@ main {
 .product-card:hover { 
     border-color: var(--color-primary);
     transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(26, 86, 219, 0.15);
+    box-shadow: 0 15px 40px rgba(6, 182, 212, 0.15);
 }
 
 [data-theme="dark"] .product-card:hover {
     border-color: var(--accent);
-    box-shadow: 0 15px 40px rgba(96, 165, 250, 0.18), 0 0 0 1px rgba(96, 165, 250, 0.1);
+    box-shadow: 0 15px 40px rgba(34, 211, 238, 0.18), 0 0 0 1px rgba(34, 211, 238, 0.1);
 }
 
 .product-image {
@@ -1845,8 +1847,8 @@ main {
 }
 .effect-bar {
   width: 0; height: 100%; border-radius: 12px;
-  /* Initial gradient visible immediately - LIFE BioHack-inspired magenta/teal */
-  background: linear-gradient(135deg, rgba(232, 155, 43, 0.3), rgba(26, 86, 219, 0.3));
+  /* Initial gradient - cyan/teal pre-animation state */
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(255, 107, 107, 0.3));
   display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; box-sizing: border-box;
   color: #FFFFFF; font-weight: 600; font-size: 0.75rem;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -2835,7 +2837,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .sticky-cta-btn {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background: linear-gradient(135deg, #FF6B6B, #FF4757);
     color: white;
     border: none;
     border-radius: 50px;
@@ -2843,12 +2845,12 @@ body.modal-open { overflow: hidden; }
     font-size: 1.1rem;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 8px 25px rgba(26, 86, 219, 0.4);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     gap: 8px;
-    animation: bounce 2s ease-in-out infinite;
+    animation: ctaPulse 3s ease-in-out infinite;
 }
 
 .sticky-cta-btn svg {
@@ -2868,7 +2870,8 @@ body.modal-open { overflow: hidden; }
 
 .sticky-cta-btn:hover {
     transform: scale(1.1) translateY(-5px);
-    box-shadow: 0 12px 35px rgba(26, 86, 219, 0.6);
+    box-shadow: 0 12px 35px rgba(255, 107, 107, 0.6);
+    animation: none;
 }
 
 .sticky-cta-btn:active {
@@ -3128,7 +3131,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .exit-cta-btn {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background: linear-gradient(135deg, #FF6B6B, #FF4757);
     color: white;
     border: none;
     padding: 18px 40px;
@@ -3137,14 +3140,14 @@ body.modal-open { overflow: hidden; }
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(26, 86, 219, 0.3);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
     width: 100%;
     margin-bottom: 15px;
 }
 
 .exit-cta-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(26, 86, 219, 0.5);
+    box-shadow: 0 12px 30px rgba(255, 107, 107, 0.5);
 }
 
 .exit-modal-footer {
@@ -3236,7 +3239,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .comparison-highlight {
-    background: rgba(26, 86, 219, 0.05);
+    background: rgba(6, 182, 212, 0.05);
 }
 
 .check-icon {
@@ -3303,7 +3306,7 @@ body.modal-open { overflow: hidden; }
 
 .guarantee-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 15px 40px rgba(26, 86, 219, 0.15);
+    box-shadow: 0 15px 40px rgba(6, 182, 212, 0.15);
     border-color: var(--accent);
 }
 
@@ -3469,7 +3472,7 @@ body.modal-open { overflow: hidden; }
 
 .ingredient-card-mini:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(26, 86, 219, 0.15);
+    box-shadow: 0 8px 20px rgba(6, 182, 212, 0.15);
 }
 
 /* Product FAQ - Mini version */
@@ -3498,7 +3501,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .faq-question-mini:hover {
-    background: rgba(26, 86, 219, 0.05);
+    background: rgba(6, 182, 212, 0.05);
 }
 
 .faq-question-mini h4 {
@@ -4039,4 +4042,476 @@ body.modal-open { overflow: hidden; }
     .product-filter-bar .filter-group {
         flex: 1 1 100%;
     }
+}
+
+/* ======================================================= */
+/*   BIOHACK DESIGN v2 - НОВA ВИЗУАЛНA ИДЕНТИЧНОСТ        */
+/*   Teal/Cyan палитра + Hexagon + Glassmorphism          */
+/* ======================================================= */
+
+/* --- CTA PULSE ANIMATION (клетъчно дишане) --- */
+@keyframes ctaPulse {
+    0%, 100% {
+        box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4),
+                    0 0 0 0 rgba(255, 107, 107, 0.25);
+    }
+    50% {
+        box-shadow: 0 8px 28px rgba(255, 107, 107, 0.55),
+                    0 0 0 10px rgba(255, 107, 107, 0);
+    }
+}
+
+/* Приложи pulsing ефект и на .btn-primary (купи/заяви) */
+.btn-primary {
+    animation: ctaPulse 3s ease-in-out infinite;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+    animation: none;
+}
+
+/* --- HEXAGONAL BACKGROUND PATTERN --- */
+/* Субтилна шестоъгълна мрежа <3% прозрачност */
+.hex-bg-pattern {
+    position: relative;
+}
+
+.hex-bg-pattern::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='98' viewBox='0 0 56 98'%3E%3Cpath d='M28 0 L56 16 L56 49 L28 65 L0 49 L0 16 Z' fill='none' stroke='%2306B6D4' stroke-width='0.8' opacity='0.18'/%3E%3Cpath d='M28 33 L56 49 L56 82 L28 98 L0 82 L0 49 Z' fill='none' stroke='%2306B6D4' stroke-width='0.8' opacity='0.18'/%3E%3C/svg%3E");
+    background-size: 56px 98px;
+    opacity: 0.028;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Секции, при които трябва да се показва hex pattern */
+.hero-section,
+.comparison-section,
+.guarantee-section,
+#benefits.section-padding,
+section[id="scientific"] {
+    position: relative;
+}
+
+.hero-section::before,
+[data-theme="light"] .comparison-section::before,
+[data-theme="light"] .guarantee-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='98' viewBox='0 0 56 98'%3E%3Cpath d='M28 0 L56 16 L56 49 L28 65 L0 49 L0 16 Z' fill='none' stroke='%2306B6D4' stroke-width='0.8'/%3E%3Cpath d='M28 33 L56 49 L56 82 L28 98 L0 82 L0 49 Z' fill='none' stroke='%2306B6D4' stroke-width='0.8'/%3E%3C/svg%3E");
+    background-size: 56px 98px;
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Изключи дублирания ::before за hero-section (вече е дефиниран за bg-image overlay) */
+.hero-section[data-bg-image]::before,
+.hero-section.hero-custom-bg::before {
+    background-image: none;
+    opacity: 1;
+}
+
+/* --- HEXAGONAL IMAGE MASK --- */
+/* Клас за изображения в шестоъгълни маски */
+.hex-img-wrapper {
+    display: inline-block;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.hex-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Testimonial avatars in hex */
+.testimonial-avatar {
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    border-radius: 4px;
+    border: none; /* clip-path replaces border */
+    box-shadow: 0 0 0 3px var(--accent), 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* --- HEX ICON CONTAINERS --- */
+/* Шестоъгълни контури за иконки на ползи */
+.hex-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    background: transparent;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.hex-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    border: 2px solid var(--accent);
+    background: rgba(6, 182, 212, 0.06);
+}
+
+.hex-icon svg {
+    position: relative;
+    z-index: 1;
+    color: var(--accent);
+    stroke: var(--accent);
+}
+
+/* Benefit items с hex иконки */
+.benefit-item .hex-icon,
+.guarantee-card .guarantee-icon.hex-icon {
+    width: 60px;
+    height: 60px;
+}
+
+/* --- GLASSMORPHISM PANELS --- */
+/* Стъклен ефект за падащи менюта и информационни карти */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(6, 182, 212, 0.18);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(6, 182, 212, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="dark"] .glass-panel {
+    background: rgba(2, 6, 26, 0.72);
+    border-color: rgba(34, 211, 238, 0.18);
+    box-shadow: 0 8px 32px rgba(34, 211, 238, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Search dropdown gets glassmorphism */
+.search-dropdown {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1.5px solid rgba(6, 182, 212, 0.18);
+    box-shadow: 0 12px 40px rgba(6, 182, 212, 0.12);
+}
+
+[data-theme="dark"] .search-dropdown {
+    background: rgba(2, 6, 26, 0.88);
+    border-color: rgba(34, 211, 238, 0.18);
+    box-shadow: 0 12px 40px rgba(34, 211, 238, 0.1);
+}
+
+/* Product cards get subtle glassmorphism in light theme */
+[data-theme="light"] .product-card {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(6, 182, 212, 0.12);
+    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.07);
+}
+
+/* Exit modal glassmorphism */
+.exit-modal-content {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(6, 182, 212, 0.15);
+}
+
+[data-theme="dark"] .exit-modal-content {
+    background: rgba(2, 6, 26, 0.92);
+    border-color: rgba(34, 211, 238, 0.15);
+}
+
+/* --- SKELETON HEXAGONAL LOADING --- */
+/* Шестоъгълни скелетни елементи при зареждане */
+.skeleton-hex {
+    display: inline-block;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    background-color: var(--skeleton-bg);
+    animation: skeleton-pulse 1.5s infinite ease-in-out;
+    background-image: linear-gradient(90deg, var(--skeleton-bg) 0px, var(--skeleton-highlight) 40px, var(--skeleton-bg) 80px);
+    background-size: 600px;
+}
+
+/* --- PROTOCOL ROADMAP STYLES --- */
+/* Визуализация на биохакинг протоколи като пътна карта */
+.protocol-roadmap {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    padding: 20px 0;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.protocol-roadmap::before {
+    content: '';
+    position: absolute;
+    left: 40px;
+    top: 40px;
+    bottom: 40px;
+    width: 2px;
+    background: linear-gradient(to bottom,
+        var(--accent) 0%,
+        rgba(6, 182, 212, 0.3) 100%);
+}
+
+.protocol-node {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 16px 0;
+    position: relative;
+}
+
+.protocol-node-icon {
+    width: 80px;
+    height: 80px;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    background: rgba(6, 182, 212, 0.08);
+    border: 2px solid rgba(6, 182, 212, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.4s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.protocol-node-icon.active,
+.protocol-node-icon:hover,
+.is-visible .protocol-node-icon {
+    background: rgba(6, 182, 212, 0.18);
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
+}
+
+.protocol-node-icon span {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: var(--font-primary);
+}
+
+.protocol-node-content {
+    flex: 1;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(6, 182, 212, 0.14);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .protocol-node-content {
+    background: rgba(2, 6, 26, 0.72);
+    border-color: rgba(34, 211, 238, 0.14);
+}
+
+.protocol-node-content:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.12);
+}
+
+.protocol-node-content h4 {
+    font-family: var(--font-primary);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+}
+
+.protocol-node-content p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Active/scrolled-to node glow */
+.protocol-node.active .protocol-node-icon,
+.is-visible .protocol-node-icon {
+    animation: hexNodeGlow 2s ease-in-out infinite;
+}
+
+@keyframes hexNodeGlow {
+    0%, 100% {
+        box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+        border-color: var(--accent);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(6, 182, 212, 0.6);
+        border-color: #00E5FF;
+    }
+}
+
+@media (max-width: 768px) {
+    .protocol-roadmap::before {
+        left: 32px;
+    }
+    .protocol-node-icon {
+        width: 64px;
+        height: 64px;
+    }
+}
+
+/* --- CLINICAL DATA / DATA-DRIVEN UI --- */
+.clinical-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px 16px;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(6, 182, 212, 0.14);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .clinical-stat {
+    background: rgba(2, 6, 26, 0.72);
+    border-color: rgba(34, 211, 238, 0.14);
+}
+
+.clinical-stat:hover {
+    border-color: var(--accent);
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.15);
+    transform: translateY(-4px);
+}
+
+.clinical-stat-value {
+    font-size: 2.8rem;
+    font-weight: 700;
+    font-family: var(--font-primary);
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #06B6D4, #00E5FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.clinical-stat-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* --- STACK BUILDER (Модулен Builder) --- */
+.stack-builder {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1.5px solid rgba(6, 182, 212, 0.18);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(6, 182, 212, 0.08);
+}
+
+[data-theme="dark"] .stack-builder {
+    background: rgba(2, 6, 26, 0.82);
+    border-color: rgba(34, 211, 238, 0.18);
+}
+
+.stack-builder-title {
+    font-family: var(--font-primary);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stack-molecule {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    min-height: 80px;
+    padding: 16px;
+    background: rgba(6, 182, 212, 0.04);
+    border: 1px dashed rgba(6, 182, 212, 0.3);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    align-items: center;
+}
+
+.stack-molecule-node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(6, 182, 212, 0.1);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    animation: nodeConnect 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: default;
+}
+
+@keyframes nodeConnect {
+    from {
+        opacity: 0;
+        transform: scale(0.5) rotate(-10deg);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+.stack-molecule-node .remove-node {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.9rem;
+    line-height: 1;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.stack-molecule-node .remove-node:hover {
+    opacity: 1;
+    background: rgba(255, 107, 107, 0.15);
+    color: #FF6B6B;
+}
+
+/* Hex connector between stack nodes */
+.stack-connector {
+    width: 20px;
+    height: 20px;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    background: rgba(6, 182, 212, 0.25);
+    flex-shrink: 0;
 }
