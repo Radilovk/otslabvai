@@ -3,13 +3,13 @@
 /* ======================================================= */
 
 :root {
-    /* LIFE BioHack Color Palette - Premium Biotech */
-    --color-primary: #0A6E5C; /* Deep Emerald */
-    --color-secondary: #C9A84C; /* Gold */
-    --color-dark: #0B1120;
-    --color-light: #F4F6F8;
+    /* LIFE BioHack Color Palette - Premium Bio-Quantum */
+    --color-primary: #1A56DB; /* Electric Royal Blue */
+    --color-secondary: #E89B2B; /* Luminous Amber Gold */
+    --color-dark: #020817;
+    --color-light: #F0F4FF;
     --color-white: #FFFFFF;
-    --color-gray: #6B7A8D;
+    --color-gray: #64748B;
 
     /* Typography (Premium Biotech fonts) */
     --font-primary: 'Space Grotesk', sans-serif;
@@ -17,67 +17,67 @@
 
     /* Design Elements */
     --border-radius: 8px;
-    --box-shadow: 0 10px 30px rgba(10, 17, 32, 0.12);
+    --box-shadow: 0 10px 30px rgba(2, 8, 23, 0.14);
     --transition-speed: 0.3s ease;
     
     /* Dark Theme Variables */
-    --bg-primary-dark: #050A12;
-    --bg-secondary-dark: #09101E;
-    --text-primary-dark: #E8ECF1;
+    --bg-primary-dark: #02061A;
+    --bg-secondary-dark: #070D20;
+    --text-primary-dark: #E2E8F0;
     --text-secondary-dark: #94A3B8;
-    --accent-dark: #00C9B4;
-    --accent-rgb-dark: 0, 201, 180;
-    --accent-secondary-dark: #D4AF37;
-    --accent-secondary-rgb-dark: 212, 175, 55;
-    --border-color-dark: rgba(0, 201, 180, 0.12);
-    --shadow-dark: rgba(0, 201, 180, 0.28);
-    --spotlight-color-dark: rgba(0, 201, 180, 0.07);
-    --note-color-dark: #D4AF37;
-    --success-color-dark: #00C9B4;
+    --accent-dark: #60A5FA;
+    --accent-rgb-dark: 96, 165, 250;
+    --accent-secondary-dark: #FCD34D;
+    --accent-secondary-rgb-dark: 252, 211, 77;
+    --border-color-dark: rgba(96, 165, 250, 0.14);
+    --shadow-dark: rgba(96, 165, 250, 0.28);
+    --spotlight-color-dark: rgba(96, 165, 250, 0.07);
+    --note-color-dark: #FCD34D;
+    --success-color-dark: #60A5FA;
     --error-color-dark: #EF4444;
-    --skeleton-bg-dark: #111827;
-    --skeleton-highlight-dark: #1E293B;
+    --skeleton-bg-dark: #0F1629;
+    --skeleton-highlight-dark: #1A2540;
 
-    --header-bg-dark: rgba(5, 10, 18, 0.92);
+    --header-bg-dark: rgba(2, 6, 26, 0.92);
     --header-height: 70px;
     --overlay-bg-dark: rgba(0,0,0,0.6);
-    --header-gradient-start-light: rgba(244, 246, 248, 0.98);
-    --header-gradient-end-light: rgba(236, 240, 244, 0.98);
-    --header-border-light: rgba(10, 110, 92, 0.08);
-    --header-border-scrolled-light: rgba(10, 110, 92, 0.15);
-    --header-scrolled-bg-light: rgba(244, 246, 248, 0.98);
-    --hero-bg-start-light: #E8F5F0;
-    --hero-bg-end-light: #F5F0E0;
-    --header-gradient-start-dark: rgba(5, 10, 18, 0.97);
-    --header-gradient-end-dark: rgba(2, 6, 12, 0.97);
-    --header-border-dark: rgba(0, 201, 180, 0.15);
-    --header-border-scrolled-dark: rgba(0, 201, 180, 0.28);
-    --header-scrolled-bg-dark: rgba(5, 10, 18, 0.99);
-    --hero-bg-start-dark: #030C14;
-    --hero-bg-end-dark: #040A14;
+    --header-gradient-start-light: rgba(240, 244, 255, 0.98);
+    --header-gradient-end-light: rgba(228, 234, 255, 0.98);
+    --header-border-light: rgba(26, 86, 219, 0.08);
+    --header-border-scrolled-light: rgba(26, 86, 219, 0.18);
+    --header-scrolled-bg-light: rgba(240, 244, 255, 0.98);
+    --hero-bg-start-light: #EBF0FF;
+    --hero-bg-end-light: #FFF8E8;
+    --header-gradient-start-dark: rgba(2, 6, 26, 0.97);
+    --header-gradient-end-dark: rgba(1, 4, 18, 0.97);
+    --header-border-dark: rgba(96, 165, 250, 0.15);
+    --header-border-scrolled-dark: rgba(96, 165, 250, 0.30);
+    --header-scrolled-bg-dark: rgba(2, 6, 26, 0.99);
+    --hero-bg-start-dark: #020817;
+    --hero-bg-end-dark: #050215;
     
     /* Theme gradient variables - default values */
-    --theme-gradient-light: linear-gradient(135deg, #E8F5F0 0%, #F5F0E0 100%);
-    --theme-gradient-dark: linear-gradient(135deg, #030C14 0%, #040A14 100%);
+    --theme-gradient-light: linear-gradient(135deg, #EBF0FF 0%, #FFF8E8 100%);
+    --theme-gradient-dark: linear-gradient(135deg, #020817 0%, #050215 100%);
     
-    /* Light Theme Variables - Premium Biotech */
-    --bg-primary-light: #F4F6F8;
-    --bg-secondary-light: #ECF0F4;
-    --text-primary-light: #0B1120;
-    --text-secondary-light: #6B7A8D;
-    --accent-light: #0A6E5C;
-    --accent-rgb-light: 10, 110, 92;
-    --accent-secondary-light: #C9A84C;
-    --accent-secondary-rgb-light: 201, 168, 76;
-    --border-color-light: rgba(11, 17, 32, 0.08);
-    --shadow-light: rgba(10, 110, 92, 0.15);
-    --spotlight-color-light: rgba(10, 110, 92, 0.04);
-    --note-color-light: #B8941E;
-    --success-color-light: #0A6E5C;
+    /* Light Theme Variables - Premium Bio-Quantum */
+    --bg-primary-light: #F0F4FF;
+    --bg-secondary-light: #E4EAFF;
+    --text-primary-light: #0A0F1E;
+    --text-secondary-light: #475569;
+    --accent-light: #1A56DB;
+    --accent-rgb-light: 26, 86, 219;
+    --accent-secondary-light: #E89B2B;
+    --accent-secondary-rgb-light: 232, 155, 43;
+    --border-color-light: rgba(10, 15, 30, 0.08);
+    --shadow-light: rgba(26, 86, 219, 0.15);
+    --spotlight-color-light: rgba(26, 86, 219, 0.04);
+    --note-color-light: #B8711E;
+    --success-color-light: #1A56DB;
     --error-color-light: #DC2626;
-    --skeleton-bg-light: #E2E8F0;
-    --skeleton-highlight-light: #F1F5F9;
-    --header-bg-light: rgba(244, 246, 248, 0.96);
+    --skeleton-bg-light: #DDE5FF;
+    --skeleton-highlight-light: #EEF2FF;
+    --header-bg-light: rgba(240, 244, 255, 0.96);
     --overlay-bg-light: rgba(0, 0, 0, 0.45);
     
     /* Promo banner height */
@@ -288,7 +288,7 @@ img {
     background-color: var(--color-secondary);
     color: var(--color-white);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(10, 110, 92, 0.4);
+    box-shadow: 0 5px 15px rgba(26, 86, 219, 0.4);
 }
 
 .btn-back {
@@ -452,7 +452,7 @@ img {
     border-bottom: 2px solid var(--header-border);
     z-index: 1001; /* Higher than promo banner to stay on top */
     transition: all var(--transition-speed);
-    box-shadow: 0 4px 20px rgba(10, 110, 92, 0.08);
+    box-shadow: 0 4px 20px rgba(26, 86, 219, 0.08);
 }
 
 /* Scrolled (sticky) header style */
@@ -462,7 +462,7 @@ img {
     -webkit-backdrop-filter: blur(20px) saturate(200%);
     border-bottom-color: var(--header-border-scrolled);
     padding: 5px 0;
-    box-shadow: 0 8px 32px rgba(10, 110, 92, 0.15);
+    box-shadow: 0 8px 32px rgba(26, 86, 219, 0.15);
 }
 
 .header-container {
@@ -1080,16 +1080,16 @@ main {
     right: 0;
     bottom: 0;
     background: linear-gradient(135deg, 
-        rgba(10, 110, 92, 0.15) 0%, 
-        rgba(201, 168, 76, 0.15) 100%);
+        rgba(26, 86, 219, 0.15) 0%, 
+        rgba(232, 155, 43, 0.15) 100%);
     backdrop-filter: blur(2px);
     z-index: 0;
 }
 
 [data-theme="dark"] .hero-section[data-bg-image]::before {
     background: linear-gradient(135deg, 
-        rgba(13, 15, 18, 0.75) 0%, 
-        rgba(18, 21, 26, 0.75) 100%);
+        rgba(2, 8, 23, 0.75) 0%, 
+        rgba(5, 13, 32, 0.75) 100%);
 }
 
 /* Overlay for custom gradients to ensure text readability */
@@ -1213,7 +1213,7 @@ main {
     height: 200%;
     background: radial-gradient(
         circle at center,
-        rgba(10, 110, 92, 0.08) 0%,
+        rgba(26, 86, 219, 0.08) 0%,
         transparent 50%
     );
     animation: heroGradientPulse 15s ease-in-out infinite;
@@ -1224,7 +1224,7 @@ main {
 [data-theme="dark"] .hero-section::after {
     background: radial-gradient(
         circle at center,
-        rgba(0, 201, 180, 0.07) 0%,
+        rgba(96, 165, 250, 0.07) 0%,
         transparent 50%
     );
 }
@@ -1263,7 +1263,7 @@ main {
 }
 
 [data-theme="dark"] .hero-content h1 {
-    background: linear-gradient(135deg, #E8ECF1 40%, #00C9B4 100%);
+    background: linear-gradient(135deg, var(--text-primary-dark) 40%, var(--accent-dark) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1349,7 +1349,7 @@ main {
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(10, 110, 92, 0.3);
+    box-shadow: 0 8px 20px rgba(26, 86, 219, 0.3);
     position: relative;
     overflow: hidden;
     display: inline-flex;
@@ -1382,7 +1382,7 @@ main {
 
 .btn-hero-primary:hover {
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 12px 30px rgba(10, 110, 92, 0.5);
+    box-shadow: 0 12px 30px rgba(26, 86, 219, 0.5);
 }
 
 .btn-hero-primary:active {
@@ -1401,7 +1401,7 @@ main {
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(10, 110, 92, 0.15);
+    box-shadow: 0 4px 15px rgba(26, 86, 219, 0.15);
     position: relative;
     overflow: hidden;
     display: inline-flex;
@@ -1424,7 +1424,7 @@ main {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(10, 110, 92, 0.1), transparent);
+    background: linear-gradient(90deg, transparent, rgba(26, 86, 219, 0.1), transparent);
     transition: left 0.5s ease;
 }
 
@@ -1439,22 +1439,22 @@ main {
         rgba(255, 235, 245, 1) 0%, 
         rgba(240, 248, 255, 1) 100%);
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(10, 110, 92, 0.25);
+    box-shadow: 0 8px 25px rgba(26, 86, 219, 0.25);
 }
 
 [data-theme="dark"] .btn-hero-secondary {
     background: linear-gradient(135deg, 
-        rgba(26, 30, 36, 0.95) 0%, 
-        rgba(18, 21, 26, 0.95) 100%);
+        rgba(7, 13, 32, 0.95) 0%, 
+        rgba(5, 13, 32, 0.95) 100%);
     color: var(--text-primary);
-    box-shadow: 0 4px 15px rgba(201, 168, 76, 0.15);
+    box-shadow: 0 4px 15px rgba(232, 155, 43, 0.15);
 }
 
 [data-theme="dark"] .btn-hero-secondary:hover {
     background: linear-gradient(135deg, 
-        rgba(26, 13, 20, 1) 0%, 
-        rgba(10, 26, 26, 1) 100%);
-    box-shadow: 0 8px 25px rgba(201, 168, 76, 0.25);
+        rgba(5, 13, 32, 1) 0%, 
+        rgba(2, 8, 40, 1) 100%);
+    box-shadow: 0 8px 25px rgba(232, 155, 43, 0.25);
 }
 
 /* Hero Trust Badges */
@@ -1501,7 +1501,7 @@ main {
     height: 100%;
     background: linear-gradient(90deg, 
         transparent, 
-        rgba(10, 110, 92, 0.1), 
+        rgba(26, 86, 219, 0.1), 
         transparent);
     transition: left 0.6s ease;
 }
@@ -1514,18 +1514,18 @@ main {
     border-color: var(--accent);
     color: var(--accent);
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 8px 20px rgba(10, 110, 92, 0.25);
+    box-shadow: 0 8px 20px rgba(26, 86, 219, 0.25);
 }
 
 [data-theme="dark"] .trust-badge {
-    background: rgba(18, 21, 26, 0.8);
-    box-shadow: 0 4px 15px rgba(201, 168, 76, 0.1);
+    background: rgba(7, 13, 32, 0.8);
+    box-shadow: 0 4px 15px rgba(232, 155, 43, 0.1);
 }
 
 [data-theme="dark"] .trust-badge:hover {
     border-color: var(--accent-secondary);
     color: var(--accent-secondary);
-    box-shadow: 0 8px 20px rgba(201, 168, 76, 0.3);
+    box-shadow: 0 8px 20px rgba(232, 155, 43, 0.3);
 }
 
 .hero-guarantee {
@@ -1719,9 +1719,9 @@ main {
 }
 
 [data-theme="dark"] .product-card {
-    background: linear-gradient(145deg, #0A1020 0%, #07101C 100%);
-    border-color: rgba(0, 201, 180, 0.10);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background: linear-gradient(145deg, #030D24 0%, #020A1C 100%);
+    border-color: rgba(96, 165, 250, 0.12);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .product-card::before {
@@ -1745,12 +1745,12 @@ main {
 .product-card:hover { 
     border-color: var(--color-primary);
     transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(10, 110, 92, 0.15);
+    box-shadow: 0 15px 40px rgba(26, 86, 219, 0.15);
 }
 
 [data-theme="dark"] .product-card:hover {
     border-color: var(--accent);
-    box-shadow: 0 15px 40px rgba(0, 201, 180, 0.18), 0 0 0 1px rgba(0, 201, 180, 0.1);
+    box-shadow: 0 15px 40px rgba(96, 165, 250, 0.18), 0 0 0 1px rgba(96, 165, 250, 0.1);
 }
 
 .product-image {
@@ -1846,7 +1846,7 @@ main {
 .effect-bar {
   width: 0; height: 100%; border-radius: 12px;
   /* Initial gradient visible immediately - LIFE BioHack-inspired magenta/teal */
-  background: linear-gradient(135deg, rgba(201, 168, 76, 0.3), rgba(10, 110, 92, 0.3));
+  background: linear-gradient(135deg, rgba(232, 155, 43, 0.3), rgba(26, 86, 219, 0.3));
   display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; box-sizing: border-box;
   color: #FFFFFF; font-weight: 600; font-size: 0.75rem;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -2843,7 +2843,7 @@ body.modal-open { overflow: hidden; }
     font-size: 1.1rem;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 8px 25px rgba(10, 110, 92, 0.4);
+    box-shadow: 0 8px 25px rgba(26, 86, 219, 0.4);
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
@@ -2868,7 +2868,7 @@ body.modal-open { overflow: hidden; }
 
 .sticky-cta-btn:hover {
     transform: scale(1.1) translateY(-5px);
-    box-shadow: 0 12px 35px rgba(10, 110, 92, 0.6);
+    box-shadow: 0 12px 35px rgba(26, 86, 219, 0.6);
 }
 
 .sticky-cta-btn:active {
@@ -3137,14 +3137,14 @@ body.modal-open { overflow: hidden; }
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(10, 110, 92, 0.3);
+    box-shadow: 0 8px 20px rgba(26, 86, 219, 0.3);
     width: 100%;
     margin-bottom: 15px;
 }
 
 .exit-cta-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(10, 110, 92, 0.5);
+    box-shadow: 0 12px 30px rgba(26, 86, 219, 0.5);
 }
 
 .exit-modal-footer {
@@ -3236,7 +3236,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .comparison-highlight {
-    background: rgba(10, 110, 92, 0.05);
+    background: rgba(26, 86, 219, 0.05);
 }
 
 .check-icon {
@@ -3303,7 +3303,7 @@ body.modal-open { overflow: hidden; }
 
 .guarantee-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 15px 40px rgba(10, 110, 92, 0.15);
+    box-shadow: 0 15px 40px rgba(26, 86, 219, 0.15);
     border-color: var(--accent);
 }
 
@@ -3469,7 +3469,7 @@ body.modal-open { overflow: hidden; }
 
 .ingredient-card-mini:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(10, 110, 92, 0.15);
+    box-shadow: 0 8px 20px rgba(26, 86, 219, 0.15);
 }
 
 /* Product FAQ - Mini version */
@@ -3498,7 +3498,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .faq-question-mini:hover {
-    background: rgba(10, 110, 92, 0.05);
+    background: rgba(26, 86, 219, 0.05);
 }
 
 .faq-question-mini h4 {
