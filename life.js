@@ -287,8 +287,8 @@ const generateHeroHTML = component => {
 
 // --- START: MODIFIED FUNCTION ---
 const generateProductCategoryHTML = (component, index) => {
-    const isCollapsible = component.options.is_collapsible;
-    const isExpanded = component.options.is_expanded_by_default;
+    const isCollapsible = component.options?.is_collapsible;
+    const isExpanded = component.options?.is_expanded_by_default ?? true;
     const productGridId = `product-grid-${component.id || index}`;
     const enableFilters = component.options && component.options.enable_filters;
     
@@ -397,7 +397,7 @@ function encodeProductsForAttr(products) {
 // --- END: MODIFIED FUNCTION ---
 
 const generateInfoCardHTML = component => `
-    <section ${component.id ? `id="${component.id}"` : ''} class="info-card-section fade-in-up ${'image-align-' + (component.options.image_align || 'left')}">
+    <section ${component.id ? `id="${component.id}"` : ''} class="info-card-section fade-in-up ${'image-align-' + (component.options?.image_align || 'left')}">
         <div class="container">
             <div class="info-card-image">
                 <img src="${component.image}" alt="${component.title}" loading="lazy">
