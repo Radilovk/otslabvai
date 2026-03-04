@@ -21,6 +21,8 @@
     
     <!-- Библиотека за Drag & Drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- Библиотека за четене на XLSX файлове -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     
     <script>
         (function() {
@@ -943,10 +945,12 @@
                         <button type="button" class="btn btn-secondary" data-action="add-nested-item" data-container="#products-editor" data-template="product-editor-template">Добави продукт</button>
                         <button type="button" class="btn btn-primary" data-action="import-product">Импортирай продукт (JSON)</button>
                         <button type="button" class="btn btn-secondary" data-action="import-products-csv" title="Импортирай продукти от CSV файл" aria-label="Импортирай продукти от CSV файл">📥 Импортирай CSV</button>
+                        <button type="button" class="btn btn-secondary" data-action="import-products-xlsx" title="Импортирай продукти от B2B XLSX файл (формат fitness1.bg)" aria-label="Импортирай продукти от XLSX файл">📊 Импортирай B2B XLSX</button>
                         <button type="button" class="btn btn-secondary" data-action="export-products-csv" title="Експортирай всички продукти от категорията в CSV" aria-label="Експортирай продукти в CSV">📤 Експортирай CSV</button>
                         <button type="button" class="btn btn-secondary" data-action="download-csv-template" title="Изтегли шаблон за импорт на продукти в CSV формат" aria-label="Изтегли CSV шаблон">📋 CSV Шаблон</button>
                         <input type="file" id="product-import-input" style="display: none;" accept=".json">
                         <input type="file" id="product-csv-import-input" style="display: none;" accept=".csv">
+                        <input type="file" id="product-xlsx-import-input" style="display: none;" accept=".xlsx,.xls">
                     </div>
                 </div>
             </div>

@@ -1377,6 +1377,12 @@ function handleAction(action, target, id) {
             csvFileInput.click();
             break;
         }
+        case 'import-products-xlsx': {
+            const xlsxFileInput = target.parentElement.querySelector('#product-xlsx-import-input');
+            xlsxFileInput.onchange = (e) => handleProductXLSXImport(e, target);
+            xlsxFileInput.click();
+            break;
+        }
         case 'export-products-csv': {
             const productsContainer = target.closest('.modal-tab-pane').querySelector('#products-editor');
             exportProductsToCSV(productsContainer);
@@ -2070,6 +2076,136 @@ function handleProductCSVImport(event, triggerButton) {
     };
     reader.onerror = () => { showNotification('Неуспешно прочитане на CSV файла.', 'error'); };
     reader.readAsText(file, 'UTF-8');
+}
+
+// =======================================================
+//          B2B XLSX IMPORT (формат fitness1.bg)
+// =======================================================
+
+/**
+ * Maps a row from the B2B XLSX file (fitness1.bg format) to a product object.
+ * Expected columns: SKU, Product, Option, Price, Discount, B2B price, Currency, EAN, Available, Label, Image
+ * The "B2B price" (final price) is used as the selling price; "Price" and "Discount" are ignored.
+ * @param {object} row - plain object with column names as keys
+ * @returns {object} product object compatible with the site's product structure
+ */
+function b2bXLSXRowToProduct(row) {
+    const sku = String(row['SKU'] || '').trim();
+    const productName = String(row['Product'] || '').trim();
+    const option = row['Option'] ? String(row['Option']).trim() : '';
+    // B2B price uses comma as decimal separator (e.g. "18,60")
+    const b2bPriceStr = String(row['B2B price'] || '').replace(',', '.').trim();
+    const b2bPrice = parseFloat(b2bPriceStr);
+    const ean = String(row['EAN'] || '').trim();
+    const available = String(row['Available'] || '').trim().toLowerCase() === 'yes';
+    const labelUrl = row['Label'] ? String(row['Label']).trim() : '';
+    const imageUrl = row['Image'] ? String(row['Image']).trim() : '';
+
+    // Parse packaging info from product name bracket suffix, e.g. "[60 капсули, 60 Дози]".
+    // parts[0] → capsules_or_grams, parts[1] → doses_per_package; missing parts default to ''.
+    const packagingMatch = productName.match(/\[([^\]]+)\]/);
+    let capsules = '';
+    let doses = '';
+    if (packagingMatch) {
+        const parts = packagingMatch[1].split(',').map(s => s.trim());
+        capsules = parts[0] || '';
+        doses = parts[1] || '';
+    }
+
+    // Derive manufacturer from product name prefix (word ending with '.', e.g. "Oly.")
+    const manufacturerMatch = productName.match(/^(\S+\.)\s/);
+    const manufacturer = manufacturerMatch ? manufacturerMatch[1] : '';
+
+    const priceValue = isNaN(b2bPrice) ? null : b2bPrice;
+
+    const product = {
+        product_id: `prod-${sku}`,
+        public_data: {
+            name: productName,
+            price: priceValue,
+            image_url: imageUrl,
+            additional_images: labelUrl,
+            packaging: {
+                capsules_or_grams: capsules,
+                doses_per_package: doses,
+            },
+            variants: [{
+                sku: sku,
+                option_name: option,
+                price: priceValue,
+                image_url: imageUrl,
+                ean: ean,
+                available: available,
+            }],
+        },
+        system_data: {
+            inventory: available ? 1 : 0,
+            manufacturer: manufacturer,
+        },
+        display_order: 0,
+    };
+
+    return product;
+}
+
+/**
+ * Handles B2B XLSX file import: parses the file and adds products to the editor.
+ * @param {Event} event
+ * @param {HTMLElement} triggerButton
+ */
+function handleProductXLSXImport(event, triggerButton) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (typeof XLSX === 'undefined') {
+        showNotification('XLSX библиотеката не е заредена. Моля, опреснете страницата.', 'error');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+            if (rows.length === 0) {
+                throw new Error('XLSX файлът не съдържа данни.');
+            }
+
+            const productsContainer = triggerButton.closest('.modal-tab-pane').querySelector('#products-editor');
+            const existingIds = Array.from(productsContainer.querySelectorAll('[data-field="product_id"]')).map(inp => inp.value);
+
+            let imported = 0;
+            rows.forEach((row, i) => {
+                if (!row['SKU'] && !row['Product']) return;
+
+                const productData = b2bXLSXRowToProduct(row);
+
+                // Ensure unique product_id
+                let newId = productData.product_id;
+                while (existingIds.includes(newId)) {
+                    newId = `${newId}-copy`;
+                }
+                productData.product_id = newId;
+                existingIds.push(newId);
+
+                addNestedItem(productsContainer, 'product-editor-template', productData);
+                imported++;
+            });
+
+            showNotification(`${imported} продукт(а) са импортирани от XLSX.`, 'success');
+        } catch (error) {
+            showNotification(`Грешка при XLSX импорт: ${error.message}`, 'error');
+            console.error(error);
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.onerror = () => { showNotification('Неуспешно прочитане на XLSX файла.', 'error'); };
+    reader.readAsArrayBuffer(file);
 }
 
 /**
