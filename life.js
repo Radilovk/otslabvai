@@ -621,8 +621,8 @@ const generateContactHTML = component => `
 //          3. УПРАВЛЕНИЕ НА КОЛИЧКА (CART LOGIC)
 // =======================================================
 
-const getCart = () => JSON.parse(localStorage.getItem('life_cart') || '[]');
-const saveCart = cart => localStorage.setItem('life_cart', JSON.stringify(cart));
+const getCart = () => JSON.parse(localStorage.getItem('lifeCart') || '[]');
+const saveCart = cart => localStorage.setItem('lifeCart', JSON.stringify(cart));
 
 const saveNavigationState = (productId = null) => {
     sessionStorage.setItem('lifeScrollPosition', window.scrollY.toString());

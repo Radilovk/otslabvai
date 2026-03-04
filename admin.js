@@ -1286,8 +1286,7 @@ function setupEventListeners() {
             }
             currentProject = e.target.value;
             localStorage.setItem('adminProject', currentProject);
-            document.querySelector('.admin-header h1').textContent = 
-                currentProject === 'life' ? 'Админ Панел — LIFE BioHack' : 'Админ Панел — ДА ОТСЛАБНА';
+            updateAdminHeaderTitle();
             appData = await fetchData();
             if (appData) {
                 setUnsavedChanges(false);
@@ -1295,10 +1294,13 @@ function setupEventListeners() {
                 showNotification(`Превключено към проект: ${currentProject === 'life' ? 'LIFE BioHack' : 'ДА ОТСЛАБНА'}`, 'success');
             }
         });
-        // Set initial header text
-        document.querySelector('.admin-header h1').textContent = 
-            currentProject === 'life' ? 'Админ Панел — LIFE BioHack' : 'Админ Панел — ДА ОТСЛАБНА';
+        updateAdminHeaderTitle();
     }
+}
+
+function updateAdminHeaderTitle() {
+    document.querySelector('.admin-header h1').textContent = 
+        currentProject === 'life' ? 'Админ Панел — LIFE BioHack' : 'Админ Панел — ДА ОТСЛАБНА';
 }
 
 function handleAction(action, target, id) {
