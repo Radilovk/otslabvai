@@ -2086,6 +2086,8 @@ function handleProductCSVImport(event, triggerButton) {
  * Maps a row from the B2B XLSX file (fitness1.bg format) to a product object.
  * Expected columns: SKU, Product, Option, Price, Discount, B2B price, Currency, EAN, Available, Label, Image
  * The "B2B price" (final price) is used as the selling price; "Price" and "Discount" are ignored.
+ * The "Label" column (supplement facts image) maps to public_data.label_url (shown as "Хранителна информация" link).
+ * The "Image" column maps to public_data.image_url and variant.image_url.
  * @param {object} row - plain object with column names as keys
  * @returns {object} product object compatible with the site's product structure
  */
@@ -2124,7 +2126,7 @@ function b2bXLSXRowToProduct(row) {
             name: productName,
             price: priceValue,
             image_url: imageUrl,
-            additional_images: labelUrl,
+            label_url: labelUrl,
             packaging: {
                 capsules_or_grams: capsules,
                 doses_per_package: doses,
