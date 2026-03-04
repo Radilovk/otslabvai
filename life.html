@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="bg" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://radilovk.github.io/face/assets/logo.png">
+    <title>LIFE BioHack - Клетъчно Подмладяване</title>
+    <meta name="description" content="Иновативни продукти за биохакинг на клетъчно ниво. Пептиди, хранителни добавки и протоколи за антиейджинг и подмладяване.">
+    <meta name="keywords" content="биохакинг, антиейджинг, подмладяване, пептиди, хранителни добавки, клетъчно подмладяване, иновативни продукти, протоколи">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="LIFE BioHack">
+    <link rel="canonical" href="https://daotslabna.com/life.html">
+    <link rel="alternate" hreflang="bg" href="https://daotslabna.com/life.html">
+    <link rel="alternate" hreflang="x-default" href="https://daotslabna.com/life.html">
+    <meta property="og:title" content="LIFE BioHack - Клетъчно Подмладяване и Антиейджинг">
+    <meta property="og:description" content="Иновативни продукти за биохакинг на клетъчно ниво. Пептиди, хранителни добавки и протоколи за антиейджинг и подмладяване.">
+    <meta property="og:image" content="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="bg_BG">
+    <meta property="og:url" content="https://daotslabna.com/life.html">
+    <meta property="og:site_name" content="LIFE BioHack">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LIFE BioHack - Клетъчно Подмладяване и Антиейджинг">
+    <meta name="twitter:description" content="Иновативни продукти за биохакинг на клетъчно ниво. Пептиди, хранителни добавки и протоколи за антиейджинг и подмладяване.">
+    <meta name="twitter:image" content="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://radilovk.github.io" crossorigin>
+    
+    <!-- Preload logo images for instant display -->
+    <link rel="preload" as="image" href="https://radilovk.github.io/face/assets/logo.png" type="image/png">
+    <link rel="preload" as="image" href="https://radilovk.github.io/face/assets/logoblack.png" type="image/png">
+    
+    <link rel="stylesheet" href="life.css">
+
+    <script>
+        (function() {
+            try {
+                // Check if user has a saved preference
+                var savedTheme = localStorage.getItem('theme');
+                var theme;
+                
+                if (savedTheme) {
+                    // Use saved theme
+                    theme = savedTheme;
+                } else {
+                    // Auto-detect from system preference
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        theme = 'dark';
+                    } else {
+                        theme = 'light';
+                    }
+                }
+                
+                document.documentElement.setAttribute('data-theme', theme);
+                
+                // Load cached logo immediately to prevent flashing
+                var cachedLogoLight = localStorage.getItem('lifeCachedLogoLight');
+                var cachedLogoDark = localStorage.getItem('lifeCachedLogoDark');
+                
+                // Store logo URLs for immediate use when page loads
+                if (cachedLogoLight && cachedLogoDark) {
+                    window.__initialLogoSettings = {
+                        lightLogo: cachedLogoLight,
+                        darkLogo: cachedLogoDark,
+                        theme: theme
+                    };
+                }
+            } catch (e) {
+                // Fallback to light theme
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <!-- ============================ HEADER & NAVIGATION ============================ -->
+    <header class="main-header">
+        <div class="header-container">
+            <a href="#" class="logo-container" id="header-logo-link">
+                <!-- Initial logo set to light theme variant for instant display, will be updated by JS based on theme -->
+                <img src="https://radilovk.github.io/face/assets/logoblack.png" alt="Лого" id="header-logo-img" style="display: block;">
+                <div>
+                    <span class="brand-name" id="header-brand-name">LIFE BioHack</span>
+                    <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <ul class="nav-links" id="main-nav-links">
+                    <!-- Navigation links will be dynamically added here -->
+                    <li class="theme-toggle-mobile">
+                        <span class="theme-toggle-mobile-label">Тема</span>
+                        <button id="theme-toggle-mobile" class="theme-toggle-btn" aria-label="Превключи тема">
+                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </button>
+                    </li>
+                    <li class="cart-link-mobile">
+                        <span class="cart-link-mobile-label">Количка</span>
+                        <a href="checkout.html">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span>Виж количката</span>
+                            <span class="cart-badge" id="cart-count-menu">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <div class="search-container">
+                    <button id="search-toggle" class="search-toggle-btn" aria-label="Търсене" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                    <div id="search-dropdown" class="search-dropdown">
+                        <div class="search-input-wrapper">
+                            <input type="text" id="site-search-input" class="search-input" placeholder="Търси продукти..." aria-label="Търси в сайта">
+                            <button id="search-clear" class="search-clear-btn" aria-label="Изчисти търсенето" style="display: none;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="search-results" class="search-results"></div>
+                    </div>
+                </div>
+                <button id="theme-toggle" class="theme-toggle-btn" aria-label="Превключи тема">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <a href="checkout.html" class="cart-icon-btn" aria-label="Количка">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-badge" id="cart-count">0</span>
+                </a>
+            </div>
+            <button class="menu-toggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    <div class="nav-overlay"></div>
+    
+    <!-- Fixed Mobile Cart Icon -->
+    <a href="checkout.html" class="cart-icon-fixed-mobile" aria-label="Количка" id="cart-icon-mobile">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <span class="cart-badge" id="cart-count-mobile">0</span>
+    </a>
+
+    <!-- ============================ PROMO BANNER ============================ -->
+    <div class="promo-banner">
+        <div class="promo-content">
+            <p>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                </svg>
+                <strong>СПЕЦИАЛНА ОФЕРТА:</strong> До 30% отстъпка при поръчка над 100 €! <span class="promo-timer" id="promo-timer"></span>
+            </p>
+        </div>
+    </div>
+
+    <!-- 
+        Контейнерът вече няма class="container", защото всяка секция ще управлява свой собствен.
+    -->
+    <main id="main-content-container">
+        <!-- Скелет за Hero секцията -->
+        <header class="hero-section">
+            <div class="hero-content">
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+            </div>
+        </header>
+
+        <!-- Скелет за Инфо Кард. Обвит е в .container, за да съответства на финалния HTML -->
+        <section class="info-card-section skeleton-wrapper">
+             <div class="container" style="display: flex; gap: 3rem; align-items: center;">
+                <div class="info-card-image" style="flex:1;">
+                    <div class="skeleton skeleton-image"></div>
+                </div>
+                <div class="info-card-content" style="flex:1;">
+                    <div class="skeleton skeleton-h2"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text short"></div>
+                    <div class="skeleton skeleton-button"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Скелет за Продуктова категория -->
+        <section class="category-section skeleton-wrapper">
+            <div class="container">
+                <div class="category-header">
+                    <div class="skeleton skeleton-h2 category-title-skeleton"></div>
+                </div>
+                <div class="product-grid">
+                    <article class="product-card skeleton-card">
+                        <div class="card-header">
+                            <div class="product-title">
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
+                            </div>
+                            <div class="effects-container">
+                                <div class="skeleton skeleton-bar"></div>
+                                <div class="skeleton skeleton-bar"></div>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="product-card skeleton-card">
+                        <div class="card-header">
+                            <div class="product-title">
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
+                            </div>
+                            <div class="effects-container">
+                                <div class="skeleton skeleton-bar"></div>
+                                <div class="skeleton skeleton-bar"></div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid" id="footer-grid-container">
+                <!-- Футър колоните ще бъдат генерирани от JS -->
+            </div>
+            <div class="footer-bottom" id="footer-copyright-container">
+                <!-- Copyright текстът ще бъде генериран от JS -->
+            </div>
+        </div>
+    </footer>
+
+    <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
+
+    <!-- Sticky CTA Button -->
+    <div class="sticky-cta" id="sticky-cta">
+        <button class="sticky-cta-btn" onclick="document.getElementById('products')?.scrollIntoView({behavior: 'smooth'})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="6"></circle>
+                <circle cx="12" cy="12" r="2"></circle>
+            </svg>
+            <span>Виж продуктите</span>
+        </button>
+    </div>
+
+    <div id="quest-modal-backdrop" class="modal-backdrop"></div>
+    <div id="quest-modal-container" class="modal-container">
+        <iframe id="quest-modal-iframe" src="" loading="lazy" title="LIFE BioHack въпросник"></iframe>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <!-- Structured Data (Schema.org) for better SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "LIFE BioHack",
+      "alternateName": "LIFE BioHack - Клетъчно Подмладяване",
+      "url": "https://daotslabna.com/life.html",
+      "description": "Иновативни продукти за биохакинг, антиейджинг и клетъчно подмладяване",
+      "inLanguage": "bg-BG",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://daotslabna.com/life.html?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "LIFE BioHack",
+      "url": "https://daotslabna.com/life.html",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://radilovk.github.io/face/assets/logo.png",
+        "width": 250,
+        "height": 60
+      },
+      "description": "Иновативни продукти за биохакинг, антиейджинг, пептиди и клетъчно подмладяване",
+      "sameAs": [],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Customer Service",
+        "availableLanguage": "Bulgarian"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "LIFE BioHack - Начална страница",
+      "description": "Иновативни продукти за биохакинг на клетъчно ниво. Пептиди, хранителни добавки и протоколи за антиейджинг и подмладяване.",
+      "url": "https://daotslabna.com/life.html",
+      "inLanguage": "bg-BG",
+      "isPartOf": {
+        "@type": "WebSite",
+        "url": "https://daotslabna.com/life.html"
+      },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [{
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Начало",
+          "item": "https://daotslabna.com/life.html"
+        }]
+      }
+    }
+    </script>
+
+    <!-- Exit Intent Popup -->
+    <div id="exit-intent-modal" class="exit-modal">
+        <div class="exit-modal-content">
+            <button class="exit-modal-close" aria-label="Затвори">&times;</button>
+            <div class="exit-modal-body">
+                <div class="exit-modal-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                        <rect x="2" y="7" width="20" height="5"></rect>
+                        <line x1="12" y1="22" x2="12" y2="7"></line>
+                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                    </svg>
+                </div>
+                <h2>Не пропускайте!</h2>
+                <p class="exit-modal-subtitle">Специална оферта само за вас</p>
+                <div class="exit-offer">
+                    <div class="exit-offer-badge">-20%</div>
+                    <p>Използвайте код <strong class="promo-code">SAVE20</strong> при първа поръчка</p>
+                </div>
+                <div class="exit-benefits">
+                    <div class="exit-benefit">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Безплатна доставка над 100 €
+                    </div>
+                    <div class="exit-benefit">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        30 дни гаранция
+                    </div>
+                    <div class="exit-benefit">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Експресна обработка
+                    </div>
+                </div>
+                <button class="exit-cta-btn" onclick="document.getElementById('products')?.scrollIntoView({behavior: 'smooth'}); document.getElementById('exit-intent-modal').classList.remove('active');">
+                    Искам отстъпката
+                </button>
+                <p class="exit-modal-footer">Офертата е валидна само днес!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="life.js" type="module"></script>
+    
+</body>
+</html>

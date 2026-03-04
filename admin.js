@@ -94,15 +94,20 @@ let filteredPromoCodesData = [];
 let unsavedChanges = false;
 let activeUndoAction = null;
 let currentModalSaveCallback = null;
+let currentProject = localStorage.getItem('adminProject') || 'main';
 
 // =======================================================
 //          2. API КОМУНИКАЦИЯ
 // =======================================================
 
+function getPageContentEndpoint() {
+    return currentProject === 'life' ? 'life_page_content.json' : 'page_content.json';
+}
+
 async function fetchData() {
     try {
         // For admin panel, use no-cache to ensure fresh data when explicitly refreshing
-        const response = await fetch(`${API_URL}/page_content.json`, {
+        const response = await fetch(`${API_URL}/${getPageContentEndpoint()}`, {
             cache: 'no-cache'
         });
         if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
@@ -176,7 +181,7 @@ async function saveData() {
     DOM.saveStatus.className = 'save-status is-saving';
 
     try {
-        const response = await fetch(`${API_URL}/page_content.json`, {
+        const response = await fetch(`${API_URL}/${getPageContentEndpoint()}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(appData, null, 2)
@@ -1267,6 +1272,35 @@ function setupEventListeners() {
             DOM.undoNotification.classList.remove('show');
         }
     });
+
+    // Project selector
+    const projectSelector = document.getElementById('project-selector');
+    if (projectSelector) {
+        projectSelector.value = currentProject;
+        projectSelector.addEventListener('change', async (e) => {
+            if (unsavedChanges) {
+                if (!confirm('Имате незаписани промени. Сигурни ли сте, че искате да превключите проекта?')) {
+                    projectSelector.value = currentProject;
+                    return;
+                }
+            }
+            currentProject = e.target.value;
+            localStorage.setItem('adminProject', currentProject);
+            updateAdminHeaderTitle();
+            appData = await fetchData();
+            if (appData) {
+                setUnsavedChanges(false);
+                renderAll();
+                showNotification(`Превключено към проект: ${currentProject === 'life' ? 'LIFE BioHack' : 'ДА ОТСЛАБНА'}`, 'success');
+            }
+        });
+        updateAdminHeaderTitle();
+    }
+}
+
+function updateAdminHeaderTitle() {
+    document.querySelector('.admin-header h1').textContent = 
+        currentProject === 'life' ? 'Админ Панел — LIFE BioHack' : 'Админ Панел — ДА ОТСЛАБНА';
 }
 
 function handleAction(action, target, id) {

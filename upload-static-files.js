@@ -22,11 +22,15 @@ const FILES_TO_UPLOAD = [
     { file: 'admin.js', key: 'static_admin.js' },
     { file: 'admin.css', key: 'static_admin.css' },
     { file: 'checkout.html', key: 'static_checkout.html' },
+    { file: 'life.html', key: 'static_life.html' },
+    { file: 'life.js', key: 'static_life.js' },
+    { file: 'life.css', key: 'static_life.css' },
     { file: 'quest.html', key: 'static_quest.html' },
     { file: 'questionnaire.js', key: 'static_questionnaire.js' },
     { file: 'questionnaire.css', key: 'static_questionnaire.css' },
     // Static fallback for page_content – used by the worker when the live 'page_content' KV key is empty
     { file: 'backend/page_content.json', key: 'static_backend_page_content.json' },
+    { file: 'backend/life_page_content.json', key: 'static_backend_life_page_content.json' },
 ];
 
 // KV Namespace details

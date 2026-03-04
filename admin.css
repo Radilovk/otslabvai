@@ -164,6 +164,25 @@ h2 {
     width: 100%;
     justify-content: space-between;
 }
+.project-selector {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 2px solid var(--primary-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.project-selector:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 99, 102, 241), 0.3);
+}
+.project-selector option {
+    font-weight: 600;
+    padding: 0.5rem;
+}
 .save-status {
     font-size: 0.9rem;
     color: var(--text-secondary);

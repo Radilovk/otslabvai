@@ -65,6 +65,9 @@ export default {
       '/product.html': { file: 'product.html', type: CONTENT_TYPES.html },
       '/product.js': { file: 'product.js', type: CONTENT_TYPES.js },
       '/checkout.html': { file: 'checkout.html', type: CONTENT_TYPES.html },
+      '/life.html': { file: 'life.html', type: CONTENT_TYPES.html },
+      '/life.js': { file: 'life.js', type: CONTENT_TYPES.js },
+      '/life.css': { file: 'life.css', type: CONTENT_TYPES.css },
       '/quest.html': { file: 'quest.html', type: CONTENT_TYPES.html },
       '/questionnaire.js': { file: 'questionnaire.js', type: CONTENT_TYPES.js },
       '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css },
@@ -92,6 +95,16 @@ export default {
                 response = await handleGetPageContent(request, env);
             } else if (request.method === 'POST') {
                 response = await handleSavePageContent(request, env, ctx);
+            } else {
+                throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+          
+          case '/life_page_content.json':
+            if (request.method === 'GET') {
+                response = await handleGetLifePageContent(request, env);
+            } else if (request.method === 'POST') {
+                response = await handleSaveLifePageContent(request, env, ctx);
             } else {
                 throw new UserFacingError('Method Not Allowed.', 405);
             }
@@ -350,6 +363,111 @@ async function handleSavePageContent(request, env, ctx) {
     } catch (e) {
         if (e instanceof UserFacingError) throw e;
         throw new UserFacingError("Invalid JSON provided in the request body.", 400);
+    }
+}
+
+/**
+ * Handles GET /life_page_content.json
+ * Falls back to static_backend_life_page_content.json if the dynamic KV key is not set.
+ */
+async function handleGetLifePageContent(request, env) {
+    let pageContent = await env.PAGE_CONTENT.get('life_page_content');
+    if (pageContent === null) {
+        pageContent = await env.PAGE_CONTENT.get('static_backend_life_page_content.json');
+    }
+    if (pageContent === null) {
+        throw new UserFacingError("Life content not found.", 404);
+    }
+    return new Response(pageContent, {
+        status: 200,
+        headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': `public, max-age=${CACHE_CONFIG.PAGE_CONTENT_MAX_AGE}, stale-while-revalidate=${CACHE_CONFIG.PAGE_CONTENT_STALE_WHILE_REVALIDATE}`,
+            'ETag': await generateETag(pageContent)
+        }
+    });
+}
+
+/**
+ * Handles POST /life_page_content.json
+ * Saves life content to KV and asynchronously syncs it to the GitHub repository.
+ */
+async function handleSaveLifePageContent(request, env, ctx) {
+    const contentToSave = await request.text();
+    try {
+        JSON.parse(contentToSave);
+        ctx.waitUntil(Promise.all([
+            env.PAGE_CONTENT.put('life_page_content', contentToSave),
+            syncLifePageContentToGitHub(contentToSave, env)
+        ]));
+        return new Response(JSON.stringify({ success: true, message: 'Life content saved.' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } catch (e) {
+        if (e instanceof UserFacingError) throw e;
+        throw new UserFacingError("Invalid JSON provided in the request body.", 400);
+    }
+}
+
+/**
+ * Syncs life_page_content JSON to backend/life_page_content.json in the GitHub repository.
+ */
+async function syncLifePageContentToGitHub(content, env) {
+    try {
+        const token = env.GITHUB_API_TOKEN || await env.PAGE_CONTENT.get('api_token');
+        if (!token) {
+            console.warn('syncLifePageContentToGitHub: no GitHub token available, skipping sync');
+            return;
+        }
+
+        const { owner, repo, branch } = GITHUB_SYNC_CONFIG;
+        const filePath = 'backend/life_page_content.json';
+        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+
+        const getResponse = await fetch(`${apiUrl}?ref=${branch}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Cloudflare-Worker'
+            }
+        });
+
+        let sha = null;
+        if (getResponse.ok) {
+            const fileData = await getResponse.json();
+            sha = fileData.sha;
+        }
+
+        const bytes = new TextEncoder().encode(content);
+        const base64Content = btoa(Array.from(bytes, b => String.fromCharCode(b)).join(''));
+
+        const payload = {
+            message: 'sync: update life_page_content from admin panel [skip ci]',
+            content: base64Content,
+            branch
+        };
+        if (sha) payload.sha = sha;
+
+        const putResponse = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Cloudflare-Worker'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!putResponse.ok) {
+            const errText = await putResponse.text();
+            console.error(`syncLifePageContentToGitHub failed: ${putResponse.status} - ${errText}`);
+        } else {
+            console.log('syncLifePageContentToGitHub: GitHub sync successful');
+        }
+    } catch (err) {
+        console.error('syncLifePageContentToGitHub error:', err);
     }
 }
 

@@ -20,6 +20,9 @@ declare -a files=(
     "admin.js"
     "admin.css"
     "checkout.html"
+    "life.html"
+    "life.js"
+    "life.css"
     "quest.html"
     "questionnaire.js"
     "questionnaire.css"
@@ -63,6 +66,25 @@ if [ -f "backend/page_content.json" ]; then
     fi
 else
     echo "⚠️  backend/page_content.json not found, skipping..."
+fi
+
+# Upload backend/life_page_content.json as both the static fallback and, if not already set,
+# the live 'life_page_content' key used by the worker.
+if [ -f "backend/life_page_content.json" ]; then
+    echo "📤 Uploading backend/life_page_content.json as static fallback..."
+    wrangler kv:key put --binding="$KV_NAMESPACE" "static_backend_life_page_content.json" --path="backend/life_page_content.json"
+    echo "✅ Uploaded backend/life_page_content.json as static fallback"
+
+    echo "📤 Seeding live 'life_page_content' key from backend/life_page_content.json (only if not set)..."
+    EXISTING_LIFE=$(wrangler kv:key get --binding="$KV_NAMESPACE" "life_page_content" 2>/dev/null || true)
+    if [ -z "$EXISTING_LIFE" ]; then
+        wrangler kv:key put --binding="$KV_NAMESPACE" "life_page_content" --path="backend/life_page_content.json"
+        echo "✅ Seeded 'life_page_content' from backend/life_page_content.json"
+    else
+        echo "ℹ️  'life_page_content' already set in KV, skipping seed (admin changes preserved)"
+    fi
+else
+    echo "⚠️  backend/life_page_content.json not found, skipping..."
 fi
 
 echo ""

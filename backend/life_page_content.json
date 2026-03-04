@@ -1,0 +1,142 @@
+{
+  "settings": {
+    "site_name": "LIFE BioHack",
+    "site_slogan": "Клетъчно Подмладяване",
+    "logo_url": "https://radilovk.github.io/face/assets/logo.png",
+    "logo_url_light": "https://radilovk.github.io/face/assets/logoblack.png",
+    "logo_url_dark": "https://radilovk.github.io/face/assets/logo.png",
+    "theme_gradients": {
+      "light": "linear-gradient(135deg, #E8F5F0 0%, #F5F0E0 100%)",
+      "dark": "linear-gradient(135deg, #050D0A 0%, #0A0800 100%)"
+    },
+    "promo_banner": {
+      "text": "ЕКСКЛУЗИВНО: Безплатна консултация при първа поръчка на пептиди!"
+    },
+    "about_us_page": {
+      "hero_title": "За LIFE BioHack",
+      "hero_subtitle": "Научен подход към клетъчното подмладяване и дълголетие",
+      "main_image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
+      "main_image_alt": "Биотехнологични изследвания"
+    }
+  },
+  "navigation": [
+    {
+      "text": "Пептиди",
+      "link": "#peptides"
+    },
+    {
+      "text": "Антиейджинг",
+      "link": "#anti-aging"
+    },
+    {
+      "text": "За нас",
+      "link": "about-us.html"
+    },
+    {
+      "text": "Контакти",
+      "link": "contact.html"
+    }
+  ],
+  "page_content": [
+    {
+      "type": "hero_banner",
+      "component_id": "life-hero-001",
+      "title": "Биохакинг на Клетъчно Ниво",
+      "subtitle": "Иновативни пептиди и протоколи за антиейджинг, подмладяване и оптимално здраве. Научно доказани формули за клетъчна регенерация.",
+      "buttons": {
+        "primary": {
+          "text": "Разгледай продуктите",
+          "action": "scroll",
+          "target": "#peptides"
+        },
+        "secondary": {
+          "text": "Научи повече",
+          "action": "link",
+          "target": "about-us.html"
+        }
+      },
+      "stats": [
+        {
+          "value": "98%",
+          "label": "Клиентско доверие",
+          "icon": "⚗️"
+        },
+        {
+          "value": "50+",
+          "label": "Научни формули",
+          "icon": "🧬"
+        },
+        {
+          "value": "10K+",
+          "label": "Доволни клиенти",
+          "icon": "✨"
+        }
+      ],
+      "trust_badges": [
+        { "text": "✅ GMP Сертифицирано" },
+        { "text": "🔬 Лабораторно тествано" },
+        { "text": "🚀 Бърза доставка" }
+      ],
+      "background_type": "default"
+    },
+    {
+      "type": "info_card",
+      "component_id": "life-info-001",
+      "title": "Персонализиран протокол за подмладяване",
+      "image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
+      "content": "Всеки организъм е уникален. Нашите експерти създават индивидуални протоколи за биохакинг, базирани на последните научни открития в областта на клетъчното подмладяване и дълголетието.",
+      "button": {
+        "text": "Получи своя протокол",
+        "url": "contact.html"
+      },
+      "options": {
+        "image_align": "left"
+      }
+    },
+    {
+      "type": "product_category",
+      "component_id": "life-cat-peptides",
+      "category_id": "peptides",
+      "title": "Пептиди за Подмладяване",
+      "description": "Биоактивни пептиди от ново поколение за клетъчна регенерация и антиейджинг.",
+      "products": []
+    },
+    {
+      "type": "product_category",
+      "component_id": "life-cat-antiaging",
+      "category_id": "anti-aging",
+      "title": "Антиейджинг Формули",
+      "description": "Научно разработени добавки за забавяне на стареенето на клетъчно ниво.",
+      "products": []
+    }
+  ],
+  "footer": {
+    "columns": [
+      {
+        "type": "logo",
+        "title": "",
+        "links": []
+      },
+      {
+        "type": "links",
+        "title": "Бързи Връзки",
+        "links": [
+          { "text": "Пептиди", "url": "#peptides" },
+          { "text": "Антиейджинг", "url": "#anti-aging" },
+          { "text": "За нас", "url": "about-us.html" },
+          { "text": "Контакти", "url": "contact.html" }
+        ]
+      },
+      {
+        "type": "links",
+        "title": "Информация",
+        "links": [
+          { "text": "Политика за поверителност", "url": "policy.html" },
+          { "text": "Условия за ползване", "url": "terms.html" },
+          { "text": "Доставка", "url": "shipping.html" }
+        ]
+      }
+    ],
+    "copyright_text": "© 2025 LIFE BioHack. Всички права запазени."
+  }
+}
