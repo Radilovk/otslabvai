@@ -46,6 +46,25 @@ for file in "${files[@]}"; do
     fi
 done
 
+# Upload backend/page_content.json as both the static fallback and, if not already set,
+# the live 'page_content' key used by the worker.
+if [ -f "backend/page_content.json" ]; then
+    echo "📤 Uploading backend/page_content.json as static fallback..."
+    wrangler kv:key put --binding="$KV_NAMESPACE" "static_backend_page_content.json" --path="backend/page_content.json"
+    echo "✅ Uploaded backend/page_content.json as static fallback"
+
+    echo "📤 Seeding live 'page_content' key from backend/page_content.json (only if not set)..."
+    EXISTING=$(wrangler kv:key get --binding="$KV_NAMESPACE" "page_content" 2>/dev/null || true)
+    if [ -z "$EXISTING" ]; then
+        wrangler kv:key put --binding="$KV_NAMESPACE" "page_content" --path="backend/page_content.json"
+        echo "✅ Seeded 'page_content' from backend/page_content.json"
+    else
+        echo "ℹ️  'page_content' already set in KV, skipping seed (admin changes preserved)"
+    fi
+else
+    echo "⚠️  backend/page_content.json not found, skipping..."
+fi
+
 echo ""
 echo "✨ Upload complete!"
 echo ""

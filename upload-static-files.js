@@ -25,6 +25,8 @@ const FILES_TO_UPLOAD = [
     { file: 'quest.html', key: 'static_quest.html' },
     { file: 'questionnaire.js', key: 'static_questionnaire.js' },
     { file: 'questionnaire.css', key: 'static_questionnaire.css' },
+    // Static fallback for page_content – used by the worker when the live 'page_content' KV key is empty
+    { file: 'backend/page_content.json', key: 'static_backend_page_content.json' },
 ];
 
 // KV Namespace details
@@ -78,6 +80,24 @@ async function main() {
     
     for (const { file, key } of FILES_TO_UPLOAD) {
         await uploadFile(file, key);
+    }
+
+    // Seed the live 'page_content' KV key from backend/page_content.json only when it is
+    // not already set (i.e., on first deploy). This preserves any changes that an admin
+    // has already saved through the admin panel.
+    const pageContentFilePath = path.join(__dirname, 'backend/page_content.json');
+    if (fs.existsSync(pageContentFilePath)) {
+        const checkUrl = `https://api.cloudflare.com/client/v4/accounts/${KV_ACCOUNT_ID}/storage/kv/namespaces/${KV_NAMESPACE_ID}/values/page_content`;
+        const checkResponse = await fetch(checkUrl, {
+            headers: { 'Authorization': `Bearer ${KV_API_TOKEN}` }
+        });
+        if (checkResponse.status === 404) {
+            console.log('📤 Seeding live \'page_content\' key from backend/page_content.json (first deploy)...');
+            await uploadFile('backend/page_content.json', 'page_content');
+            console.log('✅ Seeded \'page_content\'');
+        } else {
+            console.log('ℹ️  \'page_content\' already set in KV, skipping seed (admin changes preserved)');
+        }
     }
     
     console.log('\n✨ Upload complete!');
