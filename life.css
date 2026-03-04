@@ -11,9 +11,9 @@
     --color-white: #FFFFFF;
     --color-gray: #6B7A8D;
 
-    /* Typography (Premium fonts) */
-    --font-primary: 'Playfair Display', serif;
-    --font-secondary: 'Inter', sans-serif;
+    /* Typography (Premium Biotech fonts) */
+    --font-primary: 'Space Grotesk', sans-serif;
+    --font-secondary: 'DM Sans', sans-serif;
 
     /* Design Elements */
     --border-radius: 8px;
@@ -21,24 +21,24 @@
     --transition-speed: 0.3s ease;
     
     /* Dark Theme Variables */
-    --bg-primary-dark: #070B14;
-    --bg-secondary-dark: #0C1222;
+    --bg-primary-dark: #050A12;
+    --bg-secondary-dark: #09101E;
     --text-primary-dark: #E8ECF1;
     --text-secondary-dark: #94A3B8;
-    --accent-dark: #10B981;
-    --accent-rgb-dark: 16, 185, 129;
+    --accent-dark: #00C9B4;
+    --accent-rgb-dark: 0, 201, 180;
     --accent-secondary-dark: #D4AF37;
     --accent-secondary-rgb-dark: 212, 175, 55;
-    --border-color-dark: rgba(255, 255, 255, 0.08);
-    --shadow-dark: rgba(16, 185, 129, 0.25);
-    --spotlight-color-dark: rgba(16, 185, 129, 0.06);
+    --border-color-dark: rgba(0, 201, 180, 0.12);
+    --shadow-dark: rgba(0, 201, 180, 0.28);
+    --spotlight-color-dark: rgba(0, 201, 180, 0.07);
     --note-color-dark: #D4AF37;
-    --success-color-dark: #10B981;
+    --success-color-dark: #00C9B4;
     --error-color-dark: #EF4444;
     --skeleton-bg-dark: #111827;
     --skeleton-highlight-dark: #1E293B;
 
-    --header-bg-dark: rgba(7, 11, 20, 0.9);
+    --header-bg-dark: rgba(5, 10, 18, 0.92);
     --header-height: 70px;
     --overlay-bg-dark: rgba(0,0,0,0.6);
     --header-gradient-start-light: rgba(244, 246, 248, 0.98);
@@ -48,17 +48,17 @@
     --header-scrolled-bg-light: rgba(244, 246, 248, 0.98);
     --hero-bg-start-light: #E8F5F0;
     --hero-bg-end-light: #F5F0E0;
-    --header-gradient-start-dark: rgba(12, 18, 34, 0.95);
-    --header-gradient-end-dark: rgba(7, 11, 20, 0.95);
-    --header-border-dark: rgba(16, 185, 129, 0.15);
-    --header-border-scrolled-dark: rgba(16, 185, 129, 0.25);
-    --header-scrolled-bg-dark: rgba(7, 11, 20, 0.98);
-    --hero-bg-start-dark: #050D0A;
-    --hero-bg-end-dark: #0A0800;
+    --header-gradient-start-dark: rgba(5, 10, 18, 0.97);
+    --header-gradient-end-dark: rgba(2, 6, 12, 0.97);
+    --header-border-dark: rgba(0, 201, 180, 0.15);
+    --header-border-scrolled-dark: rgba(0, 201, 180, 0.28);
+    --header-scrolled-bg-dark: rgba(5, 10, 18, 0.99);
+    --hero-bg-start-dark: #030C14;
+    --hero-bg-end-dark: #040A14;
     
     /* Theme gradient variables - default values */
     --theme-gradient-light: linear-gradient(135deg, #E8F5F0 0%, #F5F0E0 100%);
-    --theme-gradient-dark: linear-gradient(135deg, #050D0A 0%, #0A0800 100%);
+    --theme-gradient-dark: linear-gradient(135deg, #030C14 0%, #040A14 100%);
     
     /* Light Theme Variables - Premium Biotech */
     --bg-primary-light: #F4F6F8;
@@ -211,6 +211,7 @@ h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-primary);
     font-weight: 700;
     line-height: 1.2;
+    letter-spacing: -0.01em;
 }
 
 img {
@@ -242,6 +243,7 @@ img {
     margin-bottom: 15px;
     position: relative;
     display: inline-block;
+    letter-spacing: -0.02em;
 }
 
 /* Creates the underline effect for titles (LIFE BioHack style) */
@@ -252,8 +254,8 @@ img {
     left: 50%;
     transform: translateX(-50%);
     width: 60px;
-    height: 4px;
-    background-color: var(--color-primary);
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
     border-radius: 2px;
 }
 
@@ -283,7 +285,7 @@ img {
 }
 
 .btn-primary:hover {
-    background-color: #c3006a;
+    background-color: var(--color-secondary);
     color: var(--color-white);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(10, 110, 92, 0.4);
@@ -365,7 +367,7 @@ img {
 .promo-banner {
     position: relative; /* Changed from fixed to relative - banner stays in page flow */
     width: 100%;
-    background: linear-gradient(135deg, var(--color-primary), #c3006a);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
     color: var(--color-white);
     text-align: center;
     padding: 12px 20px;
@@ -1219,6 +1221,14 @@ main {
     z-index: 0;
 }
 
+[data-theme="dark"] .hero-section::after {
+    background: radial-gradient(
+        circle at center,
+        rgba(0, 201, 180, 0.07) 0%,
+        transparent 50%
+    );
+}
+
 @keyframes heroGradientPulse {
     0%, 100% {
         transform: translate(0, 0) scale(1);
@@ -1249,6 +1259,14 @@ main {
     margin-bottom: 0.5rem;
     text-shadow: none;
     animation: fadeInDown 1s ease-out;
+    letter-spacing: -0.03em;
+}
+
+[data-theme="dark"] .hero-content h1 {
+    background: linear-gradient(135deg, #E8ECF1 40%, #00C9B4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .hero-content p {
@@ -1586,6 +1604,7 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    letter-spacing: -0.02em;
 }
 
 .category-title::after {
@@ -1595,7 +1614,7 @@ main {
     left: 0;
     width: 80px;
     height: 3px;
-    background-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
@@ -1699,6 +1718,12 @@ main {
     color: inherit; /* Inherit text color */
 }
 
+[data-theme="dark"] .product-card {
+    background: linear-gradient(145deg, #0A1020 0%, #07101C 100%);
+    border-color: rgba(0, 201, 180, 0.10);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
 .product-card::before {
     content: ""; 
     position: absolute; 
@@ -1721,6 +1746,11 @@ main {
     border-color: var(--color-primary);
     transform: translateY(-5px);
     box-shadow: 0 15px 40px rgba(10, 110, 92, 0.15);
+}
+
+[data-theme="dark"] .product-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 15px 40px rgba(0, 201, 180, 0.18), 0 0 0 1px rgba(0, 201, 180, 0.1);
 }
 
 .product-image {
@@ -1756,6 +1786,7 @@ main {
     font-weight: 600; 
     color: var(--text-primary);
     font-family: var(--font-primary);
+    letter-spacing: -0.01em;
 }
 
 .product-title p { 
@@ -1822,9 +1853,9 @@ main {
   transition: width 1.5s cubic-bezier(0.25, 1, 0.5, 1), background 0.5s ease-out, box-shadow 0.5s ease-out;
 }
 .effect-bar.animated {
-  /* Premium biotech gradient: emerald to gold */
-  background: linear-gradient(135deg, #0A6E5C, #C9A84C);
-  box-shadow: 0 0 15px rgba(10, 110, 92, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  /* Premium biotech gradient: teal to gold */
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 /* Ensure text is always readable */
 .effect-bar { color: #FFFFFF; }
@@ -2876,7 +2907,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .product-badge.new {
-    background: linear-gradient(135deg, var(--color-primary), #FF1493);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
 }
 
 .product-badge.limited {
@@ -3937,9 +3968,9 @@ body.modal-open { overflow: hidden; }
 
 .product-filter-bar .filter-select:focus,
 .product-filter-bar .filter-input:focus {
-    border-color: var(--primary-color, #e91e9a);
+    border-color: var(--accent);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(233,30,154,0.1);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 
 .filter-results-count {
@@ -3953,7 +3984,7 @@ body.modal-open { overflow: hidden; }
     position: absolute;
     top: 8px;
     right: 8px;
-    background: var(--primary-color, #e91e9a);
+    background: var(--accent);
     color: #fff;
     font-size: 0.7rem;
     font-weight: 600;
@@ -3985,7 +4016,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .btn-load-more {
-    background: var(--primary-color, #e91e9a);
+    background: var(--accent);
     color: #fff;
     border: none;
     padding: 0.75rem 2rem;
@@ -3997,7 +4028,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .btn-load-more:hover {
-    background: var(--primary-dark, #c4167f);
+    background: var(--color-primary);
     transform: translateY(-1px);
 }
 
