@@ -7,6 +7,14 @@ const CACHE_CONFIG = {
     STATIC_FILE_MAX_AGE: 3600         // 1 hour
 };
 
+// GitHub sync configuration – keeps backend/page_content.json in the repo in sync with KV
+const GITHUB_SYNC_CONFIG = {
+    owner: 'Radilovk',
+    repo: 'otslabvai',
+    branch: 'main',
+    filePath: 'backend/page_content.json'
+};
+
 class UserFacingError extends Error {
   constructor(message, status) {
     super(message);
@@ -222,9 +230,14 @@ async function serveStaticFile(env, filename, contentType) {
 
 /**
  * Handles GET /page_content.json
+ * Falls back to static_backend_page_content.json if the dynamic KV key is not set.
  */
 async function handleGetPageContent(request, env) {
-    const pageContent = await env.PAGE_CONTENT.get('page_content');
+    let pageContent = await env.PAGE_CONTENT.get('page_content');
+    if (pageContent === null) {
+        // Fallback: use the static copy uploaded from backend/page_content.json
+        pageContent = await env.PAGE_CONTENT.get('static_backend_page_content.json');
+    }
     if (pageContent === null) {
         throw new UserFacingError("Content not found.", 404);
     }
@@ -252,19 +265,90 @@ async function generateETag(content) {
 }
 
 /**
+ * Syncs the page_content JSON to backend/page_content.json in the GitHub repository.
+ * Uses ctx.waitUntil so it runs after the response is sent and does not block the user.
+ * Requires GITHUB_API_TOKEN env var or 'api_token' KV key to be set.
+ * @param {string} content - The JSON content to sync
+ * @param {object} env - Worker environment bindings
+ */
+async function syncPageContentToGitHub(content, env) {
+    try {
+        const token = env.GITHUB_API_TOKEN || await env.PAGE_CONTENT.get('api_token');
+        if (!token) {
+            console.warn('syncPageContentToGitHub: no GitHub token available, skipping sync');
+            return;
+        }
+
+        const { owner, repo, branch, filePath } = GITHUB_SYNC_CONFIG;
+        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+
+        // Fetch current file SHA (required by GitHub API to update an existing file)
+        const getResponse = await fetch(`${apiUrl}?ref=${branch}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Cloudflare-Worker'
+            }
+        });
+
+        let sha = null;
+        if (getResponse.ok) {
+            const fileData = await getResponse.json();
+            sha = fileData.sha;
+        }
+
+        // base64-encode the UTF-8 content for the GitHub API
+        const bytes = new TextEncoder().encode(content);
+        const base64Content = btoa(Array.from(bytes, b => String.fromCharCode(b)).join(''));
+
+        const payload = {
+            message: 'sync: update page_content from admin panel [skip ci]',
+            content: base64Content,
+            branch
+        };
+        if (sha) payload.sha = sha;
+
+        const putResponse = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Cloudflare-Worker'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!putResponse.ok) {
+            const errText = await putResponse.text();
+            console.error(`syncPageContentToGitHub failed: ${putResponse.status} - ${errText}`);
+        } else {
+            console.log('syncPageContentToGitHub: GitHub sync successful');
+        }
+    } catch (err) {
+        console.error('syncPageContentToGitHub error:', err);
+    }
+}
+
+/**
  * Handles POST /page_content.json
+ * Saves content to KV and asynchronously syncs it to the GitHub repository.
  */
 async function handleSavePageContent(request, env, ctx) {
     const contentToSave = await request.text();
     try {
         // Проверяваме дали е валиден JSON, преди да запишем
         JSON.parse(contentToSave);
-        ctx.waitUntil(env.PAGE_CONTENT.put('page_content', contentToSave));
+        ctx.waitUntil(Promise.all([
+            env.PAGE_CONTENT.put('page_content', contentToSave),
+            syncPageContentToGitHub(contentToSave, env)
+        ]));
         return new Response(JSON.stringify({ success: true, message: 'Content saved.' }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
     } catch (e) {
+        if (e instanceof UserFacingError) throw e;
         throw new UserFacingError("Invalid JSON provided in the request body.", 400);
     }
 }
