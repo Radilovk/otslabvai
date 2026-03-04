@@ -96,17 +96,27 @@
     {
       "type": "product_category",
       "component_id": "life-cat-peptides",
+      "id": "peptides",
       "category_id": "peptides",
       "title": "Пептиди за Подмладяване",
       "description": "Биоактивни пептиди от ново поколение за клетъчна регенерация и антиейджинг.",
+      "options": {
+        "is_collapsible": false,
+        "is_expanded_by_default": true
+      },
       "products": []
     },
     {
       "type": "product_category",
       "component_id": "life-cat-antiaging",
+      "id": "anti-aging",
       "category_id": "anti-aging",
       "title": "Антиейджинг Формули",
       "description": "Научно разработени добавки за забавяне на стареенето на клетъчно ниво.",
+      "options": {
+        "is_collapsible": false,
+        "is_expanded_by_default": true
+      },
       "products": []
     }
   ],
