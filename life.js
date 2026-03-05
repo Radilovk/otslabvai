@@ -839,16 +839,34 @@ const updateCartCount = () => {
     }
 };
 
-const showToast = (message, type = 'info', duration = 3000) => {
+const showToast = (message, type = 'info', duration = 4000) => {
     if (!DOM.toastContainer) return;
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.textContent = message;
-    DOM.toastContainer.appendChild(toast);
-    setTimeout(() => {
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    
+    const msgSpan = document.createElement('span');
+    msgSpan.className = 'toast-message';
+    msgSpan.textContent = message;
+    
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'toast-dismiss';
+    dismissBtn.setAttribute('aria-label', 'Затвори');
+    dismissBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+    
+    let timer;
+    const removeToast = () => {
+        clearTimeout(timer);
         toast.classList.add('fade-out');
-        toast.addEventListener('transitionend', () => toast.remove());
-    }, duration);
+        toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+    };
+    
+    dismissBtn.addEventListener('click', removeToast);
+    toast.appendChild(msgSpan);
+    toast.appendChild(dismissBtn);
+    DOM.toastContainer.appendChild(toast);
+    timer = setTimeout(removeToast, duration);
 };
 
 const showAddToCartFeedback = (productId) => {
@@ -1966,7 +1984,8 @@ function performSearch(query) {
                     <circle cx="11" cy="11" r="8"></circle>
                     <path d="m21 21-4.35-4.35"></path>
                 </svg>
-                <p>Не са намерени продукти за "${escapeHtml(query)}"</p>
+                <p>Не са намерени продукти за &ldquo;${escapeHtml(query)}&rdquo;</p>
+                <p class="search-no-results-hint">Опитайте с различна дума или разгледайте всички продукти по-долу.</p>
             </div>
         `;
     } else {
@@ -2177,6 +2196,53 @@ function initProductFilters() {
 if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
+
+// =======================================================
+//          SCROLL PROGRESS BAR
+// =======================================================
+function initScrollProgress() {
+    const bar = document.getElementById('scroll-progress');
+    if (!bar) return;
+
+    const update = () => {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        bar.style.width = `${Math.min(progress, 100)}%`;
+        bar.setAttribute('aria-valuenow', Math.round(progress));
+    };
+
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+}
+
+// =======================================================
+//          RIPPLE EFFECT ON BUTTONS
+// =======================================================
+function initRippleEffect() {
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-primary, .btn-hero-primary, .btn-premium');
+        if (!btn) return;
+
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.cssText = `
+            width: ${size}px;
+            height: ${size}px;
+            left: ${e.clientX - rect.left - size / 2}px;
+            top: ${e.clientY - rect.top - size / 2}px;
+        `;
+
+        btn.appendChild(ripple);
+        ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
+    });
+}
+
+initScrollProgress();
+initRippleEffect();
 
 // Старт на приложението
 main();
