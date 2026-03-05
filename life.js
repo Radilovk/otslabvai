@@ -342,12 +342,20 @@ const generateHeroHTML = component => {
 
     const makeHexFrame = (imgUrl, cls, altText, fallbackSvg) => {
         if (imgUrl) {
-            const safeUrl = escapeHtml(imgUrl);
-            const hasDangerousProtocol = safeUrl.toLowerCase().startsWith('data:') ||
-                                         safeUrl.toLowerCase().startsWith('javascript:') ||
-                                         safeUrl.toLowerCase().startsWith('vbscript:');
-            if (!hasDangerousProtocol && (safeUrl.startsWith('https://') || safeUrl.startsWith('http://') || safeUrl.startsWith('/'))) {
-                return `<div class="hex-frame ${cls}"><img src="${safeUrl}" alt="${escapeHtml(altText)}" loading="lazy"></div>`;
+            const rawUrl = String(imgUrl);
+            const lowerUrl = rawUrl.toLowerCase();
+            // Reject data: URLs entirely (can execute scripts) and other dangerous protocols
+            const isDangerous = lowerUrl.startsWith('data:') ||
+                                lowerUrl.startsWith('javascript:') ||
+                                lowerUrl.startsWith('vbscript:') ||
+                                lowerUrl.startsWith('blob:');
+            // Only allow https:// or same-origin relative paths
+            const isSafe = !isDangerous && (
+                rawUrl.startsWith('https://') ||
+                (rawUrl.startsWith('/') && (rawUrl.startsWith('/images/') || rawUrl.startsWith('/assets/')))
+            );
+            if (isSafe) {
+                return `<div class="hex-frame ${cls}"><img src="${escapeHtml(rawUrl)}" alt="${escapeHtml(altText)}" loading="lazy"></div>`;
             }
         }
         return `<div class="hex-frame ${cls} hex-frame-icon">${fallbackSvg}</div>`;
@@ -384,7 +392,7 @@ const generateHeroHTML = component => {
                 <line x1="95" y1="285" x2="105" y2="285" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
                 <line x1="115" y1="335" x2="85" y2="335" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
                 <line x1="75" y1="385" x2="125" y2="385" stroke="#22D3EE" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="100" y1="435" x2="100" y2="435" stroke="#06B6D4" stroke-width="2" stroke-opacity="0.5"/>
+                <line x1="90" y1="430" x2="110" y2="440" stroke="#06B6D4" stroke-width="2" stroke-opacity="0.5"/>
                 <!-- Node circles on strands -->
                 <circle cx="75" cy="35" r="4" fill="#06B6D4" fill-opacity="0.6"/>
                 <circle cx="125" cy="35" r="4" fill="#22D3EE" fill-opacity="0.6"/>

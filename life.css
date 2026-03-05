@@ -5044,7 +5044,10 @@ section[id="scientific"] {
     overflow: visible;
 }
 
-/* Subtle hexagonal grid pattern in background */
+/* Subtle hexagonal grid pattern in background.
+   Note: CSS custom properties cannot be used inside url() data URIs (browser limitation),
+   so the light and dark theme variants below intentionally use separate data URIs
+   with different stroke colours rather than a shared variable. */
 [data-theme="light"] .hero-section::before {
     content: '';
     position: absolute;
