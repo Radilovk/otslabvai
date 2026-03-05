@@ -19,6 +19,31 @@
     --border-radius: 8px;
     --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     --transition-speed: 0.3s ease;
+
+    /* ── PREMIUM DESIGN TOKENS ── */
+    /* Button gradient system */
+    --btn-gradient-primary: linear-gradient(135deg, #E4007C 0%, #FF2D9B 50%, #C2006A 100%);
+    --btn-gradient-primary-hover: linear-gradient(135deg, #FF2D9B 0%, #E4007C 50%, #FF2D9B 100%);
+    --btn-gradient-secondary: linear-gradient(135deg, #00A99D 0%, #00CFC2 50%, #009088 100%);
+    --btn-gradient-premium: linear-gradient(135deg, #E4007C 0%, #9B00FF 50%, #00A99D 100%);
+    /* Glow shadows */
+    --glow-primary-sm: 0 4px 20px rgba(228, 0, 124, 0.45);
+    --glow-primary-md: 0 8px 32px rgba(228, 0, 124, 0.55);
+    --glow-primary-lg: 0 14px 50px rgba(228, 0, 124, 0.65), 0 0 60px rgba(228, 0, 124, 0.3);
+    --glow-secondary-sm: 0 4px 20px rgba(0, 169, 157, 0.4);
+    --glow-secondary-md: 0 8px 32px rgba(0, 169, 157, 0.5);
+    /* Glass morphism */
+    --glass-bg-light: rgba(255, 255, 255, 0.72);
+    --glass-bg-dark: rgba(13, 15, 18, 0.72);
+    --glass-border-light: rgba(228, 0, 124, 0.18);
+    --glass-border-dark: rgba(228, 0, 124, 0.22);
+    --glass-blur: blur(20px) saturate(180%);
+    /* 3D / depth */
+    --btn-depth-shadow: 0 6px 0 rgba(160, 0, 88, 0.6);
+    --btn-depth-shadow-hover: 0 3px 0 rgba(160, 0, 88, 0.6);
+    /* Neon */
+    --neon-primary: 0 0 8px #E4007C, 0 0 20px rgba(228, 0, 124, 0.7), 0 0 40px rgba(228, 0, 124, 0.4);
+    --neon-secondary: 0 0 8px #00A99D, 0 0 20px rgba(0, 169, 157, 0.7), 0 0 40px rgba(0, 169, 157, 0.4);
     
     /* Dark Theme Variables (keeping for theme toggle) */
     --bg-primary-dark: #0D0F12;
@@ -266,27 +291,63 @@ img {
 
 /* Buttons (Lipolor style) */
 .btn {
-    display: inline-block;
-    padding: 12px 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 32px;
     border-radius: 50px;
     font-family: var(--font-primary);
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
     text-align: center;
     cursor: pointer;
-    transition: all var(--transition-speed);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Shimmer sweep on all btn variants */
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -110%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.38) 50%,
+        transparent 100%);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+.btn:hover::after {
+    left: 150%;
 }
 
 .btn-primary {
-    background-color: var(--color-primary);
+    background: var(--btn-gradient-primary);
     color: var(--color-white);
+    box-shadow: var(--glow-primary-sm);
+    border-color: transparent;
 }
 
 .btn-primary:hover {
-    background-color: #c3006a;
+    background: var(--btn-gradient-primary-hover);
     color: var(--color-white);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(228, 0, 124, 0.4);
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: var(--glow-primary-md);
+}
+
+.btn-primary:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: var(--glow-primary-sm);
 }
 
 .btn-back {
@@ -1322,21 +1383,23 @@ main {
 }
 
 .btn-hero-primary {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background: var(--btn-gradient-primary);
     color: white;
     border: none;
-    padding: 16px 40px;
+    padding: 17px 44px;
     font-size: 1.1rem;
     font-weight: 700;
+    letter-spacing: 0.03em;
     border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(228, 0, 124, 0.3);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: var(--glow-primary-sm), inset 0 1px 0 rgba(255, 255, 255, 0.25);
     position: relative;
     overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 10px;
 }
 
 .btn-hero-primary svg {
@@ -1345,50 +1408,62 @@ main {
     color: white;
     stroke: white;
     flex-shrink: 0;
+    transition: transform 0.3s ease;
 }
 
 .btn-hero-primary::before {
     content: '';
     position: absolute;
     top: 0;
-    left: -100%;
-    width: 100%;
+    left: -110%;
+    width: 70%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.5s ease;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
 }
 
 .btn-hero-primary:hover::before {
-    left: 100%;
+    left: 150%;
 }
 
 .btn-hero-primary:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 12px 30px rgba(228, 0, 124, 0.5);
+    transform: translateY(-4px) scale(1.06);
+    box-shadow: var(--glow-primary-lg);
+    background: var(--btn-gradient-primary-hover);
+}
+
+.btn-hero-primary:hover svg {
+    transform: translateX(3px);
 }
 
 .btn-hero-primary:active {
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1.01);
+    box-shadow: var(--glow-primary-sm);
 }
 
 .btn-hero-secondary {
-    background: linear-gradient(135deg, 
-        rgba(255, 255, 255, 0.95) 0%, 
-        rgba(248, 249, 250, 0.95) 100%);
+    background: var(--glass-bg-light);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     color: var(--text-primary);
-    border: 2px solid var(--accent);
-    padding: 16px 40px;
+    border: 2px solid var(--glass-border-light);
+    padding: 15px 40px;
     font-size: 1.1rem;
     font-weight: 700;
+    letter-spacing: 0.03em;
     border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(228, 0, 124, 0.15);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 20px rgba(228, 0, 124, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.7);
     position: relative;
     overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 10px;
 }
 
 .btn-hero-secondary svg {
@@ -1397,46 +1472,50 @@ main {
     color: var(--accent);
     stroke: var(--accent);
     flex-shrink: 0;
+    transition: transform 0.3s ease;
 }
 
 .btn-hero-secondary::before {
     content: '';
     position: absolute;
     top: 0;
-    left: -100%;
-    width: 100%;
+    left: -110%;
+    width: 70%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(228, 0, 124, 0.1), transparent);
-    transition: left 0.5s ease;
+    background: linear-gradient(90deg, transparent, rgba(228, 0, 124, 0.12), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
 }
 
 .btn-hero-secondary:hover::before {
-    left: 100%;
+    left: 150%;
 }
 
 .btn-hero-secondary:hover {
     border-color: var(--accent);
     color: var(--accent);
-    background: linear-gradient(135deg, 
-        rgba(255, 235, 245, 1) 0%, 
-        rgba(240, 248, 255, 1) 100%);
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(228, 0, 124, 0.25);
+    background: rgba(228, 0, 124, 0.06);
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: var(--glow-primary-sm),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.btn-hero-secondary:hover svg {
+    transform: translateX(3px);
 }
 
 [data-theme="dark"] .btn-hero-secondary {
-    background: linear-gradient(135deg, 
-        rgba(26, 30, 36, 0.95) 0%, 
-        rgba(18, 21, 26, 0.95) 100%);
-    color: var(--text-primary);
-    box-shadow: 0 4px 15px rgba(0, 169, 157, 0.15);
+    background: var(--glass-bg-dark);
+    border-color: var(--glass-border-dark);
+    box-shadow: 0 4px 20px rgba(228, 0, 124, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 [data-theme="dark"] .btn-hero-secondary:hover {
-    background: linear-gradient(135deg, 
-        rgba(26, 13, 20, 1) 0%, 
-        rgba(10, 26, 26, 1) 100%);
-    box-shadow: 0 8px 25px rgba(0, 169, 157, 0.25);
+    background: rgba(228, 0, 124, 0.1);
+    box-shadow: var(--glow-primary-md),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Hero Trust Badges */
@@ -2804,44 +2883,70 @@ body.modal-open { overflow: hidden; }
 }
 
 .sticky-cta-btn {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background: var(--btn-gradient-primary);
     color: white;
     border: none;
     border-radius: 50px;
-    padding: 16px 32px;
+    padding: 16px 36px;
     font-size: 1.1rem;
     font-weight: 700;
+    letter-spacing: 0.03em;
     cursor: pointer;
-    box-shadow: 0 8px 25px rgba(228, 0, 124, 0.4);
-    transition: all 0.3s ease;
+    box-shadow: var(--glow-primary-md);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     display: flex;
     align-items: center;
     gap: 8px;
-    animation: bounce 2s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+    animation: ctaFloat 3s ease-in-out infinite;
+}
+
+.sticky-cta-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%);
+    transform: skewX(-20deg) translateX(-120%);
+    transition: transform 0.7s ease;
+    pointer-events: none;
+}
+
+.sticky-cta-btn:hover::before {
+    transform: skewX(-20deg) translateX(220%);
 }
 
 .sticky-cta-btn svg {
     color: white;
     stroke: white;
     flex-shrink: 0;
+    transition: transform 0.3s ease;
 }
 
-@keyframes bounce {
+@keyframes ctaFloat {
     0%, 100% {
         transform: translateY(0);
+        box-shadow: var(--glow-primary-md);
     }
     50% {
-        transform: translateY(-10px);
+        transform: translateY(-8px);
+        box-shadow: var(--glow-primary-lg);
     }
 }
 
 .sticky-cta-btn:hover {
-    transform: scale(1.1) translateY(-5px);
-    box-shadow: 0 12px 35px rgba(228, 0, 124, 0.6);
+    transform: scale(1.08) translateY(-4px);
+    box-shadow: var(--glow-primary-lg);
+    animation-play-state: paused;
+}
+
+.sticky-cta-btn:hover svg {
+    transform: translateX(4px);
 }
 
 .sticky-cta-btn:active {
-    transform: scale(1.05);
+    transform: scale(1.03);
+    animation-play-state: paused;
 }
 
 /* Product Badge Styles */
@@ -3097,23 +3202,43 @@ body.modal-open { overflow: hidden; }
 }
 
 .exit-cta-btn {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background: var(--btn-gradient-primary);
     color: white;
     border: none;
-    padding: 18px 40px;
+    padding: 18px 44px;
     font-size: 1.2rem;
     font-weight: 700;
+    letter-spacing: 0.03em;
     border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(228, 0, 124, 0.3);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: var(--glow-primary-md);
     width: 100%;
     margin-bottom: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.exit-cta-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -110%;
+    width: 70%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.38), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+.exit-cta-btn:hover::before {
+    left: 150%;
 }
 
 .exit-cta-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(228, 0, 124, 0.5);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: var(--glow-primary-lg);
 }
 
 .exit-modal-footer {
@@ -3985,20 +4110,41 @@ body.modal-open { overflow: hidden; }
 }
 
 .btn-load-more {
-    background: var(--primary-color, #e91e9a);
+    background: var(--btn-gradient-primary);
     color: #fff;
     border: none;
-    padding: 0.75rem 2rem;
-    border-radius: 25px;
+    padding: 0.8rem 2.2rem;
+    border-radius: 50px;
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: var(--glow-primary-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-load-more::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -110%;
+    width: 70%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.55s ease;
+    pointer-events: none;
+}
+
+.btn-load-more:hover::before {
+    left: 150%;
 }
 
 .btn-load-more:hover {
-    background: var(--primary-dark, #c4167f);
-    transform: translateY(-1px);
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: var(--glow-primary-md);
 }
 
 @media (max-width: 600px) {
@@ -4008,4 +4154,286 @@ body.modal-open { overflow: hidden; }
     .product-filter-bar .filter-group {
         flex: 1 1 100%;
     }
+}
+
+/* ======================================================= */
+/*   PREMIUM BUTTON DESIGN CONCEPT — LIPOLOR v3            */
+/*   Glassmorphism · Neon Glow · 3-D Depth · Gradient     */
+/* ======================================================= */
+
+/* ── GLASS BUTTON ── */
+.btn-glass {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 32px;
+    border-radius: 50px;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    color: var(--text-primary);
+    box-shadow: 0 8px 32px rgba(228, 0, 124, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-glass::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -110%;
+    width: 70%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+.btn-glass:hover::before {
+    left: 150%;
+}
+
+.btn-glass:hover {
+    background: rgba(228, 0, 124, 0.1);
+    border-color: rgba(228, 0, 124, 0.5);
+    color: var(--accent);
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 12px 40px rgba(228, 0, 124, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .btn-glass {
+    background: rgba(13, 15, 18, 0.5);
+    border-color: rgba(228, 0, 124, 0.25);
+    color: var(--text-primary);
+    box-shadow: 0 8px 32px rgba(228, 0, 124, 0.14),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+[data-theme="dark"] .btn-glass:hover {
+    background: rgba(228, 0, 124, 0.12);
+    border-color: rgba(228, 0, 124, 0.5);
+}
+
+/* ── NEON OUTLINE BUTTON ── */
+.btn-neon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 32px;
+    border-radius: 50px;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+    transition: all 0.35s ease;
+    box-shadow: 0 0 8px rgba(228, 0, 124, 0.4),
+                inset 0 0 8px rgba(228, 0, 124, 0.08);
+}
+
+.btn-neon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--btn-gradient-primary);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    border-radius: inherit;
+}
+
+.btn-neon:hover {
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--neon-primary);
+    transform: translateY(-3px);
+}
+
+.btn-neon:hover::before {
+    opacity: 1;
+}
+
+.btn-neon span {
+    position: relative;
+    z-index: 1;
+}
+
+/* ── PREMIUM GRADIENT BUTTON (Full Spectrum) ── */
+.btn-premium {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 15px 40px;
+    border-radius: 50px;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    background: var(--btn-gradient-premium);
+    background-size: 200% 200%;
+    background-position: 0% 50%;
+    border: none;
+    color: white;
+    box-shadow: 0 8px 30px rgba(155, 0, 255, 0.35),
+                0 4px 16px rgba(228, 0, 124, 0.3);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: gradientShift 5s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.btn-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -110%;
+    width: 70%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.65s ease;
+    pointer-events: none;
+}
+
+.btn-premium:hover::before {
+    left: 160%;
+}
+
+.btn-premium:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 16px 50px rgba(155, 0, 255, 0.5),
+                0 8px 25px rgba(228, 0, 124, 0.45),
+                inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+.btn-premium:active {
+    transform: translateY(0) scale(1.01);
+}
+
+/* ── RIPPLE EFFECT (applies via JS class 'ripple-effect') ── */
+.btn-primary .ripple,
+.btn-hero-primary .ripple,
+.btn-premium .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(0);
+    animation: rippleAnim 0.7s linear;
+    pointer-events: none;
+}
+
+@keyframes rippleAnim {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* ── VISUAL EFFECTS UTILITIES ── */
+
+/* Gradient text */
+.text-gradient-primary {
+    background: var(--btn-gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.text-gradient-premium {
+    background: var(--btn-gradient-premium);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 4s ease infinite;
+}
+
+/* Glowing card */
+.glow-card {
+    transition: box-shadow 0.35s ease, transform 0.35s ease;
+}
+
+.glow-card:hover {
+    box-shadow: 0 0 0 1px rgba(228, 0, 124, 0.2),
+                0 8px 40px rgba(228, 0, 124, 0.18);
+    transform: translateY(-4px);
+}
+
+[data-theme="dark"] .glow-card:hover {
+    box-shadow: 0 0 0 1px rgba(228, 0, 124, 0.3),
+                0 8px 40px rgba(228, 0, 124, 0.25);
+}
+
+/* Shimmer background (badges, tags) */
+.shimmer-bg {
+    background: linear-gradient(90deg,
+        var(--color-primary) 0%,
+        #FF2D9B 30%,
+        var(--color-secondary) 60%,
+        var(--color-primary) 100%);
+    background-size: 300% 100%;
+    animation: shimmerMove 3s linear infinite;
+    color: white;
+}
+
+@keyframes shimmerMove {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
+
+/* Pulse glow for important CTAs */
+.pulse-glow {
+    animation: pulseGlowAnim 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseGlowAnim {
+    0%, 100% {
+        box-shadow: var(--glow-primary-sm);
+    }
+    50% {
+        box-shadow: var(--glow-primary-lg);
+    }
+}
+
+/* ── GLASSMORPHISM PANEL UTILITY ── */
+.glass-panel {
+    background: var(--glass-bg-light);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border-light);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(228, 0, 124, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="dark"] .glass-panel {
+    background: var(--glass-bg-dark);
+    border-color: var(--glass-border-dark);
+    box-shadow: 0 8px 32px rgba(228, 0, 124, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
