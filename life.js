@@ -65,6 +65,20 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
+// Validates an image URL - blocks dangerous protocols, allows only safe URLs
+function validateImageUrl(url) {
+    if (!url) return '';
+    const lower = url.toLowerCase().trim();
+    if (lower.startsWith('data:') || lower.startsWith('javascript:') || lower.startsWith('vbscript:')) {
+        return '';
+    }
+    if (lower.startsWith('https://') || lower.startsWith('http://') ||
+        lower.startsWith('/images/') || lower.startsWith('/assets/')) {
+        return escapeHtml(url);
+    }
+    return '';
+}
+
 
 // =======================================================
 //          2. ГЕНЕРАТОРИ НА HTML (GENERATOR FUNCTIONS)
@@ -124,7 +138,10 @@ const getStatIconSVG = (iconName) => {
         'star': '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>',
         'shield': '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>',
         'award': '<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>',
-        'trophy': '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>'
+        'trophy': '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>',
+        'flask': '<path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h6m-6 0H3m6 0V9m6-6v18m0 0h6a2 2 0 0 0 2-2v-4m-8 6V9"></path>',
+        'dna': '<path d="M2 15c6.667-6 13.333 0 20-6"></path><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"></path><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"></path><path d="m17 6-2.5-2.5"></path><path d="m14 8-1-1"></path><path d="m7 18 2.5 2.5"></path><path d="m3.5 14.5.5.5"></path><path d="m20 9 .5.5"></path><path d="m6.5 12.5 1 1"></path><path d="m16.5 10.5 1 1"></path><path d="m10 16 1.5 1.5"></path>',
+        'sparkle': '<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path>'
     };
     
     return icons[iconName] || '';
@@ -238,15 +255,19 @@ const generateHeroHTML = component => {
         { value: '100%', label: 'Естествени съставки', icon: 'leaf' }
     ];
     
-    const statsHTML = stats.map(stat => `
+    const statsHTML = stats.map(stat => {
+        const safeIconUrl = validateImageUrl(stat.icon_url);
+        return `
         <div class="stat-item">
-            ${stat.icon ? `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
+            ${safeIconUrl ? `<img src="${safeIconUrl}" alt="${escapeHtml(stat.label)}" class="stat-icon" width="32" height="32" style="object-fit:contain;">` :
+              stat.icon ? `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
                 ${getStatIconSVG(stat.icon)}
             </svg>` : ''}
             <strong>${escapeHtml(stat.value)}</strong>
             <span>${escapeHtml(stat.label)}</span>
         </div>
-    `).join('');
+    `;
+    }).join('');
     
     // Get trust badges configuration with defaults
     const trustBadges = component.trust_badges || [
@@ -255,14 +276,17 @@ const generateHeroHTML = component => {
         { text: '30 дни гаранция' }
     ];
     
-    const trustBadgesHTML = trustBadges.map(badge => `
+    const trustBadgesHTML = trustBadges.map(badge => {
+        const safeIconUrl = validateImageUrl(badge.icon_url);
+        return `
         <div class="trust-badge">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+            ${safeIconUrl ? `<img src="${safeIconUrl}" alt="" class="trust-badge-icon" width="16" height="16" style="object-fit:contain;display:inline-block;vertical-align:middle;margin-right:4px;">` : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
                 <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
+            </svg>`}
             ${escapeHtml(badge.text)}
         </div>
-    `).join('');
+    `;
+    }).join('');
     
     // Feature cards (hexagonal highlight cards below hero)
     const features = component.features || [
@@ -653,7 +677,7 @@ const generateTestimonialsHTML = component => `
             <div class="testimonials-grid">
                 ${(component.testimonials || []).map(testimonial => `
                     <div class="testimonial-card animate-on-scroll">
-                        <div class="stars" aria-label="${testimonial.rating} out of 5 stars">${'★'.repeat(testimonial.rating)}${'☆'.repeat(5 - testimonial.rating)}</div>
+                        <div class="stars" aria-label="${testimonial.rating} out of 5 stars">${Array.from({length: 5}, (_, i) => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="${i < testimonial.rating ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`).join('')}</div>
                         <p class="testimonial-text">"${testimonial.text}"</p>
                         <div class="testimonial-author">
                             <strong>${testimonial.author}</strong>
@@ -1687,7 +1711,7 @@ function initPromoTimer() {
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
         
-        timerElement.textContent = `⏰ ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
     
     updateTimer();

@@ -1551,8 +1551,14 @@ function handleAction(action, target, id) {
             }
             
             const targetFieldPath = target.dataset.targetField;
-            const inputElement = target.closest('.form-group').querySelector(`[data-field="${targetFieldPath}"]`) ||
-                                target.closest('.modal-form').querySelector(`[data-field="${targetFieldPath}"]`);
+            // Try to find the input in the same form-group first, then the closest
+            // nested-sub-item (for dynamic templates), then the modal form
+            const formGroup = target.closest('.form-group');
+            const nestedSubItem = target.closest('.nested-sub-item');
+            const modalForm = target.closest('.modal-form');
+            const inputElement = (formGroup && formGroup.querySelector(`[data-field="${targetFieldPath}"]`)) ||
+                                (nestedSubItem && nestedSubItem.querySelector(`[data-field="${targetFieldPath}"]`)) ||
+                                (modalForm && modalForm.querySelector(`[data-field="${targetFieldPath}"]`));
             
             if (!inputElement) {
                 showNotification('Грешка: Полето за изображение не е намерено', 'error');

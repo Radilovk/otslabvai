@@ -59,28 +59,34 @@
                 {
                     "value": "98%",
                     "label": "Клиентско доверие",
-                    "icon": "⚗️"
+                    "icon": "flask",
+                    "icon_url": ""
                 },
                 {
                     "value": "50+",
                     "label": "Научни формули",
-                    "icon": "🧬"
+                    "icon": "dna",
+                    "icon_url": ""
                 },
                 {
                     "value": "10K+",
                     "label": "Доволни клиенти",
-                    "icon": "✨"
+                    "icon": "sparkle",
+                    "icon_url": ""
                 }
             ],
             "trust_badges": [
                 {
-                    "text": "✅ GMP Сертифицирано"
+                    "text": "GMP Сертифицирано",
+                    "icon_url": ""
                 },
                 {
-                    "text": "🔬 Лабораторно тествано"
+                    "text": "Лабораторно тествано",
+                    "icon_url": ""
                 },
                 {
-                    "text": "🚀 Бърза доставка"
+                    "text": "Бърза доставка",
+                    "icon_url": ""
                 }
             ],
             "background_type": "default",

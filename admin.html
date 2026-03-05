@@ -1301,17 +1301,30 @@
                 <input type="text" data-field="label" placeholder="Напр. Доволни клиенти">
             </div>
             <div class="form-group">
-                <label>Икона</label>
+                <label>Икона (стандартна)</label>
                 <select data-field="icon">
                     <option value="">Без икона</option>
-                    <option value="users">Потребители (👥)</option>
-                    <option value="chart">Графика (📊)</option>
-                    <option value="leaf">Лист (🌿)</option>
-                    <option value="heart">Сърце (❤️)</option>
-                    <option value="star">Звезда (⭐)</option>
-                    <option value="shield">Щит (🛡️)</option>
-                    <option value="award">Награда (🏆)</option>
+                    <option value="flask">Колба (лаборатория)</option>
+                    <option value="dna">ДНК</option>
+                    <option value="sparkle">Блясък</option>
+                    <option value="users">Потребители</option>
+                    <option value="chart">Графика</option>
+                    <option value="leaf">Лист</option>
+                    <option value="heart">Сърце</option>
+                    <option value="star">Звезда</option>
+                    <option value="shield">Щит</option>
+                    <option value="award">Награда</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>Персонализирана икона (URL или качете файл)</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" data-field="icon_url" placeholder="https://example.com/icon.svg" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="icon_url">
+                        Upload
+                    </button>
+                </div>
+                <small class="form-hint">Качете SVG, PNG, JPG или ICO. Ако е попълнен, замества стандартната икона.</small>
             </div>
             <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий статистиката">×</button>
         </div>
@@ -1323,6 +1336,16 @@
              <div class="form-group">
                 <label>Текст на badge</label>
                 <input type="text" data-field="text" placeholder="Напр. Клинично тествано">
+            </div>
+            <div class="form-group">
+                <label>Персонализирана икона (URL или качете файл)</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" data-field="icon_url" placeholder="https://example.com/badge-icon.svg" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="icon_url">
+                        Upload
+                    </button>
+                </div>
+                <small class="form-hint">Качете SVG, PNG, JPG или ICO. Ако не е попълнен, се показва стандартна отметка.</small>
             </div>
             <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий badge">×</button>
         </div>
