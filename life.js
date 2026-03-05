@@ -1616,6 +1616,9 @@ async function main() {
             initializeScrollSpy();
             initializeMarketingFeatures();
 
+            // Re-run premium effects now that dynamic content is loaded
+            initPremiumEffects();
+
             // Restore category expanded states and scroll position if returning from product page
             const savedScrollPosition = sessionStorage.getItem('lifeScrollPosition');
             const savedCategoryStates = sessionStorage.getItem('lifeCategoryStates');
@@ -2243,6 +2246,290 @@ function initRippleEffect() {
 
 initScrollProgress();
 initRippleEffect();
+
+// =======================================================
+//          PREMIUM UX/UI FEATURES
+// =======================================================
+
+// ── Custom Cursor Glow ──
+function initCursorGlow() {
+    const glow = document.getElementById('cursor-glow');
+    if (!glow) return;
+    // Touch/mobile: skip
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+
+    document.addEventListener('mousemove', (e) => {
+        targetX = e.clientX;
+        targetY = e.clientY;
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', () => { glow.style.opacity = '0'; });
+    document.addEventListener('mouseenter', () => { glow.style.opacity = '1'; });
+
+    let rafId;
+    const animate = () => {
+        currentX += (targetX - currentX) * 0.08;
+        currentY += (targetY - currentY) * 0.08;
+        glow.style.left = `${currentX}px`;
+        glow.style.top  = `${currentY}px`;
+        rafId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    // Cleanup on page unload to avoid memory leaks
+    window.addEventListener('pagehide', () => cancelAnimationFrame(rafId), { once: true });
+}
+
+// ── Hero Particle Canvas ──
+function initHeroParticles() {
+    if (window.matchMedia('(max-width: 768px)').matches) return;
+    const hero = document.querySelector('.hero-section');
+    if (!hero) return;
+    // Guard: only create once
+    if (document.getElementById('hero-particles')) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.id = 'hero-particles';
+    hero.insertBefore(canvas, hero.firstChild);
+
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    const resize = () => {
+        canvas.width  = hero.offsetWidth;
+        canvas.height = hero.offsetHeight;
+    };
+    resize();
+    window.addEventListener('resize', debounce(resize, 200), { passive: true });
+
+    const NUM = 55;
+    const LINK_DIST = 90;
+    const COLORS = ['rgba(6,182,212,', 'rgba(34,211,238,', 'rgba(255,107,107,'];
+
+    for (let i = 0; i < NUM; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 2 + 0.5,
+            vx: (Math.random() - 0.5) * 0.35,
+            vy: (Math.random() - 0.5) * 0.35,
+            op: Math.random() * 0.45 + 0.15,
+            col: COLORS[Math.floor(Math.random() * COLORS.length)]
+        });
+    }
+
+    let animRunning = true;
+    const draw = () => {
+        if (!animRunning) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = p.col + p.op + ')';
+            ctx.fill();
+
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0 || p.x > canvas.width)  p.vx *= -1;
+            if (p.y < 0 || p.y > canvas.height)  p.vy *= -1;
+
+            for (let j = i + 1; j < particles.length; j++) {
+                const q = particles[j];
+                const dx = p.x - q.x;
+                const dy = p.y - q.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < LINK_DIST) {
+                    const alpha = (1 - dist / LINK_DIST) * 0.18;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(q.x, q.y);
+                    ctx.strokeStyle = `rgba(6,182,212,${alpha})`;
+                    ctx.lineWidth = 0.6;
+                    ctx.stroke();
+                }
+            }
+        }
+        rafId = requestAnimationFrame(draw);
+    };
+    let rafId = requestAnimationFrame(draw);
+
+    // Cleanup on page unload to avoid memory leaks
+    window.addEventListener('pagehide', () => cancelAnimationFrame(rafId), { once: true });
+}
+
+// ── Counter Animation for Stat Items ──
+function initCounterAnimation() {
+    const statItems = document.querySelectorAll('.stat-item strong');
+    if (!statItems.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting || entry.target.dataset.animated) return;
+            entry.target.dataset.animated = 'true';
+            animateStat(entry.target);
+        });
+    }, { threshold: 0.6 });
+
+    statItems.forEach(el => observer.observe(el));
+}
+
+function animateStat(el) {
+    const raw = el.textContent.trim();
+    // Match leading numeric portion (digits and commas)
+    const match = raw.match(/^([\d,]+)/);
+    if (!match) return;
+
+    const target   = parseInt(match[1].replace(/,/g, ''), 10);
+    const suffix   = raw.slice(match[1].length);  // e.g. "+", "%", ""
+    const duration = 1400;
+    const startTs  = performance.now();
+
+    const tick = (now) => {
+        const t = Math.min((now - startTs) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3); // cubic ease-out
+        const current = Math.round(target * eased);
+        el.textContent = current.toLocaleString('en-US') + suffix;
+        if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+}
+
+// ── 3D Card Tilt ──
+function initCard3DTilt() {
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    // Use event delegation on the main container
+    document.addEventListener('mousemove', (e) => {
+        const card = e.target.closest('.product-card:not(.skeleton-card)');
+        if (!card) {
+            // Reset any previously tilted card
+            document.querySelectorAll('.product-card.tilting').forEach(c => {
+                c.classList.remove('tilting');
+                c.style.transform = '';
+            });
+            return;
+        }
+
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const cx = rect.width  / 2;
+        const cy = rect.height / 2;
+        const rotX = ((y - cy) / cy) * -5;
+        const rotY = ((x - cx) / cx) *  5;
+
+        card.classList.add('tilting');
+        card.style.transform = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(6px)`;
+        card.style.transition = 'none';
+
+        // Keep spotlight in sync
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', (e) => {
+        const card = e.target.closest('.product-card');
+        if (card) {
+            card.classList.remove('tilting');
+            card.style.transform  = '';
+            card.style.transition = '';
+        }
+    }, true);
+}
+
+// ── Magnetic Button Effect ──
+function initMagneticButtons() {
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    function attachMagnetic(selector, strength) {
+        document.querySelectorAll(selector).forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const dx = e.clientX - (rect.left + rect.width  / 2);
+                const dy = e.clientY - (rect.top  + rect.height / 2);
+                btn.style.transform = `translate(${dx * strength}px, ${dy * strength}px)`;
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = '';
+            });
+        });
+    }
+
+    attachMagnetic('.btn-hero-primary',  0.2);
+    attachMagnetic('.btn-hero-secondary', 0.15);
+    // sticky CTA uses its own float animation; skip
+}
+
+// ── Hero Title Gradient Word ──
+// Wraps the last word in the hero h1 with .hero-gradient-word for animated gradient
+function initHeroGradientWord() {
+    const h1 = document.querySelector('.hero-section .hero-content h1');
+    if (!h1 || h1.dataset.gradientApplied) return;
+    h1.dataset.gradientApplied = 'true';
+
+    const words = h1.textContent.trim().split(/\s+/);
+    if (words.length < 2) return;
+
+    // Wrap the last word with DOM methods (no innerHTML, avoids XSS risk)
+    const lastWord = words.pop();
+    const prefix = words.join(' ');
+
+    const span = document.createElement('span');
+    span.className = 'hero-gradient-word';
+    span.textContent = lastWord;
+
+    h1.textContent = '';
+    h1.appendChild(document.createTextNode(prefix + ' '));
+    h1.appendChild(span);
+}
+
+// ── Section Glow Lines ──
+// Inserts a glowing separator line between major sections
+function initSectionGlowLines() {
+    const container = document.getElementById('main-content-container');
+    if (!container) return;
+
+    // Add glow lines between major sibling sections (not hero)
+    const sections = container.querySelectorAll('.category-section, .hero-features-section');
+    sections.forEach(section => {
+        if (section.previousElementSibling &&
+            !section.previousElementSibling.classList.contains('section-glow-line')) {
+            const line = document.createElement('div');
+            line.className = 'section-glow-line';
+            section.parentNode.insertBefore(line, section);
+        }
+    });
+}
+
+// ── Initialize all premium effects ──
+// Some effects use event delegation (safe to call early), others need DOM content.
+let _premiumInitialized = false;
+
+function initPremiumEffects() {
+    // Event-delegation effects: safe to init once early
+    if (!_premiumInitialized) {
+        initCursorGlow();
+        initCard3DTilt();
+        initMagneticButtons();
+        _premiumInitialized = true;
+    }
+
+    // DOM-dependent effects: run/re-run after content is available
+    initHeroParticles();
+    initCounterAnimation();
+    initHeroGradientWord();
+    initSectionGlowLines();
+}
+
+// Early init for event-delegation effects (cursor, tilt, magnetic)
+initPremiumEffects();
 
 // Старт на приложението
 main();
