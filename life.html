@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bg" data-theme="dark">
+<html lang="bg" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,47 +33,3224 @@
     <link rel="preload" as="image" href="https://radilovk.github.io/face/assets/logo.png" type="image/png">
     <link rel="preload" as="image" href="https://radilovk.github.io/face/assets/logoblack.png" type="image/png">
     
-    <link rel="stylesheet" href="life.css">
 
-    <script>
-        (function() {
-            try {
-                // Check if user has a saved preference
-                var savedTheme = localStorage.getItem('theme');
-                var theme;
-                
-                if (savedTheme) {
-                    // Use saved theme
-                    theme = savedTheme;
-                } else {
-                    // Auto-detect from system preference
-                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                        theme = 'dark';
-                    } else {
-                        theme = 'dark';
-                    }
-                }
-                
-                document.documentElement.setAttribute('data-theme', theme);
-                
-                // Load cached logo immediately to prevent flashing
-                var cachedLogoLight = localStorage.getItem('lifeCachedLogoLight');
-                var cachedLogoDark = localStorage.getItem('lifeCachedLogoDark');
-                
-                // Store logo URLs for immediate use when page loads
-                if (cachedLogoLight && cachedLogoDark) {
-                    window.__initialLogoSettings = {
-                        lightLogo: cachedLogoLight,
-                        darkLogo: cachedLogoDark,
-                        theme: theme
-                    };
-                }
-            } catch (e) {
-                // Fallback to light theme
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
-        })();
-    </script>
+    <style>
+/* ======================================================= */
+/*          1. ГЛОБАЛНИ СТИЛОВЕ И ПРОМЕНЛИВИ (LIFE BIOHACK DESIGN) */
+/* ======================================================= */
+
+:root {
+    /* LIFE BioHack Color Palette - Medical Blue-Cyan / Warm Yellow (light theme) */
+    --color-primary: #0097A7; /* Medical Blue-Cyan */
+    --color-secondary: #E6C54A; /* Warm Yellow (accent, ~10-15%) */
+    --color-dark: #0F172A;
+    --color-light: #F8FAFC;
+    --color-white: #FFFFFF;
+    --color-gray: #64748B;
+
+    /* Typography (Premium Display + UI fonts) */
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-primary: 'Space Grotesk', sans-serif;
+    --font-secondary: 'DM Sans', sans-serif;
+
+    /* Design Elements */
+    --border-radius: 8px;
+    --box-shadow: 0 10px 30px rgba(6, 8, 14, 0.14);
+    --transition-speed: 0.3s ease;
+
+    /* ── PREMIUM DESIGN TOKENS (LIFE BioHack) ── */
+    --btn-gradient-primary: #0097A7;
+    --btn-gradient-primary-hover: #007A8A;
+    --btn-gradient-cta: #E6C54A;
+    --btn-gradient-premium: #0097A7;
+    --glow-primary-sm: 0 4px 20px rgba(0, 151, 167, 0.25);
+    --glow-primary-md: 0 8px 32px rgba(0, 151, 167, 0.30);
+    --glow-primary-lg: 0 14px 50px rgba(0, 151, 167, 0.35);
+    --glow-cta-sm: 0 4px 20px rgba(230, 197, 74, 0.25);
+    --glow-cta-md: 0 8px 32px rgba(230, 197, 74, 0.30);
+    --glow-cta-lg: 0 14px 50px rgba(230, 197, 74, 0.35);
+    --glass-bg-light: rgba(255, 255, 255, 0.72);
+    --glass-bg-dark: rgba(6, 8, 14, 0.72);
+    --glass-border-light: rgba(0, 151, 167, 0.18);
+    --glass-border-dark: rgba(0, 179, 200, 0.22);
+    --glass-blur: blur(20px) saturate(180%);
+    --neon-primary: 0 0 8px rgba(0, 151, 167, 0.4), 0 0 20px rgba(0, 151, 167, 0.2);
+    --neon-cta: 0 0 8px rgba(230, 197, 74, 0.4), 0 0 20px rgba(230, 197, 74, 0.2);
+    
+    /* Dark Theme Variables */
+    --bg-primary-dark: #FFFFFF;
+    --bg-secondary-dark: #F8FBFC;
+    --text-primary-dark: #F0F7FA;
+    --text-secondary-dark: #A09888;
+    --accent-dark: #00B3C8;
+    --accent-rgb-dark: 0, 179, 200;
+    --accent-secondary-dark: #E6C54A;
+    --accent-secondary-rgb-dark: 230, 197, 74;
+    --border-color-dark: rgba(0, 179, 200, 0.14);
+    --shadow-dark: rgba(0, 179, 200, 0.28);
+    --spotlight-color-dark: rgba(0, 179, 200, 0.07);
+    --note-color-dark: #00B3C8;
+    --success-color-dark: #00B3C8;
+    --error-color-dark: #EF4444;
+    --skeleton-bg-dark: #EBF3F8;
+    --skeleton-highlight-dark: #E5F0F5;
+
+    --header-bg-dark: rgba(6, 8, 14, 0.92);
+    --header-height: 70px;
+    --overlay-bg-dark: rgba(0,0,0,0.6);
+    --header-gradient-start-light: rgba(255, 255, 255, 0.98);
+    --header-gradient-end-light: rgba(248, 250, 252, 0.98);
+    --header-border-light: rgba(0, 151, 167, 0.08);
+    --header-border-scrolled-light: rgba(0, 151, 167, 0.18);
+    --header-scrolled-bg-light: rgba(255, 255, 255, 0.98);
+    --hero-bg-start-light: #F4FAFC;
+    --hero-bg-end-light: #EDF5F8;
+    --header-gradient-start-dark: rgba(6, 8, 14, 0.97);
+    --header-gradient-end-dark: rgba(4, 6, 12, 0.97);
+    --header-border-dark: rgba(0, 179, 200, 0.15);
+    --header-border-scrolled-dark: rgba(0, 179, 200, 0.30);
+    --header-scrolled-bg-dark: rgba(6, 8, 14, 0.99);
+    --hero-bg-start-dark: #FFFFFF;
+    --hero-bg-end-dark: #F0F7F9;
+    
+    /* Theme gradient variables - default values */
+    --theme-gradient-light: linear-gradient(135deg, #F8FAFC 0%, #EDF5F8 100%);
+    --theme-gradient-dark: linear-gradient(135deg, #FFFFFF 0%, #F0F7F9 100%);
+    
+    /* Light Theme Variables - Champagne Gold */
+    --bg-primary-light: #FAFCFF;
+    --bg-secondary-light: #F5FAFB;
+    --text-primary-light: #0F172A;
+    --text-secondary-light: #475569;
+    --accent-light: #0097A7;
+    --accent-rgb-light: 0, 151, 167;
+    --accent-secondary-light: #E6C54A;
+    --accent-secondary-rgb-light: 230, 197, 74;
+    --border-color-light: rgba(15, 23, 42, 0.08);
+    --shadow-light: rgba(0, 151, 167, 0.15);
+    --spotlight-color-light: rgba(0, 151, 167, 0.04);
+    --note-color-light: #007A8A;
+    --success-color-light: #0097A7;
+    --error-color-light: #DC2626;
+    --skeleton-bg-light: #E5F2F6;
+    --skeleton-highlight-light: #EDF5F8;
+    --header-bg-light: rgba(255, 255, 255, 0.96);
+    --overlay-bg-light: rgba(0, 0, 0, 0.45);
+    
+    /* Promo banner height */
+    --promo-banner-height: 48px;
+    --double-promo-banner-height: var(--promo-banner-height);
+}
+
+
+/* Light Theme (default) */
+[data-theme="light"] {
+    --bg-primary: var(--bg-primary-light);
+    --bg-secondary: var(--bg-secondary-light);
+    --text-primary: var(--text-primary-light);
+    --text-secondary: var(--text-secondary-light);
+    --accent: var(--accent-light);
+    --accent-rgb: var(--accent-rgb-light);
+    --accent-secondary: var(--accent-secondary-light);
+    --accent-secondary-rgb: var(--accent-secondary-rgb-light);
+    --border-color: var(--border-color-light);
+    --shadow-color: var(--shadow-light);
+    --spotlight-color: var(--spotlight-color-light);
+    --note-color: var(--note-color-light);
+    --success-color: var(--success-color-light);
+    --error-color: var(--error-color-light);
+    --skeleton-bg: var(--skeleton-bg-light);
+    --skeleton-highlight: var(--skeleton-highlight-light);
+    --header-bg: var(--header-bg-light);
+    --overlay-bg: var(--overlay-bg-light);
+    --header-gradient-start: var(--header-gradient-start-light);
+    --header-gradient-end: var(--header-gradient-end-light);
+    --header-border: var(--header-border-light);
+    --header-border-scrolled: var(--header-border-scrolled-light);
+    --header-scrolled-bg: var(--header-scrolled-bg-light);
+    --hero-bg-start: var(--hero-bg-start-light);
+    --hero-bg-end: var(--hero-bg-end-light);
+    --theme-gradient: var(--theme-gradient-light);
+}
+
+/* Dark Theme */
+
+
+.btn-primary {
+    background: #0097A7;
+    color: var(--color-white);
+    box-shadow: var(--glow-primary-sm);
+    border-color: transparent;
+}
+
+.btn-primary:hover {
+    background: #007A8A;
+    color: var(--color-white);
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: var(--glow-primary-md);
+}
+
+.btn-primary:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: var(--glow-primary-sm);
+}
+
+.btn-back {
+    position: fixed;
+    z-index: 1000;
+    top: 90px;
+    left: 20px;
+    width: 2.5em;
+    height: 2.5em;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all var(--transition-speed);
+}
+
+.btn-back::before {
+    content: '';
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border-style: solid;
+    border-width: 0.2em 0.2em 0 0;
+    border-color: var(--color-secondary);
+    transform: rotate(-135deg);
+    transition: all var(--transition-speed);
+}
+
+.btn-back:hover::before {
+    border-color: var(--color-primary);
+    transform: rotate(-135deg) scale(1.2);
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+    .btn-back {
+        top: 80px;
+        left: 15px;
+        width: 2em;
+        height: 2em;
+    }
+    
+    .btn-back::before {
+        width: 0.9em;
+        height: 0.9em;
+    }
+}
+
+.btn-large {
+    padding: 15px 35px;
+    font-size: 1.1rem;
+}
+
+.btn-full {
+    display: block;
+    width: 100%;
+}
+
+/* Animation on scroll (LIFE BioHack style) */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animate-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ======================================================= */
+/*          2. PROMO BANNER (LIPOLOR STYLE)              */
+/* ======================================================= */
+
+.promo-banner {
+    position: relative; /* Changed from fixed to relative - banner stays in page flow */
+    width: 100%;
+    background: linear-gradient(135deg, #EBF6F8 0%, #E0F4F7 50%, #EBF6F8 100%);
+    color: #004F5A;
+    text-align: center;
+    padding: 11px 20px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid rgba(0, 151, 167, 0.30);
+    z-index: 1; /* No longer needs high z-index since it's not fixed */
+}
+
+
+
+/* Scrolled (sticky) header style */
+.main-header.scrolled {
+    background: var(--header-scrolled-bg);
+    backdrop-filter: blur(20px) saturate(200%);
+    -webkit-backdrop-filter: blur(20px) saturate(200%);
+    border-bottom-color: var(--header-border-scrolled);
+    padding: 5px 0;
+    box-shadow: 0 8px 32px rgba(0, 151, 167, 0.15);
+}
+
+.header-container {
+    max-width: 1140px; 
+    margin: 0 auto; 
+    padding: 0 20px; 
+    height: 100%;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo-container {
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    text-decoration: none;
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-family: var(--font-primary);
+}
+
+.logo-container img { 
+    height: 80px; 
+    width: 80px; 
+    /* Keep alt text accessible for screen readers but hide it visually when image loads */
+    object-fit: contain;
+    /* Smooth transition when image loads */
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* While loading, reduce opacity but don't hide completely for accessibility */
+.logo-container img:not([src]),
+.logo-container img[src=""] {
+    opacity: 0.1;
+}
+
+.logo-container .brand-name { 
+    font-size: 1.2rem; 
+    font-weight: 700; 
+    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    white-space: nowrap; 
+}
+
+.logo-container .brand-slogan { 
+    font-size: 0.75rem; 
+    color: var(--text-secondary); 
+    display: block; 
+    line-height: 1; 
+}
+
+.main-nav { 
+    display: flex; 
+    align-items: center; 
+    gap: 1.5rem;
+    flex: 1;
+}
+
+.nav-links { 
+    list-style: none; 
+    display: flex; 
+    gap: 1.5rem; 
+    align-items: center; 
+}
+
+.nav-links a { 
+    text-decoration: none; 
+    color: var(--text-primary);
+    font-weight: 600;
+    position: relative;
+    padding: 5px 0;
+    transition: color var(--transition-speed);
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--color-primary);
+    transition: width var(--transition-speed);
+}
+
+.nav-links a:hover::after {
+    width: 100%;
+}
+
+.nav-links a:hover { 
+    color: var(--accent); 
+}
+
+.cart-link { 
+    position: relative; 
+}
+
+/* Стил за активен линк при скрол */
+.nav-links a.active {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+/* -- Header Actions Container -- */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* -- Theme Toggle Button -- */
+.theme-toggle-btn {
+    background: transparent;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-speed);
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-toggle-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent);
+    transform: rotate(180deg) scale(1.1);
+}
+
+.theme-toggle-btn svg {
+    position: absolute;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle-btn .sun-icon {
+    color: var(--accent);
+    opacity: 0;
+    transform: rotate(-90deg) scale(0);
+}
+
+.theme-toggle-btn .moon-icon {
+    color: var(--accent);
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+
+
+.search-input-wrapper {
+    position: relative;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: var(--font-secondary);
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+}
+
+.search-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.search-clear-btn:hover {
+    color: var(--accent);
+    background: var(--bg-tertiary);
+}
+
+.search-results {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.search-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-results::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.search-result-item:hover {
+    background: var(--bg-tertiary);
+    transform: translateX(5px);
+}
+
+.search-result-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--border-color);
+}
+
+.search-result-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.search-result-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.search-result-name mark {
+    background: linear-gradient(135deg, rgba(255, 107, 153, 0.2), rgba(255, 204, 107, 0.2));
+    color: var(--accent);
+    font-weight: 700;
+    padding: 0 0.2em;
+    border-radius: 3px;
+}
+
+.search-result-tagline {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.search-result-price {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.search-no-results {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.search-no-results svg {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1rem;
+    opacity: 0.35;
+    animation: searchBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+@keyframes searchBounce {
+    from { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    to   { transform: scale(1)   rotate(0deg);   opacity: 0.35; }
+}
+
+.search-no-results p {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.search-no-results .search-no-results-hint {
+    font-size: 0.82rem;
+    opacity: 0.75;
+}
+
+.search-loading {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.search-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* -- Мобилно меню -- */
+.menu-toggle { 
+    display: none; 
+    width: 30px; 
+    height: 22px; 
+    flex-direction: column; 
+    justify-content: space-between; 
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    z-index: 1003; 
+}
+
+.menu-toggle span { 
+    display: block; 
+    width: 100%; 
+    height: 2px; 
+    background-color: var(--text-primary); 
+    border-radius: 2px; 
+    transition: transform 0.3s ease, opacity 0.3s ease; 
+}
+
+.menu-toggle.active span:nth-child(1) { 
+    transform: translateY(10px) rotate(45deg); 
+}
+
+.menu-toggle.active span:nth-child(2) { 
+    opacity: 0; 
+}
+
+.menu-toggle.active span:nth-child(3) { 
+    transform: translateY(-10px) rotate(-45deg); 
+}
+
+.nav-overlay { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: var(--overlay-bg); 
+    opacity: 0; 
+    visibility: hidden; 
+    transition: opacity 0.4s ease, visibility 0.4s ease; 
+    z-index: 999; 
+}
+
+.nav-overlay.active { 
+    opacity: 1; 
+    visibility: visible; 
+}
+
+main { 
+    padding-top: 0; /* Removed since body already has padding */
+}
+
+/* ======================================================= */
+/*          5. СЕКЦИИ НА СТРАНИЦАТА (LIPOLOR & STORE)    */
+/* ======================================================= */
+
+/* --- HERO SECTION (LIFE BioHack style) --- */
+.hero-section {
+    min-height: 500px;
+    padding: 60px 0;
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center;
+    text-align: center;
+    position: relative;
+    color: var(--text-primary);
+    background: var(--theme-gradient);
+    overflow: hidden; /* Prevents animated overlay from extending beyond bounds */
+}
+
+/* Hero section with custom background image */
+.hero-section[data-bg-image] {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Overlay for better text readability when using background images */
+.hero-section[data-bg-image]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(0, 151, 167, 0.15) 0%, 
+        rgba(230, 197, 74, 0.15) 100%);
+    backdrop-filter: blur(2px);
+    z-index: 0;
+}
+
+
+
+.stat-item:hover .stat-icon {
+    transform: scale(1.1);
+}
+
+.stat-item strong {
+    font-size: 2rem;
+    font-family: var(--font-primary);
+    display: block;
+    margin-bottom: 5px;
+    color: var(--color-primary);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-item span {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Hero CTA Buttons */
+.hero-cta-group {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin: 30px 0;
+    flex-wrap: wrap;
+    animation: fadeInUp 1s ease-out 0.4s;
+    animation-fill-mode: both;
+}
+
+.btn-hero-primary {
+    background: #0097A7;
+    color: white;
+    border: none;
+    padding: 17px 44px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: var(--glow-primary-sm), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+@keyframes bioCtaPulse {
+    0%, 100% {
+        box-shadow: var(--glow-primary-sm),
+                    0 0 0 0 rgba(0, 151, 167, 0.3);
+    }
+    50% {
+        box-shadow: var(--glow-primary-md),
+                    0 0 0 12px rgba(0, 151, 167, 0);
+    }
+}
+
+.btn-hero-primary svg {
+    display: inline-block;
+    vertical-align: middle;
+    color: white;
+    stroke: white;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.btn-hero-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -110%;
+    width: 70%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.25);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+.btn-hero-primary:hover::before {
+    left: 150%;
+}
+
+.btn-hero-primary:hover {
+    transform: translateY(-5px) scale(1.07);
+    box-shadow: var(--glow-primary-lg);
+    animation: none;
+    background: #007A8A;
+}
+
+.btn-hero-primary:hover svg {
+    transform: translateX(4px);
+}
+
+.btn-hero-primary:active {
+    transform: translateY(0) scale(1.01);
+    animation: none;
+    box-shadow: var(--glow-cta-sm);
+}
+
+.btn-hero-secondary {
+    background: var(--glass-bg-light);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
+    border: 2px solid var(--glass-border-light);
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 20px rgba(0, 151, 167, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-hero-secondary svg {
+    display: inline-block;
+    vertical-align: middle;
+    color: var(--accent);
+    stroke: var(--accent);
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.btn-hero-secondary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -110%;
+    width: 70%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.25), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+.btn-hero-secondary:hover::before {
+    left: 150%;
+}
+
+.btn-hero-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0, 151, 167, 0.07);
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: var(--glow-primary-sm),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.btn-hero-secondary:hover svg {
+    transform: translateX(4px);
+}
+
+
+
+.is-visible .category-title::after { 
+    transform: scaleX(1); 
+}
+
+.category-image-wrapper { 
+    width: 100%; 
+    border-radius: var(--border-radius);
+    overflow: hidden; 
+    margin: 1rem 0 2rem 0; 
+    box-shadow: var(--box-shadow);
+}
+
+.category-image-wrapper img { 
+    width: 100%; 
+    height: auto; 
+    object-fit: cover; 
+    display: block; 
+}
+
+.category-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 1rem auto 2rem auto;
+    text-align: center;
+    max-width: 800px;
+}
+
+.expand-icon {
+    /* Removed - expand icon no longer used */
+    display: none;
+}
+
+.category-expand-icon {
+    flex-shrink: 0; 
+    width: 0.8em; 
+    height: 0.8em; 
+    border-style: solid;
+    border-width: 0.15em 0.15em 0 0; 
+    border-color: var(--text-secondary);
+    display: inline-block; 
+    transform: rotate(135deg);
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s ease;
+    margin-left: 1rem; 
+}
+
+[aria-expanded="true"] .category-expand-icon {
+    transform: rotate(-45deg); 
+    border-color: var(--accent);
+}
+
+/* --- PRODUCT GRID & CARDS (Store + LIFE BioHack style) --- */
+.product-grid {
+    display: grid; 
+    gap: 30px; 
+    grid-template-columns: 1fr;
+    max-height: 0; 
+    overflow: hidden; 
+    opacity: 0; 
+    margin-top: 0;
+    transition: max-height 0.7s ease-in-out, opacity 0.5s ease-in-out, margin-top 0.7s ease-in-out;
+}
+
+.category-header[aria-expanded="true"] + .product-grid { 
+    max-height: 15000px; 
+    opacity: 1; 
+    margin-top: 2rem; 
+}
+
+.category-section.not-collapsible .product-grid { 
+    max-height: none; 
+    overflow: visible; 
+    opacity: 1; 
+    margin-top: 2rem; 
+}
+
+.category-section.not-collapsible .category-expand-icon { 
+    display: none; 
+}
+
+.category-section.not-collapsible .category-header { 
+    cursor: default; 
+}
+
+.product-card {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    padding: 30px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    display: block; /* Make it a proper link block */
+    text-decoration: none; /* Remove underline from link */
+    color: inherit; /* Inherit text color */
+}
+
+
+
+/* --- EFFECT BARS STYLES --- */
+.effect-bar-group { margin-bottom: 10px; }
+.effect-bar-group:last-child { margin-bottom: 0; }
+.effect-label { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+.effect-bar-container {
+  width: 100%; height: 22px; background-color: var(--bg-primary);
+  border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden;
+}
+.effect-bar {
+  width: 0; height: 100%; border-radius: 12px;
+  /* Initial gradient - cyan/teal pre-animation state */
+  background: linear-gradient(135deg, rgba(0, 151, 167, 0.3), rgba(230, 197, 74, 0.3));
+  display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; box-sizing: border-box;
+  color: #FFFFFF; font-weight: 600; font-size: 0.75rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: width 1.5s cubic-bezier(0.25, 1, 0.5, 1), background 0.5s ease-out, box-shadow 0.5s ease-out;
+}
+.effect-bar.animated {
+  /* Premium biotech gradient: teal to gold */
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+/* Ensure text is always readable */
+.effect-bar { color: #FFFFFF; }
+        
+/* ======================================================= */
+/*          6. ФУТЪР (LIPOLOR STYLE)                     */
+/* ======================================================= */
+.main-footer {
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    padding: 3rem 0 1.5rem 0; 
+    margin-top: 80px;
+}
+
+.footer-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem; 
+    margin-bottom: 2rem; 
+}
+
+.footer-column .footer-logo-container { 
+    margin-bottom: 1rem; 
+}
+
+.footer-column h4 { 
+    font-size: 1.1rem;
+    margin-bottom: 1rem; 
+    color: var(--text-primary);
+    font-family: var(--font-primary);
+    font-weight: 700;
+}
+
+.footer-column ul { 
+    list-style: none; 
+    padding: 0; 
+}
+
+.footer-column ul li { 
+    margin-bottom: 0.75rem; 
+}
+
+.footer-column ul a { 
+    color: var(--text-secondary);
+    text-decoration: none; 
+    transition: color var(--transition-speed);
+}
+
+.footer-column ul a:hover { 
+    color: var(--color-primary);
+}
+
+.footer-bottom {
+    text-align: center; 
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem; 
+    font-size: 0.9rem; 
+    color: var(--text-secondary);
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.footer-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-speed);
+}
+
+.footer-links a:hover {
+    color: var(--color-primary);
+}
+
+.footer-links span {
+    color: var(--border-color);
+}
+
+/* ======================================================= */
+/*          7. ПОМОЩНИ ЕЛЕМЕНТИ И АНИМАЦИИ                 */
+/* ======================================================= */
+/* --- THEME TOGGLE & BACK TO TOP --- */
+#back-to-top {
+    width: 44px; 
+    height: 44px; 
+    background: #0097A7;
+    border: 1px solid rgba(0, 151, 167, 0.5);
+    border-radius: 50%; 
+    cursor: pointer; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    transition: all var(--transition-speed);
+    position: fixed; 
+    z-index: 1000; 
+    bottom: 20px; 
+    right: 20px;
+    opacity: 0; 
+    visibility: hidden; 
+    transform: translateY(20px); 
+    text-decoration: none;
+    font-size: 1.2rem; 
+    color: var(--color-white);
+}
+
+#back-to-top:hover { 
+    background: #007A8A;
+    border-color: #007A8A;
+    transform: scale(1.1) translateY(0);
+}
+
+#back-to-top.visible { 
+    opacity: 1; 
+    visibility: visible; 
+    transform: translateY(0); 
+}
+
+/* --- QUEST MODAL --- */
+#quest-modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 1000;
+    display: none; opacity: 0; transition: opacity 0.3s ease;
+}
+#quest-modal-container {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg-secondary); z-index: 1001;
+    display: none; flex-direction: column; opacity: 0;
+    transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease;
+}
+#quest-modal-backdrop.show, #quest-modal-container.show { display: flex; opacity: 1; }
+#quest-modal-container.show { transform: translateY(0); }
+#quest-modal-container iframe { border: none; width: 100%; height: 100%; flex-grow: 1; }
+body.modal-open { overflow: hidden; }
+
+
+/* --- Toast Notifications (top-right corner, modern style) --- */
+#toast-container {
+    position: fixed;
+    top: calc(var(--header-height) + 16px);
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    pointer-events: none;
+    max-width: 360px;
+    width: calc(100vw - 40px);
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-radius: 10px;
+    color: #fff;
+    font-family: var(--font-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1);
+    pointer-events: auto;
+    animation: toast-slide-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.toast::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 10px 0 0 10px;
+}
+
+.toast-message {
+    flex: 1;
+    min-width: 0;
+}
+
+.toast-dismiss {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.75);
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: color 0.2s ease, background 0.2s ease;
+    flex-shrink: 0;
+}
+
+.toast-dismiss:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.toast.success { background: linear-gradient(135deg, rgba(22, 163, 74, 0.95), rgba(21, 128, 61, 0.95)); }
+.toast.error   { background: linear-gradient(135deg, rgba(220, 38, 38, 0.95), rgba(185, 28, 28, 0.95)); }
+.toast.info    { background: linear-gradient(135deg, rgba(0, 151, 167, 0.95), rgba(0, 122, 138, 0.95)); }
+.toast.fade-out { opacity: 0; transform: translateX(110%); }
+
+@keyframes toast-slide-in {
+    from { transform: translateX(110%); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+}
+
+@media (max-width: 480px) {
+    #toast-container {
+        right: 12px;
+        left: 12px;
+        width: auto;
+        top: calc(var(--header-height) + 12px);
+    }
+}
+
+/* --- UTILITY & ANIMATIONS --- */
+.fade-in-up {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.19, 1, 0.22, 1), transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+}
+.is-visible { opacity: 1; transform: translateY(0); }
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ======================================================= */
+/*          8. ЛИПOLOR СЕКЦИИ (BENEFITS, TIMELINE, ETC)  */
+/* ======================================================= */
+
+/* --- ABOUT & BENEFITS SECTION --- */
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    align-items: center;
+}
+
+.about-image-placeholder {
+    width: 100%;
+    min-height: 400px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--color-gray);
+    box-shadow: var(--box-shadow);
+}
+
+.about-content h3 {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+}
+
+.benefits {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.benefit-item svg {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    color: var(--color-secondary);
+}
+
+.benefit-item h4 {
+    color: var(--color-secondary);
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+
+/* --- TIMELINE / HOW IT WORKS SECTION --- */
+.timeline {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.timeline::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    background-color: var(--color-secondary);
+    opacity: 0.2;
+    top: 0;
+    bottom: 0;
+    left: 20px;
+}
+
+.timeline-item {
+    padding: 10px 40px;
+    padding-left: 60px;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--color-white);
+    border: 4px solid var(--color-secondary);
+    top: 15px;
+    left: 12px;
+    z-index: 1;
+}
+
+.timeline-content {
+    padding: 20px;
+    background: var(--color-white);
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+}
+
+.timeline-content h4 {
+    color: var(--color-primary);
+}
+
+/* --- INGREDIENTS SECTION (FLIP CARDS) --- */
+.ingredients-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.ingredient-card {
+    background-color: transparent;
+    min-height: 120px;
+    perspective: 1000px;
+    cursor: pointer;
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    min-height: 120px;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    border-radius: var(--border-radius);
+}
+
+.ingredient-card:hover .card-inner,
+.ingredient-card:focus .card-inner,
+.ingredient-card.is-flipped .card-inner {
+    transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    min-height: 120px;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-radius: var(--border-radius);
+}
+
+.card-front {
+    background-color: var(--bg-primary);
+    color: var(--color-dark);
+}
+
+.card-front h5 {
+    font-size: 1.2rem;
+}
+
+.card-front span {
+    font-size: 1rem;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.card-back {
+    background-color: var(--color-secondary);
+    color: white;
+    transform: rotateY(180deg);
+    overflow-y: auto;
+}
+
+/* --- MANUFACTURER SECTION --- */
+.manufacturer-content {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.manufacturer-logo {
+    margin-bottom: 20px;
+}
+
+.manufacturer-content h3 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+
+.trust-badges {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.badge-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.badge-item svg {
+    color: var(--color-secondary);
+}
+
+.badge-item span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-dark);
+}
+
+/* --- TESTIMONIALS SECTION --- */
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+.testimonial-card {
+    background: var(--bg-primary);
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    position: relative;
+    border-left: 3px solid rgba(0, 151, 167, 0.5);
+}
+
+.stars {
+    color: #FFD700;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+
+.stars svg {
+    color: #FFD700;
+    stroke: #FFD700;
+    flex-shrink: 0;
+}
+
+.testimonial-text {
+    font-style: italic;
+    margin-bottom: 20px;
+    line-height: 1.8;
+    color: var(--color-dark);
+}
+
+.testimonial-author {
+    display: flex;
+    flex-direction: column;
+}
+
+.testimonial-author strong {
+    color: var(--color-dark);
+    font-size: 1rem;
+}
+
+.testimonial-author span {
+    color: var(--color-gray);
+    font-size: 0.9rem;
+}
+
+.result-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #E6C54A 0%, #00B3C8 100%);
+    color: var(--color-white);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+/* --- FAQ SECTION --- */
+.faq-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq-item {
+    background: var(--bg-primary);
+    margin-bottom: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.faq-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+}
+
+.faq-question:hover {
+    background-color: var(--bg-secondary);
+}
+
+.faq-question h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-dark);
+    margin: 0;
+}
+
+.faq-toggle {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    font-weight: 700;
+    transition: transform var(--transition-speed);
+}
+
+.faq-item.active .faq-toggle {
+    transform: rotate(45deg);
+}
+
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+    padding: 0 25px;
+}
+
+.faq-item.active .faq-answer {
+    max-height: 500px;
+    padding: 0 25px 20px 25px;
+}
+
+.faq-answer p {
+    color: var(--color-gray);
+    line-height: 1.8;
+}
+
+/* --- ORDER/CONTACT SECTION --- */
+.order-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.contact-details h4 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: var(--color-primary);
+}
+
+.contact-details ul {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.contact-details ul li {
+    margin-bottom: 10px;
+    color: var(--color-dark);
+}
+
+.social-links {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.social-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-light);
+    color: var(--color-primary);
+    transition: all var(--transition-speed);
+}
+
+.social-links a:hover {
+    background: var(--color-primary);
+    color: var(--color-white);
+    transform: translateY(-3px);
+}
+
+.order-form {
+    background: var(--bg-secondary);
+    padding: 30px;
+    border-radius: var(--border-radius);
+}
+
+.order-form h4 {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    color: var(--color-primary);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--color-dark);
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-family: var(--font-secondary);
+    font-size: 1rem;
+    transition: border-color var(--transition-speed);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+@media (min-width: 768px) {
+    .order-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ======================================================= */
+/*          9. РЕСПОНСИВ МОБИЛНИ УСТРОЙСТВА              */
+/* ======================================================= */
+
+/* Hide theme toggle in mobile menu by default (shown only on mobile via media query) */
+.theme-toggle-mobile {
+    display: none;
+}
+
+@media (max-width: 992px) {
+    .nav-links {
+        position: fixed; 
+        top: 0; 
+        right: -100%; 
+        width: 280px; 
+        height: 100vh;
+        background: var(--bg-secondary);
+        flex-direction: column; 
+        justify-content: center;
+        align-items: center; 
+        gap: 2rem; 
+        transition: right 0.4s cubic-bezier(0.23, 1, 0.32, 1); 
+        z-index: 1002;
+        padding: 2rem 0;
+    }
+    .nav-links.active { 
+        right: 0; 
+    }
+    .nav-links li { 
+        text-align: center; 
+    }
+    .nav-links a { 
+        font-size: 1.2rem; 
+    }
+    .menu-toggle { 
+        display: flex; 
+    }
+    
+    /* Hide theme toggle in header on mobile */
+    .header-actions .theme-toggle-btn {
+        display: none;
+    }
+
+    /* Hide header cart icon on mobile and show fixed version */
+    .header-actions .cart-icon-btn {
+        display: none;
+    }
+
+    /* Show fixed mobile cart icon */
+    .cart-icon-fixed-mobile {
+        display: flex;
+    }
+
+    /* Search dropdown responsive */
+    .search-dropdown {
+        width: 280px;
+        right: -10px;
+    }
+
+    .search-dropdown.active {
+        max-height: 400px;
+    }
+
+    .search-result-item {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .search-result-image {
+        width: 40px;
+        height: 40px;
+    }
+
+    /* Show theme toggle in mobile menu */
+    .nav-links .theme-toggle-mobile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+        width: 80%;
+    }
+    
+    .nav-links .theme-toggle-mobile .theme-toggle-btn {
+        display: flex;
+    }
+    
+    .theme-toggle-mobile-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+    
+    /* Cart link in mobile menu */
+    .nav-links .cart-link-mobile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+        width: 80%;
+    }
+    
+    .cart-link-mobile-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+    
+    .cart-link-mobile a {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: var(--accent);
+        color: white;
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all var(--transition-speed);
+        position: relative;
+    }
+    
+    .cart-link-mobile a:hover {
+        background: var(--color-secondary);
+        transform: translateY(-2px);
+    }
+    
+    .cart-link-mobile a .cart-badge {
+        position: relative;
+        top: unset;
+        right: unset;
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    
+    .about-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .hero-content h1 {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-top: var(--header-height);
+    }
+    
+    .info-card-section .container, .info-card-section.image-align-right .container {
+        flex-direction: column; 
+        text-align: center; 
+        gap: 2rem;
+    }
+    
+    .hero-stats {
+        gap: 20px;
+    }
+    
+    .stat-item strong {
+        font-size: 1.5rem;
+    }
+    
+    .section-title h2 {
+        font-size: 2rem;
+    }
+    
+    .timeline::after {
+        left: 15px;
+    }
+    
+    .timeline-item {
+        padding-left: 50px;
+    }
+    
+    .product-card {
+        padding: 20px;
+    }
+    
+    /* Optimize product images for mobile */
+    .product-image img {
+        max-height: 220px;
+    }
+    
+    /* Reduce animation intensity on mobile */
+    .hero-section {
+        min-height: 450px;
+        padding: 40px 0;
+    }
+    
+    /* Fix category-section spacing on mobile */
+    .category-section {
+        padding: 40px 0;
+    }
+    
+    .category-section:first-of-type {
+        padding-top: 15px;
+    }
+}
+
+/* Very small mobile screens - further optimizations */
+@media (max-width: 480px) {
+    /* Adjust hero section for small screens */
+    .hero-section {
+        min-height: 400px;
+        padding: 30px 0;
+    }
+    
+    .hero-content {
+        padding: 1rem 15px;
+    }
+    
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+    
+    .hero-stats {
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .stat-item strong {
+        font-size: 1.3rem;
+    }
+    
+    .hero-cta-group {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    /* Further optimize product images for very small screens */
+    .product-image img {
+        max-height: 180px;
+    }
+    
+    .btn-hero-primary,
+    .btn-hero-secondary {
+        padding: 14px 30px;
+        font-size: 1rem;
+        width: 100%;
+    }
+}
+
+/* ======================================================= */
+/*          ACCESSIBILITY - REDUCED MOTION                 */
+/* ======================================================= */
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    /* Disable all animations for users who prefer reduced motion */
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    /* Remove bounce and pulse animations */
+    .sticky-cta-btn,
+    .exit-modal-icon,
+    .product-badge {
+        animation: none !important;
+    }
+}
+
+@media (min-width: 768px) { 
+    .product-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+    }
+    
+    .about-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .testimonials-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .ingredients-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) { 
+    .product-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+    }
+    
+    .main-nav {
+        display: flex !important;
+    }
+    
+    .ingredients-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .testimonials-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ======================================================= */
+/*          MARKETING ENHANCEMENTS - TRUST & URGENCY      */
+/* ======================================================= */
+
+/* Enhanced Promo Banner with Timer */
+.promo-banner {
+    background: linear-gradient(135deg, #EBF6F8 0%, #E0F4F7 50%, #EBF6F8 100%);
+    color: #004F5A;
+    text-align: center;
+    padding: 11px 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    position: relative;
+    overflow: hidden;
+    animation: slideDown 0.5s ease-out;
+}
+
+
+
+.faq-answer-full {
+    display: grid;
+    grid-template-rows: 0fr;
+    overflow: hidden;
+    transition: grid-template-rows 0.4s ease, padding 0.4s ease;
+    padding: 0 25px;
+}
+
+.faq-answer-full > * {
+    overflow: hidden;
+}
+
+.faq-item-full.active .faq-answer-full {
+    grid-template-rows: 1fr;
+    padding: 0 25px 20px;
+}
+
+.faq-answer-full p {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin: 0;
+}
+
+/* Target Profile Section */
+.product-target-profile-section {
+    padding: 30px;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    border-radius: var(--border-radius);
+    border-left: 3px solid rgba(0, 151, 167, 0.4);
+}
+
+.target-profile-text {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Protocol Hint Section (Reception/Usage) */
+.product-protocol-hint-section {
+    padding: 30px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.protocol-hint-text {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Safety Warnings Section */
+.product-safety-warnings-section {
+    padding: 30px;
+    background: linear-gradient(135deg, rgba(230, 197, 74, 0.1) 0%, rgba(255, 159, 64, 0.1) 100%);
+    border-radius: var(--border-radius);
+    border: 2px solid rgba(230, 197, 74, 0.3);
+}
+
+.product-safety-warnings-section h3 {
+    color: #E6C54A;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.safety-warnings-content {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.safety-warnings-content .warning-icon {
+    flex-shrink: 0;
+    stroke: #E6C54A;
+    width: 28px;
+    height: 28px;
+    margin-top: 3px;
+}
+
+.safety-warnings-text {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: 1rem;
+    margin: 0;
+    flex: 1;
+}
+
+/* Responsive adjustments for expansion sections */
+@media (max-width: 768px) {
+    .product-about-section,
+    .product-ingredients-section,
+    .product-faq-section,
+    .product-target-profile-section,
+    .product-protocol-hint-section,
+    .product-safety-warnings-section {
+        padding: 30px 20px;
+    }
+    
+    .product-about-section h3,
+    .product-ingredients-section h3,
+    .product-faq-section h3,
+    .product-target-profile-section h3,
+    .product-protocol-hint-section h3,
+    .product-safety-warnings-section h3 {
+        font-size: 1.5rem;
+    }
+    
+    .product-benefits-full .benefit-item {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .ingredients-grid-full {
+        grid-template-columns: 1fr;
+    }
+    
+    .ingredient-card-full {
+        min-height: 120px;
+    }
+}
+
+/* =======================================================
+   PRODUCT FILTER BAR
+   ======================================================= */
+.product-filter-bar {
+    background: var(--card-bg, #fff);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border: 1px solid var(--border-color, #e0e0e0);
+}
+
+.product-filter-bar .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.product-filter-bar .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1 1 180px;
+    min-width: 150px;
+}
+
+.product-filter-bar .filter-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary, #666);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.product-filter-bar .filter-select,
+.product-filter-bar .filter-input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: var(--bg-color, #fff);
+    color: var(--text-primary, #333);
+    transition: border-color 0.2s;
+}
+
+.product-filter-bar .filter-select:focus,
+.product-filter-bar .filter-input:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+}
+
+.filter-results-count {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #888);
+}
+
+/* Variant badge on product cards */
+.variant-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    z-index: 2;
+    letter-spacing: 0.3px;
+}
+
+.product-image {
+    position: relative;
+}
+
+/* Brand label on product cards */
+.brand-label {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary, #999);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+/* Load more button */
+.load-more-container {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.btn-load-more {
+    background: #0097A7;
+    color: #fff;
+    border: none;
+    padding: 0.8rem 2.2rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: var(--glow-primary-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-load-more::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -110%;
+    width: 70%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.25), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.55s ease;
+    pointer-events: none;
+}
+
+.btn-load-more:hover::before {
+    left: 150%;
+}
+
+.btn-load-more:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: var(--glow-primary-md);
+    background: #007A8A;
+}
+
+@media (max-width: 600px) {
+    .product-filter-bar .filter-row {
+        flex-direction: column;
+    }
+    .product-filter-bar .filter-group {
+        flex: 1 1 100%;
+    }
+}
+
+/* ======================================================= */
+/*   BIOHACK DESIGN v2 - НОВA ВИЗУАЛНA ИДЕНТИЧНОСТ        */
+/*   Teal/Cyan палитра + Hexagon + Glassmorphism          */
+/* ======================================================= */
+
+/* --- CTA PULSE ANIMATIONS (клетъчно дишане) ---
+   bioCtaPulse  → hero CTA / sticky CTA buttons (coral)
+   bioCtaFloat  → sticky-cta-btn floating animation */
+
+@keyframes bioPrimaryPulse {
+    0%, 100% {
+        box-shadow: var(--glow-primary-sm),
+                    0 0 0 0 rgba(0, 151, 167, 0.3);
+    }
+    50% {
+        box-shadow: var(--glow-primary-md),
+                    0 0 0 12px rgba(0, 151, 167, 0);
+    }
+}
+
+/* --- HEXAGONAL BACKGROUND PATTERN --- */
+/* Субтилна шестоъгълна мрежа <3% прозрачност */
+.hex-bg-pattern {
+    position: relative;
+}
+
+.hex-bg-pattern::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='98' viewBox='0 0 56 98'%3E%3Cpath d='M28 0 L56 16 L56 49 L28 65 L0 49 L0 16 Z' fill='none' stroke='%23C9A84C' stroke-width='0.8' opacity='0.18'/%3E%3Cpath d='M28 33 L56 49 L56 82 L28 98 L0 82 L0 49 Z' fill='none' stroke='%23C9A84C' stroke-width='0.8' opacity='0.18'/%3E%3C/svg%3E");
+    background-size: 56px 98px;
+    opacity: 0.028;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Секции, при които трябва да се показва hex pattern */
+.hero-section,
+.comparison-section,
+.guarantee-section,
+#benefits.section-padding,
+section[id="scientific"] {
+    position: relative;
+}
+
+.hero-section::before,
+[data-theme="light"] .comparison-section::before,
+[data-theme="light"] .guarantee-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='98' viewBox='0 0 56 98'%3E%3Cpath d='M28 0 L56 16 L56 49 L28 65 L0 49 L0 16 Z' fill='none' stroke='%23C9A84C' stroke-width='0.8'/%3E%3Cpath d='M28 33 L56 49 L56 82 L28 98 L0 82 L0 49 Z' fill='none' stroke='%23C9A84C' stroke-width='0.8'/%3E%3C/svg%3E");
+    background-size: 56px 98px;
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Изключи дублирания ::before за hero-section (вече е дефиниран за bg-image overlay) */
+.hero-section[data-bg-image]::before,
+.hero-section.hero-custom-bg::before {
+    background-image: none;
+    opacity: 1;
+}
+
+/* --- HEXAGONAL IMAGE MASK --- */
+/* Клас за изображения в шестоъгълни маски */
+.hex-img-wrapper {
+    display: inline-block;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.hex-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Testimonial avatars in hex */
+.testimonial-avatar {
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    border-radius: 4px;
+    border: none; /* clip-path replaces border */
+    box-shadow: 0 0 0 3px var(--accent), 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* --- HEX ICON CONTAINERS --- */
+/* Шестоъгълни контури за иконки на ползи */
+.hex-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    background: transparent;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.hex-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    border: 2px solid var(--accent);
+    background: rgba(0, 151, 167, 0.06);
+}
+
+.hex-icon svg {
+    position: relative;
+    z-index: 1;
+    color: var(--accent);
+    stroke: var(--accent);
+}
+
+/* Benefit items с hex иконки */
+.benefit-item .hex-icon,
+.guarantee-card .guarantee-icon.hex-icon {
+    width: 60px;
+    height: 60px;
+}
+
+/* --- GLASSMORPHISM PANELS --- */
+/* Стъклен ефект за падащи менюта и информационни карти */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(0, 151, 167, 0.18);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 151, 167, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+
+
+.btn-neon:hover {
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--neon-primary);
+    transform: translateY(-3px);
+}
+
+.btn-neon:hover::before {
+    opacity: 1;
+}
+
+.btn-neon span {
+    position: relative;
+    z-index: 1;
+}
+
+/* ── NEON CTA BUTTON (Coral) ── */
+.btn-neon-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 32px;
+    border-radius: 8px;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    border: 2px solid var(--color-secondary);
+    color: var(--color-secondary);
+    transition: all 0.35s ease;
+    box-shadow: 0 0 10px rgba(230, 197, 74, 0.45),
+                inset 0 0 10px rgba(230, 197, 74, 0.08);
+}
+
+.btn-neon-cta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #E6C54A;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    border-radius: inherit;
+}
+
+.btn-neon-cta:hover {
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--neon-cta);
+    transform: translateY(-3px);
+}
+
+.btn-neon-cta:hover::before {
+    opacity: 1;
+}
+
+.btn-neon-cta span {
+    position: relative;
+    z-index: 1;
+}
+
+/* ── PREMIUM FULL-SPECTRUM GRADIENT BUTTON ── */
+.btn-premium {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 15px 44px;
+    border-radius: 8px;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    background: #0097A7;
+    background-size: 200% 200%;
+    background-position: 0% 50%;
+    border: none;
+    color: white;
+    box-shadow: 0 8px 30px rgba(0, 151, 167, 0.35),
+                0 4px 16px rgba(230, 197, 74, 0.25);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: bioGradientShift 5s ease infinite;
+}
+
+@keyframes bioGradientShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.btn-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -110%;
+    width: 70%;
+    height: 100%;
+    background: #0097A7;
+    transform: skewX(-20deg);
+    transition: left 0.65s ease;
+    pointer-events: none;
+}
+
+.btn-premium:hover::before {
+    left: 160%;
+}
+
+.btn-premium:hover {
+    transform: translateY(-5px) scale(1.06);
+    box-shadow: 0 16px 50px rgba(0, 151, 167, 0.5),
+                0 8px 25px rgba(230, 197, 74, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+.btn-premium:active {
+    transform: translateY(0) scale(1.01);
+}
+
+/* ── RIPPLE EFFECT ──
+   Requires JavaScript: on click, append a <span class="ripple"> with width/height/top/left
+   set to the click position, then remove it after the animation completes (~700ms). */
+.btn-primary .ripple,
+.btn-hero-primary .ripple,
+.btn-premium .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(0);
+    animation: bioRipple 0.7s linear;
+    pointer-events: none;
+}
+
+@keyframes bioRipple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* ── VISUAL EFFECTS UTILITIES ── */
+
+/* Gradient text — Cyan */
+.text-gradient-primary {
+    background: #0097A7;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Gradient text — Coral CTA */
+.text-gradient-cta {
+    background: #E6C54A;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Gradient text — Full Spectrum */
+.text-gradient-premium {
+    background: #0097A7;
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: bioGradientShift 4s ease infinite;
+}
+
+/* Glowing card on hover */
+.glow-card {
+    transition: box-shadow 0.35s ease, transform 0.35s ease;
+}
+
+.glow-card:hover {
+    box-shadow: 0 0 0 1px rgba(0, 151, 167, 0.2),
+                0 8px 40px rgba(0, 151, 167, 0.18);
+    transform: translateY(-4px);
+}
+
+
+
+[data-theme="light"] .btn-hero-secondary:hover {
+    background: rgba(0, 151, 167, 0.06);
+    border-color: #0097A7;
+    color: #6B5A30;
+    transform: translateY(-2px);
+}
+
+[data-theme="light"] .btn-hero-secondary svg {
+    stroke: #8B7040;
+}
+
+/* Trust badges left-aligned */
+[data-theme="light"] .hero-trust-badges {
+    justify-content: flex-start;
+    margin-top: 0;
+}
+
+/* Stats row below the two columns */
+[data-theme="light"] .hero-stats {
+    justify-content: flex-start;
+    gap: 48px;
+    padding: 24px 0 0;
+    border-top: 1px solid rgba(0, 151, 167, 0.18);
+    margin-top: 16px;
+}
+
+[data-theme="light"] .stat-item strong {
+    color: #8B7030;
+    background: none;
+    -webkit-text-fill-color: #8B7030;
+}
+
+[data-theme="light"] .stat-item span {
+    color: #64748B;
+}
+
+/* ── 2. HEX BACKGROUND PATTERN ELEMENT ── */
+.hex-bg-pattern {
+    display: none; /* handled via CSS pseudo-element above */
+}
+
+/* ── 3. HERO VISUAL – RIGHT COLUMN ── */
+[data-theme="light"] .hero-visual {
+    position: relative;
+    height: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* DNA helix SVG in background of visual panel */
+.hero-dna-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.dna-helix-svg {
+    width: 55%;
+    height: 90%;
+    filter: drop-shadow(0 0 18px rgba(0, 151, 167, 0.25));
+    animation: dnaDrift 8s ease-in-out infinite alternate;
+}
+
+@keyframes dnaDrift {
+    0%   { transform: translateY(0); }
+    100% { transform: translateY(-14px); }
+}
+
+/* ── 4. HEXAGONAL IMAGE FRAMES ── */
+.hex-frame {
+    position: absolute;
+    overflow: hidden;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background: white;
+    z-index: 2;
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* Cyan border using a wrapping technique: outer shape + inner image */
+.hex-frame::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    background: linear-gradient(135deg, #E6C54A, #00B3C8 50%, #0097A7);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    z-index: -1;
+}
+
+.hex-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Icon-fallback hex frame */
+.hex-frame.hex-frame-icon {
+    background: linear-gradient(135deg, #EDF5F8 0%, #E5F2F6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hex-frame:hover {
+    transform: scale(1.07) translateY(-4px);
+    filter: drop-shadow(0 12px 28px rgba(0, 151, 167, 0.35));
+}
+
+/* Vial – top right */
+.hex-frame.hex-vial {
+    width: 148px;
+    height: 148px;
+    top: 6%;
+    right: 4%;
+    box-shadow: 0 8px 32px rgba(0, 151, 167, 0.22);
+}
+
+/* Lab – centre-left */
+.hex-frame.hex-lab {
+    width: 162px;
+    height: 162px;
+    top: 36%;
+    left: 2%;
+    box-shadow: 0 10px 36px rgba(0, 151, 167, 0.25);
+}
+
+/* Face – bottom right */
+.hex-frame.hex-face {
+    width: 138px;
+    height: 138px;
+    bottom: 4%;
+    right: 10%;
+    box-shadow: 0 8px 28px rgba(0, 151, 167, 0.20);
+}
+
+/* Floating molecule nodes (decorative dots) */
+.molecule-node {
+    position: absolute;
+    border-radius: 50%;
+    background: #0097A7;
+    z-index: 1;
+    animation: nodeFloat 4s ease-in-out infinite alternate;
+}
+
+.node-1 {
+    width: 12px; height: 12px;
+    top: 22%; right: 38%;
+    opacity: 0.55;
+    animation-delay: 0s;
+}
+.node-2 {
+    width: 8px; height: 8px;
+    top: 56%; right: 46%;
+    opacity: 0.4;
+    animation-delay: 1.2s;
+    background: #E6C54A;
+}
+.node-3 {
+    width: 10px; height: 10px;
+    bottom: 24%; left: 44%;
+    opacity: 0.45;
+    animation-delay: 0.6s;
+}
+
+@keyframes nodeFloat {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(6px, -10px); }
+}
+
+/* ── 5. FEATURE CARDS SECTION ── */
+[data-theme="light"] .hero-features-section {
+    background: #FFFFFF;
+    padding: 56px 0 64px;
+    border-top: 1px solid rgba(0, 151, 167, 0.1);
+    position: relative;
+}
+
+.hero-features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+}
+
+/* Glassmorphism feature card */
+.hex-feature-card {
+    background: #FFFFFF;
+    border-radius: 18px;
+    padding: 38px 30px 36px;
+    text-align: center;
+    border: 1px solid rgba(0, 151, 167, 0.14);
+    box-shadow: 0 6px 32px rgba(15, 23, 42, 0.07), 0 1px 4px rgba(0, 151, 167, 0.06);
+    transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.hex-feature-card::after {
+    content: '';
+    position: absolute;
+    top: -24px;
+    right: -24px;
+    width: 80px;
+    height: 80px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background: rgba(0, 151, 167, 0.05);
+    pointer-events: none;
+}
+
+.hex-feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 56px rgba(0, 151, 167, 0.15), 0 4px 12px rgba(0, 151, 167, 0.08);
+    border-color: rgba(0, 151, 167, 0.35);
+}
+
+/* Hexagonal icon wrapper */
+.hex-icon-outer {
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 24px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hex-icon-bg-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.hex-icon-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+.hex-feature-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: #0F172A;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    margin-bottom: 12px;
+}
+
+.hex-feature-card p {
+    font-size: 0.92rem;
+    color: #64748B;
+    line-height: 1.65;
+    margin-bottom: 24px;
+}
+
+/* "Виж повече" button – cyan outlined */
+.btn-learn-more {
+    display: inline-block;
+    background: transparent;
+    border: 1.5px solid rgba(0, 151, 167, 0.6);
+    color: #8B7030;
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-family: var(--font-primary);
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-learn-more:hover {
+    background: #0097A7;
+    color: #0F0F14;
+    box-shadow: 0 6px 22px rgba(0, 151, 167, 0.30);
+    transform: translateY(-2px);
+}
+
+/* Dark theme feature cards */
+
+}
+
+/* ── HERO PARTICLE CANVAS ── */
+#hero-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+}
+
+[data-theme="light"] #hero-particles {
+    opacity: 0.25;
+}
+
+/* ── STAGGERED CARD ANIMATION DELAYS ── */
+.product-grid .product-card.fade-in-up:nth-child(1)  { transition-delay: 0ms; }
+.product-grid .product-card.fade-in-up:nth-child(2)  { transition-delay: 90ms; }
+.product-grid .product-card.fade-in-up:nth-child(3)  { transition-delay: 180ms; }
+.product-grid .product-card.fade-in-up:nth-child(4)  { transition-delay: 270ms; }
+.product-grid .product-card.fade-in-up:nth-child(5)  { transition-delay: 360ms; }
+.product-grid .product-card.fade-in-up:nth-child(6)  { transition-delay: 450ms; }
+.product-grid .product-card.fade-in-up:nth-child(n+7){ transition-delay: 450ms; }
+
+/* ── 3D TILT CARD SUPPORT ── */
+.product-card {
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+/* ── ANIMATED GRADIENT SPAN IN HERO H1 ── */
+.hero-gradient-word {
+    background: linear-gradient(
+        135deg,
+        #0097A7 0%,
+        #E0C870 25%,
+        #00B3C8 50%,
+        #0097A7 75%,
+        #E6C54A 100%
+    );
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: heroWordGradient 6s linear infinite;
+    display: inline;
+}
+
+@keyframes heroWordGradient {
+    0%   { background-position: 0% center; }
+    100% { background-position: 300% center; }
+}
+
+/* ── STAT COUNTER ANIMATION ── */
+.stat-item strong[data-target] {
+    display: inline-block;
+}
+
+/* ── SECTION GLOW SEPARATOR ── */
+.section-glow-line {
+    display: block;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(0, 151, 167, 0.35) 30%,
+        rgba(0, 151, 167, 0.35) 70%,
+        transparent 100%
+    );
+    margin: 0;
+    position: relative;
+}
+
+.section-glow-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+    filter: blur(3px);
+    margin-top: -1.5px;
+}
+
+/* ── CATEGORY SECTION REVEAL POLISH ── */
+.category-section.fade-in-up.is-visible .category-title {
+    animation: titleReveal 0.6s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+@keyframes titleReveal {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+        filter: blur(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+        filter: blur(0);
+    }
+}
+
+/* ── HEX FEATURE CARD STAGGER ── */
+.hero-features-grid .hex-feature-card.fade-in-up:nth-child(1) { transition-delay: 0ms; }
+.hero-features-grid .hex-feature-card.fade-in-up:nth-child(2) { transition-delay: 150ms; }
+.hero-features-grid .hex-feature-card.fade-in-up:nth-child(3) { transition-delay: 300ms; }
+
+/* ── MAGNETIC BUTTON VISUAL ENHANCEMENT ── */
+.btn-hero-primary,
+.btn-hero-secondary,
+.sticky-cta-btn {
+    transform-origin: center;
+}
+
+/* ── PRODUCT CARD HOLOGRAPHIC HOVER ── */
+.product-card {
+    position: relative;
+}
+
+.product-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        105deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(var(--accent-rgb), 0.04) 50%,
+        transparent 60%,
+        transparent 100%
+    );
+    background-size: 200% auto;
+    border-radius: inherit;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 0.4s ease;
+    animation: holographic 3s ease-in-out infinite;
+    animation-play-state: paused;
+}
+
+.product-card:hover::after {
+    opacity: 1;
+    animation-play-state: running;
+}
+
+@keyframes holographic {
+    0%   { background-position: 0% center; }
+    100% { background-position: 200% center; }
+}
+
+/* ── SCROLL-TRIGGERED SECTION LINE REVEAL ── */
+.category-section.fade-in-up .category-title::after {
+    transition-duration: 0.8s;
+}
+
+/* ── FLOATING DOT GRID (Subtle Background) ── */
+@keyframes dotPulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50%       { opacity: 0.8; transform: scale(1.3); }
+}
+
+/* ── ENHANCED TOAST ── */
+.toast {
+    animation: toastBounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes toastBounceIn {
+    from { transform: translateX(110%) scale(0.8); opacity: 0; }
+    to   { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+/* ── BACK-TO-TOP PULSE ── */
+#back-to-top.visible {
+    animation: backTopPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes backTopPulse {
+    0%, 100% { box-shadow: 0 4px 20px rgba(0, 151, 167, 0.4); }
+    50%       { box-shadow: 0 4px 30px rgba(0, 151, 167, 0.7), 0 0 0 8px rgba(0, 151, 167, 0); }
+}
+
+/* ── SECTION ENTRANCE: scale fade ── */
+.hex-feature-card.fade-in-up {
+    transition: opacity 0.7s cubic-bezier(0.19, 1, 0.22, 1),
+                transform 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* ── PROMO BANNER SHIMMER UPGRADE ── */
+.promo-banner::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.18),
+        transparent
+    );
+    transform: skewX(-15deg);
+    animation: bannerShimmer 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes bannerShimmer {
+    0%   { left: -100%; }
+    60%, 100% { left: 150%; }
+}
+
+/* ── DISABLE ALL PREMIUM EFFECTS ON REDUCED MOTION ── */
+@media (prefers-reduced-motion: reduce) {
+    .bg-orbs,
+    .cursor-glow,
+    #hero-particles {
+        display: none !important;
+    }
+
+    .product-card::after,
+    .hex-feature-card::after,
+    .promo-banner::after {
+        animation: none !important;
+        opacity: 0 !important;
+    }
+
+    .hero-gradient-word {
+        animation: none;
+        background: linear-gradient(135deg, #0097A7, #E6C54A);
+    }
+}
+
+
+/* ======================================================= */
+/*   PREMIUM CLINIC REFINEMENTS - Luxury Gold Palette      */
+/*   Добавени за допълнително изчистване и финес           */
+/* ======================================================= */
+
+/* ── LUXURY PROMO BANNER SHIMMER (gold shimmer on dark bg) ── */
+.promo-banner::before {
+    background: linear-gradient(90deg, transparent, rgba(0, 151, 167, 0.15), transparent);
+}
+
+/* ── PREMIUM PRODUCT CARD HOVER (warm gold border) ── */
+.product-card:hover {
+    border-color: rgba(0, 151, 167, 0.5);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 151, 167, 0.15);
+}
+
+
+
+/* ── SEARCH RESULT PRICE: gold ── */
+.search-result-price {
+    color: #8B7030;
+}
+
+
+
+.cart-link-mobile a:hover {
+    background: #0097A7;
+    color: #FFFFFF;
+}
+
+/* ── SCROLL PROGRESS: gold ── */
+.scroll-progress {
+    background: linear-gradient(90deg, #0097A7, #00B3C8, #E6C54A);
+}
+
+/* ── TOAST INFO: gold-tinted ── */
+.toast.info {
+    background: linear-gradient(135deg, rgba(0, 151, 167, 0.95), rgba(0, 122, 138, 0.95));
+}
+
+/* ======================================================= */
+/*   BIOHACK PREMIUM REDESIGN – Inspired by protocols.html */
+/*   Dark-first design: cyan + gold, neon glow, glassmorphism */
+/* ======================================================= */
+
+/* ── BIOHACK CYAN: new accent variable ── */
+:root {
+    --color-cyan: #00C4C8;
+    --accent-cyan-rgb: 0, 196, 200;
+    --glow-cyan-sm: 0 4px 20px rgba(0, 196, 200, 0.35);
+    --glow-cyan-md: 0 8px 30px rgba(0, 196, 200, 0.50);
+    --glow-cyan-lg: 0 14px 50px rgba(0, 196, 200, 0.55), 0 0 60px rgba(0, 196, 200, 0.25);
+    --btn-gradient-biohack: linear-gradient(135deg, #00C4C8 0%, #0090A8 45%, #0097A7 100%);
+}
+
+/* ── DARK HERO: animated cyan-gold mesh (inspired by protocols.html bg-mesh) ── */
+
+
+/* ── DARK HERO tagline: cyan (instead of muted gold) ── */
+
+
+
+
+
+
+/* ── BTN-HERO-PRIMARY DARK: cyan-to-gold gradient with pulsing neon glow ── */
+
+
+
+
+
+
+
+
+/* ── BTN-PREMIUM DARK: dual-spectrum neon (gold + cyan sweep) ── */
+
+
+
+
+/* Sync ripple colour to the new btn styles */
+
+
+    </style>
 </head>
 <body>
     <!-- Skip to main content - accessibility -->
@@ -420,7 +3597,2496 @@
         </div>
     </div>
 
-    <script src="life.js" type="module"></script>
     
+    <script>
+// =======================================================
+//          1. ИНИЦИАЛИЗАЦИЯ И ГЛОБАЛНИ ЕЛЕМЕНТИ
+// =======================================================
+
+const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:8080/backend' : 'https://port.radilov-k.workers.dev';
+
+const DOM = {
+    mainContainer: document.getElementById('main-content-container'),
+    header: {
+        logoImg: document.getElementById('header-logo-img'),
+        brandName: document.getElementById('header-brand-name'),
+        brandSlogan: document.getElementById('header-brand-slogan'),
+        navLinks: document.getElementById('main-nav-links'),
+        cartCount: document.getElementById('cart-count')
+    },
+    footer: {
+        gridContainer: document.getElementById('footer-grid-container'),
+        copyrightContainer: document.getElementById('footer-copyright-container')
+    },
+    backToTopBtn: document.getElementById('back-to-top'),
+    menuToggle: document.querySelector('.menu-toggle'),
+    navLinksContainer: document.querySelector('.nav-links'),
+    navOverlay: document.querySelector('.nav-overlay'),
+    body: document.body,
+    questModal: {
+        backdrop: document.getElementById('quest-modal-backdrop'),
+        container: document.getElementById('quest-modal-container'),
+        iframe: document.getElementById('quest-modal-iframe')
+    },
+    toastContainer: document.getElementById('toast-container')
+};
+
+const promoBanner = document.querySelector('.promo-banner');
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+const updatePromoBannerOffset = () => {
+    const bannerHeight = promoBanner ? promoBanner.getBoundingClientRect().height : 0;
+    document.documentElement.style.setProperty('--promo-banner-height', `${bannerHeight}px`);
+    document.documentElement.style.setProperty('--double-promo-banner-height', `${bannerHeight}px`);
+};
+
+updatePromoBannerOffset();
+window.addEventListener('resize', debounce(updatePromoBannerOffset, 150));
+window.addEventListener('load', updatePromoBannerOffset);
+
+// HTML escaping utility to prevent XSS attacks
+function escapeHtml(unsafe) {
+    if (unsafe === null || unsafe === undefined) return '';
+    return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// Validates an image URL - blocks dangerous protocols, allows only safe URLs
+function validateImageUrl(url) {
+    if (!url) return '';
+    const lower = url.toLowerCase().trim();
+    if (lower.startsWith('data:') || lower.startsWith('javascript:') || lower.startsWith('vbscript:')) {
+        return '';
+    }
+    if (lower.startsWith('https://') || lower.startsWith('http://') ||
+        lower.startsWith('/images/') || lower.startsWith('/assets/')) {
+        return escapeHtml(url);
+    }
+    return '';
+}
+
+
+// =======================================================
+//          2. ГЕНЕРАТОРИ НА HTML (GENERATOR FUNCTIONS)
+// =======================================================
+
+const generateEffectBar = effect => `
+    <div class="effect-bar-group">
+        <div class="effect-label">${escapeHtml(effect.label)}</div>
+        <div class="effect-bar-container">
+            <div class="effect-bar" data-width="${Number(effect.value)}%">${(effect.value / 10).toFixed(1)} / 10</div>
+        </div>
+    </div>`;
+
+// --- START: MODIFIED FUNCTION ---
+// Product cards are now clickable links that navigate to product detail page
+const generateProductCard = (product) => {
+    // Проверка за сигурност: ако продуктът няма public_data, не го рендираме.
+    if (!product.public_data) {
+        console.warn(`Продукт с ID '${product.product_id}' няма 'public_data' и няма да бъде рендиран.`);
+        return '';
+    }
+
+    const publicData = product.public_data;
+    const inventory = product.system_data?.inventory ?? 0;
+    const productId = product.product_id;
+    const variants = publicData.variants || [];
+    const variantBadge = variants.length > 1 
+        ? `<span class="variant-badge">${variants.length} вкуса</span>` 
+        : '';
+    const brandLabel = publicData.brand 
+        ? `<span class="brand-label">${escapeHtml(publicData.brand)}</span>` 
+        : '';
+
+    return `
+    <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}" data-brand="${escapeHtml(publicData.brand || '')}" data-price="${Number(publicData.price)}" data-goals="${escapeHtml((product.system_data?.goals || []).join(','))}">
+        ${publicData.image_url ? `<div class="product-image">${variantBadge}<img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)} - ${escapeHtml(publicData.tagline)}" loading="lazy" decoding="async"></div>` : ''}
+        <div class="card-content">
+            ${brandLabel}
+            <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(publicData.tagline)}</p></div>
+            <div class="product-price">${Number(publicData.price).toFixed(2)} €</div>
+            <div class="effects-container">
+                ${(publicData.effects || []).map(generateEffectBar).join('')}
+            </div>
+        </div>
+    </a>`;
+}
+// --- END: MODIFIED FUNCTION ---
+
+
+// Helper function to generate SVG icons for stats
+const getStatIconSVG = (iconName) => {
+    const icons = {
+        'users': '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+        'chart': '<line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line>',
+        'leaf': '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>',
+        'heart': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>',
+        'star': '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>',
+        'shield': '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>',
+        'award': '<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>',
+        'trophy': '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>',
+        'flask': '<path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h6m-6 0H3m6 0V9m6-6v18m0 0h6a2 2 0 0 0 2-2v-4m-8 6V9"></path>',
+        'dna': '<path d="M2 15c6.667-6 13.333 0 20-6"></path><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"></path><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"></path><path d="m17 6-2.5-2.5"></path><path d="m14 8-1-1"></path><path d="m7 18 2.5 2.5"></path><path d="m3.5 14.5.5.5"></path><path d="m20 9 .5.5"></path><path d="m6.5 12.5 1 1"></path><path d="m16.5 10.5 1 1"></path><path d="m10 16 1.5 1.5"></path>',
+        'sparkle': '<path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path>'
+    };
+    
+    return icons[iconName] || '';
+};
+
+const generateHeroHTML = component => {
+    // Build style attribute for custom background
+    let heroStyle = '';
+    let heroClass = '';
+    
+    // Check background_type field to determine what to apply
+    const bgType = component.background_type || 'default';
+    
+    if (bgType === 'image' && component.background_image) {
+        // Validate URL to prevent CSS injection and XSS
+        const imageUrl = escapeHtml(component.background_image);
+        // Explicitly block dangerous protocols
+        const hasDangerousProtocol = imageUrl.toLowerCase().startsWith('data:') || 
+                                     imageUrl.toLowerCase().startsWith('javascript:') ||
+                                     imageUrl.toLowerCase().startsWith('vbscript:');
+        // Only allow safe URLs
+        const isValidUrl = !hasDangerousProtocol && (
+            imageUrl.startsWith('https://') || 
+            imageUrl.startsWith('http://') ||
+            (imageUrl.startsWith('/') && (imageUrl.startsWith('/images/') || imageUrl.startsWith('/assets/')))
+        );
+        if (isValidUrl) {
+            heroClass = ' hero-custom-bg';
+            heroStyle = ` data-bg-image="true" style="background-image: url('${imageUrl}');"`;
+        }
+    } else if (bgType === 'custom_gradient' && component.background_gradient) {
+        // Validate gradient - strict character set for security
+        const gradient = escapeHtml(component.background_gradient);
+        // Only allow safe characters: alphanumeric, spaces, commas, periods, %, #, (), and hyphens
+        const gradientPattern = /^(linear-gradient|radial-gradient|conic-gradient|repeating-linear-gradient|repeating-radial-gradient)\([a-zA-Z0-9\s,%.#()-]+\)$/;
+        if (gradientPattern.test(gradient)) {
+            heroClass = ' hero-custom-bg';
+            heroStyle = ` style="background: ${gradient};"`;
+        }
+    }
+    // If bgType is 'default' or validation fails, use the default theme-based gradient (no custom class/style)
+    
+    // Validate CSS selector for scroll targets (prevent XSS in onclick)
+    // Use allowlist approach - only permit known safe selectors
+    function validateSelector(selector) {
+        const allowedSelectors = [
+            '#products', '#weight-loss-products', '#fat-burners', '#all-products',
+            '#benefits', '#timeline', '#ingredients', '#testimonials',
+            '#faq', '#guarantee', '#contact', '#hero', '#about'
+        ];
+        return allowedSelectors.includes(selector) ? selector : '#products';
+    }
+    
+    // Get buttons configuration with defaults
+    const buttons = component.buttons || {};
+    const primaryBtn = buttons.primary || { text: 'Разгледай продуктите', action: 'scroll', target: '#products' };
+    const secondaryBtn = buttons.secondary || { text: 'Научи повече', action: 'link', target: 'about-us.html' };
+    
+    // Generate primary button (scroll or link)
+    let primaryButtonHTML = '';
+    if (primaryBtn.action === 'link') {
+        primaryButtonHTML = `<a href="${escapeHtml(primaryBtn.target)}" class="btn-hero-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            ${escapeHtml(primaryBtn.text)}
+        </a>`;
+    } else {
+        // Validate selector for security before using in onclick
+        const safeSelector = validateSelector(primaryBtn.target);
+        primaryButtonHTML = `<button class="btn-hero-primary" onclick="document.querySelector('${safeSelector}')?.scrollIntoView({behavior: 'smooth'})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            ${escapeHtml(primaryBtn.text)}
+        </button>`;
+    }
+    
+    // Generate secondary button (scroll or link)
+    let secondaryButtonHTML = '';
+    if (secondaryBtn.action === 'link') {
+        secondaryButtonHTML = `<a href="${escapeHtml(secondaryBtn.target)}" class="btn-hero-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            ${escapeHtml(secondaryBtn.text)}
+        </a>`;
+    } else {
+        // Validate selector for security before using in onclick
+        const safeSelector = validateSelector(secondaryBtn.target);
+        secondaryButtonHTML = `<button class="btn-hero-secondary" onclick="document.querySelector('${safeSelector}')?.scrollIntoView({behavior: 'smooth'})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            ${escapeHtml(secondaryBtn.text)}
+        </button>`;
+    }
+    
+    // Get stats configuration with defaults
+    const stats = component.stats || [
+        { value: '2,840+', label: 'Доволни клиенти', icon: 'users' },
+        { value: '98%', label: 'Успеваемост', icon: 'chart' },
+        { value: '100%', label: 'Естествени съставки', icon: 'leaf' }
+    ];
+    
+    const statsHTML = stats.map(stat => {
+        const safeIconUrl = validateImageUrl(stat.icon_url);
+        return `
+        <div class="stat-item">
+            ${safeIconUrl ? `<img src="${safeIconUrl}" alt="${escapeHtml(stat.label)}" class="stat-icon" width="32" height="32" style="object-fit:contain;">` :
+              stat.icon ? `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
+                ${getStatIconSVG(stat.icon)}
+            </svg>` : ''}
+            <strong>${escapeHtml(stat.value)}</strong>
+            <span>${escapeHtml(stat.label)}</span>
+        </div>
+    `;
+    }).join('');
+    
+    // Get trust badges configuration with defaults
+    const trustBadges = component.trust_badges || [
+        { text: 'Клинично тествано' },
+        { text: 'GMP сертифицирано' },
+        { text: '30 дни гаранция' }
+    ];
+    
+    const trustBadgesHTML = trustBadges.map(badge => {
+        const safeIconUrl = validateImageUrl(badge.icon_url);
+        return `
+        <div class="trust-badge">
+            ${safeIconUrl ? `<img src="${safeIconUrl}" alt="" class="trust-badge-icon" width="16" height="16" style="object-fit:contain;display:inline-block;vertical-align:middle;margin-right:4px;">` : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>`}
+            ${escapeHtml(badge.text)}
+        </div>
+    `;
+    }).join('');
+    
+    // Feature cards (hexagonal highlight cards below hero)
+    const features = component.features || [
+        {
+            title: 'МИТОХОНДРИАЛЕН БУСТ',
+            description: 'Активирайте клетъчната енергия и подобрете митохондриалната функция с доказани пептиди.',
+            icon: 'mitochondria',
+            link: '#peptides'
+        },
+        {
+            title: 'ТЕЛОМЕРНА ПОДКРЕПА',
+            description: 'Иновативни формули за защита на теломерите и клетъчно подмладяване на молекулярно ниво.',
+            icon: 'dna',
+            link: '#anti-aging'
+        },
+        {
+            title: 'НЕВРО-УСИЛВАНЕ',
+            description: 'Нутрацевтици за когнитивна функция, невропластичност и дългосрочно мозъчно здраве.',
+            icon: 'brain',
+            link: '#all-products'
+        }
+    ];
+
+    const getFeatureIconSVG = (iconName) => {
+        const icons = {
+            mitochondria: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="12" rx="8" ry="5" transform="rotate(-30 12 12)"/>
+                <path d="M9 9c1 1 1 3 0 4"/>
+                <path d="M12 8c1 2 1 5 0 7"/>
+                <path d="M15 9c1 1 1 3 0 4"/>
+            </svg>`,
+            dna: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 15c6.667-6 13.333 0 20-6"/>
+                <path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/>
+                <path d="M22 9c-4.29 4.29-8.57 5.6-11.18 3.57"/>
+                <circle cx="5" cy="13" r="1"/>
+                <circle cx="19" cy="11" r="1"/>
+                <circle cx="8" cy="21" r="1"/>
+                <circle cx="16" cy="3" r="1"/>
+                <path d="M2 9c6.667 6 13.333 0 20 6"/>
+                <path d="M9 2c1.798 1.998 2.518 3.995 2.807 5.993"/>
+            </svg>`,
+            brain: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.66z"/>
+                <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.66z"/>
+            </svg>`,
+        };
+        return icons[iconName] || icons.dna;
+    };
+
+    const featuresHTML = `
+    <section class="hero-features-section">
+        <div class="container">
+            <div class="hero-features-grid">
+                ${features.map(f => `
+                <article class="hex-feature-card fade-in-up">
+                    <div class="hex-icon-outer">
+                        <svg class="hex-icon-bg-svg" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <polygon points="45,4 86,26 86,64 45,86 4,64 4,26" fill="rgba(6,182,212,0.06)" stroke="#06B6D4" stroke-width="1.5"/>
+                        </svg>
+                        <span class="hex-icon-inner">${getFeatureIconSVG(f.icon)}</span>
+                    </div>
+                    <h3>${escapeHtml(f.title)}</h3>
+                    <p>${escapeHtml(f.description)}</p>
+                    <a href="${escapeHtml(f.link)}" class="btn-learn-more">Виж повече</a>
+                </article>
+                `).join('')}
+            </div>
+        </div>
+    </section>`;
+
+    // Hero visual panel (right side) - hexagonal image cluster with DNA helix
+    const heroImages = component.hero_images || {};
+    const vialImg = heroImages.vial || '';
+    const labImg = heroImages.lab || '';
+    const faceImg = heroImages.face || '';
+
+    const makeHexFrame = (imgUrl, cls, altText, fallbackSvg) => {
+        if (imgUrl) {
+            const rawUrl = String(imgUrl);
+            const lowerUrl = rawUrl.toLowerCase();
+            // Reject data: URLs entirely (can execute scripts) and other dangerous protocols
+            const isDangerous = lowerUrl.startsWith('data:') ||
+                                lowerUrl.startsWith('javascript:') ||
+                                lowerUrl.startsWith('vbscript:') ||
+                                lowerUrl.startsWith('blob:');
+            // Only allow https:// or same-origin relative paths
+            const isSafe = !isDangerous && (
+                rawUrl.startsWith('https://') ||
+                (rawUrl.startsWith('/') && (rawUrl.startsWith('/images/') || rawUrl.startsWith('/assets/')))
+            );
+            if (isSafe) {
+                return `<div class="hex-frame ${cls}"><img src="${escapeHtml(rawUrl)}" alt="${escapeHtml(altText)}" loading="lazy"></div>`;
+            }
+        }
+        return `<div class="hex-frame ${cls} hex-frame-icon">${fallbackSvg}</div>`;
+    };
+
+    const vialSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h6m-6 0H3m6 0V9m6-6v18m0 0h6a2 2 0 0 0 2-2v-4m-8 6V9"/></svg>`;
+    const labSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>`;
+    const faceSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>`;
+
+    const heroVisualHTML = `
+    <div class="hero-visual" aria-hidden="true">
+        <div class="hero-dna-bg">
+            <svg viewBox="0 0 200 500" xmlns="http://www.w3.org/2000/svg" class="dna-helix-svg">
+                <defs>
+                    <linearGradient id="dnaGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#06B6D4;stop-opacity:0.8"/>
+                        <stop offset="100%" style="stop-color:#22D3EE;stop-opacity:0.3"/>
+                    </linearGradient>
+                    <linearGradient id="dnaGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:0.7"/>
+                        <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:0.4"/>
+                    </linearGradient>
+                </defs>
+                <!-- Left strand -->
+                <path d="M60,10 C120,60 20,110 80,160 C140,210 40,260 100,310 C160,360 60,410 120,460" fill="none" stroke="url(#dnaGrad1)" stroke-width="3" stroke-linecap="round"/>
+                <!-- Right strand -->
+                <path d="M140,10 C80,60 180,110 120,160 C60,210 160,260 100,310 C40,360 140,410 80,460" fill="none" stroke="url(#dnaGrad2)" stroke-width="3" stroke-linecap="round"/>
+                <!-- Cross bridges -->
+                <line x1="75" y1="35" x2="125" y2="35" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="55" y1="85" x2="145" y2="85" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="90" y1="135" x2="110" y2="135" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="110" y1="185" x2="90" y2="185" stroke="#22D3EE" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="65" y1="235" x2="135" y2="235" stroke="#22D3EE" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="95" y1="285" x2="105" y2="285" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="115" y1="335" x2="85" y2="335" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="75" y1="385" x2="125" y2="385" stroke="#22D3EE" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="90" y1="430" x2="110" y2="440" stroke="#06B6D4" stroke-width="2" stroke-opacity="0.5"/>
+                <!-- Node circles on strands -->
+                <circle cx="75" cy="35" r="4" fill="#06B6D4" fill-opacity="0.6"/>
+                <circle cx="125" cy="35" r="4" fill="#22D3EE" fill-opacity="0.6"/>
+                <circle cx="55" cy="85" r="5" fill="#06B6D4" fill-opacity="0.7"/>
+                <circle cx="145" cy="85" r="5" fill="#FF6B6B" fill-opacity="0.5"/>
+                <circle cx="100" cy="160" r="6" fill="#06B6D4" fill-opacity="0.5"/>
+                <circle cx="100" cy="310" r="6" fill="#22D3EE" fill-opacity="0.5"/>
+                <circle cx="65" cy="235" r="4" fill="#06B6D4" fill-opacity="0.6"/>
+                <circle cx="135" cy="235" r="4" fill="#22D3EE" fill-opacity="0.6"/>
+            </svg>
+        </div>
+        ${makeHexFrame(vialImg, 'hex-vial', 'Биологичен флакон', vialSVG)}
+        ${makeHexFrame(labImg, 'hex-lab', 'Лабораторно изследване', labSVG)}
+        ${makeHexFrame(faceImg, 'hex-face', 'Клетъчно подмладяване', faceSVG)}
+        <!-- Floating molecule nodes -->
+        <div class="molecule-node node-1"></div>
+        <div class="molecule-node node-2"></div>
+        <div class="molecule-node node-3"></div>
+    </div>`;
+
+    return `
+    <header class="hero-section${heroClass}"${heroStyle}>
+        <div class="hex-bg-pattern" aria-hidden="true"></div>
+        <div class="container hero-grid">
+            <div class="hero-content">
+                ${component.tagline ? `<span class="hero-tagline">${escapeHtml(component.tagline)}</span>` : ''}
+                <h1>${escapeHtml(component.title)}</h1>
+                <p>${escapeHtml(component.subtitle)}</p>
+                <div class="hero-cta-group">
+                    ${primaryButtonHTML}
+                    ${secondaryButtonHTML}
+                </div>
+                <div class="hero-trust-badges">
+                    ${trustBadgesHTML}
+                </div>
+            </div>
+            ${heroVisualHTML}
+        </div>
+        <div class="container">
+            <div class="hero-stats">
+                ${statsHTML}
+            </div>
+        </div>
+    </header>
+    ${featuresHTML}`;
+};
+
+// --- START: MODIFIED FUNCTION ---
+const generateProductCategoryHTML = (component, index) => {
+    const isCollapsible = component.options?.is_collapsible;
+    const isExpanded = component.options?.is_expanded_by_default ?? true;
+    const productGridId = `product-grid-${component.id || index}`;
+    const enableFilters = component.options && component.options.enable_filters;
+    
+    // Sort products by display_order if it exists, otherwise maintain current order
+    const sortedProducts = (component.products || []).slice().sort((a, b) => {
+        const orderA = a.display_order !== undefined ? a.display_order : 999999;
+        const orderB = b.display_order !== undefined ? b.display_order : 999999;
+        return orderA - orderB;
+    });
+
+    // Build filter bar HTML if enabled
+    let filterBarHTML = '';
+    if (enableFilters) {
+        // Extract unique brands
+        const brands = [...new Set(sortedProducts.map(p => p.public_data?.brand).filter(Boolean))].sort();
+        // Extract unique goals
+        const goalsSet = new Set();
+        sortedProducts.forEach(p => {
+            (p.system_data?.goals || []).forEach(g => goalsSet.add(g));
+        });
+        const goals = [...goalsSet].sort();
+
+        filterBarHTML = `
+        <div class="product-filter-bar" data-grid-id="${productGridId}">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="filter-brand-${index}">Марка</label>
+                    <select id="filter-brand-${index}" class="filter-select" data-filter="brand">
+                        <option value="">Всички марки</option>
+                        ${brands.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-goal-${index}">Цел</label>
+                    <select id="filter-goal-${index}" class="filter-select" data-filter="goal">
+                        <option value="">Всички цели</option>
+                        ${goals.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-sort-${index}">Подреди по</label>
+                    <select id="filter-sort-${index}" class="filter-select" data-filter="sort">
+                        <option value="default">По подразбиране</option>
+                        <option value="price-asc">Цена (ниска → висока)</option>
+                        <option value="price-desc">Цена (висока → ниска)</option>
+                        <option value="effectiveness">Ефективност</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-search-${index}">Търсене</label>
+                    <input type="text" id="filter-search-${index}" class="filter-input" data-filter="search" placeholder="Търси продукт...">
+                </div>
+            </div>
+            <div class="filter-results-count" id="filter-count-${productGridId}"></div>
+        </div>`;
+    }
+
+    // For filterable categories with many products, show limited initially
+    const INITIAL_SHOW = enableFilters ? 24 : sortedProducts.length;
+    const initialProducts = sortedProducts.slice(0, INITIAL_SHOW);
+    const hasMore = sortedProducts.length > INITIAL_SHOW;
+    
+    return `
+    <section id="${component.id}" class="category-section fade-in-up ${isCollapsible ? '' : 'not-collapsible'}">
+        <div class="container">
+             <div class="category-header" ${isCollapsible ? `role="button" aria-expanded="${isExpanded}" aria-controls="${productGridId}" tabindex="0"` : ''}>
+                <h2 class="category-title">
+                    ${component.title}
+                    ${isCollapsible ? '<span class="category-expand-icon"></span>' : ''}
+                </h2>
+                ${component.image ? `<div class="category-image-wrapper"><img src="${component.image}" alt="${component.title}" loading="lazy"></div>` : ''}
+                ${component.description ? `<p class="category-description">${component.description}</p>` : ''}
+            </div>
+            ${filterBarHTML}
+            <div class="product-grid" id="${productGridId}" ${enableFilters ? `data-all-products='${encodeProductsForAttr(sortedProducts)}' data-page-size="24"` : ''}>
+                ${initialProducts.map(generateProductCard).join('')}
+            </div>
+            ${hasMore ? `<div class="load-more-container" id="load-more-${productGridId}">
+                <button class="btn-load-more" data-grid-id="${productGridId}">Зареди още продукти (${sortedProducts.length - INITIAL_SHOW} остават)</button>
+            </div>` : ''}
+        </div>
+    </section>`;
+}
+
+// Encode products data for the filterable grid (stores as base64 JSON to avoid HTML issues)
+function encodeProductsForAttr(products) {
+    try {
+        // Store minimal data needed for filtering
+        const minimalProducts = products.map(p => ({
+            product_id: p.product_id,
+            name: p.public_data?.name || '',
+            price: p.public_data?.price || 0,
+            brand: p.public_data?.brand || '',
+            image_url: p.public_data?.image_url || '',
+            tagline: p.public_data?.tagline || '',
+            effects: p.public_data?.effects || [],
+            goals: p.system_data?.goals || [],
+            variants: p.public_data?.variants || [],
+            inventory: p.system_data?.inventory ?? 0
+        }));
+        return btoa(new TextEncoder().encode(JSON.stringify(minimalProducts)).reduce((s, b) => s + String.fromCharCode(b), ''));
+    } catch (e) {
+        return '';
+    }
+}
+// --- END: MODIFIED FUNCTION ---
+
+const generateInfoCardHTML = component => `
+    <section ${component.id ? `id="${component.id}"` : ''} class="info-card-section fade-in-up ${'image-align-' + (component.options?.image_align || 'left')}">
+        <div class="container">
+            <div class="info-card-image">
+                <img src="${component.image}" alt="${component.title}" loading="lazy">
+            </div>
+            <div class="info-card-content">
+                <h2>${component.title}</h2>
+                <p>${component.content}</p>
+                ${component.button && component.button.text ? `<a href="${component.button.url}" class="btn-primary">${component.button.text}</a>` : ''}
+            </div>
+        </div>
+    </section>`;
+
+const generateBenefitsHTML = component => `
+    <section id="benefits" class="section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="about-grid">
+                ${component.image ? `<div class="about-image-placeholder animate-on-scroll">
+                    <img src="${component.image}" alt="${component.title}" style="width:100%; height:100%; object-fit:cover;">
+                </div>` : ''}
+                <div class="about-content">
+                    ${component.content_title ? `<h3 class="animate-on-scroll">${component.content_title}</h3>` : ''}
+                    <div class="benefits">
+                        ${(component.benefits || []).map(benefit => `
+                            <div class="benefit-item animate-on-scroll">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    ${benefit.icon === 'check' ? '<polyline points="20 6 9 17 4 12"></polyline>' : 
+                                      benefit.icon === 'fire' ? '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>' :
+                                      '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'}
+                                </svg>
+                                <div>
+                                    <h4>${benefit.title}</h4>
+                                    <p>${benefit.text}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>`;
+
+const generateTimelineHTML = component => `
+    <section id="effects" class="section-padding section-bg">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="timeline">
+                ${(component.steps || []).map((step, index) => `
+                    <div class="timeline-item animate-on-scroll">
+                        <div class="timeline-content">
+                            <h4>${index + 1}. ${step.title}</h4>
+                            <p>${step.text}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    </section>`;
+
+const generateIngredientsHTML = component => `
+    <section id="ingredients" class="section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="ingredients-grid">
+                ${(component.ingredients || []).map(ingredient => `
+                    <div class="ingredient-card animate-on-scroll" tabindex="0">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <h5>${ingredient.name}</h5>
+                                <span>${ingredient.amount}</span>
+                            </div>
+                            <div class="card-back">
+                                <p>${ingredient.description}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    </section>`;
+
+const generateTestimonialsHTML = component => `
+    <section id="testimonials" class="section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="testimonials-grid">
+                ${(component.testimonials || []).map(testimonial => `
+                    <div class="testimonial-card animate-on-scroll">
+                        <div class="stars" aria-label="${testimonial.rating} out of 5 stars">${Array.from({length: 5}, (_, i) => `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="${i < testimonial.rating ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`).join('')}</div>
+                        <p class="testimonial-text">"${testimonial.text}"</p>
+                        <div class="testimonial-author">
+                            <strong>${testimonial.author}</strong>
+                            ${testimonial.location ? `<span>${testimonial.location}</span>` : ''}
+                        </div>
+                        ${testimonial.result ? `<div class="result-badge">${testimonial.result}</div>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    </section>`;
+
+const generateFAQHTML = component => `
+    <section id="faq" class="section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="faq-container">
+                ${(component.questions || []).map(faq => `
+                    <div class="faq-item animate-on-scroll">
+                        <div class="faq-question" role="button" aria-expanded="false" tabindex="0">
+                            <h4>${faq.question}</h4>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>${faq.answer}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    </section>`;
+
+const generateGuaranteeHTML = component => `
+    <section class="guarantee-section section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="guarantee-grid">
+                ${(component.items || []).map(item => {
+                    const iconSVG = {
+                        'shield': '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>',
+                        'truck': '<rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle>',
+                        'certificate': '<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>',
+                        'support': '<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path><circle cx="6.5" cy="11.5" r="1.5"></circle><circle cx="9.5" cy="7.5" r="1.5"></circle><circle cx="14.5" cy="7.5" r="1.5"></circle><circle cx="17.5" cy="11.5" r="1.5"></circle>'
+                    };
+                    return `
+                    <div class="guarantee-card animate-on-scroll">
+                        <div class="guarantee-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                ${iconSVG[item.icon] || iconSVG['shield']}
+                            </svg>
+                        </div>
+                        <h4>${item.title}</h4>
+                        <p>${item.description}</p>
+                    </div>
+                `}).join('')}
+            </div>
+        </div>
+    </section>`;
+
+const generateContactHTML = component => `
+    <section id="order" class="section-padding">
+        <div class="container">
+            <div class="section-title animate-on-scroll">
+                <h2>${component.title}</h2>
+                ${component.subtitle ? `<p>${component.subtitle}</p>` : ''}
+            </div>
+            <div class="order-grid">
+                <div class="contact-details animate-on-scroll">
+                    <h4>Информация за контакт</h4>
+                    <p>За повече информация и поръчки, свържете се с нас.</p>
+                    <ul>
+                        ${component.email ? `<li><strong>Имейл:</strong> ${component.email}</li>` : ''}
+                        ${component.phone ? `<li><strong>Телефон:</strong> ${component.phone}</li>` : ''}
+                        ${component.address ? `<li><strong>Адрес:</strong> ${component.address}</li>` : ''}
+                    </ul>
+                    ${component.social ? `
+                        <h4>Последвайте ни</h4>
+                        <div class="social-links">
+                            ${component.social.facebook ? `<a href="${component.social.facebook}" aria-label="Facebook">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                            </a>` : ''}
+                            ${component.social.instagram ? `<a href="${component.social.instagram}" aria-label="Instagram">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                            </a>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+                <form id="order-form" class="order-form animate-on-scroll">
+                    <h4>Свържете се с нас</h4>
+                    <div class="form-group">
+                        <label for="contact-name">Име *</label>
+                        <input type="text" id="contact-name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-email">Имейл *</label>
+                        <input type="email" id="contact-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-phone">Телефон</label>
+                        <input type="tel" id="contact-phone" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-message">Съобщение *</label>
+                        <textarea id="contact-message" name="message" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Изпрати запитване</button>
+                </form>
+            </div>
+        </div>
+    </section>`;
+
+
+// =======================================================
+//          3. УПРАВЛЕНИЕ НА КОЛИЧКА (CART LOGIC)
+// =======================================================
+
+const getCart = () => JSON.parse(localStorage.getItem('lifeCart') || '[]');
+const saveCart = cart => localStorage.setItem('lifeCart', JSON.stringify(cart));
+
+const saveNavigationState = (productId = null) => {
+    sessionStorage.setItem('lifeScrollPosition', window.scrollY.toString());
+    if (productId) {
+        sessionStorage.setItem('lifeLastViewedProduct', productId);
+    } else {
+        sessionStorage.removeItem('lifeLastViewedProduct');
+    }
+    const categoryStates = {};
+    document.querySelectorAll('.category-section[id] .category-header[aria-expanded]').forEach(header => {
+        const section = header.closest('.category-section');
+        if (section && section.id) categoryStates[section.id] = header.getAttribute('aria-expanded');
+    });
+    sessionStorage.setItem('lifeCategoryStates', JSON.stringify(categoryStates));
+};
+
+const updateCartCount = () => {
+    const count = getCart().reduce((acc, item) => acc + item.quantity, 0);
+    
+    // Update header cart count
+    if (DOM.header.cartCount) {
+        DOM.header.cartCount.textContent = count;
+    }
+    
+    // Update mobile fixed cart count
+    const cartCountMobile = document.getElementById('cart-count-mobile');
+    if (cartCountMobile) {
+        cartCountMobile.textContent = count;
+    }
+    
+    // Update mobile menu cart count
+    const cartCountMenu = document.getElementById('cart-count-menu');
+    if (cartCountMenu) {
+        cartCountMenu.textContent = count;
+    }
+};
+
+const showToast = (message, type = 'info', duration = 4000) => {
+    if (!DOM.toastContainer) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    
+    const msgSpan = document.createElement('span');
+    msgSpan.className = 'toast-message';
+    msgSpan.textContent = message;
+    
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'toast-dismiss';
+    dismissBtn.setAttribute('aria-label', 'Затвори');
+    dismissBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+    
+    let timer;
+    const removeToast = () => {
+        clearTimeout(timer);
+        toast.classList.add('fade-out');
+        toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+    };
+    
+    dismissBtn.addEventListener('click', removeToast);
+    toast.appendChild(msgSpan);
+    toast.appendChild(dismissBtn);
+    DOM.toastContainer.appendChild(toast);
+    timer = setTimeout(removeToast, duration);
+};
+
+const showAddToCartFeedback = (productId) => {
+    const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+    if (!card) return;
+    const btn = card.querySelector('.add-to-cart-btn');
+    if (!btn || btn.classList.contains('added')) return;
+    
+    btn.classList.add('added');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>Добавено`;
+    
+    setTimeout(() => {
+        btn.classList.remove('added');
+        btn.innerHTML = originalHTML;
+    }, 2000);
+}
+
+const addToCart = (id, name, price, inventory, image) => {
+    const maxQty = Number(inventory) || 0;
+    const cart = getCart();
+    const idx = cart.findIndex(i => i.id === id);
+    if (idx > -1) {
+        if (maxQty && cart[idx].quantity >= maxQty) {
+            showToast('Няма достатъчна наличност.', 'error');
+            return;
+        }
+        cart[idx].quantity++;
+        // Update image if it's missing in existing cart item
+        if (!cart[idx].image && image) {
+            cart[idx].image = image;
+        }
+    } else {
+        if (maxQty === 0) {
+            showToast('Продуктът е изчерпан.', 'error');
+            return;
+        }
+        cart.push({ id, name, price: Number(price), quantity: 1, inventory: maxQty, image: image || '' });
+    }
+    saveCart(cart);
+    updateCartCount();
+    showAddToCartFeedback(id);
+};
+
+
+// =======================================================
+//          4. РЕНДЪРИ НА СЪДЪРЖАНИЕ (RENDERERS)
+// =======================================================
+
+function renderHeader(settings, navigation, pageContent) {
+    document.title = settings.site_name;
+    
+    // Store logo URLs for theme switching
+    window.logoSettings = {
+        lightLogo: settings.logo_url_light || settings.logo_url.replace('logo.png', 'logoblack.png'),
+        darkLogo: settings.logo_url_dark || settings.logo_url
+    };
+    
+    // Cache logo URLs in localStorage for instant loading on next visit
+    try {
+        localStorage.setItem('lifeCachedLogoLight', window.logoSettings.lightLogo);
+        localStorage.setItem('lifeCachedLogoDark', window.logoSettings.darkLogo);
+    } catch (e) {
+        console.warn('Could not cache logo URLs:', e);
+    }
+    
+    // Set initial logo based on current theme
+    updateLogoForTheme();
+    
+    DOM.header.logoImg.alt = `${settings.site_name} Logo`;
+    DOM.header.logoImg.style.display = 'block'; // Show the logo
+    DOM.header.brandName.textContent = settings.site_name;
+    DOM.header.brandSlogan.textContent = settings.site_slogan;
+
+    // Build navigation: auto-generate from product categories + keep non-category links
+    const navItems = buildNavigationItems(navigation, pageContent);
+    const navItemsHTML = navItems.map(item => `<li><a href="${item.link}">${item.text}</a></li>`).join('');
+    const persistentLis = DOM.header.navLinks.querySelectorAll('li:nth-last-child(-n+2)');
+    DOM.header.navLinks.innerHTML = navItemsHTML;
+    persistentLis.forEach(li => DOM.header.navLinks.appendChild(li));
+
+    updateCartCount();
+}
+
+/**
+ * Builds navigation items by auto-including all product categories from page_content.
+ * Product categories are derived from actual page_content components (source of truth),
+ * then non-category links from the static navigation array are appended.
+ * This ensures the menu always stays in sync with the actual categories.
+ */
+function buildNavigationItems(navigation, pageContent) {
+    const navItems = [];
+    
+    if (Array.isArray(pageContent)) {
+        // Extract product categories from page_content (the source of truth)
+        pageContent.forEach(component => {
+            if (component.type === 'product_category' && component.id && component.title) {
+                navItems.push({
+                    text: component.title,
+                    link: `#${component.id}`
+                });
+            }
+        });
+    }
+    
+    // Add non-category links from static navigation (e.g., "За нас", "Контакти")
+    if (Array.isArray(navigation)) {
+        navigation.forEach(item => {
+            // Skip items that point to a product category section (already added above)
+            if (item.link && item.link.startsWith('#')) return;
+            navItems.push(item);
+        });
+    }
+    
+    return navItems;
+}
+
+function renderPromoBanner(settings) {
+    const promoBanner = document.querySelector('.promo-banner');
+    if (!promoBanner) return;
+    
+    const promoContent = promoBanner.querySelector('.promo-content p');
+    if (!promoContent) return;
+    
+    // Get the promo text from settings
+    const promoText = settings.promo_banner?.text || 'СПЕЦИАЛНА ОФЕРТА: До 30% отстъпка при поръчка над 100 €!';
+    
+    // Keep the icon and strong tag, update only the text
+    promoContent.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+        </svg>
+        ${escapeHtml(promoText)} <span class="promo-timer" id="promo-timer"></span>
+    `;
+}
+
+// Helper function to initialize logo from cached settings
+function initializeLogoFromCache() {
+    if (window.__initialLogoSettings && !window.logoSettings) {
+        window.logoSettings = {
+            lightLogo: window.__initialLogoSettings.lightLogo,
+            darkLogo: window.__initialLogoSettings.darkLogo
+        };
+        updateLogoForTheme();
+        return true;
+    }
+    return false;
+}
+
+// Helper function to update logo based on current theme
+function updateLogoForTheme() {
+    // Try to use cached logo settings first for instant display
+    if (!window.logoSettings && window.__initialLogoSettings) {
+        window.logoSettings = {
+            lightLogo: window.__initialLogoSettings.lightLogo,
+            darkLogo: window.__initialLogoSettings.darkLogo
+        };
+    }
+    
+    if (!window.logoSettings) return;
+    
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const logoUrl = currentTheme === 'dark' ? window.logoSettings.darkLogo : window.logoSettings.lightLogo;
+    
+    if (DOM.header.logoImg) {
+        DOM.header.logoImg.src = encodeURI(logoUrl);
+    }
+    
+    // Also update footer logo if it exists
+    const footerLogo = document.querySelector('.footer-logo-container img');
+    if (footerLogo) {
+        footerLogo.src = encodeURI(logoUrl);
+    }
+}
+
+function renderMainContent(pageContent) {
+    if (!DOM.mainContainer) return;
+    
+    let contentHtml = '';
+    pageContent.forEach((component, index) => {
+        // Filter out the individual analysis info card (containing analyzis.png image)
+        // Note: The filename 'analyzis.png' is intentionally kept as-is to match the existing asset
+        if (component.type === 'info_card' && component.image && component.image.includes('analyzis.png')) {
+            return; // Skip rendering this component
+        }
+        
+        switch (component.type) {
+            case 'hero_banner':
+                contentHtml += generateHeroHTML(component);
+                break;
+            case 'product_category':
+                contentHtml += generateProductCategoryHTML(component, index);
+                break;
+            case 'info_card':
+                contentHtml += generateInfoCardHTML(component);
+                break;
+            case 'benefits':
+                contentHtml += generateBenefitsHTML(component);
+                break;
+            case 'timeline':
+                contentHtml += generateTimelineHTML(component);
+                break;
+            case 'ingredients':
+                contentHtml += generateIngredientsHTML(component);
+                break;
+            case 'testimonials':
+                contentHtml += generateTestimonialsHTML(component);
+                break;
+            case 'faq':
+                contentHtml += generateFAQHTML(component);
+                break;
+            case 'guarantee':
+                contentHtml += generateGuaranteeHTML(component);
+                break;
+            case 'contact':
+                contentHtml += generateContactHTML(component);
+                break;
+            default:
+                console.warn('Unknown component type:', component.type);
+        }
+    });
+
+    DOM.mainContainer.innerHTML = contentHtml;
+}
+
+function renderFooter(settings, footer) {
+    // Store logo URLs if not already done
+    if (!window.logoSettings) {
+        window.logoSettings = {
+            lightLogo: settings.logo_url_light || settings.logo_url.replace('logo.png', 'logoblack.png'),
+            darkLogo: settings.logo_url_dark || settings.logo_url
+        };
+    }
+    
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const logoUrl = currentTheme === 'dark' ? window.logoSettings.darkLogo : window.logoSettings.lightLogo;
+    
+    const columnsHTML = footer.columns.map(col => {
+        if (col.type === 'logo') {
+            return `<div class="footer-column">
+                 <a href="#" class="logo-container footer-logo-container">
+                    <img src="${logoUrl}" alt="${settings.site_name} Logo">
+                    <div><span class="brand-name">${settings.site_name}</span><span class="brand-slogan">${settings.site_slogan}</span></div>
+                </a>
+            </div>`;
+        }
+        if (col.type === 'links') {
+            const links = col.links.map(link => `<li><a href="${link.url}">${link.text}</a></li>`).join('');
+            return `<div class="footer-column"><h4>${col.title}</h4><ul>${links}</ul></div>`;
+        }
+        return '';
+    }).join('');
+    DOM.footer.gridContainer.innerHTML = columnsHTML;
+    DOM.footer.copyrightContainer.innerHTML = footer.copyright_text;
+}
+
+
+// =======================================================
+//          5. ИНИЦИАЛИЗАЦИЯ НА СЪБИТИЯ (INITIALIZERS)
+// =======================================================
+
+function initializePageInteractions(settings = {}) {
+    // Handle category header click (for collapsible categories)
+    document.body.addEventListener('click', e => {
+        const toggleAccordion = (header) => {
+            const isExpanded = header.getAttribute('aria-expanded') === 'true';
+            header.setAttribute('aria-expanded', !isExpanded);
+        };
+
+        const categoryHeader = e.target.closest('.category-section:not(.not-collapsible) .category-header');
+        if (categoryHeader) {
+            toggleAccordion(categoryHeader);
+            return;
+        }
+        
+        // Product cards are now links, no click handler needed here
+    });
+
+    document.body.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            const accordionHeader = e.target.closest('[role="button"][aria-expanded]');
+            // Only handle category headers, not product cards
+            if (accordionHeader && accordionHeader.classList.contains('category-header')) {
+                e.preventDefault();
+                const isExpanded = accordionHeader.getAttribute('aria-expanded') === 'true';
+                accordionHeader.setAttribute('aria-expanded', !isExpanded);
+            }
+        }
+    });
+
+
+    document.querySelectorAll('.product-card').forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+            card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+        });
+    });
+
+    const scrollObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                if (entry.target.classList.contains('product-card')) {
+                    entry.target.querySelectorAll('.effect-bar').forEach(bar => {
+                        bar.style.width = bar.dataset.width;
+                        bar.classList.add('animated');
+                    });
+                }
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-in-up').forEach(el => scrollObserver.observe(el));
+
+    // --- Save scroll position and category states before navigating to product page ---
+    document.body.addEventListener('click', (e) => {
+        const productCard = e.target.closest('.product-card');
+        if (productCard) {
+            const productId = productCard.getAttribute('data-product-id');
+            saveNavigationState(productId);
+        }
+    });
+
+    // --- Ingredient Card Flip (Lipolor style) - supports both mini and full versions ---
+    document.querySelectorAll('.ingredient-card, .ingredient-card-mini, .ingredient-card-full').forEach(card => {
+        const toggleFlip = () => {
+            // Close all other cards first
+            document.querySelectorAll('.ingredient-card.is-flipped, .ingredient-card-mini.is-flipped, .ingredient-card-full.is-flipped').forEach(otherCard => {
+                if (otherCard !== card) {
+                    otherCard.classList.remove('is-flipped');
+                }
+            });
+            
+            // Toggle current card
+            card.classList.toggle('is-flipped');
+        };
+
+        card.addEventListener('click', toggleFlip);
+
+        // For accessibility: allow flipping with Enter or Space key
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleFlip();
+            }
+        });
+    });
+
+    // --- FAQ Accordion Handler (Reusable function) ---
+    function initFAQAccordion(itemSelector, questionSelector) {
+        document.querySelectorAll(itemSelector).forEach(item => {
+            const question = item.querySelector(questionSelector);
+            
+            if (!question) return;
+            
+            const toggleFAQ = () => {
+                const isActive = item.classList.contains('active');
+                
+                // Close all other FAQ items in the same product card
+                const parentCard = item.closest('.product-card');
+                if (parentCard) {
+                    parentCard.querySelectorAll(itemSelector).forEach(otherItem => {
+                        if (otherItem !== item) {
+                            otherItem.classList.remove('active');
+                            const otherQuestion = otherItem.querySelector(questionSelector);
+                            if (otherQuestion) {
+                                otherQuestion.setAttribute('aria-expanded', 'false');
+                            }
+                        }
+                    });
+                }
+                
+                // Toggle current item
+                if (isActive) {
+                    item.classList.remove('active');
+                    question.setAttribute('aria-expanded', 'false');
+                } else {
+                    item.classList.add('active');
+                    question.setAttribute('aria-expanded', 'true');
+                }
+            };
+            
+            // Click event
+            question.addEventListener('click', toggleFAQ);
+            
+            // Keyboard event for accessibility
+            question.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleFAQ();
+                }
+            });
+        });
+    }
+
+    // Initialize all FAQ accordion types
+    initFAQAccordion('.faq-item-mini', '.faq-question-mini');
+    initFAQAccordion('.faq-item-full', '.faq-question-full');
+
+    // --- FAQ Accordion (Lipolor style) ---
+    document.querySelectorAll('.faq-item').forEach(item => {
+        const question = item.querySelector('.faq-question');
+        
+        if (!question) return;
+        
+        const toggleFAQ = () => {
+            const isActive = item.classList.contains('active');
+            
+            // Close all other FAQ items
+            document.querySelectorAll('.faq-item').forEach(otherItem => {
+                if (otherItem !== item) {
+                    otherItem.classList.remove('active');
+                    const otherQuestion = otherItem.querySelector('.faq-question');
+                    if (otherQuestion) {
+                        otherQuestion.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+            
+            // Toggle current item
+            if (isActive) {
+                item.classList.remove('active');
+                question.setAttribute('aria-expanded', 'false');
+            } else {
+                item.classList.add('active');
+                question.setAttribute('aria-expanded', 'true');
+            }
+        };
+        
+        // Click event
+        question.addEventListener('click', toggleFAQ);
+        
+        // Keyboard event for accessibility
+        question.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleFAQ();
+            }
+        });
+    });
+
+    // --- Contact Form Submission (Lipolor style) ---
+    const orderForm = document.getElementById('order-form');
+    if (orderForm) {
+        orderForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = orderForm.querySelector('#contact-name')?.value.trim();
+            const email = orderForm.querySelector('#contact-email')?.value.trim();
+            const message = orderForm.querySelector('#contact-message')?.value.trim();
+
+            if (!name || !email || !message) {
+                showToast('Моля, попълнете всички задължителни полета.', 'error');
+                return;
+            }
+            
+            showToast('Благодарим за вашето запитване! Ще се свържем с вас скоро.', 'success');
+            orderForm.reset();
+        });
+    }
+}
+
+function initializeGlobalScripts() {
+    // --- Sticky Header on Scroll (Lipolor style) ---
+    const header = document.querySelector('.main-header');
+    
+    function handleStickyHeader() {
+        const stickyThreshold = 50;
+        if (window.scrollY > stickyThreshold) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    }
+    
+    window.addEventListener('scroll', () => {
+        handleStickyHeader();
+        DOM.backToTopBtn.classList.toggle('visible', window.scrollY > 300);
+    });
+
+    // --- Scroll Animations (Lipolor style) ---
+    function handleScrollAnimations() {
+        const animatedElements = document.querySelectorAll('.animate-on-scroll');
+        
+        if (!animatedElements.length) return;
+
+        const observerOptions = {
+            root: null,
+            threshold: 0.1,
+        };
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    // Add staggered delay for timeline items
+                    if (entry.target.classList.contains('timeline-item')) {
+                        const elementIndex = Array.from(animatedElements).indexOf(entry.target);
+                        entry.target.style.transitionDelay = `${elementIndex * 0.15}s`;
+                    }
+                    
+                    entry.target.classList.add('visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        animatedElements.forEach(el => {
+            revealObserver.observe(el);
+        });
+    }
+    
+    // Initialize scroll animations
+    handleScrollAnimations();
+
+    const closeMenu = () => {
+        DOM.menuToggle.classList.remove('active');
+        DOM.navLinksContainer.classList.remove('active');
+        DOM.navOverlay.classList.remove('active');
+        DOM.body.classList.remove('nav-open');
+    };
+    DOM.menuToggle.addEventListener('click', () => {
+        DOM.menuToggle.classList.toggle('active');
+        DOM.navLinksContainer.classList.toggle('active');
+        DOM.navOverlay.classList.toggle('active');
+        DOM.body.classList.toggle('nav-open');
+    });
+    DOM.navOverlay.addEventListener('click', closeMenu);
+    DOM.navLinksContainer.addEventListener('click', e => {
+        if (e.target.tagName === 'A' || e.target.closest('button')) {
+            closeMenu();
+        }
+    });
+
+    // --- Quest Modal ---
+    // Only initialize quest modal if elements exist
+    if (DOM.questModal.backdrop && DOM.questModal.container && DOM.questModal.iframe) {
+        function openQuestModal(url) {
+            DOM.questModal.iframe.src = url || 'quest.html';
+            DOM.questModal.container.classList.add('show');
+            DOM.questModal.backdrop.classList.add('show');
+            DOM.body.classList.add('modal-open');
+        }
+        function closeQuestModal() {
+            DOM.questModal.container.classList.remove('show');
+            DOM.questModal.backdrop.classList.remove('show');
+            DOM.questModal.iframe.src = '';
+            DOM.body.classList.remove('modal-open');
+        }
+        DOM.questModal.backdrop.addEventListener('click', closeQuestModal);
+        document.addEventListener('click', e => {
+            const questLink = e.target.closest('a[href$="quest.html"]');
+            if (questLink) {
+                e.preventDefault();
+                openQuestModal(questLink.getAttribute('href'));
+            }
+        });
+    }
+
+    // --- Theme: light only ---
+    // This is a light-theme-only build; theme is always light.
+    document.documentElement.setAttribute('data-theme', 'light');
+
+    updateCartCount();
+}
+
+function initializeScrollSpy() {
+    const sections = document.querySelectorAll('section[id]');
+    if (sections.length === 0) return;
+
+    const navLinks = document.querySelectorAll('.nav-links a');
+    
+    const observer = new IntersectionObserver(entries => {
+        let lastVisibleSectionId = null;
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                lastVisibleSectionId = entry.target.id;
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            const href = link.getAttribute('href');
+            if (href === `#${lastVisibleSectionId}`) {
+                link.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-40% 0px -60% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+}
+
+// =======================================================
+//          Apply Theme Gradients
+// =======================================================
+function applyThemeGradients(settings) {
+    if (!settings || !settings.theme_gradients) return;
+    
+    const { light, dark } = settings.theme_gradients;
+    const root = document.documentElement;
+    
+    // Validate and apply light theme gradient
+    if (light && isValidGradient(light)) {
+        root.style.setProperty('--theme-gradient-light', light);
+    }
+    
+    // Validate and apply dark theme gradient
+    if (dark && isValidGradient(dark)) {
+        root.style.setProperty('--theme-gradient-dark', dark);
+    }
+}
+
+// Validate gradient string to prevent CSS injection
+function isValidGradient(gradientStr) {
+    if (typeof gradientStr !== 'string') return false;
+    
+    // Only allow gradient functions
+    const validPrefixes = ['linear-gradient', 'radial-gradient', 'conic-gradient', 'repeating-linear-gradient', 'repeating-radial-gradient'];
+    const hasValidPrefix = validPrefixes.some(prefix => gradientStr.trim().startsWith(prefix + '('));
+    
+    if (!hasValidPrefix) return false;
+    
+    // Check for potentially dangerous characters or patterns
+    const dangerousPatterns = [
+        '<script', 'javascript:', 'expression(', 'url(', '@import', 'behavior:'
+    ];
+    
+    const lowerStr = gradientStr.toLowerCase();
+    if (dangerousPatterns.some(pattern => lowerStr.includes(pattern))) {
+        console.warn('Potentially unsafe gradient string blocked:', gradientStr);
+        return false;
+    }
+    
+    return true;
+}
+
+
+// =======================================================
+//          7. ГЛАВНА ИЗПЪЛНЯВАЩА ФУНКЦИЯ (MAIN)
+// =======================================================
+async function main() {
+    // Initialize logo immediately using cached values if available
+    initializeLogoFromCache();
+    
+    initializeGlobalScripts();
+    
+    try {
+        // Try to use mock data for testing if API fails
+        let response, data;
+        try {
+            response = await fetch(`${API_URL}/life_page_content.json`, {
+                cache: 'default' // Use browser cache with proper revalidation
+            });
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            data = await response.json();
+        } catch (apiError) {
+            console.warn('API failed, trying mock data:', apiError);
+            response = await fetch('life_page_content_mock.json', {
+                cache: 'default'
+            });
+            if (!response.ok) throw new Error('Mock data also unavailable');
+            data = await response.json();
+        }
+
+        // Check if this is the index page (has main-content-container)
+        const isIndexPage = DOM.mainContainer !== null;
+        
+        if (isIndexPage) {
+            DOM.mainContainer.innerHTML = ''; 
+        }
+        
+        renderHeader(data.settings, data.navigation, data.page_content);
+        renderPromoBanner(data.settings);
+        
+        if (isIndexPage) {
+            renderMainContent(data.page_content);
+            // Extract products for search functionality
+            extractProductsForSearch(data.page_content);
+        }
+        
+        renderFooter(data.settings, data.footer);
+        
+        if (isIndexPage) {
+            DOM.mainContainer.classList.add('is-loaded');
+        }
+
+        initializePageInteractions(data.settings);
+        applyThemeGradients(data.settings);
+        
+        // Initialize search functionality
+        initializeSearch();
+        
+        // Initialize product filters for filterable categories
+        if (isIndexPage) {
+            initProductFilters();
+        }
+        
+        if (isIndexPage) {
+            initializeScrollSpy();
+            initializeMarketingFeatures();
+
+            // Re-run premium effects now that dynamic content is loaded
+            initPremiumEffects();
+
+            // Restore category expanded states and scroll position if returning from product page
+            const savedScrollPosition = sessionStorage.getItem('lifeScrollPosition');
+            const savedCategoryStates = sessionStorage.getItem('lifeCategoryStates');
+            const lastViewedProduct = sessionStorage.getItem('lifeLastViewedProduct');
+            // Validate product ID format to prevent selector injection (alphanumeric, hyphens, underscores only)
+            const safeLastViewedProduct = /^[a-zA-Z0-9_-]+$/.test(lastViewedProduct) ? lastViewedProduct : null;
+            if (savedScrollPosition || savedCategoryStates || safeLastViewedProduct) {
+                // Disable smooth scroll and transitions immediately so restoration is instant
+                document.documentElement.style.scrollBehavior = 'auto';
+                document.body.classList.add('no-transition');
+
+                // Delay to allow lazy-loaded images to finish initial layout before scrolling
+                const RESTORE_DELAY_MS = 200;
+
+                const doRestore = () => {
+                    // Reveal all animated elements instantly (no-transition is active) so the
+                    // restored scroll position shows fully-visible content, not opacity-0 elements.
+                    document.querySelectorAll('.fade-in-up').forEach(el => el.classList.add('is-visible'));
+
+                    if (savedCategoryStates) {
+                        try {
+                            const categoryStates = JSON.parse(savedCategoryStates);
+                            Object.entries(categoryStates).forEach(([id, expanded]) => {
+                                const section = document.getElementById(id);
+                                if (section) {
+                                    const header = section.querySelector('.category-header[aria-expanded]');
+                                    if (header) header.setAttribute('aria-expanded', expanded);
+                                }
+                            });
+                            // Force synchronous layout so grids are at full height before scroll
+                            document.body.offsetHeight;
+                        } catch (_) { /* Ignore malformed sessionStorage data */ }
+                        sessionStorage.removeItem('lifeCategoryStates');
+                    }
+
+                    // Prefer scrolling to the exact product card element (resilient to image-loading layout shifts)
+                    const productCard = safeLastViewedProduct
+                        ? document.querySelector(`.product-card[data-product-id="${CSS.escape(safeLastViewedProduct)}"]`)
+                        : null;
+                    if (productCard) {
+                        productCard.scrollIntoView({ behavior: 'instant', block: 'center' });
+                        sessionStorage.removeItem('lifeLastViewedProduct');
+                        sessionStorage.removeItem('lifeScrollPosition');
+                    } else if (savedScrollPosition) {
+                        window.scrollTo({ top: parseInt(savedScrollPosition, 10), behavior: 'instant' });
+                        sessionStorage.removeItem('lifeScrollPosition');
+                        sessionStorage.removeItem('lifeLastViewedProduct');
+                    }
+
+                    // Re-enable transitions and smooth scroll after a frame
+                    requestAnimationFrame(() => {
+                        document.body.classList.remove('no-transition');
+                        document.documentElement.style.scrollBehavior = '';
+                    });
+                };
+
+                setTimeout(doRestore, RESTORE_DELAY_MS);
+            }
+        }
+
+    } catch (error) {
+        console.error("Fatal Error: Could not load or render page content.", error);
+        if (DOM.mainContainer) {
+            DOM.mainContainer.innerHTML =
+                `<div class="container" style="text-align: center; color: var(--text-secondary); padding: 5rem 1rem;">
+                    <h2>Грешка при зареждане на съдържанието</h2>
+                    <p>Не успяхме да се свържем със сървъра. Моля, опреснете страницата или опитайте по-късно.</p>
+                 </div>`;
+        }
+    }
+}
+
+// =======================================================
+//          MARKETING FEATURES INITIALIZATION
+// =======================================================
+
+function initializeMarketingFeatures() {
+    // 1. Countdown Timer for Promo
+    initPromoTimer();
+    
+    // 2. Sticky CTA Button
+    initStickyCTA();
+    
+    // 3. Product Badges
+    addProductBadges();
+    
+    // 6. Exit Intent Modal
+    initExitIntentModal();
+}
+
+// Promo Timer - Shows countdown to create urgency
+function initPromoTimer() {
+    const timerElement = document.getElementById('promo-timer');
+    if (!timerElement) return;
+    
+    // Set end time to midnight today (or customize)
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    
+    function updateTimer() {
+        const now = new Date();
+        const diff = midnight - now;
+        
+        if (diff <= 0) {
+            timerElement.textContent = 'Офертата изтече!';
+            return;
+        }
+        
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    updateTimer();
+    setInterval(updateTimer, 1000);
+}
+
+// Sticky CTA - Shows when user scrolls past hero
+function initStickyCTA() {
+    const stickyCTA = document.getElementById('sticky-cta');
+    if (!stickyCTA) return;
+    
+    let lastScrollY = window.scrollY;
+    
+    function checkScroll() {
+        const currentScrollY = window.scrollY;
+        const heroHeight = document.querySelector('.hero-section')?.offsetHeight || 600;
+        
+        // Show when scrolled past hero and scrolling up
+        if (currentScrollY > heroHeight && currentScrollY < lastScrollY) {
+            stickyCTA.classList.add('visible');
+        } else if (currentScrollY <= heroHeight || currentScrollY > lastScrollY + 50) {
+            stickyCTA.classList.remove('visible');
+        }
+        
+        lastScrollY = currentScrollY;
+    }
+    
+    window.addEventListener('scroll', debounce(checkScroll, 100));
+}
+
+// Add product badges based on criteria
+function addProductBadges() {
+    const products = document.querySelectorAll('.product-card');
+    
+    products.forEach((card, index) => {
+        const productId = card.getAttribute('data-product-id');
+        if (!productId) return;
+        
+        let badge = null;
+        
+        // First product - Bestseller
+        if (index === 0) {
+            badge = createBadge('Най-продаван', 'bestseller', 'star');
+        }
+        // Second product - New
+        else if (index === 1) {
+            badge = createBadge('Ново', 'new', 'sparkles');
+        }
+        // Third product - Limited offer
+        else if (index === 2) {
+            badge = createBadge('Ограничена оферта', 'limited', 'fire');
+        }
+        
+        if (badge) {
+            card.style.position = 'relative';
+            card.insertBefore(badge, card.firstChild);
+        }
+    });
+}
+
+function createBadge(text, type, iconType) {
+    const badge = document.createElement('div');
+    badge.className = `product-badge ${type}`;
+    
+    // Create SVG icon based on type
+    let iconSVG = '';
+    if (iconType === 'star') {
+        iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+    } else if (iconType === 'sparkles') {
+        iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M9.813 3.25a.75.75 0 0 1 .437.695v4.945c0 .174.106.331.268.395l.625.25a.75.75 0 0 1 0 1.398l-.625.25a.422.422 0 0 0-.268.395v4.945a.75.75 0 0 1-1.187.607l-4.382-3.024a.422.422 0 0 1 0-.695l4.382-3.024a.75.75 0 0 1 .75-.142zm9 0a.75.75 0 0 1 .437.695v4.945c0 .174.106.331.268.395l.625.25a.75.75 0 0 1 0 1.398l-.625.25a.422.422 0 0 0-.268.395v4.945a.75.75 0 0 1-1.187.607l-4.382-3.024a.422.422 0 0 1 0-.695l4.382-3.024a.75.75 0 0 1 .75-.142z"></path></svg>';
+    } else if (iconType === 'fire') {
+        iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>';
+    }
+    
+    badge.innerHTML = iconSVG + text;
+    return badge;
+}
+
+// Exit Intent Modal - Shows when user is about to leave
+function initExitIntentModal() {
+    const modal = document.getElementById('exit-intent-modal');
+    if (!modal) return;
+    
+    let hasShown = false;
+    const closeBtn = modal.querySelector('.exit-modal-close');
+    
+    // Configuration constants
+    const EXIT_MODAL_DELAY_MS = 30000; // 30 seconds
+    const MOUSE_LEAVE_THRESHOLD_Y = 0; // Top of viewport
+    
+    // Close modal function
+    const closeModal = () => {
+        modal.classList.remove('active');
+        hasShown = true;
+        localStorage.setItem('exitModalShown', 'true');
+    };
+    
+    // Check if already shown in this session
+    if (localStorage.getItem('exitModalShown')) {
+        hasShown = true;
+    }
+    
+    // Close button click
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+    
+    // Close on overlay click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    // Exit intent detection - only trigger when mouse leaves from top of viewport
+    document.addEventListener('mouseleave', (e) => {
+        // Check if mouse actually left the viewport from the top
+        if (e.clientY <= MOUSE_LEAVE_THRESHOLD_Y && !hasShown && e.relatedTarget === null) {
+            modal.classList.add('active');
+        }
+    });
+    
+    // Also show after configured delay if not shown yet
+    setTimeout(() => {
+        if (!hasShown) {
+            modal.classList.add('active');
+        }
+    }, EXIT_MODAL_DELAY_MS);
+    
+    // Keyboard escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+}
+
+// =======================================================
+//          8. SITE SEARCH FUNCTIONALITY
+// =======================================================
+
+// Global variable to store all products for search
+let allProducts = [];
+
+// Initialize search functionality
+function initializeSearch() {
+    const searchToggle = document.getElementById('search-toggle');
+    const searchDropdown = document.getElementById('search-dropdown');
+    const searchInput = document.getElementById('site-search-input');
+    const searchClear = document.getElementById('search-clear');
+    const searchResults = document.getElementById('search-results');
+
+    if (!searchToggle || !searchDropdown || !searchInput) return;
+
+    // Toggle search dropdown
+    searchToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isExpanded = searchToggle.getAttribute('aria-expanded') === 'true';
+        
+        if (isExpanded) {
+            closeSearch();
+        } else {
+            openSearch();
+        }
+    });
+
+    // Open search function
+    function openSearch() {
+        searchDropdown.classList.add('active');
+        searchToggle.setAttribute('aria-expanded', 'true');
+        setTimeout(() => searchInput.focus(), 100);
+    }
+
+    // Close search function
+    function closeSearch() {
+        searchDropdown.classList.remove('active');
+        searchToggle.setAttribute('aria-expanded', 'false');
+        searchInput.value = '';
+        searchClear.style.display = 'none';
+        searchResults.innerHTML = '';
+    }
+
+    // Close search when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!searchDropdown.contains(e.target) && e.target !== searchToggle && !searchToggle.contains(e.target)) {
+            closeSearch();
+        }
+    });
+
+    // Prevent closing when clicking inside dropdown
+    searchDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
+    // Search input handler
+    searchInput.addEventListener('input', debounce((e) => {
+        const query = e.target.value.trim();
+        
+        if (query.length > 0) {
+            searchClear.style.display = 'flex';
+            performSearch(query);
+        } else {
+            searchClear.style.display = 'none';
+            searchResults.innerHTML = '';
+        }
+    }, 300));
+
+    // Clear button handler
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClear.style.display = 'none';
+        searchResults.innerHTML = '';
+        searchInput.focus();
+    });
+
+    // Keyboard navigation
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeSearch();
+        } else if (e.key === 'Enter') {
+            const firstResult = searchResults.querySelector('.search-result-item');
+            if (firstResult) {
+                firstResult.click();
+            }
+        }
+    });
+}
+
+// Perform search through products
+function performSearch(query) {
+    const searchResults = document.getElementById('search-results');
+    if (!searchResults) return;
+
+    const lowerQuery = query.toLowerCase();
+    
+    // Filter products that match the search query
+    const results = allProducts.filter(product => {
+        const name = product.public_data?.name?.toLowerCase() || '';
+        const tagline = product.public_data?.tagline?.toLowerCase() || '';
+        const description = product.public_data?.description?.toLowerCase() || '';
+        
+        return name.includes(lowerQuery) || 
+               tagline.includes(lowerQuery) || 
+               description.includes(lowerQuery);
+    });
+
+    // Display results
+    if (results.length === 0) {
+        searchResults.innerHTML = `
+            <div class="search-no-results">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <p>Не са намерени продукти за &ldquo;${escapeHtml(query)}&rdquo;</p>
+                <p class="search-no-results-hint">Опитайте с различна дума или разгледайте всички продукти по-долу.</p>
+            </div>
+        `;
+    } else {
+        searchResults.innerHTML = results.map(product => {
+            const publicData = product.public_data;
+            const productId = product.product_id;
+            const price = Number(publicData.price).toFixed(2);
+            
+            // Highlight matching text
+            const highlightText = (text) => {
+                if (!text) return '';
+                const regex = new RegExp(`(${escapeHtml(query)})`, 'gi');
+                return escapeHtml(text).replace(regex, '<mark>$1</mark>');
+            };
+
+            return `
+                <a href="product.html?id=${encodeURIComponent(productId)}" class="search-result-item">
+                    ${publicData.image_url ? `
+                        <img src="${escapeHtml(publicData.image_url)}" 
+                             alt="${escapeHtml(publicData.name)}" 
+                             class="search-result-image"
+                             loading="lazy">
+                    ` : ''}
+                    <div class="search-result-info">
+                        <div class="search-result-name">${highlightText(publicData.name)}</div>
+                        <div class="search-result-tagline">${escapeHtml(publicData.tagline || '')}</div>
+                    </div>
+                    <div class="search-result-price">${price} €</div>
+                </a>
+            `;
+        }).join('');
+
+        // Add click handlers to close search when result is clicked
+        searchResults.querySelectorAll('.search-result-item').forEach(item => {
+            item.addEventListener('click', () => {
+                saveNavigationState();
+            });
+        });
+    }
+}
+
+// Extract all products from page content for search
+function extractProductsForSearch(pageContent) {
+    allProducts = [];
+    
+    if (!pageContent) return;
+
+    pageContent.forEach(component => {
+        if (component.type === 'product_category' && component.products) {
+            allProducts.push(...component.products);
+        }
+    });
+}
+
+// =======================================================
+//          PRODUCT FILTER & SORT SYSTEM
+// =======================================================
+
+function initProductFilters() {
+    document.querySelectorAll('.product-filter-bar').forEach(filterBar => {
+        const gridId = filterBar.dataset.gridId;
+        const grid = document.getElementById(gridId);
+        if (!grid) return;
+
+        const brandSelect = filterBar.querySelector('[data-filter="brand"]');
+        const goalSelect = filterBar.querySelector('[data-filter="goal"]');
+        const sortSelect = filterBar.querySelector('[data-filter="sort"]');
+        const searchInput = filterBar.querySelector('[data-filter="search"]');
+        const countEl = document.getElementById(`filter-count-${gridId}`);
+
+        // Get all product cards in this grid
+        function getAllCards() {
+            return Array.from(grid.querySelectorAll('.product-card'));
+        }
+
+        function applyFilters() {
+            const brand = brandSelect ? brandSelect.value : '';
+            const goal = goalSelect ? goalSelect.value : '';
+            const sortBy = sortSelect ? sortSelect.value : 'default';
+            const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+            const cards = getAllCards();
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const cardBrand = card.dataset.brand || '';
+                const cardGoals = card.dataset.goals || '';
+                const cardName = card.querySelector('h3')?.textContent?.toLowerCase() || '';
+
+                let visible = true;
+                if (brand && cardBrand !== brand) visible = false;
+                if (goal && !cardGoals.split(',').includes(goal)) visible = false;
+                if (search && !cardName.includes(search)) visible = false;
+
+                card.style.display = visible ? '' : 'none';
+                if (visible) visibleCount++;
+            });
+
+            // Sort visible cards
+            if (sortBy !== 'default') {
+                const visibleCards = cards.filter(c => c.style.display !== 'none');
+                visibleCards.sort((a, b) => {
+                    if (sortBy === 'price-asc') {
+                        return parseFloat(a.dataset.price || 0) - parseFloat(b.dataset.price || 0);
+                    } else if (sortBy === 'price-desc') {
+                        return parseFloat(b.dataset.price || 0) - parseFloat(a.dataset.price || 0);
+                    } else if (sortBy === 'effectiveness') {
+                        const aEffects = a.querySelectorAll('.effect-bar');
+                        const bEffects = b.querySelectorAll('.effect-bar');
+                        const aMax = aEffects.length > 0 ? Math.max(...Array.from(aEffects).map(e => parseFloat(e.dataset.width) || 0)) : 0;
+                        const bMax = bEffects.length > 0 ? Math.max(...Array.from(bEffects).map(e => parseFloat(e.dataset.width) || 0)) : 0;
+                        return bMax - aMax;
+                    }
+                    return 0;
+                });
+                visibleCards.forEach(card => grid.appendChild(card));
+            }
+
+            if (countEl) {
+                countEl.textContent = `Показани: ${visibleCount} от ${cards.length} продукта`;
+            }
+        }
+
+        if (brandSelect) brandSelect.addEventListener('change', applyFilters);
+        if (goalSelect) goalSelect.addEventListener('change', applyFilters);
+        if (sortSelect) sortSelect.addEventListener('change', applyFilters);
+        if (searchInput) searchInput.addEventListener('input', debounce(applyFilters, 300));
+
+        // Initial count
+        const totalCards = getAllCards().length;
+        if (countEl) {
+            countEl.textContent = `Показани: ${totalCards} от ${totalCards} продукта`;
+        }
+    });
+
+    // Load More button handlers
+    document.querySelectorAll('.btn-load-more').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const gridId = btn.dataset.gridId;
+            const grid = document.getElementById(gridId);
+            if (!grid) return;
+
+            // Decode all products data
+            const encodedData = grid.dataset.allProducts;
+            if (!encodedData) return;
+
+            try {
+                const allProductsData = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(encodedData), c => c.charCodeAt(0))));
+                if (!Array.isArray(allProductsData)) return;
+                
+                const currentCount = grid.querySelectorAll('.product-card').length;
+                const pageSize = parseInt(grid.dataset.pageSize) || 24;
+                const nextBatch = allProductsData.slice(currentCount, currentCount + pageSize);
+
+                // Generate cards for next batch
+                nextBatch.forEach(p => {
+                    if (!p || !p.product_id) return;
+                    const product = {
+                        product_id: String(p.product_id),
+                        public_data: {
+                            name: String(p.name || ''),
+                            price: Number(p.price) || 0,
+                            brand: String(p.brand || ''),
+                            image_url: String(p.image_url || ''),
+                            tagline: String(p.tagline || ''),
+                            effects: Array.isArray(p.effects) ? p.effects : [],
+                            variants: Array.isArray(p.variants) ? p.variants : []
+                        },
+                        system_data: {
+                            inventory: Number(p.inventory) || 0,
+                            goals: Array.isArray(p.goals) ? p.goals : []
+                        }
+                    };
+                    const cardHTML = generateProductCard(product);
+                    grid.insertAdjacentHTML('beforeend', cardHTML);
+                });
+
+                // Animate new cards
+                grid.querySelectorAll('.product-card:not(.visible)').forEach(card => {
+                    card.classList.add('visible');
+                });
+
+                // Update or hide button
+                const remaining = allProductsData.length - (currentCount + nextBatch.length);
+                if (remaining <= 0) {
+                    btn.parentElement.style.display = 'none';
+                } else {
+                    btn.textContent = `Зареди още продукти (${remaining} остават)`;
+                }
+
+                // Re-apply filters if any are active
+                const filterBar = document.querySelector(`.product-filter-bar[data-grid-id="${gridId}"]`);
+                if (filterBar) {
+                    const countEl = document.getElementById(`filter-count-${gridId}`);
+                    const totalCards = grid.querySelectorAll('.product-card').length;
+                    if (countEl) {
+                        countEl.textContent = `Показани: ${totalCards} от ${allProductsData.length} продукта`;
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading more products:', e);
+            }
+        });
+    });
+}
+
+// Prevent the browser from auto-restoring scroll position so our custom restoration takes effect
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+}
+
+// =======================================================
+//          SCROLL PROGRESS BAR
+// =======================================================
+function initScrollProgress() {
+    const bar = document.getElementById('scroll-progress');
+    if (!bar) return;
+
+    const update = () => {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        bar.style.width = `${Math.min(progress, 100)}%`;
+        bar.setAttribute('aria-valuenow', Math.round(progress));
+    };
+
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+}
+
+// =======================================================
+//          RIPPLE EFFECT ON BUTTONS
+// =======================================================
+function initRippleEffect() {
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-primary, .btn-hero-primary, .btn-premium');
+        if (!btn) return;
+
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.cssText = `
+            width: ${size}px;
+            height: ${size}px;
+            left: ${e.clientX - rect.left - size / 2}px;
+            top: ${e.clientY - rect.top - size / 2}px;
+        `;
+
+        btn.appendChild(ripple);
+        ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
+    });
+}
+
+initScrollProgress();
+initRippleEffect();
+
+// =======================================================
+//          PREMIUM UX/UI FEATURES
+// =======================================================
+
+// ── Custom Cursor Glow ──
+function initCursorGlow() {
+    const glow = document.getElementById('cursor-glow');
+    if (!glow) return;
+    // Touch/mobile: skip
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+
+    document.addEventListener('mousemove', (e) => {
+        targetX = e.clientX;
+        targetY = e.clientY;
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', () => { glow.style.opacity = '0'; });
+    document.addEventListener('mouseenter', () => { glow.style.opacity = '1'; });
+
+    let rafId;
+    const animate = () => {
+        currentX += (targetX - currentX) * 0.08;
+        currentY += (targetY - currentY) * 0.08;
+        glow.style.left = `${currentX}px`;
+        glow.style.top  = `${currentY}px`;
+        rafId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    // Cleanup on page unload to avoid memory leaks
+    window.addEventListener('pagehide', () => cancelAnimationFrame(rafId), { once: true });
+}
+
+// ── Hero Particle Canvas ──
+function initHeroParticles() {
+    if (window.matchMedia('(max-width: 768px)').matches) return;
+    const hero = document.querySelector('.hero-section');
+    if (!hero) return;
+    // Guard: only create once
+    if (document.getElementById('hero-particles')) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.id = 'hero-particles';
+    hero.insertBefore(canvas, hero.firstChild);
+
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    const resize = () => {
+        canvas.width  = hero.offsetWidth;
+        canvas.height = hero.offsetHeight;
+    };
+    resize();
+    window.addEventListener('resize', debounce(resize, 200), { passive: true });
+
+    const NUM = 55;
+    const LINK_DIST = 90;
+    const COLORS = ['rgba(6,182,212,', 'rgba(34,211,238,', 'rgba(255,107,107,'];
+
+    for (let i = 0; i < NUM; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 2 + 0.5,
+            vx: (Math.random() - 0.5) * 0.35,
+            vy: (Math.random() - 0.5) * 0.35,
+            op: Math.random() * 0.45 + 0.15,
+            col: COLORS[Math.floor(Math.random() * COLORS.length)]
+        });
+    }
+
+    let animRunning = true;
+    const draw = () => {
+        if (!animRunning) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = p.col + p.op + ')';
+            ctx.fill();
+
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0 || p.x > canvas.width)  p.vx *= -1;
+            if (p.y < 0 || p.y > canvas.height)  p.vy *= -1;
+
+            for (let j = i + 1; j < particles.length; j++) {
+                const q = particles[j];
+                const dx = p.x - q.x;
+                const dy = p.y - q.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < LINK_DIST) {
+                    const alpha = (1 - dist / LINK_DIST) * 0.18;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(q.x, q.y);
+                    ctx.strokeStyle = `rgba(6,182,212,${alpha})`;
+                    ctx.lineWidth = 0.6;
+                    ctx.stroke();
+                }
+            }
+        }
+        rafId = requestAnimationFrame(draw);
+    };
+    let rafId = requestAnimationFrame(draw);
+
+    // Cleanup on page unload to avoid memory leaks
+    window.addEventListener('pagehide', () => cancelAnimationFrame(rafId), { once: true });
+}
+
+// ── Counter Animation for Stat Items ──
+function initCounterAnimation() {
+    const statItems = document.querySelectorAll('.stat-item strong');
+    if (!statItems.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting || entry.target.dataset.animated) return;
+            entry.target.dataset.animated = 'true';
+            animateStat(entry.target);
+        });
+    }, { threshold: 0.6 });
+
+    statItems.forEach(el => observer.observe(el));
+}
+
+function animateStat(el) {
+    const raw = el.textContent.trim();
+    // Match leading numeric portion (digits and commas)
+    const match = raw.match(/^([\d,]+)/);
+    if (!match) return;
+
+    const target   = parseInt(match[1].replace(/,/g, ''), 10);
+    const suffix   = raw.slice(match[1].length);  // e.g. "+", "%", ""
+    const duration = 1400;
+    const startTs  = performance.now();
+
+    const tick = (now) => {
+        const t = Math.min((now - startTs) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3); // cubic ease-out
+        const current = Math.round(target * eased);
+        el.textContent = current.toLocaleString('en-US') + suffix;
+        if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+}
+
+// ── 3D Card Tilt ──
+function initCard3DTilt() {
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    // Use event delegation on the main container
+    document.addEventListener('mousemove', (e) => {
+        const card = e.target.closest('.product-card:not(.skeleton-card)');
+        if (!card) {
+            // Reset any previously tilted card
+            document.querySelectorAll('.product-card.tilting').forEach(c => {
+                c.classList.remove('tilting');
+                c.style.transform = '';
+            });
+            return;
+        }
+
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const cx = rect.width  / 2;
+        const cy = rect.height / 2;
+        const rotX = ((y - cy) / cy) * -5;
+        const rotY = ((x - cx) / cx) *  5;
+
+        card.classList.add('tilting');
+        card.style.transform = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(6px)`;
+        card.style.transition = 'none';
+
+        // Keep spotlight in sync
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', (e) => {
+        const card = e.target.closest('.product-card');
+        if (card) {
+            card.classList.remove('tilting');
+            card.style.transform  = '';
+            card.style.transition = '';
+        }
+    }, true);
+}
+
+// ── Magnetic Button Effect ──
+function initMagneticButtons() {
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    function attachMagnetic(selector, strength) {
+        document.querySelectorAll(selector).forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const dx = e.clientX - (rect.left + rect.width  / 2);
+                const dy = e.clientY - (rect.top  + rect.height / 2);
+                btn.style.transform = `translate(${dx * strength}px, ${dy * strength}px)`;
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = '';
+            });
+        });
+    }
+
+    attachMagnetic('.btn-hero-primary',  0.2);
+    attachMagnetic('.btn-hero-secondary', 0.15);
+    // sticky CTA uses its own float animation; skip
+}
+
+// ── Hero Title Gradient Word ──
+// Wraps the last word in the hero h1 with .hero-gradient-word for animated gradient
+function initHeroGradientWord() {
+    const h1 = document.querySelector('.hero-section .hero-content h1');
+    if (!h1 || h1.dataset.gradientApplied) return;
+    h1.dataset.gradientApplied = 'true';
+
+    const words = h1.textContent.trim().split(/\s+/);
+    if (words.length < 2) return;
+
+    // Wrap the last word with DOM methods (no innerHTML, avoids XSS risk)
+    const lastWord = words.pop();
+    const prefix = words.join(' ');
+
+    const span = document.createElement('span');
+    span.className = 'hero-gradient-word';
+    span.textContent = lastWord;
+
+    h1.textContent = '';
+    h1.appendChild(document.createTextNode(prefix + ' '));
+    h1.appendChild(span);
+}
+
+// ── Section Glow Lines ──
+// Inserts a glowing separator line between major sections
+function initSectionGlowLines() {
+    const container = document.getElementById('main-content-container');
+    if (!container) return;
+
+    // Add glow lines between major sibling sections (not hero)
+    const sections = container.querySelectorAll('.category-section, .hero-features-section');
+    sections.forEach(section => {
+        if (section.previousElementSibling &&
+            !section.previousElementSibling.classList.contains('section-glow-line')) {
+            const line = document.createElement('div');
+            line.className = 'section-glow-line';
+            section.parentNode.insertBefore(line, section);
+        }
+    });
+}
+
+// ── Initialize all premium effects ──
+// Some effects use event delegation (safe to call early), others need DOM content.
+let _premiumInitialized = false;
+
+function initPremiumEffects() {
+    // Event-delegation effects: safe to init once early
+    if (!_premiumInitialized) {
+        initCursorGlow();
+        initCard3DTilt();
+        initMagneticButtons();
+        _premiumInitialized = true;
+    }
+
+    // DOM-dependent effects: run/re-run after content is available
+    initHeroParticles();
+    initCounterAnimation();
+    initHeroGradientWord();
+    initSectionGlowLines();
+}
+
+// Early init for event-delegation effects (cursor, tilt, magnetic)
+initPremiumEffects();
+
+// Старт на приложението
+main();
+
+    </script>
 </body>
 </html>
