@@ -2680,8 +2680,29 @@ section[id="scientific"] {
     display: none; /* handled via CSS pseudo-element above */
 }
 
+/* ── 3. HERO GRID – Two-column desktop layout ── */
+[data-theme="light"] .hero-section .container.hero-grid,
+[data-theme="dark"] .hero-section .container.hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
 /* ── 3. HERO VISUAL – RIGHT COLUMN ── */
 [data-theme="light"] .hero-visual {
+    position: relative;
+    height: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+[data-theme="dark"] .hero-visual {
     position: relative;
     height: 480px;
     display: flex;
@@ -3249,6 +3270,142 @@ section[id="scientific"] {
 
 /* Sync ripple colour to the new btn styles */
 
+
+/* ======================================================= */
+/*   MOBILE RESPONSIVE FIXES – hero, features, layout      */
+/* ======================================================= */
+
+/* ── TABLET (≤1024px): narrow hero grid ── */
+@media (max-width: 1024px) {
+    [data-theme="light"] .hero-section .container.hero-grid,
+    [data-theme="dark"] .hero-section .container.hero-grid {
+        grid-template-columns: 1.3fr 0.7fr;
+        gap: 28px;
+    }
+
+    [data-theme="light"] .hero-visual,
+    [data-theme="dark"] .hero-visual {
+        height: 360px;
+    }
+
+    .hex-frame.hex-vial  { width: 120px; height: 120px; }
+    .hex-frame.hex-lab   { width: 130px; height: 130px; }
+    .hex-frame.hex-face  { width: 110px; height: 110px; }
+
+    .hero-features-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+}
+
+/* ── MOBILE (≤768px): single column, hide hero visual ── */
+@media (max-width: 768px) {
+    /* Hero grid: single column, centred text */
+    [data-theme="light"] .hero-section .container.hero-grid,
+    [data-theme="dark"] .hero-section .container.hero-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Hide the decorative visual panel on mobile – saves vertical space */
+    [data-theme="light"] .hero-visual,
+    [data-theme="dark"] .hero-visual {
+        display: none;
+    }
+
+    /* Centre hero text on mobile */
+    [data-theme="light"] .hero-content,
+    [data-theme="dark"] .hero-content {
+        text-align: center;
+    }
+
+    [data-theme="light"] .hero-content p,
+    [data-theme="dark"] .hero-content p {
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    [data-theme="light"] .hero-cta-group,
+    [data-theme="dark"] .hero-cta-group {
+        justify-content: center;
+    }
+
+    [data-theme="light"] .hero-trust-badges,
+    [data-theme="dark"] .hero-trust-badges {
+        justify-content: center;
+    }
+
+    /* Fix hero stats gap on light theme mobile */
+    [data-theme="light"] .hero-stats,
+    [data-theme="dark"] .hero-stats {
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    /* Reduce hero features section padding on mobile */
+    [data-theme="light"] .hero-features-section,
+    [data-theme="dark"] .hero-features-section {
+        padding: 36px 0 40px;
+    }
+
+    /* Hero features: single column on mobile */
+    .hero-features-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    /* Reduce feature card padding */
+    .hex-feature-card {
+        padding: 28px 20px 24px;
+    }
+
+    /* Reduce section padding on mobile */
+    .section-padding {
+        padding: 50px 0;
+    }
+
+    /* Fix info-card min-width on mobile to prevent overflow */
+    .info-card-image,
+    .info-card-content {
+        min-width: 0;
+    }
+}
+
+/* ── SMALL MOBILE (≤480px): further reductions ── */
+@media (max-width: 480px) {
+    /* Section padding */
+    .section-padding {
+        padding: 36px 0;
+    }
+
+    /* Stat items wrap on very small screens */
+    .hero-stats {
+        gap: 12px;
+    }
+
+    .stat-item {
+        padding: 14px 16px;
+    }
+
+    .stat-item strong {
+        font-size: 1.4rem;
+    }
+
+    /* Feature card further reduction */
+    .hex-feature-card {
+        padding: 22px 16px 20px;
+    }
+
+    /* Hero features section */
+    [data-theme="light"] .hero-features-section,
+    [data-theme="dark"] .hero-features-section {
+        padding: 28px 0 32px;
+    }
+}
 
     </style>
 </head>
