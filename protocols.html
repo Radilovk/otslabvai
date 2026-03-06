@@ -1,0 +1,2364 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Обективен Справочник: Молекули и Протоколи за Регенерация</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #05091a;
+            --bg-card: rgba(8, 18, 40, 0.85);
+            --accent-cyan: #00c4c8;
+            --accent-gold: #d4a843;
+            --text-primary: #e8f2f8;
+            --text-secondary: #7b98b5;
+            --border-glow: rgba(0, 196, 200, 0.25);
+            --border-radius: 14px;
+            --shadow-glow: 0 0 30px rgba(0, 196, 200, 0.08);
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        /* Background mesh */
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(0,196,200,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(212,168,67,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(0,100,150,0.04) 0%, transparent 60%);
+            animation: bgShift 25s ease-in-out infinite alternate;
+        }
+        @keyframes bgShift {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.05) translate(2%, 2%); }
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+        h1 {
+            text-align: center;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin: 24px 0 44px;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            background: linear-gradient(90deg, #00c4c8, #d4a843);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        /* Control Panel */
+        #control-panel {
+            background: rgba(5, 12, 30, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow);
+            padding: 18px 24px;
+            border-radius: var(--border-radius);
+            margin-bottom: 44px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            align-items: flex-end;
+            justify-content: space-between;
+            position: sticky;
+            top: 12px;
+            z-index: 100;
+            box-shadow: var(--shadow-glow);
+        }
+        .filters-wrapper { display: flex; flex-wrap: wrap; gap: 14px; flex: 1; }
+        .control-group { display: flex; flex-direction: column; min-width: 155px; flex: 1; }
+        .control-group label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            letter-spacing: 0.6px;
+        }
+        .control-group select {
+            padding: 9px 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237b98b5' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        .control-group select option { background: #05091a; color: var(--text-primary); }
+        .control-group select:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(0,196,200,0.15); }
+        #reset-btn {
+            padding: 10px 22px;
+            background: transparent;
+            border: 1px solid var(--border-glow);
+            color: var(--text-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            height: 41px;
+        }
+        #reset-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .btn-create-protocol {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #00c4c8, #0090a8);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 4px 20px rgba(0,196,200,0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            height: 41px;
+        }
+        .btn-create-protocol:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(0,196,200,0.4); }
+        /* Category sections */
+        .category-section { margin-bottom: 60px; }
+        h2 {
+            color: var(--text-primary);
+            border-left: 3px solid var(--accent-cyan);
+            border-bottom: 1px solid var(--border-glow);
+            padding: 10px 0 12px 18px;
+            margin-top: 0;
+            margin-bottom: 28px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: -3px 0 20px rgba(0,196,200,0.15);
+        }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-top: 3px solid var(--accent-cyan);
+            border-radius: var(--border-radius);
+            padding: 22px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.35s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,196,200,0.5), transparent);
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(0,196,200,0.15), 0 4px 20px rgba(0,0,0,0.4);
+            border-color: rgba(0,196,200,0.5);
+        }
+        .card h3 {
+            margin: 0 0 14px 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            line-height: 1.3;
+            background: linear-gradient(90deg, #d4a843, #e8c878);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .metrics-mini {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+            border: 1px solid var(--border-glow);
+        }
+        .metrics-mini div {
+            background: rgba(255,255,255,0.04);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-glow);
+            flex: 1;
+            text-align: center;
+        }
+        .metrics-mini strong {
+            color: var(--accent-cyan);
+            font-size: 0.9rem;
+            display: block;
+            margin-top: 2px;
+            font-weight: 700;
+        }
+        .price-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .price-tag {
+            background: rgba(212,168,67,0.12);
+            color: var(--accent-gold);
+            border: 1px solid rgba(212,168,67,0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .btn-details {
+            width: 100%;
+            padding: 11px;
+            background: transparent;
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            border-radius: 9px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.5px;
+        }
+        .btn-details:hover { background: var(--accent-cyan); color: #05091a; }
+        /* Info Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(3, 7, 20, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .modal.show { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+        .modal-content {
+            background: rgba(8, 18, 40, 0.98);
+            border: 1px solid var(--border-glow);
+            width: 100%;
+            max-width: 800px;
+            border-radius: 16px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(0,196,200,0.05);
+            position: relative;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            padding: 22px 28px;
+            background: linear-gradient(135deg, rgba(0,196,200,0.12), rgba(212,168,67,0.08));
+            border-bottom: 1px solid var(--border-glow);
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            border: none;
+            padding: 0;
+            background: linear-gradient(90deg, #d4a843, #e8c878);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            box-shadow: none;
+        }
+        .close-btn {
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+            transition: 0.2s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border-glow);
+        }
+        .close-btn:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); }
+        .modal-body { padding: 28px; overflow-y: auto; }
+        .modal-body::-webkit-scrollbar { width: 6px; }
+        .modal-body::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .modal-body::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 3px; }
+        .detail-section {
+            margin-bottom: 18px;
+            padding: 14px 18px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            border-left: 3px solid var(--accent-cyan);
+        }
+        .detail-section h4 {
+            color: var(--accent-cyan);
+            font-size: 0.9rem;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .detail-section p { font-size: 0.92rem; color: var(--text-primary); margin: 0; line-height: 1.6; }
+        .badge { padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; color: white; font-weight: 700; display: inline-block; margin-top: 3px; }
+        .bg-red { background: var(--danger); }
+        .bg-green { background: var(--success); }
+        .bg-yellow { background: var(--warning); color: #000; }
+        .hidden-details { display: none; }
+        .hidden-section { display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+        /* ===== PROTOCOL WIZARD (8-step) ===== */
+        .protocol-wizard {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(3, 7, 20, 0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            flex-direction: column;
+        }
+        .protocol-wizard.show { display: flex; animation: fadeIn 0.3s ease; }
+        .wizard-inner {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .wizard-inner::-webkit-scrollbar { width: 5px; }
+        .wizard-inner::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 3px; }
+        .wizard-inner-content { max-width: 680px; width: 100%; padding: 0 20px 20px; }
+        /* Sticky top bar inside scrollable wizard-inner */
+        .wizard-top-bar {
+            position: sticky;
+            top: 0;
+            background: rgba(3, 7, 20, 0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 18px 0 14px;
+            margin-bottom: 28px;
+            z-index: 10;
+            border-bottom: 1px solid var(--border-glow);
+            width: 100%;
+        }
+        .wizard-progress-line {
+            height: 3px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 2px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+        .wizard-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00c4c8, #d4a843);
+            border-radius: 2px;
+            transition: width 0.4s ease;
+            width: 12.5%;
+        }
+        .wizard-top-info { display: flex; justify-content: space-between; align-items: center; }
+        .wizard-step-label { font-size: 0.78rem; color: var(--text-secondary); font-weight: 600; }
+        .wizard-step-title {
+            font-size: 1rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #d4a843, #e8c878);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        /* Close wizard button */
+        .wizard-close-btn {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            width: 34px;
+            height: 34px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border-glow);
+            border-radius: 50%;
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 11;
+            font-family: 'Inter', sans-serif;
+        }
+        .wizard-close-btn:hover { color: var(--accent-cyan); border-color: var(--accent-cyan); }
+        /* Steps */
+        .wizard-step { display: none; animation: stepIn 0.3s ease; }
+        .wizard-step.active { display: block; }
+        @keyframes stepIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+        .wizard-step-header { margin-bottom: 26px; }
+        .wizard-step-header h3 { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
+        .wizard-step-header p { color: var(--text-secondary); font-size: 0.88rem; margin: 0; }
+        /* Form fields */
+        .form-field { margin-bottom: 20px; }
+        .form-field label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+        .form-field input::placeholder,
+        .form-field textarea::placeholder { color: rgba(123,152,181,0.45); }
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(0,196,200,0.15);
+        }
+        .form-field textarea { resize: vertical; min-height: 88px; }
+        .form-field select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237b98b5' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+        .form-field select option { background: #05091a; color: var(--text-primary); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 520px) { .form-row { grid-template-columns: 1fr; } }
+        /* Tile groups (checkbox/radio) */
+        .tile-group { display: flex; flex-wrap: wrap; gap: 9px; }
+        .tile-option {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 15px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.83rem;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .tile-option:hover { border-color: rgba(0,196,200,0.5); color: var(--text-primary); }
+        .tile-option input { display: none; }
+        .tile-option:has(input:checked) {
+            border-color: var(--accent-cyan);
+            background: rgba(0,196,200,0.12);
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+        .radio-group { display: flex; flex-wrap: wrap; gap: 9px; }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .radio-option input { display: none; }
+        .radio-option:has(input:checked) {
+            border-color: var(--accent-cyan);
+            background: rgba(0,196,200,0.12);
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+        /* Validation */
+        .validation-error { color: var(--danger); font-size: 0.79rem; margin-top: 6px; display: none; }
+        .form-field.error input,
+        .form-field.error select,
+        .form-field.error textarea {
+            border-color: var(--danger);
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+        }
+        .form-field.error .validation-error { display: block; }
+        .tile-group-error { color: var(--danger); font-size: 0.79rem; margin-top: 6px; display: none; }
+        .tile-group-error.show { display: block; }
+        /* Summary step */
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        @media (max-width: 520px) { .summary-grid { grid-template-columns: 1fr; } }
+        .summary-item {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+        .summary-item .s-label {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .summary-item .s-value {
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            word-break: break-word;
+        }
+        /* Loading / DNA animation */
+        .dna-loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 22px;
+            padding: 60px 20px;
+        }
+        .dna-emoji { font-size: 4rem; animation: dnaFloat 2s ease-in-out infinite; }
+        @keyframes dnaFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
+        }
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            text-align: center;
+            max-width: 320px;
+            line-height: 1.7;
+        }
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        @keyframes dots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80%, 100% { content: '...'; } }
+        /* Result cards */
+        .protocol-result { display: none; }
+        .protocol-result.show { display: block; }
+        .result-card {
+            background: rgba(0,196,200,0.05);
+            border: 1px solid var(--border-glow);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 14px;
+        }
+        .result-card h4 {
+            color: var(--accent-cyan);
+            font-size: 0.98rem;
+            margin: 0 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .result-card p, .result-card ul {
+            font-size: 0.88rem;
+            color: var(--text-primary);
+            line-height: 1.7;
+            margin: 0;
+        }
+        .result-card ul { padding-left: 18px; }
+        .result-card li { margin-bottom: 7px; }
+        .result-actions { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; padding-bottom: 20px; }
+        .result-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 9px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+        .btn-new-protocol { background: var(--accent-cyan); color: #05091a; }
+        .btn-new-protocol:hover { opacity: 0.9; }
+        .btn-print { background: rgba(212,168,67,0.15); color: var(--accent-gold); border: 1px solid rgba(212,168,67,0.3); }
+        .btn-close-wizard { background: rgba(255,255,255,0.07); color: var(--text-secondary); border: 1px solid var(--border-glow); }
+        /* Bottom nav */
+        .wizard-bottom-nav {
+            flex-shrink: 0;
+            background: rgba(3, 7, 20, 0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-glow);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .btn-wizard-prev {
+            padding: 11px 22px;
+            background: transparent;
+            border: 1px solid var(--border-glow);
+            color: var(--text-secondary);
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+        .btn-wizard-prev:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .btn-wizard-next {
+            padding: 11px 30px;
+            background: linear-gradient(135deg, #00c4c8, #0090a8);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(0,196,200,0.3);
+            font-size: 0.9rem;
+        }
+        .btn-wizard-next:hover { transform: translateY(-2px); box-shadow: 0 6px 26px rgba(0,196,200,0.4); }
+        .btn-wizard-generate {
+            background: linear-gradient(135deg, #d4a843, #e8c878) !important;
+            color: #05091a !important;
+            box-shadow: 0 4px 20px rgba(212,168,67,0.35) !important;
+            font-weight: 800 !important;
+        }
+        .btn-wizard-generate:hover { box-shadow: 0 6px 26px rgba(212,168,67,0.45) !important; }
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border-glow);
+            background: rgba(8, 18, 40, 0.9);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-glow);
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        .theme-toggle:hover { transform: scale(1.1); border-color: var(--accent-cyan); }
+        /* Light theme overrides */
+        [data-theme="light"] {
+            --bg-dark: #eef2f7;
+            --bg-card: rgba(255, 255, 255, 0.92);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-glow: rgba(0, 196, 200, 0.3);
+        }
+        [data-theme="light"] body { background: #eef2f7; }
+        [data-theme="light"] .bg-mesh {
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(0,196,200,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(212,168,67,0.06) 0%, transparent 50%);
+        }
+        [data-theme="light"] #control-panel { background: rgba(240,246,255,0.92); border-color: rgba(0,196,200,0.25); }
+        [data-theme="light"] .control-group select { background: #fff; color: #1e293b; }
+        [data-theme="light"] .card { background: rgba(255,255,255,0.95); }
+        [data-theme="light"] .metrics-mini { background: rgba(0,0,0,0.04); }
+        [data-theme="light"] .metrics-mini div { background: #fff; }
+        [data-theme="light"] .modal-content { background: #f8faff; }
+        [data-theme="light"] .detail-section { background: rgba(0,0,0,0.04); }
+        [data-theme="light"] .protocol-wizard { background: rgba(238,242,247,0.97); }
+        [data-theme="light"] .wizard-top-bar { background: rgba(238,242,247,0.97); }
+        [data-theme="light"] .wizard-bottom-nav { background: rgba(238,242,247,0.97); }
+        [data-theme="light"] .form-field input,
+        [data-theme="light"] .form-field select,
+        [data-theme="light"] .form-field textarea { background: #fff; color: #1e293b; }
+        [data-theme="light"] .tile-option { background: #fff; color: #64748b; }
+        [data-theme="light"] .radio-option { background: #fff; color: #64748b; }
+        [data-theme="light"] .summary-item { background: rgba(0,0,0,0.04); }
+        [data-theme="light"] .result-card { background: rgba(0,196,200,0.04); }
+        [data-theme="light"] .theme-toggle { background: rgba(255,255,255,0.9); }
+        [data-theme="light"] h1 { background: linear-gradient(90deg, #007a7d, #b8860b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        [data-theme="light"] .card h3 { background: linear-gradient(90deg, #b8860b, #d4a843); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        /* Print */
+        @media print {
+            .wizard-bottom-nav, .theme-toggle, .wizard-top-bar, .result-actions { display: none !important; }
+            .protocol-wizard { position: static; background: none; }
+            .wizard-inner { overflow: visible; }
+            .result-card { break-inside: avoid; }
+        }
+        @media (max-width: 768px) {
+            #control-panel { padding: 14px 16px; position: static; }
+            .control-group { min-width: 100%; }
+            .modal { padding: 10px; }
+            .modal-content { max-height: 95vh; }
+            .grid-container { grid-template-columns: 1fr; }
+            .btn-create-protocol { width: 100%; justify-content: center; }
+        }
+        /* API config banner */
+        .api-config-banner {
+            background: rgba(251,191,36,0.08);
+            border: 1px solid rgba(251,191,36,0.25);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            font-size: 0.82rem;
+            color: #d4a843;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<button class="theme-toggle" id="themeToggle" title="Смяна на тема" aria-label="Превключи тема">◑</button>
+
+<div class="container">
+    <h1>Обективен Справочник: 32 Протокола</h1>
+
+    <div id="control-panel">
+        <div class="filters-wrapper">
+            <div class="control-group">
+                <label>Сортиране по цена</label>
+                <select id="sort-price">
+                    <option value="default">По подразбиране (Категории)</option>
+                    <option value="asc">От най-евтини към най-скъпи</option>
+                    <option value="desc">От най-скъпи към най-евтини</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Виз. Подмладяване</label>
+                <select class="filter-metric" data-metric="vis">
+                    <option value="1">Всички нива</option>
+                    <option value="3">Поне 3/5 (Среден ефект)</option>
+                    <option value="4">Поне 4/5 (Силен ефект)</option>
+                    <option value="5">ТОП (5/5 Златен стандарт)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Тяло / Мускули</label>
+                <select class="filter-metric" data-metric="mus">
+                    <option value="1">Всички нива</option>
+                    <option value="3">Поне 3/5 (Среден ефект)</option>
+                    <option value="4">Поне 4/5 (Силен ефект)</option>
+                    <option value="5">ТОП (5/5 Трансформация)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Мозък / Когниция</label>
+                <select class="filter-metric" data-metric="cog">
+                    <option value="1">Всички нива</option>
+                    <option value="3">Поне 3/5 (Фокус)</option>
+                    <option value="4">Поне 4/5 (Невропротекция)</option>
+                    <option value="5">ТОП (5/5 Регенерация)</option>
+                </select>
+            </div>
+        </div>
+        <button id="reset-btn">Изчисти</button>
+        <button class="btn-create-protocol" id="create-protocol-btn">Създай Личен Протокол</button>
+    </div>
+
+    <!-- Info Modal -->
+    <div id="info-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Детайли</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-body-content"></div>
+        </div>
+    </div>
+
+    <!-- Protocol Wizard (8-step full-screen) -->
+    <div id="protocol-wizard" class="protocol-wizard">
+        <button class="wizard-close-btn" id="close-wizard-btn" aria-label="Затвори">&times;</button>
+        <div class="wizard-inner">
+            <div class="wizard-inner-content">
+                <div class="wizard-top-bar">
+                    <div class="wizard-progress-line">
+                        <div class="wizard-progress-fill" id="wizard-progress-fill"></div>
+                    </div>
+                    <div class="wizard-top-info">
+                        <span class="wizard-step-label" id="wizard-step-label">Стъпка 1 от 8</span>
+                        <span class="wizard-step-title" id="wizard-step-title">Биометрика</span>
+                    </div>
+                </div>
+
+                <div class="wizard-steps-container">
+                    <!-- STEP 1: Биометрика -->
+                    <div class="wizard-step active" data-step="1">
+                        <div class="wizard-step-header">
+                            <h3>Биометрика</h3>
+                            <p>Основни данни за вашето тяло</p>
+                        </div>
+                        <div class="form-field">
+                            <label>Вашето име (по желание)</label>
+                            <input type="text" id="prot-name" placeholder="напр. Иван Петров">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label>Възраст *</label>
+                                <input type="number" id="prot-age" min="16" max="100" placeholder="напр. 35">
+                                <div class="validation-error"></div>
+                            </div>
+                            <div class="form-field">
+                                <label>Пол *</label>
+                                <select id="prot-gender">
+                                    <option value="">-- Изберете --</option>
+                                    <option value="male">Мъж</option>
+                                    <option value="female">Жена</option>
+                                </select>
+                                <div class="validation-error"></div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label>Височина (см) *</label>
+                                <input type="number" id="prot-height" min="120" max="230" placeholder="напр. 178">
+                                <div class="validation-error"></div>
+                            </div>
+                            <div class="form-field">
+                                <label>Тегло (кг) *</label>
+                                <input type="number" id="prot-weight" min="30" max="250" placeholder="напр. 75">
+                                <div class="validation-error"></div>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label>% Телесни мазнини (ако знаете)</label>
+                            <input type="number" id="prot-bodyfat" min="3" max="60" placeholder="ако знаете, напр. 18">
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: Активност & Начин на живот -->
+                    <div class="wizard-step" data-step="2">
+                        <div class="wizard-step-header">
+                            <h3>Активност &amp; Начин на живот</h3>
+                            <p>Разкажете ни за вашата ежедневна активност</p>
+                        </div>
+                        <div class="form-field">
+                            <label>Ниво на физическа активност *</label>
+                            <select id="prot-activity">
+                                <option value="">-- Изберете --</option>
+                                <option value="sedentary">Заседнал (офис, без спорт)</option>
+                                <option value="light">Лека активност (1-2 пъти/седмица)</option>
+                                <option value="moderate">Умерена активност (3-4 пъти/седмица)</option>
+                                <option value="active">Активен (5+ пъти/седмица)</option>
+                                <option value="athlete">Атлет / Професионален спортист</option>
+                            </select>
+                            <div class="validation-error"></div>
+                        </div>
+                        <div class="form-field">
+                            <label>Вид тренировка (изберете всички приложими)</label>
+                            <div class="tile-group">
+                                <label class="tile-option"><input type="checkbox" name="prot-training" value="strength"><span>Сила / Бодибилдинг</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-training" value="cardio"><span>Кардио / Издръжливост</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-training" value="hiit"><span>HIIT / Кросфит</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-training" value="sports"><span>Спорт / Игри</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-training" value="yoga"><span>Йога / Пилатес</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-training" value="none"><span>— Не тренирам</span></label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label>Часове сън на нощ</label>
+                                <select id="prot-sleep">
+                                    <option value="">-- Изберете --</option>
+                                    <option value="under5">Под 5 часа</option>
+                                    <option value="5to6">5-6 часа</option>
+                                    <option value="6to7">6-7 часа</option>
+                                    <option value="7to8">7-8 часа (оптимален)</option>
+                                    <option value="over8">8+ часа</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Качество на съня</label>
+                                <select id="prot-sleep-quality">
+                                    <option value="">-- Изберете --</option>
+                                    <option value="terrible">Ужасен</option>
+                                    <option value="poor">Лош</option>
+                                    <option value="average">Среден</option>
+                                    <option value="good">Добър</option>
+                                    <option value="excellent">Отличен</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label>Хронотип</label>
+                                <select id="prot-chronotype">
+                                    <option value="">-- Изберете --</option>
+                                    <option value="morning">Сутрешен ("Ранна птица")</option>
+                                    <option value="evening">Вечерен ("Нощна птица")</option>
+                                    <option value="neutral">Неутрален</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Ниво на стрес</label>
+                                <select id="prot-stress">
+                                    <option value="">-- Изберете --</option>
+                                    <option value="low">Нисък</option>
+                                    <option value="moderate">Умерен</option>
+                                    <option value="high">Висок</option>
+                                    <option value="very_high">Много висок</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: Биомаркери & Здраве -->
+                    <div class="wizard-step" data-step="3">
+                        <div class="wizard-step-header">
+                            <h3>Биомаркери &amp; Здраве</h3>
+                            <p>Здравословно състояние и известни дефицити</p>
+                        </div>
+                        <div class="form-field">
+                            <label>Имате ли кръвни изследвания от последните 12 месеца?</label>
+                            <div class="radio-group">
+                                <label class="radio-option"><input type="radio" name="prot-bloodwork" value="yes"><span>Да</span></label>
+                                <label class="radio-option"><input type="radio" name="prot-bloodwork" value="no"><span>Не</span></label>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label>Известни дефицити / ниски нива (изберете всички)</label>
+                            <div class="tile-group">
+                                <label class="tile-option"><input type="checkbox" name="prot-deficiencies" value="vitamin_d"><span>Витамин D</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-deficiencies" value="b12"><span>Витамин B12</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-deficiencies" value="iron"><span>Желязо / Феритин</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-deficiencies" value="magnesium"><span>Магнезий</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-deficiencies" value="zinc"><span>Цинк</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-deficiencies" value="omega3"><span>Омега-3</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-deficiencies" value="testosterone"><span>Тестостерон (ниско)</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-deficiencies" value="thyroid"><span>Щитовидна жлеза</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-deficiencies" value="none_deficiency"><span>— Нямам / Не знам</span></label>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label>Съществуващи здравословни проблеми (изберете всички)</label>
+                            <div class="tile-group">
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="none"><span>Никакви</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="joint_pain"><span>Ставни болки</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="fatigue"><span>Хронична умора</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="insomnia"><span>Безсъние</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="brain_fog"><span>Мозъчна мъгла</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="skin_issues"><span>Проблеми с кожата</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="hair_loss"><span>Косопад</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="digestion"><span>Храносмилане</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="inflammation"><span>Хронично възпаление</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="hormonal"><span>Хормонален дисбаланс</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="autoimmune"><span>Автоимунно</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-conditions" value="metabolic"><span>Метаболитен синдром / ИР</span></label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label>Алергии / Непоносимости</label>
+                                <textarea id="prot-allergies" placeholder="напр. хистаминова непоносимост, алергия към риба..."></textarea>
+                            </div>
+                            <div class="form-field">
+                                <label>Текущи медикаменти</label>
+                                <textarea id="prot-medications" placeholder="напр. метформин, левотироксин..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: Цели & Приоритет -->
+                    <div class="wizard-step" data-step="4">
+                        <div class="wizard-step-header">
+                            <h3>Цели &amp; Приоритет</h3>
+                            <p>Какво искате да постигнете?</p>
+                        </div>
+                        <div class="form-field">
+                            <label>Основни цели (изберете всички приложими) *</label>
+                            <div class="tile-group" id="goals-tile-group">
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="anti_aging"><span>Визуално подмладяване</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="muscle"><span>Мускулна маса и сила</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="cognitive"><span>Когниция и фокус</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="energy"><span>Енергия и издръжливост</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="longevity"><span>Дълголетие и клетъчно здраве</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="immunity"><span>Имунна система</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="sleep_goal"><span>Качество на съня</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="stress_mgmt"><span>Управление на стреса</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="joints_goal"><span>Стави и подвижност</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="skin_goal"><span>Здраве на кожата</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="fat_loss"><span>Горене на мазнини</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-goals" value="libido"><span>Либидо и хормони</span></label>
+                            </div>
+                            <div class="tile-group-error" id="err-goals">Моля, изберете поне една цел</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label>Основен приоритет</label>
+                                <select id="prot-priority">
+                                    <option value="">-- Изберете главния --</option>
+                                    <option value="anti_aging">Визуално подмладяване</option>
+                                    <option value="muscle">Мускулна маса и сила</option>
+                                    <option value="cognitive">Когниция и фокус</option>
+                                    <option value="energy">Енергия и издръжливост</option>
+                                    <option value="longevity">Дълголетие</option>
+                                    <option value="immunity">Имунна система</option>
+                                    <option value="sleep_goal">Качество на съня</option>
+                                    <option value="stress_mgmt">Управление на стреса</option>
+                                    <option value="joints_goal">Стави и подвижност</option>
+                                    <option value="skin_goal">Здраве на кожата</option>
+                                    <option value="fat_loss">Горене на мазнини</option>
+                                    <option value="libido">Либидо и хормони</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Времеви хоризонт</label>
+                                <select id="prot-timeframe">
+                                    <option value="">-- Изберете --</option>
+                                    <option value="1month">До 1 месец (бърз ефект)</option>
+                                    <option value="1to3months">1-3 месеца (среден)</option>
+                                    <option value="3to6months">3-6 месеца (дългосрочен)</option>
+                                    <option value="6plus">6+ месеца (трансформационен)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 5: Биохакинг Опит -->
+                    <div class="wizard-step" data-step="5">
+                        <div class="wizard-step-header">
+                            <h3>Биохакинг Опит</h3>
+                            <p>Разкажете ни за вашия опит с добавки и биохакинг</p>
+                        </div>
+                        <div class="form-field">
+                            <label>Текущи добавки (ако приемате)</label>
+                            <textarea id="prot-current-supplements" placeholder="напр. витамин D3 5000 IU, магнезий глицинат, омега-3..."></textarea>
+                        </div>
+                        <div class="form-field">
+                            <label>Имате ли опит с пептиди?</label>
+                            <div class="radio-group">
+                                <label class="radio-option"><input type="radio" name="prot-peptides" value="yes"><span>Да, имам</span></label>
+                                <label class="radio-option"><input type="radio" name="prot-peptides" value="no"><span>Не, нямам</span></label>
+                                <label class="radio-option"><input type="radio" name="prot-peptides" value="unknown"><span>Не знам какво са</span></label>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label>Биохакинг практики, които правите (изберете всички)</label>
+                            <div class="tile-group">
+                                <label class="tile-option"><input type="checkbox" name="prot-biohacking" value="fasting"><span>Интермитентно гладуване</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-biohacking" value="sauna"><span>Сауна / Топлинна терапия</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-biohacking" value="cold"><span>Студена терапия / Ice bath</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-biohacking" value="red_light"><span>Червена светлина (PBM)</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-biohacking" value="grounding"><span>Заземяване</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-biohacking" value="none_bio"><span>— Нищо от изброените</span></label>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label>Готовност за инжекционни форми</label>
+                            <select id="prot-injection-willing">
+                                <option value="">-- Изберете --</option>
+                                <option value="yes_all">Да, без проблем</option>
+                                <option value="subcutaneous">Само подкожни (по-лесни)</option>
+                                <option value="no">Не, само орални и топикални</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- STEP 6: Бюджет & Предпочитания -->
+                    <div class="wizard-step" data-step="6">
+                        <div class="wizard-step-header">
+                            <h3>Бюджет &amp; Предпочитания</h3>
+                            <p>Финансова рамка и предпочитани форми</p>
+                        </div>
+                        <div class="form-field">
+                            <label>Месечен бюджет за добавки *</label>
+                            <select id="prot-budget">
+                                <option value="">-- Изберете --</option>
+                                <option value="low">До €50/месец (Базов)</option>
+                                <option value="medium">€50-150/месец (Стандарт)</option>
+                                <option value="high">€150-300/месец (Висок)</option>
+                                <option value="premium">€300-500/месец (Премиум)</option>
+                                <option value="unlimited">€500+/месец (Без ограничение)</option>
+                            </select>
+                            <div class="validation-error"></div>
+                        </div>
+                        <div class="form-field">
+                            <label>Предпочитани форми за прием (изберете всички)</label>
+                            <div class="tile-group">
+                                <label class="tile-option"><input type="checkbox" name="prot-forms" value="oral"><span>Перорални таблетки/капсули</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-forms" value="powder"><span>Прахове</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-forms" value="liquid"><span>Течни / Ампули</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-forms" value="topical"><span>Серуми и кремове</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-forms" value="sublingual"><span>Сублингвални</span></label>
+                                <label class="tile-option"><input type="checkbox" name="prot-forms" value="injection"><span>Инжекционни</span></label>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label>Допълнителна информация (по желание)</label>
+                            <textarea id="prot-notes" placeholder="Всяка допълнителна информация, която считате за важна..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- STEP 7: Обобщение -->
+                    <div class="wizard-step" data-step="7">
+                        <div class="wizard-step-header">
+                            <h3>Обобщение на данните</h3>
+                            <p>Прегледайте и потвърдете вашите данни преди генерирането</p>
+                        </div>
+                        <div id="summary-content"></div>
+                        <div style="margin-top: 20px; padding: 14px 18px; background: rgba(0,196,200,0.06); border: 1px solid var(--border-glow); border-radius: 12px;">
+                            <p style="color: var(--text-secondary); font-size: 0.83rem; margin: 0; text-align: center;">
+                                Данните се обработват само за генериране на протокол. Не се съхраняват на сервъра.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 8: AI Генерация -->
+                    <div class="wizard-step" data-step="8">
+                        <div id="protocol-loading" class="dna-loader">
+                            <div class="dna-emoji">🧬</div>
+                            <p class="loading-text">AI моделът анализира вашите данни и създава персонализиран протокол<span class="loading-dots"></span></p>
+                        </div>
+                        <div id="protocol-result" class="protocol-result"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wizard-bottom-nav" id="wizard-bottom-nav">
+            <button class="btn-wizard-prev" id="wizard-prev" style="visibility: hidden;">← Назад</button>
+            <button class="btn-wizard-next" id="wizard-next">Напред →</button>
+        </div>
+    </div>
+
+    <!-- CATEGORY I -->
+    <div class="category-section" id="cat-1">
+        <h2>I. Перорални Структурни Компоненти</h2>
+        <div class="grid-container">
+            <!-- 1. Collagen -->
+            <div class="card" data-vis="4" data-phys="3" data-psy="1" data-fat="1" data-mus="2" data-cog="1" data-price="300">
+                <h3>1. Хидролизирани колагенови пептиди</h3>
+                <div class="metrics-mini"><div>Лице/Бръчки: <strong>4/5</strong></div><div>Стави/Хрущял: <strong>3/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €300 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Клинично доказано повишава плътността на дермата, подобрява еластичността, намалява дълбочината на бръчките. Укрепва ставните връзки, косата и ноктите.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Дипептидите преминават чревната бариера и сигнализират на фибробластите за "разрушаване на тъкан", карайки ги да синтезират нов собствен колаген.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>4 до 8 седмици</strong> за кожата; <strong>3 до 6 месеца</strong> за облекчение на стави.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Всеки над 25-30 г., жени в менопауза, активни спортисти.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Много безопасен. Лек стомашен дискомфорт при огромни дози. Внимание при хистаминова непоносимост.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Витамин С (задължителен кофактор), Хиалуронова киселина.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>10 до 15g дневно хидролизат (Тип I и III). Сутрин на гладно.</p></div>
+                </div>
+            </div>
+            <!-- 2. Hyaluronic Acid -->
+            <div class="card" data-vis="4" data-phys="2" data-psy="1" data-fat="1" data-mus="1" data-cog="1" data-price="200">
+                <h3>2. Хиалуронова киселина (Перорална)</h3>
+                <div class="metrics-mini"><div>Хидратация: <strong>4/5</strong></div><div>Стави: <strong>2/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €200 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Дълбока системна хидратация. Намалява сухотата на кожата, облекчава синдрома на сухото око и "смазва" леко ставите. "Plump" ефект.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Свързва се с TLR4 рецепторите в червата, изпращайки сигнал до клетките в кожата и ставите да произвеждат собствена хиалуронова киселина.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>3 до 4 седмици</strong> за подобрение в сухотата на кожата и очите.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Хора със суха кожа, живеещи в сух климат, работещи дълго пред екран (сухи очи).</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-yellow">Внимание при онкология:</span> ХК подпомага клетъчната пролиферация, не се препоръчва при активни тумори.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Колагенови пептиди, Пикногенол, обилно пиене на вода.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>150-200 mg дневно. High Molecular Weight за стави, Low Molecular Weight за кожа.</p></div>
+                </div>
+            </div>
+            <!-- 3. Astaxanthin -->
+            <div class="card" data-vis="3" data-phys="4" data-psy="1" data-fat="1" data-mus="1" data-cog="2" data-price="250">
+                <h3>3. Астаксантин</h3>
+                <div class="metrics-mini"><div>UV Защита: <strong>4/5</strong></div><div>Издръжливост: <strong>3/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €250 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>"Вътрешен слънцезащитен крем" – увеличава времето до изгаряне. Подобрява еластичността, премахва зрителната умора, повишава физическата издръжливост.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Най-мощният антиоксидант. Преминава през клетъчната мембрана и я защитава отвътре и отвън. Преминава кръвно-мозъчната бариера.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>2 до 4 седмици</strong> за слънчева защита; до 3 месеца за еластичност на кожата.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Светла кожа, често излагащи се на слънце, спортисти, работа пред монитор.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>При мегадози може да придаде лек оранжев/златист оттенък на кожата.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Омега-3 (мазнините са задължителни за усвояването му).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>8 до 12 mg дневно, задължително приети с най-мазното хранене.</p></div>
+                </div>
+            </div>
+            <!-- 4. MSM -->
+            <div class="card" data-vis="3" data-phys="3" data-psy="1" data-fat="1" data-mus="1" data-cog="1" data-price="100">
+                <h3>4. MSM (Метилсулфонилметан)</h3>
+                <div class="metrics-mini"><div>Коса/Нокти: <strong>3/5</strong></div><div>Възпаление: <strong>3/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €100 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Сгъстява косата, твърди нокти. Значително намалява мускулната треска и облекчава симптомите на остеоартрит.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Органичен донор на сяра (за кератин и колаген). Инхибира NF-kB протеиновия комплекс, спирайки възпалението.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>1-2 седмици</strong> за мускулно възстановяване; <strong>4-6 седмици</strong> за коса и нокти.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>При косопад, чупливи нокти, спортисти с тежки натоварвания, ставни болки.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Прием късно вечер води до прекалено ярки сънища и безсъние. Рядко: лек обрив в началото от детоксикация.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Витамин С (за колагена) и Глюкозамин (за ставите).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>3 до 6 грама дневно. Сутрин и на обяд. Избягвайте прием след 16:00 ч.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATEGORY II -->
+    <div class="category-section" id="cat-2">
+        <h2>II. Перорални Агенти за Клетъчно Дълголетие</h2>
+        <div class="grid-container">
+            <!-- 5. NAD+ -->
+            <div class="card" data-vis="2" data-phys="5" data-psy="3" data-fat="2" data-mus="2" data-cog="4" data-price="600">
+                <h3>5. NAD+ Прекурсори (NMN / NR)</h3>
+                <div class="metrics-mini"><div>Енергия: <strong>5/5</strong></div><div>ДНК Поправка: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €600 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Възстановява нивата на клетъчна енергия, подобрява инсулиновата чувствителност, изчиства мозъчната мъгла и активира поправка на ДНК.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Увеличават NAD+ (горивото на митохондриите). NAD+ активира Сиртуините (гени на дълголетието).</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>1-3 седмици</strong> за енергия; месеци за метаболитна промяна.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Всеки над 35-40 г., хронична умора, метаболитен синдром.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Изчерпва метиловите групи в тялото. Теоретичен риск от стимулиране на тумори (ако вече има такива).</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>TMG (Триметилглицин) - задължителен за метилирането. Ресвератрол.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>500 - 1000 mg NMN сутрин на гладно (сублингвално или липозомно).</p></div>
+                </div>
+            </div>
+            <!-- 6. Senolytics -->
+            <div class="card" data-vis="2" data-phys="5" data-psy="2" data-fat="1" data-mus="1" data-cog="3" data-price="200">
+                <h3>6. Сенолитици (Фисетин/Кверцетин)</h3>
+                <div class="metrics-mini"><div>Клетъчен Детокс: <strong>5/5</strong></div><div>Възпаление: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €200 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Драстично намалява системното възпаление. Изчиства тъканите от "зомби" клетки, подобрява паметта.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Нарушават защитата на сенесцентните (зомби) клетки, принуждавайки ги да преминат в апоптоза.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>1-2 месеца</strong> за намаляване на възпаленията.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Хора над 40 г., високи нива на системно възпаление (hs-CRP).</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-red">Не приемайте при рани:</span> Спира възстановяването от травми/счупвания.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Зехтин/Омега-3 (силно мастноразтворими).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Hit-and-Run метод: Висока доза (20mg/kg) за 2-3 поредни дни, веднъж месечно!</p></div>
+                </div>
+            </div>
+            <!-- 7. Spermidine -->
+            <div class="card" data-vis="2" data-phys="5" data-psy="2" data-fat="1" data-mus="1" data-cog="3" data-price="400">
+                <h3>7. Спермидин</h3>
+                <div class="metrics-mini"><div>Автофагия: <strong>5/5</strong></div><div>Коса: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €400 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Сърдечно-съдово здраве, памет. Силно удължава фазата на растеж на косата (анаген).</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Инхибира EP300, което води до мощно активиране на Автофагия (рециклиране на клетъчен боклук).</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>2 до 3 месеца</strong> за промяна в косата и когнитивния фокус.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Невропротекция, косопад, хора не можещи да гладуват (фастинг).</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-yellow">Глутен:</span> Ако е екстракт от пшеничен зародиш, не става за хора с Цьолиакия.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Интермитентно гладуване (Fasting) умножава автофагията.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>3 до 5 mg активен спермидин дневно с храна.</p></div>
+                </div>
+            </div>
+            <!-- 8. Ca-AKG -->
+            <div class="card" data-vis="2" data-phys="5" data-psy="2" data-fat="1" data-mus="2" data-cog="3" data-price="500">
+                <h3>8. Ca-AKG (Калциев Алфа-Кетоглутарат)</h3>
+                <div class="metrics-mini"><div>Биологична Възраст: <strong>5/5</strong></div><div>Кости: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €500 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Реверсира биологичната възраст средно с 8 години (в проучвания). Забавя остеопорозата, запазва мускулите.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Кофактор за ензимите TET, които деметилират ДНК (изчистват епигенетични грешки). Ключов в цикъла на Кребс.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>6 до 7 месеца</strong> за измеримо намаляване на възрастта; 3-4 седмици за енергия.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Всички над 45-50 години. Жени в менопауза (остеопороза).</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Много безопасен. Лек стомашен дискомфорт на гладно.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Витамин D3 и Витамин K2.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>1000 до 2000 mg дневно, сутрин. Търсете Ca-AKG, не обикновен Аргинин-AKG.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATEGORY III -->
+    <div class="category-section" id="cat-3">
+        <h2>III. Перорални Иновации</h2>
+        <div class="grid-container">
+            <!-- 9. Urolithin A -->
+            <div class="card" data-vis="2" data-phys="4" data-psy="1" data-fat="2" data-mus="4" data-cog="2" data-price="1000">
+                <h3>9. Уролитин А (Urolithin A)</h3>
+                <div class="metrics-mini"><div>Мускули/Сила: <strong>4/5</strong></div><div>Енергия: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €1000 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Повишава мускулната издръжливост (+17%) без спорт. Предпазва от саркопения.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Активира Митофагия – избирателно унищожава и рециклира стари митохондрии.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>4 до 8 седмици</strong> за мускулна издръжливост.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>50+ (саркопения), атлети. Само 30% от хората го синтезират от храна.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Основният риск е високата цена. Без сериозни странични ефекти.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>CoQ10 и PQQ (за нови митохондрии).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>500 до 1000 mg дневно (Mitopure) с леко мазна храна.</p></div>
+                </div>
+            </div>
+            <!-- 10. Ergothioneine -->
+            <div class="card" data-vis="3" data-phys="4" data-psy="2" data-fat="1" data-mus="1" data-cog="4" data-price="500">
+                <h3>10. L-Ерготионеин</h3>
+                <div class="metrics-mini"><div>Мозък/Нерви: <strong>4/5</strong></div><div>ДНК Защита: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €500 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>"Витамин на дълголетието". Мощна защита на ДНК, намалява смъртността, пази мозъка и очите.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Има собствен рецептор (OCTN1). Натрупва се в тъканите с висок оксидативен стрес.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p>Дългосрочно действие (месеци/години) за превенция. Без бърз стимулантен ефект.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Превенция на Алцхаймер/Паркинсон. Хора, които не ядат гъби.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Напълно безопасен.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Може да се набавя и чрез консумация на гъби (Шиитаке, Кладница).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>5 до 10 mg дневно.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATEGORY IV -->
+    <div class="category-section" id="cat-4">
+        <h2>IV. Топикални (Златен Стандарт)</h2>
+        <div class="grid-container">
+            <!-- 11. Retinoids -->
+            <div class="card" data-vis="5" data-phys="2" data-psy="1" data-fat="1" data-mus="1" data-cog="1" data-price="100">
+                <h3>11. Ретиноиди (Третиноин)</h3>
+                <div class="metrics-mini"><div>Бръчки: <strong>5/5</strong></div><div>Акне/Текстура: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €100 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Златен стандарт. Реверсира фотостареенето, премахва фини бръчки, лекува тежко акне.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Свързва се с RAR рецепторите. Ускорява клетъчния оборот, стимулира синтез на Колаген I и III.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>4-6 седмици</strong> за акне; <strong>3-6 месеца</strong> за бръчки.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Всеки над 25 г., акне, увреждания от слънцето.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-red">Забранен при бременност!</span> Ретинизация (зачервяване, лющене). Задължителен SPF.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Ниацинамид и Серамиди. Не смесвайте с AHA/BHA в началото.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>САМО вечер, колкото грахово зърно. Старт с 0.025% през ден.</p></div>
+                </div>
+            </div>
+            <!-- 12. Vitamin C -->
+            <div class="card" data-vis="4" data-phys="2" data-psy="1" data-fat="1" data-mus="1" data-cog="1" data-price="150">
+                <h3>12. Витамин С (L-Ascorbic Acid)</h3>
+                <div class="metrics-mini"><div>Блясък/Тен: <strong>4/5</strong></div><div>Слънцезащита: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €150 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Придава "glow" ефект, изсветлява пигментации. Умножава ефекта на слънцезащитния крем.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Мощен антиоксидант, инхибира тирозиназата (меланин), стабилизира колагеновата молекула.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>1-2 седмици</strong> за озаряване; 2-3 месеца за пигментни петна.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Всеки тип кожа, градско замърсяване, повехнал тен.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Окислява се бързо (става кафяв). Окислен серум може да оцвети порите в черно.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Витамин Е + Ферулова киселина.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Сутрин на чиста кожа. 15% концентрация с ниско pH.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATEGORY V -->
+    <div class="category-section" id="cat-5">
+        <h2>V. Трансдермални Пептиди и Иновации</h2>
+        <div class="grid-container">
+            <!-- 13. GHK-Cu -->
+            <div class="card" data-vis="5" data-phys="3" data-psy="1" data-fat="1" data-mus="1" data-cog="1" data-price="300">
+                <h3>13. Медни пептиди (GHK-Cu)</h3>
+                <div class="metrics-mini"><div>Лифтинг: <strong>5/5</strong></div><div>Белези: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €300 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Стяга отпуснатата кожа (лифтинг), заличава стари белези, уплътнява изтъняла кожа.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Доставя мед, модулира 4000 гена. Разгражда "твърдия" колаген в белезите и синтезира нов.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>4-8 седмици</strong> за еластичност; 3-6 месеца за лифтинг.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>40+, загуба на тургор, стрии, алтернатива на Третиноин.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-yellow">Uglies:</span> При прекаляване (>2%) кожата може временно да изглежда по-сбръчкана.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Микронидълинг. НЕ смесвайте с Витамин С или киселини.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Серум 1-2%, вечер, през ден в началото.</p></div>
+                </div>
+            </div>
+            <!-- 14. Argireline -->
+            <div class="card" data-vis="4" data-phys="1" data-psy="1" data-fat="1" data-mus="1" data-cog="1" data-price="150">
+                <h3>14. Аргирелин (Argireline)</h3>
+                <div class="metrics-mini"><div>Мимика: <strong>4/5</strong></div><div>Гневна бръчка: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €150 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>"Ботокс в бурканче". Омекотява динамичните бръчки на челото и около очите.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Дестабилизира SNARE комплекса, блокирайки мускулните контракции (като ботокс, но по-слабо).</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>2 до 4 седмици</strong> при ежедневна употреба.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Първи бръчки, удължаване на ботокс, страх от игли.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Ефектът е временен (изчезва при спиране). Трудно прониква дълбоко.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Matrixyl 3000, Хиалурон (за пенетрация).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Локално (10%) САМО върху мимическите зони, 2 пъти дневно.</p></div>
+                </div>
+            </div>
+            <!-- 15. Exosomes -->
+            <div class="card" data-vis="5" data-phys="4" data-psy="1" data-fat="1" data-mus="1" data-cog="1" data-price="1500">
+                <h3>15. Екзозоми (Exosomes)</h3>
+                <div class="metrics-mini"><div>Регенерация: <strong>5/5</strong></div><div>Възпаление: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €1500 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Ускорява заздравяването с 300%, драстично подмладява, лекува белези и розацея, възстановява коса.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Нано-мехурчета от млади стволови клетки. Доставят mRNA сигнали на старите клетки да регенерират.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>1-3 дни</strong> за заздравяване след лазер; 3-6 седмици за нов колаген.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Тежко фотостареене, пост-процедурна терапия, алопеция.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-red">Не се инжектират!</span> Одобрени само за локално нанасяне. Висока цена.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Микронидълинг (Morpheus8) или CO2 лазер (нанасят се след травмата).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Извършва се в клиника. 1 до 3 процедури.</p></div>
+                </div>
+            </div>
+            <!-- 16. PDRN -->
+            <div class="card" data-vis="4" data-phys="3" data-psy="1" data-fat="1" data-mus="1" data-cog="1" data-price="800">
+                <h3>16. PDRN (Сперма от Сьомга)</h3>
+                <div class="metrics-mini"><div>Плътност: <strong>4/5</strong></div><div>Тъмни кръгове: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €800 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Мощно заздравява кожата, удебелява я, лекува упорити тъмни кръгове под очите (Rejuran Healer).</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>ДНК фрагменти (близки до човешките). Агонист на Аденозин А2А рецептора, води до ангиогенеза.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>3-4 седмици</strong> след инжектиране за плътност.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Тънка, атрофирала кожа, тъмни кръгове, белези от акне.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-red">Алергия:</span> Противопоказано при алергия към риба. Болезнена процедура.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Хиалуронова киселина (мезотерапевтични коктейли).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Инжекционно/Нидълинг. Курс от 3-4 процедури през месец.</p></div>
+                </div>
+            </div>
+            <!-- 17. EGF -->
+            <div class="card" data-vis="4" data-phys="2" data-psy="1" data-fat="1" data-mus="1" data-cog="1" data-price="400">
+                <h3>17. EGF (Епидермален Растежен Фактор)</h3>
+                <div class="metrics-mini"><div>Епителизация: <strong>5/5</strong></div><div>Текстура: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €400 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Екстремно ускорява епителизацията след травма, обновява повърхността на кожата и свива порите.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Свързва се с EGFR рецептора, стимулирайки скоростно клетъчно делене и миграция на кератиноцитите.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>Дни</strong> за заздравяване на рани; 4 седмици за текстура.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>След химически пилинг, лазер, или за застаряваща, изтъняла кожа.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-yellow">Бенки:</span> Стимулира растежа на ВСИЧКИ клетки, избягвайте нанасяне върху бенки или кожни лезии.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>FGF (Фибробластен растежен фактор) за действие в дълбочина.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Топикално серум вечер, самостоятелно.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATEGORY VI -->
+    <div class="category-section" id="cat-6">
+        <h2>VI. Инжекционни Пептиди (Системни)</h2>
+        <div class="grid-container">
+            <!-- 18. Epitalon -->
+            <div class="card" data-vis="3" data-phys="5" data-psy="4" data-fat="1" data-mus="1" data-cog="3" data-price="400">
+                <h3>18. Epitalon (Епиталон)</h3>
+                <div class="metrics-mini"><div>Теломери: <strong>5/5</strong></div><div>Сън: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €400 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Удължава теломерите. Възстановява циркадния ритъм, дава изключително дълбок сън.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Активира теломеразата. Нормализира производството на мелатонин от епифизата.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>3-7 дни</strong> за перфектен сън; месеци/години за anti-aging.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>40+, безсъние, работа на смени, върховна anti-aging стратегия.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Много безопасен (биорегулатор).</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Thymalin (работят в тандем).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>10mg подкожно, 10 дни (или 5mg за 20 дни), на всеки 6 месеца.</p></div>
+                </div>
+            </div>
+            <!-- 19. Thymalin -->
+            <div class="card" data-vis="1" data-phys="5" data-psy="2" data-fat="1" data-mus="1" data-cog="2" data-price="200">
+                <h3>19. Thymalin (Тималин)</h3>
+                <div class="metrics-mini"><div>Имунитет: <strong>5/5</strong></div><div>Здраве: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €200 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Пълен рестарт на имунитета. Намалява инфекции, балансира автоимунни състояния.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Регенерира тимусната жлеза, възстановява съотношението CD4/CD8 Т-лимфоцити.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>1-2 седмици</strong> за укрепване на имунитета.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Възрастни (чиито тимус е атрофирал), често боледуващи.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>При автоимунни може първоначално да предизвика обостряне.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Epitalon, Цинк.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>10mg мускулно за 10 поредни дни, 1-2 пъти годишно.</p></div>
+                </div>
+            </div>
+            <!-- 20. MOTS-c -->
+            <div class="card" data-vis="3" data-phys="5" data-psy="2" data-fat="5" data-mus="4" data-cog="2" data-price="1000">
+                <h3>20. MOTS-c</h3>
+                <div class="metrics-mini"><div>Метаболизъм: <strong>5/5</strong></div><div>Горене на мазнини: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €1000 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>"Упражнение в бутилка". Форсира горенето на мазнини, драстично подобрява инсулина.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Митохондриален пептид, активира AMPK пътя (мимикира кардио тренировка).</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>1-2 седмици</strong> за енергия; 4-8 седмици за топене на мазнини.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Инсулинова резистентност, затлъстяване, атлети за издръжливост.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Инжекцията често причинява силно локално парене/зачервяване.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>SS-31 (за поправка на митохондриите преди MOTS-c да ги форсира).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>5-10mg подкожно, 1-3 пъти седмично, преди спорт.</p></div>
+                </div>
+            </div>
+            <!-- 21. Humanin -->
+            <div class="card" data-vis="1" data-phys="4" data-psy="3" data-fat="1" data-mus="1" data-cog="5" data-price="1000">
+                <h3>21. Humanin (ХуМанин)</h3>
+                <div class="metrics-mini"><div>Невропротекция: <strong>5/5</strong></div><div>Клетки: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €1000 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Мощна невропротекция, предпазва мозъка от Алцхаймер и възстановява когнитивните функции.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Митохондриален пептид. Инхибира Bax (протеина, отговорен за програмираната клетъчна смърт).</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p>Дългосрочно, предимно превантивен ефект (месеци).</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Възрастни с когнитивен спад, фамилна обремененост с Алцхаймер.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-yellow">Внимание:</span> Защитава всички клетки (цитопротективен), може да намали ефекта от химиотерапия.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Cerebrolysin или Dihexa за неврогенеза.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Подкожно инжектиране, по специфичен клиничен протокол.</p></div>
+                </div>
+            </div>
+            <!-- 22. BPC-157 -->
+            <div class="card" data-vis="2" data-phys="5" data-psy="2" data-fat="1" data-mus="2" data-cog="2" data-price="500">
+                <h3>22. BPC-157</h3>
+                <div class="metrics-mini"><div>Травми/Сухожилия: <strong>5/5</strong></div><div>Стомах: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €500 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Чудодейно заздравява скъсани мускули и сухожилия. Лекува синдром на пропускливи черва, гастрит.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>От човешки стомашен сок. Увеличава рецепторите за VEGF, води до масивна ангиогенеза (нови съдове).</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>3-7 дни</strong> за спиране на болка; 3-4 седмици за структурно възстановяване.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Спортисти с травми, хора с язви/Крон/гастрит.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Теоретично опасен при рак (ангиогенезата може да храни тумора). Рядко: апатия.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>TB-500 ("Кралската комбинация" за лекуване на травми).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>250-500mcg дневно подкожно (до травмата) или перорално (за стомах).</p></div>
+                </div>
+            </div>
+            <!-- 23. TB-500 -->
+            <div class="card" data-vis="2" data-phys="5" data-psy="1" data-fat="1" data-mus="3" data-cog="1" data-price="600">
+                <h3>23. TB-500</h3>
+                <div class="metrics-mini"><div>Мускули/Тъкани: <strong>5/5</strong></div><div>Гъвкавост: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €600 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Възстановява мускулните влакна, драстично увеличава гъвкавостта, намалява фиброзната (скар) тъкан в мускулите.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Синтетична версия на Thymosin Beta-4. Регулира актина (основният протеин на клетъчния скелет).</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>2 до 3 седмици</strong> за намаляване на сковаността.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>След тежки мускулни разкъсвания, скованост на ставите, фибромиалгия.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Често предизвиква силна умора в деня на инжекцията.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>BPC-157 (BPC прави съдовете, TB-500 прави тъканта).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>2.5mg подкожно два пъти седмично (общо 5mg/седмица) за месец.</p></div>
+                </div>
+            </div>
+            <!-- 24. GHK-Cu Inj -->
+            <div class="card" data-vis="5" data-phys="5" data-psy="2" data-fat="1" data-mus="2" data-cog="2" data-price="400">
+                <h3>24. GHK-Cu (Инжекционен)</h3>
+                <div class="metrics-mini"><div>Кожа (Тяло): <strong>5/5</strong></div><div>Дроб/Бели дробове: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €400 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Системно стягане на кожата по цялото тяло (не само локално). Регенерация на белите дробове (след пушене или COVID), чернодробен детокс.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Системно модулиране на гените, доставяне на мед до всички органи, регулиране на колагеновия синтез.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>1-2 месеца</strong> за еластичност на кожата на тялото.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>След драстично отслабване (увиснала кожа), бивши пушачи, чернодробни увреди.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-yellow">Много болезнена инжекция!</span> Може да доведе до дефицит на цинк (тъй като медта го измества).</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Перорален Цинк (за запазване на баланса Мед-Цинк).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>2mg дневно подкожно, цикли от 30 дни. Трябва да се разреди силно, за да се намали болката.</p></div>
+                </div>
+            </div>
+            <!-- 25. CJC/Ipamorelin -->
+            <div class="card" data-vis="4" data-phys="5" data-psy="3" data-fat="4" data-mus="4" data-cog="2" data-price="1500">
+                <h3>25. CJC-1295 + Ipamorelin</h3>
+                <div class="metrics-mini"><div>Сън/Възстановяване: <strong>5/5</strong></div><div>Топене на мазнини: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €1500 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Безопасна алтернатива на HGH. Топи коремни мазнини, увеличава мускулите, осигурява феноменално дълбок сън.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Стимулират хипофизата да освобождава естествени "пулсации" на Растежен хормон. Не спират собственото производство.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>1-3 дни</strong> за сън; 1-2 месеца за тяло.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Мъже/Жени 35+, мазнини около талията, лош сън, бавно възстановяване.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Повишава кръвната захар (инсулинова резистентност при дълга употреба). Леко зачервяване след инжекция.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Берберин/Метформин (за баланс на кръвната захар).</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>100mcg/100mcg вечер <span class="badge bg-red">строго на гладно</span> (2 ч. след храна). 5 дни прием, 2 почивка.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATEGORY VII -->
+    <div class="category-section" id="cat-7">
+        <h2>VII. Инфузии (IV) и Стволови Клетки</h2>
+        <div class="grid-container">
+            <!-- 26. NAD IV -->
+            <div class="card" data-vis="3" data-phys="5" data-psy="4" data-fat="2" data-mus="2" data-cog="5" data-price="3000">
+                <h3>26. NAD+ Инфузии (Венозно)</h3>
+                <div class="metrics-mini"><div>Енергия/Мозък: <strong>5/5</strong></div><div>Детокс на рецептори: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €3000 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Моментален рестарт. Изчиства мозъчната мъгла, лекува зависимости (рестартира рецепторите), помага при Long-COVID.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Директно венозно насищане. Зарежда митохондриите с ATP и форсира ДНК поправката.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>Мигновено</strong> (по време на самото вливане).</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Burnout, хронична умора, детокс от алкохол/опиати.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-yellow">Специфика:</span> Бързо вливане причинява стягане в гърдите и тежест (трябва да капе бавно - 2 до 4 часа).</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Майерс коктейл (В-комплекс, Вит. С) след NAD+.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>В клиника: 250-1000mg. За детокс: 5-10 поредни дни.</p></div>
+                </div>
+            </div>
+            <!-- 27. Glutathione IV -->
+            <div class="card" data-vis="5" data-phys="4" data-psy="2" data-fat="1" data-mus="1" data-cog="3" data-price="1000">
+                <h3>27. Глутатион (IV Инфузия)</h3>
+                <div class="metrics-mini"><div>Изсветляване на кожа: <strong>5/5</strong></div><div>Черен дроб: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €1000 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Мощен чернодробен детокс, изсветлява тона на кожата системно, премахва пигментации.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Главният антиоксидант в тялото. Неутрализира свободни радикали и инхибира тирозиназата (която прави меланин).</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>3-5 сесии</strong> за видима промяна в тена.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Пигментации, пушачи, след прием на тежки лекарства, махмурлук.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Дълбока и продължителна употреба може да намали нивата на цинк в тялото.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Витамин С (IV) - удвоява ефекта на изсветляване.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>600-1200mg венозно, 1-2 пъти седмично.</p></div>
+                </div>
+            </div>
+            <!-- 28. Ozone -->
+            <div class="card" data-vis="3" data-phys="5" data-psy="3" data-fat="1" data-mus="1" data-cog="3" data-price="1000">
+                <h3>28. Озонотерапия (MAH)</h3>
+                <div class="metrics-mini"><div>Оксигенация: <strong>5/5</strong></div><div>Анти-вирусно: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €1000 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Супер-насищане на тъканите с кислород. Убива патогени, вируси, гъбички в кръвта (напр. Лаймска болест).</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Хормезис: Озонът създава лек оксидативен стрес, който кара тялото да активира Nrf2 и собствените си супер-антиоксиданти.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>3-4 сесии</strong> за прилив на енергия.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Хронични инфекции, Епщайн-Бар вирус, синдром на хроничната умора.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-red">Внимание:</span> Задължителен тест за G6PD дефицит! Ако го имате, озонът ще разруши червените ви кръвни клетки (хемолиза).</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>UVBI (Ултравиолетово облъчване на кръвта) заедно с озона.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Автохемотерапия (кръвта се извежда, озонира и връща) - 10 сесии.</p></div>
+                </div>
+            </div>
+            <!-- 29. BHRT -->
+            <div class="card" data-vis="4" data-phys="5" data-psy="5" data-fat="4" data-mus="5" data-cog="4" data-price="1000">
+                <h3>29. BHRT Пелети (Хормони)</h3>
+                <div class="metrics-mini"><div>Либидо/Настроение: <strong>5/5</strong></div><div>Мускули/Кости: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €1000 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Връща хормоналния профил до 25г. Драстично либидо, премахва депресия/горещи вълни, връща мускулите и пази костите.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Биоидентични хормони (структурно 100% като човешките). Имплант (пелета) подкожно освобождава ритмично без пикове.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>1 до 3 седмици</strong> за изчезване на симптомите.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Жени в менопауза. Мъже с андропауза (нисък тестостерон).</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Жени: акне/косопад при лошо дозиране. Мъже: сгъстяване на кръвта. <span class="badge bg-red">Противопоказано при хормонални раци.</span></p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>DIM за естрогена. Даряване на кръв (мъже) за хематокрита.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Имплант в глутеуса с упойка, на всеки 3 до 6 месеца.</p></div>
+                </div>
+            </div>
+            <!-- 30. NAD Pellets -->
+            <div class="card" data-vis="3" data-phys="5" data-psy="4" data-fat="2" data-mus="2" data-cog="5" data-price="2000">
+                <h3>30. NAD+ Пелети</h3>
+                <div class="metrics-mini"><div>Стабилност: <strong>5/5</strong></div><div>Постоянна Енергия: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €2000 / год.</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Дава постоянни, високи нива на NAD+ месеци наред, без нужда от инжекции или ежедневни хапчета. Стабилна енергия без спадове.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Пресован NAD+ коензим, който се разгражда изключително бавно под кожата, доставяйки микро-дози постоянно 24/7.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>1 седмица</strong> след имплантирането за стабилизиране на енергията.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Хора, търсещи максимално удобство (без ежедневни хапчета/игли) и дългосрочен anti-aging.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p>Риск от инфекция или отхвърляне на мястото на импланта.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Метилатори (В12, Фолат), за да се балансира постоянният приток на NAD+.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Малка хирургична интервенция (пелета), сменя се на 4-6 месеца.</p></div>
+                </div>
+            </div>
+            <!-- 31. MSCs -->
+            <div class="card" data-vis="4" data-phys="5" data-psy="3" data-fat="1" data-mus="2" data-cog="4" data-price="10000">
+                <h3>31. Стволови клетки (MSCs)</h3>
+                <div class="metrics-mini"><div>Глобална Регенерация: <strong>5/5</strong></div><div>Автоимунни: <strong>5/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €10 000+ / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Най-мощната терапия. Системно подмладяване, ремисия на автоимунни заболявания, зануляване на системното възпаление.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Homing ефект (мигрират към увредата). Отделят фактори, които карат ВАШИТЕ клетки да се поправят (не правят нова тъкан директно).</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>2-4 седмици</strong> за имуномодулация; 3-6 месеца за тъканна регенерация.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Автоимунни (МС, Лупус), дегенерация, неограничен anti-aging бюджет.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-yellow">Качество:</span> Огромен риск от лоши лаборатории. Недопустимо при активен рак.</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Хипербарна кислородна камера (HBOT) увеличава оцеляването им с 800%.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>IV инфузия на 50 до 200 милиона клетки от пъпна връв (WJ-MSCs).</p></div>
+                </div>
+            </div>
+            <!-- 32. Placenta -->
+            <div class="card" data-vis="4" data-phys="5" data-psy="4" data-fat="1" data-mus="1" data-cog="3" data-price="1500">
+                <h3>32. Плацентарен екстракт</h3>
+                <div class="metrics-mini"><div>Кожа/Тургор: <strong>4/5</strong></div><div>Хормони/Черен дроб: <strong>4/5</strong></div></div>
+                <div class="price-wrapper"><span class="price-tag">~ €1500 / курс</span></div>
+                <button class="btn-details">Пълни детайли</button>
+                <div class="hidden-details">
+                    <div class="detail-section"><h4>1. Главни ползи</h4><p>Японска тайна за дълголетие. Значително подобрява тургора на кожата, облекчава менопаузата, регенерира черния дроб.</p></div>
+                    <div class="detail-section"><h4>2. Механизъм на действие</h4><p>Съдържа огромен коктейл от естествени растежни фактори (HGF, FGF), цитокини, аминокиселини и пептиди, нужни за създаване на нов живот.</p></div>
+                    <div class="detail-section"><h4>3. Време до първи ефекти</h4><p><strong>2 до 4 седмици</strong> за жизненост и блясък на кожата.</p></div>
+                    <div class="detail-section"><h4>4. За кого е подходящ</h4><p>Жени 45+, умора, проблеми с черния дроб, общо подмладяване.</p></div>
+                    <div class="detail-section"><h4>5. Рискове</h4><p><span class="badge bg-red">Произход:</span> Риск от вирусна инфекция, ако продуктът не е фармацевтичен клас. Търсете само японските сертифицирани (Laennec / Melsmon).</p></div>
+                    <div class="detail-section"><h4>6. Синергия</h4><p>Глутатион (IV) за върховен черен дроб и изсветляване на кожата.</p></div>
+                    <div class="detail-section"><h4>7. Протокол</h4><p>Инжекционно (Мускулно или Подкожно) курсово, обикновено 1-2 ампули седмично.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // === THEME TOGGLE ===
+        const themeToggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('protocolTheme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.textContent = savedTheme === 'dark' ? '◑' : '○';
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('protocolTheme', next);
+            themeToggle.textContent = next === 'dark' ? '◑' : '○';
+        });
+
+        // === FILTERING & MODAL LOGIC ===
+        const selects = document.querySelectorAll('#control-panel select');
+        const resetBtn = document.getElementById('reset-btn');
+        const sections = document.querySelectorAll('.category-section');
+        const allCards = Array.from(document.querySelectorAll('.card'));
+
+        allCards.forEach(card => {
+            card.dataset.originalParent = card.parentElement.id || ('grid-' + Math.random().toString(36).substr(2, 9));
+            if (!card.parentElement.id) card.parentElement.id = card.dataset.originalParent;
+            let priceStr = card.getAttribute('data-price').replace(/[^0-9]/g, '');
+            card.setAttribute('data-price-val', priceStr);
+        });
+
+        const modal = document.getElementById('info-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body-content');
+        const closeBtn = document.querySelector('#info-modal .close-btn');
+
+        document.querySelectorAll('.btn-details').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const card = btn.closest('.card');
+                const title = card.querySelector('h3').innerText;
+                const content = card.querySelector('.hidden-details').innerHTML;
+                modalTitle.innerText = title;
+                modalBody.innerHTML = content;
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        const closeModal = () => { modal.classList.remove('show'); document.body.style.overflow = 'auto'; };
+        closeBtn.addEventListener('click', closeModal);
+        window.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        function updateView() {
+            const sortType = document.getElementById('sort-price').value;
+            const minVis = parseInt(document.querySelector('[data-metric="vis"]').value, 10);
+            const minMus = parseInt(document.querySelector('[data-metric="mus"]').value, 10);
+            const minCog = parseInt(document.querySelector('[data-metric="cog"]').value, 10);
+
+            allCards.forEach(card => {
+                const vis = parseInt(card.getAttribute('data-vis') || 1, 10);
+                const mus = parseInt(card.getAttribute('data-mus') || 1, 10);
+                const cog = parseInt(card.getAttribute('data-cog') || 1, 10);
+                card.style.display = (vis >= minVis && mus >= minMus && cog >= minCog) ? 'flex' : 'none';
+            });
+
+            let flatContainer = document.getElementById('flat-grid');
+            if (sortType !== 'default') {
+                if (!flatContainer) {
+                    flatContainer = document.createElement('div');
+                    flatContainer.id = 'flat-grid';
+                    flatContainer.className = 'grid-container';
+                    flatContainer.style.marginTop = '20px';
+                    document.querySelector('.container').appendChild(flatContainer);
+                }
+                sections.forEach(s => s.classList.add('hidden-section'));
+                const visibleCards = allCards.filter(c => c.style.display !== 'none');
+                visibleCards.sort((a, b) => {
+                    const pA = parseInt(a.getAttribute('data-price-val'), 10);
+                    const pB = parseInt(b.getAttribute('data-price-val'), 10);
+                    return sortType === 'asc' ? pA - pB : pB - pA;
+                });
+                flatContainer.innerHTML = '';
+                visibleCards.forEach(c => flatContainer.appendChild(c));
+            } else {
+                if (flatContainer) flatContainer.remove();
+                sections.forEach(s => {
+                    s.classList.remove('hidden-section');
+                    const grid = s.querySelector('.grid-container');
+                    const sectionCards = allCards.filter(c => c.dataset.originalParent === grid.id);
+                    sectionCards.forEach(c => grid.appendChild(c));
+                    const visibleChildren = sectionCards.filter(c => c.style.display !== 'none');
+                    if (visibleChildren.length === 0) s.classList.add('hidden-section');
+                    else s.classList.remove('hidden-section');
+                });
+            }
+        }
+
+        selects.forEach(s => s.addEventListener('change', updateView));
+        resetBtn.addEventListener('click', () => { selects.forEach(s => s.value = s.options[0].value); updateView(); });
+
+        // === WIZARD LOGIC ===
+        const wizard = document.getElementById('protocol-wizard');
+        const wizardSteps = wizard.querySelectorAll('.wizard-step');
+        const prevBtn = document.getElementById('wizard-prev');
+        const nextBtn = document.getElementById('wizard-next');
+        const progressFill = document.getElementById('wizard-progress-fill');
+        const stepLabel = document.getElementById('wizard-step-label');
+        const stepTitle = document.getElementById('wizard-step-title');
+        const totalSteps = 8;
+        let currentStep = 1;
+
+        const stepTitles = [
+            'Биометрика',
+            'Активност & Начин на живот',
+            'Биомаркери & Здраве',
+            'Цели & Приоритет',
+            'Биохакинг Опит',
+            'Бюджет & Предпочитания',
+            'Обобщение',
+            'AI Генерация'
+        ];
+
+        function showStep(step) {
+            currentStep = step;
+            wizardSteps.forEach(s => s.classList.remove('active'));
+            const activeStep = wizard.querySelector(`[data-step="${step}"]`);
+            if (activeStep) activeStep.classList.add('active');
+
+            // Update progress bar
+            progressFill.style.width = `${(step / totalSteps * 100)}%`;
+            stepLabel.textContent = `Стъпка ${step} от ${totalSteps}`;
+            stepTitle.textContent = stepTitles[step - 1] || '';
+
+            // Update nav buttons
+            const bottomNav = document.getElementById('wizard-bottom-nav');
+            prevBtn.style.visibility = step <= 1 ? 'hidden' : 'visible';
+
+            if (step === 8) {
+                // Loading/result step - hide nav
+                bottomNav.style.display = 'none';
+            } else if (step === 7) {
+                // Summary step - show generate button
+                bottomNav.style.display = 'flex';
+                nextBtn.textContent = 'Генерирай Протокол';
+                nextBtn.className = 'btn-wizard-next btn-wizard-generate';
+            } else {
+                bottomNav.style.display = 'flex';
+                nextBtn.textContent = 'Напред →';
+                nextBtn.className = 'btn-wizard-next';
+            }
+
+            // Scroll to top of wizard inner
+            const wizardInner = wizard.querySelector('.wizard-inner');
+            if (wizardInner) wizardInner.scrollTop = 0;
+        }
+
+        // Open wizard
+        document.getElementById('create-protocol-btn').addEventListener('click', () => {
+            currentStep = 1;
+            clearValidation();
+            // Reset form
+            wizard.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(i => i.value = '');
+            wizard.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+            wizard.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(c => c.checked = false);
+            document.getElementById('protocol-result').innerHTML = '';
+            document.getElementById('protocol-result').classList.remove('show');
+            document.getElementById('protocol-loading').style.display = 'flex';
+            document.getElementById('summary-content').innerHTML = '';
+            document.getElementById('wizard-bottom-nav').style.display = 'flex';
+            showStep(1);
+            wizard.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Close wizard
+        const closeWizardFn = () => { wizard.classList.remove('show'); document.body.style.overflow = 'auto'; };
+        document.getElementById('close-wizard-btn').addEventListener('click', closeWizardFn);
+        wizard.addEventListener('click', (e) => { if (e.target === wizard) closeWizardFn(); });
+
+        // Navigation
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) { clearValidation(); showStep(currentStep - 1); }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep === 7) {
+                // Go to generation step
+                showStep(8);
+                generateProtocol();
+            } else if (currentStep < totalSteps) {
+                if (validateStep(currentStep)) {
+                    if (currentStep === 6) {
+                        populateSummary();
+                    }
+                    showStep(currentStep + 1);
+                }
+            }
+        });
+
+        // === FORM VALIDATION ===
+        function clearValidation() {
+            wizard.querySelectorAll('.form-field.error').forEach(f => f.classList.remove('error'));
+            const goalsError = document.getElementById('err-goals');
+            if (goalsError) goalsError.classList.remove('show');
+        }
+
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            const formField = field.closest('.form-field');
+            if (!formField) return;
+            formField.classList.add('error');
+            let errorEl = formField.querySelector('.validation-error');
+            if (!errorEl) {
+                errorEl = document.createElement('div');
+                errorEl.className = 'validation-error';
+                formField.appendChild(errorEl);
+            }
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function validateStep(step) {
+            clearValidation();
+            let valid = true;
+            if (step === 1) {
+                const age = document.getElementById('prot-age').value;
+                const gender = document.getElementById('prot-gender').value;
+                const height = document.getElementById('prot-height').value;
+                const weight = document.getElementById('prot-weight').value;
+                if (!age || age < 16 || age > 100) { showFieldError('prot-age', 'Моля, въведете възраст (16-100)'); valid = false; }
+                if (!gender) { showFieldError('prot-gender', 'Моля, изберете пол'); valid = false; }
+                if (!height || height < 120 || height > 230) { showFieldError('prot-height', 'Моля, въведете височина (120-230 см)'); valid = false; }
+                if (!weight || weight < 30 || weight > 250) { showFieldError('prot-weight', 'Моля, въведете тегло (30-250 кг)'); valid = false; }
+            } else if (step === 2) {
+                const activity = document.getElementById('prot-activity').value;
+                if (!activity) { showFieldError('prot-activity', 'Моля, изберете ниво на активност'); valid = false; }
+            } else if (step === 4) {
+                const goals = wizard.querySelectorAll('input[name="prot-goals"]:checked');
+                if (goals.length === 0) {
+                    const errEl = document.getElementById('err-goals');
+                    if (errEl) errEl.classList.add('show');
+                    valid = false;
+                }
+            } else if (step === 6) {
+                const budget = document.getElementById('prot-budget').value;
+                if (!budget) { showFieldError('prot-budget', 'Моля, изберете бюджет'); valid = false; }
+            }
+            return valid;
+        }
+
+        // === SUMMARY ===
+        function populateSummary() {
+            const data = collectFormData();
+            const summaryEl = document.getElementById('summary-content');
+
+            let bmi = '';
+            if (data.height && data.weight) {
+                const h = parseFloat(data.height) / 100;
+                const bmiVal = (parseFloat(data.weight) / (h * h)).toFixed(1);
+                bmi = ` (BMI: ${bmiVal})`;
+            }
+
+            const activityLabels = { sedentary: 'Заседнал', light: 'Лека активност', moderate: 'Умерена активност', active: 'Активен', athlete: 'Атлет' };
+            const sleepLabels = { under5: 'Под 5 ч.', '5to6': '5-6 ч.', '6to7': '6-7 ч.', '7to8': '7-8 ч.', over8: '8+ ч.' };
+            const sleepQualityLabels = { terrible: 'Ужасен', poor: 'Лош', average: 'Среден', good: 'Добър', excellent: 'Отличен' };
+            const stressLabels = { low: 'Нисък', moderate: 'Умерен', high: 'Висок', very_high: 'Много висок' };
+            const injLabels = { yes_all: 'Да, всички', subcutaneous: 'Само подкожни', no: 'Не' };
+            const budgetLabels = { low: 'До €50', medium: '€50-150', high: '€150-300', premium: '€300-500', unlimited: '€500+' };
+            const timeframeLabels = { '1month': 'До 1 месец', '1to3months': '1-3 месеца', '3to6months': '3-6 месеца', '6plus': '6+ месеца' };
+            const goalLabels = { anti_aging: 'Подмладяване', muscle: 'Мускули', cognitive: 'Когниция', energy: 'Енергия', longevity: 'Дълголетие', immunity: 'Имунитет', sleep_goal: 'Сън', stress_mgmt: 'Стрес', joints_goal: 'Стави', skin_goal: 'Кожа', fat_loss: 'Мазнини', libido: 'Либидо' };
+            const chronotypeLabels = { morning: 'Сутрешен', evening: 'Вечерен', neutral: 'Неутрален' };
+
+            const genderStr = data.gender === 'male' ? 'Мъж' : data.gender === 'female' ? 'Жена' : '—';
+            const items = [
+                { label: 'Биометрика', value: `${data.age || '—'} г., ${genderStr}, ${data.height || '—'} см / ${data.weight || '—'} кг${bmi}` },
+                { label: 'Телесни мазнини', value: data.bodyfat ? data.bodyfat + '%' : '—' },
+                { label: 'Активност', value: activityLabels[data.activity] || '—' },
+                { label: 'Тренировка', value: data.training.length ? data.training.join(', ') : '—' },
+                { label: 'Сън', value: (sleepLabels[data.sleep] || '—') + (data.sleepQuality ? ' / ' + (sleepQualityLabels[data.sleepQuality] || '') : '') },
+                { label: 'Хронотип / Стрес', value: (chronotypeLabels[data.chronotype] || '—') + ' / ' + (stressLabels[data.stress] || '—') },
+                { label: 'Дефицити', value: data.deficiencies.length ? data.deficiencies.join(', ') : '—' },
+                { label: 'Здравословни проблеми', value: data.conditions.length ? data.conditions.join(', ') : '—' },
+                { label: 'Цели', value: data.goals.map(g => goalLabels[g] || g).join(', ') || '—' },
+                { label: 'Времеви хоризонт', value: timeframeLabels[data.timeframe] || '—' },
+                { label: 'Биохакинг практики', value: data.biohacking.length ? data.biohacking.join(', ') : '—' },
+                { label: 'Инжекции', value: injLabels[data.injectionWilling] || '—' },
+                { label: 'Бюджет / месец', value: budgetLabels[data.budget] || '—' },
+                { label: 'Форми на прием', value: data.forms.length ? data.forms.join(', ') : 'Всички' },
+            ];
+
+            let html = '<div class="summary-grid">';
+            items.forEach(item => {
+                html += `<div class="summary-item"><div class="s-label">${item.label}</div><div class="s-value">${escapeHtml(item.value)}</div></div>`;
+            });
+            html += '</div>';
+            summaryEl.innerHTML = html;
+        }
+
+        // === COLLECT FORM DATA ===
+        function collectFormData() {
+            const getCheckedValues = (name) => Array.from(wizard.querySelectorAll(`input[name="${name}"]:checked`)).map(c => c.value);
+            const getRadioValue = (name) => { const el = wizard.querySelector(`input[name="${name}"]:checked`); return el ? el.value : ''; };
+            return {
+                name: document.getElementById('prot-name').value,
+                age: document.getElementById('prot-age').value,
+                gender: document.getElementById('prot-gender').value,
+                height: document.getElementById('prot-height').value,
+                weight: document.getElementById('prot-weight').value,
+                bodyfat: document.getElementById('prot-bodyfat').value,
+                activity: document.getElementById('prot-activity').value,
+                training: getCheckedValues('prot-training'),
+                sleep: document.getElementById('prot-sleep').value,
+                sleepQuality: document.getElementById('prot-sleep-quality').value,
+                chronotype: document.getElementById('prot-chronotype').value,
+                stress: document.getElementById('prot-stress').value,
+                bloodwork: getRadioValue('prot-bloodwork'),
+                deficiencies: getCheckedValues('prot-deficiencies'),
+                conditions: getCheckedValues('prot-conditions'),
+                allergies: document.getElementById('prot-allergies').value,
+                medications: document.getElementById('prot-medications').value,
+                goals: getCheckedValues('prot-goals'),
+                priority: document.getElementById('prot-priority').value,
+                timeframe: document.getElementById('prot-timeframe').value,
+                currentSupplements: document.getElementById('prot-current-supplements').value,
+                peptides: getRadioValue('prot-peptides'),
+                biohacking: getCheckedValues('prot-biohacking'),
+                injectionWilling: document.getElementById('prot-injection-willing').value,
+                budget: document.getElementById('prot-budget').value,
+                forms: getCheckedValues('prot-forms'),
+                notes: document.getElementById('prot-notes').value
+            };
+        }
+
+        // === BUILD AI PROMPT ===
+        function buildProtocolPrompt(data) {
+            const protocolConfig = JSON.parse(localStorage.getItem('protocolConfig') || '{}');
+            const customPrompt = protocolConfig.promptTemplate || '';
+
+            const goalLabels = { anti_aging: 'Визуално подмладяване', muscle: 'Мускулна маса и сила', cognitive: 'Когниция и фокус', energy: 'Енергия и издръжливост', longevity: 'Клетъчно дълголетие', immunity: 'Имунна система', sleep_goal: 'Качество на съня', stress_mgmt: 'Управление на стреса', joints_goal: 'Стави и подвижност', skin_goal: 'Здраве на кожата', fat_loss: 'Горене на мазнини', libido: 'Либидо и хормони' };
+            const conditionLabels = { none: 'Няма', joint_pain: 'Ставни болки', fatigue: 'Хронична умора', insomnia: 'Безсъние', skin_issues: 'Проблеми с кожата', hair_loss: 'Косопад', brain_fog: 'Мозъчна мъгла', digestion: 'Храносмилателни проблеми', inflammation: 'Хронично възпаление', hormonal: 'Хормонален дисбаланс', autoimmune: 'Автоимунно заболяване', metabolic: 'Метаболитен синдром / ИР' };
+            const deficiencyLabels = { vitamin_d: 'Витамин D', b12: 'Витамин B12', iron: 'Желязо/Феритин', magnesium: 'Магнезий', zinc: 'Цинк', omega3: 'Омега-3', testosterone: 'Тестостерон (ниско)', thyroid: 'Щитовидна жлеза', none_deficiency: 'Без известни дефицити' };
+            const budgetLabels = { low: 'До €50/месец', medium: '€50-150/месец', high: '€150-300/месец', premium: '€300-500/месец', unlimited: '€500+/месец' };
+            const activityLabels = { sedentary: 'Заседнал', light: 'Лека активност', moderate: 'Умерена активност', active: 'Активен', athlete: 'Атлет' };
+            const formLabels = { oral: 'Перорални', powder: 'Прахове', liquid: 'Течни форми', topical: 'Локални серуми', sublingual: 'Сублингвални', injection: 'Инжекционни' };
+            const genderLabels = { male: 'Мъж', female: 'Жена' };
+            const trainingLabels = { strength: 'Сила/Бодибилдинг', cardio: 'Кардио/Издръжливост', hiit: 'HIIT/Кросфит', sports: 'Спорт/Игри', yoga: 'Йога/Пилатес', none: 'Не тренира' };
+            const sleepLabels = { under5: 'Под 5 ч.', '5to6': '5-6 ч.', '6to7': '6-7 ч.', '7to8': '7-8 ч.', over8: '8+ ч.' };
+            const sleepQualityLabels = { terrible: 'Ужасен', poor: 'Лош', average: 'Среден', good: 'Добър', excellent: 'Отличен' };
+            const stressLabels = { low: 'Нисък', moderate: 'Умерен', high: 'Висок', very_high: 'Много висок' };
+            const biohackingLabels = { fasting: 'Интермитентно гладуване', sauna: 'Сауна', cold: 'Студена терапия', red_light: 'Червена светлина', grounding: 'Заземяване', none_bio: 'Нищо' };
+            const chronotypeLabels = { morning: 'Сутрешен', evening: 'Вечерен', neutral: 'Неутрален' };
+            const injLabels = { yes_all: 'Да, без проблем', subcutaneous: 'Само подкожни', no: 'Само орални и топикални' };
+            const timeframeLabels = { '1month': 'До 1 месец', '1to3months': '1-3 месеца', '3to6months': '3-6 месеца', '6plus': '6+ месеца' };
+            const peptideLabels = { yes: 'Да, има опит', no: 'Няма опит', unknown: 'Не знае какво са пептиди' };
+
+            // Calculate BMI
+            let bmiInfo = '';
+            if (data.height && data.weight) {
+                const h = parseFloat(data.height) / 100;
+                const bmiRaw = parseFloat(data.weight) / (h * h);
+                const bmiVal = bmiRaw.toFixed(1);
+                let bmiCat = bmiRaw < 18.5 ? 'Поднормено тегло' : bmiRaw < 25 ? 'Нормално тегло' : bmiRaw < 30 ? 'Наднормено тегло' : 'Затлъстяване';
+                bmiInfo = `BMI: ${bmiVal} (${bmiCat})`;
+            }
+
+            const goals = data.goals.map(g => goalLabels[g] || g).join(', ') || 'Не е посочено';
+            const conditions = data.conditions.map(c => conditionLabels[c] || c).join(', ') || 'Не е посочено';
+            const deficiencies = data.deficiencies.map(d => deficiencyLabels[d] || d).join(', ') || 'Не е посочено';
+            const forms = data.forms.map(f => formLabels[f] || f).join(', ') || 'Всички форми';
+            const training = data.training.map(t => trainingLabels[t] || t).join(', ') || 'Не е посочено';
+            const biohacking = data.biohacking.map(b => biohackingLabels[b] || b).join(', ') || 'Няма практики';
+
+            let prompt = `Ти си експерт нутрициолог и специалист по хранителни добавки и протоколи за регенерация. Създай ПЕРСОНАЛИЗИРАН хранителен протокол на български език за следния клиент:
+
+ПРОФИЛ НА КЛИЕНТА:
+- Възраст: ${data.age || 'Не е посочена'} години
+- Пол: ${genderLabels[data.gender] || 'Не е посочен'}
+- Ръст: ${data.height || 'Не е посочен'} см
+- Тегло: ${data.weight || 'Не е посочено'} кг
+- ${bmiInfo}
+- Телесни мазнини: ${data.bodyfat ? data.bodyfat + '%' : 'Не е посочено'}
+- Физическа активност: ${activityLabels[data.activity] || 'Не е посочена'}
+- Вид тренировки: ${training}
+- Часове сън: ${sleepLabels[data.sleep] || 'Не е посочено'}
+- Качество на съня: ${sleepQualityLabels[data.sleepQuality] || 'Не е посочено'}
+- Хронотип: ${chronotypeLabels[data.chronotype] || 'Не е посочен'}
+- Ниво на стрес: ${stressLabels[data.stress] || 'Не е посочено'}
+
+БИОМАРКЕРИ & ДЕФИЦИТИ:
+- Кръвни изследвания (последните 12 мес.): ${data.bloodwork === 'yes' ? 'Да' : data.bloodwork === 'no' ? 'Не' : 'Не е посочено'}
+- Известни дефицити: ${deficiencies}
+
+ЗДРАВОСЛОВНО СЪСТОЯНИЕ: ${conditions}
+АЛЕРГИИ/НЕПОНОСИМОСТИ: ${data.allergies || 'Няма'}
+ТЕКУЩИ МЕДИКАМЕНТИ: ${data.medications || 'Няма'}
+
+ЦЕЛИ: ${goals}
+ОСНОВЕН ПРИОРИТЕТ: ${goalLabels[data.priority] || 'Не е посочен'}
+ВРЕМЕВИ ХОРИЗОНТ: ${timeframeLabels[data.timeframe] || 'Не е посочен'}
+
+БИОХАКИНГ ПРОФИЛ:
+- Текущи добавки: ${data.currentSupplements || 'Няма'}
+- Опит с пептиди: ${peptideLabels[data.peptides] || 'Не е посочено'}
+- Биохакинг практики: ${biohacking}
+- Готовност за инжекции: ${injLabels[data.injectionWilling] || 'Не е посочено'}
+
+БЮДЖЕТ: ${budgetLabels[data.budget] || 'Не е посочен'}
+ПРЕДПОЧИТАНИ ФОРМИ: ${forms}
+ДОПЪЛНИТЕЛНИ БЕЛЕЖКИ: ${data.notes || 'Няма'}
+
+${customPrompt ? 'ДОПЪЛНИТЕЛНИ ИНСТРУКЦИИ: ' + customPrompt : ''}
+
+НАЛИЧЕН СПРАВОЧНИК ОТ 32 ВЕЩЕСТВА (избирай ОСНОВНО от тях):
+I. Перорални Структурни: 1.Колагенови пептиди(4/5 кожа,€300/г), 2.Хиалуронова к-на(4/5 хидратация,€200/г), 3.Астаксантин(4/5 UV,€250/г), 4.MSM(3/5 коса,€100/г)
+II. Клетъчно Дълголетие: 5.NMN/NR(5/5 енергия+ДНК,€600/г), 6.Сенолитици Фисетин/Кверцетин(5/5 детокс,€200/г), 7.Спермидин(5/5 автофагия,€400/г), 8.Ca-AKG(5/5 биовъзраст,€500/г)
+III. Перорални Иновации: 9.Уролитин А(4/5 мускули,€1000/г), 10.L-Ерготионеин(4/5 мозък,€500/г)
+IV. Топикални: 11.Ретиноиди(5/5 бръчки,€100/г), 12.Витамин С серум(4/5 блясък,€150/г)
+V. Трансдермални Пептиди: 13.GHK-Cu серум(5/5 лифтинг,€300/г), 14.Аргирелин(4/5 мимика,€150/г), 15.Екзозоми(5/5 регенерация,€1500/курс), 16.PDRN(4/5 плътност,€800/курс), 17.EGF(5/5 текстура,€400/г)
+VI. Инжекционни Пептиди: 18.Epitalon(5/5 теломери+сън,€400/курс), 19.Thymalin(5/5 имунитет,€200/курс), 20.MOTS-c(5/5 метаболизъм,€1000/курс), 21.Humanin(5/5 невро,€1000/курс), 22.BPC-157(5/5 травми,€500/курс), 23.TB-500(5/5 мускули,€600/курс), 24.GHK-Cu инж.(5/5 кожа+бели дроб,€400/курс), 25.CJC-1295+Ipamorelin(5/5 сън+мазнини,€1500/г)
+VII. Инфузии и Стволови: 26.NAD+ IV(5/5 енергия+мозък,€3000/курс), 27.Глутатион IV(5/5 детокс+кожа,€1000/курс), 28.Озонотерапия(5/5 кислород,€1000/курс), 29.BHRT пелети(5/5 хормони,€1000/г), 30.NAD+ пелети(5/5 стабилност,€2000/г), 31.Стволови клетки(5/5 регенерация,€10000+), 32.Плацентарен екстракт(4/5 кожа,€1500/курс)
+
+ВАЖНО: Протоколът ТРЯБВА да избира основно от горния справочник. Посочвай номера на веществото (напр. "#5 NMN") когато го препоръчваш. Можеш да добавяш и базови витамини/минерали извън списъка при нужда.
+
+ЗАДАЧА: Създай подробен, персонализиран протокол, който включва:
+
+1. **ОСНОВНИ ВЕЩЕСТВА** (3-5 продукта) - най-важните добавки за постигане на основните цели, с точни дозировки, време на прием и марка/тип ако е възможно.
+
+2. **ПОМОЩНИ ВЕЩЕСТВА** (2-4 продукта) - допълнителни добавки, които усилват ефекта на основните или адресират специфични здравословни проблеми.
+
+3. **СИНЕРГИЯ И КОМБИНАЦИИ** - обясни кои вещества работят заедно и защо, както и кои не трябва да се комбинират.
+
+4. **ДНЕВЕН ГРАФИК НА ПРИЕМ** - точна схема кога и как да се приемат веществата.
+
+5. **ОЧАКВАНА МЕСЕЧНА СТОЙНОСТ** - приблизителна оценка на месечните разходи.
+
+6. **ПРЕДУПРЕЖДЕНИЯ** - конкретни рискове и противопоказания за конкретния клиент.
+
+7. **ОЧАКВАНИ РЕЗУЛТАТИ** - какво може да очаква клиентът и в какъв времеви период.
+
+Отговори САМО с валиден JSON обект в следния формат:
+{
+  "protocolName": "Име на протокола",
+  "summary": "Кратко обобщение на протокола",
+  "mainSubstances": [{"name": "#N Име", "dosage": "Дозировка", "timing": "Кога и как", "purpose": "Защо", "monthlyPrice": "€XX"}],
+  "supportSubstances": [{"name": "#N Име", "dosage": "Дозировка", "timing": "Кога и как", "purpose": "Защо", "monthlyPrice": "€XX"}],
+  "synergies": [{"combination": "Вещество A + Вещество B", "effect": "Защо работят заедно"}],
+  "dailySchedule": {"morning_empty": ["Описание"], "morning_meal": ["Описание"], "lunch": ["Описание"], "evening": ["Описание"], "bedtime": ["Описание"]},
+  "monthlyBudget": "Обща приблизителна месечна стойност",
+  "warnings": ["Предупреждение 1", "Предупреждение 2"],
+  "expectedResults": {"shortTerm": "1-4 седмици", "mediumTerm": "1-3 месеца", "longTerm": "3-6 месеца"}
+}`;
+            return prompt;
+        }
+
+        const WORKER_URL = 'https://aidiet.radilov-k.workers.dev';
+
+        async function callProtocolAI(prompt) {
+            try {
+                const res = await fetch(WORKER_URL + '/api/generate-protocol', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.success && json.response) {
+                        return json.response;
+                    }
+                }
+            } catch (workerError) {
+                console.warn('Worker backend unavailable, trying direct API call:', workerError);
+            }
+
+            const config = JSON.parse(localStorage.getItem('protocolConfig') || '{}');
+            const provider = config.provider || 'openai';
+            const apiKey = config.apiKey || '';
+            const modelName = config.modelName || '';
+
+            if (!apiKey) {
+                throw new Error('API ключ не е конфигуриран. Моля, настройте го от Админ Панела (таб "Протоколи") или проверете настройките на worker-а.');
+            }
+
+            if (provider === 'openai') {
+                const model = modelName || 'gpt-4o-mini';
+                const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                    body: JSON.stringify({ model: model, messages: [{ role: 'user', content: prompt }], max_tokens: 4000, temperature: 0.7 })
+                });
+                if (!res.ok) { const err = await res.text(); throw new Error(`OpenAI грешка: ${res.status} - ${err}`); }
+                const json = await res.json();
+                return json.choices[0].message.content;
+            } else if (provider === 'google') {
+                const model = modelName || 'gemini-2.0-flash';
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 4000, temperature: 0.7 } })
+                });
+                if (!res.ok) { const err = await res.text(); throw new Error(`Google AI грешка: ${res.status} - ${err}`); }
+                const json = await res.json();
+                return json.candidates[0].content.parts[0].text;
+            } else if (provider === 'anthropic') {
+                const model = modelName || 'claude-sonnet-4-20250514';
+                const res = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+                    body: JSON.stringify({ model: model, max_tokens: 4000, messages: [{ role: 'user', content: prompt }] })
+                });
+                if (!res.ok) { const err = await res.text(); throw new Error(`Anthropic грешка: ${res.status} - ${err}`); }
+                const json = await res.json();
+                return json.content[0].text;
+            } else {
+                throw new Error(`Непознат AI провайдър: ${provider}`);
+            }
+        }
+
+        function renderProtocol(protocol) {
+            let html = `<div class="result-card"><h4>${escapeHtml(protocol.protocolName)}</h4><p>${escapeHtml(protocol.summary)}</p></div>`;
+
+            html += `<div class="result-card"><h4>Основни вещества</h4><ul>`;
+            (protocol.mainSubstances || []).forEach(s => {
+                html += `<li><strong>${escapeHtml(s.name)}</strong> — ${escapeHtml(s.dosage)}<br><em>Прием:</em> ${escapeHtml(s.timing)}<br><em>Цел:</em> ${escapeHtml(s.purpose)}<br><em>Цена:</em> ${escapeHtml(s.monthlyPrice)}</li>`;
+            });
+            html += `</ul></div>`;
+
+            html += `<div class="result-card"><h4>Помощни вещества</h4><ul>`;
+            (protocol.supportSubstances || []).forEach(s => {
+                html += `<li><strong>${escapeHtml(s.name)}</strong> — ${escapeHtml(s.dosage)}<br><em>Прием:</em> ${escapeHtml(s.timing)}<br><em>Цел:</em> ${escapeHtml(s.purpose)}<br><em>Цена:</em> ${escapeHtml(s.monthlyPrice)}</li>`;
+            });
+            html += `</ul></div>`;
+
+            if (protocol.synergies && protocol.synergies.length > 0) {
+                html += `<div class="result-card"><h4>Синергия и комбинации</h4><ul>`;
+                protocol.synergies.forEach(s => { html += `<li><strong>${escapeHtml(s.combination)}</strong> — ${escapeHtml(s.effect)}</li>`; });
+                html += `</ul></div>`;
+            }
+
+            if (protocol.dailySchedule) {
+                html += `<div class="result-card"><h4>Дневен график на прием</h4>`;
+                const scheduleLabels = { morning_empty: 'Сутрин на гладно', morning_meal: 'Сутрин с храна', lunch: 'Обяд', evening: 'Вечер', bedtime: 'Преди сън' };
+                for (const [key, label] of Object.entries(scheduleLabels)) {
+                    const items = protocol.dailySchedule[key];
+                    if (items && items.length > 0) {
+                        html += `<p><strong>${label}:</strong></p><ul>`;
+                        items.forEach(item => { html += `<li>${escapeHtml(item)}</li>`; });
+                        html += `</ul>`;
+                    }
+                }
+                html += `</div>`;
+            }
+
+            html += `<div class="result-card"><h4>Месечен бюджет</h4><p><strong style="color: var(--accent-gold);">${escapeHtml(protocol.monthlyBudget)}</strong></p></div>`;
+
+            if (protocol.warnings && protocol.warnings.length > 0) {
+                html += `<div class="result-card" style="border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.04);"><h4 style="color: #ef4444;">Предупреждения</h4><ul>`;
+                protocol.warnings.forEach(w => { html += `<li>${escapeHtml(w)}</li>`; });
+                html += `</ul></div>`;
+            }
+
+            if (protocol.expectedResults) {
+                html += `<div class="result-card"><h4>Очаквани резултати</h4>`;
+                html += `<p><strong>1-4 седмици:</strong> ${escapeHtml(protocol.expectedResults.shortTerm || '')}</p>`;
+                html += `<p><strong>1-3 месеца:</strong> ${escapeHtml(protocol.expectedResults.mediumTerm || '')}</p>`;
+                html += `<p><strong>3-6 месеца:</strong> ${escapeHtml(protocol.expectedResults.longTerm || '')}</p>`;
+                html += `</div>`;
+            }
+
+            html += `<div class="result-actions">
+                <button class="btn-new-protocol" onclick="document.getElementById('create-protocol-btn').click()">Нов Протокол</button>
+                <button class="btn-print" onclick="window.print()">Принтирай</button>
+                <button class="btn-close-wizard" onclick="document.getElementById('close-wizard-btn').click()">✕ Затвори</button>
+            </div>`;
+
+            return html;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(String(text)));
+            return div.innerHTML;
+        }
+
+        async function generateProtocol() {
+            const loading = document.getElementById('protocol-loading');
+            const resultDiv = document.getElementById('protocol-result');
+            loading.style.display = 'flex';
+            resultDiv.classList.remove('show');
+            resultDiv.innerHTML = '';
+
+            try {
+                const formData = collectFormData();
+                const prompt = buildProtocolPrompt(formData);
+                const rawResponse = await callProtocolAI(prompt);
+
+                let protocol;
+                try {
+                    const codeBlockMatch = rawResponse.match(/```(?:json)?\s*([\s\S]*?)```/);
+                    const jsonStr = codeBlockMatch ? codeBlockMatch[1].trim() : rawResponse.trim();
+                    protocol = JSON.parse(jsonStr.startsWith('{') ? jsonStr : jsonStr.match(/(\{[\s\S]*\})/)?.[1] || jsonStr);
+                } catch (parseErr) {
+                    throw new Error('AI моделът не върна валиден JSON. Моля, опитайте отново.');
+                }
+
+                loading.style.display = 'none';
+                resultDiv.innerHTML = renderProtocol(protocol);
+                resultDiv.classList.add('show');
+
+                // Show close button after result
+                const bottomNav = document.getElementById('wizard-bottom-nav');
+                bottomNav.style.display = 'none';
+
+                // Save to history
+                const history = JSON.parse(localStorage.getItem('protocolHistory') || '[]');
+                history.unshift({ date: new Date().toISOString(), formData: formData, protocol: protocol });
+                if (history.length > 10) history.splice(10);
+                localStorage.setItem('protocolHistory', JSON.stringify(history));
+
+            } catch (err) {
+                loading.style.display = 'none';
+                resultDiv.innerHTML = `<div class="result-card" style="border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05);">
+                    <h4 style="color: #ef4444;">Грешка при генериране</h4>
+                    <p>${escapeHtml(err.message)}</p>
+                    <p style="margin-top: 10px; font-size: 0.82rem; color: var(--text-secondary);">Уверете се, че API ключът е конфигуриран правилно от Админ Панела → таб "Протоколи".</p>
+                </div>
+                <div class="result-actions">
+                    <button class="btn-new-protocol" onclick="document.getElementById('create-protocol-btn').click()">Опитай отново</button>
+                    <button class="btn-close-wizard" onclick="document.getElementById('close-wizard-btn').click()">✕ Затвори</button>
+                </div>`;
+                resultDiv.classList.add('show');
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
