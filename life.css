@@ -3117,7 +3117,7 @@ body.modal-open { overflow: hidden; }
     padding: 3px 12px;
     background: rgba(201, 168, 76, 0.2);
     border-radius: 20px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Courier New', monospace;
     letter-spacing: 0.05em;
 }
 
@@ -3434,7 +3434,7 @@ body.modal-open { overflow: hidden; }
     background: rgba(201, 168, 76, 0.2);
     padding: 5px 15px;
     border-radius: 5px;
-    font-family: 'DM Sans', monospace;
+    font-family: 'Courier New', monospace;
     letter-spacing: 2px;
     font-size: 1.1rem;
     color: #E8D4A0;
@@ -5194,12 +5194,12 @@ section[id="scientific"] {
 .shimmer-bg {
     background: linear-gradient(90deg,
         var(--color-primary) 0%,
-        #D4AE5A 30%,
+        #F0E0A0 30%,
         var(--color-secondary) 60%,
         var(--color-primary) 100%);
     background-size: 300% 100%;
     animation: bioShimmerMove 3s linear infinite;
-    color: white;
+    color: #0F0F14;
 }
 
 @keyframes bioShimmerMove {
