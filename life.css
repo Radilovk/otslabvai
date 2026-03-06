@@ -6685,3 +6685,191 @@ section[id="scientific"] {
 [data-theme="dark"] .btn-hero-primary .ripple {
     background: rgba(0, 196, 200, 0.40);
 }
+
+/* ======================================================= */
+/*   LIGHT-ONLY LAYOUT FIXES & MOBILE IMPROVEMENTS        */
+/*   Applied after all previous rules for highest priority */
+/* ======================================================= */
+
+/* ── Hide theme toggle everywhere (light-only build) ── */
+.theme-toggle-btn,
+.theme-toggle-mobile,
+#theme-toggle,
+#theme-toggle-mobile {
+    display: none !important;
+}
+
+/* ── Fix info-card min-width overflow on small screens ── */
+.info-card-image,
+.info-card-content {
+    min-width: 0;
+}
+
+/* ── Hero section: ensure full-width on all screens ── */
+.hero-section .container.hero-grid {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ── Stat items: better mobile layout ── */
+@media (max-width: 640px) {
+    .hero-stats {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 16px;
+    }
+
+    .stat-item {
+        flex: 1 1 calc(50% - 16px);
+        min-width: 130px;
+        padding: 16px 12px;
+    }
+
+    .stat-item strong {
+        font-size: 1.4rem;
+    }
+
+    .stat-item span {
+        font-size: 0.8rem;
+    }
+
+    /* Hero section padding */
+    .hero-section {
+        padding: 40px 0 30px;
+        min-height: auto;
+    }
+
+    /* Feature cards: single column with reduced padding */
+    .hero-features-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .hex-feature-card {
+        padding: 28px 20px 24px;
+    }
+
+    /* Product grid: full width on small mobile */
+    .product-grid {
+        gap: 20px;
+    }
+
+    .product-card {
+        padding: 16px;
+    }
+
+    /* Category title font on small mobile */
+    .category-title {
+        font-size: 1.8rem;
+    }
+
+    /* Section titles on small screens */
+    .section-title h2 {
+        font-size: 1.7rem;
+    }
+
+    /* CTA buttons: full width on small screens */
+    .hero-cta-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .btn-hero-primary,
+    .btn-hero-secondary {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    /* Trust badges wrap nicely */
+    .hero-trust-badges {
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+    }
+}
+
+/* ── Product grid: 2 columns on tablets, 1 on mobile ── */
+@media (min-width: 600px) and (max-width: 767px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ── Sticky CTA: hide on very small screens (< 400px) ── */
+@media (max-width: 400px) {
+    .sticky-cta {
+        display: none;
+    }
+}
+
+/* ── Prevent horizontal scroll on mobile ── */
+body {
+    overflow-x: hidden;
+}
+
+/* ── Better promo banner on mobile ── */
+@media (max-width: 640px) {
+    .promo-banner {
+        font-size: 0.82rem;
+        padding: 9px 12px;
+    }
+
+    .promo-timer {
+        display: none;
+    }
+}
+
+/* ── Footer grid on mobile ── */
+@media (max-width: 640px) {
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}
+
+/* ── Nav links: improve mobile menu appearance ── */
+@media (max-width: 992px) {
+    .nav-links {
+        padding-top: 80px;
+    }
+
+    .nav-links a {
+        font-size: 1.1rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* ── Product filter bar: mobile ── */
+@media (max-width: 640px) {
+    .product-filter-bar {
+        padding: 0.75rem 1rem;
+    }
+
+    .product-filter-bar .filter-row {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+/* ── Info card section: better mobile spacing ── */
+@media (max-width: 768px) {
+    .info-card-section {
+        padding: 40px 0;
+    }
+
+    .info-card-content {
+        padding: 1.5rem;
+    }
+
+    .info-card-content h2 {
+        font-size: 1.8rem;
+    }
+}
+
+/* ── Promo banner: fix flex wrap on mobile ── */
+.promo-banner p {
+    flex-wrap: wrap;
+    gap: 2px;
+}

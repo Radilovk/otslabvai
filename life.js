@@ -312,13 +312,13 @@ const generateHeroHTML = component => {
 
     const getFeatureIconSVG = (iconName) => {
         const icons = {
-            mitochondria: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            mitochondria: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <ellipse cx="12" cy="12" rx="8" ry="5" transform="rotate(-30 12 12)"/>
                 <path d="M9 9c1 1 1 3 0 4"/>
                 <path d="M12 8c1 2 1 5 0 7"/>
                 <path d="M15 9c1 1 1 3 0 4"/>
             </svg>`,
-            dna: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            dna: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M2 15c6.667-6 13.333 0 20-6"/>
                 <path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/>
                 <path d="M22 9c-4.29 4.29-8.57 5.6-11.18 3.57"/>
@@ -329,7 +329,7 @@ const generateHeroHTML = component => {
                 <path d="M2 9c6.667 6 13.333 0 20 6"/>
                 <path d="M9 2c1.798 1.998 2.518 3.995 2.807 5.993"/>
             </svg>`,
-            brain: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            brain: `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.66z"/>
                 <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.66z"/>
             </svg>`,
@@ -345,7 +345,7 @@ const generateHeroHTML = component => {
                 <article class="hex-feature-card fade-in-up">
                     <div class="hex-icon-outer">
                         <svg class="hex-icon-bg-svg" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <polygon points="45,4 86,26 86,64 45,86 4,64 4,26" fill="rgba(6,182,212,0.06)" stroke="#06B6D4" stroke-width="1.5"/>
+                            <polygon points="45,4 86,26 86,64 45,86 4,64 4,26" fill="rgba(201,168,76,0.06)" stroke="#C9A84C" stroke-width="1.5"/>
                         </svg>
                         <span class="hex-icon-inner">${getFeatureIconSVG(f.icon)}</span>
                     </div>
@@ -385,9 +385,9 @@ const generateHeroHTML = component => {
         return `<div class="hex-frame ${cls} hex-frame-icon">${fallbackSvg}</div>`;
     };
 
-    const vialSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h6m-6 0H3m6 0V9m6-6v18m0 0h6a2 2 0 0 0 2-2v-4m-8 6V9"/></svg>`;
-    const labSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>`;
-    const faceSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>`;
+    const vialSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h6m-6 0H3m6 0V9m6-6v18m0 0h6a2 2 0 0 0 2-2v-4m-8 6V9"/></svg>`;
+    const labSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>`;
+    const faceSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>`;
 
     const heroVisualHTML = `
     <div class="hero-visual" aria-hidden="true">
@@ -395,12 +395,12 @@ const generateHeroHTML = component => {
             <svg viewBox="0 0 200 500" xmlns="http://www.w3.org/2000/svg" class="dna-helix-svg">
                 <defs>
                     <linearGradient id="dnaGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#06B6D4;stop-opacity:0.8"/>
-                        <stop offset="100%" style="stop-color:#22D3EE;stop-opacity:0.3"/>
+                        <stop offset="0%" style="stop-color:#C9A84C;stop-opacity:0.8"/>
+                        <stop offset="100%" style="stop-color:#D4AE5A;stop-opacity:0.3"/>
                     </linearGradient>
                     <linearGradient id="dnaGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:0.7"/>
-                        <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:0.4"/>
+                        <stop offset="0%" style="stop-color:#C9764F;stop-opacity:0.7"/>
+                        <stop offset="100%" style="stop-color:#C9A84C;stop-opacity:0.4"/>
                     </linearGradient>
                 </defs>
                 <!-- Left strand -->
@@ -408,24 +408,24 @@ const generateHeroHTML = component => {
                 <!-- Right strand -->
                 <path d="M140,10 C80,60 180,110 120,160 C60,210 160,260 100,310 C40,360 140,410 80,460" fill="none" stroke="url(#dnaGrad2)" stroke-width="3" stroke-linecap="round"/>
                 <!-- Cross bridges -->
-                <line x1="75" y1="35" x2="125" y2="35" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="55" y1="85" x2="145" y2="85" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="90" y1="135" x2="110" y2="135" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="110" y1="185" x2="90" y2="185" stroke="#22D3EE" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="65" y1="235" x2="135" y2="235" stroke="#22D3EE" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="95" y1="285" x2="105" y2="285" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="115" y1="335" x2="85" y2="335" stroke="#06B6D4" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="75" y1="385" x2="125" y2="385" stroke="#22D3EE" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="90" y1="430" x2="110" y2="440" stroke="#06B6D4" stroke-width="2" stroke-opacity="0.5"/>
+                <line x1="75" y1="35" x2="125" y2="35" stroke="#C9A84C" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="55" y1="85" x2="145" y2="85" stroke="#C9A84C" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="90" y1="135" x2="110" y2="135" stroke="#C9A84C" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="110" y1="185" x2="90" y2="185" stroke="#D4AE5A" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="65" y1="235" x2="135" y2="235" stroke="#D4AE5A" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="95" y1="285" x2="105" y2="285" stroke="#C9A84C" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="115" y1="335" x2="85" y2="335" stroke="#C9A84C" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="75" y1="385" x2="125" y2="385" stroke="#D4AE5A" stroke-width="1.5" stroke-opacity="0.5"/>
+                <line x1="90" y1="430" x2="110" y2="440" stroke="#C9A84C" stroke-width="2" stroke-opacity="0.5"/>
                 <!-- Node circles on strands -->
-                <circle cx="75" cy="35" r="4" fill="#06B6D4" fill-opacity="0.6"/>
-                <circle cx="125" cy="35" r="4" fill="#22D3EE" fill-opacity="0.6"/>
-                <circle cx="55" cy="85" r="5" fill="#06B6D4" fill-opacity="0.7"/>
-                <circle cx="145" cy="85" r="5" fill="#FF6B6B" fill-opacity="0.5"/>
-                <circle cx="100" cy="160" r="6" fill="#06B6D4" fill-opacity="0.5"/>
-                <circle cx="100" cy="310" r="6" fill="#22D3EE" fill-opacity="0.5"/>
-                <circle cx="65" cy="235" r="4" fill="#06B6D4" fill-opacity="0.6"/>
-                <circle cx="135" cy="235" r="4" fill="#22D3EE" fill-opacity="0.6"/>
+                <circle cx="75" cy="35" r="4" fill="#C9A84C" fill-opacity="0.6"/>
+                <circle cx="125" cy="35" r="4" fill="#D4AE5A" fill-opacity="0.6"/>
+                <circle cx="55" cy="85" r="5" fill="#C9A84C" fill-opacity="0.7"/>
+                <circle cx="145" cy="85" r="5" fill="#C9764F" fill-opacity="0.5"/>
+                <circle cx="100" cy="160" r="6" fill="#C9A84C" fill-opacity="0.5"/>
+                <circle cx="100" cy="310" r="6" fill="#D4AE5A" fill-opacity="0.5"/>
+                <circle cx="65" cy="235" r="4" fill="#C9A84C" fill-opacity="0.6"/>
+                <circle cx="135" cy="235" r="4" fill="#D4AE5A" fill-opacity="0.6"/>
             </svg>
         </div>
         ${makeHexFrame(vialImg, 'hex-vial', 'Биологичен флакон', vialSVG)}
@@ -1426,57 +1426,9 @@ function initializeGlobalScripts() {
         });
     }
 
-    // --- Theme Toggle ---
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeToggleMobile = document.getElementById('theme-toggle-mobile');
-    
-    function setTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        try {
-            localStorage.setItem('theme', theme);
-        } catch (e) {
-            console.warn('Could not save theme preference:', e);
-        }
-        
-        // Update logo for the new theme
-        updateLogoForTheme();
-        
-        // Show toast notification
-        const themeLabel = theme === 'dark' ? 'Тъмна тема' : 'Светла тема';
-        showToast(`${themeLabel} активирана`, 'info');
-    }
-    
-    function toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        setTheme(newTheme);
-    }
-    
-    if (themeToggle) {
-        themeToggle.addEventListener('click', toggleTheme);
-    }
-    
-    if (themeToggleMobile) {
-        themeToggleMobile.addEventListener('click', toggleTheme);
-    }
-    
-    // Listen for system theme changes
-    if (window.matchMedia) {
-        const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        
-        darkModeQuery.addEventListener('change', (e) => {
-            // Only auto-switch if user hasn't manually set a preference
-            try {
-                const savedTheme = localStorage.getItem('theme');
-                if (!savedTheme) {
-                    const newTheme = e.matches ? 'dark' : 'light';
-                    document.documentElement.setAttribute('data-theme', newTheme);
-                }
-            } catch (e) {
-                console.warn('Could not check theme preference:', e);
-            }
-        });
-    }
+    // --- Theme: light only ---
+    // This is a light-theme-only build; theme is always light.
+    document.documentElement.setAttribute('data-theme', 'light');
 
     updateCartCount();
 }
@@ -2309,7 +2261,7 @@ function initHeroParticles() {
 
     const NUM = 55;
     const LINK_DIST = 90;
-    const COLORS = ['rgba(6,182,212,', 'rgba(34,211,238,', 'rgba(255,107,107,'];
+    const COLORS = ['rgba(201,168,76,', 'rgba(212,174,90,', 'rgba(201,118,79,'];
 
     for (let i = 0; i < NUM; i++) {
         particles.push({
@@ -2350,7 +2302,7 @@ function initHeroParticles() {
                     ctx.beginPath();
                     ctx.moveTo(p.x, p.y);
                     ctx.lineTo(q.x, q.y);
-                    ctx.strokeStyle = `rgba(6,182,212,${alpha})`;
+                    ctx.strokeStyle = `rgba(201,168,76,${alpha})`;
                     ctx.lineWidth = 0.6;
                     ctx.stroke();
                 }
