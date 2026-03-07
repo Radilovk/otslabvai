@@ -373,10 +373,10 @@ img {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #00c4c8 0%, #00a8ac 100%);
+    background: linear-gradient(135deg, #d4a843 0%, #C9764F 100%);
     color: #ffffff;
     border: none;
-    box-shadow: 0 4px 20px rgba(0, 196, 200, 0.35);
+    box-shadow: 0 4px 20px rgba(201, 118, 79, 0.35);
     border-radius: 14px;
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 600;
@@ -384,9 +384,9 @@ img {
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #00d4d8 0%, #00c4c8 100%);
+    background: linear-gradient(135deg, #e0b555 0%, #d4845a 100%);
     transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0, 196, 200, 0.5);
+    box-shadow: 0 8px 30px rgba(201, 118, 79, 0.5);
 }
 
 .btn-primary:active {
@@ -482,9 +482,9 @@ img {
 }
 
 [data-theme] .promo-banner {
-    background: linear-gradient(135deg, #100D08 0%, #1A1508 50%, #100D08 100%);
-    color: #00c4c8;
-    border-bottom-color: rgba(0, 196, 200, 0.20);
+    background: linear-gradient(135deg, #FAF3E0 0%, #F5EDD5 50%, #FAF3E0 100%);
+    color: #6B5020;
+    border-bottom-color: rgba(107, 80, 32, 0.20);
 }
 
 .promo-banner svg {
@@ -493,8 +493,8 @@ img {
 }
 
 [data-theme] .promo-banner svg {
-    color: #00c4c8;
-    stroke: #00c4c8;
+    color: #d4a843;
+    stroke: #d4a843;
 }
 
 .promo-banner p {
@@ -1639,14 +1639,14 @@ main {
 }
 
 [data-theme] .trust-badge {
-    background: rgba(11, 13, 24, 0.8);
-    box-shadow: 0 4px 15px rgba(0, 196, 200, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 15px rgba(212, 168, 67, 0.12);
 }
 
 [data-theme] .trust-badge:hover {
-    border-color: var(--accent-secondary);
-    color: var(--accent-secondary);
-    box-shadow: 0 8px 20px rgba(0, 196, 200, 0.3);
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+    box-shadow: 0 8px 20px rgba(212, 168, 67, 0.25);
 }
 
 .hero-guarantee {
@@ -2997,8 +2997,8 @@ body.modal-open { overflow: hidden; }
 }
 
 [data-theme] .promo-banner {
-    background: linear-gradient(135deg, #100D08 0%, #1A1508 50%, #100D08 100%);
-    color: #00c4c8;
+    background: linear-gradient(135deg, #FAF3E0 0%, #F5EDD5 50%, #FAF3E0 100%);
+    color: #6B5020;
 }
 
 .promo-banner::before {
@@ -6477,25 +6477,25 @@ section[id="scientific"] {
 
 /* ── BTN-PRIMARY LIGHT: solid cyan button for light backgrounds ── */
 [data-theme] .btn-primary {
-    background: linear-gradient(135deg, #00c4c8 0%, #00a8ac 100%);
+    background: linear-gradient(135deg, #d4a843 0%, #C9764F 100%);
     color: #ffffff;
     border: none;
-    box-shadow: 0 4px 16px rgba(0, 196, 200, 0.30);
+    box-shadow: 0 4px 16px rgba(201, 118, 79, 0.35);
     border-radius: 14px;
     font-weight: 600;
     letter-spacing: 0.02em;
 }
 
 [data-theme] .btn-primary:hover {
-    background: linear-gradient(135deg, #00d4d8 0%, #00c4c8 100%);
+    background: linear-gradient(135deg, #e0b555 0%, #d4845a 100%);
     color: #ffffff;
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 24px rgba(0, 196, 200, 0.45);
+    box-shadow: 0 8px 24px rgba(201, 118, 79, 0.50);
 }
 
 [data-theme] .btn-primary:active {
     transform: translateY(0) scale(0.99);
-    box-shadow: 0 3px 12px rgba(0, 196, 200, 0.25);
+    box-shadow: 0 3px 12px rgba(201, 118, 79, 0.30);
 }
 
 /* ── BTN-HERO-PRIMARY DARK: cyan-to-gold gradient with pulsing neon glow ── */
@@ -6575,7 +6575,7 @@ section[id="scientific"] {
 
 /* Sync ripple colour to the new btn styles */
 [data-theme] .btn-primary .ripple {
-    background: rgba(0, 196, 200, 0.40);
+    background: rgba(201, 118, 79, 0.40);
 }
 
 [data-theme] .btn-hero-primary .ripple {
