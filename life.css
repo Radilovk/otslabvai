@@ -1,18 +1,25 @@
 /* ======================================================= */
-/*          1. ГЛОБАЛНИ СТИЛОВЕ И ПРОМЕНЛИВИ (LIFE BIOHACK DESIGN) */
+/*   1. ГЛОБАЛНИ СТИЛОВЕ И ПРОМЕНЛИВИ (LIFE BIOHACK DESIGN) */
+/*   Визуална идентичност: Фармацевтична чистота × Биотех   */
+/*   Вижте DESIGN_BRIEF.md за пълния дизайн наръчник.        */
 /* ======================================================= */
 
 :root {
-    /* ── LIFE BioHack — Cyan/Light Biotech Theme ── */
+    /* ── LIFE BioHack — Pharmaceutical White × Biotech Theme ──
+       Concept: pharmaceutical purity + high-tech biotechnology.
+       Pure white canvas, cool-neutral secondary surfaces,
+       precision cyan (#00C4C8) as the science accent.
+       Ref: DESIGN_BRIEF.md
+    ── */
     --bg-light: #ffffff;
-    --bg-subtle: #f0f7f8;
+    --bg-subtle: #F7F9FB;           /* Cool clean white — pharma-grade surface */
     --bg-card: #ffffff;
     --accent-cyan: #00c4c8;
     --accent-gold: #d4a843;
     --text-primary: #0f2540;
     --text-secondary: #4a6a85;
-    --border-glow: rgba(0, 196, 200, 0.2);
-    --shadow-glow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    --border-glow: rgba(0, 196, 200, 0.15);
+    --shadow-glow: 0 4px 24px rgba(0, 0, 0, 0.05);
     --danger: #ef4444;
     --success: #10b981;
     --warning: #f59e0b;
@@ -21,7 +28,7 @@
     --color-primary: #00c4c8;
     --color-secondary: #00c4c8;
     --color-dark: #0f2540;
-    --color-light: #f0f7f8;
+    --color-light: #F7F9FB;         /* Cool clean white (no teal tint) */
     --color-white: #ffffff;
     --color-gray: #4a6a85;
 
@@ -63,19 +70,19 @@
 
     /* Semantic theme variables */
     --bg-primary: #ffffff;
-    --bg-secondary: #f0f7f8;
+    --bg-secondary: #F7F9FB;        /* Cool pharma-white secondary surface */
     --accent: #00c4c8;
     --accent-rgb: 0, 196, 200;
     --accent-secondary: #d4a843;
     --accent-secondary-rgb: 212, 168, 67;
-    --border-color: rgba(0, 196, 200, 0.2);
-    --shadow-color: rgba(0, 0, 0, 0.06);
+    --border-color: rgba(0, 196, 200, 0.15);
+    --shadow-color: rgba(0, 0, 0, 0.05);
     --spotlight-color: rgba(0, 196, 200, 0.04);
     --note-color: #00a8ac;
     --success-color: #10b981;
     --error-color: #ef4444;
-    --skeleton-bg: #e8f5f5;
-    --skeleton-highlight: #f0fafa;
+    --skeleton-bg: #EEF2F7;         /* Clean cool-gray skeleton */
+    --skeleton-highlight: #F7F9FB;
 
     /* Header */
     --header-height: 70px;
@@ -87,8 +94,8 @@
     --header-border-scrolled: rgba(0, 196, 200, 0.25);
     --header-scrolled-bg: rgba(255, 255, 255, 0.99);
     --hero-bg-start: #ffffff;
-    --hero-bg-end: #f0f7f8;
-    --theme-gradient: linear-gradient(135deg, #ffffff 0%, #f0f7f8 100%);
+    --hero-bg-end: #F7F9FB;
+    --theme-gradient: linear-gradient(155deg, #ffffff 0%, #F7F9FB 100%);
 
     /* Promo banner */
     --promo-banner-height: 48px;
@@ -98,19 +105,19 @@
 /* Single light-cyan theme */
 [data-theme] {
     --bg-primary: #ffffff;
-    --bg-secondary: #f0f7f8;
+    --bg-secondary: #F7F9FB;        /* Cool pharma-white secondary surface */
     --accent: #00c4c8;
     --accent-rgb: 0, 196, 200;
     --accent-secondary: #d4a843;
     --accent-secondary-rgb: 212, 168, 67;
-    --border-color: rgba(0, 196, 200, 0.2);
-    --shadow-color: rgba(0, 0, 0, 0.06);
+    --border-color: rgba(0, 196, 200, 0.15);
+    --shadow-color: rgba(0, 0, 0, 0.05);
     --spotlight-color: rgba(0, 196, 200, 0.04);
     --note-color: #00a8ac;
     --success-color: #10b981;
     --error-color: #ef4444;
-    --skeleton-bg: #e8f5f5;
-    --skeleton-highlight: #f0fafa;
+    --skeleton-bg: #EEF2F7;         /* Clean cool-gray skeleton */
+    --skeleton-highlight: #F7F9FB;
     --header-bg: rgba(255, 255, 255, 0.96);
     --overlay-bg: rgba(0, 0, 0, 0.5);
     --header-gradient-start: rgba(255, 255, 255, 0.98);
@@ -119,8 +126,8 @@
     --header-border-scrolled: rgba(0, 196, 200, 0.25);
     --header-scrolled-bg: rgba(255, 255, 255, 0.99);
     --hero-bg-start: #ffffff;
-    --hero-bg-end: #f0f7f8;
-    --theme-gradient: linear-gradient(135deg, #ffffff 0%, #f0f7f8 100%);
+    --hero-bg-end: #F7F9FB;
+    --theme-gradient: linear-gradient(155deg, #ffffff 0%, #F7F9FB 100%);
 }
 
 /* Basic Reset */
@@ -470,31 +477,31 @@ img {
 .promo-banner {
     position: relative; /* Changed from fixed to relative - banner stays in page flow */
     width: 100%;
-    background: linear-gradient(135deg, #FAF3E0 0%, #F5EDD5 50%, #FAF3E0 100%);
-    color: #6B5020;
+    background: #ffffff;
+    color: #0f2540;
     text-align: center;
     padding: 11px 20px;
     font-weight: 500;
     font-size: 0.9rem;
     letter-spacing: 0.02em;
-    border-bottom: 1px solid rgba(0, 196, 200, 0.30);
+    border-bottom: 1px solid rgba(0, 196, 200, 0.25);
     z-index: 1; /* No longer needs high z-index since it's not fixed */
 }
 
 [data-theme] .promo-banner {
-    background: linear-gradient(135deg, #FAF3E0 0%, #F5EDD5 50%, #FAF3E0 100%);
-    color: #6B5020;
-    border-bottom-color: rgba(107, 80, 32, 0.20);
+    background: #ffffff;
+    color: #0f2540;
+    border-bottom-color: rgba(0, 196, 200, 0.20);
 }
 
 .promo-banner svg {
-    color: #d4a843;
-    stroke: #d4a843;
+    color: #00c4c8;
+    stroke: #00c4c8;
 }
 
 [data-theme] .promo-banner svg {
-    color: #d4a843;
-    stroke: #d4a843;
+    color: #00c4c8;
+    stroke: #00c4c8;
 }
 
 .promo-banner p {
@@ -1857,9 +1864,9 @@ main {
 }
 
 [data-theme] .product-card {
-    background: linear-gradient(145deg, #f5fbfb 0%, #f0f7f8 100%);
+    background: #ffffff;
     border-color: rgba(0, 196, 200, 0.12);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .product-card::before {
@@ -2984,8 +2991,8 @@ body.modal-open { overflow: hidden; }
 
 /* Enhanced Promo Banner with Timer */
 .promo-banner {
-    background: linear-gradient(135deg, #FAF3E0 0%, #F5EDD5 50%, #FAF3E0 100%);
-    color: #6B5020;
+    background: #ffffff;
+    color: #0f2540;
     text-align: center;
     padding: 11px 20px;
     font-size: 0.9rem;
@@ -2997,8 +3004,8 @@ body.modal-open { overflow: hidden; }
 }
 
 [data-theme] .promo-banner {
-    background: linear-gradient(135deg, #FAF3E0 0%, #F5EDD5 50%, #FAF3E0 100%);
-    color: #6B5020;
+    background: #ffffff;
+    color: #0f2540;
 }
 
 .promo-banner::before {
@@ -5180,7 +5187,7 @@ section[id="scientific"] {
 /* ── 1. HERO LAYOUT: TWO-COLUMN GRID ── */
 [data-theme] .hero-section {
     text-align: left;
-    background: linear-gradient(155deg, #f0f7f8 0%, #FAF9F7 40%, #f0f7f8 100%);
+    background: linear-gradient(155deg, #ffffff 0%, #F7F9FB 50%, #ffffff 100%);
     min-height: 640px;
     padding: 70px 0 40px;
     align-items: stretch;
@@ -5402,7 +5409,7 @@ section[id="scientific"] {
 
 /* Icon-fallback hex frame */
 .hex-frame.hex-frame-icon {
-    background: linear-gradient(135deg, #f0f7f8 0%, #e8f5f5 100%);
+    background: linear-gradient(135deg, #F7F9FB 0%, #EEF3F8 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -5476,7 +5483,7 @@ section[id="scientific"] {
 
 /* ── 5. FEATURE CARDS SECTION ── */
 [data-theme] .hero-features-section {
-    background: #f0f7f8;
+    background: #F7F9FB;
     padding: 56px 0 64px;
     border-top: 1px solid rgba(0, 196, 200, 0.1);
     position: relative;
@@ -6303,17 +6310,17 @@ section[id="scientific"] {
     stroke: #00c4c8;
 }
 
-/* ── FOOTER: slightly warmer background ── */
+/* ── FOOTER: clean pharmaceutical white ── */
 [data-theme] .main-footer {
-    background-color: #f0f7f8;
+    background-color: #F7F9FB;
     border-top-color: rgba(0, 196, 200, 0.12);
 }
 
-/* ── SECTION BACKGROUND: warm cream ── */
+/* ── SECTION BACKGROUND: clean cool white ── */
 [data-theme] .section-bg,
 [data-theme] .comparison-section,
 [data-theme] .guarantee-section {
-    background-color: #f0f7f8;
+    background-color: #F7F9FB;
 }
 
 /* ── TIMELINE: gold accent ── */
@@ -6371,11 +6378,11 @@ section[id="scientific"] {
     color: #00c4c8;
 }
 
-/* ── INGREDIENT CARD BACK: gold gradient ── */
+/* ── INGREDIENT CARD BACK: clean clinical white ── */
 .ingredient-card-full .card-back,
 .card-back {
-    background: linear-gradient(135deg, #FAF3E0, #F0E8CE);
-    color: #6B5020;
+    background: linear-gradient(135deg, #F7F9FB, #EEF3F8);
+    color: #0f2540;
 }
 
 [data-theme] .ingredient-card-full .card-back,
@@ -7268,5 +7275,166 @@ body.nav-open {
         font-size: 0.75rem;
         line-height: 1.3;
     }
+}
+
+
+/* =======================================================
+   PHARMACEUTICAL CLEAN × BIOTECH PRECISION — Design System
+   Ref: DESIGN_BRIEF.md
+   Concept: sterile white canvas + precision cyan + science grid
+   ======================================================= */
+
+/* ── 1. CLEAN LAB SURFACE: sections that alternate background ── */
+/* Guarantee section, comparison, info-card alt sections → cool clean */
+.guarantee-section,
+.comparison-section,
+.section-bg {
+    background-color: var(--bg-secondary);
+}
+
+/* Info card content — crisp white with clinical border */
+[data-theme] .info-card-content {
+    background: #ffffff;
+    border: 1px solid rgba(0, 196, 200, 0.18);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+}
+
+/* ── 2. PRODUCT CARD — Pharmaceutical precision styling ── */
+[data-theme] .product-card {
+    border: 1px solid rgba(0, 196, 200, 0.14);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme] .product-card:hover {
+    border-color: rgba(0, 196, 200, 0.45);
+    box-shadow: 0 8px 32px rgba(0, 196, 200, 0.13);
+}
+
+/* ── 3. GUARANTEE CARDS — white with clean borders ── */
+[data-theme] .guarantee-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 196, 200, 0.14);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme] .guarantee-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 8px 28px rgba(0, 196, 200, 0.14);
+}
+
+/* ── 4. PROMO BANNER — clean white with cyan accent text ── */
+.promo-banner strong,
+.promo-banner b {
+    color: #00a8ac;
+}
+
+/* ── 5. SCROLLBAR — minimal pharmaceutical style ── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #F7F9FB;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 196, 200, 0.35);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 196, 200, 0.6);
+}
+
+/* ── 6. STAT ITEMS — clinical data display ── */
+[data-theme] .stat-item {
+    background: #ffffff;
+    border: 1px solid rgba(0, 196, 200, 0.12);
+    border-radius: 12px;
+    padding: 18px 24px;
+}
+
+[data-theme] .stat-item strong {
+    font-family: var(--font-primary);
+    letter-spacing: -0.02em;
+}
+
+/* ── 7. SECTION DIVIDERS — precision lines ── */
+[data-theme] .category-section + .category-section {
+    border-top: 1px solid rgba(0, 196, 200, 0.08);
+}
+
+/* ── 8. TRUST BADGES — clinical lab feel ── */
+[data-theme] .trust-badge {
+    background: #ffffff;
+    border: 1px solid rgba(0, 196, 200, 0.18);
+    border-radius: 24px;
+    padding: 7px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #4a6a85;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* ── 9. HEX FEATURE CARDS — white lab cards ── */
+[data-theme] .hex-feature-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 196, 200, 0.14);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme] .hex-feature-card:hover {
+    border-color: rgba(0, 196, 200, 0.40);
+    box-shadow: 0 8px 32px rgba(0, 196, 200, 0.12);
+}
+
+/* ── 10. EFFECT BARS — clinical measurement bars ── */
+[data-theme] .effect-bar {
+    background: linear-gradient(90deg, #00c4c8 0%, #00a8ac 100%);
+    border-radius: 4px;
+}
+
+[data-theme] .effect-bar-container {
+    background: rgba(0, 196, 200, 0.10);
+    border-radius: 4px;
+}
+
+/* ── 11. PRICE TAG — clinical precision ── */
+[data-theme] .product-price {
+    font-family: var(--font-primary);
+    color: #0f2540;
+    font-weight: 700;
+}
+
+/* ── 12. FOOTER — clean base ── */
+[data-theme] .main-footer {
+    border-top: 1px solid rgba(0, 196, 200, 0.12);
+}
+
+/* ── 13. SEARCH DROPDOWN — white clinical panel ── */
+[data-theme] .search-dropdown {
+    background: #ffffff;
+    border: 1px solid rgba(0, 196, 200, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* ── 14. NAV LINKS — clean pharma menu ── */
+[data-theme] .nav-links {
+    background: #ffffff;
+    border-left: 1px solid rgba(0, 196, 200, 0.12);
+}
+
+/* ── 15. BACKGROUND ORBS — very subtle for white theme ── */
+[data-theme] .bg-orb-1 {
+    background: radial-gradient(circle, rgba(0, 196, 200, 0.03), transparent 70%);
+}
+
+[data-theme] .bg-orb-2 {
+    background: radial-gradient(circle, rgba(0, 196, 200, 0.02), transparent 70%);
+}
+
+[data-theme] .bg-orb-3 {
+    background: radial-gradient(circle, rgba(0, 196, 200, 0.015), transparent 70%);
 }
 
