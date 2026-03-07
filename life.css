@@ -6769,3 +6769,504 @@ body {
     flex-wrap: wrap;
     gap: 2px;
 }
+
+/* =======================================================
+   МОБИЛЕН UX/UI – ПОДОБРЕНО ИЗЖИВЯВАНЕ v2
+   Enhanced mobile experience: touch targets, gestures,
+   safe areas, micro-interactions, scrolling, typography
+   ======================================================= */
+
+/* ── 1. HAMBURGER BUTTON – LARGER TAP TARGET ── */
+/* Increase tap area to 44×44px without changing visual icon size */
+.menu-toggle {
+    width: 44px;
+    height: 44px;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    padding: 11px 7px;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.menu-toggle span {
+    width: 26px;
+    flex-shrink: 0;
+}
+
+.menu-toggle:active {
+    background: rgba(0, 196, 200, 0.10);
+}
+
+/* ── 2. MOBILE NAV MENU – BETTER WIDTH, SCROLL, OVERLAY ── */
+@media (max-width: 992px) {
+    .nav-links {
+        width: min(300px, 85vw);
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        padding-bottom: env(safe-area-inset-bottom, 20px);
+        box-shadow: -8px 0 32px rgba(0, 0, 0, 0.18);
+    }
+
+    .nav-links a {
+        padding: 0.65rem 1.25rem;
+        border-radius: 8px;
+        width: 80%;
+        transition: background 0.2s ease, color 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-links a:active {
+        background: rgba(0, 196, 200, 0.10);
+    }
+
+    /* Smooth overlay fade */
+    .nav-overlay {
+        transition: opacity 0.35s ease;
+    }
+}
+
+/* ── 3. FORM INPUTS – MINIMUM 44px TOUCH TARGET ── */
+@media (max-width: 768px) {
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 14px 16px;
+        font-size: 16px; /* Prevents iOS auto-zoom on focus */
+        border-radius: 10px;
+        min-height: 48px;
+    }
+
+    .form-group label {
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .search-input {
+        font-size: 16px; /* Prevents iOS auto-zoom */
+    }
+}
+
+/* ── 4. HERO SECTION – IMPROVED MOBILE TYPOGRAPHY ── */
+@media (max-width: 640px) {
+    [data-theme] .hero-content h1 {
+        font-size: clamp(1.75rem, 7.5vw, 2.4rem);
+        line-height: 1.12;
+        letter-spacing: -0.02em;
+    }
+
+    [data-theme] .hero-content p {
+        font-size: 0.97rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-tagline {
+        font-size: 0.78rem;
+        letter-spacing: 0.14em;
+    }
+
+    .hero-section {
+        padding-bottom: 24px;
+    }
+}
+
+@media (max-width: 400px) {
+    [data-theme] .hero-content h1 {
+        font-size: clamp(1.6rem, 8vw, 2rem);
+    }
+
+    [data-theme] .hero-content p {
+        font-size: 0.92rem;
+    }
+}
+
+/* ── 5. PRODUCT IMAGES – BETTER SIZING ON SMALL SCREENS ── */
+@media (max-width: 480px) {
+    .product-image img {
+        max-height: 200px;
+        width: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+}
+
+/* ── 6. STICKY CTA – DISABLE FLOAT ANIMATION + BETTER MOBILE LAYOUT ── */
+@media (max-width: 768px) {
+    .sticky-cta-btn {
+        animation: none; /* Save battery on mobile */
+        box-shadow: 0 6px 20px rgba(0, 196, 200, 0.35);
+    }
+
+    .sticky-cta-btn:active {
+        transform: scale(0.97);
+        box-shadow: 0 3px 12px rgba(0, 196, 200, 0.25);
+    }
+
+    .sticky-cta {
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+@media (max-width: 480px) {
+    .sticky-cta-btn {
+        padding: 14px 20px;
+        font-size: 0.92rem;
+        border-radius: 10px;
+        min-height: 48px;
+    }
+
+    .sticky-cta-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* ── 7. EXIT MODAL – BETTER SMALL SCREEN SUPPORT ── */
+@media (max-width: 640px) {
+    .exit-modal-content {
+        width: 92%;
+        min-width: 280px;
+        border-radius: 16px;
+        max-height: 92vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .exit-modal-body {
+        padding: 28px 18px 22px;
+    }
+
+    .exit-modal-close {
+        top: 12px;
+        right: 12px;
+        width: 36px;
+        height: 36px;
+        font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 50%;
+    }
+
+    .exit-modal-content h2 {
+        font-size: 1.35rem;
+        line-height: 1.3;
+    }
+
+    .exit-offer-badge {
+        font-size: 1.8rem;
+    }
+
+    .exit-cta-btn {
+        width: 100%;
+        font-size: 1rem;
+        padding: 14px 20px;
+        min-height: 48px;
+    }
+}
+
+/* ── 8. MOBILE CART ICON – LARGER TAP TARGET ── */
+@media (max-width: 992px) {
+    .cart-icon-fixed-mobile {
+        width: 52px;
+        height: 52px;
+        top: 72px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    }
+
+    .cart-icon-fixed-mobile svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .cart-icon-fixed-mobile:active {
+        transform: scale(0.95);
+    }
+}
+
+/* ── 9. TOUCH FEEDBACK ON BUTTONS/LINKS ── */
+@media (hover: none) {
+    .btn-primary:active,
+    .btn-hero-primary:active,
+    .btn-hero-secondary:active,
+    .btn-premium:active,
+    [data-theme] .btn-hero-primary:active {
+        transform: scale(0.97);
+        opacity: 0.9;
+    }
+
+    .product-card:active {
+        transform: scale(0.99);
+    }
+
+    .nav-links a:active {
+        opacity: 0.7;
+    }
+
+    /* Remove hover transforms on touch (they stay stuck on mobile) */
+    .guarantee-card:hover,
+    .hex-feature-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+/* ── 10. SAFE AREA INSETS – IPHONE NOTCH/HOME INDICATOR ── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .main-footer {
+        padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    @media (max-width: 992px) {
+        .nav-links {
+            padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+        }
+    }
+}
+
+/* ── 11. HERO TRUST BADGES – COMPACT ON MOBILE ── */
+@media (max-width: 640px) {
+    [data-theme] .hero-trust-badges {
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .trust-badge {
+        font-size: 0.78rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+    }
+}
+
+/* ── 12. SECTION TITLES – FLUID SCALING ── */
+@media (max-width: 640px) {
+    .section-title h2 {
+        font-size: clamp(1.5rem, 5.5vw, 1.9rem);
+    }
+
+    .section-title p {
+        font-size: 0.93rem;
+        line-height: 1.6;
+    }
+
+    .category-title {
+        font-size: clamp(1.5rem, 6vw, 1.9rem);
+    }
+}
+
+/* ── 13. PRODUCT CARDS – BETTER MOBILE EXPERIENCE ── */
+@media (max-width: 640px) {
+    .product-card {
+        border-radius: 14px;
+        padding: 18px;
+    }
+
+    .product-title h3 {
+        font-size: 1.05rem;
+        line-height: 1.3;
+    }
+
+    .product-price {
+        font-size: 1.1rem;
+    }
+
+    .effect-bar {
+        height: 16px;
+        font-size: 0.7rem;
+        border-radius: 8px;
+    }
+
+    .product-badge {
+        font-size: 0.7rem;
+        padding: 5px 10px;
+    }
+}
+
+/* ── 14. PRODUCT FILTER BAR – SCROLLABLE CHIPS ON MOBILE ── */
+@media (max-width: 640px) {
+    .filter-chips {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        gap: 8px;
+        padding-bottom: 4px;
+        scrollbar-width: none; /* Firefox */
+    }
+
+    .filter-chips::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+
+    .filter-chip {
+        scroll-snap-align: start;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+}
+
+/* ── 15. PROMO BANNER – COMPACT ON MOBILE ── */
+@media (max-width: 640px) {
+    .promo-banner {
+        font-size: 0.8rem;
+        padding: 8px 12px;
+        line-height: 1.4;
+    }
+
+    .promo-banner strong {
+        font-size: 0.85rem;
+    }
+}
+
+/* ── 16. INFO CARD SECTION – FULL-WIDTH IMAGE ON MOBILE ── */
+@media (max-width: 640px) {
+    .info-card-section .info-card-image {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .info-card-image img {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        border-radius: 14px;
+    }
+
+    .info-card-content h2 {
+        font-size: clamp(1.4rem, 5.5vw, 1.75rem);
+    }
+
+    .info-card-content p {
+        font-size: 0.93rem;
+        line-height: 1.65;
+    }
+}
+
+/* ── 17. HEADER – SAFE AREA TOP PADDING ── */
+@supports (padding-top: env(safe-area-inset-top)) {
+    .main-header {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+}
+
+/* ── 18. SCROLL SMOOTH & MOMENTUM ── */
+@media (max-width: 992px) {
+    html {
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* ── 19. MODAL BACKDROP – TOUCH TO CLOSE CURSOR ── */
+@media (hover: none) {
+    .modal-backdrop,
+    .exit-modal,
+    .nav-overlay {
+        cursor: pointer;
+    }
+}
+
+/* ── 20. FOOTER – BETTER MOBILE SPACING ── */
+@media (max-width: 640px) {
+    .footer-grid {
+        gap: 2.5rem;
+    }
+
+    .footer-grid h4 {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .footer-links li {
+        margin-bottom: 0.6rem;
+    }
+
+    .footer-bottom {
+        padding: 1.5rem 0;
+        font-size: 0.82rem;
+        text-align: center;
+    }
+}
+
+/* ── 21. BACK BUTTON – MINIMUM TOUCH TARGET ── */
+@media (max-width: 768px) {
+    .btn-back {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* ── 22. TOAST NOTIFICATIONS – BETTER MOBILE POSITION ── */
+@media (max-width: 480px) {
+    .toast {
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+        left: 12px;
+        right: 12px;
+        max-width: 100%;
+        font-size: 0.88rem;
+        padding: 12px 14px;
+        border-radius: 10px;
+    }
+}
+
+/* ── 23. CONTAINER HORIZONTAL PADDING ON VERY SMALL SCREENS ── */
+@media (max-width: 360px) {
+    .container {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    [data-theme] .hero-content h1 {
+        font-size: 1.55rem;
+    }
+}
+
+/* ── 24. PREVENT CONTENT SHIFT WHEN MENU OPENS ── */
+body.nav-open {
+    overflow: hidden;
+}
+
+/* ── 25. STAT ITEMS – BETTER GRID ON SMALL SCREENS ── */
+@media (max-width: 480px) {
+    [data-theme] .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        justify-items: center;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 14px 10px;
+        background: rgba(0, 196, 200, 0.04);
+        border-radius: 12px;
+        border: 1px solid rgba(0, 196, 200, 0.12);
+        width: 100%;
+    }
+
+    .stat-item strong {
+        display: block;
+        font-size: 1.25rem;
+        margin-bottom: 4px;
+    }
+
+    .stat-item span {
+        font-size: 0.75rem;
+        line-height: 1.3;
+    }
+}
+
