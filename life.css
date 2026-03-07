@@ -479,7 +479,7 @@ img {
     z-index: 1; /* No longer needs high z-index since it's not fixed */
 }
 
-[data-theme="dark"] .promo-banner {
+[data-theme="light"] .promo-banner {
     background: linear-gradient(135deg, #100D08 0%, #1A1508 50%, #100D08 100%);
     color: #00c4c8;
     border-bottom-color: rgba(0, 196, 200, 0.20);
@@ -490,7 +490,7 @@ img {
     stroke: #d4a843;
 }
 
-[data-theme="dark"] .promo-banner svg {
+[data-theme="light"] .promo-banner svg {
     color: #00c4c8;
     stroke: #00c4c8;
 }
@@ -1161,7 +1161,7 @@ main {
     z-index: 0;
 }
 
-[data-theme="dark"] .hero-section[data-bg-image]::before {
+[data-theme="light"] .hero-section[data-bg-image]::before {
     background: linear-gradient(135deg, 
         rgba(6, 8, 14, 0.75) 0%, 
         rgba(5, 13, 32, 0.75) 100%);
@@ -1222,26 +1222,26 @@ main {
     color: #e8f2f8;
 }
 
-[data-theme="dark"] .stat-item {
+[data-theme="light"] .stat-item {
     background: var(--glass-bg-dark);
     border-color: var(--glass-border-dark);
     box-shadow: 0 4px 24px rgba(0, 196, 200, 0.08);
 }
 
 /* Theme-aware text colors for custom gradients - Dark theme */
-[data-theme="dark"] .hero-section.hero-custom-bg .hero-content h1 {
+[data-theme="light"] .hero-section.hero-custom-bg .hero-content h1 {
     color: var(--text-primary);
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6), 
                  0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
-[data-theme="dark"] .hero-section.hero-custom-bg .hero-content p {
+[data-theme="light"] .hero-section.hero-custom-bg .hero-content p {
     color: var(--text-secondary);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 
                  0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
-[data-theme="dark"] .hero-section.hero-custom-bg .stat-item strong {
+[data-theme="light"] .hero-section.hero-custom-bg .stat-item strong {
     color: var(--text-primary);
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6),
                  0 1px 4px rgba(0, 0, 0, 0.8);
@@ -1249,7 +1249,7 @@ main {
     -webkit-text-fill-color: var(--text-primary);
 }
 
-[data-theme="dark"] .hero-section.hero-custom-bg .stat-item span {
+[data-theme="light"] .hero-section.hero-custom-bg .stat-item span {
     color: var(--text-secondary);
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
 }
@@ -1270,7 +1270,7 @@ main {
 }
 
 /* Theme-aware trust badges for custom backgrounds - Dark theme */
-[data-theme="dark"] .hero-section.hero-custom-bg .trust-badge {
+[data-theme="light"] .hero-section.hero-custom-bg .trust-badge {
     background: rgba(0, 0, 0, 0.3);
     border-color: rgba(255, 255, 255, 0.15);
     color: var(--text-primary);
@@ -1278,7 +1278,7 @@ main {
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
-[data-theme="dark"] .hero-section.hero-custom-bg .trust-badge:hover {
+[data-theme="light"] .hero-section.hero-custom-bg .trust-badge:hover {
     background: rgba(0, 0, 0, 0.4);
     border-color: rgba(255, 255, 255, 0.25);
     color: var(--text-primary);
@@ -1302,7 +1302,7 @@ main {
     z-index: 0;
 }
 
-[data-theme="dark"] .hero-section::after {
+[data-theme="light"] .hero-section::after {
     background: radial-gradient(
         circle at center,
         rgba(0, 196, 200, 0.07) 0%,
@@ -1343,7 +1343,7 @@ main {
     letter-spacing: -0.03em;
 }
 
-[data-theme="dark"] .hero-content h1 {
+[data-theme="light"] .hero-content h1 {
     background: linear-gradient(135deg, var(--text-primary-dark) 40%, var(--accent-dark) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1564,7 +1564,7 @@ main {
     transform: translateX(4px);
 }
 
-[data-theme="dark"] .btn-hero-secondary {
+[data-theme="light"] .btn-hero-secondary {
     background: var(--glass-bg-dark);
     border-color: var(--glass-border-dark);
     color: var(--text-primary);
@@ -1572,7 +1572,7 @@ main {
                 inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-[data-theme="dark"] .btn-hero-secondary:hover {
+[data-theme="light"] .btn-hero-secondary:hover {
     background: rgba(0, 196, 200, 0.1);
     box-shadow: var(--glow-primary-md),
                 inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -1638,12 +1638,12 @@ main {
     box-shadow: 0 8px 20px rgba(0, 196, 200, 0.25);
 }
 
-[data-theme="dark"] .trust-badge {
+[data-theme="light"] .trust-badge {
     background: rgba(11, 13, 24, 0.8);
     box-shadow: 0 4px 15px rgba(0, 196, 200, 0.1);
 }
 
-[data-theme="dark"] .trust-badge:hover {
+[data-theme="light"] .trust-badge:hover {
     border-color: var(--accent-secondary);
     color: var(--accent-secondary);
     box-shadow: 0 8px 20px rgba(0, 196, 200, 0.3);
@@ -1685,7 +1685,7 @@ main {
     box-shadow: 0 8px 32px rgba(0, 196, 200, 0.08);
 }
 
-[data-theme="dark"] .info-card-content {
+[data-theme="light"] .info-card-content {
     background: var(--glass-bg-dark);
     border-color: var(--glass-border-dark);
     box-shadow: 0 8px 32px rgba(0, 196, 200, 0.08);
@@ -1856,7 +1856,7 @@ main {
     color: inherit; /* Inherit text color */
 }
 
-[data-theme="dark"] .product-card {
+[data-theme="light"] .product-card {
     background: linear-gradient(145deg, #060A16 0%, #080C16 100%);
     border-color: rgba(0, 196, 200, 0.12);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -1886,7 +1886,7 @@ main {
     box-shadow: 0 15px 40px rgba(0, 196, 200, 0.15);
 }
 
-[data-theme="dark"] .product-card:hover {
+[data-theme="light"] .product-card:hover {
     border-color: var(--accent);
     box-shadow: 0 15px 40px rgba(0, 196, 200, 0.18), 0 0 0 1px rgba(0, 196, 200, 0.1);
 }
@@ -2996,7 +2996,7 @@ body.modal-open { overflow: hidden; }
     animation: slideDown 0.5s ease-out;
 }
 
-[data-theme="dark"] .promo-banner {
+[data-theme="light"] .promo-banner {
     background: linear-gradient(135deg, #100D08 0%, #1A1508 50%, #100D08 100%);
     color: #00c4c8;
 }
@@ -3322,7 +3322,7 @@ body.modal-open { overflow: hidden; }
     overflow: hidden;
 }
 
-[data-theme="dark"] .exit-offer {
+[data-theme="light"] .exit-offer {
     background: linear-gradient(135deg, #1A1410 0%, #2A2218 100%);
     border-color: rgba(0, 196, 200, 0.30);
 }
@@ -3357,7 +3357,7 @@ body.modal-open { overflow: hidden; }
     margin: 0;
 }
 
-[data-theme="dark"] .exit-offer p {
+[data-theme="light"] .exit-offer p {
     color: white;
 }
 
@@ -3522,7 +3522,7 @@ body.modal-open { overflow: hidden; }
     font-weight: 600;
 }
 
-[data-theme="dark"] .comparison-header {
+[data-theme="light"] .comparison-header {
     background: linear-gradient(135deg, #1A1410 0%, #2A2218 100%);
     color: #00c4c8;
 }
@@ -4496,7 +4496,7 @@ section[id="scientific"] {
                 inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-[data-theme="dark"] .glass-panel {
+[data-theme="light"] .glass-panel {
     background: rgba(6, 8, 14, 0.72);
     border-color: rgba(0, 196, 200, 0.18);
     box-shadow: 0 8px 32px rgba(0, 196, 200, 0.08),
@@ -4512,7 +4512,7 @@ section[id="scientific"] {
     box-shadow: 0 12px 40px rgba(0, 196, 200, 0.12);
 }
 
-[data-theme="dark"] .search-dropdown {
+[data-theme="light"] .search-dropdown {
     background: rgba(6, 8, 14, 0.88);
     border-color: rgba(0, 196, 200, 0.18);
     box-shadow: 0 12px 40px rgba(0, 196, 200, 0.1);
@@ -4535,7 +4535,7 @@ section[id="scientific"] {
     border: 1px solid rgba(0, 196, 200, 0.15);
 }
 
-[data-theme="dark"] .exit-modal-content {
+[data-theme="light"] .exit-modal-content {
     background: rgba(6, 8, 14, 0.92);
     border-color: rgba(0, 196, 200, 0.15);
 }
@@ -4624,7 +4624,7 @@ section[id="scientific"] {
     transition: all 0.3s ease;
 }
 
-[data-theme="dark"] .protocol-node-content {
+[data-theme="light"] .protocol-node-content {
     background: rgba(6, 8, 14, 0.72);
     border-color: rgba(0, 196, 200, 0.14);
 }
@@ -4691,7 +4691,7 @@ section[id="scientific"] {
     transition: all 0.3s ease;
 }
 
-[data-theme="dark"] .clinical-stat {
+[data-theme="light"] .clinical-stat {
     background: rgba(6, 8, 14, 0.72);
     border-color: rgba(0, 196, 200, 0.14);
 }
@@ -4733,7 +4733,7 @@ section[id="scientific"] {
     box-shadow: 0 8px 32px rgba(0, 196, 200, 0.08);
 }
 
-[data-theme="dark"] .stack-builder {
+[data-theme="light"] .stack-builder {
     background: rgba(6, 8, 14, 0.82);
     border-color: rgba(0, 196, 200, 0.18);
 }
@@ -4877,7 +4877,7 @@ section[id="scientific"] {
                 inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-[data-theme="dark"] .btn-glass {
+[data-theme="light"] .btn-glass {
     background: rgba(6, 8, 14, 0.5);
     border-color: rgba(0, 196, 200, 0.25);
     color: var(--text-primary);
@@ -4885,7 +4885,7 @@ section[id="scientific"] {
                 inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
-[data-theme="dark"] .btn-glass:hover {
+[data-theme="light"] .btn-glass:hover {
     background: rgba(0, 196, 200, 0.1);
     border-color: var(--accent);
     box-shadow: var(--glow-primary-md),
@@ -5112,7 +5112,7 @@ section[id="scientific"] {
     transform: translateY(-4px);
 }
 
-[data-theme="dark"] .glow-card:hover {
+[data-theme="light"] .glow-card:hover {
     box-shadow: 0 0 0 1px rgba(0, 196, 200, 0.3),
                 0 8px 40px rgba(0, 196, 200, 0.2);
 }
@@ -5378,7 +5378,7 @@ section[id="scientific"] {
     position: absolute;
     overflow: hidden;
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    background: white;
+    background: transparent;
     z-index: 2;
     transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
@@ -5476,7 +5476,7 @@ section[id="scientific"] {
 
 /* ── 5. FEATURE CARDS SECTION ── */
 [data-theme="light"] .hero-features-section {
-    background: #FFFFFF;
+    background: #081228;
     padding: 56px 0 64px;
     border-top: 1px solid rgba(0, 196, 200, 0.1);
     position: relative;
@@ -5490,15 +5490,16 @@ section[id="scientific"] {
 
 /* Glassmorphism feature card */
 .hex-feature-card {
-    background: #FFFFFF;
+    background: rgba(8, 18, 40, 0.85);
     border-radius: 18px;
     padding: 38px 30px 36px;
     text-align: center;
-    border: 1px solid rgba(0, 196, 200, 0.14);
+    border: 1px solid rgba(0, 196, 200, 0.2);
     box-shadow: 0 6px 32px rgba(15, 23, 42, 0.07), 0 1px 4px rgba(0, 196, 200, 0.06);
     transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
     position: relative;
     overflow: hidden;
+    color: #e8f2f8;
 }
 
 .hex-feature-card::after {
@@ -5589,55 +5590,55 @@ section[id="scientific"] {
 }
 
 /* Dark theme feature cards */
-[data-theme="dark"] .hero-features-section {
+[data-theme="light"] .hero-features-section {
     background: var(--bg-primary);
     border-top-color: rgba(0, 196, 200, 0.12);
 }
 
-[data-theme="dark"] .hex-feature-card {
+[data-theme="light"] .hex-feature-card {
     background: var(--bg-secondary);
     border-color: rgba(0, 196, 200, 0.14);
     box-shadow: 0 6px 32px rgba(0, 0, 0, 0.3);
 }
 
-[data-theme="dark"] .hex-feature-card:hover {
+[data-theme="light"] .hex-feature-card:hover {
     border-color: rgba(0, 196, 200, 0.35);
     box-shadow: 0 20px 56px rgba(0, 196, 200, 0.15);
 }
 
-[data-theme="dark"] .hex-feature-card h3 {
+[data-theme="light"] .hex-feature-card h3 {
     color: var(--text-primary);
 }
 
-[data-theme="dark"] .hex-feature-card p {
+[data-theme="light"] .hex-feature-card p {
     color: var(--text-secondary);
 }
 
-[data-theme="dark"] .hex-icon-bg-svg polygon {
+[data-theme="light"] .hex-icon-bg-svg polygon {
     fill: rgba(0, 196, 200, 0.06);
     stroke: #00c4c8;
 }
 
-[data-theme="dark"] .hex-icon-inner svg {
+[data-theme="light"] .hex-icon-inner svg {
     stroke: #00c4c8;
 }
 
-[data-theme="dark"] .btn-learn-more {
+[data-theme="light"] .btn-learn-more {
     border-color: rgba(0, 196, 200, 0.6);
     color: #00c4c8;
 }
 
-[data-theme="dark"] .btn-learn-more:hover {
+[data-theme="light"] .btn-learn-more:hover {
     background: #00c4c8;
     color: #05091a;
 }
 
 /* ── 6. DARK THEME HERO ── */
-[data-theme="dark"] .hero-visual {
+[data-theme="light"] .hero-visual {
     display: flex;
 }
 
-[data-theme="dark"] .hero-section .container.hero-grid {
+[data-theme="light"] .hero-section .container.hero-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 48px;
@@ -5646,29 +5647,29 @@ section[id="scientific"] {
     z-index: 1;
 }
 
-[data-theme="dark"] .hero-content {
+[data-theme="light"] .hero-content {
     text-align: left;
     max-width: 100%;
     margin: 0;
     padding: 0;
 }
 
-[data-theme="dark"] .hero-cta-group {
+[data-theme="light"] .hero-cta-group {
     justify-content: flex-start;
 }
 
-[data-theme="dark"] .hero-trust-badges {
+[data-theme="light"] .hero-trust-badges {
     justify-content: flex-start;
 }
 
-[data-theme="dark"] .hero-stats {
+[data-theme="light"] .hero-stats {
     justify-content: flex-start;
     gap: 48px;
     padding-top: 24px;
     border-top: 1px solid rgba(0, 196, 200, 0.15);
 }
 
-[data-theme="dark"] .hero-section::before {
+[data-theme="light"] .hero-section::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -5678,7 +5679,7 @@ section[id="scientific"] {
     opacity: 0.5;
 }
 
-[data-theme="dark"] .hero-visual {
+[data-theme="light"] .hero-visual {
     position: relative;
     height: 480px;
 }
@@ -5686,13 +5687,13 @@ section[id="scientific"] {
 /* ── 7. RESPONSIVE: TABLET & MOBILE ── */
 @media (max-width: 1024px) {
     [data-theme="light"] .hero-section .container.hero-grid,
-    [data-theme="dark"] .hero-section .container.hero-grid {
+    [data-theme="light"] .hero-section .container.hero-grid {
         grid-template-columns: 1.3fr 0.7fr;
         gap: 28px;
     }
 
     [data-theme="light"] .hero-visual,
-    [data-theme="dark"] .hero-visual {
+    [data-theme="light"] .hero-visual {
         height: 380px;
     }
 
@@ -5703,39 +5704,39 @@ section[id="scientific"] {
 
 @media (max-width: 768px) {
     [data-theme="light"] .hero-section .container.hero-grid,
-    [data-theme="dark"] .hero-section .container.hero-grid {
+    [data-theme="light"] .hero-section .container.hero-grid {
         grid-template-columns: 1fr;
     }
 
     [data-theme="light"] .hero-visual,
-    [data-theme="dark"] .hero-visual {
+    [data-theme="light"] .hero-visual {
         display: none;
     }
 
     [data-theme="light"] .hero-content,
-    [data-theme="dark"] .hero-content {
+    [data-theme="light"] .hero-content {
         text-align: center;
     }
 
     [data-theme="light"] .hero-content p,
-    [data-theme="dark"] .hero-content p {
+    [data-theme="light"] .hero-content p {
         max-width: 100%;
         margin-left: auto;
         margin-right: auto;
     }
 
     [data-theme="light"] .hero-cta-group,
-    [data-theme="dark"] .hero-cta-group {
+    [data-theme="light"] .hero-cta-group {
         justify-content: center;
     }
 
     [data-theme="light"] .hero-trust-badges,
-    [data-theme="dark"] .hero-trust-badges {
+    [data-theme="light"] .hero-trust-badges {
         justify-content: center;
     }
 
     [data-theme="light"] .hero-stats,
-    [data-theme="dark"] .hero-stats {
+    [data-theme="light"] .hero-stats {
         justify-content: center;
         gap: 24px;
     }
@@ -6112,7 +6113,7 @@ section[id="scientific"] {
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 196, 200, 0.15);
 }
 
-[data-theme="dark"] .product-card:hover {
+[data-theme="light"] .product-card:hover {
     border-color: rgba(0, 196, 200, 0.4);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 196, 200, 0.15);
 }
@@ -6138,7 +6139,7 @@ section[id="scientific"] {
 }
 
 /* ── DARK HERO GRADIENT (richer, deeper) ── */
-[data-theme="dark"] .hero-content h1 {
+[data-theme="light"] .hero-content h1 {
     background: linear-gradient(135deg, #e8f2f8 40%, #00c4c8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -6175,7 +6176,7 @@ section[id="scientific"] {
     font-size: 1.25rem;
 }
 
-[data-theme="dark"] .product-price {
+[data-theme="light"] .product-price {
     color: #00c4c8;
 }
 
@@ -6256,8 +6257,8 @@ section[id="scientific"] {
     color: #8B7030;
 }
 
-[data-theme="dark"] .nav-links a:hover,
-[data-theme="dark"] .nav-links a.active {
+[data-theme="light"] .nav-links a:hover,
+[data-theme="light"] .nav-links a.active {
     color: #00c4c8;
 }
 
@@ -6287,18 +6288,18 @@ section[id="scientific"] {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
-[data-theme="dark"] .info-card-content {
+[data-theme="light"] .info-card-content {
     border-color: rgba(0, 196, 200, 0.15);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 /* ── HEX FEATURE CARD: gold icon stroke in dark ── */
-[data-theme="dark"] .hex-icon-bg-svg polygon {
+[data-theme="light"] .hex-icon-bg-svg polygon {
     fill: rgba(0, 196, 200, 0.06);
     stroke: #00c4c8;
 }
 
-[data-theme="dark"] .hex-icon-inner svg {
+[data-theme="light"] .hex-icon-inner svg {
     stroke: #00c4c8;
 }
 
@@ -6334,8 +6335,8 @@ section[id="scientific"] {
     color: #B8603A;
 }
 
-[data-theme="dark"] .benefit-item h4,
-[data-theme="dark"] .product-benefits-full .benefit-item h4 {
+[data-theme="light"] .benefit-item h4,
+[data-theme="light"] .product-benefits-full .benefit-item h4 {
     color: #D4906B;
 }
 
@@ -6359,7 +6360,7 @@ section[id="scientific"] {
     color: #8B7030;
 }
 
-[data-theme="dark"] .protocol-node-content h4 {
+[data-theme="light"] .protocol-node-content h4 {
     color: #00c4c8;
 }
 
@@ -6377,8 +6378,8 @@ section[id="scientific"] {
     color: #6B5020;
 }
 
-[data-theme="dark"] .ingredient-card-full .card-back,
-[data-theme="dark"] .card-back {
+[data-theme="light"] .ingredient-card-full .card-back,
+[data-theme="light"] .card-back {
     background: linear-gradient(135deg, #1A1410, #2A2218);
     color: #E8D4A0;
 }
@@ -6394,7 +6395,7 @@ section[id="scientific"] {
     color: #8B7030;
 }
 
-[data-theme="dark"] .search-result-price {
+[data-theme="light"] .search-result-price {
     color: #00c4c8;
 }
 
@@ -6435,7 +6436,7 @@ section[id="scientific"] {
 }
 
 /* ── DARK HERO: animated cyan-gold mesh (inspired by protocols.html bg-mesh) ── */
-[data-theme="dark"] .hero-section:not([data-bg-image]):not(.hero-custom-bg)::before {
+[data-theme="light"] .hero-section:not([data-bg-image]):not(.hero-custom-bg)::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -6454,14 +6455,14 @@ section[id="scientific"] {
 }
 
 /* Richer animated radial pulse in dark mode – add cyan orb alongside gold */
-[data-theme="dark"] .hero-section::after {
+[data-theme="light"] .hero-section::after {
     background:
         radial-gradient(ellipse at center, rgba(0, 196, 200, 0.10) 0%, transparent 55%),
         radial-gradient(ellipse at 30% 70%, rgba(0, 196, 200, 0.07) 0%, transparent 40%);
 }
 
 /* ── DARK HERO h1: cream → gold → cyan gradient (like protocols.html card titles) ── */
-[data-theme="dark"] .hero-content h1 {
+[data-theme="light"] .hero-content h1 {
     background: linear-gradient(135deg, #e8f2f8 0%, #00c4c8 50%, #00C4C8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -6469,14 +6470,14 @@ section[id="scientific"] {
 }
 
 /* ── DARK HERO tagline: cyan (instead of muted gold) ── */
-[data-theme="dark"] .hero-tagline {
+[data-theme="light"] .hero-tagline {
     color: #00C4C8;
     text-shadow: 0 0 12px rgba(0, 196, 200, 0.45);
 }
 
 /* ── BTN-PRIMARY DARK: dark-glass panel with gold neon border ── */
 /* Replaces the plain gold-gradient pill with a biohacking glassmorphism style */
-[data-theme="dark"] .btn-primary {
+[data-theme="light"] .btn-primary {
     background: linear-gradient(135deg, rgba(8, 12, 28, 0.90) 0%, rgba(14, 22, 42, 0.90) 100%);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
@@ -6489,7 +6490,7 @@ section[id="scientific"] {
     text-shadow: 0 0 8px rgba(0, 196, 200, 0.35);
 }
 
-[data-theme="dark"] .btn-primary:hover {
+[data-theme="light"] .btn-primary:hover {
     background: linear-gradient(135deg, rgba(14, 20, 40, 0.96) 0%, rgba(20, 30, 56, 0.96) 100%);
     border-color: rgba(0, 196, 200, 0.80);
     color: #EAC860;
@@ -6502,7 +6503,7 @@ section[id="scientific"] {
     text-shadow: 0 0 14px rgba(0, 196, 200, 0.70);
 }
 
-[data-theme="dark"] .btn-primary:active {
+[data-theme="light"] .btn-primary:active {
     transform: translateY(0) scale(1.01);
     box-shadow:
         0 0 12px rgba(0, 196, 200, 0.28),
@@ -6510,7 +6511,7 @@ section[id="scientific"] {
 }
 
 /* ── BTN-HERO-PRIMARY DARK: cyan-to-gold gradient with pulsing neon glow ── */
-[data-theme="dark"] .btn-hero-primary {
+[data-theme="light"] .btn-hero-primary {
     background: var(--btn-gradient-biohack);
     border: none;
     color: #fff;
@@ -6537,7 +6538,7 @@ section[id="scientific"] {
     }
 }
 
-[data-theme="dark"] .btn-hero-primary:hover {
+[data-theme="light"] .btn-hero-primary:hover {
     background: linear-gradient(135deg, #00D4D8 0%, #00A0BC 45%, #00c4c8 100%);
     transform: translateY(-5px) scale(1.07);
     animation: none;
@@ -6547,18 +6548,18 @@ section[id="scientific"] {
         inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-[data-theme="dark"] .btn-hero-primary:hover::before {
+[data-theme="light"] .btn-hero-primary:hover::before {
     left: 150%;
 }
 
-[data-theme="dark"] .btn-hero-primary:active {
+[data-theme="light"] .btn-hero-primary:active {
     transform: translateY(0) scale(1.01);
     animation: none;
     box-shadow: var(--glow-cyan-sm);
 }
 
 /* ── BTN-PREMIUM DARK: dual-spectrum neon (gold + cyan sweep) ── */
-[data-theme="dark"] .btn-premium {
+[data-theme="light"] .btn-premium {
     background: linear-gradient(135deg, #0D1830 0%, #00c4c8 50%, #00C4C8 100%);
     background-size: 250% 250%;
     background-position: 0% 50%;
@@ -6576,7 +6577,7 @@ section[id="scientific"] {
     100% { background-position: 0%   50%; }
 }
 
-[data-theme="dark"] .btn-premium:hover {
+[data-theme="light"] .btn-premium:hover {
     transform: translateY(-5px) scale(1.06);
     box-shadow:
         0 16px 50px rgba(0, 196, 200, 0.42),
@@ -6585,11 +6586,11 @@ section[id="scientific"] {
 }
 
 /* Sync ripple colour to the new btn styles */
-[data-theme="dark"] .btn-primary .ripple {
+[data-theme="light"] .btn-primary .ripple {
     background: rgba(0, 196, 200, 0.40);
 }
 
-[data-theme="dark"] .btn-hero-primary .ripple {
+[data-theme="light"] .btn-hero-primary .ripple {
     background: rgba(0, 196, 200, 0.40);
 }
 
