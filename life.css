@@ -1230,13 +1230,13 @@ main {
 /* Theme-aware text colors for custom gradients - Dark theme */
 [data-theme] .hero-section.hero-custom-bg .hero-content h1 {
     color: var(--text-primary);
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3), 
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3),
                  0 0 4px rgba(0, 0, 0, 0.15);
 }
 
 [data-theme] .hero-section.hero-custom-bg .hero-content p {
     color: var(--text-secondary);
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.25), 
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.25),
                  0 0 3px rgba(0, 0, 0, 0.12);
 }
 
@@ -1246,6 +1246,7 @@ main {
                  0 0 4px rgba(0, 0, 0, 0.15);
     background: none;
     -webkit-text-fill-color: var(--text-primary);
+
 }
 
 [data-theme] .hero-section.hero-custom-bg .stat-item span {
