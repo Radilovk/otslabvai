@@ -2378,6 +2378,8 @@ function initCursorGlow() {
 }
 
 // ── Hero Particle Canvas ──
+const PARTICLE_COLORS = ['rgba(201,168,76,', 'rgba(212,174,90,', 'rgba(201,118,79,'];
+
 function initHeroParticles() {
     if (window.matchMedia('(max-width: 768px)').matches) return;
     const hero = document.querySelector('.hero-section');
@@ -2401,7 +2403,6 @@ function initHeroParticles() {
 
     const NUM = 55;
     const LINK_DIST = 90;
-    const COLORS = ['rgba(201,168,76,', 'rgba(212,174,90,', 'rgba(201,118,79,'];
 
     for (let i = 0; i < NUM; i++) {
         particles.push({
@@ -2411,7 +2412,7 @@ function initHeroParticles() {
             vx: (Math.random() - 0.5) * 0.35,
             vy: (Math.random() - 0.5) * 0.35,
             op: Math.random() * 0.45 + 0.15,
-            col: COLORS[Math.floor(Math.random() * COLORS.length)]
+            col: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)]
         });
     }
 
@@ -2600,6 +2601,40 @@ function initSectionGlowLines() {
     });
 }
 
+// ── Hero Parallax Effect ──
+// Subtle vertical parallax on the hero background mesh/orbs while scrolling.
+// Uses requestAnimationFrame + passive scroll listener for smooth 60fps.
+function initHeroParallax() {
+    // Skip on mobile (parallax can hurt performance and feel odd)
+    if (window.matchMedia('(max-width: 768px)').matches) return;
+    // Guard against double-init
+    if (window._heroParallaxInit) return;
+    window._heroParallaxInit = true;
+
+    let scrollY = 0;
+    let rafQueued = false;
+
+    const applyParallax = () => {
+        rafQueued = false;
+        // Lazy-query the hero each frame in case the DOM was replaced by JS rendering
+        const hero = document.querySelector('.hero-section');
+        if (!hero) return;
+        // Only animate while hero is visible
+        if (scrollY > hero.offsetTop + hero.offsetHeight) return;
+
+        // Move background meshes at 40% scroll speed (subtle depth)
+        hero.style.setProperty('--parallax-offset', `${scrollY * 0.40}px`);
+    };
+
+    window.addEventListener('scroll', () => {
+        scrollY = window.scrollY;
+        if (!rafQueued) {
+            rafQueued = true;
+            requestAnimationFrame(applyParallax);
+        }
+    }, { passive: true });
+}
+
 // ── Initialize all premium effects ──
 // Some effects use event delegation (safe to call early), others need DOM content.
 let _premiumInitialized = false;
@@ -2610,6 +2645,7 @@ function initPremiumEffects() {
         initCursorGlow();
         initCard3DTilt();
         initMagneticButtons();
+        initHeroParallax();
         _premiumInitialized = true;
     }
 

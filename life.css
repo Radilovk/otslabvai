@@ -7552,3 +7552,26 @@ body.nav-open {
     background: radial-gradient(circle, rgba(0, 196, 200, 0.015), transparent 70%);
 }
 
+/* ======================================================= */
+/*   HERO PARALLAX — background layers scroll at 40% speed */
+/* ======================================================= */
+
+/* Only active on desktop (mobile skips initHeroParallax) */
+@media (min-width: 769px) {
+    .hero-section {
+        --parallax-offset: 0px;
+    }
+
+    /* Parallax: hero background mesh shifts vertically */
+    .hero-section:not([data-bg-image]):not(.hero-custom-bg)::before,
+    .hero-section:not([data-bg-image]):not(.hero-custom-bg)::after {
+        will-change: transform;
+        transform: translateY(var(--parallax-offset));
+    }
+
+    /* Ambient hero orbs (bg-orb children of hero) also parallax */
+    .hero-section > .bg-orbs {
+        will-change: transform;
+        transform: translateY(calc(var(--parallax-offset) * 0.6));
+    }
+}
