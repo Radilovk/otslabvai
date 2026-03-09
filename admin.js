@@ -277,15 +277,21 @@ function renderPageContent() {
         contact: 'Контакти',
     };
     appData.page_content.forEach(component => {
+        const typeLabel = (component.is_hidden && component.type === 'product_category')
+            ? `${componentTypes[component.type] || component.type} 🙈 Скрита`
+            : (componentTypes[component.type] || component.type);
         const item = createListItem({
             id: component.component_id,
-            type: componentTypes[component.type] || component.type,
+            type: typeLabel,
             title: component.title,
             actions: [
                 { label: 'Редактирай', action: 'edit-component', class: 'btn-secondary' },
                 { label: 'Изтрий', action: 'delete-component', class: 'btn-danger' }
             ]
         });
+        if (component.is_hidden && component.type === 'product_category') {
+            item.style.opacity = '0.6';
+        }
         DOM.pageBuilderList.appendChild(item);
     });
     initSortable(DOM.pageBuilderList, appData.page_content);
