@@ -6708,12 +6708,61 @@ section[id="scientific"] {
 /*   Applied after all previous rules for highest priority */
 /* ======================================================= */
 
-/* ── Hide theme toggle everywhere (light-only build) ── */
-.theme-toggle-btn,
-.theme-toggle-mobile,
-#theme-toggle,
-#theme-toggle-mobile {
-    display: none !important;
+/* ── Theme toggle button base (shown in header + mobile nav) ── */
+.theme-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-primary);
+    padding: 0;
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--border-color);
+    border-color: var(--accent);
+    transform: scale(1.08);
+}
+
+.theme-toggle-btn:active {
+    transform: scale(0.96);
+}
+
+/* Icon visibility: in light theme show moon (click → go dark), in dark show sun */
+.theme-toggle-btn .icon-sun,
+.theme-toggle-btn .icon-moon {
+    position: absolute;
+    transition: opacity 0.3s ease, transform 0.4s ease;
+    pointer-events: none;
+}
+
+/* Light mode (default) */
+html:not([data-theme="dark"]) .theme-toggle-btn .icon-moon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+html:not([data-theme="dark"]) .theme-toggle-btn .icon-sun {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.4);
+}
+
+/* Dark mode */
+[data-theme="dark"] .theme-toggle-btn .icon-sun {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+[data-theme="dark"] .theme-toggle-btn .icon-moon {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.4);
 }
 
 /* ── Fix info-card min-width overflow on small screens ── */
@@ -7552,3 +7601,600 @@ body.nav-open {
     background: radial-gradient(circle, rgba(0, 196, 200, 0.015), transparent 70%);
 }
 
+
+/* ======================================================= */
+/*   DARK MODE — [data-theme="dark"]                       */
+/*   Тъмен режим: Биотех нощна естетика                    */
+/*   Deep navy canvas + biotech cyan + metallic gold       */
+/*   All overrides placed AFTER [data-theme] for cascade.  */
+/* ======================================================= */
+
+/* ── 1. Variable overrides ── */
+[data-theme="dark"] {
+    /* Backgrounds */
+    --bg-primary:   #06080E;
+    --bg-secondary: #0D1827;
+    --bg-card:      #0F1E32;
+    --bg-subtle:    #0D1827;
+    --bg-light:     #06080E;
+    --color-light:  #0D1827;
+
+    /* Text */
+    --text-primary:   #E0EEF5;
+    --text-secondary: #8AAFC0;
+    --color-dark:     #E0EEF5;
+    --color-gray:     #8AAFC0;
+    --color-white:    #E0EEF5;
+
+    /* Accent (unchanged — cyan is great on dark) */
+    --accent:              #00C4C8;
+    --accent-rgb:          0, 196, 200;
+    --accent-secondary:    #D4A843;
+    --accent-secondary-rgb: 212, 168, 67;
+    --color-primary:       #00C4C8;
+    --color-secondary:     #00C4C8;
+    --note-color:          #00C4C8;
+
+    /* Borders / Shadows */
+    --border-color:    rgba(0, 196, 200, 0.22);
+    --border-glow:     rgba(0, 196, 200, 0.22);
+    --shadow-color:    rgba(0, 0, 0, 0.55);
+    --shadow-glow:     0 4px 24px rgba(0, 0, 0, 0.50);
+    --box-shadow:      0 4px 24px rgba(0, 0, 0, 0.50);
+    --spotlight-color: rgba(0, 196, 200, 0.10);
+
+    /* Skeleton */
+    --skeleton-bg:        #0F1E32;
+    --skeleton-highlight: #152438;
+
+    /* Header */
+    --header-bg:              rgba(6, 8, 14, 0.96);
+    --header-gradient-start:  rgba(6, 8, 14, 0.98);
+    --header-gradient-end:    rgba(10, 20, 35, 0.98);
+    --header-border:          rgba(0, 196, 200, 0.20);
+    --header-border-scrolled: rgba(0, 196, 200, 0.38);
+    --header-scrolled-bg:     rgba(6, 8, 14, 0.99);
+    --overlay-bg:             rgba(0, 0, 0, 0.80);
+
+    /* Hero */
+    --hero-bg-start:  #06080E;
+    --hero-bg-end:    #0D1827;
+    --theme-gradient: linear-gradient(155deg, #06080E 0%, #0D1827 100%);
+
+    /* Glow — more vivid on dark bg */
+    --glow-primary-sm: 0 4px 16px rgba(0, 196, 200, 0.40);
+    --glow-primary-md: 0 8px 28px rgba(0, 196, 200, 0.50);
+    --glow-primary-lg: 0 12px 40px rgba(0, 196, 200, 0.60), 0 0 60px rgba(0, 196, 200, 0.28);
+    --glow-cta-sm:     0 4px 16px rgba(0, 196, 200, 0.40);
+    --glow-cta-md:     0 8px 28px rgba(0, 196, 200, 0.50);
+    --glow-cta-lg:     0 12px 40px rgba(0, 196, 200, 0.60), 0 0 60px rgba(0, 196, 200, 0.28);
+    --neon-primary:    0 0 8px rgba(0, 196, 200, 0.75), 0 0 24px rgba(0, 196, 200, 0.55);
+
+    /* Glass */
+    --glass-bg-light:   rgba(13, 24, 39, 0.85);
+    --glass-bg-dark:    rgba(6, 8, 14, 0.92);
+    --glass-border-light: rgba(0, 196, 200, 0.25);
+    --glass-border-dark:  rgba(0, 196, 200, 0.28);
+
+    /* Button gradients — keep cyan/gold on dark */
+    --btn-gradient-primary:       linear-gradient(135deg, #00c4c8 0%, #00a8ac 100%);
+    --btn-gradient-primary-hover: linear-gradient(135deg, #00d4d8 0%, #00c4c8 100%);
+    --btn-gradient-cta:           linear-gradient(135deg, #00c4c8 0%, #00a8ac 100%);
+    --btn-gradient-premium:       linear-gradient(135deg, #d4a843 0%, #c49030 100%);
+    --btn-gradient-biohack:       linear-gradient(135deg, #00C4C8 0%, #0090A8 45%, #00c4c8 100%);
+
+    color-scheme: dark;
+}
+
+/* ── 2. Global base ── */
+[data-theme="dark"] body {
+    background-color: #06080E;
+    color: #E0EEF5;
+}
+
+/* ── 3. Header ── */
+[data-theme="dark"] .main-header {
+    background: rgba(6, 8, 14, 0.96);
+    border-bottom: 1px solid rgba(0, 196, 200, 0.18);
+}
+
+[data-theme="dark"] .main-header.scrolled {
+    background: rgba(6, 8, 14, 0.99);
+    border-bottom-color: rgba(0, 196, 200, 0.32);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.60);
+}
+
+[data-theme="dark"] .brand-name {
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .brand-slogan {
+    color: #8AAFC0;
+}
+
+/* ── 4. Promo banner ── */
+[data-theme="dark"] .promo-banner {
+    background: #0D1827;
+    color: #E0EEF5;
+    border-bottom: 1px solid rgba(0, 196, 200, 0.20);
+}
+
+[data-theme="dark"] .promo-banner svg {
+    color: #00C4C8;
+    stroke: #00C4C8;
+}
+
+/* ── 5. Navigation ── */
+[data-theme="dark"] .nav-links {
+    background: #0D1827;
+    border-left-color: rgba(0, 196, 200, 0.18);
+}
+
+[data-theme="dark"] .nav-links a {
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .nav-links a:hover {
+    color: #00C4C8;
+}
+
+[data-theme="dark"] .nav-dropdown-toggle {
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .nav-dropdown-menu {
+    background: #0D1827;
+    border-color: rgba(0, 196, 200, 0.20);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.60);
+}
+
+[data-theme="dark"] .nav-dropdown-menu li a {
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .nav-dropdown-menu li a:hover {
+    background: rgba(0, 196, 200, 0.10);
+    color: #00C4C8;
+}
+
+/* ── 6. Hero section ── */
+[data-theme="dark"] .hero-section:not([data-bg-image]):not(.hero-custom-bg) {
+    background: linear-gradient(155deg, #06080E 0%, #0D1827 100%);
+}
+
+[data-theme="dark"] .hero-content h1 {
+    color: #E0EEF5;
+    /* Remove gradient text clip in dark to ensure readability */
+    -webkit-text-fill-color: unset;
+    background: none;
+}
+
+[data-theme="dark"] .hero-tagline {
+    color: #8AAFC0;
+    text-shadow: none;
+}
+
+[data-theme="dark"] .stat-item {
+    background: rgba(15, 30, 50, 0.80);
+    border-color: rgba(0, 196, 200, 0.25);
+}
+
+[data-theme="dark"] .stat-item strong {
+    color: #00C4C8;
+}
+
+[data-theme="dark"] .stat-item span {
+    color: #8AAFC0;
+}
+
+[data-theme="dark"] .trust-badge {
+    background: rgba(15, 30, 50, 0.80);
+    border-color: rgba(0, 196, 200, 0.25);
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .trust-badge:hover {
+    background: rgba(0, 196, 200, 0.10);
+    border-color: rgba(0, 196, 200, 0.50);
+}
+
+/* ── 7. Buttons — already good via variables, fix specific overrides ── */
+[data-theme="dark"] .btn-primary {
+    background: var(--btn-gradient-primary);
+    color: #ffffff;
+    border: none;
+    box-shadow: var(--glow-primary-sm);
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background: var(--btn-gradient-primary-hover);
+    box-shadow: var(--glow-primary-md);
+    transform: translateY(-2px) scale(1.02);
+}
+
+[data-theme="dark"] .btn-hero-secondary {
+    background: transparent;
+    border-color: rgba(0, 196, 200, 0.50);
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .btn-hero-secondary:hover {
+    background: rgba(0, 196, 200, 0.12);
+    border-color: #00C4C8;
+    color: #00C4C8;
+}
+
+[data-theme="dark"] .btn-primary .ripple {
+    background: rgba(0, 196, 200, 0.40);
+}
+
+[data-theme="dark"] .btn-hero-primary .ripple {
+    background: rgba(255, 255, 255, 0.30);
+}
+
+/* ── 8. Product cards ── */
+[data-theme="dark"] .product-card {
+    background: #0F1E32;
+    border-color: rgba(0, 196, 200, 0.18);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .product-card:hover {
+    border-color: rgba(0, 196, 200, 0.50);
+    box-shadow: 0 12px 40px rgba(0, 196, 200, 0.20), 0 4px 16px rgba(0, 0, 0, 0.50);
+    background: #112040;
+}
+
+[data-theme="dark"] .product-title h3 {
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .product-brand,
+[data-theme="dark"] .product-short-description,
+[data-theme="dark"] .product-description {
+    color: #8AAFC0;
+}
+
+[data-theme="dark"] .product-price {
+    color: #D4A843;
+}
+
+[data-theme="dark"] .product-price .original-price {
+    color: #5A7A90;
+}
+
+[data-theme="dark"] .price-badge {
+    background: rgba(212, 168, 67, 0.15);
+    border-color: rgba(212, 168, 67, 0.35);
+    color: #D4A843;
+}
+
+/* ── 9. Category sections ── */
+[data-theme="dark"] .category-section {
+    background: #06080E;
+}
+
+[data-theme="dark"] .category-section:nth-child(even) {
+    background: #0D1827;
+}
+
+[data-theme="dark"] .category-title {
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .category-header {
+    border-bottom-color: rgba(0, 196, 200, 0.18);
+}
+
+[data-theme="dark"] .category-header h2,
+[data-theme="dark"] .category-header h3 {
+    color: #E0EEF5;
+}
+
+/* ── 10. Info card sections ── */
+[data-theme="dark"] .info-card-section {
+    background: #0D1827;
+}
+
+[data-theme="dark"] .info-card-content {
+    background: #0F1E32;
+    border-color: rgba(0, 196, 200, 0.22);
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .info-card-content h2 {
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .info-card-content p,
+[data-theme="dark"] .info-card-content li {
+    color: #8AAFC0;
+}
+
+/* ── 11. Hex feature cards ── */
+[data-theme="dark"] .hex-feature-card {
+    background: #0F1E32;
+    border-color: rgba(0, 196, 200, 0.22);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.40);
+}
+
+[data-theme="dark"] .hex-feature-card:hover {
+    border-color: rgba(0, 196, 200, 0.50);
+    box-shadow: 0 10px 36px rgba(0, 196, 200, 0.18);
+    background: #112040;
+}
+
+[data-theme="dark"] .hex-feature-card h3 {
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .hex-feature-card p {
+    color: #8AAFC0;
+}
+
+/* ── 12. Product filter bar ── */
+[data-theme="dark"] .product-filter-bar {
+    background: #0F1E32;
+    border-color: rgba(0, 196, 200, 0.18);
+}
+
+[data-theme="dark"] .filter-select {
+    background: #0D1827;
+    border-color: rgba(0, 196, 200, 0.22);
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .filter-select:focus {
+    border-color: #00C4C8;
+    box-shadow: 0 0 0 3px rgba(0, 196, 200, 0.15);
+}
+
+/* ── 13. Search dropdown ── */
+[data-theme="dark"] .search-dropdown {
+    background: #0D1827;
+    border-color: rgba(0, 196, 200, 0.22);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.70);
+}
+
+[data-theme="dark"] .search-input {
+    background: #0F1E32;
+    color: #E0EEF5;
+    border-color: rgba(0, 196, 200, 0.22);
+}
+
+[data-theme="dark"] .search-input::placeholder {
+    color: #5A7A90;
+}
+
+[data-theme="dark"] .search-result-item {
+    border-bottom-color: rgba(0, 196, 200, 0.10);
+}
+
+[data-theme="dark"] .search-result-item:hover {
+    background: rgba(0, 196, 200, 0.08);
+}
+
+[data-theme="dark"] .search-result-name {
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .search-result-brand {
+    color: #8AAFC0;
+}
+
+/* ── 14. Footer ── */
+[data-theme="dark"] .main-footer {
+    background: #0D1827;
+    border-top-color: rgba(0, 196, 200, 0.18);
+    color: #8AAFC0;
+}
+
+[data-theme="dark"] .footer-heading {
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .footer-links a {
+    color: #8AAFC0;
+}
+
+[data-theme="dark"] .footer-links a:hover {
+    color: #00C4C8;
+}
+
+[data-theme="dark"] .footer-divider {
+    border-color: rgba(0, 196, 200, 0.15);
+}
+
+/* ── 15. Exit-intent modal ── */
+[data-theme="dark"] .exit-offer {
+    background: #0F1E32;
+    border-color: rgba(0, 196, 200, 0.28);
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .exit-offer h2,
+[data-theme="dark"] .exit-offer h3 {
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .exit-offer p {
+    color: #8AAFC0;
+}
+
+/* ── 16. Comparison & guarantee sections ── */
+[data-theme="dark"] .comparison-section,
+[data-theme="dark"] .guarantee-section {
+    background: #0D1827;
+}
+
+[data-theme="dark"] .comparison-header {
+    background: #0F1E32;
+    border-color: rgba(0, 196, 200, 0.22);
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .comparison-row {
+    border-bottom-color: rgba(0, 196, 200, 0.10);
+    color: #E0EEF5;
+}
+
+[data-theme="dark"] .comparison-check {
+    color: #00C4C8;
+}
+
+[data-theme="dark"] .guarantee-card {
+    background: #0F1E32;
+    border-color: rgba(0, 196, 200, 0.22);
+}
+
+[data-theme="dark"] .guarantee-card h3,
+[data-theme="dark"] .guarantee-card p {
+    color: #E0EEF5;
+}
+
+/* ── 17. Glass panels ── */
+[data-theme="dark"] .glass-panel {
+    background: rgba(13, 24, 39, 0.85);
+    border-color: rgba(0, 196, 200, 0.22);
+}
+
+/* ── 18. Scroll progress bar — brighter in dark ── */
+[data-theme="dark"] .scroll-progress {
+    background: linear-gradient(90deg, #00C4C8 0%, #D4A843 100%);
+    box-shadow: 0 0 8px rgba(0, 196, 200, 0.60);
+}
+
+/* ── 19. Ambient orbs — more visible on dark ── */
+[data-theme="dark"] .bg-orb-1 {
+    background: radial-gradient(circle, rgba(0, 196, 200, 0.12), transparent 70%);
+}
+
+[data-theme="dark"] .bg-orb-2 {
+    background: radial-gradient(circle, rgba(212, 168, 67, 0.07), transparent 70%);
+}
+
+[data-theme="dark"] .bg-orb-3 {
+    background: radial-gradient(circle, rgba(0, 196, 200, 0.08), transparent 70%);
+}
+
+/* ── 20. Cursor glow — more vivid on dark ── */
+[data-theme="dark"] .cursor-glow {
+    background: radial-gradient(
+        circle,
+        rgba(0, 196, 200, 0.14) 0%,
+        rgba(0, 196, 200, 0.07) 40%,
+        transparent 70%
+    );
+    mix-blend-mode: screen;
+}
+
+/* ── 21. Section glow lines ── */
+[data-theme="dark"] .section-glow-line {
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 196, 200, 0.30) 50%, transparent 100%);
+    box-shadow: 0 0 20px rgba(0, 196, 200, 0.20);
+}
+
+/* ── 22. Skeleton loading in dark ── */
+[data-theme="dark"] .skeleton {
+    background: linear-gradient(90deg, #0F1E32 25%, #152438 50%, #0F1E32 75%);
+    background-size: 200% 100%;
+}
+
+/* ── 23. Ingredient cards (dark flip cards) ── */
+[data-theme="dark"] .ingredient-card-mini,
+[data-theme="dark"] .ingredient-card-mini .card-front,
+[data-theme="dark"] .ingredient-card-mini .card-back {
+    background: #0F1E32;
+    border-color: rgba(0, 196, 200, 0.22);
+    color: #E0EEF5;
+}
+
+/* ── 24. Hero particles — cyan palette in dark mode ── */
+[data-theme="dark"] #hero-particles {
+    opacity: 0.7;
+}
+
+/* ── 25. Mobile nav theme toggle label ── */
+[data-theme="dark"] .theme-toggle-mobile-label {
+    color: #8AAFC0;
+}
+
+/* ── 26. Cart icon (fixed mobile) dark ── */
+[data-theme="dark"] .cart-icon-fixed-mobile {
+    background: #0F1E32;
+    border-color: rgba(0, 196, 200, 0.30);
+    color: #00C4C8;
+}
+
+/* ── 27. Hero features section ── */
+[data-theme="dark"] .hero-features-section {
+    background: #0D1827;
+}
+
+/* ── 28. Effect bars in dark ── */
+[data-theme="dark"] .effect-bar {
+    background: linear-gradient(90deg, #00c4c8 0%, #00a8ac 100%);
+}
+
+[data-theme="dark"] .effect-bar-container {
+    background: rgba(0, 196, 200, 0.15);
+}
+
+/* ── 30. Nav overlay and menu toggle in dark ── */
+[data-theme="dark"] .nav-overlay {
+    background: rgba(0, 0, 0, 0.80);
+}
+
+[data-theme="dark"] .menu-toggle span {
+    background: #E0EEF5;
+}
+
+/* ── 31. Back to top button ── */
+[data-theme="dark"] #back-to-top {
+    background: #0F1E32;
+    border-color: rgba(0, 196, 200, 0.30);
+    color: #00C4C8;
+}
+
+[data-theme="dark"] #back-to-top:hover {
+    background: #00C4C8;
+    color: #06080E;
+}
+
+/* ── 32. Toast notifications ── */
+[data-theme="dark"] .toast {
+    background: #0F1E32;
+    border-color: rgba(0, 196, 200, 0.30);
+    color: #E0EEF5;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.60);
+}
+
+/* ── 33. Theme toggle in mobile nav ── */
+[data-theme="dark"] .nav-links .theme-toggle-mobile {
+    border-top-color: rgba(0, 196, 200, 0.18);
+}
+
+/* ======================================================= */
+/*   HERO PARALLAX — background layers scroll at 40% speed */
+/* ======================================================= */
+
+/* Only active on desktop (mobile skips initHeroParallax) */
+@media (min-width: 769px) {
+    .hero-section {
+        --parallax-offset: 0px;
+    }
+
+    /* Parallax: hero background mesh shifts vertically */
+    .hero-section:not([data-bg-image]):not(.hero-custom-bg)::before,
+    .hero-section:not([data-bg-image]):not(.hero-custom-bg)::after {
+        will-change: transform;
+        transform: translateY(var(--parallax-offset));
+    }
+
+    /* Ambient hero orbs (bg-orb children of hero) also parallax */
+    .hero-section > .bg-orbs {
+        will-change: transform;
+        transform: translateY(calc(var(--parallax-offset) * 0.6));
+    }
+}

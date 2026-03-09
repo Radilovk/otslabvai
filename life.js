@@ -1548,9 +1548,62 @@ function initializeGlobalScripts() {
         });
     }
 
-    // --- Theme: light only ---
-    // This is a light-theme-only build; theme is always light.
-    document.documentElement.setAttribute('data-theme', 'light');
+    // --- Theme toggle: dark / light mode with localStorage + system preference ---
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        try { localStorage.setItem('lifeTheme', theme); } catch(e) {}
+        const label = theme === 'dark' ? 'Светла тема' : 'Тъмна тема';
+        document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+            btn.setAttribute('aria-label', label);
+        });
+        // Update PWA theme-color meta
+        const metaTheme = document.getElementById('meta-theme-color');
+        if (metaTheme) {
+            metaTheme.setAttribute('content', theme === 'dark' ? '#06080E' : '#00C4C8');
+        }
+        // Update logo for current theme
+        updateLogoForTheme();
+        // Adjust hero particles colour palette for theme
+        _adjustParticlesForTheme(theme);
+    }
+
+    // If theme was already set by the inline script in <head>, honour it;
+    // otherwise fall back to localStorage / system preference.
+    (function initTheme() {
+        const inlineTheme = document.documentElement.getAttribute('data-theme');
+        // Inline script already ran and set a value — just sync UI
+        if (inlineTheme) {
+            applyTheme(inlineTheme);
+        } else {
+            try {
+                const saved = localStorage.getItem('lifeTheme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+            } catch(e) {
+                applyTheme('light');
+            }
+        }
+    })();
+
+    // Listen for clicks on any .theme-toggle-btn (header + mobile nav)
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.theme-toggle-btn')) {
+            const current = document.documentElement.getAttribute('data-theme');
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        }
+    });
+
+    // Also react to OS-level preference changes
+    try {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            // Only auto-switch if user hasn't explicitly set a preference
+            let hasExplicitPref = false;
+            try { hasExplicitPref = !!localStorage.getItem('lifeTheme'); } catch(_) {}
+            if (!hasExplicitPref) {
+                applyTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+    } catch(e) {}
 
     updateCartCount();
 }
@@ -2378,6 +2431,23 @@ function initCursorGlow() {
 }
 
 // ── Hero Particle Canvas ──
+// particleColors is module-level so _adjustParticlesForTheme() can update it live.
+let _particleColors = ['rgba(201,168,76,', 'rgba(212,174,90,', 'rgba(201,118,79,'];
+const _PARTICLE_COLORS_LIGHT = ['rgba(201,168,76,', 'rgba(212,174,90,', 'rgba(201,118,79,'];
+const _PARTICLE_COLORS_DARK  = ['rgba(0,196,200,',  'rgba(0,168,172,',  'rgba(0,148,164,'];
+// Holds a reference to live particles so colors can be updated on theme change
+let _heroParticles = null;
+
+function _adjustParticlesForTheme(theme) {
+    _particleColors = (theme === 'dark') ? _PARTICLE_COLORS_DARK : _PARTICLE_COLORS_LIGHT;
+    // Update already-created particles so the colour change is instant
+    if (_heroParticles) {
+        _heroParticles.forEach((p, i) => {
+            p.col = _particleColors[i % _particleColors.length];
+        });
+    }
+}
+
 function initHeroParticles() {
     if (window.matchMedia('(max-width: 768px)').matches) return;
     const hero = document.querySelector('.hero-section');
@@ -2401,7 +2471,6 @@ function initHeroParticles() {
 
     const NUM = 55;
     const LINK_DIST = 90;
-    const COLORS = ['rgba(201,168,76,', 'rgba(212,174,90,', 'rgba(201,118,79,'];
 
     for (let i = 0; i < NUM; i++) {
         particles.push({
@@ -2411,9 +2480,11 @@ function initHeroParticles() {
             vx: (Math.random() - 0.5) * 0.35,
             vy: (Math.random() - 0.5) * 0.35,
             op: Math.random() * 0.45 + 0.15,
-            col: COLORS[Math.floor(Math.random() * COLORS.length)]
+            col: _particleColors[i % _particleColors.length]
         });
     }
+    // Register particles globally for live theme-colour updates
+    _heroParticles = particles;
 
     let animRunning = true;
     const draw = () => {
@@ -2442,7 +2513,7 @@ function initHeroParticles() {
                     ctx.beginPath();
                     ctx.moveTo(p.x, p.y);
                     ctx.lineTo(q.x, q.y);
-                    ctx.strokeStyle = `rgba(201,168,76,${alpha})`;
+                    ctx.strokeStyle = _particleColors[0] + alpha + ')';
                     ctx.lineWidth = 0.6;
                     ctx.stroke();
                 }
@@ -2600,6 +2671,40 @@ function initSectionGlowLines() {
     });
 }
 
+// ── Hero Parallax Effect ──
+// Subtle vertical parallax on the hero background mesh/orbs while scrolling.
+// Uses requestAnimationFrame + passive scroll listener for smooth 60fps.
+function initHeroParallax() {
+    // Skip on mobile (parallax can hurt performance and feel odd)
+    if (window.matchMedia('(max-width: 768px)').matches) return;
+    // Guard against double-init
+    if (window._heroParallaxInit) return;
+    window._heroParallaxInit = true;
+
+    let scrollY = 0;
+    let rafQueued = false;
+
+    const applyParallax = () => {
+        rafQueued = false;
+        // Lazy-query the hero each frame in case the DOM was replaced by JS rendering
+        const hero = document.querySelector('.hero-section');
+        if (!hero) return;
+        // Only animate while hero is visible
+        if (scrollY > hero.offsetTop + hero.offsetHeight) return;
+
+        // Move background meshes at 40% scroll speed (subtle depth)
+        hero.style.setProperty('--parallax-offset', `${scrollY * 0.40}px`);
+    };
+
+    window.addEventListener('scroll', () => {
+        scrollY = window.scrollY;
+        if (!rafQueued) {
+            rafQueued = true;
+            requestAnimationFrame(applyParallax);
+        }
+    }, { passive: true });
+}
+
 // ── Initialize all premium effects ──
 // Some effects use event delegation (safe to call early), others need DOM content.
 let _premiumInitialized = false;
@@ -2610,6 +2715,7 @@ function initPremiumEffects() {
         initCursorGlow();
         initCard3DTilt();
         initMagneticButtons();
+        initHeroParallax();
         _premiumInitialized = true;
     }
 
