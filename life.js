@@ -1404,6 +1404,31 @@ function initializeGlobalScripts() {
         }
     });
 
+    // Escape key closes mobile menu
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && DOM.navLinksContainer.classList.contains('active')) {
+            closeMenu();
+        }
+    });
+
+    // Swipe left to close mobile menu
+    (() => {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        DOM.navLinksContainer.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        DOM.navLinksContainer.addEventListener('touchend', (e) => {
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            // Swipe right-to-left (dx < -60) and mostly horizontal
+            if (dx < -60 && Math.abs(dy) < Math.abs(dx) * 0.6) {
+                closeMenu();
+            }
+        }, { passive: true });
+    })();
+
     // --- Quest Modal ---
     // Only initialize quest modal if elements exist
     if (DOM.questModal.backdrop && DOM.questModal.container && DOM.questModal.iframe) {
@@ -1816,7 +1841,25 @@ function initExitIntentModal() {
             modal.classList.add('active');
         }
     }, EXIT_MODAL_DELAY_MS);
-    
+
+    // Mobile: trigger when user scrolls past 70% of the page then scrolls back up
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    if (isTouchDevice) {
+        let maxScrollReached = 0;
+        const mobileScrollHandler = debounce(() => {
+            const scrollPct = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight;
+            if (scrollPct > maxScrollReached) {
+                maxScrollReached = scrollPct;
+            }
+            // User scrolled to 70%+ then scrolled back to top 20% — likely leaving
+            if (maxScrollReached > 0.70 && scrollPct < 0.20 && !hasShown) {
+                modal.classList.add('active');
+                hasShown = true;
+            }
+        }, 200);
+        window.addEventListener('scroll', mobileScrollHandler, { passive: true });
+    }
+
     // Keyboard escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('active')) {
