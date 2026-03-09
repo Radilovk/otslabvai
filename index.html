@@ -433,9 +433,11 @@
                 var footer = document.querySelector('.main-footer');
 
                 function updatePetalFrame() {
-                    var endScroll = footer
+                    var totalScroll = footer
                         ? Math.max(1, footer.offsetTop - window.innerHeight)
                         : Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+                    // Animation completes at 50% of the total scroll distance
+                    var endScroll = totalScroll * 0.5;
                     var progress = Math.min(1, Math.max(0, window.scrollY / endScroll));
                     var dur = video.duration;
                     if (dur > 0 && isFinite(dur)) {
