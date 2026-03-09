@@ -565,6 +565,17 @@ img {
     opacity: 0.1;
 }
 
+/* ── Petal animation container (replaces logo image in header) ── */
+#petal-animation-container {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    display: block;
+    overflow: hidden;
+    background: transparent;
+    object-fit: contain;
+}
+
 .logo-container .brand-name { 
     font-size: 1.2rem; 
     font-weight: 700; 

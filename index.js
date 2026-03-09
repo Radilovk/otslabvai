@@ -741,7 +741,10 @@ function renderHeader(settings, navigation, pageContent) {
     updateLogoForTheme();
     
     DOM.header.logoImg.alt = `${settings.site_name} Logo`;
-    DOM.header.logoImg.style.display = 'block'; // Show the logo
+    // Show the logo image only when the petal animation container is absent
+    if (!document.getElementById('petal-animation-container')) {
+        DOM.header.logoImg.style.display = 'block'; // Show the logo
+    }
     DOM.header.brandName.textContent = settings.site_name;
     DOM.header.brandSlogan.textContent = settings.site_slogan;
 
