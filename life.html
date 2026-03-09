@@ -35,9 +35,6 @@
 
     <link rel="stylesheet" href="life.css">
 
-    <!-- Ruffle: open-source Flash emulator (WASM) for petal animation -->
-    <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
-
 </head>
 <body>
     <!-- Skip to main content - accessibility -->
@@ -50,8 +47,9 @@
     <header class="main-header">
         <div class="header-container">
             <a href="#" class="logo-container" id="header-logo-link">
-                <!-- Petal SWF animation in place of the logo, synchronized with page scroll -->
-                <div id="petal-animation-container" aria-label="Лого анимация"></div>
+                <!-- Petal WebM animation in place of the logo, synchronized with page scroll -->
+                <video id="petal-animation-container" src="petal_20260309_222905.webm"
+                       muted playsinline preload="auto" aria-label="Лого анимация"></video>
                 <!-- Logo image kept in DOM for JS compatibility but hidden when animation is active -->
                 <img src="https://radilovk.github.io/face/assets/logoblack.png" alt="Лого" id="header-logo-img" style="display: none;">
                 <div>
@@ -2926,52 +2924,46 @@ function initPremiumEffects() {
 // Early init for event-delegation effects (cursor, tilt, magnetic)
 initPremiumEffects();
 
-// ── Petal Animation — scroll-synchronized SWF in logo position ──
+// ── Petal Animation — scroll-synchronized WebM video in logo position ──
 function initPetalScrollAnimation() {
-    const container = document.getElementById('petal-animation-container');
-    if (!container) return;
+    const video = document.getElementById('petal-animation-container');
+    if (!video || video.tagName !== 'VIDEO') return;
 
     function showLogoFallback() {
-        container.style.display = 'none';
+        video.style.display = 'none';
         const logoImg = document.getElementById('header-logo-img');
         if (logoImg) logoImg.style.display = 'block';
     }
 
-    function tryInit() {
-        if (typeof window.RufflePlayer === 'undefined') {
-            setTimeout(tryInit, 200);
-            return;
-        }
-        const ruffle = window.RufflePlayer.newest();
-        const player = ruffle.createPlayer();
-        player.style.width = '100%';
-        player.style.height = '100%';
-        container.appendChild(player);
+    video.addEventListener('error', function () {
+        console.warn('Petal animation failed to load, falling back to logo image');
+        showLogoFallback();
+    });
 
-        player.load({ url: 'petal_20260309_222908.swf', autoplay: 'off' }).then(function () {
-            player.pause();
-            const footer = document.querySelector('.main-footer');
+    function setup() {
+        video.pause();
+        const footer = document.querySelector('.main-footer');
 
-            function updatePetalFrame() {
-                const endScroll = footer
-                    ? Math.max(1, footer.offsetTop - window.innerHeight)
-                    : Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-                const progress = Math.min(1, Math.max(0, window.scrollY / endScroll));
-                const dur = (player.metadata && player.metadata.duration) || 0;
-                if (dur > 0) {
-                    try { player.seek(progress * dur); } catch (e) { console.warn('Petal seek error:', e); }
-                }
+        function updatePetalFrame() {
+            const endScroll = footer
+                ? Math.max(1, footer.offsetTop - window.innerHeight)
+                : Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+            const progress = Math.min(1, Math.max(0, window.scrollY / endScroll));
+            const dur = video.duration;
+            if (dur > 0 && isFinite(dur)) {
+                video.currentTime = progress * dur;
             }
+        }
 
-            window.addEventListener('scroll', updatePetalFrame, { passive: true });
-            updatePetalFrame();
-        }).catch(function (err) {
-            console.warn('Petal animation failed to load, falling back to logo image:', err);
-            showLogoFallback();
-        });
+        window.addEventListener('scroll', updatePetalFrame, { passive: true });
+        updatePetalFrame();
     }
 
-    tryInit();
+    if (video.readyState >= 1) {
+        setup();
+    } else {
+        video.addEventListener('loadedmetadata', setup, { once: true });
+    }
 }
 initPetalScrollAnimation();
 
