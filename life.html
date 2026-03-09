@@ -35,6 +35,9 @@
 
     <link rel="stylesheet" href="life.css">
 
+    <!-- Ruffle: open-source Flash emulator (WASM) for petal animation -->
+    <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+
 </head>
 <body>
     <!-- Skip to main content - accessibility -->
@@ -47,8 +50,10 @@
     <header class="main-header">
         <div class="header-container">
             <a href="#" class="logo-container" id="header-logo-link">
-                <!-- Initial logo set to light theme variant for instant display, will be updated by JS based on theme -->
-                <img src="https://radilovk.github.io/face/assets/logoblack.png" alt="Лого" id="header-logo-img" style="display: block;">
+                <!-- Petal SWF animation in place of the logo, synchronized with page scroll -->
+                <div id="petal-animation-container" aria-label="Лого анимация"></div>
+                <!-- Logo image kept in DOM for JS compatibility but hidden when animation is active -->
+                <img src="https://radilovk.github.io/face/assets/logoblack.png" alt="Лого" id="header-logo-img" style="display: none;">
                 <div>
                     <span class="brand-name" id="header-brand-name">LIFE BioHack</span>
                     <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
@@ -1290,7 +1295,10 @@ function renderHeader(settings, navigation, pageContent) {
     updateLogoForTheme();
     
     DOM.header.logoImg.alt = `${settings.site_name} Logo`;
-    DOM.header.logoImg.style.display = 'block'; // Show the logo
+    // Show the logo image only when the petal animation container is absent
+    if (!document.getElementById('petal-animation-container')) {
+        DOM.header.logoImg.style.display = 'block';
+    }
     DOM.header.brandName.textContent = settings.site_name;
     DOM.header.brandSlogan.textContent = settings.site_slogan;
 
@@ -2917,6 +2925,55 @@ function initPremiumEffects() {
 
 // Early init for event-delegation effects (cursor, tilt, magnetic)
 initPremiumEffects();
+
+// ── Petal Animation — scroll-synchronized SWF in logo position ──
+function initPetalScrollAnimation() {
+    const container = document.getElementById('petal-animation-container');
+    if (!container) return;
+
+    function showLogoFallback() {
+        container.style.display = 'none';
+        const logoImg = document.getElementById('header-logo-img');
+        if (logoImg) logoImg.style.display = 'block';
+    }
+
+    function tryInit() {
+        if (typeof window.RufflePlayer === 'undefined') {
+            setTimeout(tryInit, 200);
+            return;
+        }
+        const ruffle = window.RufflePlayer.newest();
+        const player = ruffle.createPlayer();
+        player.style.width = '100%';
+        player.style.height = '100%';
+        container.appendChild(player);
+
+        player.load({ url: 'petal_20260309_222908.swf', autoplay: 'off' }).then(function () {
+            player.pause();
+            const footer = document.querySelector('.main-footer');
+
+            function updatePetalFrame() {
+                const endScroll = footer
+                    ? Math.max(1, footer.offsetTop - window.innerHeight)
+                    : Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+                const progress = Math.min(1, Math.max(0, window.scrollY / endScroll));
+                const dur = (player.metadata && player.metadata.duration) || 0;
+                if (dur > 0) {
+                    try { player.seek(progress * dur); } catch (e) { console.warn('Petal seek error:', e); }
+                }
+            }
+
+            window.addEventListener('scroll', updatePetalFrame, { passive: true });
+            updatePetalFrame();
+        }).catch(function (err) {
+            console.warn('Petal animation failed to load, falling back to logo image:', err);
+            showLogoFallback();
+        });
+    }
+
+    tryInit();
+}
+initPetalScrollAnimation();
 
 // Старт на приложението
 main();
