@@ -1548,62 +1548,9 @@ function initializeGlobalScripts() {
         });
     }
 
-    // --- Theme toggle: dark / light mode with localStorage + system preference ---
-    function applyTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        try { localStorage.setItem('lifeTheme', theme); } catch(e) {}
-        const label = theme === 'dark' ? 'Светла тема' : 'Тъмна тема';
-        document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
-            btn.setAttribute('aria-label', label);
-        });
-        // Update PWA theme-color meta
-        const metaTheme = document.getElementById('meta-theme-color');
-        if (metaTheme) {
-            metaTheme.setAttribute('content', theme === 'dark' ? '#06080E' : '#00C4C8');
-        }
-        // Update logo for current theme
-        updateLogoForTheme();
-        // Adjust hero particles colour palette for theme
-        _adjustParticlesForTheme(theme);
-    }
-
-    // If theme was already set by the inline script in <head>, honour it;
-    // otherwise fall back to localStorage / system preference.
-    (function initTheme() {
-        const inlineTheme = document.documentElement.getAttribute('data-theme');
-        // Inline script already ran and set a value — just sync UI
-        if (inlineTheme) {
-            applyTheme(inlineTheme);
-        } else {
-            try {
-                const saved = localStorage.getItem('lifeTheme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                applyTheme(saved || (prefersDark ? 'dark' : 'light'));
-            } catch(e) {
-                applyTheme('light');
-            }
-        }
-    })();
-
-    // Listen for clicks on any .theme-toggle-btn (header + mobile nav)
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('.theme-toggle-btn')) {
-            const current = document.documentElement.getAttribute('data-theme');
-            applyTheme(current === 'dark' ? 'light' : 'dark');
-        }
-    });
-
-    // Also react to OS-level preference changes
-    try {
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            // Only auto-switch if user hasn't explicitly set a preference
-            let hasExplicitPref = false;
-            try { hasExplicitPref = !!localStorage.getItem('lifeTheme'); } catch(_) {}
-            if (!hasExplicitPref) {
-                applyTheme(e.matches ? 'dark' : 'light');
-            }
-        });
-    } catch(e) {}
+    // --- Theme: light only ---
+    // This is a light-theme-only build; theme is always light.
+    document.documentElement.setAttribute('data-theme', 'light');
 
     updateCartCount();
 }
@@ -2431,22 +2378,7 @@ function initCursorGlow() {
 }
 
 // ── Hero Particle Canvas ──
-// particleColors is module-level so _adjustParticlesForTheme() can update it live.
-let _particleColors = ['rgba(201,168,76,', 'rgba(212,174,90,', 'rgba(201,118,79,'];
-const _PARTICLE_COLORS_LIGHT = ['rgba(201,168,76,', 'rgba(212,174,90,', 'rgba(201,118,79,'];
-const _PARTICLE_COLORS_DARK  = ['rgba(0,196,200,',  'rgba(0,168,172,',  'rgba(0,148,164,'];
-// Holds a reference to live particles so colors can be updated on theme change
-let _heroParticles = null;
-
-function _adjustParticlesForTheme(theme) {
-    _particleColors = (theme === 'dark') ? _PARTICLE_COLORS_DARK : _PARTICLE_COLORS_LIGHT;
-    // Update already-created particles so the colour change is instant
-    if (_heroParticles) {
-        _heroParticles.forEach((p, i) => {
-            p.col = _particleColors[i % _particleColors.length];
-        });
-    }
-}
+const PARTICLE_COLORS = ['rgba(201,168,76,', 'rgba(212,174,90,', 'rgba(201,118,79,'];
 
 function initHeroParticles() {
     if (window.matchMedia('(max-width: 768px)').matches) return;
@@ -2480,11 +2412,9 @@ function initHeroParticles() {
             vx: (Math.random() - 0.5) * 0.35,
             vy: (Math.random() - 0.5) * 0.35,
             op: Math.random() * 0.45 + 0.15,
-            col: _particleColors[i % _particleColors.length]
+            col: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)]
         });
     }
-    // Register particles globally for live theme-colour updates
-    _heroParticles = particles;
 
     let animRunning = true;
     const draw = () => {
@@ -2513,7 +2443,7 @@ function initHeroParticles() {
                     ctx.beginPath();
                     ctx.moveTo(p.x, p.y);
                     ctx.lineTo(q.x, q.y);
-                    ctx.strokeStyle = _particleColors[0] + alpha + ')';
+                    ctx.strokeStyle = `rgba(201,168,76,${alpha})`;
                     ctx.lineWidth = 0.6;
                     ctx.stroke();
                 }

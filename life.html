@@ -23,10 +23,6 @@
     <meta name="twitter:title" content="LIFE BioHack - Клетъчно Подмладяване и Антиейджинг">
     <meta name="twitter:description" content="Иновативни продукти за биохакинг на клетъчно ниво. Пептиди, хранителни добавки и протоколи за антиейджинг и подмладяване.">
     <meta name="twitter:image" content="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png">
-    <!-- PWA: theme color (light default; JS updates for dark mode) -->
-    <meta name="theme-color" id="meta-theme-color" content="#00C4C8">
-    <!-- PWA manifest for installability and performance -->
-    <link rel="manifest" href="life-manifest.json">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,18 +32,6 @@
     <!-- Preload logo images for instant display -->
     <link rel="preload" as="image" href="https://radilovk.github.io/face/assets/logo.png" type="image/png">
     <link rel="preload" as="image" href="https://radilovk.github.io/face/assets/logoblack.png" type="image/png">
-
-    <!-- Apply saved theme before first paint to avoid flash of wrong theme -->
-    <script>
-        (function() {
-            try {
-                var saved = localStorage.getItem('lifeTheme');
-                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                var theme = saved || (prefersDark ? 'dark' : 'light');
-                document.documentElement.setAttribute('data-theme', theme);
-            } catch(e) {}
-        })();
-    </script>
 
     <link rel="stylesheet" href="life.css">
 
@@ -85,48 +69,9 @@
                             <span class="cart-badge" id="cart-count-menu">0</span>
                         </a>
                     </li>
-                    <!-- Dark mode toggle in mobile nav -->
-                    <li class="theme-toggle-mobile" id="theme-toggle-mobile">
-                        <span class="theme-toggle-mobile-label">Тъмен режим</span>
-                        <button class="theme-toggle-btn" aria-label="Тъмна тема">
-                            <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                            </svg>
-                            <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="12" cy="12" r="5"></circle>
-                                <line x1="12" y1="1" x2="12" y2="3"></line>
-                                <line x1="12" y1="21" x2="12" y2="23"></line>
-                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                                <line x1="1" y1="12" x2="3" y2="12"></line>
-                                <line x1="21" y1="12" x2="23" y2="12"></line>
-                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                            </svg>
-                        </button>
-                    </li>
                 </ul>
             </nav>
             <div class="header-actions">
-                <!-- Theme toggle button (dark / light mode) -->
-                <button class="theme-toggle-btn" id="theme-toggle" aria-label="Тъмна тема">
-                    <!-- Moon icon: shown in light mode to indicate "switch to dark" -->
-                    <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <!-- Sun icon: shown in dark mode to indicate "switch to light" -->
-                    <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
                 <div class="search-container">
                     <button id="search-toggle" class="search-toggle-btn" aria-label="Търсене" aria-expanded="false">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
