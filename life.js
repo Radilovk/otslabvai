@@ -468,7 +468,8 @@ const generateHeroHTML = component => {
 const generateProductCategoryHTML = (component, index) => {
     const isCollapsible = component.options?.is_collapsible;
     const isExpanded = component.options?.is_expanded_by_default ?? true;
-    const productGridId = `product-grid-${component.id || index}`;
+    const sectionId = component.id || component.component_id || `category-${index}`;
+    const productGridId = `product-grid-${sectionId}`;
     const enableFilters = component.options && component.options.enable_filters;
     
     // Sort products by display_order if it exists, otherwise maintain current order
@@ -531,7 +532,7 @@ const generateProductCategoryHTML = (component, index) => {
     const hasMore = sortedProducts.length > INITIAL_SHOW;
     
     return `
-    <section id="${component.id}" class="category-section fade-in-up ${isCollapsible ? '' : 'not-collapsible'}">
+    <section id="${sectionId}" class="category-section fade-in-up ${isCollapsible ? '' : 'not-collapsible'}">
         <div class="container">
              <div class="category-header" ${isCollapsible ? `role="button" aria-expanded="${isExpanded}" aria-controls="${productGridId}" tabindex="0"` : ''}>
                 <h2 class="category-title">
@@ -964,13 +965,16 @@ function buildNavigationItems(navigation, pageContent) {
     const navItems = [];
     
     if (Array.isArray(pageContent)) {
-        // Extract product categories from page_content (the source of truth)
+        // Extract visible product categories from page_content (the source of truth)
         pageContent.forEach(component => {
-            if (component.type === 'product_category' && component.id && component.title) {
-                navItems.push({
-                    text: component.title,
-                    link: `#${component.id}`
-                });
+            if (component.type === 'product_category' && component.title && !component.is_hidden) {
+                const anchor = component.id || component.component_id;
+                if (anchor) {
+                    navItems.push({
+                        text: component.title,
+                        link: `#${anchor}`
+                    });
+                }
             }
         });
     }
@@ -1054,6 +1058,11 @@ function renderMainContent(pageContent) {
         // Note: The filename 'analyzis.png' is intentionally kept as-is to match the existing asset
         if (component.type === 'info_card' && component.image && component.image.includes('analyzis.png')) {
             return; // Skip rendering this component
+        }
+        
+        // Skip hidden product categories
+        if (component.type === 'product_category' && component.is_hidden) {
+            return;
         }
         
         switch (component.type) {

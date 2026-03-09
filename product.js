@@ -611,11 +611,14 @@ function buildNavigationItems(navigation, pageContent) {
     
     if (Array.isArray(pageContent)) {
         pageContent.forEach(component => {
-            if (component.type === 'product_category' && component.id && component.title) {
-                navItems.push({
-                    text: component.title,
-                    link: `#${component.id}`
-                });
+            if (component.type === 'product_category' && component.title && !component.is_hidden) {
+                const anchor = component.id || component.component_id;
+                if (anchor) {
+                    navItems.push({
+                        text: component.title,
+                        link: `#${anchor}`
+                    });
+                }
             }
         });
     }
