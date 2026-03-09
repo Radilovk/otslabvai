@@ -947,10 +947,38 @@ function renderHeader(settings, navigation, pageContent) {
 
     // Build navigation: auto-generate from product categories + keep non-category links
     const navItems = buildNavigationItems(navigation, pageContent);
-    const navItemsHTML = navItems.map(item => `<li><a href="${item.link}">${item.text}</a></li>`).join('');
+
+    // Separate category anchor-links from static page links
+    const categoryItems = navItems.filter(item => item.link && item.link.startsWith('#'));
+    const pageItems = navItems.filter(item => !item.link || !item.link.startsWith('#'));
+
+    let navItemsHTML = '';
+
+    // Group all category items under a single "Категории" dropdown
+    if (categoryItems.length > 0) {
+        const dropdownItems = categoryItems.map(item =>
+            `<li role="none"><a href="${item.link}" role="menuitem">${item.text}</a></li>`
+        ).join('');
+        navItemsHTML += `<li class="nav-item has-dropdown">` +
+            `<button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">` +
+            `Категории` +
+            `<svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>` +
+            `</button>` +
+            `<ul class="nav-dropdown-menu" role="menu">${dropdownItems}</ul>` +
+            `</li>`;
+    }
+
+    // Add non-category page links as flat items
+    navItemsHTML += pageItems.map(item =>
+        `<li><a href="${item.link}">${item.text}</a></li>`
+    ).join('');
+
     const persistentLis = DOM.header.navLinks.querySelectorAll('li:nth-last-child(-n+2)');
     DOM.header.navLinks.innerHTML = navItemsHTML;
     persistentLis.forEach(li => DOM.header.navLinks.appendChild(li));
+
+    // Activate dropdown behaviour after DOM is updated
+    initNavDropdowns();
 
     updateCartCount();
 }
@@ -989,6 +1017,61 @@ function buildNavigationItems(navigation, pageContent) {
     }
     
     return navItems;
+}
+
+/**
+ * Initialises hover (desktop) and click (mobile) behaviour for .has-dropdown nav items.
+ * Must be called after the nav HTML has been injected into the DOM.
+ */
+let _navDropdownOutsideClickAttached = false;
+function initNavDropdowns() {
+    document.querySelectorAll('.nav-item.has-dropdown').forEach(parent => {
+        const toggle = parent.querySelector('.nav-dropdown-toggle');
+        const menu = parent.querySelector('.nav-dropdown-menu');
+        if (!toggle || !menu) return;
+
+        // Desktop: open on hover
+        parent.addEventListener('mouseenter', () => {
+            if (window.innerWidth > 992) {
+                menu.classList.add('open');
+                toggle.setAttribute('aria-expanded', 'true');
+            }
+        });
+        parent.addEventListener('mouseleave', () => {
+            if (window.innerWidth > 992) {
+                menu.classList.remove('open');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Mobile / click: toggle open/close
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = menu.classList.contains('open');
+            document.querySelectorAll('.nav-item.has-dropdown .nav-dropdown-menu.open').forEach(m => {
+                m.classList.remove('open');
+                const t = m.previousElementSibling;
+                if (t) t.setAttribute('aria-expanded', 'false');
+            });
+            if (!isOpen) {
+                menu.classList.add('open');
+                toggle.setAttribute('aria-expanded', 'true');
+            }
+        });
+    });
+
+    // Attach the outside-click handler only once, regardless of how many times
+    // renderHeader() is called; the handler always queries the live DOM.
+    if (!_navDropdownOutsideClickAttached) {
+        _navDropdownOutsideClickAttached = true;
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.nav-item.has-dropdown .nav-dropdown-menu.open').forEach(menu => {
+                menu.classList.remove('open');
+                const toggle = menu.previousElementSibling;
+                if (toggle) toggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+    }
 }
 
 function renderPromoBanner(settings) {
@@ -1408,6 +1491,8 @@ function initializeGlobalScripts() {
     });
     DOM.navOverlay.addEventListener('click', closeMenu);
     DOM.navLinksContainer.addEventListener('click', e => {
+        // Don't close the mobile nav when the user is toggling the categories dropdown
+        if (e.target.closest('.nav-dropdown-toggle')) return;
         if (e.target.tagName === 'A' || e.target.closest('button')) {
             closeMenu();
         }

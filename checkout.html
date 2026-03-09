@@ -1156,18 +1156,9 @@
                 if (data) {
                     const navLinksContainer = document.getElementById('main-nav-links');
                     if (navLinksContainer) {
-                        // Find theme toggle and cart link elements by their IDs/classes more explicitly
-                        const themeToggleBtn = document.getElementById('theme-toggle');
-                        const themeToggleLi = themeToggleBtn ? themeToggleBtn.closest('li') : null;
-                        const cartLink = navLinksContainer.querySelector('.cart-link');
-                        const cartLinkLi = cartLink ? cartLink.closest('li') : null;
-                        
-                        // Remove only navigation link items (not theme toggle or cart)
-                        const navLinks = Array.from(navLinksContainer.querySelectorAll('li')).filter(li => {
-                            return li !== themeToggleLi && li !== cartLinkLi;
-                        });
-                        navLinks.forEach(li => li.remove());
-                        
+                        // Find the persistent mobile-only items (last 2 li: theme toggle + cart)
+                        const persistentLis = navLinksContainer.querySelectorAll('li:nth-last-child(-n+2)');
+
                         // Build nav items from product categories (source of truth) + non-category links
                         const navItems = [];
                         if (Array.isArray(data.page_content)) {
@@ -1186,21 +1177,37 @@
                                 navItems.push(item);
                             });
                         }
-                        
-                        // Add navigation items before theme toggle
-                        navItems.forEach(item => {
-                            const li = document.createElement('li');
-                            const a = document.createElement('a');
-                            a.href = item.link;
-                            a.textContent = item.text;
-                            li.appendChild(a);
-                            // Insert before theme toggle if it exists, otherwise append
-                            if (themeToggleLi) {
-                                navLinksContainer.insertBefore(li, themeToggleLi);
-                            } else {
-                                navLinksContainer.appendChild(li);
-                            }
-                        });
+
+                        // Separate category links from page links
+                        const categoryItems = navItems.filter(item => item.link && item.link.includes('#'));
+                        const pageItems = navItems.filter(item => !item.link || !item.link.includes('#'));
+
+                        let navItemsHTML = '';
+
+                        // Group all category items under a single "Категории" dropdown
+                        if (categoryItems.length > 0) {
+                            const dropdownItems = categoryItems.map(item =>
+                                `<li role="none"><a href="${item.link}" role="menuitem">${item.text}</a></li>`
+                            ).join('');
+                            navItemsHTML += `<li class="nav-item has-dropdown">` +
+                                `<button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">` +
+                                `Категории` +
+                                `<svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>` +
+                                `</button>` +
+                                `<ul class="nav-dropdown-menu" role="menu">${dropdownItems}</ul>` +
+                                `</li>`;
+                        }
+
+                        // Add non-category page links as flat items
+                        navItemsHTML += pageItems.map(item =>
+                            `<li><a href="${item.link}">${item.text}</a></li>`
+                        ).join('');
+
+                        navLinksContainer.innerHTML = navItemsHTML;
+                        persistentLis.forEach(li => navLinksContainer.appendChild(li));
+
+                        // Activate dropdown behaviour
+                        initNavDropdowns();
                     }
                 }
             } catch (error) {
@@ -1208,6 +1215,54 @@
             }
         }
         
+        // --- Nav Dropdown: hover (desktop) and click accordion (mobile) ---
+        let _navDropdownOutsideClickAttached = false;
+        function initNavDropdowns() {
+            document.querySelectorAll('.nav-item.has-dropdown').forEach(parent => {
+                const toggle = parent.querySelector('.nav-dropdown-toggle');
+                const menu = parent.querySelector('.nav-dropdown-menu');
+                if (!toggle || !menu) return;
+
+                parent.addEventListener('mouseenter', () => {
+                    if (window.innerWidth > 992) {
+                        menu.classList.add('open');
+                        toggle.setAttribute('aria-expanded', 'true');
+                    }
+                });
+                parent.addEventListener('mouseleave', () => {
+                    if (window.innerWidth > 992) {
+                        menu.classList.remove('open');
+                        toggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = menu.classList.contains('open');
+                    document.querySelectorAll('.nav-item.has-dropdown .nav-dropdown-menu.open').forEach(m => {
+                        m.classList.remove('open');
+                        const t = m.previousElementSibling;
+                        if (t) t.setAttribute('aria-expanded', 'false');
+                    });
+                    if (!isOpen) {
+                        menu.classList.add('open');
+                        toggle.setAttribute('aria-expanded', 'true');
+                    }
+                });
+            });
+
+            if (!_navDropdownOutsideClickAttached) {
+                _navDropdownOutsideClickAttached = true;
+                document.addEventListener('click', () => {
+                    document.querySelectorAll('.nav-item.has-dropdown .nav-dropdown-menu.open').forEach(menu => {
+                        menu.classList.remove('open');
+                        const toggle = menu.previousElementSibling;
+                        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+                    });
+                });
+            }
+        }
+
         // --- Load footer settings from cached data ---
         async function loadFooterSettings(data) {
             try {
@@ -1299,6 +1354,8 @@
             });
             navOverlay.addEventListener('click', closeMenu);
             navLinks.addEventListener('click', e => {
+                // Don't close the mobile nav when the user is toggling the categories dropdown
+                if (e.target.closest('.nav-dropdown-toggle')) return;
                 if (e.target.tagName === 'A' || e.target.closest('button')) {
                     closeMenu();
                 }
