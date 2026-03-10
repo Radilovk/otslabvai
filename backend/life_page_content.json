@@ -1,10 +1,10 @@
 {
     "settings": {
-        "site_name": "LIFE BioHack",
-        "site_slogan": "Клетъчно Подмладяване",
-        "logo_url": "https://radilovk.github.io/face/assets/logo.png",
-        "logo_url_light": "https://radilovk.github.io/face/assets/logoblack.png",
-        "logo_url_dark": "https://radilovk.github.io/face/assets/logo.png",
+        "site_name": "Life Protocols",
+        "site_slogan": "Протоколи за Здраве и Дълголетие",
+        "logo_url": "images/lifelogo.png",
+        "logo_url_light": "images/lifelogo.png",
+        "logo_url_dark": "images/lifelogo.png",
         "theme_gradients": {
             "light": "linear-gradient(155deg, #EAF6FB 0%, #F4FAFE 40%, #E8F3F9 100%)",
             "dark": "linear-gradient(135deg, #020817 0%, #050215 100%)"
@@ -13,7 +13,7 @@
             "text": "ЕКСКЛУЗИВНО: Безплатна консултация при първа поръчка на пептиди!"
         },
         "about_us_page": {
-            "hero_title": "За LIFE BioHack",
+            "hero_title": "За Life Protocols",
             "hero_subtitle": "Научен подход към клетъчното подмладяване и дълголетие",
             "main_image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
             "main_image_alt": "Биотехнологични изследвания"
@@ -206,6 +206,6 @@
                 ]
             }
         ],
-        "copyright_text": "© 2025 LIFE BioHack. Всички права запазени."
+        "copyright_text": "© 2025 Life Protocols. Всички права запазени."
     }
 }
