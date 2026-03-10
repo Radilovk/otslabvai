@@ -1,211 +1,211 @@
 {
-    "settings": {
-        "site_name": "Life Protocols",
-        "site_slogan": "Протоколи за Здраве и Дълголетие",
-        "logo_url": "images/lifelogo.png",
-        "logo_url_light": "images/lifelogo.png",
-        "logo_url_dark": "images/lifelogo.png",
-        "theme_gradients": {
-            "light": "linear-gradient(155deg, #EAF6FB 0%, #F4FAFE 40%, #E8F3F9 100%)",
-            "dark": "linear-gradient(135deg, #020817 0%, #050215 100%)"
-        },
-        "promo_banner": {
-            "text": "ЕКСКЛУЗИВНО: Безплатна консултация при първа поръчка на пептиди!"
-        },
-        "about_us_page": {
-            "hero_title": "За Life Protocols",
-            "hero_subtitle": "Научен подход към клетъчното подмладяване и дълголетие",
-            "main_image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
-            "main_image_alt": "Биотехнологични изследвания"
-        }
+  "settings": {
+    "site_name": "Life Protocols",
+    "site_slogan": "Протоколи за Здраве и Дълголетие",
+    "logo_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773114159682-lifelogo.png",
+    "logo_url_light": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773114168831-lifelogo.png",
+    "logo_url_dark": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773114184247-lifelogo.png",
+    "promo_banner": {
+      "text": "ЕКСКЛУЗИВНО: Безплатна консултация при първа поръчка на пептиди!"
     },
-    "navigation": [
-        {
-            "text": "Пептиди",
-            "link": "#peptides"
-        },
-        {
-            "text": "Антиейджинг",
-            "link": "#anti-aging"
-        },
-        {
-            "text": "За нас",
-            "link": "about-us.html"
-        },
-        {
-            "text": "Контакти",
-            "link": "contact.html"
-        }
-    ],
-    "page_content": [
-        {
-            "type": "hero_banner",
-            "component_id": "life-hero-001",
-            "title": "Преписване на Биологичния Часовник.",
-            "subtitle": "Открийте силата на пептидите и иновативните добавки за подмладяване на молекулярно ниво.",
-            "buttons": {
-                "primary": {
-                    "text": "Започнете вашия протокол",
-                    "action": "scroll",
-                    "target": "#peptides"
-                },
-                "secondary": {
-                    "text": "Научи повече",
-                    "action": "link",
-                    "target": "about-us.html"
-                }
-            },
-            "stats": [
-                {
-                    "value": "98%",
-                    "label": "Клиентско доверие",
-                    "icon": "flask",
-                    "icon_url": ""
-                },
-                {
-                    "value": "50+",
-                    "label": "Научни формули",
-                    "icon": "dna",
-                    "icon_url": ""
-                },
-                {
-                    "value": "10K+",
-                    "label": "Доволни клиенти",
-                    "icon": "sparkle",
-                    "icon_url": ""
-                }
-            ],
-            "trust_badges": [
-                {
-                    "text": "GMP Сертифицирано",
-                    "icon_url": ""
-                },
-                {
-                    "text": "Лабораторно тествано",
-                    "icon_url": ""
-                },
-                {
-                    "text": "Бърза доставка",
-                    "icon_url": ""
-                }
-            ],
-            "background_type": "default",
-            "tagline": "Клетъчно Възстановяване",
-            "hero_images": {
-                "vial": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
-                "lab": "",
-                "face": ""
-            },
-            "features": [
-                {
-                    "title": "МИТОХОНДРИАЛЕН БУСТ",
-                    "description": "Активирайте клетъчната енергия и подобрете митохондриалната функция с доказани пептиди.",
-                    "icon": "mitochondria",
-                    "link": "#peptides"
-                },
-                {
-                    "title": "ТЕЛОМЕРНА ПОДКРЕПА",
-                    "description": "Иновативни формули за защита на теломерите и клетъчно подмладяване на молекулярно ниво.",
-                    "icon": "dna",
-                    "link": "#anti-aging"
-                },
-                {
-                    "title": "НЕВРО-УСИЛВАНЕ",
-                    "description": "Нутрацевтици за когнитивна функция, невропластичност и дългосрочно мозъчно здраве.",
-                    "icon": "brain",
-                    "link": "#all-products"
-                }
-            ]
-        },
-        {
-            "type": "info_card",
-            "component_id": "life-info-001",
-            "title": "Персонализиран протокол за подмладяване",
-            "image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
-            "content": "Всеки организъм е уникален. Нашите експерти създават индивидуални протоколи за биохакинг, базирани на последните научни открития в областта на клетъчното подмладяване и дълголетието.",
-            "button": {
-                "text": "Получи своя протокол",
-                "url": "quest.html"
-            },
-            "options": {
-                "image_align": "left"
-            }
-        },
-        {
-            "type": "product_category",
-            "component_id": "life-cat-peptides",
-            "id": "peptides",
-            "category_id": "peptides",
-            "title": "Пептиди за Подмладяване",
-            "description": "Биоактивни пептиди от ново поколение за клетъчна регенерация и антиейджинг.",
-            "options": {
-                "is_collapsible": false,
-                "is_expanded_by_default": true
-            },
-            "products": []
-        },
-        {
-            "type": "product_category",
-            "component_id": "life-cat-antiaging",
-            "id": "anti-aging",
-            "category_id": "anti-aging",
-            "title": "Антиейджинг Формули",
-            "description": "Научно разработени добавки за забавяне на стареенето на клетъчно ниво.",
-            "options": {
-                "is_collapsible": false,
-                "is_expanded_by_default": true
-            },
-            "products": []
-        }
-    ],
-    "footer": {
-        "columns": [
-            {
-                "type": "logo",
-                "title": "",
-                "links": []
-            },
-            {
-                "type": "links",
-                "title": "Бързи Връзки",
-                "links": [
-                    {
-                        "text": "Пептиди",
-                        "url": "#peptides"
-                    },
-                    {
-                        "text": "Антиейджинг",
-                        "url": "#anti-aging"
-                    },
-                    {
-                        "text": "За нас",
-                        "url": "about-us.html"
-                    },
-                    {
-                        "text": "Контакти",
-                        "url": "contact.html"
-                    }
-                ]
-            },
-            {
-                "type": "links",
-                "title": "Информация",
-                "links": [
-                    {
-                        "text": "Политика за поверителност",
-                        "url": "policy.html"
-                    },
-                    {
-                        "text": "Условия за ползване",
-                        "url": "terms.html"
-                    },
-                    {
-                        "text": "Доставка",
-                        "url": "shipping.html"
-                    }
-                ]
-            }
-        ],
-        "copyright_text": "© 2025 Life Protocols. Всички права запазени."
+    "theme_gradients": {
+      "light": "linear-gradient(155deg, #EAF6FB 0%, #F4FAFE 40%, #E8F3F9 100%)",
+      "dark": "linear-gradient(135deg, #020817 0%, #050215 100%)"
+    },
+    "about_us_page": {
+      "hero_title": "За Life Protocols",
+      "hero_subtitle": "Научен подход към клетъчното подмладяване и дълголетие",
+      "main_image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
+      "main_image_alt": "Биотехнологични изследвания"
     }
+  },
+  "navigation": [
+    {
+      "text": "Пептиди",
+      "link": "#peptides"
+    },
+    {
+      "text": "Антиейджинг",
+      "link": "#anti-aging"
+    },
+    {
+      "text": "За нас",
+      "link": "about-us.html"
+    },
+    {
+      "text": "Контакти",
+      "link": "contact.html"
+    }
+  ],
+  "page_content": [
+    {
+      "type": "hero_banner",
+      "component_id": "life-hero-001",
+      "title": "Преписване на Биологичния Часовник.",
+      "subtitle": "Открийте силата на пептидите и иновативните добавки за подмладяване на молекулярно ниво.",
+      "buttons": {
+        "primary": {
+          "text": "Започнете вашия протокол",
+          "action": "scroll",
+          "target": "#peptides"
+        },
+        "secondary": {
+          "text": "Научи повече",
+          "action": "link",
+          "target": "about-us.html"
+        }
+      },
+      "stats": [
+        {
+          "value": "98%",
+          "label": "Клиентско доверие",
+          "icon": "flask",
+          "icon_url": ""
+        },
+        {
+          "value": "50+",
+          "label": "Научни формули",
+          "icon": "dna",
+          "icon_url": ""
+        },
+        {
+          "value": "10K+",
+          "label": "Доволни клиенти",
+          "icon": "sparkle",
+          "icon_url": ""
+        }
+      ],
+      "trust_badges": [
+        {
+          "text": "GMP Сертифицирано",
+          "icon_url": ""
+        },
+        {
+          "text": "Лабораторно тествано",
+          "icon_url": ""
+        },
+        {
+          "text": "Бърза доставка",
+          "icon_url": ""
+        }
+      ],
+      "background_type": "default",
+      "tagline": "Клетъчно Възстановяване",
+      "hero_images": {
+        "vial": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
+        "lab": "",
+        "face": ""
+      },
+      "features": [
+        {
+          "title": "МИТОХОНДРИАЛЕН БУСТ",
+          "description": "Активирайте клетъчната енергия и подобрете митохондриалната функция с доказани пептиди.",
+          "icon": "mitochondria",
+          "link": "#peptides"
+        },
+        {
+          "title": "ТЕЛОМЕРНА ПОДКРЕПА",
+          "description": "Иновативни формули за защита на теломерите и клетъчно подмладяване на молекулярно ниво.",
+          "icon": "dna",
+          "link": "#anti-aging"
+        },
+        {
+          "title": "НЕВРО-УСИЛВАНЕ",
+          "description": "Нутрацевтици за когнитивна функция, невропластичност и дългосрочно мозъчно здраве.",
+          "icon": "brain",
+          "link": "#all-products"
+        }
+      ]
+    },
+    {
+      "type": "info_card",
+      "component_id": "life-info-001",
+      "title": "Персонализиран протокол за подмладяване",
+      "image": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
+      "content": "Всеки организъм е уникален. Нашите експерти създават индивидуални протоколи за биохакинг, базирани на последните научни открития в областта на клетъчното подмладяване и дълголетието.",
+      "button": {
+        "text": "Получи своя протокол",
+        "url": "quest.html"
+      },
+      "options": {
+        "image_align": "left"
+      }
+    },
+    {
+      "type": "product_category",
+      "component_id": "life-cat-peptides",
+      "id": "peptides",
+      "category_id": "peptides",
+      "title": "Пептиди за Подмладяване",
+      "description": "Биоактивни пептиди от ново поколение за клетъчна регенерация и антиейджинг.",
+      "options": {
+        "is_collapsible": false,
+        "is_expanded_by_default": true
+      },
+      "products": []
+    },
+    {
+      "type": "product_category",
+      "component_id": "life-cat-antiaging",
+      "id": "anti-aging",
+      "category_id": "anti-aging",
+      "title": "Антиейджинг Формули",
+      "description": "Научно разработени добавки за забавяне на стареенето на клетъчно ниво.",
+      "options": {
+        "is_collapsible": false,
+        "is_expanded_by_default": true
+      },
+      "products": []
+    }
+  ],
+  "footer": {
+    "columns": [
+      {
+        "type": "logo",
+        "title": "",
+        "links": []
+      },
+      {
+        "type": "links",
+        "title": "Бързи Връзки",
+        "links": [
+          {
+            "text": "Пептиди",
+            "url": "#peptides"
+          },
+          {
+            "text": "Антиейджинг",
+            "url": "#anti-aging"
+          },
+          {
+            "text": "За нас",
+            "url": "about-us.html"
+          },
+          {
+            "text": "Контакти",
+            "url": "contact.html"
+          }
+        ]
+      },
+      {
+        "type": "links",
+        "title": "Информация",
+        "links": [
+          {
+            "text": "Политика за поверителност",
+            "url": "policy.html"
+          },
+          {
+            "text": "Условия за ползване",
+            "url": "terms.html"
+          },
+          {
+            "text": "Доставка",
+            "url": "shipping.html"
+          }
+        ]
+      }
+    ],
+    "copyright_text": "© 2025 Life Protocols. Всички права запазени."
+  }
 }
