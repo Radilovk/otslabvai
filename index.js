@@ -1513,6 +1513,7 @@ async function main() {
         if (isIndexPage) {
             initializeScrollSpy();
             initializeMarketingFeatures();
+            initPremiumEffects();
 
             // Restore category expanded states and scroll position if returning from product page
             const savedScrollPosition = sessionStorage.getItem('indexScrollPosition');
@@ -2092,6 +2093,163 @@ function initProductFilters() {
 // Prevent the browser from auto-restoring scroll position so our custom restoration takes effect
 if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
+}
+
+// ── PREMIUM VISUAL EFFECTS ──
+
+// Ripple effect on button click
+function initRippleEffect() {
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-primary, .btn-hero-primary, .btn-premium');
+        if (!btn) return;
+
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.cssText = `
+            width: ${size}px;
+            height: ${size}px;
+            left: ${e.clientX - rect.left - size / 2}px;
+            top: ${e.clientY - rect.top - size / 2}px;
+        `;
+
+        btn.appendChild(ripple);
+        ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
+    });
+}
+
+// Animated counter for stat numbers
+function animateStat(el) {
+    const raw = el.textContent.trim();
+    const match = raw.match(/^([\d,]+)/);
+    if (!match) return;
+
+    const target   = parseInt(match[1].replace(/,/g, ''), 10);
+    const suffix   = raw.slice(match[1].length);
+    const duration = 1400;
+    const startTs  = performance.now();
+
+    const tick = (now) => {
+        const t      = Math.min((now - startTs) / duration, 1);
+        const eased  = 1 - Math.pow(1 - t, 3);
+        const current = Math.round(target * eased);
+        el.textContent = current.toLocaleString('en-US') + suffix;
+        if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+}
+
+function initCounterAnimation() {
+    const statItems = document.querySelectorAll('.stat-item strong');
+    if (!statItems.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting || entry.target.dataset.animated) return;
+            entry.target.dataset.animated = 'true';
+            animateStat(entry.target);
+        });
+    }, { threshold: 0.6 });
+
+    statItems.forEach(el => observer.observe(el));
+}
+
+// 3-D tilt effect on product cards
+function initCard3DTilt() {
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    let currentTiltCard = null;
+
+    document.addEventListener('mousemove', (e) => {
+        const card = e.target.closest('.product-card:not(.skeleton-card)');
+        if (!card) {
+            if (currentTiltCard) {
+                currentTiltCard.classList.remove('tilting');
+                currentTiltCard.style.transform = '';
+                currentTiltCard = null;
+            }
+            return;
+        }
+
+        const rect = card.getBoundingClientRect();
+        const x  = e.clientX - rect.left;
+        const y  = e.clientY - rect.top;
+        const cx = rect.width  / 2;
+        const cy = rect.height / 2;
+        const rotX = ((y - cy) / cy) * -5;
+        const rotY = ((x - cx) / cx) *  5;
+
+        card.classList.add('tilting');
+        card.style.transform  = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(6px)`;
+        card.style.transition = 'none';
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+        currentTiltCard = card;
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', (e) => {
+        const card = e.target.closest('.product-card');
+        if (card) {
+            card.classList.remove('tilting');
+            card.style.transform  = '';
+            card.style.transition = '';
+            if (currentTiltCard === card) currentTiltCard = null;
+        }
+    }, true);
+}
+
+// Magnetic pull on hero CTA buttons
+function initMagneticButtons() {
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    function attachMagnetic(selector, strength) {
+        document.querySelectorAll(selector).forEach(btn => {
+            let cachedRect = null;
+            btn.addEventListener('mouseenter', () => {
+                cachedRect = btn.getBoundingClientRect();
+            });
+            btn.addEventListener('mousemove', (e) => {
+                if (!cachedRect) cachedRect = btn.getBoundingClientRect();
+                const dx = e.clientX - (cachedRect.left + cachedRect.width  / 2);
+                const dy = e.clientY - (cachedRect.top  + cachedRect.height / 2);
+                btn.style.transform = `translate(${dx * strength}px, ${dy * strength}px)`;
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = '';
+                cachedRect = null;
+            });
+        });
+    }
+
+    attachMagnetic('.btn-hero-primary',   0.2);
+    attachMagnetic('.btn-hero-secondary', 0.15);
+}
+
+// Glowing divider lines between major content sections
+function initSectionGlowLines() {
+    const container = document.getElementById('main-content-container');
+    if (!container) return;
+
+    const sections = container.querySelectorAll('.category-section, .hero-features-section');
+    sections.forEach(section => {
+        if (section.previousElementSibling &&
+            !section.previousElementSibling.classList.contains('section-glow-line')) {
+            const line = document.createElement('div');
+            line.className = 'section-glow-line';
+            section.parentNode.insertBefore(line, section);
+        }
+    });
+}
+
+// Initialize all premium effects (call after content is rendered)
+function initPremiumEffects() {
+    initRippleEffect();
+    initCard3DTilt();
+    initMagneticButtons();
+    initCounterAnimation();
+    initSectionGlowLines();
 }
 
 // Старт на приложението
