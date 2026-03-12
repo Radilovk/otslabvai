@@ -1040,35 +1040,7 @@
                 "answer": "Да, работи отлично в комбинация с L-карнитин за още по-силен ефект. Не комбинирайте с други термогенни продукти или високи дози кофеин."
               }
             ],
-            "variants": [
-              {
-                "packaging": "30 капс",
-                "flavor": "лайна",
-                "price": 54,
-                "sku": "",
-                "ean": "",
-                "image_url": "",
-                "available": true
-              },
-              {
-                "packaging": "30 капс",
-                "flavor": "путка",
-                "price": 45,
-                "sku": "",
-                "ean": "",
-                "image_url": "",
-                "available": true
-              },
-              {
-                "packaging": "45 капс",
-                "flavor": "пикоч",
-                "price": 56,
-                "sku": "",
-                "ean": "",
-                "image_url": "",
-                "available": true
-              }
-            ]
+            "variants": []
           },
           "system_data": {
             "manufacturer": "",
