@@ -1058,6 +1058,15 @@
                 "ean": "",
                 "image_url": "",
                 "available": true
+              },
+              {
+                "packaging": "45 капс",
+                "flavor": "пикоч",
+                "price": 56,
+                "sku": "",
+                "ean": "",
+                "image_url": "",
+                "available": true
               }
             ]
           },
