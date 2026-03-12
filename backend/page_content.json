@@ -1047,6 +1047,14 @@
                 "ean": "",
                 "image_url": "",
                 "available": true
+              },
+              {
+                "option_name": "45 капс",
+                "price": 45,
+                "sku": "",
+                "ean": "",
+                "image_url": "",
+                "available": true
               }
             ]
           },
