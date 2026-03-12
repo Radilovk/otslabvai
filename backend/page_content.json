@@ -929,13 +929,13 @@
             ],
             "variants": [
               {
+                "packaging": "30 капс.",
+                "flavor": "",
                 "price": 65,
                 "sku": "",
                 "ean": "",
                 "image_url": "",
-                "available": true,
-                "packaging": "30 капс.",
-                "flavor": ""
+                "available": true
               }
             ]
           },
@@ -1042,22 +1042,22 @@
             ],
             "variants": [
               {
+                "packaging": "30 капс",
+                "flavor": "лайна",
                 "price": 54,
                 "sku": "",
                 "ean": "",
                 "image_url": "",
-                "available": true,
-                "packaging": "30 капс",
-                "flavor": ""
+                "available": true
               },
               {
+                "packaging": "30 капс",
+                "flavor": "путка",
                 "price": 45,
                 "sku": "",
                 "ean": "",
                 "image_url": "",
-                "available": true,
-                "packaging": "45 капс",
-                "flavor": ""
+                "available": true
               }
             ]
           },
