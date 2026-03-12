@@ -993,6 +993,7 @@
             <div class="product-content">
             <nav class="modal-tab-nav">
                 <button type="button" class="modal-tab-btn active" data-modal-tab=".product-tab-public">Публични данни</button>
+                <button type="button" class="modal-tab-btn" data-modal-tab=".product-tab-variants" aria-label="Варианти (Вкусове / Разфасовки)">🎨 Варианти</button>
                 <button type="button" class="modal-tab-btn" data-modal-tab=".product-tab-system">Системни данни</button>
             </nav>
 
@@ -1132,24 +1133,24 @@
                         <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="faq-editor-template" data-container="[data-sub-container='faq']">Добави въпрос</button>
                     </fieldset>
 
-                    <fieldset>
-                        <legend>Варианти (Вкусове / Разфасовки)</legend>
-                        <small style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">
-                            Добавете различни вкусове или разфасовки за този продукт. Всеки вариант може да има собствен SKU, цена и изображение.
-                        </small>
-                        <div class="nested-sublist-container" data-sub-container="variants">
-                            <!-- Вариантите ще се генерират тук от JS -->
-                        </div>
-                        <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="variant-editor-template" data-container="[data-sub-container='variants']">Добави вариант</button>
-                    </fieldset>
-
                     <div class="form-group">
                         <label>Линк към хранителна информация (Label URL)</label>
                         <input type="text" data-field="public_data.label_url" placeholder="https://fitness1.bg/label/supp-facts...">
                     </div>
                 </div>
 
-                <!-- ТАБ 2: СИСТЕМНИ ДАННИ -->
+                <!-- ТАБ 2: ВАРИАНТИ (Вкусове / Разфасовки) -->
+                <div class="modal-tab-pane product-tab-variants">
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                        Добавете различни вкусове или разфасовки за този продукт. Всеки вариант може да има собствена цена, SKU код и изображение. Ако продуктът няма варианти, оставете секцията празна.
+                    </p>
+                    <div class="nested-sublist-container" data-sub-container="variants">
+                        <!-- Вариантите ще се генерират тук от JS -->
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary" style="margin-top: 0.75rem;" data-action="add-nested-item" data-template="variant-editor-template" data-container="[data-sub-container='variants']">+ Добави вариант</button>
+                </div>
+
+                <!-- ТАБ 3: СИСТЕМНИ ДАННИ -->
                 <div class="modal-tab-pane product-tab-system">
                     <div class="form-group">
                         <label>Производител</label>
