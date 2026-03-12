@@ -292,23 +292,37 @@ function renderProductDetail(product) {
 
     // Generate variant selector HTML
     const variants = publicData.variants || [];
+    // A variant is available when available is not explicitly set to false (undefined/null/true = available)
+    const isVariantAvailable = v => v.available !== false;
+    // Index of the initially active variant (first available one)
+    const firstAvailableIdx = variants.findIndex(isVariantAvailable);
     let variantSelectorHTML = '';
     if (variants.length > 1) {
         variantSelectorHTML = `
             <div class="product-variant-selector">
                 <h3>Изберете вкус / разфасовка</h3>
                 <div class="variant-options">
-                    ${variants.map((v, idx) => `
-                        <button class="variant-option ${idx === 0 ? 'active' : ''}" 
+                    ${variants.map((v, idx) => {
+                        const isUnavailable = !isVariantAvailable(v);
+                        const isActive = idx === (firstAvailableIdx >= 0 ? firstAvailableIdx : 0);
+                        const priceDiff = !isUnavailable && Math.abs(v.price - publicData.price) > 0.005;
+                        const badgeHTML = isUnavailable
+                            ? '<span class="variant-sold-out">Изчерпано</span>'
+                            : (priceDiff ? `<span class="variant-price">${Number(v.price).toFixed(2)} €</span>` : '');
+                        return `
+                        <button class="variant-option ${isActive ? 'active' : ''} ${isUnavailable ? 'unavailable' : ''}" 
                                 data-variant-idx="${idx}"
                                 data-variant-sku="${escapeHtml(v.sku)}"
                                 data-variant-price="${v.price}"
                                 data-variant-image="${escapeHtml(v.image_url || '')}"
-                                data-variant-name="${escapeHtml(v.option_name || 'Стандартна')}">
+                                data-variant-name="${escapeHtml(v.option_name || 'Стандартна')}"
+                                data-variant-available="${isUnavailable ? 'false' : 'true'}"
+                                ${isUnavailable ? 'title="Изчерпано"' : ''}>
                             ${escapeHtml(v.option_name || 'Стандартна')}
-                            ${Math.abs(v.price - publicData.price) > 0.005 ? `<span class="variant-price">${Number(v.price).toFixed(2)} €</span>` : ''}
+                            ${badgeHTML}
                         </button>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
             </div>
         `;
@@ -385,6 +399,8 @@ function renderProductDetail(product) {
                 variantButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
+                const isAvailable = btn.dataset.variantAvailable !== 'false';
+
                 // Update price display
                 const variantPrice = parseFloat(btn.dataset.variantPrice);
                 const priceDisplay = document.getElementById('product-price-display');
@@ -401,7 +417,7 @@ function renderProductDetail(product) {
                     if (mainImgContainer) mainImgContainer.dataset.zoomImage = variantImage;
                 }
 
-                // Update add to cart button data
+                // Update add to cart button data and availability
                 if (DOM.addToCartBtn) {
                     DOM.addToCartBtn.dataset.price = variantPrice;
                     DOM.addToCartBtn.dataset.id = `${productId}_${btn.dataset.variantSku}`;
@@ -410,6 +426,8 @@ function renderProductDetail(product) {
                     if (btn.dataset.variantImage) {
                         DOM.addToCartBtn.dataset.image = btn.dataset.variantImage;
                     }
+                    DOM.addToCartBtn.disabled = !isAvailable;
+                    DOM.addToCartBtn.textContent = isAvailable ? 'Добави в количката' : 'Изчерпано';
                 }
             });
         });
@@ -417,26 +435,37 @@ function renderProductDetail(product) {
 
     // Setup add to cart button
     if (DOM.addToCartBtn) {
-        DOM.addToCartBtn.disabled = inventory <= 0;
-        DOM.addToCartBtn.dataset.id = variants.length > 0 ? `${productId}_${variants[0].sku}` : productId;
-        DOM.addToCartBtn.dataset.name = variants.length > 1 ? `${publicData.name} - ${variants[0].option_name || 'Стандартна'}` : publicData.name;
-        DOM.addToCartBtn.dataset.price = publicData.price;
-        DOM.addToCartBtn.dataset.inventory = inventory;
-        DOM.addToCartBtn.dataset.image = publicData.image_url || '';
-        
-        if (inventory > 0) {
-            DOM.addToCartBtn.addEventListener('click', () => {
-                addToCart(
-                    DOM.addToCartBtn.dataset.id,
-                    DOM.addToCartBtn.dataset.name,
-                    DOM.addToCartBtn.dataset.price,
-                    DOM.addToCartBtn.dataset.inventory,
-                    DOM.addToCartBtn.dataset.image
-                );
-            });
-        } else {
+        // Use first available variant for initial state (if variants exist)
+        // When all variants are unavailable, fall back to index 0 but keep button disabled
+        const initIdx = firstAvailableIdx >= 0 ? firstAvailableIdx : 0;
+        const initVariant = variants.length > 0 ? variants[initIdx] : null;
+        const initAvailable = initVariant ? isVariantAvailable(initVariant) : inventory > 0;
+        DOM.addToCartBtn.disabled = !initAvailable;
+        if (!initAvailable) {
             DOM.addToCartBtn.textContent = 'Изчерпано';
         }
+        if (initVariant) {
+            DOM.addToCartBtn.dataset.id = `${productId}_${initVariant.sku}`;
+            DOM.addToCartBtn.dataset.name = variants.length > 1 ? `${publicData.name} - ${initVariant.option_name || 'Стандартна'}` : publicData.name;
+            DOM.addToCartBtn.dataset.price = initVariant.price || publicData.price;
+        } else {
+            DOM.addToCartBtn.dataset.id = productId;
+            DOM.addToCartBtn.dataset.name = publicData.name;
+            DOM.addToCartBtn.dataset.price = publicData.price;
+        }
+        DOM.addToCartBtn.dataset.inventory = inventory;
+        DOM.addToCartBtn.dataset.image = (initVariant && initVariant.image_url) || publicData.image_url || '';
+
+        // Always attach the listener; the disabled attribute prevents it from firing when unavailable
+        DOM.addToCartBtn.addEventListener('click', () => {
+            addToCart(
+                DOM.addToCartBtn.dataset.id,
+                DOM.addToCartBtn.dataset.name,
+                DOM.addToCartBtn.dataset.price,
+                DOM.addToCartBtn.dataset.inventory,
+                DOM.addToCartBtn.dataset.image
+            );
+        });
     }
 
     // Initialize interactive elements
