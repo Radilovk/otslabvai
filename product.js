@@ -296,6 +296,7 @@ function renderProductDetail(product) {
     const isVariantAvailable = v => v.available !== false;
     // Index of the initially active variant (first available one)
     const firstAvailableIdx = variants.findIndex(isVariantAvailable);
+    const initActiveIdx = firstAvailableIdx >= 0 ? firstAvailableIdx : 0;
     let variantSelectorHTML = '';
     if (variants.length > 1) {
         variantSelectorHTML = `
@@ -304,22 +305,21 @@ function renderProductDetail(product) {
                 <div class="variant-options">
                     ${variants.map((v, idx) => {
                         const isUnavailable = !isVariantAvailable(v);
-                        const isActive = idx === (firstAvailableIdx >= 0 ? firstAvailableIdx : 0);
-                        const priceDiff = !isUnavailable && Math.abs(v.price - publicData.price) > 0.005;
-                        const badgeHTML = isUnavailable
+                        const isActive = idx === initActiveIdx;
+                        const priceLabel = isUnavailable
                             ? '<span class="variant-sold-out">Изчерпано</span>'
-                            : (priceDiff ? `<span class="variant-price">${Number(v.price).toFixed(2)} €</span>` : '');
+                            : (v.price != null ? `<span class="variant-price">${Number(v.price).toFixed(2)} €</span>` : '');
                         return `
                         <button class="variant-option ${isActive ? 'active' : ''} ${isUnavailable ? 'unavailable' : ''}" 
                                 data-variant-idx="${idx}"
-                                data-variant-sku="${escapeHtml(v.sku)}"
-                                data-variant-price="${v.price}"
+                                data-variant-sku="${escapeHtml(v.sku || '')}"
+                                data-variant-price="${v.price != null ? v.price : ''}"
                                 data-variant-image="${escapeHtml(v.image_url || '')}"
                                 data-variant-name="${escapeHtml(v.option_name || 'Стандартна')}"
                                 data-variant-available="${isUnavailable ? 'false' : 'true'}"
                                 ${isUnavailable ? 'title="Изчерпано"' : ''}>
                             ${escapeHtml(v.option_name || 'Стандартна')}
-                            ${badgeHTML}
+                            ${priceLabel}
                         </button>
                         `;
                     }).join('')}
@@ -329,7 +329,7 @@ function renderProductDetail(product) {
     } else if (variants.length === 1 && variants[0].option_name && variants[0].option_name !== 'Стандартна') {
         variantSelectorHTML = `
             <div class="product-variant-selector">
-                <p class="single-variant-label">Вкус: <strong>${escapeHtml(variants[0].option_name)}</strong></p>
+                <p class="single-variant-label">Вкус / Разфасовка: <strong>${escapeHtml(variants[0].option_name)}</strong></p>
             </div>
         `;
     }
@@ -345,13 +345,18 @@ function renderProductDetail(product) {
     ` : '';
 
     // Build the product detail HTML
+    // Use the initial variant price for display if variants are present
+    const initActiveVariant = variants.length > 0 ? variants[initActiveIdx] : null;
+    const initialDisplayPrice = (initActiveVariant && initActiveVariant.price != null)
+        ? Number(initActiveVariant.price).toFixed(2)
+        : Number(publicData.price).toFixed(2);
     const productHTML = `
         <div class="product-detail-header">
             ${brandHTML}
             <h1>${escapeHtml(publicData.name)}</h1>
             <p class="tagline">${escapeHtml(publicData.tagline)}</p>
             <div class="product-detail-meta">
-                <span class="product-detail-price" id="product-price-display">${Number(publicData.price).toFixed(2)} €</span>
+                <span class="product-detail-price" id="product-price-display">${initialDisplayPrice} €</span>
                 <span class="product-detail-stock ${stockClass}">${stockText}</span>
             </div>
         </div>
@@ -404,7 +409,7 @@ function renderProductDetail(product) {
                 // Update price display
                 const variantPrice = parseFloat(btn.dataset.variantPrice);
                 const priceDisplay = document.getElementById('product-price-display');
-                if (priceDisplay && variantPrice) {
+                if (priceDisplay && !isNaN(variantPrice)) {
                     priceDisplay.textContent = `${variantPrice.toFixed(2)} €`;
                 }
 
@@ -419,8 +424,11 @@ function renderProductDetail(product) {
 
                 // Update add to cart button data and availability
                 if (DOM.addToCartBtn) {
-                    DOM.addToCartBtn.dataset.price = variantPrice;
-                    DOM.addToCartBtn.dataset.id = `${productId}_${btn.dataset.variantSku}`;
+                    if (!isNaN(variantPrice)) {
+                        DOM.addToCartBtn.dataset.price = variantPrice;
+                    }
+                    const variantSku = btn.dataset.variantSku;
+                    DOM.addToCartBtn.dataset.id = variantSku ? `${productId}_${variantSku}` : productId;
                     const variantName = btn.dataset.variantName;
                     DOM.addToCartBtn.dataset.name = `${publicData.name} - ${variantName}`;
                     if (btn.dataset.variantImage) {
@@ -437,17 +445,16 @@ function renderProductDetail(product) {
     if (DOM.addToCartBtn) {
         // Use first available variant for initial state (if variants exist)
         // When all variants are unavailable, fall back to index 0 but keep button disabled
-        const initIdx = firstAvailableIdx >= 0 ? firstAvailableIdx : 0;
-        const initVariant = variants.length > 0 ? variants[initIdx] : null;
+        const initVariant = initActiveVariant;
         const initAvailable = initVariant ? isVariantAvailable(initVariant) : inventory > 0;
         DOM.addToCartBtn.disabled = !initAvailable;
         if (!initAvailable) {
             DOM.addToCartBtn.textContent = 'Изчерпано';
         }
         if (initVariant) {
-            DOM.addToCartBtn.dataset.id = `${productId}_${initVariant.sku}`;
+            DOM.addToCartBtn.dataset.id = initVariant.sku ? `${productId}_${initVariant.sku}` : productId;
             DOM.addToCartBtn.dataset.name = variants.length > 1 ? `${publicData.name} - ${initVariant.option_name || 'Стандартна'}` : publicData.name;
-            DOM.addToCartBtn.dataset.price = initVariant.price || publicData.price;
+            DOM.addToCartBtn.dataset.price = initVariant.price != null ? initVariant.price : publicData.price;
         } else {
             DOM.addToCartBtn.dataset.id = productId;
             DOM.addToCartBtn.dataset.name = publicData.name;

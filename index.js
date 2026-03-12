@@ -91,6 +91,7 @@ const generateProductCard = (product) => {
     const inventory = product.system_data?.inventory ?? 0;
     const productId = product.product_id;
     const variants = publicData.variants || [];
+    const availableVariants = variants.filter(v => v.available !== false && v.price != null);
     const variantBadge = variants.length > 1 
         ? `<span class="variant-badge">${variants.length} вкуса</span>` 
         : '';
@@ -98,13 +99,30 @@ const generateProductCard = (product) => {
         ? `<span class="brand-label">${escapeHtml(publicData.brand)}</span>` 
         : '';
 
+    // For products with multiple variants at different prices, show "от X.XX €"
+    let priceDisplay;
+    if (availableVariants.length > 1) {
+        const prices = availableVariants.map(v => v.price);
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        if (minPrice < maxPrice) {
+            priceDisplay = `<span class="price-from">от</span> ${Number(minPrice).toFixed(2)} €`;
+        } else {
+            priceDisplay = `${Number(minPrice).toFixed(2)} €`;
+        }
+    } else if (availableVariants.length === 1) {
+        priceDisplay = `${Number(availableVariants[0].price).toFixed(2)} €`;
+    } else {
+        priceDisplay = publicData.price != null ? `${Number(publicData.price).toFixed(2)} €` : '';
+    }
+
     return `
     <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}" data-brand="${escapeHtml(publicData.brand || '')}" data-price="${Number(publicData.price)}" data-goals="${escapeHtml((product.system_data?.goals || []).join(','))}">
         ${publicData.image_url ? `<div class="product-image">${variantBadge}<img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)} - ${escapeHtml(publicData.tagline)}" loading="lazy" decoding="async"></div>` : ''}
         <div class="card-content">
             ${brandLabel}
             <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(publicData.tagline)}</p></div>
-            <div class="product-price">${Number(publicData.price).toFixed(2)} €</div>
+            <div class="product-price">${priceDisplay}</div>
             <div class="effects-container">
                 ${(publicData.effects || []).map(generateEffectBar).join('')}
             </div>

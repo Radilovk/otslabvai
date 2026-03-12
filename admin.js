@@ -949,8 +949,9 @@ function serializeForm(form) {
         data.products = [];
         productsContainer.querySelectorAll(':scope > .nested-item[data-type="product"]').forEach((productNode, index) => {
             const productData = {};
-            // Сериализираме основните полета на продукта
+            // Сериализираме основните полета на продукта (пропускаме полетата от вложените елементи)
             productNode.querySelectorAll('[data-field]').forEach(input => {
+                if (input.closest('.nested-sub-item')) return; // skip variant/effect/ingredient/faq fields
                 const path = input.dataset.field;
                 let value;
                  if (input.type === 'checkbox') {
@@ -2279,6 +2280,7 @@ function exportProductsToCSV(productsContainer) {
     productNodes.forEach(node => {
         const productData = {};
         node.querySelectorAll('[data-field]').forEach(input => {
+            if (input.closest('.nested-sub-item')) return; // skip variant/effect/ingredient/faq fields
             const path = input.dataset.field;
             let value;
             if (input.type === 'checkbox') {
@@ -2677,6 +2679,7 @@ function handleMoveProduct(productEditor) {
     // Get product data
     const productData = {};
     productEditor.querySelectorAll('[data-field]').forEach(input => {
+        if (input.closest('.nested-sub-item')) return; // skip variant/effect/ingredient/faq fields
         const path = input.dataset.field;
         let value;
         if (input.type === 'checkbox') {

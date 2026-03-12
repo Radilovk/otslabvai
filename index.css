@@ -4204,6 +4204,13 @@ body.modal-open { overflow: hidden; }
     letter-spacing: 0.3px;
 }
 
+/* "от X.XX €" label for products with price range */
+.price-from {
+    font-size: 0.75em;
+    font-weight: 400;
+    opacity: 0.75;
+}
+
 .product-image {
     position: relative;
 }
