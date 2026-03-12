@@ -507,6 +507,48 @@
             background: var(--card-bg, #f9f9f9);
             border-radius: 12px;
             border: 1px solid var(--border-color, #e0e0e0);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .variant-dropdown-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .variant-dropdown-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-secondary, #888);
+        }
+
+        .variant-dropdown {
+            padding: 0.55rem 0.9rem;
+            border: 2px solid var(--border-color, #ddd);
+            border-radius: 8px;
+            background: var(--bg-color, #fff);
+            color: var(--text-primary, #333);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+            appearance: auto;
+        }
+
+        .variant-dropdown:focus {
+            outline: none;
+            border-color: var(--color-primary, #E4007C);
+            box-shadow: 0 0 0 3px rgba(228, 0, 124, 0.12);
+        }
+
+        .variant-dropdown:hover {
+            border-color: var(--color-primary, #E4007C);
         }
 
         .variant-selector-label {
@@ -516,6 +558,7 @@
             letter-spacing: 0.6px;
             color: var(--text-secondary, #888);
             margin-bottom: 0.75rem;
+            width: 100%;
         }
 
         .variant-options {

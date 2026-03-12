@@ -299,11 +299,64 @@ function renderProductDetail(product) {
     const initActiveIdx = firstAvailableIdx >= 0 ? firstAvailableIdx : 0;
     // Base price for delta calculation (the product's own base price)
     const basePrice = publicData.price;
+
+    // Helper: build variant label from packaging + flavor (or legacy option_name)
+    const variantLabel = v => {
+        const parts = [v.packaging, v.flavor].filter(Boolean);
+        if (parts.length > 0) return parts.join(' / ');
+        return v.option_name || 'Стандартна';
+    };
+
+    // Determine if new two-field system is used (at least one variant has packaging or flavor)
+    const hasPackagingField = variants.some(v => v.packaging !== undefined);
+    const hasFlavorField = variants.some(v => v.flavor !== undefined);
+    const useDropdownSystem = hasPackagingField || hasFlavorField;
+
+    // Unique packaging values (preserving first-seen order)
+    const uniquePackagings = useDropdownSystem
+        ? Array.from(new Set(variants.map(v => v.packaging || '').filter(Boolean)))
+        : [];
+    // Unique flavor values
+    const uniqueFlavors = useDropdownSystem
+        ? Array.from(new Set(variants.map(v => v.flavor || '').filter(Boolean)))
+        : [];
+
+    const showPackagingDropdown = uniquePackagings.length > 1;
+    const showFlavorDropdown = uniqueFlavors.length > 1;
+
     let variantSelectorHTML = '';
-    if (variants.length > 1) {
+    if (useDropdownSystem && (showPackagingDropdown || showFlavorDropdown)) {
+        const initVariantForDropdowns = variants[initActiveIdx] || {};
+
+        const packagingSelectHTML = showPackagingDropdown ? `
+            <div class="variant-dropdown-group">
+                <label class="variant-dropdown-label">Разфасовка</label>
+                <select class="variant-dropdown" id="variant-packaging-select">
+                    ${uniquePackagings.map(p => `<option value="${escapeHtml(p)}"${(initVariantForDropdowns.packaging || '') === p ? ' selected' : ''}>${escapeHtml(p)}</option>`).join('')}
+                </select>
+            </div>
+        ` : '';
+
+        const flavorSelectHTML = showFlavorDropdown ? `
+            <div class="variant-dropdown-group">
+                <label class="variant-dropdown-label">Вкус</label>
+                <select class="variant-dropdown" id="variant-flavor-select">
+                    ${uniqueFlavors.map(f => `<option value="${escapeHtml(f)}"${(initVariantForDropdowns.flavor || '') === f ? ' selected' : ''}>${escapeHtml(f)}</option>`).join('')}
+                </select>
+            </div>
+        ` : '';
+
+        variantSelectorHTML = `
+            <div class="product-variant-selector" id="product-variant-selector">
+                ${packagingSelectHTML}
+                ${flavorSelectHTML}
+            </div>
+        `;
+    } else if (!useDropdownSystem && variants.length > 1) {
+        // Legacy button-based selector (backward compatibility for option_name only variants)
         variantSelectorHTML = `
             <div class="product-variant-selector">
-                <div class="variant-selector-label">Изберете разфасовка / вкус:</div>
+                <div class="variant-selector-label">Изберете вариант:</div>
                 <div class="variant-options">
                     ${variants.map((v, idx) => {
                         const isUnavailable = !isVariantAvailable(v);
@@ -320,10 +373,10 @@ function renderProductDetail(product) {
                                 data-variant-sku="${escapeHtml(v.sku || '')}"
                                 data-variant-price="${typeof v.price === 'number' ? v.price : ''}"
                                 data-variant-image="${escapeHtml(v.image_url || '')}"
-                                data-variant-name="${escapeHtml(v.option_name || 'Стандартна')}"
+                                data-variant-name="${escapeHtml(variantLabel(v))}"
                                 data-variant-available="${isUnavailable ? 'false' : 'true'}"
                                 ${isUnavailable ? 'title="Изчерпано"' : ''}>
-                            <span class="variant-option-name">${escapeHtml(v.option_name || 'Стандартна')}</span>
+                            <span class="variant-option-name">${escapeHtml(variantLabel(v))}</span>
                             ${badge}
                         </button>
                         `;
@@ -408,7 +461,123 @@ function renderProductDetail(product) {
     DOM.productContent.innerHTML = productHTML;
 
     // Setup variant selector interaction
-    if (variants.length > 1) {
+    if (useDropdownSystem && (showPackagingDropdown || showFlavorDropdown)) {
+        // Helper: find best matching variant for selected packaging+flavor
+        const findVariant = (selectedPackaging, selectedFlavor) => {
+            // Exact match first
+            let match = variants.find(v => {
+                const pkgMatch = !showPackagingDropdown || (v.packaging || '') === selectedPackaging;
+                const flvMatch = !showFlavorDropdown || (v.flavor || '') === selectedFlavor;
+                return pkgMatch && flvMatch;
+            });
+            // Fallback: match by whichever dimension is shown
+            if (!match) {
+                match = variants.find(v =>
+                    showPackagingDropdown && (v.packaging || '') === selectedPackaging
+                ) || variants.find(v =>
+                    showFlavorDropdown && (v.flavor || '') === selectedFlavor
+                ) || variants[0];
+            }
+            return match || variants[0];
+        };
+
+        // Helper: update the UI with the selected variant
+        const applyVariant = (v) => {
+            if (!v) return;
+            const isAvailable = isVariantAvailable(v);
+            const variantPrice = typeof v.price === 'number' ? v.price : NaN;
+            const priceDisplay = document.getElementById('product-price-display');
+            const deltaDisplay = document.getElementById('product-price-delta');
+            if (priceDisplay && !isNaN(variantPrice)) {
+                priceDisplay.textContent = `${variantPrice.toFixed(2)} €`;
+                if (deltaDisplay) {
+                    const delta = variantPrice - (basePrice || 0);
+                    if (Math.abs(delta) > 0.005) {
+                        deltaDisplay.textContent = `${delta > 0 ? '+' : ''}${delta.toFixed(2)} €`;
+                        deltaDisplay.style.display = '';
+                    } else {
+                        deltaDisplay.style.display = 'none';
+                    }
+                }
+            }
+            if (v.image_url && /^https?:\/\//.test(v.image_url)) {
+                const mainImg = document.getElementById('main-product-img');
+                if (mainImg) mainImg.src = v.image_url;
+                const mainImgContainer = DOM.productContent.querySelector('.main-product-image');
+                if (mainImgContainer) mainImgContainer.dataset.zoomImage = v.image_url;
+            }
+            if (DOM.addToCartBtn) {
+                if (!isNaN(variantPrice)) DOM.addToCartBtn.dataset.price = variantPrice;
+                DOM.addToCartBtn.dataset.id = v.sku ? `${productId}_${v.sku}` : productId;
+                DOM.addToCartBtn.dataset.name = `${publicData.name} - ${variantLabel(v)}`;
+                if (v.image_url) DOM.addToCartBtn.dataset.image = v.image_url;
+                DOM.addToCartBtn.disabled = !isAvailable;
+                DOM.addToCartBtn.textContent = isAvailable ? 'Добави в количката' : 'Изчерпано';
+            }
+        };
+
+        // Helper: update packaging options based on selected flavor
+        const updatePackagingOptions = (selectedFlavor) => {
+            const packagingSelect = document.getElementById('variant-packaging-select');
+            if (!packagingSelect) return;
+            const validPackagings = new Set(
+                variants
+                    .filter(v => !showFlavorDropdown || (v.flavor || '') === selectedFlavor)
+                    .map(v => v.packaging || '')
+                    .filter(p => p !== '')
+            );
+            Array.from(packagingSelect.options).forEach(opt => {
+                opt.disabled = !validPackagings.has(opt.value);
+            });
+            // Auto-correct if current selection is invalid
+            if (packagingSelect.options[packagingSelect.selectedIndex].disabled) {
+                const firstValid = Array.from(packagingSelect.options).find(o => !o.disabled);
+                if (firstValid) packagingSelect.value = firstValid.value;
+            }
+        };
+
+        // Helper: update flavor options based on selected packaging
+        const updateFlavorOptions = (selectedPackaging) => {
+            const flavorSelect = document.getElementById('variant-flavor-select');
+            if (!flavorSelect) return;
+            const validFlavors = new Set(
+                variants
+                    .filter(v => !showPackagingDropdown || (v.packaging || '') === selectedPackaging)
+                    .map(v => v.flavor || '')
+                    .filter(f => f !== '')
+            );
+            Array.from(flavorSelect.options).forEach(opt => {
+                opt.disabled = !validFlavors.has(opt.value);
+            });
+            // Auto-correct if current selection is invalid
+            if (flavorSelect.options[flavorSelect.selectedIndex].disabled) {
+                const firstValid = Array.from(flavorSelect.options).find(o => !o.disabled);
+                if (firstValid) flavorSelect.value = firstValid.value;
+            }
+        };
+
+        const packagingSelect = document.getElementById('variant-packaging-select');
+        const flavorSelect = document.getElementById('variant-flavor-select');
+
+        const onDropdownChange = () => {
+            const selectedPackaging = packagingSelect ? packagingSelect.value : '';
+            const selectedFlavor = flavorSelect ? flavorSelect.value : '';
+            if (packagingSelect) updateFlavorOptions(selectedPackaging);
+            if (flavorSelect) updatePackagingOptions(selectedFlavor);
+            // Re-read values after potential auto-correction
+            const finalPackaging = packagingSelect ? packagingSelect.value : '';
+            const finalFlavor = flavorSelect ? flavorSelect.value : '';
+            const matched = findVariant(finalPackaging, finalFlavor);
+            applyVariant(matched);
+        };
+
+        if (packagingSelect) packagingSelect.addEventListener('change', onDropdownChange);
+        if (flavorSelect) flavorSelect.addEventListener('change', onDropdownChange);
+
+        // Initial state: apply the initial variant
+        applyVariant(variants[initActiveIdx]);
+    } else if (!useDropdownSystem && variants.length > 1) {
+        // Legacy button interaction
         const variantButtons = DOM.productContent.querySelectorAll('.variant-option');
         variantButtons.forEach(btn => {
             btn.addEventListener('click', () => {

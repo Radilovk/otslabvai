@@ -929,12 +929,13 @@
             ],
             "variants": [
               {
-                "option_name": "30 капс.",
                 "price": 65,
                 "sku": "",
                 "ean": "",
                 "image_url": "",
-                "available": true
+                "available": true,
+                "packaging": "30 капс.",
+                "flavor": ""
               }
             ]
           },
@@ -1041,20 +1042,22 @@
             ],
             "variants": [
               {
-                "option_name": "30 калс",
                 "price": 54,
                 "sku": "",
                 "ean": "",
                 "image_url": "",
-                "available": true
+                "available": true,
+                "packaging": "30 капс",
+                "flavor": ""
               },
               {
-                "option_name": "45 капс",
                 "price": 45,
                 "sku": "",
                 "ean": "",
                 "image_url": "",
-                "available": true
+                "available": true,
+                "packaging": "45 капс",
+                "flavor": ""
               }
             ]
           },
