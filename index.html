@@ -76,6 +76,9 @@
     </script>
 </head>
 <body>
+    <!-- Scroll progress indicator -->
+    <div id="scroll-progress" class="scroll-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Прочетено"></div>
+
     <!-- ============================ HEADER & NAVIGATION ============================ -->
     <header class="main-header">
         <div class="header-container">
@@ -177,6 +180,16 @@
         </div>
     </header>
     <div class="nav-overlay"></div>
+
+    <!-- Ambient cursor glow (desktop only) -->
+    <div id="cursor-glow" class="cursor-glow" aria-hidden="true"></div>
+
+    <!-- Ambient background orbs for visual depth -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+    </div>
     
     <!-- Fixed Mobile Cart Icon -->
     <a href="checkout.html" class="cart-icon-fixed-mobile" aria-label="Количка" id="cart-icon-mobile">
