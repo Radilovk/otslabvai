@@ -442,6 +442,63 @@ h2 {
 .nested-sub-item .form-group { flex: 1; margin-bottom: 0; }
 .nested-sub-item .form-group label { font-size: 0.8rem; }
 
+/* Variant editor - use column layout so all fields are clearly visible */
+.nested-sub-item[data-type="variant"] {
+    flex-direction: column;
+    align-items: stretch;
+    position: relative;
+    padding-top: 2rem;
+}
+.nested-sub-item[data-type="variant"] > .delete-nested-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+}
+.nested-sub-item[data-type="variant"] .form-row {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+.nested-sub-item[data-type="variant"] .form-row .form-group {
+    flex: 1;
+    margin-bottom: 0.75rem;
+}
+.nested-sub-item[data-type="variant"] > .form-group {
+    margin-bottom: 0.75rem;
+}
+.nested-sub-item[data-type="variant"] .form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+.nested-sub-item[data-type="variant"] input[type="text"],
+.nested-sub-item[data-type="variant"] input[type="number"] {
+    width: 100%;
+}
+/* Advanced disclosure inside variant editor */
+.variant-advanced {
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.variant-advanced > summary {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+    background: var(--bg-light, #f5f5f5);
+}
+.variant-advanced > summary:hover {
+    color: var(--primary-color);
+}
+.variant-advanced > *:not(summary) {
+    padding: 0 0.75rem 0.5rem;
+}
+
 /* --- Табове в модала --- */
 .modal-tab-nav { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; }
 .modal-tab-btn { padding: 0.75rem 1rem; background: none; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); }
