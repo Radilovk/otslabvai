@@ -528,6 +528,31 @@
             color: #fff;
         }
 
+        .variant-option.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+            text-decoration: line-through;
+            border-style: dashed;
+        }
+
+        .variant-option.unavailable:hover {
+            border-color: var(--border-color, #ddd);
+            background: var(--bg-color, #fff);
+        }
+
+        .variant-option.unavailable.active {
+            border-color: var(--border-color, #ddd);
+            background: var(--bg-color, #fff);
+            color: var(--text-secondary, #888);
+        }
+
+        .variant-sold-out {
+            font-size: 0.7rem;
+            color: var(--text-secondary, #888);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
         .variant-option .variant-price {
             font-size: 0.75rem;
             opacity: 0.8;

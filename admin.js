@@ -1059,7 +1059,9 @@ function addNestedItem(container, templateId, data) {
             const path = input.dataset.field;
             const value = getProperty(data, path);
             if (value !== undefined && value !== null) {
-                if(Array.isArray(value)) {
+                if (input.type === 'checkbox') {
+                    input.checked = !!value;
+                } else if (Array.isArray(value)) {
                     input.value = value.join(', ');
                 } else {
                     input.value = value;
