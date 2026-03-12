@@ -297,39 +297,38 @@ function renderProductDetail(product) {
     // Index of the initially active variant (first available one)
     const firstAvailableIdx = variants.findIndex(isVariantAvailable);
     const initActiveIdx = firstAvailableIdx >= 0 ? firstAvailableIdx : 0;
+    // Base price for delta calculation (the product's own base price)
+    const basePrice = publicData.price;
     let variantSelectorHTML = '';
     if (variants.length > 1) {
         variantSelectorHTML = `
             <div class="product-variant-selector">
-                <h3>Изберете вкус / разфасовка</h3>
+                <div class="variant-selector-label">Изберете разфасовка / вкус:</div>
                 <div class="variant-options">
                     ${variants.map((v, idx) => {
                         const isUnavailable = !isVariantAvailable(v);
                         const isActive = idx === initActiveIdx;
-                        const priceLabel = isUnavailable
+                        const delta = (typeof v.price === 'number' && typeof basePrice === 'number') ? v.price - basePrice : null;
+                        const badge = isUnavailable
                             ? '<span class="variant-sold-out">Изчерпано</span>'
-                            : (v.price != null ? `<span class="variant-price">${Number(v.price).toFixed(2)} €</span>` : '');
+                            : (delta !== null && Math.abs(delta) > 0.005
+                                ? `<span class="variant-delta">${delta > 0 ? '+' : ''}${delta.toFixed(2)} €</span>`
+                                : '');
                         return `
-                        <button class="variant-option ${isActive ? 'active' : ''} ${isUnavailable ? 'unavailable' : ''}" 
+                        <button class="variant-option ${isActive ? 'active' : ''} ${isUnavailable ? 'unavailable' : ''}"
                                 data-variant-idx="${idx}"
                                 data-variant-sku="${escapeHtml(v.sku || '')}"
-                                data-variant-price="${v.price != null ? v.price : ''}"
+                                data-variant-price="${typeof v.price === 'number' ? v.price : ''}"
                                 data-variant-image="${escapeHtml(v.image_url || '')}"
                                 data-variant-name="${escapeHtml(v.option_name || 'Стандартна')}"
                                 data-variant-available="${isUnavailable ? 'false' : 'true'}"
                                 ${isUnavailable ? 'title="Изчерпано"' : ''}>
-                            ${escapeHtml(v.option_name || 'Стандартна')}
-                            ${priceLabel}
+                            <span class="variant-option-name">${escapeHtml(v.option_name || 'Стандартна')}</span>
+                            ${badge}
                         </button>
                         `;
                     }).join('')}
                 </div>
-            </div>
-        `;
-    } else if (variants.length === 1 && variants[0].option_name && variants[0].option_name !== 'Стандартна') {
-        variantSelectorHTML = `
-            <div class="product-variant-selector">
-                <p class="single-variant-label">Вкус / Разфасовка: <strong>${escapeHtml(variants[0].option_name)}</strong></p>
             </div>
         `;
     }
@@ -347,33 +346,46 @@ function renderProductDetail(product) {
     // Build the product detail HTML
     // Use the initial variant price for display if variants are present
     const initActiveVariant = variants.length > 0 ? variants[initActiveIdx] : null;
-    const initialDisplayPrice = (initActiveVariant && initActiveVariant.price != null)
+    const initialDisplayPrice = (initActiveVariant && typeof initActiveVariant.price === 'number')
         ? Number(initActiveVariant.price).toFixed(2)
         : Number(publicData.price).toFixed(2);
-    const productHTML = `
-        <div class="product-detail-header">
-            ${brandHTML}
-            <h1>${escapeHtml(publicData.name)}</h1>
-            <p class="tagline">${escapeHtml(publicData.tagline)}</p>
-            <div class="product-detail-meta">
-                <span class="product-detail-price" id="product-price-display">${initialDisplayPrice} €</span>
-                <span class="product-detail-stock ${stockClass}">${stockText}</span>
-            </div>
-        </div>
+    // Compute initial delta for display (shown if first active variant differs from base price)
+    const initDelta = (initActiveVariant && typeof initActiveVariant.price === 'number' && typeof basePrice === 'number')
+        ? initActiveVariant.price - basePrice : 0;
+    const initDeltaHTML = (Math.abs(initDelta) > 0.005)
+        ? `<span class="product-price-delta" id="product-price-delta">${initDelta > 0 ? '+' : ''}${initDelta.toFixed(2)} €</span>`
+        : `<span class="product-price-delta" id="product-price-delta" style="display:none;"></span>`;
 
-        ${imagesHTML}
-
-        ${variantSelectorHTML}
-        ${labelHTML}
-
-        ${(publicData.effects && publicData.effects.length > 0) ? `
+    const effectsHTML = (publicData.effects && publicData.effects.length > 0) ? `
             <div class="product-detail-effects">
                 <h2>Ефекти</h2>
                 <div class="effects-container">
                     ${publicData.effects.map(generateEffectBar).join('')}
                 </div>
             </div>
-        ` : ''}
+        ` : '';
+
+    const productHTML = `
+        <div class="product-detail-header">
+            ${brandHTML}
+            <h1>${escapeHtml(publicData.name)}</h1>
+            <p class="tagline">${escapeHtml(publicData.tagline)}</p>
+            <div class="product-detail-meta">
+                <div class="price-group">
+                    <span class="product-detail-price" id="product-price-display">${initialDisplayPrice} €</span>
+                    ${initDeltaHTML}
+                </div>
+                <span class="product-detail-stock ${stockClass}">${stockText}</span>
+            </div>
+        </div>
+
+        ${imagesHTML}
+
+        ${labelHTML}
+
+        ${effectsHTML}
+
+        ${variantSelectorHTML}
 
         <div class="product-detail-description">
             <h2>Описание</h2>
@@ -406,11 +418,21 @@ function renderProductDetail(product) {
 
                 const isAvailable = btn.dataset.variantAvailable !== 'false';
 
-                // Update price display
+                // Update price display and delta
                 const variantPrice = parseFloat(btn.dataset.variantPrice);
                 const priceDisplay = document.getElementById('product-price-display');
+                const deltaDisplay = document.getElementById('product-price-delta');
                 if (priceDisplay && !isNaN(variantPrice)) {
                     priceDisplay.textContent = `${variantPrice.toFixed(2)} €`;
+                    if (deltaDisplay) {
+                        const delta = variantPrice - (basePrice || 0);
+                        if (Math.abs(delta) > 0.005) {
+                            deltaDisplay.textContent = `${delta > 0 ? '+' : ''}${delta.toFixed(2)} €`;
+                            deltaDisplay.style.display = '';
+                        } else {
+                            deltaDisplay.style.display = 'none';
+                        }
+                    }
                 }
 
                 // Update main image if variant has different image
@@ -454,7 +476,7 @@ function renderProductDetail(product) {
         if (initVariant) {
             DOM.addToCartBtn.dataset.id = initVariant.sku ? `${productId}_${initVariant.sku}` : productId;
             DOM.addToCartBtn.dataset.name = variants.length > 1 ? `${publicData.name} - ${initVariant.option_name || 'Стандартна'}` : publicData.name;
-            DOM.addToCartBtn.dataset.price = initVariant.price != null ? initVariant.price : publicData.price;
+            DOM.addToCartBtn.dataset.price = typeof initVariant.price === 'number' ? initVariant.price : publicData.price;
         } else {
             DOM.addToCartBtn.dataset.id = productId;
             DOM.addToCartBtn.dataset.name = publicData.name;

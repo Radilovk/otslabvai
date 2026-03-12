@@ -91,7 +91,7 @@ const generateProductCard = (product) => {
     const inventory = product.system_data?.inventory ?? 0;
     const productId = product.product_id;
     const variants = publicData.variants || [];
-    const availableVariants = variants.filter(v => v.available !== false && v.price != null);
+    const availableVariants = variants.filter(v => v.available !== false && typeof v.price === 'number');
     const variantBadge = variants.length > 1 
         ? `<span class="variant-badge">${variants.length} вкуса</span>` 
         : '';
@@ -113,7 +113,7 @@ const generateProductCard = (product) => {
     } else if (availableVariants.length === 1) {
         priceDisplay = `${Number(availableVariants[0].price).toFixed(2)} €`;
     } else {
-        priceDisplay = publicData.price != null ? `${Number(publicData.price).toFixed(2)} €` : '';
+        priceDisplay = typeof publicData.price === 'number' ? `${Number(publicData.price).toFixed(2)} €` : '';
     }
 
     return `

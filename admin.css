@@ -476,6 +476,28 @@ h2 {
 .nested-sub-item[data-type="variant"] input[type="number"] {
     width: 100%;
 }
+/* Advanced disclosure inside variant editor */
+.variant-advanced {
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.variant-advanced > summary {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+    background: var(--bg-light, #f5f5f5);
+}
+.variant-advanced > summary:hover {
+    color: var(--primary-color);
+}
+.variant-advanced > *:not(summary) {
+    padding: 0 0.75rem 0.5rem;
+}
 
 /* --- Табове в модала --- */
 .modal-tab-nav { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; }
