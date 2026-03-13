@@ -929,13 +929,12 @@
             ],
             "variants": [
               {
-                "packaging": "30 капс.",
-                "flavor": "",
                 "price": 65,
                 "sku": "",
                 "ean": "",
                 "image_url": "",
-                "available": true
+                "available": true,
+                "option_name": "30 капс."
               }
             ]
           },
