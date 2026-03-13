@@ -1148,7 +1148,7 @@ function setupEventListeners() {
                 if (success) {
                     setUnsavedChanges(true);
                     renderAll();
-                    showNotification('Промените са запазени. Натиснете "Запази всичко" за да ги съхраните.', 'success');
+                    await saveData();
                 }
             }
         }
