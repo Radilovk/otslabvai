@@ -300,34 +300,39 @@ function renderProductDetail(product) {
     // Base price for delta calculation (the product's own base price)
     const basePrice = publicData.price;
     let variantSelectorHTML = '';
-    if (variants.length > 1) {
+    if (variants.length === 1) {
+        // Single variant: display as static text, no label, no interaction element
+        const v = variants[0];
         variantSelectorHTML = `
-            <div class="product-variant-selector">
-                <div class="variant-selector-label">Изберете разфасовка / вкус:</div>
-                <div class="variant-options">
-                    ${variants.map((v, idx) => {
-                        const isUnavailable = !isVariantAvailable(v);
-                        const isActive = idx === initActiveIdx;
-                        const delta = (typeof v.price === 'number' && typeof basePrice === 'number') ? v.price - basePrice : null;
-                        const badge = isUnavailable
-                            ? '<span class="variant-sold-out">Изчерпано</span>'
-                            : (delta !== null && Math.abs(delta) > 0.005
-                                ? `<span class="variant-delta">${delta > 0 ? '+' : ''}${delta.toFixed(2)} €</span>`
-                                : '');
-                        return `
-                        <button class="variant-option ${isActive ? 'active' : ''} ${isUnavailable ? 'unavailable' : ''}"
-                                data-variant-idx="${idx}"
+            <div class="product-variant-selector product-variant-selector--single">
+                <span class="variant-single-display">${escapeHtml(v.option_name || '')}</span>
+            </div>
+        `;
+    } else if (variants.length > 1) {
+        // Multiple variants: dropdown selector with "Варианти:" label
+        variantSelectorHTML = `
+            <div class="product-variant-selector product-variant-selector--multi">
+                <span class="variant-dropdown-label">Варианти:</span>
+                <div class="variant-dropdown-wrapper">
+                    <select id="variant-select" class="variant-dropdown" aria-label="Избери вариант">
+                        ${variants.map((v, idx) => {
+                            const isUnavailable = !isVariantAvailable(v);
+                            const delta = (typeof v.price === 'number' && typeof basePrice === 'number') ? v.price - basePrice : null;
+                            const deltaStr = (delta !== null && Math.abs(delta) > 0.005)
+                                ? ` (${delta > 0 ? '+' : ''}${delta.toFixed(2)} €)`
+                                : '';
+                            const soldOutStr = isUnavailable ? ' — Изчерпано' : '';
+                            return `<option value="${idx}"
                                 data-variant-sku="${escapeHtml(v.sku || '')}"
                                 data-variant-price="${typeof v.price === 'number' ? v.price : ''}"
                                 data-variant-image="${escapeHtml(v.image_url || '')}"
                                 data-variant-name="${escapeHtml(v.option_name || 'Стандартна')}"
                                 data-variant-available="${isUnavailable ? 'false' : 'true'}"
-                                ${isUnavailable ? 'title="Изчерпано"' : ''}>
-                            <span class="variant-option-name">${escapeHtml(v.option_name || 'Стандартна')}</span>
-                            ${badge}
-                        </button>
-                        `;
-                    }).join('')}
+                                ${idx === initActiveIdx ? 'selected' : ''}
+                            >${escapeHtml(v.option_name || 'Стандартна')}${deltaStr}${soldOutStr}</option>`;
+                        }).join('')}
+                    </select>
+                    <span class="variant-dropdown-arrow" aria-hidden="true"></span>
                 </div>
             </div>
         `;
@@ -409,17 +414,14 @@ function renderProductDetail(product) {
 
     // Setup variant selector interaction
     if (variants.length > 1) {
-        const variantButtons = DOM.productContent.querySelectorAll('.variant-option');
-        variantButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Update active state
-                variantButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                const isAvailable = btn.dataset.variantAvailable !== 'false';
+        const variantSelect = DOM.productContent.querySelector('#variant-select');
+        if (variantSelect) {
+            variantSelect.addEventListener('change', () => {
+                const selectedOption = variantSelect.options[variantSelect.selectedIndex];
+                const isAvailable = selectedOption.dataset.variantAvailable !== 'false';
 
                 // Update price display and delta
-                const variantPrice = parseFloat(btn.dataset.variantPrice);
+                const variantPrice = parseFloat(selectedOption.dataset.variantPrice);
                 const priceDisplay = document.getElementById('product-price-display');
                 const deltaDisplay = document.getElementById('product-price-delta');
                 if (priceDisplay && !isNaN(variantPrice)) {
@@ -435,8 +437,8 @@ function renderProductDetail(product) {
                     }
                 }
 
-                // Update main image if variant has different image
-                const variantImage = btn.dataset.variantImage;
+                // Update main image if variant has a different image
+                const variantImage = selectedOption.dataset.variantImage;
                 if (variantImage && /^https?:\/\//.test(variantImage)) {
                     const mainImg = document.getElementById('main-product-img');
                     if (mainImg) mainImg.src = variantImage;
@@ -449,18 +451,18 @@ function renderProductDetail(product) {
                     if (!isNaN(variantPrice)) {
                         DOM.addToCartBtn.dataset.price = variantPrice;
                     }
-                    const variantSku = btn.dataset.variantSku;
+                    const variantSku = selectedOption.dataset.variantSku;
                     DOM.addToCartBtn.dataset.id = variantSku ? `${productId}_${variantSku}` : productId;
-                    const variantName = btn.dataset.variantName;
+                    const variantName = selectedOption.dataset.variantName;
                     DOM.addToCartBtn.dataset.name = `${publicData.name} - ${variantName}`;
-                    if (btn.dataset.variantImage) {
-                        DOM.addToCartBtn.dataset.image = btn.dataset.variantImage;
+                    if (selectedOption.dataset.variantImage) {
+                        DOM.addToCartBtn.dataset.image = selectedOption.dataset.variantImage;
                     }
                     DOM.addToCartBtn.disabled = !isAvailable;
                     DOM.addToCartBtn.textContent = isAvailable ? 'Добави в количката' : 'Изчерпано';
                 }
             });
-        });
+        }
     }
 
     // Setup add to cart button

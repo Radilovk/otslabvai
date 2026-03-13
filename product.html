@@ -502,95 +502,94 @@
 
         /* Variant Selector — placed after effects section */
         .product-variant-selector {
-            margin: 1.5rem 0;
-            padding: 1.25rem 1.5rem;
-            background: var(--card-bg, #f9f9f9);
-            border-radius: 12px;
-            border: 1px solid var(--border-color, #e0e0e0);
+            margin: 1.25rem 0;
         }
 
-        .variant-selector-label {
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            color: var(--text-secondary, #888);
-            margin-bottom: 0.75rem;
+        /* Single variant: plain styled text, no label */
+        .product-variant-selector--single {
+            display: block;
         }
 
-        .variant-options {
+        .variant-single-display {
+            display: inline-block;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary, #212529);
+            letter-spacing: 0.01em;
+            line-height: 1.4;
+        }
+
+        /* Multi variant: label + dropdown row */
+        .product-variant-selector--multi {
             display: flex;
+            align-items: center;
+            gap: 0.75rem;
             flex-wrap: wrap;
-            gap: 0.5rem;
         }
 
-        .variant-option {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            padding: 0.55rem 1.1rem;
-            border: 2px solid var(--border-color, #ddd);
+        .variant-dropdown-label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-secondary, #6c757d);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .variant-dropdown-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 180px;
+            max-width: 380px;
+        }
+
+        .variant-dropdown {
+            width: 100%;
+            padding: 0.55rem 2.4rem 0.55rem 0.9rem;
+            border: 2px solid var(--border-color, rgba(0, 0, 0, 0.1));
             border-radius: 8px;
             background: var(--bg-color, #fff);
-            color: var(--text-primary, #333);
-            font-size: 0.88rem;
+            color: var(--text-primary, #212529);
+            font-size: 0.9rem;
             font-weight: 500;
+            font-family: inherit;
             cursor: pointer;
-            transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
-            line-height: 1.3;
+            appearance: none;
+            -webkit-appearance: none;
+            outline: none;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
         }
 
-        .variant-option:hover:not(.unavailable) {
+        .variant-dropdown:focus {
             border-color: var(--color-primary, #E4007C);
-            background: rgba(228, 0, 124, 0.04);
-            box-shadow: 0 2px 8px rgba(228, 0, 124, 0.12);
+            box-shadow: 0 0 0 3px rgba(228, 0, 124, 0.12);
         }
 
-        .variant-option.active {
+        .variant-dropdown:hover {
             border-color: var(--color-primary, #E4007C);
-            background: var(--color-primary, #E4007C);
-            color: #fff;
-            box-shadow: 0 3px 10px rgba(228, 0, 124, 0.3);
         }
 
-        .variant-option.active .variant-delta {
-            background: rgba(255, 255, 255, 0.2);
-            color: #fff;
-            border-color: rgba(255, 255, 255, 0.3);
+        .variant-dropdown-arrow {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%) rotate(45deg);
+            pointer-events: none;
+            width: 7px;
+            height: 7px;
+            border-right: 2px solid var(--text-secondary, #6c757d);
+            border-bottom: 2px solid var(--text-secondary, #6c757d);
+            margin-top: -3px;
         }
 
-        .variant-option.unavailable {
-            opacity: 0.45;
-            cursor: not-allowed;
-            text-decoration: line-through;
-            border-style: dashed;
-        }
-
-        .variant-option.unavailable:hover {
-            border-color: var(--border-color, #ddd);
-            background: var(--bg-color, #fff);
-            box-shadow: none;
-        }
-
-        .variant-sold-out {
-            font-size: 0.68rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            color: var(--text-secondary, #888);
-        }
-
-        /* Delta badge inside variant button (e.g. "+25.22 €") */
-        .variant-delta {
-            font-size: 0.72rem;
-            font-weight: 700;
-            padding: 1px 6px;
-            border-radius: 10px;
-            background: rgba(0, 169, 157, 0.1);
-            color: var(--color-secondary, #00A99D);
-            border: 1px solid rgba(0, 169, 157, 0.25);
-            white-space: nowrap;
-            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+        @media (max-width: 480px) {
+            .product-variant-selector--multi {
+                gap: 0.5rem;
+            }
+            .variant-dropdown-wrapper {
+                min-width: 0;
+                width: 100%;
+                max-width: 100%;
+            }
         }
 
         .product-detail-brand {
@@ -618,15 +617,6 @@
             text-decoration: underline;
         }
 
-        @media (max-width: 600px) {
-            .variant-options {
-                gap: 0.4rem;
-            }
-            .variant-option {
-                padding: 0.45rem 0.85rem;
-                font-size: 0.82rem;
-            }
-        }
     </style>
 </head>
 <body>
