@@ -2538,6 +2538,9 @@ async function handleAIAssistant(productEditor) {
         fillField('[data-field="public_data.tagline"]', aiData.tagline);
         fillField('[data-field="public_data.description"]', aiData.description);
         
+        // Марка (Brand)
+        fillField('[data-field="public_data.brand"]', aiData.brand);
+
         // Изображения
         fillField('[data-field="public_data.image_url"]', aiData.image_url);
         
@@ -2633,6 +2636,19 @@ async function handleAIAssistant(productEditor) {
             }
         }
         
+        // Добавяме варианти
+        if (aiData.variants && Array.isArray(aiData.variants)) {
+            const variantsContainer = productEditor.querySelector('[data-sub-container="variants"]');
+            if (variantsContainer) {
+                const existingVariants = variantsContainer.querySelectorAll('.nested-sub-item[data-type="variant"]');
+                if (existingVariants.length === 0) {
+                    aiData.variants.forEach(variant => {
+                        addNestedItem(variantsContainer, 'variant-editor-template', variant);
+                    });
+                }
+            }
+        }
+
         // Актуализираме заглавието на продукта само ако е празно или е "Нов Продукт"
         const titleSpan = productEditor.querySelector('.product-editor-title');
         if (titleSpan && aiData.name) {
@@ -3006,26 +3022,27 @@ function getDefaultPromptTemplate() {
 Моля попълни JSON обект със следните полета (на български език):
 {
   "name": "Пълно име на продукта",
+  "brand": "Марка / производителска марка на продукта (напр. OstroVit, Olimp, Scitec Nutrition и т.н.; null ако не е известна)",
   "manufacturer": "Производител (ако е известен)",
-  "price": "Приблизителна цена в лева като число (или null ако не знаеш)",
+  "price": "Приблизителна цена в евро като число (или null ако не знаеш)",
   "tagline": "Кратък маркетингов слоган (до 60 символа)",
   "description": "Подробно маркетингово описание (100-200 думи)",
   "packaging_info": {
-    "capsules_or_grams": "Брой капсули или грамаж",
-    "doses_per_package": "Брой дози в опаковка"
+    "capsules_or_grams": "Брой капсули или грамаж (напр. '60 капсули' или '500 г')",
+    "doses_per_package": "Брой дози в опаковка (напр. '30 дози')"
   },
   "effects": [
     {
       "label": "Ефект 1",
-      "value": "Стойност от 0 до 10"
+      "value": "Число от 0 до 100 (показва се като процентна лента)"
     },
     {
-      "label": "Ефект 2", 
-      "value": "Стойност от 0 до 10"
+      "label": "Ефект 2",
+      "value": "Число от 0 до 100"
     },
     {
       "label": "Ефект 3",
-      "value": "Стойност от 0 до 10"
+      "value": "Число от 0 до 100"
     }
   ],
   "about_content": {
@@ -3033,8 +3050,8 @@ function getDefaultPromptTemplate() {
     "description": "Подробно описание",
     "benefits": [
       {
-        "icon": "✓",
-        "text": "Полза 1"
+        "title": "Заглавие на ползата",
+        "text": "Подробно описание на ползата"
       }
     ]
   },
@@ -3053,6 +3070,13 @@ function getDefaultPromptTemplate() {
       "question": "Често задаван въпрос 1",
       "answer": "Отговор"
     }
+  ],
+  "variants": [
+    {
+      "option_name": "Разфасовка или вкус (напр. '60 капс', '120 капс', 'Ягода', 'Шоколад')",
+      "price": "Цена на варианта като число (или null)",
+      "available": true
+    }
   ]
 }
 
@@ -3063,6 +3087,7 @@ function getDefaultPromptTemplate() {
 - Бъди точен, грамотен и маркетингово компетентен
 - Ако липсва информация за поле, използвай null или празен масив []
 - Базирай се на твоите знания за подобни продукти
+- За "variants": добави 1-3 типични разфасовки/вкуса ако продуктът обичайно се продава в такива; ако не, използвай []
 
 КРИТИЧНО ВАЖНО - ПРАВИЛА ЗА ЛИПСВАЩА ИНФОРМАЦИЯ:
 ⚠️ НИКОГА не използвай думи като "неуточнено", "не е посочено", "липсва информация", "неизвестно" или подобни в полета за количества, опаковка или други данни
