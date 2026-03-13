@@ -4548,7 +4548,7 @@ section[id="scientific"] {
 /* Клас за изображения в шестоъгълни маски */
 .hex-img-wrapper {
     display: inline-block;
-    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    clip-path: polygon(50% 0%, 93.301% 25%, 93.301% 75%, 50% 100%, 6.699% 75%, 6.699% 25%);
     border-radius: 6px;
     overflow: hidden;
 }
@@ -4562,7 +4562,7 @@ section[id="scientific"] {
 
 /* Testimonial avatars in hex */
 .testimonial-avatar {
-    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    clip-path: polygon(50% 0%, 93.301% 25%, 93.301% 75%, 50% 100%, 6.699% 75%, 6.699% 25%);
     border-radius: 4px;
     border: none; /* clip-path replaces border */
     box-shadow: 0 0 0 3px var(--accent), 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -4576,7 +4576,7 @@ section[id="scientific"] {
     justify-content: center;
     width: 64px;
     height: 64px;
-    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    clip-path: polygon(50% 0%, 93.301% 25%, 93.301% 75%, 50% 100%, 6.699% 75%, 6.699% 25%);
     background: transparent;
     position: relative;
     flex-shrink: 0;
@@ -4586,7 +4586,7 @@ section[id="scientific"] {
     content: '';
     position: absolute;
     inset: 0;
-    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    clip-path: polygon(50% 0%, 93.301% 25%, 93.301% 75%, 50% 100%, 6.699% 75%, 6.699% 25%);
     border: 2px solid var(--accent);
     background: rgba(0, 196, 200, 0.06);
 }
@@ -4665,7 +4665,7 @@ section[id="scientific"] {
 /* Шестоъгълни скелетни елементи при зареждане */
 .skeleton-hex {
     display: inline-block;
-    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    clip-path: polygon(50% 0%, 93.301% 25%, 93.301% 75%, 50% 100%, 6.699% 75%, 6.699% 25%);
     background-color: var(--skeleton-bg);
     animation: skeleton-pulse 1.5s infinite ease-in-out;
     background-image: linear-gradient(90deg, var(--skeleton-bg) 0px, var(--skeleton-highlight) 40px, var(--skeleton-bg) 80px);
@@ -4707,7 +4707,7 @@ section[id="scientific"] {
 .protocol-node-icon {
     width: 80px;
     height: 80px;
-    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    clip-path: polygon(50% 0%, 93.301% 25%, 93.301% 75%, 50% 100%, 6.699% 75%, 6.699% 25%);
     background: rgba(0, 196, 200, 0.08);
     border: 2px solid rgba(0, 196, 200, 0.3);
     display: flex;
@@ -4937,7 +4937,7 @@ section[id="scientific"] {
 .stack-connector {
     width: 20px;
     height: 20px;
-    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    clip-path: polygon(50% 0%, 93.301% 25%, 93.301% 75%, 50% 100%, 6.699% 75%, 6.699% 25%);
     background: rgba(0, 196, 200, 0.25);
     flex-shrink: 0;
 }
@@ -5498,7 +5498,7 @@ section[id="scientific"] {
 .hex-frame {
     position: absolute;
     overflow: hidden;
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    clip-path: polygon(50% 0%, 93.301% 25%, 93.301% 75%, 50% 100%, 6.699% 75%, 6.699% 25%);
     background: transparent;
     z-index: 2;
     transition: transform 0.35s ease, box-shadow 0.35s ease;
@@ -5510,7 +5510,7 @@ section[id="scientific"] {
     position: absolute;
     inset: -3px;
     background: linear-gradient(135deg, #d4a843, #00c4c8 50%, #00c4c8);
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    clip-path: polygon(50% 0%, 93.301% 25%, 93.301% 75%, 50% 100%, 6.699% 75%, 6.699% 25%);
     z-index: -1;
 }
 
@@ -5630,7 +5630,7 @@ section[id="scientific"] {
     right: -24px;
     width: 80px;
     height: 80px;
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    clip-path: polygon(50% 0%, 93.301% 25%, 93.301% 75%, 50% 100%, 6.699% 75%, 6.699% 25%);
     background: rgba(0, 196, 200, 0.05);
     pointer-events: none;
 }
