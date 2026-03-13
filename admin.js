@@ -3034,15 +3034,15 @@ function getDefaultPromptTemplate() {
   "effects": [
     {
       "label": "Ефект 1",
-      "value": "Число от 0 до 100 (показва се като процентна лента)"
+      "value": "Стойност от 0 до 10"
     },
     {
       "label": "Ефект 2",
-      "value": "Число от 0 до 100"
+      "value": "Стойност от 0 до 10"
     },
     {
       "label": "Ефект 3",
-      "value": "Число от 0 до 100"
+      "value": "Стойност от 0 до 10"
     }
   ],
   "about_content": {
@@ -3065,6 +3065,10 @@ function getDefaultPromptTemplate() {
   "recommended_intake": "Препоръчителен прием и дозировка",
   "contraindications": "Противопоказания и предупреждения",
   "additional_advice": "Допълнителни съвети и информация",
+  "research_note": {
+    "text": "Кратко описание на научен/клиничен източник (напр. 'Проучване, публикувано в PubMed, 2021') или null",
+    "url": "URL към изследване или официален сайт или null"
+  },
   "faq": [
     {
       "question": "Често задаван въпрос 1",
@@ -3077,7 +3081,12 @@ function getDefaultPromptTemplate() {
       "price": "Цена на варианта като число (или null)",
       "available": true
     }
-  ]
+  ],
+  "application_type": "Тип приложение - използвай ТОЧНО една от стойностите: 'Injectable', 'Intranasal', 'Topical', 'Oral', 'Injectable / Oral / Topical' (или null ако не е приложимо)",
+  "goals": "Цели/ефекти на продукта, разделени със запетая (на английски, напр. 'weight-loss, appetite-control, energy')",
+  "target_profile": "Описание на идеалния потребител на продукта",
+  "protocol_hint": "Техническа насока за протокол на прием (дозировка, цикличност, комбинации)",
+  "safety_warnings": "Предупреждения за безопасност и противопоказания за системни данни"
 }
 
 ВАЖНО:
