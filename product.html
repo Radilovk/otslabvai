@@ -519,12 +519,13 @@
             line-height: 1.4;
         }
 
-        /* Multi variant: label + dropdown row */
+        /* Multi variant: heading above dropdown (block layout) */
         .product-variant-selector--multi {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            flex-wrap: wrap;
+            display: block;
+        }
+
+        .variant-section-heading {
+            margin-bottom: 0.5rem;
         }
 
         .variant-dropdown-label {
@@ -537,7 +538,6 @@
 
         .variant-dropdown-wrapper {
             position: relative;
-            flex: 1;
             min-width: 180px;
             max-width: 380px;
         }
@@ -582,9 +582,6 @@
         }
 
         @media (max-width: 480px) {
-            .product-variant-selector--multi {
-                gap: 0.5rem;
-            }
             .variant-dropdown-wrapper {
                 min-width: 0;
                 width: 100%;

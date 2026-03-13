@@ -301,18 +301,19 @@ function renderProductDetail(product) {
     const basePrice = publicData.price;
     let variantSelectorHTML = '';
     if (variants.length === 1) {
-        // Single variant: display as static text, no label, no interaction element
+        // Single variant: display as static text with "Количество" heading
         const v = variants[0];
         variantSelectorHTML = `
             <div class="product-variant-selector product-variant-selector--single">
+                <h2>Количество</h2>
                 <span class="variant-single-display">${escapeHtml(v.option_name || '')}</span>
             </div>
         `;
     } else if (variants.length > 1) {
-        // Multiple variants: dropdown selector with "Варианти:" label
+        // Multiple variants: dropdown selector with "Варианти:" heading above
         variantSelectorHTML = `
             <div class="product-variant-selector product-variant-selector--multi">
-                <span class="variant-dropdown-label">Варианти:</span>
+                <h2 class="variant-section-heading">Варианти:</h2>
                 <div class="variant-dropdown-wrapper">
                     <select id="variant-select" class="variant-dropdown" aria-label="Избери вариант">
                         ${variants.map((v, idx) => {
@@ -421,13 +422,15 @@ function renderProductDetail(product) {
                 const isAvailable = selectedOption.dataset.variantAvailable !== 'false';
 
                 // Update price display and delta
+                // When a variant has no price, fall back to the base product price
                 const variantPrice = parseFloat(selectedOption.dataset.variantPrice);
+                const displayPrice = isNaN(variantPrice) ? basePrice : variantPrice;
                 const priceDisplay = document.getElementById('product-price-display');
                 const deltaDisplay = document.getElementById('product-price-delta');
-                if (priceDisplay && !isNaN(variantPrice)) {
-                    priceDisplay.textContent = `${variantPrice.toFixed(2)} €`;
+                if (priceDisplay && typeof displayPrice === 'number') {
+                    priceDisplay.textContent = `${Number(displayPrice).toFixed(2)} €`;
                     if (deltaDisplay) {
-                        const delta = variantPrice - (basePrice || 0);
+                        const delta = displayPrice - (basePrice || 0);
                         if (Math.abs(delta) > 0.005) {
                             deltaDisplay.textContent = `${delta > 0 ? '+' : ''}${delta.toFixed(2)} €`;
                             deltaDisplay.style.display = '';
@@ -448,9 +451,8 @@ function renderProductDetail(product) {
 
                 // Update add to cart button data and availability
                 if (DOM.addToCartBtn) {
-                    if (!isNaN(variantPrice)) {
-                        DOM.addToCartBtn.dataset.price = variantPrice;
-                    }
+                    // Use base price as fallback when variant has no price
+                    DOM.addToCartBtn.dataset.price = isNaN(variantPrice) ? (basePrice || 0) : variantPrice;
                     const variantSku = selectedOption.dataset.variantSku;
                     DOM.addToCartBtn.dataset.id = variantSku ? `${productId}_${variantSku}` : productId;
                     const variantName = selectedOption.dataset.variantName;
