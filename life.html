@@ -47,6 +47,21 @@
             <a href="#" class="logo-container" id="header-logo-link">
                 <!-- Initial logo set to light theme variant for instant display, will be updated by JS based on theme -->
                 <img src="images/lifelogo3.png" alt="Life Protocols Лого" id="header-logo-img" style="display: block;">
+                <script>
+                /* Prevent logo FOUC: apply cached logo URL from localStorage before first paint.
+                   lifeCachedLogoLight / lifeCachedLogoDark are written by renderHeader() on each visit. */
+                (function () {
+                    try {
+                        var theme = document.documentElement.getAttribute('data-theme') || 'light';
+                        var cacheKey = theme === 'dark' ? 'lifeCachedLogoDark' : 'lifeCachedLogoLight';
+                        var cachedUrl = localStorage.getItem(cacheKey);
+                        if (cachedUrl) {
+                            var logoImg = document.getElementById('header-logo-img');
+                            if (logoImg) logoImg.src = cachedUrl;
+                        }
+                    } catch (e) { /* localStorage may be unavailable (private mode) */ }
+                }());
+                </script>
                 <div>
                     <span class="brand-name" id="header-brand-name">Life Protocols</span>
                     <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
@@ -1444,6 +1459,19 @@ function initializeLogoFromCache() {
         updateLogoForTheme();
         return true;
     }
+    // Fallback: read directly from localStorage (set on previous visit by renderHeader)
+    try {
+        const lightLogo = localStorage.getItem('lifeCachedLogoLight');
+        const darkLogo = localStorage.getItem('lifeCachedLogoDark');
+        if ((lightLogo || darkLogo) && !window.logoSettings) {
+            window.logoSettings = {
+                lightLogo: lightLogo || darkLogo,
+                darkLogo: darkLogo || lightLogo
+            };
+            updateLogoForTheme();
+            return true;
+        }
+    } catch (e) {}
     return false;
 }
 
