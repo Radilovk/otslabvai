@@ -2,9 +2,9 @@
   "settings": {
     "site_name": "Life Protocols",
     "site_slogan": "Протоколи за Здраве и Дълголетие",
-    "logo_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773369418803-lifelogo3__2_.png",
-    "logo_url_light": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773369479265-lifelogo3__2_.png",
-    "logo_url_dark": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773369491761-lifelogo3__2_.png",
+    "logo_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773504384216-life_protocols_logo_more_padding.png",
+    "logo_url_light": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773504392550-life_protocols_logo_more_padding.png",
+    "logo_url_dark": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773504395716-life_protocols_logo_more_padding.png",
     "promo_banner": {
       "text": "ЕКСКЛУЗИВНО: Безплатна консултация при първа поръчка на пептиди!"
     },
@@ -41,7 +41,7 @@
     {
       "type": "hero_banner",
       "component_id": "life-hero-001",
-      "title": "Преписване на Биологичния Часовник.",
+      "title": "Настройване на Биологичния Часовник.",
       "subtitle": "Открийте силата на пептидите и иновативните добавки за подмладяване на молекулярно ниво.",
       "buttons": {
         "primary": {
@@ -115,7 +115,9 @@
           "icon": "brain",
           "link": "#all-products"
         }
-      ]
+      ],
+      "background_image": "",
+      "background_gradient": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
     },
     {
       "type": "info_card",
