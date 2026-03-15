@@ -1274,8 +1274,8 @@ async function callOpenAI(settings, messages) {
  * Call Google AI (Gemini)
  */
 async function callGoogleAI(settings, messages) {
-    const model = settings.model || 'gemini-pro';
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${settings.apiKey}`;
+    const model = settings.model || 'gemini-2.0-flash';
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${settings.apiKey}`;
 
     // Map the messages array to Google's format.
     // A system-role message becomes a top-level systemInstruction.
