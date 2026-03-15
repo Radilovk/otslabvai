@@ -134,7 +134,7 @@ function renderProductDetail(product) {
     const productId = product.product_id;
 
     // Update page title
-    document.title = `${publicData.name} - Ефективни Решения за Отслабване`;
+    document.title = `${publicData.name} - Life Protocols`;
 
     // Generate About Content section
     const aboutContentHTML = publicData.about_content ? `
@@ -545,7 +545,7 @@ function addProductStructuredData(product, publicData) {
         "image": publicData.image_url,
         "brand": {
             "@type": "Brand",
-            "name": publicData.brand || "ДА ОТСЛАБНА"
+            "name": publicData.brand || "Life Protocols"
         },
         "offers": {
             "@type": "Offer",
@@ -555,7 +555,7 @@ function addProductStructuredData(product, publicData) {
             "availability": availability,
             "seller": {
                 "@type": "Organization",
-                "name": "ДА ОТСЛАБНА"
+                "name": "Life Protocols"
             }
         }
     };
@@ -605,7 +605,7 @@ function addProductStructuredData(product, publicData) {
 // Update meta tags dynamically for product pages
 function updateProductMetaTags(publicData) {
     // Update title
-    document.title = `${publicData.name} - ДА ОТСЛАБНА`;
+    document.title = `${publicData.name} - Life Protocols`;
     
     // Update or create meta description
     let metaDesc = document.querySelector('meta[name="description"]');
