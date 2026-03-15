@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="bg" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="images/lifelogo3.png">
+    <title>Поръчка - Life Protocols</title>
+    <meta name="description" content="Формуляр за завършване на поръчката.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://daotslabna.com/life-checkout.html">
+    <meta property="og:title" content="Поръчка - Life Protocols">
+    <meta property="og:description" content="Формуляр за завършване на поръчката.">
+    <meta property="og:image" content="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="bg_BG">
+    <meta property="og:url" content="https://daotslabna.com/life-checkout.html">
+    <meta property="og:site_name" content="Life Protocols">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="images/lifelogo3.png" type="image/png">
+    <link rel="stylesheet" href="life.css">
+    
+    <script>
+        (function() {
+            try {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        /* Reuse global CSS variables from index.css */
+        :root {
+            --ekont-dropdown-expansion-height: 200px;
+        }
+        
+        body { 
+            font-family: var(--font-secondary); 
+            background-color: var(--bg-primary); 
+            color: var(--text-primary); 
+            line-height: 1.6;
+        }
+        .checkout-container { display: flex; flex-wrap: wrap; max-width: 1400px; margin: 2rem auto; padding: 0 1rem; gap: 2rem; }
+        .form-section { flex: 6; min-width: 320px; }
+        .summary-section { flex: 4; min-width: 300px; background-color: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-color); padding: 1.5rem; align-self: flex-start; position: sticky; top: 2rem; }
+        h1, h2, h3 { font-family: var(--font-primary); }
+        h1 { margin-bottom: 2rem; }
+        h2 { font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
+        .form-step { margin-bottom: 2.5rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .form-group input { width: 100%; padding: 0.8rem; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 1rem; transition: border-color 0.3s, box-shadow 0.3s; }
+        .form-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 224, 224, 0.2); }
+        .form-group input.is-invalid { border-color: var(--error-color); }
+        .error-message { color: var(--error-color); font-size: 0.85rem; margin-top: 0.25rem; display: none; }
+        input.is-invalid + .error-message { display: block; }
+        .form-row { display: flex; gap: 1rem; }
+        .form-row .form-group { flex: 1; }
+        .checkbox-group { display: flex; align-items: center; gap: 0.75rem; background-color: var(--bg-secondary); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 1rem; }
+        .checkbox-group label { margin-bottom: 0; color: var(--text-primary); font-weight: 400; cursor: pointer; }
+        .checkbox-group input { width: auto; }
+        .hidden-fields { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        .hidden-fields.visible { max-height: 1000px; margin-top: 1rem; overflow: visible; /* Allow dropdowns to extend beyond */}
+        /* Summary Section Styles */
+        .product-list { list-style: none; }
+        .product-item { display: flex; gap: 1rem; align-items: center; padding: 1rem 0; border-bottom: 1px solid var(--border-color); }
+        .product-item:last-child { border-bottom: none; }
+        .product-image { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); }
+        .product-info { flex-grow: 1; }
+        .product-info h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1rem; font-weight: 600; margin: 0; }
+        .product-info span { font-size: 0.9rem; color: var(--text-secondary); }
+        .product-controls { display: flex; flex-direction: column; align-items: flex-end; }
+        .quantity-control { display: flex; align-items: center; border: 1px solid var(--border-color); border-radius: 6px; }
+        .quantity-control button { background: none; border: none; color: var(--text-primary); font-size: 1.2rem; cursor: pointer; padding: 0.3rem 0.7rem; }
+        .quantity-control span { padding: 0 0.5rem; font-weight: 600; }
+        .product-price { font-weight: 600; margin-top: 0.5rem; }
+        .remove-item-btn { font-size: 1rem; color: var(--text-secondary); cursor: pointer; transition: color 0.3s; margin-left: 0.5rem; }
+        .remove-item-btn:hover { color: var(--error-color); }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; font-size: 1rem; }
+        .summary-row.total { font-size: 1.2rem; font-weight: bold; border-top: 1px solid var(--border-color); margin-top: 1rem; padding-top: 1rem; }
+        .promo-code-form { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .promo-code-form input { flex-grow: 1; }
+        .promo-code-form button { 
+            padding: 0.8rem 1.5rem; 
+            background-color: var(--color-primary); 
+            color: var(--color-white); 
+            border: none; 
+            border-radius: 50px; 
+            cursor: pointer; 
+            font-weight: 600;
+            transition: all var(--transition-speed);
+            font-family: var(--font-primary);
+        }
+        .promo-code-form button:hover {
+            background-color: #c3006a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(228, 0, 124, 0.4);
+        }
+        /* Finalization */
+        .btn-submit { 
+            width: 100%; 
+            padding: 1rem; 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            color: var(--color-white); 
+            background-color: var(--color-primary); 
+            border: none; 
+            border-radius: 50px; 
+            cursor: pointer; 
+            transition: all var(--transition-speed);
+            font-family: var(--font-primary);
+        }
+        .btn-submit:hover { 
+            background-color: #c3006a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(228, 0, 124, 0.4);
+        }
+        .trust-seals { 
+            text-align: center; 
+            margin-top: 1.5rem; 
+            color: var(--text-secondary); 
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+        .checkout-page-title {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Courier Widget Styles */
+        .courier-widget {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: visible; /* Allow dropdowns to extend beyond container */
+            position: relative; /* Establish positioning context */
+        }
+        
+        /* Ensure Speedy widget doesn't expand parent container horizontally */
+        #speedy-widget {
+            overflow-x: hidden; /* Prevent container from expanding horizontally */
+            overflow-y: visible; /* Allow iframe to extend vertically if needed */
+        }
+        
+        /* Ekont widget should allow dropdowns to overflow */
+        #ekont-widget {
+            overflow: visible; /* Allow dropdowns to extend beyond container */
+        }
+        
+        /* Responsive iframe for Speedy widget */
+        #frameOfficeLocator {
+            width: 100%;
+            max-width: 400px;
+            height: 400px !important;
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        /* Expanded state for ekont-widget when dropdown is shown */
+        #ekont-widget.expanded {
+            padding-bottom: var(--ekont-dropdown-expansion-height);
+            transition: padding-bottom 0.3s ease-in-out;
+        }
+        .speedy-widget-container {
+            font-family: Arial, sans-serif;
+            max-width: 100%;
+            overflow-x: hidden; /* Prevent horizontal expansion */
+            overflow-y: visible; /* Allow iframe to be visible */
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Speedy result info styling */
+        #speedy-result-info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: var(--bg-secondary);
+            border-left: 4px solid var(--accent-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            box-sizing: border-box;
+        }
+        
+        #view-office-name {
+            display: inline-block;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+        
+        #view-office-addr {
+            color: var(--text-secondary);
+            display: block;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            margin-top: 0.25rem;
+        }
+        
+        .econt-container {
+            font-family: Arial, sans-serif;
+            max-width: 100%;
+        }
+        
+        /* Econt custom dropdown styles */
+        .econt-dropdown-wrapper {
+            position: relative;
+            z-index: 1000; /* Above form elements, below modals (z-index: 10000) */
+        }
+        
+        .econt-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--bg-secondary);
+            border: 2px solid #0056b3;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            z-index: 1001; /* Above wrapper (1000) and form elements, below modals (10000) */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .econt-dropdown-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+        
+        .econt-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .econt-dropdown-item:hover {
+            background-color: rgba(0, 86, 179, 0.1);
+        }
+        
+        .econt-dropdown-item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            display: block;
+        }
+        
+        .econt-dropdown-item-address {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: block;
+            margin-top: 2px;
+        }
+        
+        .econt-dropdown-item-empty {
+            padding: 10px;
+            cursor: default;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        
+        @media (max-width: 992px) {
+            .checkout-container { flex-direction: column-reverse; }
+            .summary-section { position: static; }
+        }
+        @media (max-width: 600px) {
+            /* Prevent horizontal overflow on mobile */
+            body {
+                overflow-x: hidden;
+            }
+            
+            .checkout-container { 
+                padding: 0 0.5rem;
+                max-width: 100%;
+                overflow-x: hidden; /* Prevent horizontal scroll */
+                overflow-y: visible; /* Allow dropdowns to extend vertically */
+            }
+            
+            .form-section {
+                min-width: 0;
+                overflow-x: hidden; /* Prevent horizontal scroll */
+                overflow-y: visible; /* Allow dropdowns to extend vertically */
+            }
+            
+            .form-row { flex-direction: column; }
+            .product-item { flex-direction: column; align-items: flex-start; }
+            .product-controls { width: 100%; flex-direction: row; justify-content: space-between; margin-top: 0.5rem; }
+            .summary-section { 
+                padding: 1rem;
+                max-width: 100%;
+            }
+            
+            /* Allow speedy widget to have iframe extend outside on mobile */
+            #speedy-widget {
+                overflow: visible; /* Allow iframe to extend outside */
+            }
+            
+            /* Mobile-optimized courier selection */
+            .courier-widget {
+                padding: 0.5rem;
+                margin-top: 0.75rem;
+                max-width: 100%;
+                overflow: visible; /* Allow iframe to extend outside */
+                box-sizing: border-box;
+            }
+            
+            .speedy-widget-container {
+                max-width: 100%;
+                overflow: visible; /* Allow iframe to extend outside container */
+                margin: 0 auto;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch; /* Changed from center to allow negative margin approach */
+                position: relative;
+            }
+            
+            .econt-container {
+                max-width: 100%;
+                overflow: visible; /* Changed from hidden to allow dropdown to display */
+                position: relative;
+            }
+            
+            /* Speedy iframe mobile optimization - fixed 400px width that extends outside container */
+            #frameOfficeLocator {
+                width: 400px !important;
+                height: 400px !important;
+                box-sizing: border-box;
+                /* Center using calc - when container < 400px, negative margins center the wider iframe */
+                margin: 0 calc((100% - 400px) / 2);
+            }
+            
+            /* Ensure Econt dropdown has high z-index on mobile */
+            .econt-dropdown {
+                z-index: 1001;
+            }
+            
+            .speedy-widget-container label,
+            .econt-container label {
+                font-size: 0.9rem;
+                display: block;
+                margin-bottom: 0.5rem;
+            }
+            
+            /* Enhanced result info display for mobile - THIS IS THE KEY FIX */
+            #speedy-result-info {
+                font-size: 0.85rem;
+                padding: 0.75rem;
+                max-width: 100%;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                white-space: normal;
+                box-sizing: border-box;
+            }
+            
+            /* Make office name and address display properly on mobile */
+            #view-office-name {
+                display: inline-block;
+                max-width: 100%;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                white-space: normal;
+            }
+            
+            #view-office-addr {
+                display: block;
+                max-width: 100%;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                white-space: normal;
+                margin-top: 0.25rem;
+            }
+            
+            /* Better mobile input styling */
+            #ekont-office-search {
+                font-size: 16px !important; /* Prevents zoom on iOS */
+                width: 100%;
+                box-sizing: border-box;
+            }
+            
+            #ekont-status-text {
+                font-size: 0.75rem;
+            }
+            
+            /* Compact form groups on mobile */
+            .form-group {
+                margin-bottom: 0.75rem;
+            }
+            
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            
+            h3 {
+                font-size: 1.1rem;
+                margin-top: 1rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+            
+            h4 {
+                font-size: 1rem;
+                margin-top: 0.75rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            
+            /* Optimize checkbox groups for mobile */
+            .checkbox-group {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+            
+            .checkout-page-title {
+                font-size: 1.75rem;
+            }
+        }
+        
+        /* Success Modal Styles */
+        .success-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .success-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .success-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .success-modal-content {
+            position: relative;
+            background: var(--bg-primary);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            max-width: 540px;
+            width: 90%;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            text-align: center;
+            animation: modalBounceIn 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1;
+        }
+        
+        .success-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            font-size: 1.8rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .success-modal-close:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transform: rotate(90deg);
+        }
+        
+        .success-animation {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        /* Add celebration confetti effect */
+        .success-animation::before,
+        .success-animation::after {
+            content: '🎉';
+            position: absolute;
+            font-size: 2rem;
+            animation: celebrate 1.5s ease-out;
+        }
+        
+        .success-animation::before {
+            left: 10%;
+            top: -10px;
+            animation-delay: 0.3s;
+        }
+        
+        .success-animation::after {
+            right: 10%;
+            top: -10px;
+            animation-delay: 0.5s;
+        }
+        
+        .checkmark {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            animation: checkmarkBounce 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.2s both;
+            filter: drop-shadow(0 5px 15px rgba(0, 224, 224, 0.3));
+        }
+        
+        .checkmark-circle {
+            stroke: var(--color-secondary);
+            stroke-width: 3;
+            stroke-miterlimit: 10;
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            animation: strokeCircle 0.8s cubic-bezier(0.65, 0, 0.45, 1) 0.3s forwards;
+            fill: none;
+        }
+        
+        .checkmark-check {
+            stroke: var(--color-primary);
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-miterlimit: 10;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: strokeCheck 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+        
+        .success-title {
+            font-family: var(--font-primary);
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+            animation: fadeSlideUp 0.6s ease 0.5s both;
+        }
+        
+        .success-message {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            animation: fadeSlideUp 0.6s ease 0.6s both;
+            font-weight: 500;
+        }
+        
+        .success-details {
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+        
+        .success-detail-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, rgba(228, 0, 124, 0.05), rgba(0, 224, 224, 0.05));
+            border: 1px solid rgba(228, 0, 124, 0.1);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            animation: fadeSlideUp 0.5s ease both;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .success-detail-item:nth-child(1) {
+            animation-delay: 0.7s;
+        }
+        
+        .success-detail-item:nth-child(2) {
+            animation-delay: 0.8s;
+        }
+        
+        .success-detail-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(228, 0, 124, 0.15);
+        }
+        
+        .detail-icon {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+            animation: bounce 1s ease infinite;
+        }
+        
+        .detail-text {
+            flex: 1;
+            font-size: 1rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .detail-text strong {
+            color: var(--color-primary);
+        }
+        
+        .success-btn {
+            width: 100%;
+            padding: 1.25rem 2rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-family: var(--font-primary);
+            font-weight: 700;
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: fadeSlideUp 0.6s ease 0.9s both;
+            box-shadow: 0 8px 20px rgba(228, 0, 124, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .success-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .success-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .success-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(228, 0, 124, 0.4);
+        }
+        
+        .success-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes modalBounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(-50px);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.95);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes checkmarkBounce {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.15);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes strokeCircle {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        
+        @keyframes strokeCheck {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        
+        @keyframes celebrate {
+            0% {
+                opacity: 0;
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-80px) rotate(180deg);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .success-modal-content {
+                padding: 2.5rem 1.5rem;
+                border-radius: 20px;
+            }
+            
+            .checkmark {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .success-title {
+                font-size: 1.6rem;
+            }
+            
+            .success-message {
+                font-size: 1rem;
+            }
+            
+            .success-detail-item {
+                padding: 1rem;
+            }
+        }
+        
+        /* Reduced motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            .success-modal-content,
+            .checkmark,
+            .success-title,
+            .success-message,
+            .success-detail-item,
+            .success-btn {
+                animation: none;
+            }
+            
+            .detail-icon {
+                animation: none;
+            }
+            
+            .success-animation::before,
+            .success-animation::after {
+                animation: none;
+                opacity: 0;
+            }
+            
+            .success-modal {
+                animation: fadeIn 0.2s ease;
+            }
+            
+            .success-btn:hover {
+                transform: none;
+            }
+            
+            .success-modal-close:hover {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <a href="life.html" class="logo-container" id="header-logo-link">
+                <img src="images/lifelogo3.png" alt="Life Protocols Лого" id="header-logo-img" style="display: block;">
+                <div>
+                    <span class="brand-name" id="header-brand-name">Life Protocols</span>
+                    <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <ul class="nav-links" id="main-nav-links">
+                    <!-- Navigation links will be dynamically added here -->
+                    <li><a href="life-checkout.html" class="cart-link">Количка (<span id="cart-count">0</span>)</a></li>
+                </ul>
+            </nav>
+            <button class="menu-toggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    <div class="nav-overlay"></div>
+    <div class="checkout-container">
+        <!-- Форма за попълване -->
+        <main class="form-section">
+            <h1 class="checkout-page-title">Завършване на поръчката</h1>
+            <a href="life.html" class="btn-back" aria-label="Обратно към магазина"></a>
+            <form id="checkout-form" novalidate>
+                <div class="form-step">
+                    <h2>Информация за контакт</h2>
+                    <div class="form-group">
+                        <label for="email">Имейл адрес</label>
+                        <input type="email" id="email" name="email" required>
+                        <div class="error-message">Моля, въведете валиден имейл адрес.</div>
+                    </div>
+                </div>
+
+                <div class="form-step">
+                    <h2>Адрес за доставка</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="first-name">Име</label>
+                            <input type="text" id="first-name" name="firstName" required>
+                            <div class="error-message">Полето е задължително.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="last-name">Фамилия</label>
+                            <input type="text" id="last-name" name="lastName" required>
+                            <div class="error-message">Полето е задължително.</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Телефон</label>
+                        <input type="tel" id="phone" name="phone" required>
+                        <div class="error-message">Моля, въведете валиден телефонен номер.</div>
+                    </div>
+                    
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem;">Метод на доставка</h3>
+                    <div class="checkbox-group">
+                        <input type="radio" id="delivery-address" name="deliveryMethod" value="address">
+                        <label for="delivery-address">Доставка до личен адрес</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="radio" id="delivery-courier" name="deliveryMethod" value="courier" checked>
+                        <label for="delivery-courier">Доставка до офис на куриер</label>
+                    </div>
+                    
+                    <div id="address-fields" class="hidden-fields">
+                        <div class="form-group">
+                            <label for="address">Адрес (улица, номер, бл., вх., ет., ап.)</label>
+                            <input type="text" id="address" name="address" required>
+                            <div class="error-message">Полето е задължително.</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="city">Град / Населено място</label>
+                                <input type="text" id="city" name="city" required>
+                                <div class="error-message">Полето е задължително.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="postcode">Пощенски код</label>
+                                <input type="text" id="postcode" name="postcode" required>
+                                <div class="error-message">Полето е задължително.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="courier-fields" class="hidden-fields">
+                        <h4 style="margin-top: 1rem; margin-bottom: 0.75rem;">Избор на куриерска фирма</h4>
+                        <div class="checkbox-group">
+                            <input type="radio" id="courier-speedy" name="courierCompany" value="speedy" checked>
+                            <label for="courier-speedy">Speedy</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="radio" id="courier-ekont" name="courierCompany" value="ekont">
+                            <label for="courier-ekont">Econt</label>
+                        </div>
+                        
+                        <!-- Speedy Office Selection Widget -->
+                        <div id="speedy-widget" class="courier-widget" style="display: none; margin-top: 1rem;">
+                            <div class="speedy-widget-container">
+                                <label><strong>Избери офис на Спиди:</strong></label>
+                                <br><br>
+                                <iframe id="frameOfficeLocator" name="frameOfficeLocator" 
+                                        src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=Избор"
+                                        sandbox="allow-scripts allow-same-origin"
+                                        style="width: 100%; height: 400px;">
+                                </iframe>
+                                <div id="speedy-result-info" style="display: none;">
+                                    <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
+                                    <span id="view-office-addr">-</span>
+                                </div>
+                                <input type="hidden" name="speedy_office_id" id="final-speedy-id">
+                            </div>
+                        </div>
+                        
+                        <!-- Econt Office Selection Widget -->
+                        <div id="ekont-widget" class="courier-widget" style="display: none; margin-top: 1rem;">
+                            <div class="econt-container">
+                                <label for="ekont-office-search"><strong>Избери офис на Еконт:</strong></label>
+                                <br>
+                                <div class="econt-dropdown-wrapper">
+                                    <input type="text" id="ekont-office-search" placeholder="Град или име на офис..." autocomplete="off" style="width: 100%; padding: 10px; border: 2px solid #0056b3; border-radius: 5px; font-size: 15px; margin-top: 0.5rem;">
+                                    <div id="econt-offices-dropdown" class="econt-dropdown" style="display: none;"></div>
+                                </div>
+                                <input type="hidden" id="final-office-id" name="office_id">
+                                <div id="ekont-status-text" style="font-size: 12px; color: gray; margin-top: 5px;">Зареждане...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-step">
+                    <h2>Начин на плащане</h2>
+                    <div class="checkbox-group">
+                        <input type="radio" id="cod" name="paymentMethod" value="cod" checked>
+                        <label for="cod">Наложен платеж</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="radio" id="card" name="paymentMethod" value="card" disabled>
+                        <label for="card">Кредитна/Дебитна карта (Очаквайте скоро)</label>
+                    </div>
+                </div>
+                
+                <div class="form-step">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="policy-consent" name="policyConsent" required>
+                        <label for="policy-consent">Прочетох и се съгласявам с <a href="life-policy.html" target="_blank" style="color:var(--accent)">политиката за поверителност</a> и <a href="life-shipping.html" target="_blank" style="color:var(--accent)">условията за доставка</a>.</label>
+                    </div>
+                    <div class="error-message" id="policy-error">Трябва да се съгласите с политиката и условията.</div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms">Прочетох и се съгласявам с <a href="life-terms.html" target="_blank" style="color:var(--accent)">Общите условия</a>.</label>
+                    </div>
+                    <div class="error-message" id="terms-error">Трябва да се съгласите с общите условия.</div>
+
+                    <button type="submit" class="btn-submit" style="margin-top: 1.5rem;">Поръчай с наложен платеж</button>
+                    <p class="trust-seals">🔒 Всички транзакции са сигурни и криптирани.<br>📦 Гаранция за качество и сигурна доставка.</p>
+                </div>
+            </form>
+        </main>
+
+        <!-- Резюме на поръчката -->
+        <aside class="summary-section">
+            <h2>Резюме на поръчката</h2>
+            <ul class="product-list" id="product-list">
+                <!-- Продуктите ще се заредят тук от JS -->
+            </ul>
+            <div class="promo-code-form">
+                <input type="text" id="promo-code" placeholder="Промо код">
+                <button id="apply-promo">Приложи</button>
+            </div>
+            <div class="summary-details">
+                <div class="summary-row">
+                    <span>Междинна сума</span>
+                    <span id="summary-subtotal">0.00 €</span>
+                </div>
+                <div class="summary-row">
+                    <span>Доставка</span>
+                    <span id="summary-shipping">Изчислява се...</span>
+                </div>
+                <div class="summary-row" id="discount-row" style="display:none;">
+                    <span>Отстъпка</span>
+                    <span id="summary-discount"></span>
+                </div>
+                <div class="summary-row total">
+                    <span>ОБЩО</span>
+                    <span id="summary-total">0.00 €</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid" id="footer-grid-container">
+                <!-- Футър колоните ще бъдат генерирани от JS -->
+            </div>
+            <div class="footer-bottom" id="footer-copyright-container">
+                <!-- Copyright текстът ще бъде генериран от JS -->
+            </div>
+        </div>
+    </footer>
+
+    <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="success-modal" role="dialog" aria-modal="true" aria-labelledby="success-title">
+        <div class="success-modal-overlay" aria-hidden="true"></div>
+        <div class="success-modal-content" tabindex="-1">
+            <button class="success-modal-close" aria-label="Затвори" onclick="closeSuccessModal()">&times;</button>
+            <div class="success-animation">
+                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" aria-hidden="true">
+                    <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                    <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                </svg>
+            </div>
+            <h2 id="success-title" class="success-title">Поръчката е приета успешно! 🎉</h2>
+            <p class="success-message">Благодарим ви за доверието!</p>
+            <div class="success-details">
+                <div class="success-detail-item">
+                    <span class="detail-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                    </span>
+                    <span class="detail-text">Вашата поръчка ще бъде изпратена в рамките на <strong>48 часа</strong></span>
+                </div>
+                <div class="success-detail-item">
+                    <span class="detail-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="6"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                        </svg>
+                    </span>
+                    <span class="detail-text">Направихте важна стъпка към постигането на вашата цел</span>
+                </div>
+            </div>
+            <button class="success-btn" onclick="window.location.href='life.html'">Продължи пазаруването</button>
+        </div>
+    </div>
+
+    <script type="module">
+    import { API_URL } from './config.js';
+    
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- Shared cache for page content to avoid duplicate requests ---
+        let pageContentCache = null;
+        let pageContentPromise = null;
+        
+        // --- Load page content once and cache it ---
+        async function loadPageContent() {
+            // Return cached data if available
+            if (pageContentCache) {
+                return pageContentCache;
+            }
+            
+            // Return in-flight promise if already loading
+            if (pageContentPromise) {
+                return pageContentPromise;
+            }
+            
+            // Start loading
+            pageContentPromise = (async () => {
+                try {
+                    let response, data;
+                    try {
+                        response = await fetch(`${API_URL}/life_page_content.json`, {
+                            cache: 'default'
+                        });
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                        data = await response.json();
+                    } catch (apiError) {
+                        console.warn('API failed, trying mock data:', apiError);
+                        response = await fetch('life_page_content_mock.json', {
+                            cache: 'default'
+                        });
+                        if (!response.ok) throw new Error('Mock data also unavailable');
+                        data = await response.json();
+                    }
+                    
+                    pageContentCache = data;
+                    return data;
+                } catch (error) {
+                    console.error('Could not load page content:', error);
+                    // Reset both cache and promise for consistent retry behavior
+                    pageContentCache = null;
+                    pageContentPromise = null;
+                    throw error;
+                }
+            })();
+            
+            return pageContentPromise;
+        }
+        
+        // --- Load header settings from cached data ---
+        async function loadHeaderSettings(data) {
+            try {
+                if (data && data.settings) {
+                    const settings = data.settings;
+                    if (settings.logo_url) {
+                        const logoImg = document.getElementById('header-logo-img');
+                        logoImg.src = settings.logo_url;
+                        logoImg.style.display = 'block';
+                    }
+                    if (settings.site_name) {
+                        document.getElementById('header-brand-name').textContent = settings.site_name;
+                    }
+                    if (settings.site_slogan) {
+                        const sloganEl = document.getElementById('header-brand-slogan');
+                        sloganEl.textContent = settings.site_slogan;
+                        sloganEl.style.display = 'block';
+                    }
+                }
+                
+                // Render navigation - auto-generated from product categories
+                if (data) {
+                    const navLinksContainer = document.getElementById('main-nav-links');
+                    if (navLinksContainer) {
+                        // Find the persistent mobile-only items (last 2 li: theme toggle + cart)
+                        const persistentLis = navLinksContainer.querySelectorAll('li:nth-last-child(-n+2)');
+
+                        // Build nav items from product categories (source of truth) + non-category links
+                        const navItems = [];
+                        if (Array.isArray(data.page_content)) {
+                            data.page_content.forEach(component => {
+                                if (component.type === 'product_category' && component.title && !component.is_hidden) {
+                                    const anchor = component.id || component.component_id;
+                                    if (anchor) {
+                                        navItems.push({ text: component.title, link: `life.html#${anchor}` });
+                                    }
+                                }
+                            });
+                        }
+                        if (Array.isArray(data.navigation)) {
+                            data.navigation.forEach(item => {
+                                if (item.link && item.link.startsWith('#')) return;
+                                navItems.push(item);
+                            });
+                        }
+
+                        // Separate category links from page links
+                        const categoryItems = navItems.filter(item => item.link && item.link.includes('#'));
+                        const pageItems = navItems.filter(item => !item.link || !item.link.includes('#'));
+
+                        let navItemsHTML = '';
+
+                        // Group all category items under a single "Категории" dropdown
+                        if (categoryItems.length > 0) {
+                            const dropdownItems = categoryItems.map(item =>
+                                `<li role="none"><a href="${item.link}" role="menuitem">${item.text}</a></li>`
+                            ).join('');
+                            navItemsHTML += `<li class="nav-item has-dropdown">` +
+                                `<button class="nav-dropdown-toggle" aria-expanded="false" aria-haspopup="true">` +
+                                `Категории` +
+                                `<svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>` +
+                                `</button>` +
+                                `<ul class="nav-dropdown-menu" role="menu">${dropdownItems}</ul>` +
+                                `</li>`;
+                        }
+
+                        // Add non-category page links as flat items
+                        navItemsHTML += pageItems.map(item =>
+                            `<li><a href="${item.link}">${item.text}</a></li>`
+                        ).join('');
+
+                        navLinksContainer.innerHTML = navItemsHTML;
+                        persistentLis.forEach(li => navLinksContainer.appendChild(li));
+
+                        // Activate dropdown behaviour
+                        initNavDropdowns();
+                    }
+                }
+            } catch (error) {
+                console.error('Could not load header settings:', error);
+            }
+        }
+        
+        // --- Nav Dropdown: hover (desktop) and click accordion (mobile) ---
+        let _navDropdownOutsideClickAttached = false;
+        function initNavDropdowns() {
+            document.querySelectorAll('.nav-item.has-dropdown').forEach(parent => {
+                const toggle = parent.querySelector('.nav-dropdown-toggle');
+                const menu = parent.querySelector('.nav-dropdown-menu');
+                if (!toggle || !menu) return;
+
+                parent.addEventListener('mouseenter', () => {
+                    if (window.innerWidth > 992) {
+                        menu.classList.add('open');
+                        toggle.setAttribute('aria-expanded', 'true');
+                    }
+                });
+                parent.addEventListener('mouseleave', () => {
+                    if (window.innerWidth > 992) {
+                        menu.classList.remove('open');
+                        toggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = menu.classList.contains('open');
+                    document.querySelectorAll('.nav-item.has-dropdown .nav-dropdown-menu.open').forEach(m => {
+                        m.classList.remove('open');
+                        const t = m.previousElementSibling;
+                        if (t) t.setAttribute('aria-expanded', 'false');
+                    });
+                    if (!isOpen) {
+                        menu.classList.add('open');
+                        toggle.setAttribute('aria-expanded', 'true');
+                    }
+                });
+            });
+
+            if (!_navDropdownOutsideClickAttached) {
+                _navDropdownOutsideClickAttached = true;
+                document.addEventListener('click', () => {
+                    document.querySelectorAll('.nav-item.has-dropdown .nav-dropdown-menu.open').forEach(menu => {
+                        menu.classList.remove('open');
+                        const toggle = menu.previousElementSibling;
+                        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+                    });
+                });
+            }
+        }
+
+        // --- Load footer settings from cached data ---
+        async function loadFooterSettings(data) {
+            try {
+                if (data && data.footer) {
+                    const footer = data.footer;
+                    const settings = data.settings;
+                    
+                    // Render footer columns
+                    const footerGridEl = document.getElementById('footer-grid-container');
+                    if (footerGridEl && footer.columns) {
+                        const columnsHTML = footer.columns.map(col => {
+                            if (col.type === 'logo') {
+                                return `<div class="footer-column">
+                                     <a href="#" class="logo-container footer-logo-container">
+                                        <img src="${settings.logo_url}" alt="${settings.site_name} Logo">
+                                        <div><span class="brand-name">${settings.site_name}</span><span class="brand-slogan">${settings.site_slogan}</span></div>
+                                    </a>
+                                </div>`;
+                            }
+                            if (col.type === 'links') {
+                                const links = col.links.map(link => `<li><a href="${link.url}">${link.text}</a></li>`).join('');
+                                return `<div class="footer-column"><h4>${col.title}</h4><ul>${links}</ul></div>`;
+                            }
+                            return '';
+                        }).join('');
+                        footerGridEl.innerHTML = columnsHTML;
+                    }
+                    
+                    // Render copyright
+                    const copyrightEl = document.getElementById('footer-copyright-container');
+                    if (copyrightEl && footer.copyright_text) {
+                        copyrightEl.innerHTML = footer.copyright_text;
+                    }
+                }
+            } catch (error) {
+                console.error('Could not load footer settings:', error);
+            }
+        }
+        
+        // --- Load both header and footer from single API call ---
+        (async () => {
+            const data = await loadPageContent();
+            await Promise.all([
+                loadHeaderSettings(data),
+                loadFooterSettings(data)
+            ]);
+        })();
+
+        // --- Theme Toggle ---
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            try {
+                localStorage.setItem('theme', theme);
+            } catch (e) {
+                console.warn('Could not save theme preference:', e);
+            }
+        }
+        
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+        
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+        
+        // --- Mobile Menu ---
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        const navOverlay = document.querySelector('.nav-overlay');
+        
+        const closeMenu = () => {
+            menuToggle.classList.remove('active');
+            navLinks.classList.remove('active');
+            navOverlay.classList.remove('active');
+            document.body.classList.remove('nav-open');
+        };
+        
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                menuToggle.classList.toggle('active');
+                navLinks.classList.toggle('active');
+                navOverlay.classList.toggle('active');
+                document.body.classList.toggle('nav-open');
+            });
+            navOverlay.addEventListener('click', closeMenu);
+            navLinks.addEventListener('click', e => {
+                // Don't close the mobile nav when the user is toggling the categories dropdown
+                if (e.target.closest('.nav-dropdown-toggle')) return;
+                if (e.target.tagName === 'A' || e.target.closest('button')) {
+                    closeMenu();
+                }
+            });
+        }
+
+        // --- 1. Зареждане на количката от localStorage ---
+        const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
+        let activeDiscount = 0;
+        let activePromoCode = null;
+
+        // --- 2. ЕЛЕМЕНТИ ОТ DOM ---
+        const productListEl = document.getElementById('product-list');
+        const subtotalEl = document.getElementById('summary-subtotal');
+        const shippingEl = document.getElementById('summary-shipping');
+        const totalEl = document.getElementById('summary-total');
+        const form = document.getElementById('checkout-form');
+        const promoInput = document.getElementById('promo-code');
+        const applyPromoBtn = document.getElementById('apply-promo');
+        const discountRow = document.getElementById('discount-row');
+        const discountEl = document.getElementById('summary-discount');
+        const cartCountEl = document.getElementById('cart-count');
+
+        const saveCart = () => localStorage.setItem('cart', JSON.stringify(cartData));
+
+        const updateCartCount = () => {
+            if (cartCountEl) {
+                const count = cartData.reduce((acc, p) => acc + p.quantity, 0);
+                cartCountEl.textContent = count;
+            }
+        };
+        
+        // --- 3. РЕНДЕРИРАНЕ И ИЗЧИСЛЕНИЯ ---
+        function renderProducts() {
+            productListEl.innerHTML = '';
+            if (cartData.length === 0) {
+                productListEl.innerHTML = '<p style="text-align:center; padding: 2rem 0;">Кошницата е празна.</p>';
+                return;
+            }
+
+            cartData.forEach(product => {
+                const itemEl = document.createElement('li');
+                itemEl.className = 'product-item';
+                itemEl.dataset.id = product.id;
+                itemEl.innerHTML = `
+                    ${product.image ? `<img src="${product.image}" alt="${product.name}" class="product-image">` : ''}
+                    <div class="product-info">
+                        <h3>${product.name}</h3>
+                        <span>Ед. цена: ${product.price.toFixed(2)} €</span>
+                    </div>
+                    <div class="product-controls">
+                        <div class="quantity-control">
+                            <button class="quantity-btn" data-action="decrease">-</button>
+                            <span class="quantity">${product.quantity}</span>
+                            <button class="quantity-btn" data-action="increase">+</button>
+                        </div>
+                        <span class="product-price">${(product.price * product.quantity).toFixed(2)} €</span>
+                    </div>
+                    <span class="remove-item-btn" title="Премахни">✖</span>
+                `;
+                productListEl.appendChild(itemEl);
+            });
+            updateSummary();
+            saveCart();
+            updateCartCount();
+        }
+
+        function calculateShipping() {
+            const subtotal = cartData.reduce((acc, p) => acc + (p.price * p.quantity), 0);
+            
+            // Free shipping for orders over 100 EUR
+            if (subtotal >= 100) {
+                return 0;
+            }
+            
+            // Get delivery method
+            const deliveryCourierRadio = document.getElementById('delivery-courier');
+            const deliveryAddressRadio = document.getElementById('delivery-address');
+            const isToAddress = deliveryAddressRadio && deliveryAddressRadio.checked;
+            const isToCourier = deliveryCourierRadio && deliveryCourierRadio.checked;
+            
+            let basePrice = 0;
+            let codRate = 0;
+            
+            // Determine courier method
+            if (isToCourier) {
+                const speedyRadio = document.getElementById('courier-speedy');
+                const ekontRadio = document.getElementById('courier-ekont');
+                
+                if (ekontRadio && ekontRadio.checked) {
+                    // Econt office/automat
+                    basePrice = 3.10;
+                    codRate = 0.0298;
+                } else if (speedyRadio && speedyRadio.checked) {
+                    // Speedy office/automat
+                    basePrice = 1.52;
+                    codRate = 0.0096;
+                } else {
+                    // Default to Speedy if courier selected but no specific courier chosen yet
+                    basePrice = 1.52;
+                    codRate = 0.0096;
+                }
+            } else if (isToAddress) {
+                // Address delivery - use Econt door pricing by default (most common/economical)
+                // Users can contact if they prefer Speedy door delivery
+                basePrice = 4.55;
+                codRate = 0.0298;
+            } else {
+                // Default case - Speedy office
+                basePrice = 1.52;
+                codRate = 0.0096;
+            }
+            
+            // Calculate delivery cost using the formula: basePrice + (totalProductAmount * codRate)
+            const deliveryCost = basePrice + (subtotal * codRate);
+            
+            return deliveryCost;
+        }
+
+        function updateSummary() {
+            const subtotal = cartData.reduce((acc, p) => acc + (p.price * p.quantity), 0);
+            const shipping = subtotal > 0 ? calculateShipping() : 0.00;
+            
+            // Calculate discount based on type
+            let discountAmount = 0;
+            if (activePromoCode) {
+                if (activePromoCode.discountType === 'percentage') {
+                    discountAmount = subtotal * activeDiscount;
+                } else {
+                    // Fixed amount discount
+                    discountAmount = Math.min(activeDiscount, subtotal); // Don't exceed subtotal
+                }
+            }
+            
+            const total = subtotal - discountAmount + shipping;
+
+            subtotalEl.textContent = `${subtotal.toFixed(2)} €`;
+            if (subtotal >= 100) {
+                shippingEl.textContent = 'Безплатна';
+            } else {
+                shippingEl.textContent = `${shipping.toFixed(2)} €`;
+            }
+            if (activeDiscount > 0) {
+                discountRow.style.display = 'flex';
+                discountEl.textContent = `- ${discountAmount.toFixed(2)} €`;
+            } else {
+                discountRow.style.display = 'none';
+                discountEl.textContent = '';
+            }
+            totalEl.textContent = `${total.toFixed(2)} €`;
+        }
+
+        // --- 4. СЪБИТИЯ (EVENTS) ---
+        productListEl.addEventListener('click', (e) => {
+            const target = e.target;
+            const productItem = target.closest('.product-item');
+            if (!productItem) return;
+
+            const productId = productItem.dataset.id;
+            const productIndex = cartData.findIndex(p => p.id === productId);
+
+            if (target.matches('.quantity-btn')) {
+                const action = target.dataset.action;
+                if (action === 'increase') {
+                    const max = cartData[productIndex].inventory || Infinity;
+                    if (cartData[productIndex].quantity < max) {
+                        cartData[productIndex].quantity++;
+                    } else {
+                        alert('Няма повече наличности.');
+                    }
+                } else if (action === 'decrease' && cartData[productIndex].quantity > 1) {
+                    cartData[productIndex].quantity--;
+                }
+                renderProducts();
+                saveCart();
+                updateCartCount();
+            }
+
+            if (target.matches('.remove-item-btn')) {
+                if(confirm(`Сигурни ли сте, че искате да премахнете "${cartData[productIndex].name}"?`)){
+                    cartData.splice(productIndex, 1);
+                    renderProducts();
+                    saveCart();
+                    updateCartCount();
+                }
+            }
+        });
+
+        applyPromoBtn.addEventListener('click', async () => {
+            const code = promoInput.value.trim().toUpperCase();
+            if (!code) {
+                alert('Моля, въведете промо код.');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/validate-promo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                
+                const result = await response.json();
+                
+                if (result.valid) {
+                    activePromoCode = result.promoCode;
+                    if (result.promoCode.discountType === 'percentage') {
+                        activeDiscount = result.promoCode.discount / 100;
+                    } else {
+                        // For future fixed amount discounts
+                        activeDiscount = result.promoCode.discount;
+                    }
+                    updateSummary();
+                    alert(`Промо кодът е приложен! ${result.promoCode.description || ''}`);
+                    promoInput.disabled = true;
+                    applyPromoBtn.disabled = true;
+                } else {
+                    alert(result.error || 'Невалиден промо код.');
+                    activeDiscount = 0;
+                    activePromoCode = null;
+                    updateSummary();
+                }
+            } catch (err) {
+                console.error('Грешка при валидация на промо код:', err);
+                alert('Възникна грешка при валидация на промо кода.');
+            }
+        });
+
+        // Toggle delivery method fields
+        const deliveryAddressRadio = document.getElementById('delivery-address');
+        const deliveryCourierRadio = document.getElementById('delivery-courier');
+        const addressFields = document.getElementById('address-fields');
+        const courierFields = document.getElementById('courier-fields');
+        
+        function toggleDeliveryFields() {
+            if (deliveryAddressRadio.checked) {
+                addressFields.classList.add('visible');
+                courierFields.classList.remove('visible');
+                // Make address fields required
+                document.getElementById('address').required = true;
+                document.getElementById('city').required = true;
+                document.getElementById('postcode').required = true;
+            } else {
+                addressFields.classList.remove('visible');
+                courierFields.classList.add('visible');
+                // Make address fields not required
+                document.getElementById('address').required = false;
+                document.getElementById('city').required = false;
+                document.getElementById('postcode').required = false;
+            }
+            // Update shipping price when delivery method changes
+            updateSummary();
+        }
+        
+        deliveryAddressRadio.addEventListener('change', toggleDeliveryFields);
+        deliveryCourierRadio.addEventListener('change', toggleDeliveryFields);
+        
+        // Handle courier company selection and show appropriate widget
+        const speedyRadio = document.getElementById('courier-speedy');
+        const ekontRadio = document.getElementById('courier-ekont');
+        const speedyWidget = document.getElementById('speedy-widget');
+        const ekontWidget = document.getElementById('ekont-widget');
+        
+        function toggleCourierWidgets() {
+            if (speedyRadio.checked) {
+                speedyWidget.style.display = 'block';
+                ekontWidget.style.display = 'none';
+            } else if (ekontRadio.checked) {
+                speedyWidget.style.display = 'none';
+                ekontWidget.style.display = 'block';
+                // Load Econt offices if not already loaded
+                if (!ekontOfficesLoaded) {
+                    loadEcontOffices();
+                }
+            } else {
+                speedyWidget.style.display = 'none';
+                ekontWidget.style.display = 'none';
+            }
+            // Update shipping price when courier company changes
+            updateSummary();
+        }
+        
+        speedyRadio.addEventListener('change', toggleCourierWidgets);
+        ekontRadio.addEventListener('change', toggleCourierWidgets);
+        
+        // Speedy widget logic - listen for office selection
+        window.addEventListener('message', function(event) {
+            // Security: Accept data only from Speedy's exact domain
+            if (event.origin !== 'https://services.speedy.bg') return;
+            
+            const data = event.data;
+            
+            if (data && data.id) {
+                // Show selected office info
+                document.getElementById('speedy-result-info').style.display = 'block';
+                document.getElementById('view-office-name').textContent = data.name;
+                document.getElementById('view-office-addr').textContent = data.address.fullAddressString;
+                
+                // Store office ID in hidden field
+                document.getElementById('final-speedy-id').value = data.id;
+                
+                console.log("Успешно избран офис на Спиди ID: " + data.id);
+            }
+        }, false);
+        
+        // Econt office selection logic
+        let ekontOfficesLoaded = false;
+        let allEcontOffices = [];
+        let selectedEcontOffice = null;
+        let ekontChangeHandlerAttached = false;
+        
+        function loadEcontOffices() {
+            const ekontInput = document.getElementById('ekont-office-search');
+            const ekontDropdown = document.getElementById('econt-offices-dropdown');
+            const hiddenInput = document.getElementById('final-office-id');
+            const statusText = document.getElementById('ekont-status-text');
+
+            fetch('https://ee.econt.com/services/Nomenclatures/NomenclaturesService.getOffices.json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ countryCode: "BGR" })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.offices) {
+                    allEcontOffices = data.offices;
+                    statusText.textContent = "✓ Готово";
+                    statusText.style.color = "green";
+                    ekontOfficesLoaded = true;
+                }
+            })
+            .catch(err => {
+                console.error('Error loading Econt offices:', err);
+                statusText.textContent = "Грешка при зареждане. Опитайте отново.";
+                statusText.style.color = "red";
+            });
+
+            // Attach event listeners only once
+            if (!ekontChangeHandlerAttached) {
+                // Input event for filtering
+                ekontInput.addEventListener('input', function() {
+                    const searchValue = this.value.toLowerCase().trim();
+                    
+                    if (searchValue.length < 2) {
+                        ekontDropdown.style.display = 'none';
+                        ekontWidget.classList.remove('expanded');
+                        return;
+                    }
+                    
+                    // Filter offices based on search value
+                    const filteredOffices = allEcontOffices.filter(office => {
+                        let cleanName = office.name;
+                        if (office.isAPS === true) cleanName += " (ЕКОНТОМАТ)";
+                        else if (office.isMPS === true) cleanName += " (МОБИЛЕН)";
+                        
+                        const fullAddr = (office.address && office.address.fullAddress) ? office.address.fullAddress : "";
+                        
+                        return cleanName.toLowerCase().includes(searchValue) || 
+                               fullAddr.toLowerCase().includes(searchValue);
+                    });
+                    
+                    // Display filtered results
+                    if (filteredOffices.length > 0) {
+                        ekontDropdown.innerHTML = filteredOffices.map(office => {
+                            let cleanName = office.name;
+                            if (office.isAPS === true) cleanName += " (ЕКОНТОМАТ)";
+                            else if (office.isMPS === true) cleanName += " (МОБИЛЕН)";
+                            
+                            const fullAddr = (office.address && office.address.fullAddress) ? office.address.fullAddress : "";
+                            
+                            return `<div class="econt-dropdown-item" data-office-code="${office.code}">
+                                <span class="econt-dropdown-item-name">${cleanName}</span>
+                                <span class="econt-dropdown-item-address">${fullAddr}</span>
+                            </div>`;
+                        }).join('');
+                        ekontDropdown.style.display = 'block';
+                        ekontWidget.classList.add('expanded');
+                    } else {
+                        ekontDropdown.innerHTML = '<div class="econt-dropdown-item-empty">Няма намерени офиси</div>';
+                        ekontDropdown.style.display = 'block';
+                        ekontWidget.classList.add('expanded');
+                    }
+                });
+                
+                // Click event on dropdown items
+                ekontDropdown.addEventListener('click', function(e) {
+                    const item = e.target.closest('.econt-dropdown-item');
+                    if (item && item.dataset.officeCode) {
+                        const officeCode = item.dataset.officeCode;
+                        const office = allEcontOffices.find(o => o.code === officeCode);
+                        
+                        if (office) {
+                            let cleanName = office.name;
+                            if (office.isAPS === true) cleanName += " (ЕКОНТОМАТ)";
+                            else if (office.isMPS === true) cleanName += " (МОБИЛЕН)";
+                            
+                            const fullAddr = (office.address && office.address.fullAddress) ? office.address.fullAddress : "";
+                            
+                            ekontInput.value = cleanName;
+                            hiddenInput.value = office.code;
+                            selectedEcontOffice = office;
+                            statusText.textContent = `✓ Избран: ${cleanName}${fullAddr ? ' - ' + fullAddr : ''}`;
+                            statusText.style.color = "#0056b3";
+                            ekontDropdown.style.display = 'none';
+                            ekontWidget.classList.remove('expanded');
+                        }
+                    }
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!ekontInput.contains(e.target) && !ekontDropdown.contains(e.target)) {
+                        ekontDropdown.style.display = 'none';
+                        ekontWidget.classList.remove('expanded');
+                    }
+                });
+                
+                // Focus event to show dropdown if there's a search value
+                ekontInput.addEventListener('focus', function() {
+                    if (this.value.length >= 2) {
+                        ekontInput.dispatchEvent(new Event('input'));
+                    }
+                });
+                
+                ekontChangeHandlerAttached = true;
+            }
+        }
+        
+        // --- 5. ВАЛИДАЦИЯ И ИЗПРАЩАНЕ НА ФОРМАТА ---
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (validateForm()) {
+                const formData = new FormData(form);
+                const orderData = Object.fromEntries(formData.entries());
+                
+                // Add delivery details based on selected method
+                if (deliveryCourierRadio.checked) {
+                    orderData.deliveryMethod = 'courier';
+                    if (speedyRadio.checked) {
+                        orderData.courierCompany = 'Speedy';
+                        orderData.courierOfficeId = document.getElementById('final-speedy-id').value;
+                        orderData.courierOfficeName = document.getElementById('view-office-name').textContent;
+                        orderData.courierOfficeAddress = document.getElementById('view-office-addr').textContent;
+                    } else if (ekontRadio.checked) {
+                        orderData.courierCompany = 'Econt';
+                        orderData.courierOfficeId = document.getElementById('final-office-id').value;
+                        // Use the actual office name from the selected office object
+                        if (selectedEcontOffice) {
+                            let officeName = selectedEcontOffice.name;
+                            if (selectedEcontOffice.isAPS === true) {
+                                officeName += " (ЕКОНТОМАТ)";
+                            } else if (selectedEcontOffice.isMPS === true) {
+                                officeName += " (МОБИЛЕН)";
+                            }
+                            orderData.courierOfficeName = officeName;
+                            orderData.courierOfficeAddress = (selectedEcontOffice.address && selectedEcontOffice.address.fullAddress) ? selectedEcontOffice.address.fullAddress : '';
+                        }
+                    }
+                } else {
+                    orderData.deliveryMethod = 'address';
+                }
+                
+                const fullOrder = {
+                    customer: orderData,
+                    products: cartData,
+                    summary: {
+                        subtotal: subtotalEl.textContent,
+                        shipping: shippingEl.textContent,
+                        discount: activePromoCode ? discountEl.textContent : null,
+                        total: totalEl.textContent
+                    },
+                    promoCode: activePromoCode ? activePromoCode.code : null,
+                    status: 'Нова'
+                };
+
+                // If promo code is applied, increment usage count
+                const orderPromise = fetch(`${API_URL}/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fullOrder)
+                });
+                
+                const promoPromise = activePromoCode ? fetch(`${API_URL}/validate-promo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: activePromoCode.code, incrementUsage: true })
+                }) : Promise.resolve({ ok: true });
+
+                Promise.all([orderPromise, promoPromise])
+                .then(([orderRes, promoRes]) => {
+                    if (!orderRes.ok) throw new Error('Server error');
+                    // Log promo response issue but don't fail order if promo increment fails
+                    if (activePromoCode && !promoRes.ok) {
+                        console.warn('Warning: Promo code usage count may not have been updated');
+                    }
+                    return orderRes.json();
+                })
+                .then(() => {
+                    localStorage.removeItem('cart');
+                    // Show success modal instead of alert
+                    showSuccessModal();
+                })
+                .catch(err => {
+                    console.error('Грешка при изпращане на поръчката:', err);
+                    alert('Възникна грешка. Опитайте по-късно.');
+                });
+            }
+        });
+        
+        function validateForm() {
+            let isValid = true;
+            // Reset previous errors
+            form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            document.getElementById('terms-error').style.display = 'none';
+            document.getElementById('policy-error').style.display = 'none';
+
+            const requiredFields = form.querySelectorAll('input[required]');
+            requiredFields.forEach(input => {
+                // Skip checkbox validation here, handle separately
+                if (input.type === 'checkbox') return;
+                
+                // Skip fields that are not visible
+                if (!input.offsetParent) return;
+                
+                let fieldIsValid = true;
+                if (input.type === 'email') {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(input.value)) fieldIsValid = false;
+                } else {
+                    if (input.value.trim() === '') fieldIsValid = false;
+                }
+
+                if (!fieldIsValid) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            });
+            
+            // Validate courier office selection if courier delivery is selected
+            if (deliveryCourierRadio.checked) {
+                // Check if a courier is selected
+                if (!speedyRadio.checked && !ekontRadio.checked) {
+                    alert('Моля, изберете куриерска фирма (Speedy или Еконт).');
+                    isValid = false;
+                }
+                
+                // Check if an office is selected
+                if (speedyRadio.checked) {
+                    const speedyOfficeId = document.getElementById('final-speedy-id').value;
+                    if (!speedyOfficeId) {
+                        alert('Моля, изберете офис на Speedy от картата.');
+                        isValid = false;
+                    }
+                } else if (ekontRadio.checked) {
+                    const ekontOfficeId = document.getElementById('final-office-id').value;
+                    if (!ekontOfficeId) {
+                        alert('Моля, изберете офис на Еконт от списъка.');
+                        isValid = false;
+                    }
+                }
+            }
+
+            // Validate policy consent
+            const policyCheckbox = document.getElementById('policy-consent');
+            if (!policyCheckbox.checked) {
+                document.getElementById('policy-error').style.display = 'block';
+                isValid = false;
+            }
+            
+            // Validate terms
+            const termsCheckbox = document.getElementById('terms');
+            if (!termsCheckbox.checked) {
+                document.getElementById('terms-error').style.display = 'block';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // --- 6. ИНИЦИАЛИЗАЦИЯ ---
+        renderProducts();
+        updateCartCount();
+        toggleDeliveryFields(); // Initialize delivery method visibility
+        toggleCourierWidgets(); // Initialize courier widget visibility (Speedy is default)
+        
+        // --- Success Modal Functions ---
+        const successModal = document.getElementById('success-modal');
+        const modalOverlay = successModal ? successModal.querySelector('.success-modal-overlay') : null;
+        
+        // Define closeSuccessModal first
+        window.closeSuccessModal = function() {
+            if (successModal) {
+                successModal.classList.remove('active');
+                document.body.style.overflow = '';
+                document.removeEventListener('keydown', handleModalEscape);
+            }
+        };
+        
+        function handleModalEscape(e) {
+            if (e.key === 'Escape') {
+                window.closeSuccessModal();
+            }
+        }
+        
+        // Add overlay click listener once during initialization
+        if (modalOverlay) {
+            modalOverlay.addEventListener('click', window.closeSuccessModal);
+        }
+        
+        function showSuccessModal() {
+            if (successModal) {
+                successModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                
+                // Focus the modal for accessibility
+                const modalContent = successModal.querySelector('.success-modal-content');
+                if (modalContent) {
+                    modalContent.focus();
+                }
+                
+                // Add ESC key listener
+                document.addEventListener('keydown', handleModalEscape);
+            }
+        }
+        
+        // --- Back to top button ---
+        const backToTopBtn = document.getElementById('back-to-top');
+        if (backToTopBtn) {
+            window.addEventListener('scroll', () => {
+                backToTopBtn.classList.toggle('visible', window.scrollY > 300);
+            });
+        }
+    });
+    </script>
+</body>
+</html>

@@ -30,11 +30,11 @@
     },
     {
       "text": "За нас",
-      "link": "about-us.html"
+      "link": "life-about.html"
     },
     {
       "text": "Контакти",
-      "link": "contact.html"
+      "link": "life-contact.html"
     }
   ],
   "page_content": [
@@ -52,7 +52,7 @@
         "secondary": {
           "text": "Научи повече",
           "action": "link",
-          "target": "about-us.html"
+          "target": "life-about.html"
         }
       },
       "stats": [
@@ -127,7 +127,7 @@
       "content": "Всеки организъм е уникален. Нашите експерти създават индивидуални протоколи за биохакинг, базирани на последните научни открития в областта на клетъчното подмладяване и дълголетието.",
       "button": {
         "text": "Получи своя протокол",
-        "url": "quest.html"
+        "url": "life-contact.html"
       },
       "options": {
         "image_align": "left"
@@ -181,11 +181,11 @@
           },
           {
             "text": "За нас",
-            "url": "about-us.html"
+            "url": "life-about.html"
           },
           {
             "text": "Контакти",
-            "url": "contact.html"
+            "url": "life-contact.html"
           }
         ]
       },
@@ -195,15 +195,15 @@
         "links": [
           {
             "text": "Политика за поверителност",
-            "url": "policy.html"
+            "url": "life-policy.html"
           },
           {
             "text": "Условия за ползване",
-            "url": "terms.html"
+            "url": "life-terms.html"
           },
           {
             "text": "Доставка",
-            "url": "shipping.html"
+            "url": "life-shipping.html"
           }
         ]
       }
