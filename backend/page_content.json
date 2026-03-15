@@ -1722,9 +1722,9 @@
           "display_order": 7
         },
         {
-          "product_id": "prod-1773599549731",
+          "product_id": "prod-1773601941831",
           "public_data": {
-            "name": "Eveslim зелен чай ",
+            "name": "Eveslim detox",
             "price": null,
             "sale_price": null,
             "tagline": "",
@@ -1733,7 +1733,7 @@
             "additional_images": "",
             "description": "",
             "packaging": {
-              "capsules_or_grams": "42 капс",
+              "capsules_or_grams": "",
               "doses_per_package": ""
             },
             "recommended_intake": "",
