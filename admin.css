@@ -347,7 +347,7 @@ h2 {
 .modal-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
 .modal-header h3 { margin: 0; font-size: 1.1rem; }
 .close-modal-btn { font-size: 2rem; font-weight: 300; background: none; border: none; cursor: pointer; color: var(--text-secondary); }
-.modal-body { padding: 1.5rem; overflow-y: auto; flex-grow: 1; }
+.modal-body { padding: 1.5rem; overflow-y: auto; flex-grow: 1; min-height: 0; }
 .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: var(--bg-light); display: flex; gap: 1rem; }
 .modal-footer button { flex: 1; }
 
@@ -403,9 +403,9 @@ h2 {
     user-select: none;
 }
 .product-item-collapsible .product-content {
-    max-height: 3000px;
+    max-height: 20000px;
     overflow: hidden;
-    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+    transition: max-height 0.5s ease-out, opacity 0.3s ease-out;
     opacity: 1;
 }
 .product-item-collapsible.collapsed .product-content {
