@@ -22,11 +22,6 @@ const DOM = {
     navLinksContainer: document.querySelector('.nav-links'),
     navOverlay: document.querySelector('.nav-overlay'),
     body: document.body,
-    questModal: {
-        backdrop: document.getElementById('quest-modal-backdrop'),
-        container: document.getElementById('quest-modal-container'),
-        iframe: document.getElementById('quest-modal-iframe')
-    },
     toastContainer: document.getElementById('toast-container')
 };
 
@@ -121,7 +116,7 @@ const generateProductCard = (product) => {
     const priceClass = hasSale ? 'product-price has-sale' : 'product-price';
 
     return `
-    <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}" data-brand="${escapeHtml(publicData.brand || '')}" data-price="${Number(hasSale ? salePrice : publicData.price)}" data-sale="${hasSale ? 'true' : ''}" data-goals="${escapeHtml((product.system_data?.goals || []).join(','))}">
+    <a href="life-product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}" data-brand="${escapeHtml(publicData.brand || '')}" data-price="${Number(hasSale ? salePrice : publicData.price)}" data-sale="${hasSale ? 'true' : ''}" data-goals="${escapeHtml((product.system_data?.goals || []).join(','))}">
         ${publicData.image_url ? `<div class="product-image">${variantBadge}<img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)} - ${escapeHtml(publicData.tagline)}" loading="lazy" decoding="async"></div>` : ''}
         <div class="card-content">
             ${brandLabel}
@@ -206,7 +201,7 @@ const generateHeroHTML = component => {
     // Get buttons configuration with defaults
     const buttons = component.buttons || {};
     const primaryBtn = buttons.primary || { text: 'Разгледай продуктите', action: 'scroll', target: '#products' };
-    const secondaryBtn = buttons.secondary || { text: 'Научи повече', action: 'link', target: 'about-us.html' };
+    const secondaryBtn = buttons.secondary || { text: 'Научи повече', action: 'link', target: 'life-about.html' };
     
     // Generate primary button (scroll or link)
     let primaryButtonHTML = '';
@@ -1532,29 +1527,7 @@ function initializeGlobalScripts() {
     })();
 
     // --- Quest Modal ---
-    // Only initialize quest modal if elements exist
-    if (DOM.questModal.backdrop && DOM.questModal.container && DOM.questModal.iframe) {
-        function openQuestModal(url) {
-            DOM.questModal.iframe.src = url || 'quest.html';
-            DOM.questModal.container.classList.add('show');
-            DOM.questModal.backdrop.classList.add('show');
-            DOM.body.classList.add('modal-open');
-        }
-        function closeQuestModal() {
-            DOM.questModal.container.classList.remove('show');
-            DOM.questModal.backdrop.classList.remove('show');
-            DOM.questModal.iframe.src = '';
-            DOM.body.classList.remove('modal-open');
-        }
-        DOM.questModal.backdrop.addEventListener('click', closeQuestModal);
-        document.addEventListener('click', e => {
-            const questLink = e.target.closest('a[href$="quest.html"]');
-            if (questLink) {
-                e.preventDefault();
-                openQuestModal(questLink.getAttribute('href'));
-            }
-        });
-    }
+    // Quest modal is not used in this project
 
     // --- Theme: light only ---
     // This is a light-theme-only build; theme is always light.
@@ -2111,7 +2084,7 @@ function performSearch(query) {
             };
 
             return `
-                <a href="product.html?id=${encodeURIComponent(productId)}" class="search-result-item">
+                <a href="life-product.html?id=${encodeURIComponent(productId)}" class="search-result-item">
                     ${publicData.image_url ? `
                         <img src="${escapeHtml(publicData.image_url)}" 
                              alt="${escapeHtml(publicData.name)}" 
