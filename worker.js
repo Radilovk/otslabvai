@@ -973,9 +973,9 @@ function getDefaultAISettings() {
 ПРИМЕР ЗА ВАЛИДЕН JSON С МАСИВИ (забележи запетаите между елементите):
 {
   "effects": [
-    {"label": "Първи ефект", "value": 8},
-    {"label": "Втори ефект", "value": 9},
-    {"label": "Трети ефект", "value": 7}
+    {"label": "Първи ефект", "value": 80},
+    {"label": "Втори ефект", "value": 90},
+    {"label": "Трети ефект", "value": 70}
   ],
   "ingredients": [
     {"name": "Първа съставка", "amount": "100mg", "description": "Описание 1"},
@@ -1000,15 +1000,15 @@ function getDefaultAISettings() {
   "effects": [
     {
       "label": "Изгаряне на мазнини",
-      "value": 8
+      "value": 80
     },
     {
       "label": "Енергия и издръжливост",
-      "value": 9
+      "value": 90
     },
     {
       "label": "Възстановяване след тренировка",
-      "value": 7
+      "value": 70
     }
   ],
   "about_content": {
