@@ -19,8 +19,8 @@ function attemptJSONRepair(jsonStr) {
         // Fix missing commas: " followed by { or [ (with or without whitespace)
         .replace(/"(\s*)(\{|\[)/g, '",$1$2')
         // Fix missing comma between consecutive strings (in arrays and between properties)
-        // Handles zero or more whitespace between quotes
-        .replace(/"(\s*)"/g, '",$1"')
+        // Requires at least one whitespace between quotes to avoid corrupting empty strings ""
+        .replace(/"(\s+)"/g, '",$1"')
         // Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
         .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
         // Fix common quote issues - replace smart quotes with regular quotes
@@ -87,8 +87,8 @@ function extractJSONFromResponse(responseText) {
                 // Matches: ""WHITESPACE"{ or ""WHITESPACE"[ (with or without whitespace)
                 .replace(/"(\s*)(\{|\[)/g, '",$1$2')
                 // Fix missing comma between consecutive strings (in arrays and between properties)
-                // Matches: "string1"WHITESPACE"string2" - handles zero or more whitespace
-                .replace(/"(\s*)"/g, '",$1"')
+                // Matches: "string1"WHITESPACE"string2" - requires at least one whitespace to avoid corrupting empty strings ""
+                .replace(/"(\s+)"/g, '",$1"')
                 // Remove any trailing comma right before the final }
                 .replace(/,(\s*)$/g, '$1');
             
@@ -391,12 +391,14 @@ describe('extractJSONFromResponse', () => {
         expect(result.ingredients).toHaveLength(2);
     });
 
-    test('should handle missing comma with zero whitespace between strings', () => {
-        // This is the specific bug we're fixing - AI generates ""value1""value2"" with NO whitespace
+    test('should handle missing comma between consecutive strings separated by whitespace', () => {
+        // AI almost always separates strings with at least a newline; the fix requires \s+ (one or more whitespace)
         const input = `{
-            "items": ["item1""item2"],
+            "items": ["item1"
+                "item2"],
             "data": {
-                "field1": "value1""field2": "value2"
+                "field1": "value1"
+                "field2": "value2"
             }
         }`;
         const result = extractJSONFromResponse(input);
@@ -409,12 +411,14 @@ describe('extractJSONFromResponse', () => {
         });
     });
 
-    test('should handle missing comma with zero whitespace in ingredient properties', () => {
-        // Real-world scenario: ingredient object with missing comma and no whitespace
+    test('should handle missing comma between ingredient properties separated by whitespace', () => {
+        // Real-world scenario: ingredient object with missing comma separated by newline
         const input = `{
             "ingredients": [
-                {"name": "L-карнитин""amount": "500mg"},
-                {"name": "Креатин""amount": "100mg"}
+                {"name": "L-карнитин"
+                 "amount": "500mg"},
+                {"name": "Креатин"
+                 "amount": "100mg"}
             ]
         }`;
         const result = extractJSONFromResponse(input);
@@ -433,5 +437,25 @@ describe('extractJSONFromResponse', () => {
             items: ['', 'value'],  // Empty string preserved
             key: ''  // Empty string preserved
         });
+    });
+
+    test('should preserve empty strings in invalid JSON that also has missing commas', () => {
+        // Bug fix: empty strings "" must NOT be corrupted to "," when JSON also has missing commas
+        // The admin prompt explicitly tells AI to use "" for unknown values, so this is a common case
+        const input = `{
+            "name": "Продукт"
+            "brand": ""
+            "manufacturer": "Nutrend"
+            "packaging_info": {
+                "capsules_or_grams": ""
+                "doses_per_package": "30 дози"
+            }
+        }`;
+        const result = extractJSONFromResponse(input);
+        expect(result.name).toBe('Продукт');
+        expect(result.brand).toBe('');           // Empty string must be preserved, not corrupted to ","
+        expect(result.manufacturer).toBe('Nutrend');
+        expect(result.packaging_info.capsules_or_grams).toBe('');  // Empty string preserved
+        expect(result.packaging_info.doses_per_package).toBe('30 дози');
     });
 });
