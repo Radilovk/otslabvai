@@ -3291,7 +3291,7 @@ body.modal-open { overflow: hidden; }
 
 .product-badge.sale {
     background: linear-gradient(135deg, #E8502A, #C9764F);
-    animation: badgeUrgent 1.2s ease-in-out infinite;
+    animation: badgeUrgent 1s ease-in-out infinite;
 }
 
 @keyframes badgeUrgent {
