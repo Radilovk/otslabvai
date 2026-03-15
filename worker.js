@@ -109,7 +109,7 @@ export default {
                 throw new UserFacingError('Method Not Allowed.', 405);
             }
             break;
-          
+
           case '/orders':
               if (request.method === 'GET') {
                   response = await handleGetOrders(request, env);
