@@ -31,8 +31,6 @@ const FILES_TO_UPLOAD = [
     // Static fallback for page_content – used by the worker when the live 'page_content' KV key is empty
     { file: 'backend/page_content.json', key: 'static_backend_page_content.json' },
     { file: 'backend/life_page_content.json', key: 'static_backend_life_page_content.json' },
-    // Static fallback for price_list – used by the worker when the live 'price_list' KV key is empty
-    { file: 'backend/price_list.json', key: 'static_backend_price_list.json' },
 ];
 
 // KV Namespace details

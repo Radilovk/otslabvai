@@ -1435,10 +1435,6 @@ function handleAction(action, target, id) {
             downloadCSVTemplate();
             break;
         }
-        case 'sync-prices-from-list': {
-            syncPricesFromPriceList();
-            break;
-        }
         case 'upload-product-image': {
             const fileInput = document.getElementById('image-upload-input');
             const targetFieldPath = target.dataset.targetField;
@@ -2340,72 +2336,6 @@ function exportProductsToCSV(productsContainer) {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     showNotification(`${products.length} продукт(а) са експортирани.`, 'success');
-}
-
-/**
- * Fetches prices from the read-only price_list.json reference file and applies them to the
- * currently loaded appData. Only the base product price (public_data.price) is updated;
- * sale prices and variant prices are intentionally left untouched.
- * After the sync the admin must click "Запиши" to persist the changes.
- */
-async function syncPricesFromPriceList() {
-    try {
-        const response = await fetch(`${API_URL}/price_list.json`, { cache: 'no-cache' });
-        if (!response.ok) throw new Error(`HTTP грешка: ${response.status}`);
-        const priceList = await response.json();
-
-        // Build a flat map of product_id → price for quick lookup
-        const priceMap = {};
-        for (const category of (priceList.categories || [])) {
-            for (const product of (category.products || [])) {
-                if (product.product_id && typeof product.price === 'number') {
-                    priceMap[product.product_id] = product.price;
-                }
-            }
-        }
-
-        let updatedCount = 0;
-        let skippedCount = 0;
-
-        // Walk every component that can hold products
-        for (const component of (appData.page_content || [])) {
-            // Update top-level component product (e.g. featured product on a category card)
-            if (component.product_id && component.public_data) {
-                const newPrice = priceMap[component.product_id];
-                if (newPrice !== undefined) {
-                    component.public_data.price = newPrice;
-                    updatedCount++;
-                } else {
-                    skippedCount++;
-                }
-            }
-            // Update products inside the category products array
-            for (const product of (component.products || [])) {
-                if (!product.product_id || !product.public_data) continue;
-                const newPrice = priceMap[product.product_id];
-                if (newPrice !== undefined) {
-                    product.public_data.price = newPrice;
-                    updatedCount++;
-                } else {
-                    skippedCount++;
-                }
-            }
-        }
-
-        if (updatedCount === 0) {
-            showNotification('Не бяха намерени съвпадащи продукти за актуализиране.', 'warning');
-            return;
-        }
-
-        setUnsavedChanges(true);
-        const msg = skippedCount > 0
-            ? `Актуализирани ${updatedCount} цени. ${skippedCount} продукта без съответствие в ценовия лист. Кликни „Запиши" за запазване.`
-            : `Актуализирани ${updatedCount} цени от ценовия лист. Кликни „Запиши" за запазване.`;
-        showNotification(msg, 'success');
-    } catch (err) {
-        console.error('syncPricesFromPriceList error:', err);
-        showNotification('Грешка при зареждане на ценовия лист.', 'error');
-    }
 }
 
 function getProperty(obj, path) {
