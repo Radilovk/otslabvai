@@ -1227,7 +1227,7 @@ async function callCloudflareAI(env, settings, messages) {
         throw new Error("AI response is missing the 'result.response' field.");
     }
     
-    return extractJSONFromResponse(aiEnvelope.result.response);
+    return JSON.parse(aiEnvelope.result.response);
 }
 
 /**
@@ -1267,7 +1267,7 @@ async function callOpenAI(settings, messages) {
         throw new Error("OpenAI response is missing expected fields.");
     }
     
-    return extractJSONFromResponse(result.choices[0].message.content);
+    return JSON.parse(result.choices[0].message.content);
 }
 
 /**
@@ -1284,6 +1284,8 @@ async function callGoogleAI(settings, messages) {
     
     const payload = {
         ...(systemMsg ? { systemInstruction: { parts: [{ text: systemMsg.content }] } } : {}),
+        // Google's REST API only accepts 'user' and 'model' turn roles in `contents`;
+        // all non-system messages therefore map to 'user'.
         contents: userMessages.map(m => ({ role: 'user', parts: [{ text: m.content }] })),
         generationConfig: {
             temperature: settings.temperature || 0.3,
@@ -1314,177 +1316,7 @@ async function callGoogleAI(settings, messages) {
     }
     
     const textContent = result.candidates[0].content.parts[0].text;
-    return extractJSONFromResponse(textContent);
-}
-
-/**
- * Fix unescaped control characters inside JSON string values.
- * Uses character-by-character scanning to correctly track string boundaries
- * and converts literal newlines, carriage returns, and tabs within strings
- * into their proper JSON escape sequences.
- * This is the fundamental fix for AI responses that contain literal newlines
- * inside string values (a common AI mistake that breaks JSON parsing).
- */
-function sanitizeJSONStrings(jsonStr) {
-    let result = '';
-    let inString = false;
-    let i = 0;
-    while (i < jsonStr.length) {
-        const char = jsonStr[i];
-        if (!inString) {
-            if (char === '"') {
-                inString = true;
-                result += char;
-            } else {
-                result += char;
-            }
-        } else {
-            if (char === '\\') {
-                // Escaped character — copy both the backslash and the next char unchanged
-                result += char;
-                i++;
-                if (i < jsonStr.length) result += jsonStr[i];
-            } else if (char === '"') {
-                inString = false;
-                result += char;
-            } else if (char === '\n') {
-                result += '\\n';
-            } else if (char === '\r') {
-                result += '\\r';
-            } else if (char === '\t') {
-                result += '\\t';
-            } else if (char < ' ') {
-                // Drop other raw control characters — they are never valid inside JSON strings
-            } else {
-                result += char;
-            }
-        }
-        i++;
-    }
-    return result;
-}
-
-/**
- * Attempt aggressive JSON repair for common AI mistakes
- * This is used as a last resort when basic fixes fail
- */
-function attemptJSONRepair(jsonStr) {
-    // First, fix any unescaped control characters inside string values
-    let repaired = sanitizeJSONStrings(jsonStr);
-
-    // Then apply structural repairs
-    repaired = repaired
-        // Remove all trailing commas more aggressively (including multiple commas)
-        .replace(/,+(\s*[}\]])/g, '$1')
-        // Remove multiple consecutive commas anywhere
-        .replace(/,{2,}/g, ',')
-        // Fix missing commas: } or ] followed by { or [ (with or without whitespace)
-        .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
-        // Fix missing commas: } or ] followed by " (with or without whitespace)
-        .replace(/(\}|\])(\s*)"/g, '$1,$2"')
-        // Fix missing commas: " followed by { or [ (with or without whitespace)
-        .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-        // Fix missing comma between consecutive strings (in arrays and between properties)
-        // Handles one or more whitespace between quotes (avoids corrupting empty strings "")
-        .replace(/"(\s+)"/g, '",$1"')
-        // Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
-        .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
-        // Fix common quote issues - replace smart quotes with regular quotes
-        .replace(/[\u201C\u201D]/g, '"')
-        .replace(/[\u2018\u2019]/g, "'")
-        // Fix escaped newlines that might confuse JSON parser
-        .replace(/\\\n/g, '\\n')
-        // Remove trailing commas before closing braces/brackets (one more time after all fixes)
-        .replace(/,(\s*[}\]])/g, '$1');
-    
-    return repaired;
-}
-
-/**
- * Extract JSON from AI response text with enhanced error recovery
- * Handles common AI mistakes in JSON formatting, especially with nested arrays and objects
- * Uses a three-stage approach: parse as-is, apply basic fixes, apply aggressive repair
- */
-function extractJSONFromResponse(responseText) {
-    if (typeof responseText !== 'string') {
-        return responseText;
-    }
-    
-    // Trim and extract JSON
-    let jsonStr = responseText.trim();
-    
-    // Remove markdown code blocks if present
-    if (jsonStr.startsWith('```')) {
-        jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-    }
-    
-    // Find JSON object boundaries
-    const startIdx = jsonStr.indexOf('{');
-    const endIdx = jsonStr.lastIndexOf('}');
-    
-    if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) {
-        console.error("AI returned a string without JSON structure:", responseText);
-        throw new UserFacingError('AI отговори с текст без JSON структура.');
-    }
-    
-    jsonStr = jsonStr.substring(startIdx, endIdx + 1);
-    
-    try {
-        // Stage 1: Try parsing as-is first
-        return JSON.parse(jsonStr);
-    } catch (parseError) {
-        console.warn("Initial JSON parse failed, applying comprehensive fixes:", parseError.message);
-        
-        try {
-            // Stage 2: Apply comprehensive sanitization for common AI JSON errors.
-            // First, fix unescaped control characters inside string values (e.g. literal
-            // newlines that AI models sometimes output instead of the \n escape sequence).
-            let sanitizedJson = sanitizeJSONStrings(jsonStr);
-            sanitizedJson = sanitizedJson
-                // Remove multiple consecutive commas (2 or more)
-                .replace(/,{2,}/g, ',')
-                // Remove trailing commas before } (with optional whitespace/newlines)
-                .replace(/,(\s*})/g, '$1')
-                // Remove trailing commas before ] (with optional whitespace/newlines)
-                .replace(/,(\s*])/g, '$1')
-                // Fix missing commas between array/object elements (comprehensive patterns)
-                // Pattern 1: } followed by { with whitespace
-                .replace(/\}(\s+)\{/g, '},$1{')
-                // Pattern 2: ] followed by [ with whitespace
-                .replace(/\](\s+)\[/g, '],$1[')
-                // Pattern 3: } or ] followed by { or [ (with or without whitespace)
-                .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
-                // Fix missing comma between closing brace/bracket and opening quote
-                // Matches: }"WHITESPACE"" or ]"WHITESPACE"" (with or without whitespace)
-                .replace(/(\}|\])(\s*)"/g, '$1,$2"')
-                // Fix missing comma between closing quote and opening brace/bracket
-                // Matches: ""WHITESPACE"{ or ""WHITESPACE"[ (with or without whitespace)
-                .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-                // Fix missing comma between consecutive strings (in arrays and between properties)
-                // Matches: "string1"WHITESPACE"string2" - requires at least one whitespace to avoid corrupting empty strings ""
-                .replace(/"(\s+)"/g, '",$1"')
-                // Remove any trailing comma right before the final }
-                .replace(/,(\s*)$/g, '$1');
-            
-            return JSON.parse(sanitizedJson);
-        } catch (sanitizeError) {
-            // Stage 3: Try aggressive repair as last resort
-            try {
-                console.warn("Sanitization failed, attempting aggressive JSON repair:", sanitizeError.message);
-                const repairedJson = attemptJSONRepair(jsonStr);
-                return JSON.parse(repairedJson);
-            } catch (repairError) {
-                // All attempts failed, throw the original error with context
-                console.error("Original JSON parsing error:", parseError.message);
-                console.error("After sanitization error:", sanitizeError.message);
-                console.error("After aggressive repair error:", repairError.message);
-                
-                throw new UserFacingError(
-                    `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
-                );
-            }
-        }
-    }
+    return JSON.parse(textContent);
 }
 
 /**
