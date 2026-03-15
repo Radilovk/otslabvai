@@ -109,7 +109,15 @@ export default {
                 throw new UserFacingError('Method Not Allowed.', 405);
             }
             break;
-          
+
+          case '/price_list.json':
+            if (request.method === 'GET') {
+                response = await handleGetPriceList(request, env);
+            } else {
+                throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
           case '/orders':
               if (request.method === 'GET') {
                   response = await handleGetOrders(request, env);
@@ -469,6 +477,25 @@ async function syncLifePageContentToGitHub(content, env) {
     } catch (err) {
         console.error('syncLifePageContentToGitHub error:', err);
     }
+}
+
+/**
+ * Handles GET /price_list.json
+ * Returns the canonical price list from KV (read-only reference).
+ * Used by the admin panel for a one-time price sync into page_content.json.
+ */
+async function handleGetPriceList(request, env) {
+    const priceList = await env.PAGE_CONTENT.get('static_backend_price_list.json');
+    if (priceList === null) {
+        throw new UserFacingError("Price list not found.", 404);
+    }
+    return new Response(priceList, {
+        status: 200,
+        headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+        }
+    });
 }
 
 /**
