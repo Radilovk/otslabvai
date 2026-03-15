@@ -362,6 +362,16 @@ function renderProductDetail(product) {
         ? `<span class="product-price-delta" id="product-price-delta">${initDelta > 0 ? '+' : ''}${initDelta.toFixed(2)} €</span>`
         : `<span class="product-price-delta" id="product-price-delta" style="display:none;"></span>`;
 
+    // Sale / promotion price (only applies when no variants override pricing)
+    const salePriceRaw = publicData.sale_price;
+    const hasSale = typeof salePriceRaw === 'number' && salePriceRaw > 0 && salePriceRaw < Number(publicData.price) && variants.length === 0;
+    const salePriceDisplay = hasSale ? Number(salePriceRaw).toFixed(2) : null;
+    // Build the displayed price span — sale overrides the plain price when no variants
+    const priceSpanContent = hasSale
+        ? `<span class="price-original">${Number(publicData.price).toFixed(2)} €</span><span class="price-sale">${salePriceDisplay} €</span>`
+        : `${initialDisplayPrice} €`;
+    const priceSpanClass = hasSale ? 'product-detail-price has-sale' : 'product-detail-price';
+
     const effectsHTML = (publicData.effects && publicData.effects.length > 0) ? `
             <div class="product-detail-effects">
                 <h2>Ефекти</h2>
@@ -371,14 +381,19 @@ function renderProductDetail(product) {
             </div>
         ` : '';
 
+    const saleBadgeHTML = hasSale
+        ? `<span class="product-badge sale" style="position:static;display:inline-flex;align-items:center;margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"></path><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"></circle></svg>ПРОМО</span>`
+        : '';
+
     const productHTML = `
         <div class="product-detail-header">
             ${brandHTML}
+            ${saleBadgeHTML}
             <h1>${escapeHtml(publicData.name)}</h1>
             <p class="tagline">${escapeHtml(publicData.tagline)}</p>
             <div class="product-detail-meta">
                 <div class="price-group">
-                    <span class="product-detail-price" id="product-price-display">${initialDisplayPrice} €</span>
+                    <span class="${priceSpanClass}" id="product-price-display">${priceSpanContent}</span>
                     ${initDeltaHTML}
                 </div>
                 <span class="product-detail-stock ${stockClass}">${stockText}</span>
@@ -484,7 +499,7 @@ function renderProductDetail(product) {
         } else {
             DOM.addToCartBtn.dataset.id = productId;
             DOM.addToCartBtn.dataset.name = publicData.name;
-            DOM.addToCartBtn.dataset.price = publicData.price;
+            DOM.addToCartBtn.dataset.price = hasSale ? salePriceRaw : publicData.price;
         }
         DOM.addToCartBtn.dataset.inventory = inventory;
         DOM.addToCartBtn.dataset.image = (initVariant && initVariant.image_url) || publicData.image_url || '';

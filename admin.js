@@ -1871,6 +1871,7 @@ const CSV_COLUMNS = [
     { key: 'product_id',                               header: 'product_id',                               description: 'Уникален идентификатор на продукта (напр. prod-omega-3). Само малки букви, цифри и тирета. Не се променя след създаване.' },
     { key: 'public_data.name',                         header: 'name',                                     description: 'Пълно търговско наименование на продукта.' },
     { key: 'public_data.price',                        header: 'price',                                    description: 'Продажна цена в евро (число с до 2 десетични знака, напр. 29.99).' },
+    { key: 'public_data.sale_price',                   header: 'sale_price',                               description: 'Промоционална цена в евро. Оставете празно ако няма промоция. Трябва да е по-малка от основната цена.' },
     { key: 'public_data.tagline',                      header: 'tagline',                                  description: 'Кратък слоган/мото на продукта (до 100 знака).' },
     { key: 'public_data.brand',                        header: 'brand',                                    description: 'Марка/бранд на продукта (напр. OstroVit, AllNutrition, Nordic Naturals).' },
     { key: 'public_data.image_url',                    header: 'image_url',                                description: 'URL на основното изображение на продукта (препоръчителен размер 800x800 px).' },
