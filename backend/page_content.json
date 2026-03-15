@@ -1720,6 +1720,51 @@
             "safety_warnings": ""
           },
           "display_order": 7
+        },
+        {
+          "product_id": "prod-1773599549731",
+          "public_data": {
+            "name": "Eveslim green tea Detox",
+            "price": null,
+            "sale_price": null,
+            "tagline": "",
+            "brand": "",
+            "image_url": "",
+            "additional_images": "",
+            "description": "",
+            "packaging": {
+              "capsules_or_grams": "",
+              "doses_per_package": ""
+            },
+            "recommended_intake": "",
+            "contraindications": "",
+            "additional_advice": "",
+            "research_note": {
+              "text": "",
+              "url": ""
+            },
+            "about_content": {
+              "title": "",
+              "description": "",
+              "benefits": []
+            },
+            "label_url": "",
+            "effects": [],
+            "ingredients": [],
+            "faq": [],
+            "variants": []
+          },
+          "system_data": {
+            "manufacturer": "",
+            "application_type": "",
+            "inventory": null,
+            "goals": [],
+            "target_profile": "",
+            "protocol_hint": "",
+            "synergy_products": [],
+            "safety_warnings": ""
+          },
+          "display_order": 8
         }
       ],
       "product_id": "prod-742",
