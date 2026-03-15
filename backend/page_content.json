@@ -835,8 +835,8 @@
           "product_id": "prod-ethicsport-thermo-master",
           "public_data": {
             "name": "Thermo Master",
-            "price": 4,
-            "sale_price": null,
+            "price": 40,
+            "sale_price": 30,
             "tagline": "Италиански билков комплекс за метаболизъм",
             "brand": "",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769142512370-thumb1-f8b736c-original.png",
