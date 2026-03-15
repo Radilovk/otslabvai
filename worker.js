@@ -956,19 +956,12 @@ function getDefaultAISettings() {
         apiKey: '',
         temperature: 0.3,
         maxTokens: 4096,
-        promptTemplate: `Ти си експерт по хранителни добавки и продукти за отслабване. Анализирай следната информация за продукт и попълни ВСИЧКИ възможни полета в JSON формат базирайки се на твоите знания за този тип продукти.
+        promptTemplate: `Ти си експерт по хранителни добавки и продукти за отслабване. Ще получиш информация за продукт и трябва да попълниш ВСИЧКИ възможни полета в JSON формат, базирайки се на твоите знания за този тип продукти.
 
-Въведена информация:
-{{productData}}
-
-КРИТИЧНО ВАЖНО ЗА JSON ФОРМАТИРАНЕТО:
-1. Отговори САМО с валиден JSON обект - БЕЗ текст, коментари или обяснения преди или след него
-2. ВИНАГИ използвай запетая (,) между елементите в масиви
-3. ВИНАГИ използвай запетая (,) между свойствата в обекти
-4. НЕ слагай запетая след последния елемент в масив или обект
-5. Провери 2-3 пъти дали има запетаи след ВСЕКИ елемент в масивите освен последния
-6. Особено внимателно форматирай масиви като effects, ingredients, benefits, faq
-7. Следвай ТОЧНО форматирането на примера по-долу
+ФОРМАТ НА ОТГОВОРА:
+- Отговори САМО с валиден JSON обект - БЕЗ текст, коментари или обяснения
+- Започни директно с { и завърши с }
+- НЕ използвай markdown code blocks
 
 ПРИМЕР ЗА ВАЛИДЕН JSON С МАСИВИ (забележи запетаите между елементите):
 {
@@ -1095,13 +1088,7 @@ function getDefaultAISettings() {
 ✅ Добре: "capsules_or_grams": null или "capsules_or_grams": ""
 ❌ Лошо: "capsules_or_grams": "неуточнено" или "capsules_or_grams": "не е посочено"
 
-ФОРМАТ НА ОТГОВОРА:
-- Отговори само с JSON обекта, БЕЗ текст или обяснения
-- Започни директно с { и завърши с }
-- НЕ използвай markdown code blocks
-- Провери запетаите в масивите 3 пъти!
-
-Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта.`
+Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта, описан от потребителя.`
     };
 }
 
@@ -1139,8 +1126,9 @@ async function handleAIAssistant(request, env) {
         throw new UserFacingError("Cloudflare AI не е конфигуриран.", 500);
     }
     
-    // Create prompt from template
-    const prompt = aiSettings.promptTemplate.replace('{{productData}}', JSON.stringify(productData, null, 2));
+    // Create messages array using system/user split when possible, with legacy fallback.
+    const productDataJson = JSON.stringify(productData, null, 2);
+    const messages = buildAIMessages(aiSettings.promptTemplate, productDataJson);
     
     try {
         let extractedData;
@@ -1148,13 +1136,13 @@ async function handleAIAssistant(request, env) {
         // Call appropriate AI provider
         switch (aiSettings.provider) {
             case 'cloudflare':
-                extractedData = await callCloudflareAI(env, aiSettings, prompt);
+                extractedData = await callCloudflareAI(env, aiSettings, messages);
                 break;
             case 'openai':
-                extractedData = await callOpenAI(aiSettings, prompt);
+                extractedData = await callOpenAI(aiSettings, messages);
                 break;
             case 'google':
-                extractedData = await callGoogleAI(aiSettings, prompt);
+                extractedData = await callGoogleAI(aiSettings, messages);
                 break;
             default:
                 throw new UserFacingError("Невалиден AI доставчик.", 400);
@@ -1176,16 +1164,46 @@ async function handleAIAssistant(request, env) {
 }
 
 /**
+ * Build the messages array for an AI API call.
+ *
+ * New-style templates (no {{productData}} placeholder) receive the instructions
+ * as a system message and the product data as a separate user message.  Keeping
+ * instructions and data in separate roles prevents the AI from confusing product
+ * text with formatting directives and lets the provider's JSON-mode constraint
+ * apply cleanly to the assistant turn.
+ *
+ * Legacy templates that still embed {{productData}} in the body are sent as a
+ * single user message so that existing stored configurations keep working.
+ */
+function buildAIMessages(template, productDataJson) {
+    if (template.includes('{{productData}}')) {
+        // Legacy mode: single user message with full combined prompt.
+        // Use a function replacement so special $ patterns in the data are not
+        // interpreted as replacement specifiers by String.replace().
+        const prompt = template.replace('{{productData}}', () => productDataJson);
+        return [{ role: 'user', content: prompt }];
+    }
+    // New mode: system instructions + user data (clean separation)
+    return [
+        { role: 'system', content: template },
+        { role: 'user', content: `Въведена информация за продукта:\n${productDataJson}` }
+    ];
+}
+
+/**
  * Call Cloudflare AI
  */
-async function callCloudflareAI(env, settings, prompt) {
+async function callCloudflareAI(env, settings, messages) {
     const model = settings.model || '@cf/meta/llama-3.1-70b-instruct';
     const cfEndpoint = `https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/ai/run/${model}`;
     
     const payload = {
-        messages: [{ role: 'user', content: prompt }],
+        messages: messages,
         max_tokens: settings.maxTokens || 4096,
-        temperature: settings.temperature || 0.3
+        temperature: settings.temperature || 0.3,
+        // Instruct the model's sampler to produce only valid JSON tokens.
+        // This is the primary prevention: invalid JSON cannot be generated.
+        response_format: { type: 'json_object' }
     };
     
     const response = await fetch(cfEndpoint, {
@@ -1209,21 +1227,23 @@ async function callCloudflareAI(env, settings, prompt) {
         throw new Error("AI response is missing the 'result.response' field.");
     }
     
-    return extractJSONFromResponse(aiEnvelope.result.response);
+    return JSON.parse(aiEnvelope.result.response);
 }
 
 /**
  * Call OpenAI API
  */
-async function callOpenAI(settings, prompt) {
+async function callOpenAI(settings, messages) {
     const model = settings.model || 'gpt-4';
     const endpoint = 'https://api.openai.com/v1/chat/completions';
     
     const payload = {
         model: model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: messages,
         max_tokens: settings.maxTokens || 4096,
-        temperature: settings.temperature || 0.3
+        temperature: settings.temperature || 0.3,
+        // Force the model to output only valid JSON — primary prevention mechanism.
+        response_format: { type: 'json_object' }
     };
     
     const response = await fetch(endpoint, {
@@ -1247,23 +1267,31 @@ async function callOpenAI(settings, prompt) {
         throw new Error("OpenAI response is missing expected fields.");
     }
     
-    return extractJSONFromResponse(result.choices[0].message.content);
+    return JSON.parse(result.choices[0].message.content);
 }
 
 /**
  * Call Google AI (Gemini)
  */
-async function callGoogleAI(settings, prompt) {
+async function callGoogleAI(settings, messages) {
     const model = settings.model || 'gemini-pro';
     const endpoint = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${settings.apiKey}`;
+
+    // Map the messages array to Google's format.
+    // A system-role message becomes a top-level systemInstruction.
+    const systemMsg = messages.find(m => m.role === 'system');
+    const userMessages = messages.filter(m => m.role !== 'system');
     
     const payload = {
-        contents: [{
-            parts: [{ text: prompt }]
-        }],
+        ...(systemMsg ? { systemInstruction: { parts: [{ text: systemMsg.content }] } } : {}),
+        // Google's REST API only accepts 'user' and 'model' turn roles in `contents`;
+        // all non-system messages therefore map to 'user'.
+        contents: userMessages.map(m => ({ role: 'user', parts: [{ text: m.content }] })),
         generationConfig: {
             temperature: settings.temperature || 0.3,
-            maxOutputTokens: settings.maxTokens || 4096
+            maxOutputTokens: settings.maxTokens || 4096,
+            // Instruct Gemini to produce only valid JSON — primary prevention mechanism.
+            responseMimeType: 'application/json'
         }
     };
     
@@ -1288,124 +1316,7 @@ async function callGoogleAI(settings, prompt) {
     }
     
     const textContent = result.candidates[0].content.parts[0].text;
-    return extractJSONFromResponse(textContent);
-}
-
-/**
- * Attempt aggressive JSON repair for common AI mistakes
- * This is used as a last resort when basic fixes fail
- */
-function attemptJSONRepair(jsonStr) {
-    // More aggressive repairs - but still conservative
-    let repaired = jsonStr
-        // Remove all trailing commas more aggressively (including multiple commas)
-        .replace(/,+(\s*[}\]])/g, '$1')
-        // Remove multiple consecutive commas anywhere
-        .replace(/,{2,}/g, ',')
-        // Fix missing commas: } or ] followed by { or [ (with or without whitespace)
-        .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
-        // Fix missing commas: } or ] followed by " (with or without whitespace)
-        .replace(/(\}|\])(\s*)"/g, '$1,$2"')
-        // Fix missing commas: " followed by { or [ (with or without whitespace)
-        .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-        // Fix missing comma between consecutive strings (in arrays and between properties)
-        // Handles one or more whitespace between quotes (avoids corrupting empty strings "")
-        .replace(/"(\s+)"/g, '",$1"')
-        // Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
-        .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
-        // Fix common quote issues - replace smart quotes with regular quotes
-        .replace(/[\u201C\u201D]/g, '"')
-        .replace(/[\u2018\u2019]/g, "'")
-        // Fix escaped newlines that might confuse JSON parser
-        .replace(/\\\n/g, '\\n')
-        // Remove trailing commas before closing braces/brackets (one more time after all fixes)
-        .replace(/,(\s*[}\]])/g, '$1');
-    
-    return repaired;
-}
-
-/**
- * Extract JSON from AI response text with enhanced error recovery
- * Handles common AI mistakes in JSON formatting, especially with nested arrays and objects
- * Uses a three-stage approach: parse as-is, apply basic fixes, apply aggressive repair
- */
-function extractJSONFromResponse(responseText) {
-    if (typeof responseText !== 'string') {
-        return responseText;
-    }
-    
-    // Trim and extract JSON
-    let jsonStr = responseText.trim();
-    
-    // Remove markdown code blocks if present
-    if (jsonStr.startsWith('```')) {
-        jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-    }
-    
-    // Find JSON object boundaries
-    const startIdx = jsonStr.indexOf('{');
-    const endIdx = jsonStr.lastIndexOf('}');
-    
-    if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) {
-        console.error("AI returned a string without JSON structure:", responseText);
-        throw new UserFacingError('AI отговори с текст без JSON структура.');
-    }
-    
-    jsonStr = jsonStr.substring(startIdx, endIdx + 1);
-    
-    try {
-        // Stage 1: Try parsing as-is first
-        return JSON.parse(jsonStr);
-    } catch (parseError) {
-        console.warn("Initial JSON parse failed, applying comprehensive fixes:", parseError.message);
-        
-        try {
-            // Stage 2: Apply comprehensive sanitization for common AI JSON errors
-            let sanitizedJson = jsonStr
-                // Remove multiple consecutive commas (2 or more)
-                .replace(/,{2,}/g, ',')
-                // Remove trailing commas before } (with optional whitespace/newlines)
-                .replace(/,(\s*})/g, '$1')
-                // Remove trailing commas before ] (with optional whitespace/newlines)
-                .replace(/,(\s*])/g, '$1')
-                // Fix missing commas between array/object elements (comprehensive patterns)
-                // Pattern 1: } followed by { with whitespace
-                .replace(/\}(\s+)\{/g, '},$1{')
-                // Pattern 2: ] followed by [ with whitespace
-                .replace(/\](\s+)\[/g, '],$1[')
-                // Pattern 3: } or ] followed by { or [ (with or without whitespace)
-                .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
-                // Fix missing comma between closing brace/bracket and opening quote
-                // Matches: }"WHITESPACE"" or ]"WHITESPACE"" (with or without whitespace)
-                .replace(/(\}|\])(\s*)"/g, '$1,$2"')
-                // Fix missing comma between closing quote and opening brace/bracket
-                // Matches: ""WHITESPACE"{ or ""WHITESPACE"[ (with or without whitespace)
-                .replace(/"(\s*)(\{|\[)/g, '",$1$2')
-                // Fix missing comma between consecutive strings (in arrays and between properties)
-                // Matches: "string1"WHITESPACE"string2" - requires at least one whitespace to avoid corrupting empty strings ""
-                .replace(/"(\s+)"/g, '",$1"')
-                // Remove any trailing comma right before the final }
-                .replace(/,(\s*)$/g, '$1');
-            
-            return JSON.parse(sanitizedJson);
-        } catch (sanitizeError) {
-            // Stage 3: Try aggressive repair as last resort
-            try {
-                console.warn("Sanitization failed, attempting aggressive JSON repair:", sanitizeError.message);
-                const repairedJson = attemptJSONRepair(jsonStr);
-                return JSON.parse(repairedJson);
-            } catch (repairError) {
-                // All attempts failed, throw the original error with context
-                console.error("Original JSON parsing error:", parseError.message);
-                console.error("After sanitization error:", sanitizeError.message);
-                console.error("After aggressive repair error:", repairError.message);
-                
-                throw new UserFacingError(
-                    `AI отговори с невалиден JSON формат. Грешка: ${parseError.message}`
-                );
-            }
-        }
-    }
+    return JSON.parse(textContent);
 }
 
 /**
@@ -1486,15 +1397,19 @@ async function getAIRecommendation(env, formData, productList, mainPromptTemplat
   if (!env.ACCOUNT_ID || !env.AI_TOKEN) {
     throw new Error("Cloudflare Account/AI credentials are not configured.");
   }
+  // Use function replacements to prevent special $ patterns in the data
+  // (e.g. $', $&, $`) from being interpreted as replacement specifiers by String.replace().
   const finalPrompt = mainPromptTemplate
-    .replace('{{productList}}', JSON.stringify(productList, null, 2))
-    .replace('{{clientData}}', JSON.stringify(formData, null, 2));
+    .replace('{{productList}}', () => JSON.stringify(productList, null, 2))
+    .replace('{{clientData}}', () => JSON.stringify(formData, null, 2));
   const model = '@cf/meta/llama-3.1-70b-instruct';
   const cfEndpoint = `https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/ai/run/${model}`;
   const payload = {
     messages: [{ role: 'system', content: finalPrompt }],
     max_tokens: 2048,
-    temperature: 0.2
+    temperature: 0.2,
+    // Force valid JSON output — primary prevention mechanism.
+    response_format: { type: 'json_object' }
   };
   const response = await fetch(cfEndpoint, {
     method: 'POST',
