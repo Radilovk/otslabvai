@@ -973,9 +973,9 @@ function getDefaultAISettings() {
 ПРИМЕР ЗА ВАЛИДЕН JSON С МАСИВИ (забележи запетаите между елементите):
 {
   "effects": [
-    {"label": "Първи ефект", "value": 8},
-    {"label": "Втори ефект", "value": 9},
-    {"label": "Трети ефект", "value": 7}
+    {"label": "Първи ефект", "value": 80},
+    {"label": "Втори ефект", "value": 90},
+    {"label": "Трети ефект", "value": 70}
   ],
   "ingredients": [
     {"name": "Първа съставка", "amount": "100mg", "description": "Описание 1"},
@@ -1000,15 +1000,15 @@ function getDefaultAISettings() {
   "effects": [
     {
       "label": "Изгаряне на мазнини",
-      "value": 8
+      "value": 80
     },
     {
       "label": "Енергия и издръжливост",
-      "value": 9
+      "value": 90
     },
     {
       "label": "Възстановяване след тренировка",
-      "value": 7
+      "value": 70
     }
   ],
   "about_content": {
@@ -1309,8 +1309,8 @@ function attemptJSONRepair(jsonStr) {
         // Fix missing commas: " followed by { or [ (with or without whitespace)
         .replace(/"(\s*)(\{|\[)/g, '",$1$2')
         // Fix missing comma between consecutive strings (in arrays and between properties)
-        // Handles zero or more whitespace between quotes
-        .replace(/"(\s*)"/g, '",$1"')
+        // Handles one or more whitespace between quotes (avoids corrupting empty strings "")
+        .replace(/"(\s+)"/g, '",$1"')
         // Remove any non-printable control characters (but keep newlines, tabs, carriage returns)
         .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
         // Fix common quote issues - replace smart quotes with regular quotes
@@ -1382,8 +1382,8 @@ function extractJSONFromResponse(responseText) {
                 // Matches: ""WHITESPACE"{ or ""WHITESPACE"[ (with or without whitespace)
                 .replace(/"(\s*)(\{|\[)/g, '",$1$2')
                 // Fix missing comma between consecutive strings (in arrays and between properties)
-                // Matches: "string1"WHITESPACE"string2" - handles zero or more whitespace
-                .replace(/"(\s*)"/g, '",$1"')
+                // Matches: "string1"WHITESPACE"string2" - requires at least one whitespace to avoid corrupting empty strings ""
+                .replace(/"(\s+)"/g, '",$1"')
                 // Remove any trailing comma right before the final }
                 .replace(/,(\s*)$/g, '$1');
             
