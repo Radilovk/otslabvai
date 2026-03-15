@@ -120,7 +120,7 @@
           "product_id": "prod-lida-green",
           "public_data": {
             "name": "Lida Green",
-            "price": 38.0,
+            "price": 34.77,
             "tagline": "АБСОЛЮТНИЯТ ЛИДЕР: Най-мощният ефект на пазара",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769480798581-IMG_20260127_042603.jpg",
             "additional_images": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769477241377-Lida-Green-Nutrition-Facts-1-scaled-1-1536x1536.jpg\nhttps://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481648434-161A0441-copy-1-scaled.jpeg",
@@ -238,7 +238,7 @@
           "product_id": "prod-meizimax",
           "public_data": {
             "name": "MeiziMax",
-            "price": 40.0,
+            "price": 38.35,
             "tagline": "Японска формула за стройна фигура и сияйна кожа",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481555803-IMG_20260127_042847.jpg",
             "additional_images": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769477283359-Meizimax-Nutrition-Facts-scaled-1-1536x1536.jpg\nhttps://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769482178503-IMG_20260127_044917.jpg",
@@ -356,7 +356,7 @@
           "product_id": "prod-eveslim-birch",
           "public_data": {
             "name": "Eveslim Birch Bark",
-            "price": 34.0,
+            "price": 31.7,
             "tagline": "№1 срещу целулит, отоци и подпухване",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481569612-IMG_20260127_043039.jpg",
             "additional_images": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769477311863-Eve-Slim-Blue-Nutrition-Facts-scaled-1.jpg\nhttps://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481591162-161A3842-Edit.jpg",
@@ -474,7 +474,7 @@
           "product_id": "prod-eveslim-cayenne",
           "public_data": {
             "name": "Eveslim Cayenne Pepper",
-            "price": 34.0,
+            "price": 31.7,
             "tagline": "Огнена сила срещу бавен метаболизъм",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481674782-LiDa-Green_200-scaled_edit_109586337220434.jpg",
             "additional_images": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769477341660-Eve-Slim-Red-Nutrition-Facts-scaled-1-1.jpg\nhttps://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481680967-161A3843-Edit.jpg",
@@ -582,8 +582,8 @@
         {
           "product_id": "prod-1769356752064",
           "public_data": {
-            "name": "Lida Plus extra forte",
-            "price": 40.0,
+            "name": "Lida Plus extra forte ",
+            "price": 35,
             "tagline": "Мощна формула за бързо и ефективно отслабване!",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481696332-IMG_20260127_043648-01.jpeg",
             "additional_images": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769477370303-1769475757191_edit_104471469212541.jpg",
@@ -700,8 +700,8 @@
         {
           "product_id": "prod-742",
           "public_data": {
-            "name": "Lipo 6 Black Ultra Concentrate",
-            "price": 44.99,
+            "name": "Lipo 6 Black Ultra Concentrate ",
+            "price": 97,
             "tagline": "Nutrex - Екстремно силен термогенен фет бърнер",
             "image_url": "/images/products/product_742/Lipo6-BlackUC-60-0b247b3-original.webp",
             "additional_images": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769223199506-204WDg1ecebc.jpg",
@@ -835,7 +835,8 @@
           "product_id": "prod-ethicsport-thermo-master",
           "public_data": {
             "name": "Thermo Master",
-            "price": 22.5,
+            "price": 4,
+            "sale_price": null,
             "tagline": "Италиански билков комплекс за метаболизъм",
             "brand": "",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769142512370-thumb1-f8b736c-original.png",
@@ -927,7 +928,16 @@
                 "answer": "Да, благодарение на своя натурален и балансиран състав, Thermo Master е напълно безопасен за продължителен прием от няколко месеца без нужда от почивка."
               }
             ],
-            "variants": []
+            "variants": [
+              {
+                "option_name": "30 капс.",
+                "price": 65,
+                "sku": "",
+                "ean": "",
+                "image_url": "",
+                "available": true
+              }
+            ]
           },
           "system_data": {
             "manufacturer": "",
@@ -948,7 +958,8 @@
           "product_id": "prod-16905",
           "public_data": {
             "name": "Fat No More",
-            "price": 25.0,
+            "price": 38.95,
+            "sale_price": null,
             "tagline": "Sport Definition - Термогенен фет бърнер с L-Carnitine",
             "brand": "",
             "image_url": "/images/products/product_16905/SD_Fat_No_More_120cap_600px1_kamera1-aab4bde-original.png",
@@ -1030,7 +1041,16 @@
                 "answer": "Да, работи отлично в комбинация с L-карнитин за още по-силен ефект. Не комбинирайте с други термогенни продукти или високи дози кофеин."
               }
             ],
-            "variants": []
+            "variants": [
+              {
+                "option_name": "30 капс",
+                "price": null,
+                "sku": "",
+                "ean": "",
+                "image_url": "",
+                "available": true
+              }
+            ]
           },
           "system_data": {
             "manufacturer": "",
@@ -1053,6 +1073,7 @@
           "public_data": {
             "name": "Thermo Caps | Thermogenic Fat Burner for Women",
             "price": 34.95,
+            "sale_price": null,
             "tagline": "Nutriversum - Термогенен фет бърнер за жени",
             "brand": "",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769221498590-thermo_caps_120caps-webshop-5f0dbf3-original.webp",
@@ -1151,7 +1172,8 @@
           "product_id": "prod-37086",
           "public_data": {
             "name": "Essential Fat Burner | Thermogenic",
-            "price": 50.59,
+            "price": 98.95,
+            "sale_price": null,
             "tagline": "RAW Nutrition - Премиум термогенен фет бърнер",
             "brand": "",
             "image_url": "/images/products/product_37086/EssentialFatBurner_720x-db2bd27-original.png",
@@ -1255,7 +1277,8 @@
           "product_id": "prod-24605",
           "public_data": {
             "name": "Burn4All Extreme | High Thermogenesis",
-            "price": 15.84,
+            "price": 30.99,
+            "sale_price": null,
             "tagline": "AllNutrition - Екстремен термогенен фет бърнер",
             "brand": "",
             "image_url": "/images/products/product_24605/allnutrition-burn4all-extreme-8d74e05-original.png",
@@ -1354,7 +1377,8 @@
           "product_id": "prod-5177",
           "public_data": {
             "name": "Fat Transporter | Lipotropic Fat Burner",
-            "price": 42.92,
+            "price": 83.95,
+            "sale_price": null,
             "tagline": "Trec Nutrition - Липотропен термогенен фет бърнер",
             "brand": "",
             "image_url": "/images/products/product_5177/Fat_Transporter_i574_d1200x1200-a444781-original.png",
@@ -1453,7 +1477,8 @@
           "product_id": "prod-31",
           "public_data": {
             "name": "Lipo 6 BLACK",
-            "price": 42.95,
+            "price": 73,
+            "sale_price": null,
             "tagline": "Nutrex - Lipo 6 Black Original",
             "brand": "",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769222494178-Lipo6-120_4fa205d2-96f4-4000-971b-57367f9e31c6-f07128d-original.webp",
@@ -1572,8 +1597,9 @@
         {
           "product_id": "prod-1769224145127",
           "public_data": {
-            "name": "Thermo Fat Burner MAX",
-            "price": 21.45,
+            "name": "Thermo Fat Burner MAX ",
+            "price": 45.9,
+            "sale_price": null,
             "tagline": "Trec Nutrition - Thermo Fat Burner MAX (Strong Extracts)",
             "brand": "",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769225120761-default2-fd4dc26-original.png",
@@ -1729,7 +1755,7 @@
           "product_id": "prod-pqq-now-energy",
           "public_data": {
             "name": "NOW Foods PQQ Energy 20 mg",
-            "price": 37.84,
+            "price": 28.38,
             "tagline": "Тройна формула за умствен фокус",
             "brand": "",
             "image_url": "",
@@ -1807,7 +1833,7 @@
           "product_id": "prod-gluta-now-30",
           "public_data": {
             "name": "NOW Foods Glutathione 500 mg",
-            "price": 30.68,
+            "price": 23.01,
             "tagline": "Майсторът на детоксикацията",
             "brand": "",
             "image_url": "",
@@ -1899,7 +1925,7 @@
           "product_id": "prod-gluta-now-60",
           "public_data": {
             "name": "NOW Foods Glutathione 500 mg (60 caps)",
-            "price": 56.24,
+            "price": 42.18,
             "tagline": "Двумесечен детокс курс",
             "brand": "",
             "image_url": "",
@@ -1985,7 +2011,7 @@
           "product_id": "prod-gluta-now-120",
           "public_data": {
             "name": "NOW Foods Glutathione 500 mg (MAX)",
-            "price": 89.48,
+            "price": 67.11,
             "tagline": "Максимална защита за цялото семейство",
             "brand": "",
             "image_url": "",
@@ -2291,7 +2317,7 @@
           "product_id": "prod-astax-now",
           "public_data": {
             "name": "NOW Foods Astaxanthin 10 mg",
-            "price": 27.09,
+            "price": 30.29,
             "tagline": "Супер-доза за очи и стави",
             "brand": "",
             "image_url": "",
@@ -2653,7 +2679,7 @@
           "product_id": "prod-1772461382084",
           "public_data": {
             "name": "Grewia NMN - Complex 1000 mg",
-            "price": 66.87,
+            "price": null,
             "tagline": "Подкрепа за клетъчна енергия, дълголетие и младост.",
             "brand": "",
             "image_url": "",
@@ -2769,7 +2795,7 @@
           "product_id": "prod-1772554319124",
           "public_data": {
             "name": "Oly. NMN 500 mg",
-            "price": 89.9,
+            "price": 119.99,
             "tagline": "Активирайте младостта на клетките си и подкрепете дълголетието!",
             "brand": "",
             "image_url": "",
@@ -2888,7 +2914,7 @@
           "product_id": "prod-1772554556267",
           "public_data": {
             "name": "Trained by JP NMN 1000 mg",
-            "price": 157.24,
+            "price": 120,
             "tagline": "Активирайте младостта на клетките си с NMN 1000 mg.",
             "brand": "",
             "image_url": "",
@@ -3105,7 +3131,7 @@
           "product_id": "prod-1772554953225",
           "public_data": {
             "name": "Hero.Lab NMN + Resveratrol Uthever®",
-            "price": 37.81,
+            "price": null,
             "tagline": "Подкрепа за клетъчното здраве, енергия и дълголетие.",
             "brand": "",
             "image_url": "",
@@ -3212,7 +3238,7 @@
           "product_id": "prod-1772563338784",
           "public_data": {
             "name": "SWEDISH Supplements NAD+ 300 mg",
-            "price": 45.96,
+            "price": 89.9,
             "tagline": "Подкрепете клетъчната си енергия и младост!",
             "brand": "",
             "image_url": "",
@@ -3318,7 +3344,7 @@
           "product_id": "prod-1772565481695",
           "public_data": {
             "name": "Oly. Urolithin A 500 mg",
-            "price": 37.3,
+            "price": 89.99,
             "tagline": "Подкрепете клетъчното здраве и дълголетието си!",
             "brand": "",
             "image_url": "",
@@ -3473,7 +3499,7 @@
           "product_id": "prod-1772565865045",
           "public_data": {
             "name": "Osavi PQQ 20 mg",
-            "price": 23.47,
+            "price": null,
             "tagline": "Оптимизирайте клетъчната енергия и когнитивната функция.",
             "brand": "",
             "image_url": "",
@@ -3594,7 +3620,7 @@
           "product_id": "prod-1772565950224",
           "public_data": {
             "name": "Osavi PQQ 20 mg (Big Pack)",
-            "price": 40.88,
+            "price": null,
             "tagline": "Подкрепете енергията и мозъка си с Osavi PQQ 20 mg!",
             "brand": "",
             "image_url": "",
