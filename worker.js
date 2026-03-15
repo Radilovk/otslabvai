@@ -956,19 +956,12 @@ function getDefaultAISettings() {
         apiKey: '',
         temperature: 0.3,
         maxTokens: 4096,
-        promptTemplate: `Ти си експерт по хранителни добавки и продукти за отслабване. Анализирай следната информация за продукт и попълни ВСИЧКИ възможни полета в JSON формат базирайки се на твоите знания за този тип продукти.
+        promptTemplate: `Ти си експерт по хранителни добавки и продукти за отслабване. Ще получиш информация за продукт и трябва да попълниш ВСИЧКИ възможни полета в JSON формат, базирайки се на твоите знания за този тип продукти.
 
-Въведена информация:
-{{productData}}
-
-КРИТИЧНО ВАЖНО ЗА JSON ФОРМАТИРАНЕТО:
-1. Отговори САМО с валиден JSON обект - БЕЗ текст, коментари или обяснения преди или след него
-2. ВИНАГИ използвай запетая (,) между елементите в масиви
-3. ВИНАГИ използвай запетая (,) между свойствата в обекти
-4. НЕ слагай запетая след последния елемент в масив или обект
-5. Провери 2-3 пъти дали има запетаи след ВСЕКИ елемент в масивите освен последния
-6. Особено внимателно форматирай масиви като effects, ingredients, benefits, faq
-7. Следвай ТОЧНО форматирането на примера по-долу
+ФОРМАТ НА ОТГОВОРА:
+- Отговори САМО с валиден JSON обект - БЕЗ текст, коментари или обяснения
+- Започни директно с { и завърши с }
+- НЕ използвай markdown code blocks
 
 ПРИМЕР ЗА ВАЛИДЕН JSON С МАСИВИ (забележи запетаите между елементите):
 {
@@ -1095,13 +1088,7 @@ function getDefaultAISettings() {
 ✅ Добре: "capsules_or_grams": null или "capsules_or_grams": ""
 ❌ Лошо: "capsules_or_grams": "неуточнено" или "capsules_or_grams": "не е посочено"
 
-ФОРМАТ НА ОТГОВОРА:
-- Отговори само с JSON обекта, БЕЗ текст или обяснения
-- Започни директно с { и завърши с }
-- НЕ използвай markdown code blocks
-- Провери запетаите в масивите 3 пъти!
-
-Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта.`
+Използвай СЪЩАТА структура и форматиране за твоя отговор. Попълни с подходящи данни за продукта, описан от потребителя.`
     };
 }
 
@@ -1139,11 +1126,9 @@ async function handleAIAssistant(request, env) {
         throw new UserFacingError("Cloudflare AI не е конфигуриран.", 500);
     }
     
-    // Create prompt from template.
-    // Use a function replacement to prevent special $ patterns in product data
-    // (e.g. $', $&, $`) from being interpreted as replacement specifiers by String.replace().
+    // Create messages array using system/user split when possible, with legacy fallback.
     const productDataJson = JSON.stringify(productData, null, 2);
-    const prompt = aiSettings.promptTemplate.replace('{{productData}}', () => productDataJson);
+    const messages = buildAIMessages(aiSettings.promptTemplate, productDataJson);
     
     try {
         let extractedData;
@@ -1151,13 +1136,13 @@ async function handleAIAssistant(request, env) {
         // Call appropriate AI provider
         switch (aiSettings.provider) {
             case 'cloudflare':
-                extractedData = await callCloudflareAI(env, aiSettings, prompt);
+                extractedData = await callCloudflareAI(env, aiSettings, messages);
                 break;
             case 'openai':
-                extractedData = await callOpenAI(aiSettings, prompt);
+                extractedData = await callOpenAI(aiSettings, messages);
                 break;
             case 'google':
-                extractedData = await callGoogleAI(aiSettings, prompt);
+                extractedData = await callGoogleAI(aiSettings, messages);
                 break;
             default:
                 throw new UserFacingError("Невалиден AI доставчик.", 400);
@@ -1179,16 +1164,46 @@ async function handleAIAssistant(request, env) {
 }
 
 /**
+ * Build the messages array for an AI API call.
+ *
+ * New-style templates (no {{productData}} placeholder) receive the instructions
+ * as a system message and the product data as a separate user message.  Keeping
+ * instructions and data in separate roles prevents the AI from confusing product
+ * text with formatting directives and lets the provider's JSON-mode constraint
+ * apply cleanly to the assistant turn.
+ *
+ * Legacy templates that still embed {{productData}} in the body are sent as a
+ * single user message so that existing stored configurations keep working.
+ */
+function buildAIMessages(template, productDataJson) {
+    if (template.includes('{{productData}}')) {
+        // Legacy mode: single user message with full combined prompt.
+        // Use a function replacement so special $ patterns in the data are not
+        // interpreted as replacement specifiers by String.replace().
+        const prompt = template.replace('{{productData}}', () => productDataJson);
+        return [{ role: 'user', content: prompt }];
+    }
+    // New mode: system instructions + user data (clean separation)
+    return [
+        { role: 'system', content: template },
+        { role: 'user', content: `Въведена информация за продукта:\n${productDataJson}` }
+    ];
+}
+
+/**
  * Call Cloudflare AI
  */
-async function callCloudflareAI(env, settings, prompt) {
+async function callCloudflareAI(env, settings, messages) {
     const model = settings.model || '@cf/meta/llama-3.1-70b-instruct';
     const cfEndpoint = `https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/ai/run/${model}`;
     
     const payload = {
-        messages: [{ role: 'user', content: prompt }],
+        messages: messages,
         max_tokens: settings.maxTokens || 4096,
-        temperature: settings.temperature || 0.3
+        temperature: settings.temperature || 0.3,
+        // Instruct the model's sampler to produce only valid JSON tokens.
+        // This is the primary prevention: invalid JSON cannot be generated.
+        response_format: { type: 'json_object' }
     };
     
     const response = await fetch(cfEndpoint, {
@@ -1218,15 +1233,17 @@ async function callCloudflareAI(env, settings, prompt) {
 /**
  * Call OpenAI API
  */
-async function callOpenAI(settings, prompt) {
+async function callOpenAI(settings, messages) {
     const model = settings.model || 'gpt-4';
     const endpoint = 'https://api.openai.com/v1/chat/completions';
     
     const payload = {
         model: model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: messages,
         max_tokens: settings.maxTokens || 4096,
-        temperature: settings.temperature || 0.3
+        temperature: settings.temperature || 0.3,
+        // Force the model to output only valid JSON — primary prevention mechanism.
+        response_format: { type: 'json_object' }
     };
     
     const response = await fetch(endpoint, {
@@ -1256,17 +1273,23 @@ async function callOpenAI(settings, prompt) {
 /**
  * Call Google AI (Gemini)
  */
-async function callGoogleAI(settings, prompt) {
+async function callGoogleAI(settings, messages) {
     const model = settings.model || 'gemini-pro';
     const endpoint = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${settings.apiKey}`;
+
+    // Map the messages array to Google's format.
+    // A system-role message becomes a top-level systemInstruction.
+    const systemMsg = messages.find(m => m.role === 'system');
+    const userMessages = messages.filter(m => m.role !== 'system');
     
     const payload = {
-        contents: [{
-            parts: [{ text: prompt }]
-        }],
+        ...(systemMsg ? { systemInstruction: { parts: [{ text: systemMsg.content }] } } : {}),
+        contents: userMessages.map(m => ({ role: 'user', parts: [{ text: m.content }] })),
         generationConfig: {
             temperature: settings.temperature || 0.3,
-            maxOutputTokens: settings.maxTokens || 4096
+            maxOutputTokens: settings.maxTokens || 4096,
+            // Instruct Gemini to produce only valid JSON — primary prevention mechanism.
+            responseMimeType: 'application/json'
         }
     };
     
@@ -1552,7 +1575,9 @@ async function getAIRecommendation(env, formData, productList, mainPromptTemplat
   const payload = {
     messages: [{ role: 'system', content: finalPrompt }],
     max_tokens: 2048,
-    temperature: 0.2
+    temperature: 0.2,
+    // Force valid JSON output — primary prevention mechanism.
+    response_format: { type: 'json_object' }
   };
   const response = await fetch(cfEndpoint, {
     method: 'POST',
