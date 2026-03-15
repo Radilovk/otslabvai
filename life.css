@@ -23,6 +23,7 @@
     --danger: #ef4444;
     --success: #10b981;
     --warning: #f59e0b;
+    --color-sale: #E8502A;          /* Terracotta — promotion / sale accent */
 
     /* Legacy aliases */
     --color-primary: #00c4c8;
@@ -3289,6 +3290,11 @@ body.modal-open { overflow: hidden; }
     animation: badgeUrgent 1s ease-in-out infinite;
 }
 
+.product-badge.sale {
+    background: linear-gradient(135deg, var(--color-sale, #E8502A), #C9764F);
+    animation: badgeUrgent 1s ease-in-out infinite;
+}
+
 @keyframes badgeUrgent {
     0%, 100% {
         transform: scale(1) rotate(0deg);
@@ -3296,6 +3302,45 @@ body.modal-open { overflow: hidden; }
     50% {
         transform: scale(1.1) rotate(-5deg);
     }
+}
+
+/* Sale / Promotion price display */
+.product-price.has-sale {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.price-original {
+    text-decoration: line-through;
+    color: var(--text-secondary, #8AAFC0);
+    font-size: 0.88em;
+    font-weight: 500;
+}
+
+.price-sale {
+    color: var(--color-sale, #E8502A);
+    font-weight: 700;
+}
+
+/* Product detail page sale price */
+.product-detail-price.has-sale {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.product-detail-price .price-original {
+    text-decoration: line-through;
+    color: var(--text-secondary, #8AAFC0);
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+.product-detail-price .price-sale {
+    color: var(--color-sale, #E8502A);
 }
 
 /* Enhanced Product Card with Badges */

@@ -1014,6 +1014,13 @@
                             <input type="number" step="0.01" data-field="public_data.price">
                         </div>
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Промоционална цена (€) <small style="color: var(--text-secondary); font-weight: 400;">— оставете празно ако няма промоция</small></label>
+                            <input type="number" step="0.01" min="0" data-field="public_data.sale_price" placeholder="0.00">
+                            <small class="form-hint">Ако е зададена, старата цена се задрасква и се показва промо етикет "ПРОМО".</small>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label>Слоган</label>
                         <input type="text" data-field="public_data.tagline">

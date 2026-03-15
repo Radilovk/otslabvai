@@ -3105,6 +3105,11 @@ body.modal-open { overflow: hidden; }
     animation: badgeUrgent 1s ease-in-out infinite;
 }
 
+.product-badge.sale {
+    background: linear-gradient(135deg, var(--color-primary), #FF2D9B);
+    animation: badgeUrgent 1s ease-in-out infinite;
+}
+
 @keyframes badgeUrgent {
     0%, 100% {
         transform: scale(1) rotate(0deg);
@@ -3112,6 +3117,32 @@ body.modal-open { overflow: hidden; }
     50% {
         transform: scale(1.1) rotate(-5deg);
     }
+}
+
+/* Sale / Promotion price display */
+.product-price.has-sale,
+.product-detail-price.has-sale {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.price-original {
+    text-decoration: line-through;
+    color: var(--text-secondary, #6c757d);
+    font-size: 0.88em;
+    font-weight: 500;
+}
+
+.price-sale {
+    color: var(--color-primary, #E4007C);
+    font-weight: 700;
+}
+
+/* Dark theme: ensure strikethrough price remains clearly muted */
+[data-theme="dark"] .price-original {
+    color: var(--text-secondary, #A0AEC0);
 }
 
 /* Enhanced Product Card with Badges */

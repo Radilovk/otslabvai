@@ -99,9 +99,13 @@ const generateProductCard = (product) => {
         ? `<span class="brand-label">${escapeHtml(publicData.brand)}</span>` 
         : '';
 
+    // Sale / promotion price (only applies when no variant price overrides publicData.price)
+    const salePrice = publicData.sale_price;
+    const hasSale = typeof salePrice === 'number' && salePrice > 0 && salePrice < Number(publicData.price) && availableVariants.length === 0;
+
     // For products with multiple variants at different prices, show "от X.XX €"
     let priceDisplay;
-    if (availableVariants.length > 1) {
+    if (!hasSale && availableVariants.length > 1) {
         const prices = availableVariants.map(v => v.price);
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
@@ -110,19 +114,22 @@ const generateProductCard = (product) => {
         } else {
             priceDisplay = `${Number(minPrice).toFixed(2)} €`;
         }
-    } else if (availableVariants.length === 1) {
+    } else if (!hasSale && availableVariants.length === 1) {
         priceDisplay = `${Number(availableVariants[0].price).toFixed(2)} €`;
+    } else if (hasSale) {
+        priceDisplay = `<span class="price-original">${Number(publicData.price).toFixed(2)} €</span><span class="price-sale">${Number(salePrice).toFixed(2)} €</span>`;
     } else {
         priceDisplay = typeof publicData.price === 'number' ? `${Number(publicData.price).toFixed(2)} €` : '';
     }
+    const priceClass = hasSale ? 'product-price has-sale' : 'product-price';
 
     return `
-    <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}" data-brand="${escapeHtml(publicData.brand || '')}" data-price="${Number(publicData.price)}" data-goals="${escapeHtml((product.system_data?.goals || []).join(','))}">
+    <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}" data-brand="${escapeHtml(publicData.brand || '')}" data-price="${Number(hasSale ? salePrice : publicData.price)}" data-sale="${hasSale ? 'true' : ''}" data-goals="${escapeHtml((product.system_data?.goals || []).join(','))}">
         ${publicData.image_url ? `<div class="product-image">${variantBadge}<img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)} - ${escapeHtml(publicData.tagline)}" loading="lazy" decoding="async"></div>` : ''}
         <div class="card-content">
             ${brandLabel}
             <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(publicData.tagline)}</p></div>
-            <div class="product-price">${priceDisplay}</div>
+            <div class="${priceClass}">${priceDisplay}</div>
             <div class="effects-container">
                 ${(publicData.effects || []).map(generateEffectBar).join('')}
             </div>
@@ -1687,8 +1694,12 @@ function addProductBadges() {
         
         let badge = null;
         
+        // Sale / promotion badge has highest priority
+        if (card.getAttribute('data-sale') === 'true') {
+            badge = createBadge('ПРОМО', 'sale', 'tag');
+        }
         // First product - Bestseller
-        if (index === 0) {
+        else if (index === 0) {
             badge = createBadge('Най-продаван', 'bestseller', 'star');
         }
         // Second product - New
@@ -1719,6 +1730,8 @@ function createBadge(text, type, iconType) {
         iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M9.813 3.25a.75.75 0 0 1 .437.695v4.945c0 .174.106.331.268.395l.625.25a.75.75 0 0 1 0 1.398l-.625.25a.422.422 0 0 0-.268.395v4.945a.75.75 0 0 1-1.187.607l-4.382-3.024a.422.422 0 0 1 0-.695l4.382-3.024a.75.75 0 0 1 .75-.142zm9 0a.75.75 0 0 1 .437.695v4.945c0 .174.106.331.268.395l.625.25a.75.75 0 0 1 0 1.398l-.625.25a.422.422 0 0 0-.268.395v4.945a.75.75 0 0 1-1.187.607l-4.382-3.024a.422.422 0 0 1 0-.695l4.382-3.024a.75.75 0 0 1 .75-.142z"></path></svg>';
     } else if (iconType === 'fire') {
         iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>';
+    } else if (iconType === 'tag') {
+        iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"></path><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"></circle></svg>';
     }
     
     badge.innerHTML = iconSVG + text;
