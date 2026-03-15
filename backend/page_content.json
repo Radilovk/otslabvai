@@ -120,7 +120,7 @@
           "product_id": "prod-lida-green",
           "public_data": {
             "name": "Lida Green",
-            "price": 38.0,
+            "price": 38,
             "tagline": "АБСОЛЮТНИЯТ ЛИДЕР: Най-мощният ефект на пазара",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769480798581-IMG_20260127_042603.jpg",
             "additional_images": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769477241377-Lida-Green-Nutrition-Facts-1-scaled-1-1536x1536.jpg\nhttps://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481648434-161A0441-copy-1-scaled.jpeg",
@@ -238,7 +238,7 @@
           "product_id": "prod-meizimax",
           "public_data": {
             "name": "MeiziMax",
-            "price": 40.0,
+            "price": 40,
             "tagline": "Японска формула за стройна фигура и сияйна кожа",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481555803-IMG_20260127_042847.jpg",
             "additional_images": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769477283359-Meizimax-Nutrition-Facts-scaled-1-1536x1536.jpg\nhttps://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769482178503-IMG_20260127_044917.jpg",
@@ -356,7 +356,7 @@
           "product_id": "prod-eveslim-birch",
           "public_data": {
             "name": "Eveslim Birch Bark",
-            "price": 34.0,
+            "price": 34,
             "tagline": "№1 срещу целулит, отоци и подпухване",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481569612-IMG_20260127_043039.jpg",
             "additional_images": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769477311863-Eve-Slim-Blue-Nutrition-Facts-scaled-1.jpg\nhttps://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481591162-161A3842-Edit.jpg",
@@ -474,7 +474,7 @@
           "product_id": "prod-eveslim-cayenne",
           "public_data": {
             "name": "Eveslim Cayenne Pepper",
-            "price": 34.0,
+            "price": 34,
             "tagline": "Огнена сила срещу бавен метаболизъм",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481674782-LiDa-Green_200-scaled_edit_109586337220434.jpg",
             "additional_images": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769477341660-Eve-Slim-Red-Nutrition-Facts-scaled-1-1.jpg\nhttps://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481680967-161A3843-Edit.jpg",
@@ -583,7 +583,7 @@
           "product_id": "prod-1769356752064",
           "public_data": {
             "name": "Lida Plus extra forte ",
-            "price": 40.0,
+            "price": 40,
             "tagline": "Мощна формула за бързо и ефективно отслабване!",
             "image_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769481696332-IMG_20260127_043648-01.jpeg",
             "additional_images": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1769477370303-1769475757191_edit_104471469212541.jpg",
@@ -804,7 +804,7 @@
       "product_id": "prod-eveslim-cayenne",
       "public_data": {
         "name": "Eveslim Cayenne Pepper",
-        "price": 34.0,
+        "price": 34,
         "tagline": "Огнена сила срещу бавен метаболизъм",
         "image_url": "/images/products/eveslim-cayenne.png",
         "additional_images": "",
@@ -958,7 +958,7 @@
           "product_id": "prod-16905",
           "public_data": {
             "name": "Fat No More",
-            "price": 25.0,
+            "price": 25,
             "sale_price": 25,
             "tagline": "Sport Definition - Термогенен фет бърнер с L-Carnitine",
             "brand": "",
@@ -2142,7 +2142,7 @@
           "product_id": "prod-gluta-ghost",
           "public_data": {
             "name": "Ghost Basics Vitamin C and Glutathione",
-            "price": 41.0,
+            "price": 41,
             "tagline": "Премиум Setria® Глутатион за елитни резултати",
             "brand": "",
             "image_url": "",
