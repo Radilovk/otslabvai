@@ -1,0 +1,225 @@
+{
+  "currency": "EUR",
+  "note": "Цените са актуализирани спрямо ОРИГИНАЛНИТЕ (ненамалени) стойности във fitness1.bg",
+  "categories": [
+    {
+      "category_name": "ТОП продукти за отслабване",
+      "products": [
+        {
+          "product_id": "prod-lida-green",
+          "name": "Lida Green",
+          "price": 38.00,
+          "variants": []
+        },
+        {
+          "product_id": "prod-meizimax",
+          "name": "MeiziMax",
+          "price": 40.00,
+          "variants": []
+        },
+        {
+          "product_id": "prod-eveslim-birch",
+          "name": "Eveslim Birch Bark",
+          "price": 34.00,
+          "variants": []
+        },
+        {
+          "product_id": "prod-eveslim-cayenne",
+          "name": "Eveslim Cayenne Pepper",
+          "price": 34.00,
+          "variants": []
+        },
+        {
+          "product_id": "prod-1769356752064",
+          "name": "Lida Plus extra forte",
+          "price": 40.00,
+          "variants": []
+        },
+        {
+          "product_id": "prod-742",
+          "name": "Lipo 6 Black Ultra Concentrate",
+          "price": 44.99,
+          "variants": []
+        }
+      ]
+    },
+    {
+      "category_name": "Избрани продукти за отслабване",
+      "products": [
+        {
+          "product_id": "prod-ethicsport-thermo-master",
+          "name": "Thermo Master",
+          "price": 22.50,
+          "variants": []
+        },
+        {
+          "product_id": "prod-16905",
+          "name": "Fat No More",
+          "price": 25.00,
+          "variants": []
+        },
+        {
+          "product_id": "prod-24527",
+          "name": "Thermo Caps | Thermogenic Fat Burner for Women",
+          "price": 34.95,
+          "variants": []
+        },
+        {
+          "product_id": "prod-37086",
+          "name": "Essential Fat Burner | Thermogenic",
+          "price": 50.59,
+          "variants": []
+        },
+        {
+          "product_id": "prod-24605",
+          "name": "Burn4All Extreme | High Thermogenesis",
+          "price": 15.84,
+          "variants": []
+        },
+        {
+          "product_id": "prod-5177",
+          "name": "Fat Transporter | Lipotropic Fat Burner",
+          "price": 42.92,
+          "variants": []
+        },
+        {
+          "product_id": "prod-31",
+          "name": "Lipo 6 BLACK",
+          "price": 42.95,
+          "variants": []
+        },
+        {
+          "product_id": "prod-1769224145127",
+          "name": "Thermo Fat Burner MAX",
+          "price": 21.45,
+          "variants": []
+        }
+      ]
+    },
+    {
+      "category_name": "Антиейджинг - Революционни решения за младост",
+      "products": [
+        {
+          "product_id": "prod-pqq-now-energy",
+          "name": "NOW Foods PQQ Energy 20 mg",
+          "price": 37.84,
+          "variants": []
+        },
+        {
+          "product_id": "prod-gluta-now-30",
+          "name": "NOW Foods Glutathione 500 mg",
+          "price": 30.68,
+          "variants": []
+        },
+        {
+          "product_id": "prod-gluta-now-60",
+          "name": "NOW Foods Glutathione 500 mg (60 caps)",
+          "price": 56.24,
+          "variants": []
+        },
+        {
+          "product_id": "prod-gluta-now-120",
+          "name": "NOW Foods Glutathione 500 mg (MAX)",
+          "price": 89.48,
+          "variants": []
+        },
+        {
+          "product_id": "prod-gluta-ghost",
+          "name": "Ghost Basics Vitamin C and Glutathione",
+          "price": 41.00,
+          "variants": []
+        },
+        {
+          "product_id": "prod-gluta-swanson",
+          "name": "SWANSON L-Glutathione 500 mg",
+          "price": 34.56,
+          "variants": []
+        },
+        {
+          "product_id": "prod-gluta-ostrovit",
+          "name": "OstroVit Natural Glutathione 75 mg",
+          "price": 18.77,
+          "variants": []
+        },
+        {
+          "product_id": "prod-astax-now",
+          "name": "NOW Foods Astaxanthin 10 mg",
+          "price": 27.09,
+          "variants": []
+        },
+        {
+          "product_id": "prod-astax-ostrovit",
+          "name": "OstroVit Astaxanthin Forte 4 mg",
+          "price": 23.37,
+          "variants": []
+        },
+        {
+          "product_id": "prod-astax-swanson",
+          "name": "SWANSON Organic Spirulina & Astaxanthin",
+          "price": 15.87,
+          "variants": []
+        },
+        {
+          "product_id": "prod-astax-allnutrition",
+          "name": "AllNutrition Astaxanthin 4 mg",
+          "price": 15.31,
+          "variants": []
+        },
+        {
+          "product_id": "prod-1772461382084",
+          "name": "Grewia NMN - Complex 1000 mg",
+          "price": 66.87,
+          "variants": []
+        },
+        {
+          "product_id": "prod-1772554319124",
+          "name": "Oly. NMN 500 mg",
+          "price": 89.90,
+          "variants": []
+        },
+        {
+          "product_id": "prod-1772554556267",
+          "name": "Trained by JP NMN 1000 mg",
+          "price": 157.24,
+          "variants": []
+        },
+        {
+          "product_id": "prod-1772554952375",
+          "name": "Oly. NAD+ 500 mg",
+          "price": 99.99,
+          "variants": []
+        },
+        {
+          "product_id": "prod-1772554953225",
+          "name": "Hero.Lab NMN + Resveratrol Uthever®",
+          "price": 37.81,
+          "variants": []
+        },
+        {
+          "product_id": "prod-1772563338784",
+          "name": "SWEDISH Supplements NAD+ 300 mg",
+          "price": 45.96,
+          "variants": []
+        },
+        {
+          "product_id": "prod-1772565481695",
+          "name": "Oly. Urolithin A 500 mg",
+          "price": 37.30,
+          "variants": []
+        },
+        {
+          "product_id": "prod-1772565865045",
+          "name": "Osavi PQQ 20 mg",
+          "price": 23.47,
+          "variants": []
+        },
+        {
+          "product_id": "prod-1772565950224",
+          "name": "Osavi PQQ 20 mg (Big Pack)",
+          "price": 40.88,
+          "variants": []
+        }
+      ]
+    }
+  ]
+}
