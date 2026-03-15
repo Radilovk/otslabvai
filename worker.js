@@ -1139,8 +1139,11 @@ async function handleAIAssistant(request, env) {
         throw new UserFacingError("Cloudflare AI не е конфигуриран.", 500);
     }
     
-    // Create prompt from template
-    const prompt = aiSettings.promptTemplate.replace('{{productData}}', JSON.stringify(productData, null, 2));
+    // Create prompt from template.
+    // Use a function replacement to prevent special $ patterns in product data
+    // (e.g. $', $&, $`) from being interpreted as replacement specifiers by String.replace().
+    const productDataJson = JSON.stringify(productData, null, 2);
+    const prompt = aiSettings.promptTemplate.replace('{{productData}}', () => productDataJson);
     
     try {
         let extractedData;
@@ -1292,12 +1295,62 @@ async function callGoogleAI(settings, prompt) {
 }
 
 /**
+ * Fix unescaped control characters inside JSON string values.
+ * Uses character-by-character scanning to correctly track string boundaries
+ * and converts literal newlines, carriage returns, and tabs within strings
+ * into their proper JSON escape sequences.
+ * This is the fundamental fix for AI responses that contain literal newlines
+ * inside string values (a common AI mistake that breaks JSON parsing).
+ */
+function sanitizeJSONStrings(jsonStr) {
+    let result = '';
+    let inString = false;
+    let i = 0;
+    while (i < jsonStr.length) {
+        const char = jsonStr[i];
+        if (!inString) {
+            if (char === '"') {
+                inString = true;
+                result += char;
+            } else {
+                result += char;
+            }
+        } else {
+            if (char === '\\') {
+                // Escaped character — copy both the backslash and the next char unchanged
+                result += char;
+                i++;
+                if (i < jsonStr.length) result += jsonStr[i];
+            } else if (char === '"') {
+                inString = false;
+                result += char;
+            } else if (char === '\n') {
+                result += '\\n';
+            } else if (char === '\r') {
+                result += '\\r';
+            } else if (char === '\t') {
+                result += '\\t';
+            } else if (char < ' ') {
+                // Drop other raw control characters — they are never valid inside JSON strings
+            } else {
+                result += char;
+            }
+        }
+        i++;
+    }
+    return result;
+}
+
+/**
  * Attempt aggressive JSON repair for common AI mistakes
  * This is used as a last resort when basic fixes fail
  */
 function attemptJSONRepair(jsonStr) {
-    // More aggressive repairs - but still conservative
-    let repaired = jsonStr
+    // First, fix any unescaped control characters inside string values
+    let repaired = sanitizeJSONStrings(jsonStr);
+
+    // Then apply structural repairs
+    repaired = repaired
         // Remove all trailing commas more aggressively (including multiple commas)
         .replace(/,+(\s*[}\]])/g, '$1')
         // Remove multiple consecutive commas anywhere
@@ -1360,8 +1413,11 @@ function extractJSONFromResponse(responseText) {
         console.warn("Initial JSON parse failed, applying comprehensive fixes:", parseError.message);
         
         try {
-            // Stage 2: Apply comprehensive sanitization for common AI JSON errors
-            let sanitizedJson = jsonStr
+            // Stage 2: Apply comprehensive sanitization for common AI JSON errors.
+            // First, fix unescaped control characters inside string values (e.g. literal
+            // newlines that AI models sometimes output instead of the \n escape sequence).
+            let sanitizedJson = sanitizeJSONStrings(jsonStr);
+            sanitizedJson = sanitizedJson
                 // Remove multiple consecutive commas (2 or more)
                 .replace(/,{2,}/g, ',')
                 // Remove trailing commas before } (with optional whitespace/newlines)
@@ -1486,9 +1542,11 @@ async function getAIRecommendation(env, formData, productList, mainPromptTemplat
   if (!env.ACCOUNT_ID || !env.AI_TOKEN) {
     throw new Error("Cloudflare Account/AI credentials are not configured.");
   }
+  // Use function replacements to prevent special $ patterns in the data
+  // (e.g. $', $&, $`) from being interpreted as replacement specifiers by String.replace().
   const finalPrompt = mainPromptTemplate
-    .replace('{{productList}}', JSON.stringify(productList, null, 2))
-    .replace('{{clientData}}', JSON.stringify(formData, null, 2));
+    .replace('{{productList}}', () => JSON.stringify(productList, null, 2))
+    .replace('{{clientData}}', () => JSON.stringify(formData, null, 2));
   const model = '@cf/meta/llama-3.1-70b-instruct';
   const cfEndpoint = `https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/ai/run/${model}`;
   const payload = {

@@ -3,11 +3,56 @@
  */
 
 /**
+ * Fix unescaped control characters inside JSON string values.
+ * (Mirror of the worker.js sanitizeJSONStrings function)
+ */
+function sanitizeJSONStrings(jsonStr) {
+    let result = '';
+    let inString = false;
+    let i = 0;
+    while (i < jsonStr.length) {
+        const char = jsonStr[i];
+        if (!inString) {
+            if (char === '"') {
+                inString = true;
+                result += char;
+            } else {
+                result += char;
+            }
+        } else {
+            if (char === '\\') {
+                result += char;
+                i++;
+                if (i < jsonStr.length) result += jsonStr[i];
+            } else if (char === '"') {
+                inString = false;
+                result += char;
+            } else if (char === '\n') {
+                result += '\\n';
+            } else if (char === '\r') {
+                result += '\\r';
+            } else if (char === '\t') {
+                result += '\\t';
+            } else if (char < ' ') {
+                // Drop other raw control characters
+            } else {
+                result += char;
+            }
+        }
+        i++;
+    }
+    return result;
+}
+
+/**
  * Attempt aggressive JSON repair for common AI mistakes
  */
 function attemptJSONRepair(jsonStr) {
-    // More aggressive repairs - but still conservative
-    let repaired = jsonStr
+    // First, fix any unescaped control characters inside string values
+    let repaired = sanitizeJSONStrings(jsonStr);
+
+    // Then apply structural repairs
+    repaired = repaired
         // Remove all trailing commas more aggressively (including multiple commas)
         .replace(/,+(\s*[}\]])/g, '$1')
         // Remove multiple consecutive commas anywhere
@@ -34,7 +79,7 @@ function attemptJSONRepair(jsonStr) {
     return repaired;
 }
 
-// Mock the extractJSONFromResponse function with enhanced sanitization
+// Mirror of the extractJSONFromResponse function from worker.js
 function extractJSONFromResponse(responseText) {
     if (typeof responseText !== 'string') {
         return responseText;
@@ -65,8 +110,9 @@ function extractJSONFromResponse(responseText) {
     } catch (parseError) {
         // If initial parse fails, try to fix common AI JSON errors
         try {
-            // Apply comprehensive sanitization for common AI JSON errors
-            let sanitizedJson = jsonStr
+            // Stage 2: Fix unescaped control chars first, then apply structural fixes
+            let sanitizedJson = sanitizeJSONStrings(jsonStr);
+            sanitizedJson = sanitizedJson
                 // Remove multiple consecutive commas (2 or more)
                 .replace(/,{2,}/g, ',')
                 // Remove trailing commas before } (with optional whitespace/newlines)
@@ -81,13 +127,10 @@ function extractJSONFromResponse(responseText) {
                 // Pattern 3: } or ] followed by { or [ (with or without whitespace)
                 .replace(/(\}|\])(\s*)(\{|\[)/g, '$1,$2$3')
                 // Fix missing comma between closing brace/bracket and opening quote
-                // Matches: }"WHITESPACE"" or ]"WHITESPACE"" (with or without whitespace)
                 .replace(/(\}|\])(\s*)"/g, '$1,$2"')
                 // Fix missing comma between closing quote and opening brace/bracket
-                // Matches: ""WHITESPACE"{ or ""WHITESPACE"[ (with or without whitespace)
                 .replace(/"(\s*)(\{|\[)/g, '",$1$2')
                 // Fix missing comma between consecutive strings (in arrays and between properties)
-                // Matches: "string1"WHITESPACE"string2" - requires at least one whitespace to avoid corrupting empty strings ""
                 .replace(/"(\s+)"/g, '",$1"')
                 // Remove any trailing comma right before the final }
                 .replace(/,(\s*)$/g, '$1');
@@ -457,5 +500,142 @@ describe('extractJSONFromResponse', () => {
         expect(result.manufacturer).toBe('Nutrend');
         expect(result.packaging_info.capsules_or_grams).toBe('');  // Empty string preserved
         expect(result.packaging_info.doses_per_package).toBe('30 дози');
+    });
+});
+
+describe('sanitizeJSONStrings', () => {
+    test('should escape literal newlines inside string values', () => {
+        // AI sometimes outputs literal newlines inside strings instead of \\n
+        const input = '{"description": "Line one\nLine two\nLine three"}';
+        const result = sanitizeJSONStrings(input);
+        expect(result).toBe('{"description": "Line one\\nLine two\\nLine three"}');
+        expect(() => JSON.parse(result)).not.toThrow();
+        expect(JSON.parse(result).description).toBe('Line one\nLine two\nLine three');
+    });
+
+    test('should escape literal carriage returns inside string values', () => {
+        const input = '{"text": "before\rafter"}';
+        const result = sanitizeJSONStrings(input);
+        expect(result).toBe('{"text": "before\\rafter"}');
+        expect(() => JSON.parse(result)).not.toThrow();
+    });
+
+    test('should escape literal tabs inside string values', () => {
+        const input = '{"text": "col1\tcol2"}';
+        const result = sanitizeJSONStrings(input);
+        expect(result).toBe('{"text": "col1\\tcol2"}');
+        expect(() => JSON.parse(result)).not.toThrow();
+    });
+
+    test('should not modify already-escaped sequences', () => {
+        const input = '{"text": "line\\nbreak and \\t tab"}';
+        const result = sanitizeJSONStrings(input);
+        expect(result).toBe('{"text": "line\\nbreak and \\t tab"}');
+    });
+
+    test('should not modify structural whitespace outside strings', () => {
+        const input = '{\n  "key": "value"\n}';
+        const result = sanitizeJSONStrings(input);
+        expect(result).toBe('{\n  "key": "value"\n}');
+    });
+
+    test('should handle multiline AI output with literal newlines in strings', () => {
+        // This simulates the exact scenario: AI outputs literal newlines in FAQ answers
+        const rawAIOutput = `{
+  "faq": [
+    {
+      "question": "How to use?",
+      "answer": "Take 2 capsules daily.\nDrink plenty of water.\nAvoid caffeine."
+    }
+  ]
+}`;
+        const sanitized = sanitizeJSONStrings(rawAIOutput);
+        expect(() => JSON.parse(sanitized)).not.toThrow();
+        const parsed = JSON.parse(sanitized);
+        expect(parsed.faq[0].answer).toContain('Take 2 capsules daily.');
+        expect(parsed.faq[0].answer).toContain('Drink plenty of water.');
+    });
+});
+
+describe('extractJSONFromResponse - unescaped newlines', () => {
+    test('should handle AI output with literal newlines inside string values', () => {
+        // Simulates the most common case: AI outputs literal newlines in description/answer fields
+        const input = `{
+            "name": "Product",
+            "description": "Line one
+Line two
+Line three"
+        }`;
+        const result = extractJSONFromResponse(input);
+        expect(result.name).toBe('Product');
+        expect(result.description).toContain('Line one');
+        expect(result.description).toContain('Line two');
+    });
+
+    test('should handle FAQ answer with literal newlines (matches reported error pattern)', () => {
+        // This pattern triggers "Expected ',' or '}' after property value" at a specific line
+        const input = `{
+            "name": "Продукт",
+            "description": "Описание на продукта",
+            "faq": [
+                {
+                    "question": "Как да го използвам?",
+                    "answer": "Приемайте 2 капсули дневно.
+Пийте достатъчно вода.
+Избягвайте кофеин."
+                },
+                {
+                    "question": "Безопасен ли е?",
+                    "answer": "Да, при правилна употреба."
+                }
+            ]
+        }`;
+        const result = extractJSONFromResponse(input);
+        expect(result.faq).toHaveLength(2);
+        expect(result.faq[0].answer).toContain('Приемайте 2 капсули дневно.');
+        expect(result.faq[1].question).toContain('Безопасен ли е?');
+    });
+});
+
+describe('prompt template $ pattern safety', () => {
+    test("function replacement prevents dollar-apostrophe corruption in product descriptions", () => {
+        // The bug: String.replace() interprets $' as "insert text after the match",
+        // which corrupts the entire prompt when product data contains $'
+        const template = 'BEFORE {{productData}} AFTER';
+        const productData = { name: 'Product', description: "Costs $'100 per bottle" };
+        const jsonStr = JSON.stringify(productData, null, 2);
+
+        // Buggy approach (old code): string replace interprets $' as replacement specifier
+        const buggyResult = template.replace('{{productData}}', jsonStr);
+        // Safe approach (new code): function replacement - return value used verbatim
+        const safeResult = template.replace('{{productData}}', () => jsonStr);
+
+        // The safe result must contain the original $' text unchanged
+        expect(safeResult).toContain("Costs $'100 per bottle");
+        expect(safeResult).toBe(`BEFORE ${jsonStr} AFTER`);
+
+        // The buggy result would be corrupted (AFTER appears inside the description)
+        // We verify the fix actually differs from the old broken behavior when $' is present
+        expect(buggyResult).not.toBe(safeResult);
+    });
+
+    test('function replacement prevents dollar-ampersand corruption in product descriptions', () => {
+        const template = 'BEFORE {{productData}} AFTER';
+        const productData = { name: 'Product', description: 'Price: $& per unit' };
+        const jsonStr = JSON.stringify(productData, null, 2);
+
+        const safeResult = template.replace('{{productData}}', () => jsonStr);
+        expect(safeResult).toContain('Price: $& per unit');
+        expect(safeResult).toBe(`BEFORE ${jsonStr} AFTER`);
+    });
+
+    test('function replacement prevents dollar-backtick corruption in product descriptions', () => {
+        const template = 'BEFORE {{productData}} AFTER';
+        const productData = { name: 'Product', description: 'Formula $`X` active' };
+        const jsonStr = JSON.stringify(productData, null, 2);
+
+        const safeResult = template.replace('{{productData}}', () => jsonStr);
+        expect(safeResult).toContain('Formula $`X` active');
+        expect(safeResult).toBe(`BEFORE ${jsonStr} AFTER`);
     });
 });
