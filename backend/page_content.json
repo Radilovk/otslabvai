@@ -959,7 +959,7 @@
           "public_data": {
             "name": "Fat No More",
             "price": 38.95,
-            "sale_price": null,
+            "sale_price": 25,
             "tagline": "Sport Definition - Термогенен фет бърнер с L-Carnitine",
             "brand": "",
             "image_url": "/images/products/product_16905/SD_Fat_No_More_120cap_600px1_kamera1-aab4bde-original.png",
