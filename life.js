@@ -361,89 +361,32 @@ const generateHeroHTML = component => {
         </div>
     </section>`;
 
-    // Hero visual panel (right side) - hexagonal image cluster with DNA helix
-    const heroImages = component.hero_images || {};
-    const vialImg = heroImages.vial || '';
-    const labImg = heroImages.lab || '';
-    const faceImg = heroImages.face || '';
-
-    const makeHexFrame = (imgUrl, cls, altText, fallbackSvg) => {
-        if (imgUrl) {
-            const rawUrl = String(imgUrl);
-            const lowerUrl = rawUrl.toLowerCase();
-            // Reject data: URLs entirely (can execute scripts) and other dangerous protocols
-            const isDangerous = lowerUrl.startsWith('data:') ||
-                                lowerUrl.startsWith('javascript:') ||
-                                lowerUrl.startsWith('vbscript:') ||
-                                lowerUrl.startsWith('blob:');
-            // Only allow https:// or same-origin relative paths
-            const isSafe = !isDangerous && (
-                rawUrl.startsWith('https://') ||
-                (rawUrl.startsWith('/') && (rawUrl.startsWith('/images/') || rawUrl.startsWith('/assets/')))
-            );
-            if (isSafe) {
-                return `<div class="hex-frame ${cls}"><img src="${escapeHtml(rawUrl)}" alt="${escapeHtml(altText)}" loading="lazy"></div>`;
-            }
-        }
-        return `<div class="hex-frame ${cls} hex-frame-icon">${fallbackSvg}</div>`;
-    };
-
-    const vialSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h6m-6 0H3m6 0V9m6-6v18m0 0h6a2 2 0 0 0 2-2v-4m-8 6V9"/></svg>`;
-    const labSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>`;
-    const faceSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>`;
-
-    const heroVisualHTML = `
-    <div class="hero-visual" aria-hidden="true">
-        <div class="hero-dna-bg">
-            <svg viewBox="0 0 200 500" xmlns="http://www.w3.org/2000/svg" class="dna-helix-svg">
-                <defs>
-                    <linearGradient id="dnaGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#C9A84C;stop-opacity:0.8"/>
-                        <stop offset="100%" style="stop-color:#D4AE5A;stop-opacity:0.3"/>
-                    </linearGradient>
-                    <linearGradient id="dnaGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style="stop-color:#C9764F;stop-opacity:0.7"/>
-                        <stop offset="100%" style="stop-color:#C9A84C;stop-opacity:0.4"/>
-                    </linearGradient>
-                </defs>
-                <!-- Left strand -->
-                <path d="M60,10 C120,60 20,110 80,160 C140,210 40,260 100,310 C160,360 60,410 120,460" fill="none" stroke="url(#dnaGrad1)" stroke-width="3" stroke-linecap="round"/>
-                <!-- Right strand -->
-                <path d="M140,10 C80,60 180,110 120,160 C60,210 160,260 100,310 C40,360 140,410 80,460" fill="none" stroke="url(#dnaGrad2)" stroke-width="3" stroke-linecap="round"/>
-                <!-- Cross bridges -->
-                <line x1="75" y1="35" x2="125" y2="35" stroke="#C9A84C" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="55" y1="85" x2="145" y2="85" stroke="#C9A84C" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="90" y1="135" x2="110" y2="135" stroke="#C9A84C" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="110" y1="185" x2="90" y2="185" stroke="#D4AE5A" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="65" y1="235" x2="135" y2="235" stroke="#D4AE5A" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="95" y1="285" x2="105" y2="285" stroke="#C9A84C" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="115" y1="335" x2="85" y2="335" stroke="#C9A84C" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="75" y1="385" x2="125" y2="385" stroke="#D4AE5A" stroke-width="1.5" stroke-opacity="0.5"/>
-                <line x1="90" y1="430" x2="110" y2="440" stroke="#C9A84C" stroke-width="2" stroke-opacity="0.5"/>
-                <!-- Node circles on strands -->
-                <circle cx="75" cy="35" r="4" fill="#C9A84C" fill-opacity="0.6"/>
-                <circle cx="125" cy="35" r="4" fill="#D4AE5A" fill-opacity="0.6"/>
-                <circle cx="55" cy="85" r="5" fill="#C9A84C" fill-opacity="0.7"/>
-                <circle cx="145" cy="85" r="5" fill="#C9764F" fill-opacity="0.5"/>
-                <circle cx="100" cy="160" r="6" fill="#C9A84C" fill-opacity="0.5"/>
-                <circle cx="100" cy="310" r="6" fill="#D4AE5A" fill-opacity="0.5"/>
-                <circle cx="65" cy="235" r="4" fill="#C9A84C" fill-opacity="0.6"/>
-                <circle cx="135" cy="235" r="4" fill="#D4AE5A" fill-opacity="0.6"/>
-            </svg>
-        </div>
-        ${makeHexFrame(vialImg, 'hex-vial', 'Биологичен флакон', vialSVG)}
-        ${makeHexFrame(labImg, 'hex-lab', 'Лабораторно изследване', labSVG)}
-        ${makeHexFrame(faceImg, 'hex-face', 'Клетъчно подмладяване', faceSVG)}
-        <!-- Floating molecule nodes -->
-        <div class="molecule-node node-1"></div>
-        <div class="molecule-node node-2"></div>
-        <div class="molecule-node node-3"></div>
+    // Hero banner panel (right side) – shows an uploaded image when available
+    let heroBannerHTML = '';
+    if (component.hero_image) {
+        const rawUrl = String(component.hero_image);
+        const lowerUrl = rawUrl.toLowerCase();
+        const isDangerous = lowerUrl.startsWith('data:') ||
+                            lowerUrl.startsWith('javascript:') ||
+                            lowerUrl.startsWith('vbscript:') ||
+                            lowerUrl.startsWith('blob:');
+        const isSafe = !isDangerous && (
+            rawUrl.startsWith('https://') ||
+            (rawUrl.startsWith('/') && (rawUrl.startsWith('/images/') || rawUrl.startsWith('/assets/')))
+        );
+        if (isSafe) {
+            heroBannerHTML = `
+    <div class="hero-banner-panel" aria-hidden="true">
+        <img src="${escapeHtml(rawUrl)}" alt="" class="hero-banner-img" loading="eager">
     </div>`;
+        }
+    }
+    const hasBanner = heroBannerHTML !== '';
 
     return `
     <header class="hero-section${heroClass}"${heroStyle}>
         <div class="hex-bg-pattern" aria-hidden="true"></div>
-        <div class="container hero-grid">
+        <div class="container hero-grid${hasBanner ? '' : ' no-banner'}">
             <div class="hero-content">
                 ${component.tagline ? `<span class="hero-tagline">${escapeHtml(component.tagline)}</span>` : ''}
                 <h1>${escapeHtml(component.title)}</h1>
@@ -456,7 +399,7 @@ const generateHeroHTML = component => {
                     ${trustBadgesHTML}
                 </div>
             </div>
-            ${heroVisualHTML}
+            ${heroBannerHTML}
         </div>
         <div class="container">
             <div class="hero-stats">
@@ -1218,7 +1161,17 @@ function renderFooter(settings, footer) {
         return '';
     }).join('');
     DOM.footer.gridContainer.innerHTML = columnsHTML;
-    DOM.footer.copyrightContainer.innerHTML = footer.copyright_text;
+
+    const socialFooterHTML = (footer.social_facebook || footer.social_instagram) ? `
+        <div class="footer-social-links">
+            ${footer.social_facebook ? `<a href="${escapeHtml(footer.social_facebook)}" aria-label="Facebook" class="footer-social-link" target="_blank" rel="noopener noreferrer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+            </a>` : ''}
+            ${footer.social_instagram ? `<a href="${escapeHtml(footer.social_instagram)}" aria-label="Instagram" class="footer-social-link" target="_blank" rel="noopener noreferrer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            </a>` : ''}
+        </div>` : '';
+    DOM.footer.copyrightContainer.innerHTML = `<span>${footer.copyright_text}</span>${socialFooterHTML}`;
 }
 
 
