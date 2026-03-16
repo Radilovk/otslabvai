@@ -2131,11 +2131,48 @@ main {
 }
 
 .footer-bottom {
-    text-align: center; 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
     border-top: 1px solid var(--border-color);
     padding-top: 1.5rem; 
     font-size: 0.9rem; 
     color: var(--text-secondary);
+}
+
+.footer-social-links {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.footer-social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-primary, #fff);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    transition: background var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed), transform 0.2s ease;
+    text-decoration: none;
+}
+
+.footer-social-link:hover {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 600px) {
+    .footer-bottom {
+        justify-content: center;
+    }
 }
 
 .footer-links {
@@ -5506,7 +5543,48 @@ section[id="scientific"] {
     display: none; /* handled via CSS pseudo-element above */
 }
 
-/* ── 3. HERO VISUAL – RIGHT COLUMN ── */
+/* ── 3. HERO BANNER PANEL – RIGHT COLUMN ── */
+[data-theme] .hero-banner-panel {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow:
+        0 24px 64px rgba(15, 37, 64, 0.16),
+        0 4px 16px rgba(0, 196, 200, 0.12);
+    align-self: stretch;
+    min-height: 420px;
+    flex-shrink: 0;
+}
+
+[data-theme] .hero-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s ease;
+}
+
+[data-theme] .hero-banner-panel:hover .hero-banner-img {
+    transform: scale(1.03);
+}
+
+/* No-banner: collapse to single-column centered layout */
+[data-theme] .hero-section .container.hero-grid.no-banner {
+    grid-template-columns: 1fr;
+    max-width: 720px;
+    text-align: center;
+}
+
+[data-theme] .hero-section .container.hero-grid.no-banner .hero-content {
+    text-align: center;
+}
+
+[data-theme] .hero-section .container.hero-grid.no-banner .hero-cta-group,
+[data-theme] .hero-section .container.hero-grid.no-banner .hero-trust-badges {
+    justify-content: center;
+}
+
+/* ── 3a. HERO VISUAL ── */
 [data-theme] .hero-visual {
     position: relative;
     height: 480px;
@@ -5858,6 +5936,10 @@ section[id="scientific"] {
         gap: 28px;
     }
 
+    [data-theme] .hero-banner-panel {
+        min-height: 320px;
+    }
+
     [data-theme] .hero-visual,
     [data-theme] .hero-visual {
         height: 380px;
@@ -5872,6 +5954,10 @@ section[id="scientific"] {
     [data-theme] .hero-section .container.hero-grid,
     [data-theme] .hero-section .container.hero-grid {
         grid-template-columns: 1fr;
+    }
+
+    [data-theme] .hero-banner-panel {
+        display: none;
     }
 
     [data-theme] .hero-visual,

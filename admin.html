@@ -694,6 +694,19 @@
             </fieldset>
             
             <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">🖼️ Банер изображение (десктоп)</h4>
+            <div class="form-group">
+                <label for="hero_image">Банер изображение (дясна колона на hero секцията)</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="hero_image" data-field="hero_image" placeholder="https://example.com/banner.jpg" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_image">
+                        📤 Upload
+                    </button>
+                </div>
+                <small class="form-hint">Изображението се показва само на десктоп в дясната колона на hero секцията. Препоръчителен размер: 800×600px. Оставете празно, ако не желаете банер.</small>
+            </div>
+
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
             <h4 style="margin-bottom: 1rem; color: var(--accent);">🎨 Фон на Hero секция</h4>
             <div class="form-group">
                 <label for="hero_bg_type">Тип на фона</label>
@@ -1500,7 +1513,16 @@
                 <label for="footer_copyright">Copyright текст</label>
                 <input type="text" id="footer_copyright" data-field="copyright_text">
             </div>
-            <!-- Тук може да се добави редактор за колоните, ако е нужно в бъдеще -->
+            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">📱 Социални мрежи</h4>
+            <div class="form-group">
+                <label for="footer_facebook">Facebook линк</label>
+                <input type="text" id="footer_facebook" data-field="social_facebook" placeholder="https://www.facebook.com/yourpage">
+            </div>
+            <div class="form-group">
+                <label for="footer_instagram">Instagram линк</label>
+                <input type="text" id="footer_instagram" data-field="social_instagram" placeholder="https://www.instagram.com/yourprofile">
+            </div>
         </form>
     </template>
 
