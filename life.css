@@ -5584,7 +5584,7 @@ section[id="scientific"] {
     justify-content: center;
 }
 
-/* ── 3a. HERO VISUAL (LEGACY – kept for reference, not rendered) ── */
+/* ── 3a. HERO VISUAL ── */
 [data-theme] .hero-visual {
     position: relative;
     height: 480px;

@@ -278,7 +278,7 @@ function renderPageContent() {
     };
     appData.page_content.forEach(component => {
         const typeLabel = (component.is_hidden && component.type === 'product_category')
-            ? `${componentTypes[component.type] || component.type} 🙈 Скрита`
+            ? `${componentTypes[component.type] || component.type} (скрита)`
             : (componentTypes[component.type] || component.type);
         const item = createListItem({
             id: component.component_id,
@@ -1459,7 +1459,7 @@ function handleAction(action, target, id) {
                 try {
                     // Show loading state
                     target.disabled = true;
-                    target.textContent = '⏳ Качване...';
+                    target.textContent = 'Качване...';
                     
                     // Upload the file
                     const imageUrl = await uploadImageToGitHub(file);
@@ -1476,7 +1476,7 @@ function handleAction(action, target, id) {
                 } finally {
                     // Reset button state
                     target.disabled = false;
-                    target.textContent = '📤 Upload';
+                    target.textContent = 'Upload';
                     // Clear file input
                     fileInput.value = '';
                 }
@@ -1519,7 +1519,7 @@ function handleAction(action, target, id) {
                     
                     // Show loading state
                     target.disabled = true;
-                    target.textContent = `⏳ Качване на ${files.length} ${getImageWord(files.length)}...`;
+                    target.textContent = `Качване на ${files.length} ${getImageWord(files.length)}...`;
                     
                     // Upload all files
                     const uploadPromises = files.map(file => uploadImageToGitHub(file));
@@ -1542,7 +1542,7 @@ function handleAction(action, target, id) {
                 } finally {
                     // Reset button state
                     target.disabled = false;
-                    target.textContent = '📤 Upload';
+                    target.textContent = 'Upload';
                     // Clear file input
                     fileInput.value = '';
                 }
@@ -1594,7 +1594,7 @@ function handleAction(action, target, id) {
                 try {
                     // Show loading state
                     target.disabled = true;
-                    target.textContent = '⏳ Качване...';
+                    target.textContent = 'Качване...';
                     
                     // Upload the file
                     const imageUrl = await uploadImageToGitHub(file);
@@ -1609,7 +1609,7 @@ function handleAction(action, target, id) {
                 } finally {
                     // Reset button state
                     target.disabled = false;
-                    target.textContent = '📤 Upload';
+                    target.textContent = 'Upload';
                     // Clear file input
                     fileInput.value = '';
                 }
@@ -2468,7 +2468,7 @@ async function handleAIAssistant(productEditor) {
         const aiBtn = productEditor.querySelector('.ai-assistant-btn');
         const originalText = aiBtn.textContent;
         aiBtn.disabled = true;
-        aiBtn.textContent = '⏳ AI обработва...';
+        aiBtn.textContent = 'AI обработва...';
         
         // Събираме текущите данни от продуктовия редактор
         const currentData = {
@@ -2659,17 +2659,17 @@ async function handleAIAssistant(productEditor) {
             }
         }
         
-        showNotification('✅ AI Асистентът успешно попълни информацията за продукта!', 'success', 6000);
+        showNotification('AI Асистентът успешно попълни информацията за продукта!', 'success', 6000);
         
     } catch (error) {
         console.error('AI Assistant error:', error);
-        showNotification(`❌ Грешка при AI обработка: ${error.message}`, 'error', 6000);
+        showNotification(`Грешка при AI обработка: ${error.message}`, 'error', 6000);
     } finally {
         // Възстановяваме бутона
         const aiBtn = productEditor.querySelector('.ai-assistant-btn');
         if (aiBtn) {
             aiBtn.disabled = false;
-            aiBtn.textContent = '🤖 AI Асистент';
+            aiBtn.textContent = 'AI Асистент';
         }
     }
 }
@@ -2889,11 +2889,11 @@ async function saveAISettings() {
         }
         
         aiSettings = settings;
-        showNotification('✅ AI настройките са запазени успешно!', 'success');
+        showNotification('AI настройките са запазени успешно!', 'success');
         
     } catch (error) {
         console.error('Failed to save AI settings:', error);
-        showNotification('❌ Грешка при запазване на настройките', 'error');
+        showNotification('Грешка при запазване на настройките', 'error');
     }
 }
 
@@ -2904,7 +2904,7 @@ async function testAISettings() {
     try {
         const testBtn = document.getElementById('test-ai-settings-btn');
         testBtn.disabled = true;
-        testBtn.textContent = '⏳ Тестване...';
+        testBtn.textContent = 'Тестване...';
         
         // Collect current settings
         const settings = {
@@ -2938,18 +2938,18 @@ async function testAISettings() {
         const result = await response.json();
         
         if (result.success) {
-            showNotification('✅ AI тестът премина успешно! Моделът работи правилно.', 'success', 6000);
+            showNotification('AI тестът премина успешно! Моделът работи правилно.', 'success', 6000);
         } else {
             throw new Error('Invalid response');
         }
         
     } catch (error) {
         console.error('AI test failed:', error);
-        showNotification(`❌ AI тестът се провали: ${error.message}`, 'error', 6000);
+        showNotification(`AI тестът се провали: ${error.message}`, 'error', 6000);
     } finally {
         const testBtn = document.getElementById('test-ai-settings-btn');
         testBtn.disabled = false;
-        testBtn.textContent = '🧪 Тествай AI';
+        testBtn.textContent = 'Тествай AI';
     }
 }
 
@@ -2969,7 +2969,7 @@ function resetAISettings() {
     document.getElementById('ai-prompt-template').value = getDefaultPromptTemplate();
     
     updateModelPlaceholder();
-    showNotification('🔄 Настройките са възстановени по подразбиране', 'info');
+    showNotification('Настройките са възстановени по подразбиране', 'info');
 }
 
 /**
