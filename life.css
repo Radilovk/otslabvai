@@ -2274,6 +2274,11 @@ main {
     color: #fff;
 }
 
+.social-feed-icon.youtube-icon {
+    background: #ff0000;
+    color: #fff;
+}
+
 .social-handle {
     font-size: 1.1rem;
     font-weight: 600;
@@ -2299,6 +2304,18 @@ main {
     border-color: transparent;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(188,24,136,0.4);
+}
+
+.social-follow-btn.youtube-btn {
+    background: #ff0000;
+    border-color: transparent;
+}
+
+.social-follow-btn.youtube-btn:hover {
+    background: #cc0000;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255,0,0,0.4);
 }
 
 /* Instagram profile card */

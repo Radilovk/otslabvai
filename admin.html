@@ -1515,22 +1515,41 @@
             </div>
             <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-color);">
             <h4 style="margin-bottom: 1rem; color: var(--accent);">📱 Социални мрежи</h4>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem;">Въведете пълните URL адреси. Иконите ще се покажат автоматично в футъра на всички страници.</p>
             <div class="form-group">
-                <label for="footer_facebook">Facebook линк</label>
-                <input type="text" id="footer_facebook" data-field="social_facebook" placeholder="https://www.facebook.com/yourpage">
+                <label for="footer_facebook">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#1877f2" style="vertical-align:middle;margin-right:6px;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>Facebook линк
+                </label>
+                <input type="url" id="footer_facebook" data-field="social_facebook" placeholder="https://www.facebook.com/вашата-страница">
             </div>
             <div class="form-group">
-                <label for="footer_instagram">Instagram линк</label>
-                <input type="text" id="footer_instagram" data-field="social_instagram" placeholder="https://www.instagram.com/yourprofile">
+                <label for="footer_instagram">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e1306c" stroke-width="2" style="vertical-align:middle;margin-right:6px;"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>Instagram линк
+                </label>
+                <input type="url" id="footer_instagram" data-field="social_instagram" placeholder="https://www.instagram.com/вашия-профил">
+            </div>
+            <div class="form-group">
+                <label for="footer_youtube">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#ff0000" style="vertical-align:middle;margin-right:6px;"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/></svg>YouTube канал
+                </label>
+                <input type="url" id="footer_youtube" data-field="social_youtube" placeholder="https://www.youtube.com/@вашия-канал">
+            </div>
+            <div class="form-group">
+                <label for="footer_tiktok">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#010101" stroke-width="2" style="vertical-align:middle;margin-right:6px;"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg>TikTok профил
+                </label>
+                <input type="url" id="footer_tiktok" data-field="social_tiktok" placeholder="https://www.tiktok.com/@вашия-профил">
             </div>
             <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-color);">
             <h4 style="margin-bottom: 1rem; color: var(--accent);">📺 Показване на публикации</h4>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem;">Избери кой социален канал да се показва като секция с публикации на всички страници (над футъра). Изисква да е въведен съответния линк.</p>
             <div class="form-group">
                 <label for="footer_social_feed_platform">Покажи публикации от</label>
                 <select id="footer_social_feed_platform" data-field="social_feed_platform">
                     <option value="">Не показвай</option>
-                    <option value="facebook">Facebook</option>
-                    <option value="instagram">Instagram</option>
+                    <option value="facebook">Facebook (интегриран времеви ред)</option>
+                    <option value="instagram">Instagram (профилна карта)</option>
+                    <option value="youtube">YouTube (видео плейлист)</option>
                 </select>
             </div>
         </form>

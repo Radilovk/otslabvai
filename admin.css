@@ -875,3 +875,67 @@ input:checked + .slider:before {
 .promo-actions button {
     white-space: nowrap;
 }
+
+/* Social Media Admin Card */
+.admin-social-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin-top: 0.75rem;
+}
+
+.admin-social-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.admin-social-title {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.btn-sm {
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+.admin-social-icons {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.admin-social-icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.admin-social-icon-label {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.admin-social-icon-item.active .admin-social-icon-label {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.admin-social-feed-status {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.admin-social-feed-status strong {
+    color: var(--accent);
+}

@@ -1042,7 +1042,8 @@ function renderFooter(settings, footer) {
     }).join('');
     DOM.footer.gridContainer.innerHTML = columnsHTML;
 
-    const socialFooterHTML = (footer.social_facebook || footer.social_instagram) ? `
+    const hasSocial = footer.social_facebook || footer.social_instagram || footer.social_youtube || footer.social_tiktok;
+    const socialFooterHTML = hasSocial ? `
         <div class="footer-social-links">
             ${footer.social_facebook ? `<a href="${escapeHtml(footer.social_facebook)}" aria-label="Facebook" class="footer-social-link" target="_blank" rel="noopener noreferrer">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
@@ -1050,8 +1051,142 @@ function renderFooter(settings, footer) {
             ${footer.social_instagram ? `<a href="${escapeHtml(footer.social_instagram)}" aria-label="Instagram" class="footer-social-link" target="_blank" rel="noopener noreferrer">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
             </a>` : ''}
+            ${footer.social_youtube ? `<a href="${escapeHtml(footer.social_youtube)}" aria-label="YouTube" class="footer-social-link" target="_blank" rel="noopener noreferrer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"></path><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"></polygon></svg>
+            </a>` : ''}
+            ${footer.social_tiktok ? `<a href="${escapeHtml(footer.social_tiktok)}" aria-label="TikTok" class="footer-social-link" target="_blank" rel="noopener noreferrer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg>
+            </a>` : ''}
         </div>` : '';
     DOM.footer.copyrightContainer.innerHTML = `<span>${footer.copyright_text}</span>${socialFooterHTML}`;
+}
+
+function renderSocialFeed(footer) {
+    const section = document.getElementById('social-feed-section');
+    if (!section) return;
+
+    const platform = footer.social_feed_platform || '';
+    const fbUrl = (footer.social_facebook || '').trim();
+    const igUrl = (footer.social_instagram || '').trim();
+    const ytUrl = (footer.social_youtube || '').trim();
+
+    if (platform === 'facebook' && fbUrl) {
+        const encodedUrl = encodeURIComponent(fbUrl);
+        section.innerHTML = `
+            <section class="social-feed-section section-padding">
+                <div class="container">
+                    <div class="section-title animate-on-scroll">
+                        <h2>Следвайте ни във Facebook</h2>
+                        <p>Вижте нашите последни публикации и новини</p>
+                    </div>
+                    <div class="social-feed-wrapper">
+                        <div class="social-feed-iframe-container">
+                            <iframe
+                                src="https://www.facebook.com/plugins/page.php?href=${encodedUrl}&tabs=timeline&width=500&height=600&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true"
+                                style="border:none;overflow:hidden;width:100%;height:600px;"
+                                scrolling="no"
+                                allowfullscreen="true"
+                                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                                loading="lazy"
+                                title="Facebook страница"
+                            ></iframe>
+                        </div>
+                        <div class="social-feed-cta">
+                            <div class="social-feed-icon facebook-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                            </div>
+                            <h3>Присъединете се към нашата общност</h3>
+                            <p>Следете ни за последни новини, оферти и полезни съвети.</p>
+                            <a href="${escapeHtml(fbUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary social-follow-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                                Харесайте страницата
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>`;
+    } else if (platform === 'instagram' && igUrl) {
+        const igUsername = (() => {
+            try {
+                const url = new URL(igUrl.startsWith('http') ? igUrl : 'https://' + igUrl);
+                const parts = url.pathname.replace(/\/+$/, '').split('/').filter(Boolean);
+                const candidate = parts[0] || '';
+                return /^[a-zA-Z0-9._]{1,30}$/.test(candidate) ? candidate : '';
+            } catch { return ''; }
+        })();
+        section.innerHTML = `
+            <section class="social-feed-section section-padding section-bg">
+                <div class="container">
+                    <div class="section-title animate-on-scroll">
+                        <h2>Следвайте ни в Instagram</h2>
+                        <p>Вижте нашите публикации и истории</p>
+                    </div>
+                    <div class="social-feed-wrapper instagram-layout">
+                        <div class="social-feed-cta">
+                            <div class="social-feed-icon instagram-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                            </div>
+                            ${igUsername ? `<p class="social-handle">@${escapeHtml(igUsername)}</p>` : ''}
+                            <h3>Вижте публикациите ни</h3>
+                            <p>Следвайте ни за вдъхновяващо съдържание и полезни съвети.</p>
+                            <a href="${escapeHtml(igUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary social-follow-btn instagram-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                                Отвори в Instagram
+                            </a>
+                        </div>
+                        <a href="${escapeHtml(igUrl)}" target="_blank" rel="noopener noreferrer" class="instagram-profile-card" aria-label="Отвори Instagram профил">
+                            <div class="instagram-profile-bg">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                                <p class="instagram-profile-cta">Вижте профила ни →</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </section>`;
+    } else if (platform === 'youtube' && ytUrl) {
+        const ytChannelId = (() => {
+            try {
+                const url = new URL(ytUrl.startsWith('http') ? ytUrl : 'https://' + ytUrl);
+                const parts = url.pathname.replace(/\/+$/, '').split('/').filter(Boolean);
+                if (parts[0] === 'channel' && parts[1]) return parts[1];
+                return null;
+            } catch { return null; }
+        })();
+        section.innerHTML = `
+            <section class="social-feed-section section-padding">
+                <div class="container">
+                    <div class="section-title animate-on-scroll">
+                        <h2>Абонирайте се в YouTube</h2>
+                        <p>Гледайте нашите видеа и съвети</p>
+                    </div>
+                    <div class="social-feed-wrapper">
+                        ${ytChannelId ? `<div class="social-feed-iframe-container">
+                            <iframe
+                                src="https://www.youtube.com/embed?listType=user_uploads&list=${encodeURIComponent(ytChannelId)}"
+                                style="border:none;overflow:hidden;width:100%;height:400px;"
+                                allowfullscreen="true"
+                                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                                loading="lazy"
+                                title="YouTube канал"
+                            ></iframe>
+                        </div>` : ''}
+                        <div class="social-feed-cta">
+                            <div class="social-feed-icon youtube-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/></svg>
+                            </div>
+                            <h3>Гледайте нашия канал</h3>
+                            <p>Абонирайте се за редовни видеа, съвети и ексклузивно съдържание.</p>
+                            <a href="${escapeHtml(ytUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary social-follow-btn youtube-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="white"/></svg>
+                                Абонирайте се
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>`;
+    } else {
+        section.innerHTML = '';
+    }
 }
 
 
@@ -1529,6 +1664,7 @@ async function main() {
         }
         
         renderFooter(data.settings, data.footer);
+        renderSocialFeed(data.footer);
         
         if (isIndexPage) {
             DOM.mainContainer.classList.add('is-loaded');

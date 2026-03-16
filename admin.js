@@ -5,6 +5,10 @@
 // API Endpoint
 import { API_URL } from './config.js';
 
+function escapeAdminHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
 // =======================================================
 //          THEME TOGGLE FUNCTIONALITY
 // =======================================================
@@ -299,15 +303,53 @@ function renderPageContent() {
 
 function renderFooter() {
     DOM.footerSettingsContainer.innerHTML = '';
-     const item = createListItem({
+
+    // Copyright item
+    const copyrightItem = createListItem({
         type: 'Copyright',
         title: appData.footer.copyright_text,
         actions: [
             { label: 'Редактирай', action: 'edit-footer', class: 'btn-secondary' }
         ]
     });
-    item.querySelector('.handle').style.display = 'none';
-    DOM.footerSettingsContainer.appendChild(item);
+    copyrightItem.querySelector('.handle').style.display = 'none';
+    DOM.footerSettingsContainer.appendChild(copyrightItem);
+
+    // Social media preview card
+    const footer = appData.footer;
+    const networks = [
+        { key: 'social_facebook', label: 'Facebook', color: '#1877f2', icon: '<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>' },
+        { key: 'social_instagram', label: 'Instagram', color: '#e1306c', icon: '<rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>' },
+        { key: 'social_youtube', label: 'YouTube', color: '#ff0000', icon: '<path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"></path><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"></polygon>' },
+        { key: 'social_tiktok', label: 'TikTok', color: '#010101', icon: '<path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>' },
+    ];
+
+    const socialCard = document.createElement('div');
+    socialCard.className = 'admin-social-card';
+    socialCard.innerHTML = `
+        <div class="admin-social-header">
+            <span class="admin-social-title">📱 Социални мрежи</span>
+            <button class="btn btn-secondary btn-sm" data-action="edit-footer">Редактирай</button>
+        </div>
+        <div class="admin-social-icons">
+            ${networks.map(net => {
+                const url = footer[net.key] || '';
+                const active = url.trim() !== '';
+                return `<div class="admin-social-icon-item ${active ? 'active' : 'inactive'}" title="${net.label}: ${active ? url : 'не е зададен'}">
+                    <a href="${active ? escapeAdminHtml(url) : '#'}" ${active ? 'target="_blank" rel="noopener noreferrer"' : ''} style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:${active ? net.color : 'var(--border-color)'};color:#fff;text-decoration:none;opacity:${active ? '1' : '0.35'};">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${net.key === 'social_instagram' ? 'none' : 'currentColor'}" stroke="${net.key === 'social_instagram' ? 'currentColor' : 'none'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${net.icon}</svg>
+                    </a>
+                    <span class="admin-social-icon-label">${net.label}</span>
+                </div>`;
+            }).join('')}
+        </div>
+        ${(() => {
+            const feed = footer.social_feed_platform || '';
+            const feedLabels = { facebook: 'Facebook', instagram: 'Instagram', youtube: 'YouTube' };
+            return feed ? `<p class="admin-social-feed-status">📺 Показва публикации от: <strong>${feedLabels[feed] || feed}</strong></p>` : '<p class="admin-social-feed-status">📺 Показване на публикации: <em>изключено</em></p>';
+        })()}
+    `;
+    DOM.footerSettingsContainer.appendChild(socialCard);
 }
 
 function renderOrders() {
