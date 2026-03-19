@@ -2885,7 +2885,7 @@ async function loadAISettings() {
             model: '@cf/meta/llama-3.1-70b-instruct',
             apiKey: localStorage.getItem('ai_api_key') || '',
             temperature: 0.3,
-            maxTokens: 4096,
+            maxTokens: 8192,
             promptTemplate: getDefaultPromptTemplate()
         };
     }
