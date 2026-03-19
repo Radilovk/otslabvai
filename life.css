@@ -614,8 +614,8 @@ img {
 }
 
 .logo-container img { 
-    height: 80px; 
-    width: 80px; 
+    height: 52px; 
+    width: 52px; 
     /* Keep alt text accessible for screen readers but hide it visually when image loads */
     object-fit: contain;
     /* Smooth transition when image loads */
@@ -652,6 +652,12 @@ img {
     align-items: center; 
     gap: 1.5rem;
     flex: 1;
+    justify-content: center;
+}
+
+/* Mobile-only cart link: hidden on desktop, shown inside the mobile nav drawer */
+.cart-link-mobile {
+    display: none;
 }
 
 .nav-links { 
