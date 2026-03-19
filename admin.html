@@ -707,6 +707,49 @@
             </div>
 
             <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">🔷 Изображения на хексагоналните рамки (Hero Visual)</h4>
+            <div class="form-group">
+                <label>Фоново изображение на hero-visual панела</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" data-field="hero_images.visual_bg" placeholder="https://example.com/visual-bg.jpg" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_images.visual_bg">
+                        📤 Upload
+                    </button>
+                </div>
+                <small class="form-hint">Фоново изображение за дясната (hero-visual) секция. Оставете празно за прозрачен фон.</small>
+            </div>
+            <div class="form-group">
+                <label>Изображение — Флакон (hex-vial)</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" data-field="hero_images.vial" placeholder="https://example.com/vial.png" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_images.vial">
+                        📤 Upload
+                    </button>
+                </div>
+                <small class="form-hint">Изображение за горния хексагон (флакон). Препоръчителен размер: 300×300px.</small>
+            </div>
+            <div class="form-group">
+                <label>Изображение — Лаборатория (hex-lab)</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" data-field="hero_images.lab" placeholder="https://example.com/lab.png" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_images.lab">
+                        📤 Upload
+                    </button>
+                </div>
+                <small class="form-hint">Изображение за средния хексагон (лаборатория). Препоръчителен размер: 300×300px.</small>
+            </div>
+            <div class="form-group">
+                <label>Изображение — Лице (hex-face)</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" data-field="hero_images.face" placeholder="https://example.com/face.png" style="flex: 1;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_images.face">
+                        📤 Upload
+                    </button>
+                </div>
+                <small class="form-hint">Изображение за долния хексагон (лице). Препоръчителен размер: 300×300px.</small>
+            </div>
+
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
             <h4 style="margin-bottom: 1rem; color: var(--accent);">🎨 Фон на Hero секция</h4>
             <div class="form-group">
                 <label for="hero_bg_type">Тип на фона</label>
