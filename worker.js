@@ -955,7 +955,7 @@ function getDefaultAISettings() {
         model: '@cf/meta/llama-3.1-70b-instruct',
         apiKey: '',
         temperature: 0.3,
-        maxTokens: 4096,
+        maxTokens: 8192,
         promptTemplate: `Ти си експерт по хранителни добавки и продукти за отслабване. Ще получиш информация за продукт и трябва да попълниш ВСИЧКИ възможни полета в JSON формат, базирайки се на твоите знания за този тип продукти.
 
 ФОРМАТ НА ОТГОВОРА:
@@ -1267,6 +1267,13 @@ async function callOpenAI(settings, messages) {
         throw new Error("OpenAI response is missing expected fields.");
     }
     
+    if (result.choices[0].finish_reason === 'length') {
+        throw new UserFacingError(
+            "AI отговорът е прекъснат поради ограничение на токените. Увеличете 'Максимум токени' в настройките на AI асистента (препоръчително: 8192).",
+            500
+        );
+    }
+    
     return JSON.parse(result.choices[0].message.content);
 }
 
@@ -1315,7 +1322,15 @@ async function callGoogleAI(settings, messages) {
         throw new Error("Google AI response is missing expected fields.");
     }
     
-    const textContent = result.candidates[0].content.parts[0].text;
+    const candidate = result.candidates[0];
+    if (candidate.finishReason === 'MAX_TOKENS') {
+        throw new UserFacingError(
+            "AI отговорът е прекъснат поради ограничение на токените. Увеличете 'Максимум токени' в настройките на AI асистента (препоръчително: 8192).",
+            500
+        );
+    }
+    
+    const textContent = candidate.content.parts[0].text;
     return JSON.parse(textContent);
 }
 
