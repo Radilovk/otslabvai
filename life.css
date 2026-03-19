@@ -2075,8 +2075,8 @@ main {
   transition: width 1.5s cubic-bezier(0.25, 1, 0.5, 1), background 0.5s ease-out, box-shadow 0.5s ease-out;
 }
 .effect-bar.animated {
-  /* Premium biotech gradient: teal to gold */
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  /* Premium biotech gradient: teal */
+  background: linear-gradient(135deg, var(--accent), #0097a7);
   box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 /* Ensure text is always readable */
@@ -5046,7 +5046,7 @@ section[id="scientific"] {
     }
     50% {
         box-shadow: 0 0 28px rgba(0, 196, 200, 0.6);
-        border-color: #E0C870;
+        border-color: var(--accent);
     }
 }
 
@@ -5093,7 +5093,7 @@ section[id="scientific"] {
     color: var(--accent);
     line-height: 1;
     margin-bottom: 8px;
-    background: linear-gradient(135deg, #00c4c8, #E0C870);
+    background: linear-gradient(135deg, #00c4c8, #0097a7);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -6327,10 +6327,8 @@ section[id="scientific"] {
     background: linear-gradient(
         135deg,
         #00c4c8 0%,
-        #E0C870 25%,
-        #00c4c8 50%,
-        #00c4c8 75%,
-        #d4a843 100%
+        #0097a7 50%,
+        #00c4c8 100%
     );
     background-size: 300% auto;
     -webkit-background-clip: text;
