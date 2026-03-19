@@ -779,13 +779,17 @@ img {
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    background: rgba(0, 196, 200, 0.05);
+    border: 1px solid rgba(0, 196, 200, 0.12);
+    border-radius: 50px;
+    padding: 4px 6px;
 }
 
 /* -- Cart Icon Button -- */
 .cart-icon-btn {
     background: transparent;
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(0, 196, 200, 0.35);
     border-radius: 50%;
     width: 42px;
     height: 42px;
@@ -804,7 +808,8 @@ img {
     border-color: var(--accent);
     background: var(--accent);
     color: var(--color-white);
-    transform: scale(1.1);
+    transform: scale(1.08);
+    box-shadow: 0 4px 18px rgba(0, 196, 200, 0.45);
 }
 
 .cart-icon-btn svg {
@@ -818,7 +823,7 @@ img {
     top: -5px;
     right: -5px;
     background: var(--accent);
-    color: white;
+    color: var(--color-white);
     border-radius: 50%;
     width: 20px;
     height: 20px;
@@ -827,10 +832,12 @@ img {
     justify-content: center;
     font-size: 0.7rem;
     font-weight: 700;
+    border: 2px solid var(--color-white);
 }
 
 .cart-icon-btn:hover .cart-badge {
-    background: var(--color-secondary);
+    background: var(--color-white);
+    color: var(--accent);
 }
 
 /* -- Fixed Mobile Cart Icon -- */
@@ -840,8 +847,8 @@ img {
     top: 80px; /* Position below the header to avoid overlapping */
     right: 20px;
     z-index: 1004;
-    background: var(--bg-primary);
-    border: 2px solid var(--border-color);
+    background: var(--color-white);
+    border: 2px solid rgba(0, 196, 200, 0.45);
     border-radius: 50%;
     width: 46px;
     height: 46px;
@@ -851,14 +858,15 @@ img {
     transition: all var(--transition-speed);
     text-decoration: none;
     color: var(--accent);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 196, 200, 0.2);
 }
 
 .cart-icon-fixed-mobile:hover {
     border-color: var(--accent);
     background: var(--accent);
     color: var(--color-white);
-    transform: scale(1.05);
+    transform: scale(1.08);
+    box-shadow: 0 6px 22px rgba(0, 196, 200, 0.5);
 }
 
 .cart-icon-fixed-mobile svg {
@@ -872,7 +880,7 @@ img {
     top: -6px;
     right: -6px;
     background: var(--accent);
-    color: white;
+    color: var(--color-white);
     border-radius: 50%;
     width: 22px;
     height: 22px;
@@ -881,11 +889,13 @@ img {
     justify-content: center;
     font-size: 0.7rem;
     font-weight: 700;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 2px solid var(--color-white);
+    box-shadow: 0 2px 8px rgba(0, 196, 200, 0.3);
 }
 
 .cart-icon-fixed-mobile:hover .cart-badge {
-    background: var(--color-secondary);
+    background: var(--color-white);
+    color: var(--accent);
 }
 
 /* Hide fixed cart when menu is open */
@@ -900,7 +910,7 @@ body.nav-open .cart-icon-fixed-mobile {
 
 .search-toggle-btn {
     background: transparent;
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(0, 196, 200, 0.35);
     border-radius: 50%;
     width: 42px;
     height: 42px;
@@ -917,13 +927,15 @@ body.nav-open .cart-icon-fixed-mobile {
     border-color: var(--accent);
     background: var(--accent);
     color: var(--color-white);
-    transform: scale(1.1);
+    transform: scale(1.08);
+    box-shadow: 0 4px 18px rgba(0, 196, 200, 0.45);
 }
 
 .search-toggle-btn[aria-expanded="true"] {
     border-color: var(--accent);
     background: var(--accent);
     color: var(--color-white);
+    box-shadow: 0 4px 18px rgba(0, 196, 200, 0.45);
 }
 
 .search-toggle-btn svg {
@@ -3122,36 +3134,53 @@ body.modal-open { overflow: hidden; }
     .cart-link-mobile a {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background: var(--accent);
-        color: white;
-        border-radius: var(--border-radius);
+        gap: 0.6rem;
+        padding: 0.8rem 1.75rem;
+        background: var(--color-white);
+        color: var(--accent);
+        border: 2px solid var(--accent);
+        border-radius: 50px;
         text-decoration: none;
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 0.95rem;
+        letter-spacing: 0.02em;
         transition: all var(--transition-speed);
         position: relative;
+        box-shadow: 0 2px 12px rgba(0, 196, 200, 0.18);
+        width: 100%;
+        justify-content: center;
     }
     
     .cart-link-mobile a:hover {
-        background: var(--color-secondary);
+        background: var(--accent);
+        color: var(--color-white);
+        border-color: var(--accent);
         transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(0, 196, 200, 0.45);
     }
     
     .cart-link-mobile a .cart-badge {
         position: relative;
         top: unset;
         right: unset;
-        background: rgba(255, 255, 255, 0.3);
-        color: white;
+        background: var(--accent);
+        color: var(--color-white);
         border-radius: 50%;
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         font-weight: 700;
+        border: 2px solid var(--color-white);
+        flex-shrink: 0;
+    }
+    
+    .cart-link-mobile a:hover .cart-badge {
+        background: var(--color-white);
+        color: var(--accent);
+        border-color: var(--accent);
     }
     
     .about-grid {
@@ -6672,14 +6701,14 @@ section[id="scientific"] {
     color: #0f2540;
 }
 
-/* ── NAV LINKS UNDERLINE: gold ── */
+/* ── NAV LINKS UNDERLINE: cyan ── */
 .nav-links a::after {
     background-color: #00c4c8;
 }
 
 .nav-links a:hover,
 .nav-links a.active {
-    color: #8B7030;
+    color: #00c4c8;
 }
 
 [data-theme] .nav-links a:hover,
@@ -6824,15 +6853,16 @@ section[id="scientific"] {
     color: #00c4c8;
 }
 
-/* ── MOBILE CART LINK: gold bg ── */
+/* ── MOBILE CART LINK: cyan outlined pill ── */
 .cart-link-mobile a {
-    background: #00c4c8;
-    color: #0f2540;
+    background: var(--color-white);
+    color: var(--accent);
+    border: 2px solid var(--accent);
 }
 
 .cart-link-mobile a:hover {
-    background: #d4a843;
-    color: #0f2540;
+    background: var(--accent);
+    color: var(--color-white);
 }
 
 /* ── SCROLL PROGRESS: cyan ── */
