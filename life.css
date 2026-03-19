@@ -47,7 +47,7 @@
     --btn-gradient-primary: linear-gradient(135deg, #00c4c8 0%, #00a8ac 100%);
     --btn-gradient-primary-hover: linear-gradient(135deg, #00d4d8 0%, #00c4c8 100%);
     --btn-gradient-cta: linear-gradient(135deg, #00c4c8 0%, #00a8ac 100%);
-    --btn-gradient-premium: linear-gradient(135deg, #d4a843 0%, #c49030 100%);
+    --btn-gradient-premium: linear-gradient(135deg, #00c4c8 0%, #0090a8 100%);
     --btn-gradient-biohack: linear-gradient(135deg, #00c4c8 0%, #0090a8 45%, #00c4c8 100%);
 
     /* Glow shadows — cyan */
@@ -200,7 +200,7 @@ body {
     left: 0;
     height: 2px;
     width: 0%;
-    background: linear-gradient(90deg, #00c4c8, #00d4d8, #d4a843);
+    background: linear-gradient(90deg, #00c4c8, #00d4d8, #00a8ac);
     z-index: 9998;
     transition: width 0.1s linear;
     box-shadow: 0 0 6px rgba(0, 196, 200, 0.5);
@@ -381,10 +381,10 @@ img {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #d4a843 0%, #C9764F 100%);
+    background: linear-gradient(135deg, #00c4c8 0%, #0090a8 100%);
     color: #ffffff;
     border: none;
-    box-shadow: 0 4px 20px rgba(201, 118, 79, 0.35);
+    box-shadow: 0 4px 20px rgba(0, 196, 200, 0.35);
     border-radius: 14px;
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 600;
@@ -392,9 +392,9 @@ img {
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #e0b555 0%, #d4845a 100%);
+    background: linear-gradient(135deg, #00d4d8 0%, #00c4c8 100%);
     transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(201, 118, 79, 0.5);
+    box-shadow: 0 8px 30px rgba(0, 196, 200, 0.5);
 }
 
 .btn-primary:active {
@@ -2802,7 +2802,7 @@ body.modal-open { overflow: hidden; }
     position: absolute;
     top: 20px;
     right: 20px;
-    background: linear-gradient(135deg, #d4a843 0%, #00c4c8 100%);
+    background: #00c4c8;
     color: var(--color-white);
     padding: 8px 16px;
     border-radius: 20px;
@@ -3495,11 +3495,11 @@ body.modal-open { overflow: hidden; }
 }
 
 .product-badge.bestseller {
-    background: linear-gradient(135deg, #FFD700, #FFA500);
+    background: #d4a843;
 }
 
 .product-badge.new {
-    background: linear-gradient(135deg, #d4a843, #00c4c8);
+    background: #00c4c8;
     color: #0f2540;
 }
 
@@ -5813,7 +5813,7 @@ section[id="scientific"] {
     content: '';
     position: absolute;
     inset: -3px;
-    background: linear-gradient(135deg, #d4a843, #00c4c8 50%, #00c4c8);
+    background: #00c4c8;
     clip-path: polygon(50% 0%, 93.301% 25%, 93.301% 75%, 50% 100%, 6.699% 75%, 6.699% 25%);
     z-index: -1;
 }
@@ -6556,16 +6556,16 @@ section[id="scientific"] {
     background: linear-gradient(90deg, #00c4c8, transparent);
 }
 
-/* ── LOGO GRADIENT: gold tones ── */
+/* ── LOGO GRADIENT: cyan tones ── */
 .logo-container {
-    background: linear-gradient(135deg, #8B7030, #00c4c8);
+    background: linear-gradient(135deg, #00c4c8, #0090a8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
 .logo-container .brand-name {
-    background: linear-gradient(135deg, #8B7030, #00c4c8);
+    background: linear-gradient(135deg, #00c4c8, #0090a8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -6613,9 +6613,9 @@ section[id="scientific"] {
     color: #00c4c8;
 }
 
-/* ── EFFECT BAR animated: gold gradient ── */
+/* ── EFFECT BAR animated: cyan ── */
 .effect-bar.animated {
-    background: linear-gradient(135deg, #d4a843, #00c4c8);
+    background: #00c4c8;
     box-shadow: 0 0 12px rgba(0, 196, 200, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
@@ -6652,20 +6652,14 @@ section[id="scientific"] {
     50%       { box-shadow: 0 4px 28px rgba(0, 196, 200, 0.6), 0 0 0 8px rgba(0, 196, 200, 0); }
 }
 
-/* ── CLINICAL STAT VALUE: gold gradient ── */
+/* ── CLINICAL STAT VALUE: cyan ── */
 .clinical-stat-value {
-    background: linear-gradient(135deg, #d4a843, #00c4c8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #00c4c8;
 }
 
-/* ── STAT ITEM STRONG: gold gradient ── */
+/* ── STAT ITEM STRONG: cyan ── */
 .stat-item strong {
-    background: linear-gradient(135deg, #d4a843, #00c4c8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #00c4c8;
 }
 
 [data-theme] .stat-item strong {
@@ -6676,7 +6670,7 @@ section[id="scientific"] {
 
 /* ── PRODUCT BADGE BESTSELLER: refined gold ── */
 .product-badge.bestseller {
-    background: linear-gradient(135deg, #d4a843, #00c4c8);
+    background: #d4a843;
     color: #0f2540;
 }
 
@@ -6845,7 +6839,7 @@ section[id="scientific"] {
 
 /* ── SCROLL PROGRESS: cyan ── */
 .scroll-progress {
-    background: linear-gradient(90deg, #00c4c8, #00d4d8, #d4a843);
+    background: linear-gradient(90deg, #00c4c8, #00d4d8, #00a8ac);
 }
 
 /* ── TOAST INFO: gold-tinted ── */
@@ -6910,25 +6904,25 @@ section[id="scientific"] {
 
 /* ── BTN-PRIMARY LIGHT: solid cyan button for light backgrounds ── */
 [data-theme] .btn-primary {
-    background: linear-gradient(135deg, #d4a843 0%, #C9764F 100%);
+    background: linear-gradient(135deg, #00c4c8 0%, #0090a8 100%);
     color: #ffffff;
     border: none;
-    box-shadow: 0 4px 16px rgba(201, 118, 79, 0.35);
+    box-shadow: 0 4px 16px rgba(0, 196, 200, 0.35);
     border-radius: 14px;
     font-weight: 600;
     letter-spacing: 0.02em;
 }
 
 [data-theme] .btn-primary:hover {
-    background: linear-gradient(135deg, #e0b555 0%, #d4845a 100%);
+    background: linear-gradient(135deg, #00d4d8 0%, #00c4c8 100%);
     color: #ffffff;
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 24px rgba(201, 118, 79, 0.50);
+    box-shadow: 0 8px 24px rgba(0, 196, 200, 0.50);
 }
 
 [data-theme] .btn-primary:active {
     transform: translateY(0) scale(0.99);
-    box-shadow: 0 3px 12px rgba(201, 118, 79, 0.30);
+    box-shadow: 0 3px 12px rgba(0, 196, 200, 0.30);
 }
 
 /* ── BTN-HERO-PRIMARY DARK: cyan-to-gold gradient with pulsing neon glow ── */
