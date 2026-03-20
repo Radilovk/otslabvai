@@ -92,6 +92,7 @@
       "background_type": "default",
       "tagline": "Клетъчно Възстановяване",
       "hero_images": {
+        "visual_bg": "",
         "vial": "https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp",
         "lab": "",
         "face": ""
@@ -117,7 +118,8 @@
         }
       ],
       "background_image": "",
-      "background_gradient": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+      "background_gradient": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      "hero_image": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773968237615-lifelogo__2_.png"
     },
     {
       "type": "info_card",
