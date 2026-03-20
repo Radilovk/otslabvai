@@ -2181,25 +2181,25 @@ function handleProductCSVImport(event, triggerButton) {
 // =======================================================
 
 /**
- * Maps a row from the B2B XLSX file (fitness1.bg format) to a product object.
+ * Maps a group of rows from the B2B XLSX file (fitness1.bg format) to a product object.
  * Expected columns: SKU, Product, Option, Price, Discount, B2B price, Currency, EAN, Available, Label, Image
- * The "B2B price" (final price) is used as the selling price; "Price" and "Discount" are ignored.
- * The "Label" column (supplement facts image) maps to public_data.label_url (shown as "Хранителна информация" link).
+ * Rows in the same group share the same product name (field B); each row becomes a variant (field C).
+ * The "Price" column (field D) is used as the customer-facing selling price.
+ * The "Label" column (supplement facts image) maps to public_data.label_url (link) AND is added
+ * as a second image in public_data.additional_images (gallery).
  * The "Image" column maps to public_data.image_url and variant.image_url.
- * @param {object} row - plain object with column names as keys
+ * @param {object[]} rows - array of plain objects with column names as keys (same product name)
  * @returns {object} product object compatible with the site's product structure
  */
-function b2bXLSXRowToProduct(row) {
-    const sku = String(row['SKU'] || '').trim();
-    const productName = String(row['Product'] || '').trim();
-    const option = row['Option'] ? String(row['Option']).trim() : '';
-    // B2B price uses comma as decimal separator (e.g. "18,60")
-    const b2bPriceStr = String(row['B2B price'] || '').replace(',', '.').trim();
-    const b2bPrice = parseFloat(b2bPriceStr);
-    const ean = String(row['EAN'] || '').trim();
-    const available = String(row['Available'] || '').trim().toLowerCase() === 'yes';
-    const labelUrl = row['Label'] ? String(row['Label']).trim() : '';
-    const imageUrl = row['Image'] ? String(row['Image']).trim() : '';
+function b2bXLSXRowToProduct(rows) {
+    const firstRow = rows[0];
+    const sku = String(firstRow['SKU'] || '').trim();
+    const productName = String(firstRow['Product'] || '').trim();
+    // "Price" (field D) is the customer-facing price; "B2B price" is our distributor cost.
+    const priceStr = String(firstRow['Price'] || '').replace(',', '.').trim();
+    const price = parseFloat(priceStr);
+    const labelUrl = firstRow['Label'] ? String(firstRow['Label']).trim() : '';
+    const imageUrl = firstRow['Image'] ? String(firstRow['Image']).trim() : '';
 
     // Parse packaging info from product name bracket suffix, e.g. "[60 капсули, 60 Дози]".
     // parts[0] → capsules_or_grams, parts[1] → doses_per_package; missing parts default to ''.
@@ -2216,7 +2216,32 @@ function b2bXLSXRowToProduct(row) {
     const manufacturerMatch = productName.match(/^(\S+\.)\s/);
     const manufacturer = manufacturerMatch ? manufacturerMatch[1] : '';
 
-    const priceValue = isNaN(b2bPrice) ? null : b2bPrice;
+    const priceValue = isNaN(price) ? null : price;
+
+    // Build variants from all rows in the group (each row = one variant/option).
+    const variants = rows.map(row => {
+        const variantSku = String(row['SKU'] || '').trim();
+        const option = row['Option'] ? String(row['Option']).trim() : '';
+        const variantPriceStr = String(row['Price'] || '').replace(',', '.').trim();
+        const variantPrice = parseFloat(variantPriceStr);
+        const ean = String(row['EAN'] || '').trim();
+        const available = String(row['Available'] || '').trim().toLowerCase() === 'yes';
+        const variantImageUrl = row['Image'] ? String(row['Image']).trim() : '';
+        return {
+            sku: variantSku,
+            option_name: option,
+            price: isNaN(variantPrice) ? priceValue : variantPrice,
+            image_url: variantImageUrl,
+            ean: ean,
+            available: available,
+        };
+    });
+
+    const anyAvailable = variants.some(v => v.available);
+
+    // Label URL is added both as a link (label_url) and as an image in the gallery
+    // (additional_images is a newline-separated string in the textarea).
+    const additionalImagesValue = labelUrl || '';
 
     const product = {
         product_id: `prod-${sku}`,
@@ -2225,21 +2250,15 @@ function b2bXLSXRowToProduct(row) {
             price: priceValue,
             image_url: imageUrl,
             label_url: labelUrl,
+            additional_images: additionalImagesValue,
             packaging: {
                 capsules_or_grams: capsules,
                 doses_per_package: doses,
             },
-            variants: [{
-                sku: sku,
-                option_name: option,
-                price: priceValue,
-                image_url: imageUrl,
-                ean: ean,
-                available: available,
-            }],
+            variants: variants,
         },
         system_data: {
-            inventory: available ? 1 : 0,
+            inventory: anyAvailable ? 1 : 0,
             manufacturer: manufacturer,
         },
         display_order: 0,
@@ -2278,11 +2297,22 @@ function handleProductXLSXImport(event, triggerButton) {
             const productsContainer = triggerButton.closest('.modal-tab-pane').querySelector('#products-editor');
             const existingIds = Array.from(productsContainer.querySelectorAll('[data-field="product_id"]')).map(inp => inp.value);
 
-            let imported = 0;
-            rows.forEach((row, i) => {
+            // Group consecutive rows by product name (field B). Rows with the same name
+            // are treated as different variants (option, field C) of the same product.
+            const groups = [];
+            rows.forEach(row => {
                 if (!row['SKU'] && !row['Product']) return;
+                const productName = String(row['Product'] || '').trim();
+                if (groups.length > 0 && groups[groups.length - 1].name === productName) {
+                    groups[groups.length - 1].rows.push(row);
+                } else {
+                    groups.push({ name: productName, rows: [row] });
+                }
+            });
 
-                const productData = b2bXLSXRowToProduct(row);
+            let imported = 0;
+            groups.forEach(group => {
+                const productData = b2bXLSXRowToProduct(group.rows);
 
                 // Ensure unique product_id
                 let newId = productData.product_id;
