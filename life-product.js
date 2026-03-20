@@ -41,8 +41,8 @@ function escapeHtml(unsafe) {
 //          CART MANAGEMENT
 // =======================================================
 
-const getCart = () => JSON.parse(localStorage.getItem('cart') || '[]');
-const saveCart = cart => localStorage.setItem('cart', JSON.stringify(cart));
+const getCart = () => JSON.parse(localStorage.getItem('lifeCart') || '[]');
+const saveCart = cart => localStorage.setItem('lifeCart', JSON.stringify(cart));
 
 const updateCartCount = () => {
     if (!DOM.header.cartCount) return;
