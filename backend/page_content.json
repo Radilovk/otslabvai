@@ -1720,6 +1720,68 @@
             "safety_warnings": ""
           },
           "display_order": 7
+        },
+        {
+          "product_id": "prod-40337",
+          "public_data": {
+            "name": "Dorian Yates Nutrition Slender / Cellulite & Fat Burner / Ultimate Matrix [450 грама, 60 Дози]",
+            "price": 39.34,
+            "sale_price": null,
+            "tagline": "",
+            "brand": "",
+            "image_url": "https://fitness1.bg/products/v3/p24696/Slender_450g_RASPBEERRY-591805c-1000x1000.jpg",
+            "additional_images": "https://fitness1.bg/label/dy_nutrition_slender_strawberry_05_2000p07452.jpg",
+            "description": "",
+            "packaging": {
+              "capsules_or_grams": "450 грама",
+              "doses_per_package": "60 Дози"
+            },
+            "recommended_intake": "",
+            "contraindications": "",
+            "additional_advice": "",
+            "research_note": {
+              "text": "",
+              "url": ""
+            },
+            "about_content": {
+              "title": "",
+              "description": "",
+              "benefits": []
+            },
+            "label_url": "https://fitness1.bg/label/dy_nutrition_slender_strawberry_05_2000p07452.jpg",
+            "effects": [],
+            "ingredients": [],
+            "faq": [],
+            "variants": [
+              {
+                "option_name": "Малина",
+                "price": 39.34,
+                "sku": "40337",
+                "ean": "5060763890787",
+                "image_url": "https://fitness1.bg/products/v3/p24696/Slender_450g_RASPBEERRY-591805c-1000x1000.jpg",
+                "available": true
+              },
+              {
+                "option_name": "Ягода",
+                "price": 39.34,
+                "sku": "40338",
+                "ean": "5060763890770",
+                "image_url": "https://fitness1.bg/products/v3/p24696/Slender_450g_strawberry-7fe500a-original-2d63092-1000x1000.jpg",
+                "available": true
+              }
+            ]
+          },
+          "system_data": {
+            "manufacturer": "",
+            "application_type": "",
+            "inventory": 1,
+            "goals": [],
+            "target_profile": "",
+            "protocol_hint": "",
+            "synergy_products": [],
+            "safety_warnings": ""
+          },
+          "display_order": 8
         }
       ],
       "product_id": "prod-742",
