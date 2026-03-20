@@ -1342,7 +1342,7 @@
         }
 
         // --- 1. Зареждане на количката от localStorage ---
-        const cartData = JSON.parse(localStorage.getItem('cart') || '[]');
+        const cartData = JSON.parse(localStorage.getItem('lifeCart') || '[]');
         let activeDiscount = 0;
         let activePromoCode = null;
 
@@ -1358,7 +1358,7 @@
         const discountEl = document.getElementById('summary-discount');
         const cartCountEl = document.getElementById('cart-count');
 
-        const saveCart = () => localStorage.setItem('cart', JSON.stringify(cartData));
+        const saveCart = () => localStorage.setItem('lifeCart', JSON.stringify(cartData));
 
         const updateCartCount = () => {
             if (cartCountEl) {
@@ -1833,7 +1833,7 @@
                     return orderRes.json();
                 })
                 .then(() => {
-                    localStorage.removeItem('cart');
+                    localStorage.removeItem('lifeCart');
                     // Show success modal instead of alert
                     showSuccessModal();
                 })
