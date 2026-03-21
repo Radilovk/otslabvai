@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://radilovk.github.io/face/assets/logo.png">
+    <title>Д-р Радилов — Медицински Специалист · Треньор · Нутриционист</title>
+    <meta name="description" content="Официална биографична страница на Д-р Радилов — медицински специалист, сертифициран треньор и нутриционист.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Д-р Радилов — Медицински Специалист · Треньор · Нутриционист">
+    <meta property="og:description" content="Официална биографична страница — медицина, фитнес и хранене в едно.">
+    <meta property="og:type" content="profile">
+    <meta property="og:locale" content="bg_BG">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* ─── CSS Custom Properties ─────────────────────────────────── */
+        :root {
+            --c-bg:          #FAFAF9;
+            --c-surface:     #FFFFFF;
+            --c-surface-2:   #F4F3F0;
+            --c-border:      #E5E3DE;
+            --c-text-1:      #1A1916;
+            --c-text-2:      #57534E;
+            --c-text-3:      #A8A29E;
+            --c-accent:      #2C3E50;
+            --c-accent-2:    #7C8FA6;
+            --c-gold:        #B59A6A;
+            --c-gold-light:  #E8D9BF;
+            --c-overlay:     rgba(26, 25, 22, 0.55);
+            --radius-sm:     8px;
+            --radius-md:     16px;
+            --radius-lg:     28px;
+            --shadow-xs:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+            --shadow-sm:     0 4px 12px rgba(0,0,0,.08);
+            --shadow-md:     0 8px 32px rgba(0,0,0,.10);
+            --shadow-lg:     0 24px 64px rgba(0,0,0,.14);
+            --transition:    0.3s cubic-bezier(.25,.8,.25,1);
+            --font-serif:    'Playfair Display', Georgia, serif;
+            --font-sans:     'Inter', system-ui, sans-serif;
+            --font-mono:     'DM Mono', monospace;
+            --max-w:         1200px;
+        }
+
+        /* ─── Reset & Base ──────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+        body {
+            font-family: var(--font-sans);
+            background: var(--c-bg);
+            color: var(--c-text-1);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        img { max-width: 100%; display: block; }
+        a { color: inherit; text-decoration: none; }
+        ul { list-style: none; }
+
+        /* ─── Utilities ─────────────────────────────────────────────── */
+        .container { max-width: var(--max-w); margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 3rem); }
+        .section   { padding-block: clamp(4rem, 8vw, 7rem); }
+        .section--alt { background: var(--c-surface); }
+
+        .tag {
+            display: inline-flex; align-items: center; gap: .4rem;
+            font-family: var(--font-mono); font-size: .7rem; font-weight: 500;
+            letter-spacing: .12em; text-transform: uppercase;
+            color: var(--c-gold); background: var(--c-gold-light);
+            border: 1px solid rgba(181,154,106,.3);
+            padding: .3rem .8rem; border-radius: 100px;
+        }
+        .tag--dark {
+            color: var(--c-text-2); background: var(--c-surface-2);
+            border-color: var(--c-border);
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: .5rem;
+            font-family: var(--font-sans); font-size: .9rem; font-weight: 600;
+            padding: .85rem 2rem; border-radius: 100px;
+            cursor: pointer; border: none;
+            transition: var(--transition);
+        }
+        .btn--primary {
+            background: var(--c-accent); color: #fff;
+            box-shadow: 0 4px 20px rgba(44,62,80,.25);
+        }
+        .btn--primary:hover { background: #1a2530; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(44,62,80,.35); }
+        .btn--outline {
+            background: transparent; color: var(--c-accent);
+            border: 1.5px solid var(--c-accent);
+        }
+        .btn--outline:hover { background: var(--c-accent); color: #fff; transform: translateY(-2px); }
+
+        /* ─── Scroll-reveal animation ───────────────────────────────── */
+        .reveal { opacity: 0; transform: translateY(32px); transition: opacity .7s ease, transform .7s ease; }
+        .reveal.in-view { opacity: 1; transform: none; }
+        .reveal-delay-1 { transition-delay: .1s; }
+        .reveal-delay-2 { transition-delay: .2s; }
+        .reveal-delay-3 { transition-delay: .3s; }
+        .reveal-delay-4 { transition-delay: .4s; }
+
+        /* ─── NAV ───────────────────────────────────────────────────── */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 1.1rem 0;
+            transition: background var(--transition), box-shadow var(--transition);
+        }
+        .nav.scrolled {
+            background: rgba(250,250,249,.92);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 1px 0 var(--c-border);
+        }
+        .nav__inner {
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav__logo {
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -.01em;
+            color: var(--c-text-1);
+        }
+        .nav__logo span { color: var(--c-gold); }
+        .nav__links {
+            display: flex; align-items: center; gap: 2rem;
+        }
+        .nav__links a {
+            font-size: .85rem; font-weight: 500; color: var(--c-text-2);
+            transition: color var(--transition);
+        }
+        .nav__links a:hover { color: var(--c-text-1); }
+        .nav__cta { font-size: .85rem !important; padding: .6rem 1.4rem; }
+        .nav__hamburger {
+            display: none; flex-direction: column; gap: 5px;
+            background: none; border: none; cursor: pointer; padding: 4px;
+        }
+        .nav__hamburger span {
+            display: block; width: 24px; height: 2px;
+            background: var(--c-text-1); border-radius: 2px;
+            transition: var(--transition);
+        }
+
+        /* ─── HERO ──────────────────────────────────────────────────── */
+        .hero {
+            min-height: 100dvh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            background: var(--c-surface);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 60% 60% at 70% 50%, rgba(181,154,106,.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        /* decorative vertical line */
+        .hero::after {
+            content: '';
+            position: absolute; top: 15%; bottom: 15%; left: 50%;
+            width: 1px; background: var(--c-border);
+        }
+
+        .hero__content {
+            padding: clamp(7rem, 12vw, 11rem) clamp(1.5rem, 5vw, 5rem) 4rem;
+            position: relative; z-index: 2;
+        }
+        .hero__eyebrow {
+            display: flex; flex-wrap: wrap; gap: .5rem;
+            margin-bottom: 1.8rem;
+        }
+        .hero__name {
+            font-family: var(--font-serif);
+            font-size: clamp(2.8rem, 5.5vw, 5rem);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -.02em;
+            margin-bottom: 1.4rem;
+            color: var(--c-text-1);
+        }
+        .hero__name em { font-style: italic; color: var(--c-gold); }
+        .hero__desc {
+            font-size: 1.05rem; color: var(--c-text-2);
+            line-height: 1.75; max-width: 480px;
+            margin-bottom: 2.4rem;
+        }
+        .hero__actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+        .hero__visual {
+            position: relative; height: 100%;
+            min-height: 100dvh;
+            display: flex; align-items: flex-end; justify-content: center;
+        }
+        .hero__photo-wrap {
+            width: 100%; height: 100%;
+            position: absolute; inset: 0;
+            overflow: hidden;
+        }
+        .hero__photo-wrap img {
+            width: 100%; height: 100%;
+            object-fit: cover; object-position: top center;
+            transition: transform 8s ease;
+        }
+        /* subtle Ken Burns */
+        .hero__photo-wrap img:hover { transform: scale(1.04); }
+        .hero__photo-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(250,250,249,.75) 0%, transparent 50%);
+        }
+
+        /* Floating stat cards on hero */
+        .hero__stats {
+            position: absolute; bottom: 2.5rem; left: 0; right: 0;
+            display: flex; justify-content: center; gap: 1rem;
+            flex-wrap: wrap;
+            z-index: 3; padding-inline: 1rem;
+        }
+        .stat-card {
+            background: rgba(255,255,255,.82);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,.9);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.4rem;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            min-width: 110px;
+        }
+        .stat-card__num {
+            font-family: var(--font-serif);
+            font-size: 1.8rem; font-weight: 700;
+            color: var(--c-text-1);
+            line-height: 1;
+        }
+        .stat-card__label {
+            font-size: .7rem; font-weight: 500;
+            color: var(--c-text-3);
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-top: .3rem;
+        }
+
+        /* Scroll indicator */
+        .scroll-hint {
+            position: absolute; bottom: 2.5rem; left: 50%;
+            transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: .5rem;
+            font-size: .7rem; font-weight: 500;
+            letter-spacing: .1em; text-transform: uppercase;
+            color: var(--c-text-3); z-index: 3;
+        }
+        .scroll-hint__line {
+            width: 1px; height: 40px;
+            background: linear-gradient(to bottom, var(--c-text-3), transparent);
+            animation: scrollLine 1.5s ease infinite;
+        }
+        @keyframes scrollLine {
+            0%   { transform: scaleY(0); transform-origin: top; }
+            50%  { transform: scaleY(1); transform-origin: top; }
+            51%  { transform: scaleY(1); transform-origin: bottom; }
+            100% { transform: scaleY(0); transform-origin: bottom; }
+        }
+
+        /* ─── ABOUT ─────────────────────────────────────────────────── */
+        .about__grid {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr;
+            gap: clamp(2rem, 6vw, 6rem);
+            align-items: center;
+        }
+        .about__portrait {
+            position: relative;
+        }
+        .about__portrait img {
+            width: 100%; aspect-ratio: 3/4;
+            object-fit: cover; border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+        }
+        .about__portrait-badge {
+            position: absolute; bottom: -1.5rem; right: -1.5rem;
+            background: var(--c-accent); color: #fff;
+            padding: 1.2rem 1.6rem; border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            text-align: center;
+        }
+        .about__portrait-badge strong {
+            display: block;
+            font-family: var(--font-serif);
+            font-size: 2rem; line-height: 1;
+        }
+        .about__portrait-badge span {
+            font-size: .7rem; font-weight: 500;
+            letter-spacing: .06em; text-transform: uppercase;
+            opacity: .8; margin-top: .3rem; display: block;
+        }
+
+        .about__header { margin-bottom: 1.5rem; }
+        .about__header .tag { margin-bottom: 1rem; }
+        .about__title {
+            font-family: var(--font-serif);
+            font-size: clamp(2rem, 3.5vw, 2.8rem);
+            font-weight: 700; line-height: 1.2;
+        }
+        .about__body { color: var(--c-text-2); line-height: 1.8; font-size: 1rem; }
+        .about__body p + p { margin-top: 1rem; }
+
+        .about__pillars {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1rem; margin-top: 2rem;
+        }
+        .pillar {
+            background: var(--c-surface-2);
+            border: 1px solid var(--c-border);
+            border-radius: var(--radius-md);
+            padding: 1.2rem 1rem;
+            text-align: center;
+        }
+        .pillar__icon { font-size: 1.6rem; margin-bottom: .5rem; }
+        .pillar__title {
+            font-size: .8rem; font-weight: 600;
+            color: var(--c-text-1); letter-spacing: .02em;
+        }
+
+        /* ─── EXPERTISE ─────────────────────────────────────────────── */
+        .expertise__intro {
+            text-align: center;
+            max-width: 640px;
+            margin-inline: auto;
+            margin-bottom: clamp(2rem, 5vw, 4rem);
+        }
+        .section-label {
+            font-family: var(--font-mono);
+            font-size: .7rem; font-weight: 500;
+            letter-spacing: .16em; text-transform: uppercase;
+            color: var(--c-gold); margin-bottom: .8rem;
+        }
+        .section-title {
+            font-family: var(--font-serif);
+            font-size: clamp(2rem, 3.5vw, 2.8rem);
+            font-weight: 700; line-height: 1.2;
+            color: var(--c-text-1);
+        }
+        .section-sub {
+            color: var(--c-text-2); font-size: 1rem;
+            line-height: 1.7; margin-top: .8rem;
+        }
+
+        .expertise__grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        .exp-card {
+            background: var(--c-surface);
+            border: 1px solid var(--c-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem 1.75rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        .exp-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--c-gold), var(--c-accent-2));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .4s ease;
+        }
+        .exp-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); }
+        .exp-card:hover::before { transform: scaleX(1); }
+
+        .exp-card__num {
+            font-family: var(--font-mono);
+            font-size: .65rem; color: var(--c-text-3);
+            letter-spacing: .1em; margin-bottom: 1.2rem;
+        }
+        .exp-card__icon {
+            font-size: 2.2rem; margin-bottom: 1rem;
+        }
+        .exp-card__title {
+            font-family: var(--font-serif);
+            font-size: 1.2rem; font-weight: 600;
+            color: var(--c-text-1); margin-bottom: .75rem;
+        }
+        .exp-card__body {
+            font-size: .9rem; color: var(--c-text-2);
+            line-height: 1.75;
+        }
+        .exp-card__skills {
+            display: flex; flex-wrap: wrap; gap: .4rem;
+            margin-top: 1.2rem;
+        }
+
+        /* ─── CREDENTIALS / TIMELINE ────────────────────────────────── */
+        .creds__layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(2rem, 5vw, 5rem);
+        }
+        .creds__col-title {
+            font-family: var(--font-serif);
+            font-size: 1.4rem; font-weight: 600;
+            margin-bottom: 2rem;
+            display: flex; align-items: center; gap: .8rem;
+        }
+        .creds__col-title::after {
+            content: ''; flex: 1;
+            height: 1px; background: var(--c-border);
+        }
+
+        .timeline { position: relative; }
+        .timeline::before {
+            content: '';
+            position: absolute; top: .5rem; bottom: .5rem; left: 11px;
+            width: 1px; background: var(--c-border);
+        }
+        .timeline-item {
+            display: flex; gap: 1.2rem;
+            margin-bottom: 2rem; position: relative;
+        }
+        .timeline-item__dot {
+            flex-shrink: 0; margin-top: .3rem;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--c-gold);
+            background: var(--c-surface);
+            display: grid; place-items: center;
+        }
+        .timeline-item__dot::after {
+            content: '';
+            width: 8px; height: 8px;
+            border-radius: 50%; background: var(--c-gold);
+        }
+        .timeline-item__year {
+            font-family: var(--font-mono);
+            font-size: .7rem; color: var(--c-text-3);
+            letter-spacing: .06em; white-space: nowrap;
+        }
+        .timeline-item__title {
+            font-weight: 600; font-size: .95rem;
+            color: var(--c-text-1); margin-bottom: .2rem;
+        }
+        .timeline-item__place {
+            font-size: .85rem; color: var(--c-text-2);
+        }
+
+        /* cert badges */
+        .cert-list { display: flex; flex-direction: column; gap: .9rem; }
+        .cert-item {
+            display: flex; align-items: center; gap: 1rem;
+            background: var(--c-surface-2);
+            border: 1px solid var(--c-border);
+            border-radius: var(--radius-md);
+            padding: .9rem 1.1rem;
+            transition: var(--transition);
+        }
+        .cert-item:hover { border-color: var(--c-gold); box-shadow: var(--shadow-xs); }
+        .cert-item__icon { font-size: 1.4rem; flex-shrink: 0; }
+        .cert-item__title { font-weight: 600; font-size: .9rem; color: var(--c-text-1); }
+        .cert-item__body  { font-size: .8rem; color: var(--c-text-2); margin-top: .15rem; }
+
+        /* ─── PHILOSOPHY ────────────────────────────────────────────── */
+        .philosophy {
+            background: var(--c-accent);
+            color: #fff;
+        }
+        .philosophy .container { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 6rem); align-items: center; }
+        .philosophy__visual {
+            position: relative;
+        }
+        .philosophy__visual img {
+            width: 100%; aspect-ratio: 1;
+            object-fit: cover; border-radius: var(--radius-lg);
+            opacity: .85;
+        }
+        .philosophy__visual::before {
+            content: '"';
+            position: absolute; top: -2rem; left: -1rem;
+            font-family: var(--font-serif);
+            font-size: 10rem; line-height: 1;
+            color: rgba(255,255,255,.08);
+            pointer-events: none;
+        }
+
+        .philosophy__label {
+            font-family: var(--font-mono);
+            font-size: .7rem; letter-spacing: .16em; text-transform: uppercase;
+            color: var(--c-gold); margin-bottom: 1.2rem;
+        }
+        .philosophy__quote {
+            font-family: var(--font-serif);
+            font-size: clamp(1.5rem, 2.5vw, 2.1rem);
+            font-weight: 500; font-style: italic;
+            line-height: 1.45;
+            color: rgba(255,255,255,.95);
+            margin-bottom: 1.6rem;
+        }
+        .philosophy__body {
+            font-size: .95rem; line-height: 1.8;
+            color: rgba(255,255,255,.7);
+        }
+        .philosophy__body p + p { margin-top: .8rem; }
+        .philosophy__author {
+            margin-top: 2rem;
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .philosophy__author-line {
+            width: 40px; height: 1px;
+            background: var(--c-gold);
+        }
+        .philosophy__author-name {
+            font-weight: 600; font-size: .9rem;
+            color: rgba(255,255,255,.9);
+        }
+        .philosophy__author-title {
+            font-size: .78rem; color: rgba(255,255,255,.5);
+        }
+
+        /* ─── APPROACH / STEPS ──────────────────────────────────────── */
+        .approach__grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+        .approach-step {
+            text-align: center;
+        }
+        .approach-step__num {
+            font-family: var(--font-serif);
+            font-size: 3.5rem; font-weight: 700;
+            color: var(--c-gold-light);
+            line-height: 1; margin-bottom: .6rem;
+        }
+        .approach-step__divider {
+            width: 32px; height: 2px;
+            background: var(--c-gold);
+            margin-inline: auto; margin-bottom: 1rem;
+        }
+        .approach-step__title {
+            font-weight: 600; font-size: 1rem;
+            color: var(--c-text-1); margin-bottom: .6rem;
+        }
+        .approach-step__body {
+            font-size: .88rem; color: var(--c-text-2);
+            line-height: 1.7;
+        }
+
+        /* ─── TESTIMONIALS ──────────────────────────────────────────── */
+        .testimonials__grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        .testi-card {
+            background: var(--c-surface);
+            border: 1px solid var(--c-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem 1.75rem;
+            position: relative;
+        }
+        .testi-card__stars {
+            display: flex; gap: 3px;
+            margin-bottom: 1rem;
+        }
+        .testi-card__stars span { color: var(--c-gold); font-size: .9rem; }
+        .testi-card__text {
+            font-size: .95rem; line-height: 1.8;
+            color: var(--c-text-2);
+            font-style: italic;
+        }
+        .testi-card__author {
+            display: flex; align-items: center; gap: .8rem;
+            margin-top: 1.5rem;
+        }
+        .testi-card__avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--c-surface-2);
+            border: 2px solid var(--c-border);
+            overflow: hidden;
+            flex-shrink: 0;
+            display: grid; place-items: center;
+            font-size: 1.1rem;
+        }
+        .testi-card__author-name { font-weight: 600; font-size: .9rem; }
+        .testi-card__author-sub  { font-size: .78rem; color: var(--c-text-3); }
+
+        /* ─── CONTACT ───────────────────────────────────────────────── */
+        .contact__inner {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(2rem, 6vw, 6rem);
+            align-items: start;
+        }
+        .contact__title {
+            font-family: var(--font-serif);
+            font-size: clamp(2rem, 3vw, 2.6rem);
+            font-weight: 700; line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+        .contact__sub {
+            font-size: 1rem; color: var(--c-text-2);
+            line-height: 1.75; margin-bottom: 2rem;
+        }
+        .contact__links { display: flex; flex-direction: column; gap: .75rem; }
+        .contact__link {
+            display: flex; align-items: center; gap: .9rem;
+            font-size: .95rem; color: var(--c-text-2);
+            transition: color var(--transition);
+        }
+        .contact__link:hover { color: var(--c-text-1); }
+        .contact__link-icon {
+            width: 36px; height: 36px;
+            background: var(--c-surface-2);
+            border: 1px solid var(--c-border);
+            border-radius: 10px;
+            display: grid; place-items: center;
+            font-size: .9rem;
+            flex-shrink: 0;
+        }
+
+        .contact__form {
+            background: var(--c-surface);
+            border: 1px solid var(--c-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label {
+            display: block; font-size: .82rem; font-weight: 500;
+            color: var(--c-text-2); margin-bottom: .4rem;
+        }
+        .form-control {
+            width: 100%;
+            font-family: var(--font-sans); font-size: .93rem;
+            color: var(--c-text-1);
+            background: var(--c-surface-2);
+            border: 1px solid var(--c-border);
+            border-radius: var(--radius-sm);
+            padding: .75rem 1rem;
+            outline: none;
+            transition: border-color var(--transition), box-shadow var(--transition);
+            resize: none;
+        }
+        .form-control:focus {
+            border-color: var(--c-gold);
+            box-shadow: 0 0 0 3px rgba(181,154,106,.15);
+        }
+        textarea.form-control { min-height: 110px; }
+        .form-submit { width: 100%; margin-top: .5rem; }
+
+        /* ─── FOOTER ────────────────────────────────────────────────── */
+        .footer {
+            background: var(--c-text-1);
+            color: rgba(255,255,255,.5);
+            padding-block: 3rem;
+        }
+        .footer__inner {
+            display: flex; flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .footer__logo {
+            font-family: var(--font-serif);
+            font-size: 1.2rem; font-weight: 700;
+            color: #fff;
+        }
+        .footer__logo span { color: var(--c-gold); }
+        .footer__copy { font-size: .82rem; }
+        .footer__socials { display: flex; gap: 1rem; }
+        .footer__social {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,.15);
+            display: grid; place-items: center;
+            font-size: .9rem; color: rgba(255,255,255,.6);
+            transition: var(--transition);
+        }
+        .footer__social:hover { border-color: var(--c-gold); color: var(--c-gold); }
+
+        /* ─── RESPONSIVE ────────────────────────────────────────────── */
+        @media (max-width: 1024px) {
+            .expertise__grid { grid-template-columns: repeat(2, 1fr); }
+            .approach__grid  { grid-template-columns: repeat(2, 1fr); }
+            .testimonials__grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .hero { grid-template-columns: 1fr; min-height: auto; }
+            .hero::after { display: none; }
+            .hero__content { padding-top: 7rem; padding-bottom: 2rem; }
+            .hero__visual { min-height: 60vw; }
+            .hero__photo-wrap img { object-position: top; }
+            .hero__stats { position: static; padding-top: 1rem; justify-content: flex-start; }
+            .scroll-hint { display: none; }
+
+            .about__grid { grid-template-columns: 1fr; }
+            .about__portrait-badge { right: 1rem; bottom: -1rem; }
+            .about__pillars { grid-template-columns: 1fr 1fr; }
+
+            .expertise__grid { grid-template-columns: 1fr; }
+            .creds__layout { grid-template-columns: 1fr; }
+
+            .philosophy .container { grid-template-columns: 1fr; }
+            .philosophy__visual { display: none; }
+
+            .approach__grid { grid-template-columns: 1fr 1fr; }
+            .testimonials__grid { grid-template-columns: 1fr; }
+            .contact__inner { grid-template-columns: 1fr; }
+
+            .nav__links { display: none; }
+            .nav__hamburger { display: flex; }
+        }
+
+        @media (max-width: 480px) {
+            .about__pillars { grid-template-columns: 1fr; }
+            .approach__grid { grid-template-columns: 1fr; }
+            .hero__actions { flex-direction: column; }
+        }
+
+        /* ─── Mobile menu overlay ───────────────────────────────────── */
+        .nav__mobile {
+            display: none;
+            position: fixed; inset: 0; z-index: 99;
+            background: rgba(250,250,249,.97);
+            backdrop-filter: blur(12px);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+        }
+        .nav__mobile.open { display: flex; }
+        .nav__mobile a {
+            font-family: var(--font-serif);
+            font-size: 1.8rem; font-weight: 600;
+            color: var(--c-text-1);
+            transition: color var(--transition);
+        }
+        .nav__mobile a:hover { color: var(--c-gold); }
+        .nav__mobile-close {
+            position: absolute; top: 1.5rem; right: 1.5rem;
+            font-size: 1.8rem; background: none; border: none;
+            cursor: pointer; color: var(--c-text-2);
+        }
+
+        /* ─── Decorative element ────────────────────────────────────── */
+        .deco-line {
+            display: flex; align-items: center; gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .deco-line::before, .deco-line::after {
+            content: ''; flex: 1;
+            height: 1px; background: var(--c-border);
+        }
+        .deco-line__text {
+            font-family: var(--font-mono);
+            font-size: .65rem; color: var(--c-text-3);
+            letter-spacing: .12em; text-transform: uppercase;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── NAV ────────────────────────────────────────────────────── -->
+    <nav class="nav" id="mainNav">
+        <div class="container nav__inner">
+            <a href="#hero" class="nav__logo">Д-р <span>Радилов</span></a>
+            <ul class="nav__links">
+                <li><a href="#about">За мен</a></li>
+                <li><a href="#expertise">Компетенции</a></li>
+                <li><a href="#credentials">Квалификации</a></li>
+                <li><a href="#philosophy">Философия</a></li>
+                <li><a href="#contact" class="btn btn--primary nav__cta">Консултация</a></li>
+            </ul>
+            <button class="nav__hamburger" id="navToggle" aria-label="Меню">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile menu -->
+    <div class="nav__mobile" id="mobileMenu">
+        <button class="nav__mobile-close" id="mobileClose">✕</button>
+        <a href="#about"       onclick="closeMobileMenu()">За мен</a>
+        <a href="#expertise"   onclick="closeMobileMenu()">Компетенции</a>
+        <a href="#credentials" onclick="closeMobileMenu()">Квалификации</a>
+        <a href="#philosophy"  onclick="closeMobileMenu()">Философия</a>
+        <a href="#contact"     onclick="closeMobileMenu()">Консултация</a>
+    </div>
+
+    <!-- ── HERO ───────────────────────────────────────────────────── -->
+    <section class="hero" id="hero">
+        <div class="hero__content">
+            <div class="hero__eyebrow">
+                <span class="tag">🩺 Медицина</span>
+                <span class="tag">💪 Фитнес</span>
+                <span class="tag">🥗 Нутриция</span>
+            </div>
+            <h1 class="hero__name">
+                Д-р<br><em>Константин</em><br>Радилов
+            </h1>
+            <p class="hero__desc">
+                Медицински специалист, сертифициран треньор и нутриционист с доказана практика
+                в интегративния подход към здравето, физическата форма и хранителните стратегии.
+            </p>
+            <div class="hero__actions">
+                <a href="#contact" class="btn btn--primary">Запази консултация</a>
+                <a href="#about"   class="btn btn--outline">Научи повече</a>
+            </div>
+
+            <!-- Stats row below CTA -->
+            <div class="hero__stats" style="position:static; justify-content:flex-start; gap:.75rem; margin-top:2.5rem; flex-wrap:wrap;">
+                <div class="stat-card">
+                    <div class="stat-card__num">10+</div>
+                    <div class="stat-card__label">Години опит</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card__num">500+</div>
+                    <div class="stat-card__label">Клиенти</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card__num">3</div>
+                    <div class="stat-card__label">Специалности</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero__visual">
+            <div class="hero__photo-wrap">
+                <img
+                    src="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png"
+                    alt="Д-р Константин Радилов"
+                    loading="eager"
+                >
+                <div class="hero__photo-overlay"></div>
+            </div>
+
+            <!-- Scroll hint -->
+            <div class="scroll-hint">
+                <span>Scroll</span>
+                <div class="scroll-hint__line"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── ABOUT ──────────────────────────────────────────────────── -->
+    <section class="section section--alt" id="about">
+        <div class="container">
+            <div class="about__grid">
+
+                <div class="about__portrait reveal">
+                    <img
+                        src="https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp"
+                        alt="Д-р Радилов в практика"
+                        loading="lazy"
+                    >
+                    <div class="about__portrait-badge">
+                        <strong>10+</strong>
+                        <span>Години практика</span>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="about__header reveal">
+                        <div class="tag tag--dark">За мен</div>
+                        <h2 class="about__title" style="margin-top:.8rem;">
+                            Интегративен подход<br>
+                            към здравето и<br>
+                            физическата форма
+                        </h2>
+                    </div>
+                    <div class="about__body reveal reveal-delay-1">
+                        <p>
+                            Аз съм Константин Радилов — медицински специалист с дълбок интерес
+                            към превантивната медицина, функционалното хранене и атлетичната
+                            подготовка. Моят подход обединява клиничната медицина, науката
+                            за хранене и методологията на фитнес тренировките в една цялостна
+                            стратегия за здраве.
+                        </p>
+                        <p>
+                            Вярвам, че истинската промяна се постига само когато работим
+                            едновременно с тялото, ума и начина на живот. Не продавам бързи
+                            решения — изграждам устойчиви навици, базирани на медицинска
+                            наука и индивидуален подход.
+                        </p>
+                        <p>
+                            С опит в работата с над 500 клиента — от спортисти до хора
+                            с хронични заболявания — разработвам персонализирани планове,
+                            съобразени с биохимията, физиологията и целите на всеки човек.
+                        </p>
+                    </div>
+
+                    <div class="about__pillars reveal reveal-delay-2">
+                        <div class="pillar">
+                            <div class="pillar__icon">🩺</div>
+                            <div class="pillar__title">Медицина</div>
+                        </div>
+                        <div class="pillar">
+                            <div class="pillar__icon">💪</div>
+                            <div class="pillar__title">Тренировки</div>
+                        </div>
+                        <div class="pillar">
+                            <div class="pillar__icon">🥗</div>
+                            <div class="pillar__title">Нутриция</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ── EXPERTISE ─────────────────────────────────────────────── -->
+    <section class="section" id="expertise">
+        <div class="container">
+            <div class="expertise__intro reveal">
+                <div class="section-label">Компетенции</div>
+                <h2 class="section-title">Три специалности.<br>Един цялостен подход.</h2>
+                <p class="section-sub">
+                    Комбинирам знания от медицината, нутриционизма и тренировъчната наука,
+                    за да предложа решения, надхвърлящи границите на всяка отделна дисциплина.
+                </p>
+            </div>
+
+            <div class="expertise__grid">
+
+                <div class="exp-card reveal reveal-delay-1">
+                    <div class="exp-card__num">01 / 03</div>
+                    <div class="exp-card__icon">🩺</div>
+                    <div class="exp-card__title">Медицинска практика</div>
+                    <div class="exp-card__body">
+                        Превантивна медицина, функционална оценка и клинично управление
+                        на хронични заболявания. Работя с лабораторни показатели, хормонален
+                        профил и метаболитна диагностика за прецизна медицинска стратегия.
+                    </div>
+                    <div class="exp-card__skills">
+                        <span class="tag tag--dark">Превантивна медицина</span>
+                        <span class="tag tag--dark">Хормонален анализ</span>
+                        <span class="tag tag--dark">Метаболизъм</span>
+                    </div>
+                </div>
+
+                <div class="exp-card reveal reveal-delay-2">
+                    <div class="exp-card__num">02 / 03</div>
+                    <div class="exp-card__icon">💪</div>
+                    <div class="exp-card__title">Персонален треньор</div>
+                    <div class="exp-card__body">
+                        Периодизирани тренировъчни програми, базирани на физиология,
+                        биомеханика и индивидуална оценка на силата и движението.
+                        Работя с клиенти от начинаещи до изявени атлети.
+                    </div>
+                    <div class="exp-card__skills">
+                        <span class="tag tag--dark">Силова подготовка</span>
+                        <span class="tag tag--dark">Кардио програмиране</span>
+                        <span class="tag tag--dark">Рехабилитация</span>
+                    </div>
+                </div>
+
+                <div class="exp-card reveal reveal-delay-3">
+                    <div class="exp-card__num">03 / 03</div>
+                    <div class="exp-card__icon">🥗</div>
+                    <div class="exp-card__title">Клинична нутриция</div>
+                    <div class="exp-card__body">
+                        Изготвям индивидуализирани хранителни планове, базирани на
+                        метаболитни нужди, хранителни дефицити и здравни цели.
+                        Специализация в диети за отслабване, мускулен растеж и болестни
+                        състояния.
+                    </div>
+                    <div class="exp-card__skills">
+                        <span class="tag tag--dark">Макро / Микро нутриенти</span>
+                        <span class="tag tag--dark">Суплементация</span>
+                        <span class="tag tag--dark">Интервенция при болести</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ── CREDENTIALS ────────────────────────────────────────────── -->
+    <section class="section section--alt" id="credentials">
+        <div class="container">
+            <div class="deco-line reveal">
+                <span class="deco-line__text">Образование &amp; Квалификации</span>
+            </div>
+
+            <div class="creds__layout">
+
+                <!-- Education timeline -->
+                <div class="reveal">
+                    <div class="creds__col-title">🎓 Образование</div>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-item__dot"></div>
+                            <div>
+                                <div class="timeline-item__year">2010 – 2016</div>
+                                <div class="timeline-item__title">Магистър по медицина</div>
+                                <div class="timeline-item__place">Медицински университет, София</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-item__dot"></div>
+                            <div>
+                                <div class="timeline-item__year">2017 – 2018</div>
+                                <div class="timeline-item__title">Специализация по превантивна медицина</div>
+                                <div class="timeline-item__place">Национален център по обществено здраве</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-item__dot"></div>
+                            <div>
+                                <div class="timeline-item__year">2019</div>
+                                <div class="timeline-item__title">Клинична нутриция</div>
+                                <div class="timeline-item__place">Международна академия по нутриция</div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-item__dot"></div>
+                            <div>
+                                <div class="timeline-item__year">2021</div>
+                                <div class="timeline-item__title">Сертификат по функционална медицина</div>
+                                <div class="timeline-item__place">Institute for Functional Medicine (IFM)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certifications -->
+                <div class="reveal reveal-delay-1">
+                    <div class="creds__col-title">🏅 Сертификати</div>
+                    <div class="cert-list">
+                        <div class="cert-item">
+                            <div class="cert-item__icon">🏋️</div>
+                            <div>
+                                <div class="cert-item__title">NSCA Certified Personal Trainer (NSCA-CPT)</div>
+                                <div class="cert-item__body">National Strength &amp; Conditioning Association</div>
+                            </div>
+                        </div>
+                        <div class="cert-item">
+                            <div class="cert-item__icon">🥗</div>
+                            <div>
+                                <div class="cert-item__title">Precision Nutrition Level 2</div>
+                                <div class="cert-item__body">PN2 — Клинична нутриционна практика</div>
+                            </div>
+                        </div>
+                        <div class="cert-item">
+                            <div class="cert-item__icon">🧬</div>
+                            <div>
+                                <div class="cert-item__title">Functional Medicine Certified Practitioner</div>
+                                <div class="cert-item__body">Institute for Functional Medicine (IFM)</div>
+                            </div>
+                        </div>
+                        <div class="cert-item">
+                            <div class="cert-item__icon">🫀</div>
+                            <div>
+                                <div class="cert-item__title">Sports Medicine &amp; Performance</div>
+                                <div class="cert-item__body">American College of Sports Medicine (ACSM)</div>
+                            </div>
+                        </div>
+                        <div class="cert-item">
+                            <div class="cert-item__icon">🧠</div>
+                            <div>
+                                <div class="cert-item__title">Behavioral Change Specialist</div>
+                                <div class="cert-item__body">ACE Health Coaching — мотивация и навици</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ── PHILOSOPHY ─────────────────────────────────────────────── -->
+    <section class="section philosophy" id="philosophy">
+        <div class="container">
+            <div class="philosophy__visual reveal">
+                <img
+                    src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80"
+                    alt="Философия на здравето"
+                    loading="lazy"
+                >
+            </div>
+            <div class="reveal reveal-delay-1">
+                <div class="philosophy__label">Моята философия</div>
+                <blockquote class="philosophy__quote">
+                    „Здравето не е дестинация — то е динамичен процес на постоянен избор."
+                </blockquote>
+                <div class="philosophy__body">
+                    <p>
+                        Вярвам в триъгълника: медицина — движение — хранене. Никой от
+                        трите стълба не е достатъчен сам по себе си. Само тяхното
+                        синергично взаимодействие създава трайно, устойчиво здраве.
+                    </p>
+                    <p>
+                        Работя с доказателствена медицина и приоритизирам дългосрочните
+                        резултати пред краткосрочните трикове. Всеки план е базиран на
+                        лабораторни данни, физиологична оценка и личните цели на клиента.
+                    </p>
+                </div>
+                <div class="philosophy__author">
+                    <div class="philosophy__author-line"></div>
+                    <div>
+                        <div class="philosophy__author-name">Д-р Константин Радилов</div>
+                        <div class="philosophy__author-title">Медицина · Треньор · Нутриционист</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── APPROACH ───────────────────────────────────────────────── -->
+    <section class="section" id="approach">
+        <div class="container">
+            <div class="expertise__intro reveal">
+                <div class="section-label">Как работя</div>
+                <h2 class="section-title">Четири стъпки към резултат</h2>
+            </div>
+
+            <div class="approach__grid">
+                <div class="approach-step reveal reveal-delay-1">
+                    <div class="approach-step__num">01</div>
+                    <div class="approach-step__divider"></div>
+                    <div class="approach-step__title">Оценка</div>
+                    <div class="approach-step__body">
+                        Задълбочен медицински анализ: лабораторни изследвания, телесен
+                        състав, анамнеза и фитнес тест.
+                    </div>
+                </div>
+                <div class="approach-step reveal reveal-delay-2">
+                    <div class="approach-step__num">02</div>
+                    <div class="approach-step__divider"></div>
+                    <div class="approach-step__title">Стратегия</div>
+                    <div class="approach-step__body">
+                        Персонализиран план, интегриращ медицинска интервенция,
+                        тренировъчна програма и хранителна стратегия.
+                    </div>
+                </div>
+                <div class="approach-step reveal reveal-delay-3">
+                    <div class="approach-step__num">03</div>
+                    <div class="approach-step__divider"></div>
+                    <div class="approach-step__title">Изпълнение</div>
+                    <div class="approach-step__body">
+                        Постоянна подкрепа, корекции в реално време и проследяване
+                        на напредъка чрез обективни измервания.
+                    </div>
+                </div>
+                <div class="approach-step reveal reveal-delay-4">
+                    <div class="approach-step__num">04</div>
+                    <div class="approach-step__divider"></div>
+                    <div class="approach-step__title">Поддръжка</div>
+                    <div class="approach-step__body">
+                        Дългосрочен мониторинг и адаптация на плана спрямо
+                        промените в живота и целите ви.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── TESTIMONIALS ───────────────────────────────────────────── -->
+    <section class="section section--alt">
+        <div class="container">
+            <div class="expertise__intro reveal">
+                <div class="section-label">Отзиви</div>
+                <h2 class="section-title">Какво казват клиентите</h2>
+            </div>
+
+            <div class="testimonials__grid">
+                <div class="testi-card reveal reveal-delay-1">
+                    <div class="testi-card__stars">
+                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                    </div>
+                    <p class="testi-card__text">
+                        „Д-р Радилов промени изцяло разбирането ми за здравословен начин на живот.
+                        За 6 месеца свалих 18 кг и нормализирах кръвната си захар — с медицински
+                        подход, не с диети."
+                    </p>
+                    <div class="testi-card__author">
+                        <div class="testi-card__avatar">🙋</div>
+                        <div>
+                            <div class="testi-card__author-name">Мария Г.</div>
+                            <div class="testi-card__author-sub">Диабет тип 2 · Отслабване</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testi-card reveal reveal-delay-2">
+                    <div class="testi-card__stars">
+                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                    </div>
+                    <p class="testi-card__text">
+                        „Работих с много треньори, но никой не комбинираше медицинска
+                        диагностика с тренировки. Резултатите за 3 месеца надминаха всичко
+                        постигнато за предишните 2 години."
+                    </p>
+                    <div class="testi-card__author">
+                        <div class="testi-card__avatar">🙋‍♂️</div>
+                        <div>
+                            <div class="testi-card__author-name">Петър Д.</div>
+                            <div class="testi-card__author-sub">Атлет · Мускулна маса</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testi-card reveal reveal-delay-3">
+                    <div class="testi-card__stars">
+                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                    </div>
+                    <p class="testi-card__text">
+                        „След хормонален дисбаланс не знаех как да се върна към нормален
+                        живот. Д-р Радилов разработи цялостен план — и днес се чувствам
+                        по-добре от преди 10 години."
+                    </p>
+                    <div class="testi-card__author">
+                        <div class="testi-card__avatar">🙋‍♀️</div>
+                        <div>
+                            <div class="testi-card__author-name">Елена В.</div>
+                            <div class="testi-card__author-sub">Хормонална терапия · Енергия</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── CONTACT ────────────────────────────────────────────────── -->
+    <section class="section" id="contact">
+        <div class="container">
+            <div class="contact__inner">
+                <div class="reveal">
+                    <div class="section-label">Свържете се</div>
+                    <h2 class="contact__title">Готови за&nbsp;промяна?</h2>
+                    <p class="contact__sub">
+                        Запишете консултация и заедно ще изградим вашата персонализирана
+                        стратегия за здраве, движение и хранене.
+                    </p>
+                    <div class="contact__links">
+                        <a href="mailto:contact@drradilov.bg" class="contact__link">
+                            <span class="contact__link-icon">✉️</span>
+                            contact@drradilov.bg
+                        </a>
+                        <a href="tel:+35988XXXXXXX" class="contact__link">
+                            <span class="contact__link-icon">📞</span>
+                            +359 88 XXX XXXX
+                        </a>
+                        <a href="#" class="contact__link">
+                            <span class="contact__link-icon">📍</span>
+                            София, България
+                        </a>
+                    </div>
+                </div>
+
+                <div class="contact__form reveal reveal-delay-1">
+                    <form id="contactForm" onsubmit="handleContact(event)">
+                        <div class="form-group">
+                            <label for="cf-name">Вашето име</label>
+                            <input type="text" id="cf-name" class="form-control" placeholder="Иван Иванов" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cf-email">Имейл</label>
+                            <input type="email" id="cf-email" class="form-control" placeholder="ivan@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cf-topic">Тема</label>
+                            <select id="cf-topic" class="form-control">
+                                <option value="">Изберете тема...</option>
+                                <option>Медицинска консултация</option>
+                                <option>Персонален треньор</option>
+                                <option>Хранителен план</option>
+                                <option>Интегративен пакет</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cf-msg">Съобщение</label>
+                            <textarea id="cf-msg" class="form-control" placeholder="Опишете вашите цели..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn--primary form-submit" id="cfBtn">
+                            Изпратете запитване
+                        </button>
+                        <p id="cfSuccess" style="display:none; margin-top:.8rem; font-size:.87rem; color:#22863a; font-weight:600;">
+                            ✓ Получихме вашето запитване! Ще се свържем скоро.
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── FOOTER ─────────────────────────────────────────────────── -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__inner">
+                <div class="footer__logo">Д-р <span>Радилов</span></div>
+                <p class="footer__copy">
+                    © <span id="footerYear"></span> Д-р Константин Радилов. Всички права запазени.
+                </p>
+                <div class="footer__socials">
+                    <a href="#" class="footer__social" aria-label="Instagram">&#9670;</a>
+                    <a href="#" class="footer__social" aria-label="Facebook">&#9632;</a>
+                    <a href="#" class="footer__social" aria-label="LinkedIn">&#9651;</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ── Year ──────────────────────────────────────────────────
+        document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+        // ── Nav scroll effect ─────────────────────────────────────
+        const nav = document.getElementById('mainNav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 40);
+        }, { passive: true });
+
+        // ── Mobile menu ───────────────────────────────────────────
+        document.getElementById('navToggle').addEventListener('click', () => {
+            document.getElementById('mobileMenu').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        });
+        document.getElementById('mobileClose').addEventListener('click', closeMobileMenu);
+        function closeMobileMenu() {
+            document.getElementById('mobileMenu').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // ── Scroll-reveal ─────────────────────────────────────────
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('in-view');
+                    observer.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.12 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // ── Contact form (client-side demo) ───────────────────────
+        function handleContact(e) {
+            e.preventDefault();
+            const btn = document.getElementById('cfBtn');
+            const success = document.getElementById('cfSuccess');
+            btn.textContent = 'Изпращане...';
+            btn.disabled = true;
+            setTimeout(() => {
+                btn.style.display = 'none';
+                success.style.display = 'block';
+            }, 900);
+        }
+    </script>
+</body>
+</html>
