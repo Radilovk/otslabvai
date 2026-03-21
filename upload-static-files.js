@@ -28,6 +28,7 @@ const FILES_TO_UPLOAD = [
     { file: 'quest.html', key: 'static_quest.html' },
     { file: 'questionnaire.js', key: 'static_questionnaire.js' },
     { file: 'questionnaire.css', key: 'static_questionnaire.css' },
+    { file: 'bio.html', key: 'static_bio.html' },
     // Static fallback for page_content – used by the worker when the live 'page_content' KV key is empty
     { file: 'backend/page_content.json', key: 'static_backend_page_content.json' },
     { file: 'backend/life_page_content.json', key: 'static_backend_life_page_content.json' },
