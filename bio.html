@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="https://radilovk.github.io/face/assets/logo.png">
-    <title>Д-р Радилов — Медицински Специалист · Треньор · Нутриционист</title>
-    <meta name="description" content="Официална биографична страница на Д-р Радилов — медицински специалист, сертифициран треньор и нутриционист.">
+    <title>Д-р Радилов — Диетолог · Нутриционист · Специалист по спорт и здраве</title>
+    <meta name="description" content="Официална биографична страница на Д-р Константин Радилов — дипломиран диетолог, клиничен нутриционист и медицински специалист. Програми за отслабване, спортно хранене и здравословен начин на живот.">
     <meta name="robots" content="index, follow">
-    <meta property="og:title" content="Д-р Радилов — Медицински Специалист · Треньор · Нутриционист">
-    <meta property="og:description" content="Официална биографична страница — медицина, фитнес и хранене в едно.">
+    <meta property="og:title" content="Д-р Радилов — Диетолог · Нутриционист · Специалист по спорт и здраве">
+    <meta property="og:description" content="Персонализирани програми за отслабване, спортна нутриция и здравословен начин на живот — изградени на медицинска основа.">
     <meta property="og:type" content="profile">
     <meta property="og:locale" content="bg_BG">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -766,9 +766,227 @@
             letter-spacing: .12em; text-transform: uppercase;
             white-space: nowrap;
         }
+
+        /* ─── Scroll progress bar ───────────────────────────────────── */
+        .scroll-progress {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+            height: 3px;
+            background: linear-gradient(90deg, var(--c-gold), var(--c-accent));
+            transform-origin: left;
+            transform: scaleX(0);
+            transition: transform .1s linear;
+            will-change: transform;
+        }
+
+        /* ─── Inline SVG icon sizing ────────────────────────────────── */
+        .icon-svg {
+            width: 1em; height: 1em;
+            vertical-align: -.125em;
+            flex-shrink: 0;
+        }
+        .pillar__icon .icon-svg,
+        .exp-card__icon .icon-svg {
+            width: 2rem; height: 2rem;
+            display: block; margin-bottom: .5rem;
+            color: var(--c-gold);
+        }
+        .exp-card__icon { color: var(--c-gold); }
+        .cert-item__icon .icon-svg {
+            width: 1.6rem; height: 1.6rem;
+            display: block;
+            color: var(--c-gold);
+        }
+        .cert-item__icon { display: flex; align-items: center; }
+        .contact__link-icon .icon-svg {
+            width: 1.1rem; height: 1.1rem;
+            color: var(--c-text-2);
+        }
+        .testi-card__avatar .icon-svg {
+            width: 1.4rem; height: 1.4rem;
+            color: var(--c-text-3);
+        }
+        .footer__social .icon-svg {
+            width: 1rem; height: 1rem;
+        }
+
+        /* ─── Counter animation ─────────────────────────────────────── */
+        .stat-card__num[data-count] { display: block; }
+
+        /* ─── Magnetic button ───────────────────────────────────────── */
+        .btn { will-change: transform; }
+
+        /* ─── Card ripple ───────────────────────────────────────────── */
+        .exp-card { overflow: hidden; }
+        .exp-card .ripple {
+            position: absolute; border-radius: 50%;
+            background: rgba(181,154,106,.15);
+            transform: scale(0);
+            animation: ripple .6s linear;
+            pointer-events: none;
+        }
+        @keyframes ripple {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        /* ─── Parallax hero visual ──────────────────────────────────── */
+        .hero__photo-wrap img {
+            will-change: transform;
+        }
+
+        /* ─── Mobile bottom navigation ─────────────────────────────── */
+        .bottom-nav {
+            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 110;
+            background: rgba(250,250,249,.96);
+            backdrop-filter: blur(14px);
+            border-top: 1px solid var(--c-border);
+            padding: .5rem 0 calc(.5rem + env(safe-area-inset-bottom));
+        }
+        .bottom-nav__list {
+            display: flex; justify-content: space-around;
+            align-items: center;
+        }
+        .bottom-nav__item {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 2px;
+            font-size: .6rem; font-weight: 600;
+            letter-spacing: .04em; text-transform: uppercase;
+            color: var(--c-text-3);
+            padding: .4rem .6rem;
+            transition: color var(--transition);
+        }
+        .bottom-nav__item .icon-svg { width: 1.3rem; height: 1.3rem; }
+        .bottom-nav__item.active,
+        .bottom-nav__item:hover { color: var(--c-accent); }
+        @media (max-width: 768px) {
+            .bottom-nav { display: block; }
+            /* push footer above bottom-nav */
+            body { padding-bottom: 4rem; }
+        }
+
+        /* ─── Swipeable testimonials ────────────────────────────────── */
+        .testimonials-carousel {
+            position: relative; overflow: hidden;
+        }
+        .testimonials-track {
+            display: flex;
+            transition: transform .4s cubic-bezier(.25,.8,.25,1);
+            will-change: transform;
+        }
+        .testimonials-track .testi-card {
+            flex: 0 0 100%;
+            min-width: 0;
+        }
+        .carousel-dots {
+            display: flex; justify-content: center; gap: .5rem;
+            margin-top: 1.5rem;
+        }
+        .carousel-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--c-border);
+            border: none; cursor: pointer; padding: 0;
+            transition: background var(--transition), transform var(--transition);
+        }
+        .carousel-dot.active {
+            background: var(--c-gold); transform: scale(1.3);
+        }
+        /* Show grid on desktop, carousel on mobile */
+        @media (min-width: 769px) {
+            .testimonials-carousel { overflow: visible; }
+            .testimonials-track {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+                transform: none !important;
+            }
+            .testimonials-track .testi-card { flex: unset; }
+            .carousel-dots { display: none; }
+        }
+        @media (max-width: 768px) {
+            .testimonials__grid { display: none; }
+        }
+
+        /* ─── SERVICES ──────────────────────────────────────────────── */
+        .services__grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: clamp(2rem, 4vw, 3rem);
+        }
+        .service-card {
+            background: var(--c-surface);
+            border: 1px solid var(--c-border);
+            border-radius: var(--radius-lg);
+            padding: 2rem 1.75rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        .service-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+        .service-card__icon {
+            width: 48px; height: 48px;
+            border-radius: var(--radius-md);
+            background: var(--c-gold-light);
+            display: grid; place-items: center;
+            margin-bottom: 1.2rem;
+            color: var(--c-gold);
+        }
+        .service-card__badge {
+            display: inline-block;
+            font-family: var(--font-mono); font-size: .65rem;
+            font-weight: 600; letter-spacing: .1em;
+            text-transform: uppercase;
+            background: var(--c-surface-2);
+            color: var(--c-text-3);
+            border: 1px solid var(--c-border);
+            padding: .2rem .7rem; border-radius: 100px;
+            margin-bottom: .8rem;
+        }
+        .service-card__badge--featured {
+            background: rgba(181,154,106,.15);
+            color: var(--c-gold);
+            border-color: rgba(181,154,106,.3);
+        }
+        .service-card__title {
+            font-family: var(--font-serif);
+            font-size: 1.2rem; font-weight: 600;
+            color: var(--c-text-1); margin-bottom: .75rem;
+        }
+        .service-card__body {
+            font-size: .9rem; color: var(--c-text-2);
+            line-height: 1.75; margin-bottom: 1.2rem;
+        }
+        .service-card__list { display: flex; flex-direction: column; gap: .45rem; }
+        .service-card__list li {
+            font-size: .85rem; color: var(--c-text-2);
+            display: flex; align-items: center; gap: .6rem;
+        }
+        .service-card__list li::before {
+            content: '';
+            flex-shrink: 0;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--c-gold);
+        }
+        @media (max-width: 640px) {
+            .services__grid { grid-template-columns: 1fr; }
+        }
+
+        /* ─── prefers-reduced-motion ────────────────────────────────── */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+            .reveal { opacity: 1; transform: none; }
+            .testimonials-track { transition: none; }
+        }
     </style>
 </head>
 <body>
+
+    <!-- ── Scroll progress ────────────────────────────────────────── -->
+    <div class="scroll-progress" id="scrollProgress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Прочетено"></div>
 
     <!-- ── NAV ────────────────────────────────────────────────────── -->
     <nav class="nav" id="mainNav">
@@ -777,8 +995,8 @@
             <ul class="nav__links">
                 <li><a href="#about">За мен</a></li>
                 <li><a href="#expertise">Компетенции</a></li>
+                <li><a href="#services">Услуги</a></li>
                 <li><a href="#credentials">Квалификации</a></li>
-                <li><a href="#philosophy">Философия</a></li>
                 <li><a href="#contact" class="btn btn--primary nav__cta">Консултация</a></li>
             </ul>
             <button class="nav__hamburger" id="navToggle" aria-label="Меню">
@@ -789,9 +1007,10 @@
 
     <!-- Mobile menu -->
     <div class="nav__mobile" id="mobileMenu">
-        <button class="nav__mobile-close" id="mobileClose">✕</button>
+        <button class="nav__mobile-close" id="mobileClose" aria-label="Затвори менюто"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         <a href="#about"       onclick="closeMobileMenu()">За мен</a>
         <a href="#expertise"   onclick="closeMobileMenu()">Компетенции</a>
+        <a href="#services"    onclick="closeMobileMenu()">Услуги</a>
         <a href="#credentials" onclick="closeMobileMenu()">Квалификации</a>
         <a href="#philosophy"  onclick="closeMobileMenu()">Философия</a>
         <a href="#contact"     onclick="closeMobileMenu()">Консултация</a>
@@ -801,16 +1020,18 @@
     <section class="hero" id="hero">
         <div class="hero__content">
             <div class="hero__eyebrow">
-                <span class="tag">🩺 Медицина</span>
-                <span class="tag">💪 Фитнес</span>
-                <span class="tag">🥗 Нутриция</span>
+                <span class="tag"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Медицина</span>
+                <span class="tag"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><path d="M9 8h6M9 16h6"/><path d="M3 9h3M18 9h3M3 15h3M18 15h3"/></svg> Фитнес</span>
+                <span class="tag"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg> Нутриция</span>
             </div>
             <h1 class="hero__name">
                 Д-р<br><em>Константин</em><br>Радилов
             </h1>
             <p class="hero__desc">
-                Медицински специалист, сертифициран треньор и нутриционист с доказана практика
-                в интегративния подход към здравето, физическата форма и хранителните стратегии.
+                Дипломиран диетолог и клиничен нутриционист с медицинско образование
+                и сертификация като персонален треньор. Специализирам в програми за
+                отслабване, спортно хранене и здравословен начин на живот — изградени
+                на научна основа и персонализирани за всеки клиент.
             </p>
             <div class="hero__actions">
                 <a href="#contact" class="btn btn--primary">Запази консултация</a>
@@ -820,15 +1041,15 @@
             <!-- Stats row below CTA -->
             <div class="hero__stats" style="position:static; justify-content:flex-start; gap:.75rem; margin-top:2.5rem; flex-wrap:wrap;">
                 <div class="stat-card">
-                    <div class="stat-card__num">10+</div>
+                    <div class="stat-card__num" data-count="10" data-suffix="+">10+</div>
                     <div class="stat-card__label">Години опит</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-card__num">500+</div>
+                    <div class="stat-card__num" data-count="500" data-suffix="+">500+</div>
                     <div class="stat-card__label">Клиенти</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-card__num">3</div>
+                    <div class="stat-card__num" data-count="3" data-suffix="">3</div>
                     <div class="stat-card__label">Специалности</div>
                 </div>
             </div>
@@ -901,15 +1122,15 @@
 
                     <div class="about__pillars reveal reveal-delay-2">
                         <div class="pillar">
-                            <div class="pillar__icon">🩺</div>
+                            <div class="pillar__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
                             <div class="pillar__title">Медицина</div>
                         </div>
                         <div class="pillar">
-                            <div class="pillar__icon">💪</div>
+                            <div class="pillar__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><path d="M9 8h6M9 16h6"/><path d="M3 9h3M18 9h3M3 15h3M18 15h3"/></svg></div>
                             <div class="pillar__title">Тренировки</div>
                         </div>
                         <div class="pillar">
-                            <div class="pillar__icon">🥗</div>
+                            <div class="pillar__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
                             <div class="pillar__title">Нутриция</div>
                         </div>
                     </div>
@@ -935,7 +1156,7 @@
 
                 <div class="exp-card reveal reveal-delay-1">
                     <div class="exp-card__num">01 / 03</div>
-                    <div class="exp-card__icon">🩺</div>
+                    <div class="exp-card__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
                     <div class="exp-card__title">Медицинска практика</div>
                     <div class="exp-card__body">
                         Превантивна медицина, функционална оценка и клинично управление
@@ -951,7 +1172,7 @@
 
                 <div class="exp-card reveal reveal-delay-2">
                     <div class="exp-card__num">02 / 03</div>
-                    <div class="exp-card__icon">💪</div>
+                    <div class="exp-card__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><path d="M9 8h6M9 16h6"/><path d="M3 9h3M18 9h3M3 15h3M18 15h3"/></svg></div>
                     <div class="exp-card__title">Персонален треньор</div>
                     <div class="exp-card__body">
                         Периодизирани тренировъчни програми, базирани на физиология,
@@ -967,7 +1188,7 @@
 
                 <div class="exp-card reveal reveal-delay-3">
                     <div class="exp-card__num">03 / 03</div>
-                    <div class="exp-card__icon">🥗</div>
+                    <div class="exp-card__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
                     <div class="exp-card__title">Клинична нутриция</div>
                     <div class="exp-card__body">
                         Изготвям индивидуализирани хранителни планове, базирани на
@@ -997,7 +1218,7 @@
 
                 <!-- Education timeline -->
                 <div class="reveal">
-                    <div class="creds__col-title">🎓 Образование</div>
+                    <div class="creds__col-title"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> Образование</div>
                     <div class="timeline">
                         <div class="timeline-item">
                             <div class="timeline-item__dot"></div>
@@ -1036,38 +1257,38 @@
 
                 <!-- Certifications -->
                 <div class="reveal reveal-delay-1">
-                    <div class="creds__col-title">🏅 Сертификати</div>
+                    <div class="creds__col-title"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Сертификати</div>
                     <div class="cert-list">
                         <div class="cert-item">
-                            <div class="cert-item__icon">🏋️</div>
+                            <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><path d="M9 8h6M9 16h6"/><path d="M3 9h3M18 9h3M3 15h3M18 15h3"/></svg></div>
                             <div>
                                 <div class="cert-item__title">NSCA Certified Personal Trainer (NSCA-CPT)</div>
                                 <div class="cert-item__body">National Strength &amp; Conditioning Association</div>
                             </div>
                         </div>
                         <div class="cert-item">
-                            <div class="cert-item__icon">🥗</div>
+                            <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
                             <div>
                                 <div class="cert-item__title">Precision Nutrition Level 2</div>
                                 <div class="cert-item__body">PN2 — Клинична нутриционна практика</div>
                             </div>
                         </div>
                         <div class="cert-item">
-                            <div class="cert-item__icon">🧬</div>
+                            <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6M9 22c1.798-1.998 2.518-3.995 2.807-5.993M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m2 9 20 6"/></svg></div>
                             <div>
                                 <div class="cert-item__title">Functional Medicine Certified Practitioner</div>
                                 <div class="cert-item__body">Institute for Functional Medicine (IFM)</div>
                             </div>
                         </div>
                         <div class="cert-item">
-                            <div class="cert-item__icon">🫀</div>
+                            <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
                             <div>
                                 <div class="cert-item__title">Sports Medicine &amp; Performance</div>
                                 <div class="cert-item__body">American College of Sports Medicine (ACSM)</div>
                             </div>
                         </div>
                         <div class="cert-item">
-                            <div class="cert-item__icon">🧠</div>
+                            <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24A2.5 2.5 0 0 0 14.5 2Z"/></svg></div>
                             <div>
                                 <div class="cert-item__title">Behavioral Change Specialist</div>
                                 <div class="cert-item__body">ACE Health Coaching — мотивация и навици</div>
@@ -1167,6 +1388,98 @@
         </div>
     </section>
 
+    <!-- ── SERVICES ──────────────────────────────────────────────── -->
+    <section class="section section--alt" id="services">
+        <div class="container">
+            <div class="expertise__intro reveal">
+                <div class="section-label">Услуги</div>
+                <h2 class="section-title">Програми и консултации</h2>
+                <p class="section-sub">
+                    Всяка услуга е изградена около вашите индивидуални нужди, цели
+                    и здравен статус — без универсални решения, само персонализиран подход.
+                </p>
+            </div>
+
+            <div class="services__grid">
+
+                <div class="service-card reveal reveal-delay-1">
+                    <div class="service-card__icon">
+                        <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </div>
+                    <div class="service-card__badge">Стартова точка</div>
+                    <div class="service-card__title">Първоначална консултация</div>
+                    <div class="service-card__body">
+                        Задълбочена оценка на здравния статус, хранителните навици, телесния
+                        състав и лабораторните показатели. Завършва с изготвяне на вашия
+                        индивидуален хранителен план.
+                    </div>
+                    <ul class="service-card__list">
+                        <li>Хранителен и метаболитен анализ</li>
+                        <li>Анализ на телесния състав</li>
+                        <li>Персонализиран хранителен план</li>
+                        <li>Суплементационна схема</li>
+                    </ul>
+                </div>
+
+                <div class="service-card reveal reveal-delay-2">
+                    <div class="service-card__icon">
+                        <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/><path d="M8 6V4M16 6V4M8 12v2M16 12v2"/></svg>
+                    </div>
+                    <div class="service-card__badge service-card__badge--featured">Най-търсено</div>
+                    <div class="service-card__title">Програма за отслабване</div>
+                    <div class="service-card__body">
+                        Медицински обоснована програма за устойчива загуба на тегло — без
+                        глад, без стрес. Диетата е адаптирана към вашия метаболизъм,
+                        хормонален профил и начин на живот.
+                    </div>
+                    <ul class="service-card__list">
+                        <li>Метаболитна оценка и калориен дефицит</li>
+                        <li>Хранителен план без глад</li>
+                        <li>Тренировъчен протокол</li>
+                        <li>Месечен мониторинг и корекции</li>
+                    </ul>
+                </div>
+
+                <div class="service-card reveal reveal-delay-3">
+                    <div class="service-card__icon">
+                        <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><path d="M9 8h6M9 16h6"/><path d="M3 9h3M18 9h3M3 15h3M18 15h3"/></svg>
+                    </div>
+                    <div class="service-card__badge">За спортисти</div>
+                    <div class="service-card__title">Спортна нутриция</div>
+                    <div class="service-card__body">
+                        Оптимизирана диета за атлетична производителност, мускулен растеж
+                        и по-бързо възстановяване. Планирана в синхрон с тренировъчния ви цикъл.
+                    </div>
+                    <ul class="service-card__list">
+                        <li>Периодизация на храненето</li>
+                        <li>Протоколи за мускулен растеж</li>
+                        <li>Суплементация за спортисти</li>
+                        <li>Анализ на ефективността</li>
+                    </ul>
+                </div>
+
+                <div class="service-card reveal reveal-delay-4">
+                    <div class="service-card__icon">
+                        <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                    </div>
+                    <div class="service-card__badge">Цялостен подход</div>
+                    <div class="service-card__title">Здравословен начин на живот</div>
+                    <div class="service-card__body">
+                        Интегрална стратегия за превантивно здраве — хранене, движение, сън
+                        и управление на стреса в един съгласуван план за дългосрочни резултати.
+                    </div>
+                    <ul class="service-card__list">
+                        <li>Антиинфламаторна и балансирана диета</li>
+                        <li>Хигиена на съня и биоритъм</li>
+                        <li>Управление на стреса</li>
+                        <li>Дългосрочен мониторинг</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
     <!-- ── TESTIMONIALS ───────────────────────────────────────────── -->
     <section class="section section--alt">
         <div class="container">
@@ -1175,6 +1488,7 @@
                 <h2 class="section-title">Какво казват клиентите</h2>
             </div>
 
+            <!-- Desktop grid (hidden on mobile via CSS) -->
             <div class="testimonials__grid">
                 <div class="testi-card reveal reveal-delay-1">
                     <div class="testi-card__stars">
@@ -1186,7 +1500,7 @@
                         подход, не с диети."
                     </p>
                     <div class="testi-card__author">
-                        <div class="testi-card__avatar">🙋</div>
+                        <div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>
                         <div>
                             <div class="testi-card__author-name">Мария Г.</div>
                             <div class="testi-card__author-sub">Диабет тип 2 · Отслабване</div>
@@ -1204,7 +1518,7 @@
                         постигнато за предишните 2 години."
                     </p>
                     <div class="testi-card__author">
-                        <div class="testi-card__avatar">🙋‍♂️</div>
+                        <div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>
                         <div>
                             <div class="testi-card__author-name">Петър Д.</div>
                             <div class="testi-card__author-sub">Атлет · Мускулна маса</div>
@@ -1222,12 +1536,74 @@
                         по-добре от преди 10 години."
                     </p>
                     <div class="testi-card__author">
-                        <div class="testi-card__avatar">🙋‍♀️</div>
+                        <div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>
                         <div>
                             <div class="testi-card__author-name">Елена В.</div>
                             <div class="testi-card__author-sub">Хормонална терапия · Енергия</div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Mobile swipeable carousel -->
+            <div class="testimonials-carousel" id="testiCarousel" aria-label="Отзиви от клиенти">
+                <div class="testimonials-track" id="testiTrack">
+                    <div class="testi-card">
+                        <div class="testi-card__stars">
+                            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                        </div>
+                        <p class="testi-card__text">
+                            „Д-р Радилов промени изцяло разбирането ми за здравословен начин на живот.
+                            За 6 месеца свалих 18 кг и нормализирах кръвната си захар — с медицински
+                            подход, не с диети."
+                        </p>
+                        <div class="testi-card__author">
+                            <div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>
+                            <div>
+                                <div class="testi-card__author-name">Мария Г.</div>
+                                <div class="testi-card__author-sub">Диабет тип 2 · Отслабване</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testi-card">
+                        <div class="testi-card__stars">
+                            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                        </div>
+                        <p class="testi-card__text">
+                            „Работих с много треньори, но никой не комбинираше медицинска
+                            диагностика с тренировки. Резултатите за 3 месеца надминаха всичко
+                            постигнато за предишните 2 години."
+                        </p>
+                        <div class="testi-card__author">
+                            <div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>
+                            <div>
+                                <div class="testi-card__author-name">Петър Д.</div>
+                                <div class="testi-card__author-sub">Атлет · Мускулна маса</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testi-card">
+                        <div class="testi-card__stars">
+                            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                        </div>
+                        <p class="testi-card__text">
+                            „След хормонален дисбаланс не знаех как да се върна към нормален
+                            живот. Д-р Радилов разработи цялостен план — и днес се чувствам
+                            по-добре от преди 10 години."
+                        </p>
+                        <div class="testi-card__author">
+                            <div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>
+                            <div>
+                                <div class="testi-card__author-name">Елена В.</div>
+                                <div class="testi-card__author-sub">Хормонална терапия · Енергия</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-dots" role="tablist" aria-label="Слайд навигация">
+                    <button class="carousel-dot active" data-index="0" role="tab" aria-label="Слайд 1" aria-selected="true"></button>
+                    <button class="carousel-dot" data-index="1" role="tab" aria-label="Слайд 2" aria-selected="false"></button>
+                    <button class="carousel-dot" data-index="2" role="tab" aria-label="Слайд 3" aria-selected="false"></button>
                 </div>
             </div>
         </div>
@@ -1246,15 +1622,15 @@
                     </p>
                     <div class="contact__links">
                         <a href="mailto:contact@drradilov.bg" class="contact__link">
-                            <span class="contact__link-icon">✉️</span>
+                            <span class="contact__link-icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></span>
                             contact@drradilov.bg
                         </a>
                         <a href="tel:+35988XXXXXXX" class="contact__link">
-                            <span class="contact__link-icon">📞</span>
+                            <span class="contact__link-icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 9.73a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6.29 6.29l1.27-.76A2 2 0 0 1 17.76 14a12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
                             +359 88 XXX XXXX
                         </a>
                         <a href="#" class="contact__link">
-                            <span class="contact__link-icon">📍</span>
+                            <span class="contact__link-icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
                             София, България
                         </a>
                     </div>
@@ -1274,6 +1650,10 @@
                             <label for="cf-topic">Тема</label>
                             <select id="cf-topic" class="form-control">
                                 <option value="">Изберете тема...</option>
+                                <option>Първоначална консултация</option>
+                                <option>Програма за отслабване</option>
+                                <option>Спортна нутриция</option>
+                                <option>Здравословен начин на живот</option>
                                 <option>Медицинска консултация</option>
                                 <option>Персонален треньор</option>
                                 <option>Хранителен план</option>
@@ -1288,13 +1668,36 @@
                             Изпратете запитване
                         </button>
                         <p id="cfSuccess" style="display:none; margin-top:.8rem; font-size:.87rem; color:#22863a; font-weight:600;">
-                            ✓ Получихме вашето запитване! Ще се свържем скоро.
+                            <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            Получихме вашето запитване! Ще се свържем скоро.
                         </p>
                     </form>
                 </div>
             </div>
         </div>
     </section>
+
+    <!-- ── Mobile bottom navigation ───────────────────────────────── -->
+    <nav class="bottom-nav" aria-label="Навигация">
+        <ul class="bottom-nav__list">
+            <li><a href="#about" class="bottom-nav__item">
+                <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+                <span>За мен</span>
+            </a></li>
+            <li><a href="#services" class="bottom-nav__item">
+                <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span>Услуги</span>
+            </a></li>
+            <li><a href="#credentials" class="bottom-nav__item">
+                <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                <span>Дипломи</span>
+            </a></li>
+            <li><a href="#contact" class="bottom-nav__item">
+                <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                <span>Контакт</span>
+            </a></li>
+        </ul>
+    </nav>
 
     <!-- ── FOOTER ─────────────────────────────────────────────────── -->
     <footer class="footer">
@@ -1305,22 +1708,37 @@
                     © <span id="footerYear"></span> Д-р Константин Радилов. Всички права запазени.
                 </p>
                 <div class="footer__socials">
-                    <a href="#" class="footer__social" aria-label="Instagram">&#9670;</a>
-                    <a href="#" class="footer__social" aria-label="Facebook">&#9632;</a>
-                    <a href="#" class="footer__social" aria-label="LinkedIn">&#9651;</a>
+                    <a href="#" class="footer__social" aria-label="Instagram"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+                    <a href="#" class="footer__social" aria-label="Facebook"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+                    <a href="#" class="footer__social" aria-label="LinkedIn"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg></a>
                 </div>
             </div>
         </div>
     </footer>
 
     <script>
+        // ── Reduced-motion detection ──────────────────────────────
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
         // ── Year ──────────────────────────────────────────────────
         document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+        // ── Scroll progress bar ───────────────────────────────────
+        const progressBar = document.getElementById('scrollProgress');
+        function updateScrollProgress() {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const pct = docHeight > 0 ? scrollTop / docHeight : 0;
+            progressBar.style.transform = 'scaleX(' + pct + ')';
+            progressBar.setAttribute('aria-valuenow', Math.round(pct * 100));
+        }
+        window.addEventListener('scroll', updateScrollProgress, { passive: true });
 
         // ── Nav scroll effect ─────────────────────────────────────
         const nav = document.getElementById('mainNav');
         window.addEventListener('scroll', () => {
             nav.classList.toggle('scrolled', window.scrollY > 40);
+            updateBottomNavActive();
         }, { passive: true });
 
         // ── Mobile menu ───────────────────────────────────────────
@@ -1334,16 +1752,152 @@
             document.body.style.overflow = '';
         }
 
+        // ── Bottom nav active section tracking ───────────────────
+        const sections = document.querySelectorAll('section[id]');
+        // Activate a section when its top reaches 40% down the viewport
+        const SECTION_ACTIVATION_THRESHOLD = 0.4;
+        function updateBottomNavActive() {
+            const scrollY = window.scrollY + window.innerHeight * SECTION_ACTIVATION_THRESHOLD;
+            let activeId = '';
+            sections.forEach(s => {
+                if (s.offsetTop <= scrollY) activeId = s.id;
+            });
+            document.querySelectorAll('.bottom-nav a').forEach(anchor => {
+                anchor.classList.toggle('active', anchor.getAttribute('href') === '#' + activeId);
+            });
+        }
+        updateBottomNavActive();
+
         // ── Scroll-reveal ─────────────────────────────────────────
-        const observer = new IntersectionObserver((entries) => {
+        const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(e => {
                 if (e.isIntersecting) {
                     e.target.classList.add('in-view');
-                    observer.unobserve(e.target);
+                    revealObserver.unobserve(e.target);
                 }
             });
         }, { threshold: 0.12 });
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        // ── Counter animation ─────────────────────────────────────
+        function animateCounter(el) {
+            if (prefersReducedMotion) return;
+            const target = parseInt(el.dataset.count, 10);
+            const suffix = el.dataset.suffix || '';
+            const duration = 1200;
+            const start = performance.now();
+            function step(now) {
+                const elapsed = now - start;
+                const progress = Math.min(elapsed / duration, 1);
+                // ease-out cubic
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.floor(eased * target) + suffix;
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting && e.target.dataset.count) {
+                    animateCounter(e.target);
+                    counterObserver.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
+
+        // ── Card ripple effect ────────────────────────────────────
+        document.querySelectorAll('.exp-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (prefersReducedMotion) return;
+                const rect = card.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                ripple.style.cssText = [
+                    'width:' + size + 'px',
+                    'height:' + size + 'px',
+                    'left:' + (e.clientX - rect.left - size / 2) + 'px',
+                    'top:' + (e.clientY - rect.top - size / 2) + 'px'
+                ].join(';');
+                card.appendChild(ripple);
+                ripple.addEventListener('animationend', () => ripple.remove());
+            });
+        });
+
+        // ── Magnetic buttons ──────────────────────────────────────
+        if (!prefersReducedMotion) {
+            document.querySelectorAll('.btn--primary, .btn--outline').forEach(btn => {
+                btn.addEventListener('mousemove', function(e) {
+                    const rect = btn.getBoundingClientRect();
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+                    const dx = (e.clientX - cx) * 0.3;
+                    const dy = (e.clientY - cy) * 0.3;
+                    btn.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    btn.style.transform = '';
+                });
+            });
+        }
+
+        // ── Hero parallax ─────────────────────────────────────────
+        const heroImg = document.querySelector('.hero__photo-wrap img');
+        // Apply parallax for the first 1.5 viewport heights of scroll to avoid
+        // the effect continuing long after the hero is out of view.
+        const PARALLAX_CUTOFF_FACTOR = 1.5;
+        if (heroImg && !prefersReducedMotion) {
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                if (scrollY < window.innerHeight * PARALLAX_CUTOFF_FACTOR) {
+                    heroImg.style.transform = 'translateY(' + scrollY * 0.2 + 'px)';
+                }
+            }, { passive: true });
+        }
+
+        // ── Swipeable testimonials carousel (mobile only) ─────────
+        (function() {
+            const track = document.getElementById('testiTrack');
+            const dots  = document.querySelectorAll('.carousel-dot');
+            if (!track || !dots.length) return;
+            let current = 0;
+            const total = track.children.length;
+            let startX = 0, isDragging = false;
+
+            function goTo(index) {
+                current = (index + total) % total;
+                if (!prefersReducedMotion) {
+                    track.style.transform = 'translateX(-' + current * 100 + '%)';
+                } else {
+                    track.style.transition = 'none';
+                    track.style.transform = 'translateX(-' + current * 100 + '%)';
+                }
+                dots.forEach((d, i) => {
+                    d.classList.toggle('active', i === current);
+                    d.setAttribute('aria-selected', i === current ? 'true' : 'false');
+                });
+            }
+
+            dots.forEach(dot => {
+                dot.addEventListener('click', () => goTo(parseInt(dot.dataset.index, 10)));
+            });
+
+            // Touch support — passive listeners are safe here because we only read
+            // touch coordinates; we never call preventDefault() to block scrolling.
+            track.addEventListener('touchstart', e => {
+                if (!e.touches || !e.touches.length) return;
+                startX = e.touches[0].clientX;
+                isDragging = true;
+            }, { passive: true });
+            track.addEventListener('touchend', e => {
+                if (!isDragging) return;
+                if (!e.changedTouches || !e.changedTouches.length) { isDragging = false; return; }
+                const diff = startX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 40) goTo(diff > 0 ? current + 1 : current - 1);
+                isDragging = false;
+            }, { passive: true });
+        })();
 
         // ── Contact form (client-side demo) ───────────────────────
         function handleContact(e) {
