@@ -1912,5 +1912,100 @@
             }, 900);
         }
     </script>
+
+    <!-- Apply bioadmin overrides: fetch from server and patch the page -->
+    <script>
+    (function() {
+        const IMAGE_TARGETS = {
+            hero:       '.hero__photo-wrap img',
+            about:      '.about__portrait img',
+            philosophy: '.philosophy__visual img',
+        };
+
+        function applyBioContent(data) {
+            if (!data || typeof data !== 'object') return;
+
+            // Text overrides
+            if (data.textOverrides) {
+                Object.entries(data.textOverrides).forEach(function(entry) {
+                    var sel = entry[0], opts = entry[1];
+                    var el = document.querySelector(sel);
+                    if (!el) return;
+                    if (opts.content !== undefined) el.textContent = opts.content;
+                    if (opts.fontFamily) el.style.fontFamily = opts.fontFamily;
+                    if (opts.fontSize)   el.style.fontSize   = (typeof opts.fontSize === 'number' ? opts.fontSize + 'rem' : opts.fontSize);
+                    if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
+                    if (opts.color)      el.style.color       = opts.color;
+                });
+            }
+
+            // Image overrides
+            if (data.images) {
+                Object.entries(IMAGE_TARGETS).forEach(function(entry) {
+                    var key = entry[0], sel = entry[1];
+                    if (data.images[key]) {
+                        var el = document.querySelector(sel);
+                        if (el) el.src = data.images[key];
+                    }
+                });
+            }
+
+            // Theme / CSS variable overrides
+            if (data.theme) {
+                var root = document.documentElement;
+                Object.entries(data.theme).forEach(function(entry) {
+                    root.style.setProperty(entry[0], entry[1]);
+                });
+            }
+
+            // Diplomas section
+            var existing = document.getElementById('bioadmin-diplomas');
+            if (existing) existing.remove();
+            if (data.diplomas && data.diplomas.length > 0) {
+                var creds = document.querySelector('#credentials .container');
+                if (creds) {
+                    var section = document.createElement('div');
+                    section.id = 'bioadmin-diplomas';
+                    section.style.cssText = 'margin-top:2rem;';
+
+                    var title = document.createElement('div');
+                    title.style.cssText = 'font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--c-text-3);margin-bottom:1rem;';
+                    title.textContent = 'Дипломи & Сертификати';
+                    section.appendChild(title);
+
+                    var grid = document.createElement('div');
+                    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;';
+
+                    data.diplomas.forEach(function(d) {
+                        var card = document.createElement('div');
+                        card.style.cssText = 'border:1px solid var(--c-border);border-radius:12px;overflow:hidden;background:var(--c-surface);';
+                        if (d.dataURL) {
+                            var img = document.createElement('img');
+                            img.src = d.dataURL;
+                            img.alt = d.label || 'Диплома';
+                            img.style.cssText = 'width:100%;height:140px;object-fit:cover;display:block;';
+                            card.appendChild(img);
+                        }
+                        if (d.label) {
+                            var lbl = document.createElement('div');
+                            lbl.style.cssText = 'padding:.5rem .75rem;font-size:.78rem;color:var(--c-text-2);';
+                            lbl.textContent = d.label;
+                            card.appendChild(lbl);
+                        }
+                        grid.appendChild(card);
+                    });
+
+                    section.appendChild(grid);
+                    creds.appendChild(section);
+                }
+            }
+        }
+
+        fetch('/bio_content.json')
+            .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
+            .then(function(data) { applyBioContent(data); })
+            .catch(function(err) { console.warn('bio_content.json load failed:', err); });
+    })();
+    </script>
 </body>
 </html>

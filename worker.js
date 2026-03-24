@@ -181,6 +181,16 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
+
+          case '/bio_content.json':
+              if (request.method === 'GET') {
+                  response = await handleGetBioContent(request, env);
+              } else if (request.method === 'POST') {
+                  response = await handleSaveBioContent(request, env, ctx);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
             
           default:
             // Try to serve 404.html for unknown routes
@@ -470,6 +480,45 @@ async function syncLifePageContentToGitHub(content, env) {
         }
     } catch (err) {
         console.error('syncLifePageContentToGitHub error:', err);
+    }
+}
+
+/**
+ * Handles GET /bio_content.json
+ * Returns bio page overrides stored in KV, or empty object if none exist yet.
+ */
+async function handleGetBioContent(request, env) {
+    const bioContent = await env.PAGE_CONTENT.get('bio_content');
+    const body = bioContent !== null ? bioContent : '{}';
+    return new Response(body, {
+        status: 200,
+        headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
+        }
+    });
+}
+
+/**
+ * Handles POST /bio_content.json
+ * Saves bio page overrides to KV.
+ */
+async function handleSaveBioContent(request, env, ctx) {
+    const contentToSave = await request.text();
+    try {
+        // Validate that the body is valid JSON before storing
+        const parsed = JSON.parse(contentToSave);
+        if (typeof parsed !== 'object' || parsed === null) {
+            throw new UserFacingError('Expected a JSON object in the request body.', 400);
+        }
+        ctx.waitUntil(env.PAGE_CONTENT.put('bio_content', contentToSave));
+        return new Response(JSON.stringify({ success: true, message: 'Bio content saved.' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } catch (e) {
+        if (e instanceof UserFacingError) throw e;
+        throw new UserFacingError('Invalid JSON provided in the request body.', 400);
     }
 }
 
