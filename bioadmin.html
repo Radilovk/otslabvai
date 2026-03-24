@@ -236,6 +236,8 @@
             <button class="tab-btn active" data-panel="panel-text">✏️ Текст</button>
             <button class="tab-btn" data-panel="panel-images">🖼️ Снимки</button>
             <button class="tab-btn" data-panel="panel-theme">🎨 Тема</button>
+            <button class="tab-btn" data-panel="panel-contact">📞 Контакти</button>
+            <button class="tab-btn" data-panel="panel-testimonials">💬 Отзиви</button>
         </div>
 
         <div class="header-actions">
@@ -454,6 +456,56 @@
                     </div>
                 </div>
 
+                <!-- ── PANEL: Contact ───────────────────────────────── -->
+                <div id="panel-contact" class="panel">
+                    <div class="panel-section">
+                        <div class="panel-section__title">Информация за контакт</div>
+                        <p style="font-size:.78rem;color:var(--c-muted);margin-bottom:.8rem;">Попълни полетата и натисни "Запази", за да обновиш контактния раздел на bio.html.</p>
+
+                        <div class="form-group">
+                            <label>📧 Имейл адрес</label>
+                            <input type="text" id="c-email" placeholder="contact@drradilov.bg">
+                        </div>
+                        <div class="form-group">
+                            <label>📱 Телефон</label>
+                            <input type="text" id="c-phone" placeholder="+359 88 XXX XXXX">
+                        </div>
+                        <div class="form-group">
+                            <label>📍 Адрес / Локация</label>
+                            <input type="text" id="c-address" placeholder="София, България">
+                        </div>
+                    </div>
+
+                    <hr class="divider">
+
+                    <div class="panel-section">
+                        <div class="panel-section__title">Социални мрежи</div>
+                        <div class="form-group">
+                            <label>Instagram URL</label>
+                            <input type="text" id="c-instagram" placeholder="https://instagram.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label>Facebook URL</label>
+                            <input type="text" id="c-facebook" placeholder="https://facebook.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label>LinkedIn URL</label>
+                            <input type="text" id="c-linkedin" placeholder="https://linkedin.com/in/...">
+                        </div>
+                        <button class="btn-sm btn-primary" id="btn-apply-contact" style="width:100%;margin-top:.25rem;">Приложи контактите</button>
+                    </div>
+                </div>
+
+                <!-- ── PANEL: Testimonials ──────────────────────────── -->
+                <div id="panel-testimonials" class="panel">
+                    <div class="panel-section">
+                        <div class="panel-section__title">Отзиви от клиенти</div>
+                        <p style="font-size:.78rem;color:var(--c-muted);margin-bottom:.8rem;">Управлявай отзивите, показани на bio.html (до 6). Натисни "Запази" след промени.</p>
+                        <div id="testimonial-slots"></div>
+                        <button class="btn-sm btn-primary" id="btn-add-testimonial" style="width:100%;margin-top:.5rem;">+ Добави отзив</button>
+                    </div>
+                </div>
+
             </div><!-- /sidebar__inner -->
         </aside>
 
@@ -549,6 +601,7 @@ const EDITABLE_ELEMENTS = [
     { label: 'За мен — Заглавие',              selector: '.about__title' },
     { label: 'За мен — Тяло (параграф 1)',      selector: '.about__body p:nth-child(1)' },
     { label: 'За мен — Тяло (параграф 2)',      selector: '.about__body p:nth-child(2)' },
+    { label: 'За мен — Тяло (параграф 3)',      selector: '.about__body p:nth-child(3)' },
     { label: 'За мен — Бадж "Опит"',           selector: '.about__portrait-badge strong' },
     { label: 'За мен — Бадж подзаглавие',      selector: '.about__portrait-badge span' },
     // Expertise
@@ -664,6 +717,8 @@ let savedData = {
     images: {},          // key -> dataURL
     theme: {},           // CSS var name -> value
     diplomas: [],        // array of { label, dataURL }
+    contact: {},         // email, phone, address, instagram, facebook, linkedin
+    testimonials: [],    // array of { stars, text, authorName, authorSub }
 };
 let selectedElIndex = -1;
 let bioDoc = null;       // reference to the iframe's document
@@ -680,6 +735,8 @@ function initApp() {
     setupTextEditor();
     setupImageUploads();
     setupThemePanel();
+    setupContactPanel();
+    setupTestimonialsPanel();
     setupSaveReset();
 
     const frame = document.getElementById('bio-frame');
@@ -707,7 +764,7 @@ function loadData() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
             const parsed = JSON.parse(raw);
-            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[] }, parsed);
+            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] }, parsed);
         }
     } catch(e) { console.warn('Failed to load saved data:', e); }
 }
@@ -721,14 +778,16 @@ async function loadDataFromServer() {
             return;
         }
         const serverData = await res.json();
-        const EXPECTED_KEYS = ['textOverrides', 'images', 'theme', 'diplomas', '_activeTheme'];
+        const EXPECTED_KEYS = ['textOverrides', 'images', 'theme', 'diplomas', '_activeTheme', 'contact', 'testimonials'];
         if (serverData && typeof serverData === 'object' && Object.keys(serverData).length > 0) {
             const filtered = {};
             EXPECTED_KEYS.forEach(k => { if (k in serverData) filtered[k] = serverData[k]; });
-            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[] }, filtered);
+            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] }, filtered);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
             applyAllChanges();
             buildThemeGrid();
+            populateContactPanel();
+            renderTestimonialSlots();
         }
     } catch(e) {
         console.warn('Failed to load data from server:', e);
@@ -773,7 +832,7 @@ async function saveData() {
 async function resetData() {
     if (!confirm('Сигурен ли си? Всички промени ще бъдат изтрити!')) return;
     localStorage.removeItem(STORAGE_KEY);
-    savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[] };
+    savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] };
     // Clear server data as well
     try {
         await fetch(BIO_API_URL, {
@@ -786,6 +845,8 @@ async function resetData() {
     showToast('Нулиране — страницата се презарежда.', 'error');
     document.getElementById('save-status').textContent = '';
     renderDiplomaSlots();
+    populateContactPanel();
+    renderTestimonialSlots();
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -797,6 +858,8 @@ function applyAllChanges() {
     applyImages();
     applyTheme();
     applyDiplomas();
+    applyContact();
+    applyTestimonials();
 }
 
 function applyTextOverrides() {
@@ -889,9 +952,208 @@ function applyDiplomas() {
     creds.appendChild(section);
 }
 
+function applyContact() {
+    if (!bioDoc) return;
+    const c = savedData.contact || {};
+
+    if (c.email) {
+        const emailLink = bioDoc.querySelector('.contact__link[href^="mailto"]');
+        if (emailLink) {
+            emailLink.href = 'mailto:' + c.email;
+            const lastNode = emailLink.childNodes[emailLink.childNodes.length - 1];
+            if (lastNode && lastNode.nodeType === 3) lastNode.textContent = ' ' + c.email;
+        }
+    }
+    if (c.phone) {
+        const phoneLink = bioDoc.querySelector('.contact__link[href^="tel"]');
+        if (phoneLink) {
+            phoneLink.href = 'tel:' + c.phone.replace(/\s/g, '');
+            const lastNode = phoneLink.childNodes[phoneLink.childNodes.length - 1];
+            if (lastNode && lastNode.nodeType === 3) lastNode.textContent = ' ' + c.phone;
+        }
+    }
+    if (c.address) {
+        bioDoc.querySelectorAll('.contact__link').forEach(el => {
+            const href = el.getAttribute('href') || '';
+            if (href === '#' || href.includes('maps') || el.textContent.includes('България') || el.textContent.includes('Sofia')) {
+                const lastNode = el.childNodes[el.childNodes.length - 1];
+                if (lastNode && lastNode.nodeType === 3) lastNode.textContent = ' ' + c.address;
+            }
+        });
+    }
+    if (c.instagram) { const el = bioDoc.querySelector('.footer__social[aria-label="Instagram"]'); if (el) el.href = c.instagram; }
+    if (c.facebook)  { const el = bioDoc.querySelector('.footer__social[aria-label="Facebook"]');  if (el) el.href = c.facebook; }
+    if (c.linkedin)  { const el = bioDoc.querySelector('.footer__social[aria-label="LinkedIn"]');  if (el) el.href = c.linkedin; }
+}
+
+function applyTestimonials() {
+    if (!bioDoc) return;
+    const list = savedData.testimonials;
+    if (!list || list.length === 0) return;
+
+    function buildTestiCard(t) {
+        const stars = Math.max(1, Math.min(5, t.stars || 5));
+        const starsHtml = '★'.repeat(stars).split('').map(s => `<span>${s}</span>`).join('');
+        const card = bioDoc.createElement('div');
+        card.className = 'testi-card';
+        card.innerHTML =
+            `<div class="testi-card__stars">${starsHtml}</div>` +
+            `<p class="testi-card__text">${escapeHtml(t.text)}</p>` +
+            `<div class="testi-card__author">` +
+                `<div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>` +
+                `<div><div class="testi-card__author-name">${escapeHtml(t.authorName || '')}</div>` +
+                `<div class="testi-card__author-sub">${escapeHtml(t.authorSub || '')}</div></div>` +
+            `</div>`;
+        return card;
+    }
+
+    // Desktop grid
+    const desktopGrid = bioDoc.querySelector('.testimonials__grid');
+    if (desktopGrid) {
+        desktopGrid.innerHTML = '';
+        list.forEach((t, i) => {
+            const card = buildTestiCard(t);
+            card.classList.add('reveal', 'reveal-delay-' + Math.min(i + 1, 4));
+            desktopGrid.appendChild(card);
+        });
+    }
+    // Mobile carousel track
+    const track = bioDoc.getElementById('testiTrack');
+    if (track) {
+        track.innerHTML = '';
+        list.forEach(t => track.appendChild(buildTestiCard(t)));
+        // Rebuild dots
+        const dotsWrap = bioDoc.querySelector('.carousel-dots');
+        if (dotsWrap) {
+            dotsWrap.innerHTML = '';
+            list.forEach((_, i) => {
+                const btn = bioDoc.createElement('button');
+                btn.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                btn.dataset.index = i;
+                btn.setAttribute('role', 'tab');
+                btn.setAttribute('aria-label', 'Слайд ' + (i + 1));
+                btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+                dotsWrap.appendChild(btn);
+            });
+        }
+    }
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 /* ══════════════════════════════════════════════════════════════════
-   TAB SWITCHING
+   CONTACT PANEL
 ══════════════════════════════════════════════════════════════════ */
+function populateContactPanel() {
+    const c = savedData.contact || {};
+    document.getElementById('c-email').value     = c.email     || '';
+    document.getElementById('c-phone').value     = c.phone     || '';
+    document.getElementById('c-address').value   = c.address   || '';
+    document.getElementById('c-instagram').value = c.instagram || '';
+    document.getElementById('c-facebook').value  = c.facebook  || '';
+    document.getElementById('c-linkedin').value  = c.linkedin  || '';
+}
+
+function setupContactPanel() {
+    populateContactPanel();
+    document.getElementById('btn-apply-contact').addEventListener('click', () => {
+        savedData.contact = {
+            email:     document.getElementById('c-email').value.trim(),
+            phone:     document.getElementById('c-phone').value.trim(),
+            address:   document.getElementById('c-address').value.trim(),
+            instagram: document.getElementById('c-instagram').value.trim(),
+            facebook:  document.getElementById('c-facebook').value.trim(),
+            linkedin:  document.getElementById('c-linkedin').value.trim(),
+        };
+        applyContact();
+        showToast('Контактите са приложени!');
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TESTIMONIALS PANEL
+══════════════════════════════════════════════════════════════════ */
+const MAX_TESTIMONIALS = 6;
+
+function renderTestimonialSlots() {
+    const container = document.getElementById('testimonial-slots');
+    container.innerHTML = '';
+    (savedData.testimonials || []).forEach((t, i) => {
+        container.appendChild(buildTestiSlot(t, i));
+    });
+    document.getElementById('btn-add-testimonial').style.display =
+        (savedData.testimonials || []).length >= MAX_TESTIMONIALS ? 'none' : '';
+}
+
+function buildTestiSlot(t, i) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'border:1px solid var(--c-border);border-radius:var(--radius);padding:.75rem;margin-bottom:.6rem;background:var(--c-surface2);';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;';
+    const lbl = document.createElement('span');
+    lbl.style.cssText = 'font-size:.78rem;font-weight:600;color:var(--c-muted);';
+    lbl.textContent = 'Отзив ' + (i + 1);
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'btn-sm btn-danger';
+    removeBtn.textContent = '✕';
+    removeBtn.addEventListener('click', () => {
+        savedData.testimonials.splice(i, 1);
+        renderTestimonialSlots();
+        applyTestimonials();
+    });
+    header.appendChild(lbl);
+    header.appendChild(removeBtn);
+    wrap.appendChild(header);
+
+    // Stars
+    const starsRow = document.createElement('div');
+    starsRow.style.cssText = 'display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem;';
+    const starsLbl = document.createElement('label');
+    starsLbl.textContent = 'Звезди:';
+    starsLbl.style.cssText = 'font-size:.78rem;color:var(--c-muted);min-width:56px;';
+    const starsInput = document.createElement('input');
+    starsInput.type = 'number'; starsInput.min = '1'; starsInput.max = '5'; starsInput.value = t.stars || 5;
+    starsInput.style.cssText = 'width:60px;';
+    starsInput.addEventListener('change', () => { savedData.testimonials[i].stars = parseInt(starsInput.value,10) || 5; applyTestimonials(); });
+    starsRow.appendChild(starsLbl); starsRow.appendChild(starsInput);
+    wrap.appendChild(starsRow);
+
+    // Text
+    const textArea = document.createElement('textarea');
+    textArea.rows = 3; textArea.placeholder = 'Текст на отзива...';
+    textArea.value = t.text || '';
+    textArea.style.cssText = 'margin-bottom:.4rem;';
+    textArea.addEventListener('input', () => { savedData.testimonials[i].text = textArea.value; applyTestimonials(); });
+    wrap.appendChild(textArea);
+
+    // Author name
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text'; nameInput.placeholder = 'Иван И. — Автор'; nameInput.value = t.authorName || '';
+    nameInput.style.cssText = 'margin-bottom:.4rem;';
+    nameInput.addEventListener('input', () => { savedData.testimonials[i].authorName = nameInput.value; applyTestimonials(); });
+    wrap.appendChild(nameInput);
+
+    // Author sub
+    const subInput = document.createElement('input');
+    subInput.type = 'text'; subInput.placeholder = 'Подзаглавие (напр. Диабет · Отслабване)'; subInput.value = t.authorSub || '';
+    subInput.addEventListener('input', () => { savedData.testimonials[i].authorSub = subInput.value; applyTestimonials(); });
+    wrap.appendChild(subInput);
+
+    return wrap;
+}
+
+function setupTestimonialsPanel() {
+    renderTestimonialSlots();
+    document.getElementById('btn-add-testimonial').addEventListener('click', () => {
+        if ((savedData.testimonials || []).length >= MAX_TESTIMONIALS) return;
+        if (!savedData.testimonials) savedData.testimonials = [];
+        savedData.testimonials.push({ stars: 5, text: '', authorName: '', authorSub: '' });
+        renderTestimonialSlots();
+    });
+}
 function setupTabSwitching() {
     document.querySelectorAll('.tab-btn[data-panel]').forEach(btn => {
         btn.addEventListener('click', () => {

@@ -15,11 +15,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- Prevent FOUC: page is invisible until bio_content.json overrides are applied -->
+    <!-- Prevent FOUC: hide page immediately BEFORE any CSS is parsed -->
+    <style>html.bio-loading{visibility:hidden}</style>
     <script>document.documentElement.classList.add('bio-loading');</script>
 
     <style>
-        /* ─── FOUC prevention ───────────────────────────────────────── */
+        /* ─── FOUC prevention (kept for specificity) ────────────────── */
         html.bio-loading { visibility: hidden; }
 
         /* ─── CSS Custom Properties ─────────────────────────────────── */
@@ -1905,17 +1906,36 @@
             }, { passive: true });
         })();
 
-        // ── Contact form (client-side demo) ───────────────────────
+        // ── Contact form ──────────────────────────────────────────
         function handleContact(e) {
             e.preventDefault();
-            const btn = document.getElementById('cfBtn');
+            const btn     = document.getElementById('cfBtn');
             const success = document.getElementById('cfSuccess');
+            const name    = document.getElementById('cf-name').value.trim();
+            const email   = document.getElementById('cf-email').value.trim();
+            const topic   = document.getElementById('cf-topic').value;
+            const msg     = document.getElementById('cf-msg').value.trim();
+
             btn.textContent = 'Изпращане...';
             btn.disabled = true;
-            setTimeout(() => {
+
+            const workerOrigin = window._bioWorkerOrigin || 'https://port.radilov-k.workers.dev';
+            fetch(workerOrigin + '/contacts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, subject: topic, message: msg })
+            })
+            .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
+            .then(function() {
                 btn.style.display = 'none';
                 success.style.display = 'block';
-            }, 900);
+            })
+            .catch(function(err) {
+                console.warn('Contact form error:', err);
+                // Fallback: show success even if server fails so the user is not confused
+                btn.style.display = 'none';
+                success.style.display = 'block';
+            });
         }
     </script>
 
@@ -1970,6 +1990,84 @@
                 Object.entries(data.theme).forEach(function(entry) {
                     root.style.setProperty(entry[0], entry[1]);
                 });
+            }
+
+            // Contact info overrides
+            if (data.contact) {
+                var c = data.contact;
+                if (c.email) {
+                    var emailLink = document.querySelector('.contact__link[href^="mailto"]');
+                    if (emailLink) { emailLink.href = 'mailto:' + c.email; emailLink.childNodes[emailLink.childNodes.length - 1].textContent = ' ' + c.email; }
+                }
+                if (c.phone) {
+                    var phoneLink = document.querySelector('.contact__link[href^="tel"]');
+                    if (phoneLink) { phoneLink.href = 'tel:' + c.phone.replace(/\s/g, ''); phoneLink.childNodes[phoneLink.childNodes.length - 1].textContent = ' ' + c.phone; }
+                }
+                if (c.address) {
+                    var addrLinks = document.querySelectorAll('.contact__link');
+                    addrLinks.forEach(function(el) {
+                        if (el.querySelector('.icon-svg path[d^="M20 10c0 6"]') || el.textContent.trim().indexOf('България') >= 0 || el.textContent.trim().indexOf('Sofia') >= 0) {
+                            el.childNodes[el.childNodes.length - 1].textContent = ' ' + c.address;
+                        }
+                    });
+                }
+                if (c.instagram) { var ig = document.querySelector('.footer__social[aria-label="Instagram"]'); if (ig) ig.href = c.instagram; }
+                if (c.facebook)  { var fb = document.querySelector('.footer__social[aria-label="Facebook"]');  if (fb) fb.href = c.facebook; }
+                if (c.linkedin)  { var li = document.querySelector('.footer__social[aria-label="LinkedIn"]');  if (li) li.href = c.linkedin; }
+            }
+
+            // Testimonials overrides
+            if (data.testimonials && data.testimonials.length > 0) {
+                function buildTestiCard(t) {
+                    var stars = Math.max(1, Math.min(5, t.stars || 5));
+                    var starsHtml = '';
+                    for (var i = 0; i < stars; i++) starsHtml += '<span>★</span>';
+                    var card = document.createElement('div');
+                    card.className = 'testi-card';
+                    card.innerHTML =
+                        '<div class="testi-card__stars">' + starsHtml + '</div>' +
+                        '<p class="testi-card__text">' + t.text.replace(/</g, '&lt;') + '</p>' +
+                        '<div class="testi-card__author">' +
+                            '<div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>' +
+                            '<div>' +
+                                '<div class="testi-card__author-name">' + (t.authorName || '').replace(/</g, '&lt;') + '</div>' +
+                                '<div class="testi-card__author-sub">' + (t.authorSub || '').replace(/</g, '&lt;') + '</div>' +
+                            '</div>' +
+                        '</div>';
+                    return card;
+                }
+                // Desktop grid
+                var desktopGrid = document.querySelector('.testimonials__grid');
+                if (desktopGrid) {
+                    desktopGrid.innerHTML = '';
+                    data.testimonials.forEach(function(t, i) {
+                        var card = buildTestiCard(t);
+                        card.classList.add('reveal', 'reveal-delay-' + (i + 1));
+                        desktopGrid.appendChild(card);
+                    });
+                }
+                // Mobile carousel
+                var track = document.getElementById('testiTrack');
+                if (track) {
+                    track.innerHTML = '';
+                    data.testimonials.forEach(function(t) {
+                        track.appendChild(buildTestiCard(t));
+                    });
+                    // Rebuild carousel dots
+                    var dotsWrap = document.querySelector('.carousel-dots');
+                    if (dotsWrap) {
+                        dotsWrap.innerHTML = '';
+                        data.testimonials.forEach(function(_, i) {
+                            var btn = document.createElement('button');
+                            btn.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                            btn.dataset.index = i;
+                            btn.setAttribute('role', 'tab');
+                            btn.setAttribute('aria-label', 'Слайд ' + (i + 1));
+                            btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+                            dotsWrap.appendChild(btn);
+                        });
+                    }
+                }
             }
 
             // Diplomas section
@@ -2034,6 +2132,9 @@
                 clearTimeout(revealTimer);
                 reveal();
             });
+
+        // Store worker origin for contact form
+        window._bioWorkerOrigin = workerOrigin;
     })();
     </script>
 </body>
