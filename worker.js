@@ -72,6 +72,7 @@ export default {
       '/questionnaire.js': { file: 'questionnaire.js', type: CONTENT_TYPES.js },
       '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css },
       '/bio.html': { file: 'bio.html', type: CONTENT_TYPES.html },
+      '/bioadmin.html': { file: 'bioadmin.html', type: CONTENT_TYPES.html },
       '/robots.txt': { file: 'robots.txt', type: 'text/plain; charset=utf-8' },
       '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' }
     };
