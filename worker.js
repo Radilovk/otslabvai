@@ -71,7 +71,6 @@ export default {
       '/quest.html': { file: 'quest.html', type: CONTENT_TYPES.html },
       '/questionnaire.js': { file: 'questionnaire.js', type: CONTENT_TYPES.js },
       '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css },
-      '/bio.html': { file: 'bio.html', type: CONTENT_TYPES.html },
       '/bioadmin.html': { file: 'bioadmin.html', type: CONTENT_TYPES.html },
       '/robots.txt': { file: 'robots.txt', type: 'text/plain; charset=utf-8' },
       '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' }
@@ -80,12 +79,16 @@ export default {
     try {
       let response;
       
+      // bio.html is served with bio_content injected inline to avoid a
+      // separate /bio_content.json KV read on every page view.
+      if (url.pathname === '/bio.html') {
+        response = await serveBioHtml(env);
+      }
       // Check if it's a static file request
-      if (STATIC_FILES[url.pathname]) {
+      else if (STATIC_FILES[url.pathname]) {
         const { file, type } = STATIC_FILES[url.pathname];
         response = await serveStaticFile(env, file, type);
       }
-      // API endpoints
       else {
         switch (url.pathname) {
           case '/quest-submit':
@@ -248,6 +251,41 @@ async function serveStaticFile(env, filename, contentType) {
         status: 200,
         headers: { 
             'Content-Type': contentType,
+            'Cache-Control': `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`
+        }
+    });
+}
+
+/**
+ * Serves bio.html with the bio_content KV data injected inline as
+ * window.__bioContent.  This avoids a separate /bio_content.json request
+ * (and the associated KV read) on every page view.
+ */
+async function serveBioHtml(env) {
+    const [htmlContent, bioContent] = await Promise.all([
+        env.PAGE_CONTENT.get('static_bio.html'),
+        env.PAGE_CONTENT.get('bio_content')
+    ]);
+    if (htmlContent === null) {
+        throw new UserFacingError('File bio.html not found in storage.', 404);
+    }
+    const bioData = bioContent !== null ? bioContent : '{}';
+    // Escape characters that are unsafe inside an inline <script> block so
+    // that an adversarially-crafted bio_content value cannot break out of the
+    // script context and inject arbitrary HTML.
+    const safeData = bioData
+        .replace(/&/g, '\\u0026')
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e');
+    const inlineScript = `<script id="bio-content-injection-point">window.__bioContent=${safeData};<\/script>`;
+    const injectedHtml = htmlContent.replace(
+        '<script id="bio-content-injection-point">/* bio_content injected by worker */</script>',
+        inlineScript
+    );
+    return new Response(injectedHtml, {
+        status: 200,
+        headers: {
+            'Content-Type': 'text/html; charset=utf-8',
             'Cache-Control': `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`
         }
     });

@@ -1600,10 +1600,7 @@ function setupSaveReset() {
     document.getElementById('btn-reset').addEventListener('click', resetData);
 }
 
-/* Auto-save every 60 s */
-setInterval(() => {
-    if (appEl.classList.contains('visible')) saveData();
-}, 60000);
+
 </script>
 </body>
 </html>
