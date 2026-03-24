@@ -15,7 +15,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
+    <!-- Prevent FOUC: page is invisible until bio_content.json overrides are applied -->
+    <script>document.documentElement.classList.add('bio-loading');</script>
+
     <style>
+        /* ─── FOUC prevention ───────────────────────────────────────── */
+        html.bio-loading { visibility: hidden; }
+
         /* ─── CSS Custom Properties ─────────────────────────────────── */
         :root {
             --c-bg:          #FAFAF9;
@@ -1916,11 +1922,19 @@
     <!-- Apply bioadmin overrides: fetch from server and patch the page -->
     <script>
     (function() {
-        const IMAGE_TARGETS = {
+        var IMAGE_TARGETS = {
             hero:       '.hero__photo-wrap img',
             about:      '.about__portrait img',
             philosophy: '.philosophy__visual img',
         };
+
+        // Reveal the page (removes the bio-loading class added in <head>)
+        function reveal() {
+            document.documentElement.classList.remove('bio-loading');
+        }
+
+        // Failsafe: always reveal within 1.5 s even if the fetch is slow or fails
+        var revealTimer = setTimeout(reveal, 1500);
 
         function applyBioContent(data) {
             if (!data || typeof data !== 'object') return;
@@ -2003,8 +2017,16 @@
 
         fetch('/bio_content.json')
             .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
-            .then(function(data) { applyBioContent(data); })
-            .catch(function(err) { console.warn('bio_content.json load failed:', err); });
+            .then(function(data) {
+                applyBioContent(data);
+                clearTimeout(revealTimer);
+                reveal();
+            })
+            .catch(function(err) {
+                console.warn('bio_content.json load failed:', err);
+                clearTimeout(revealTimer);
+                reveal();
+            });
     })();
     </script>
 </body>
