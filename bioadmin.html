@@ -476,7 +476,19 @@
 const STORAGE_KEY      = 'bioadmin_data';
 const MAX_IMAGE_BYTES  = 5 * 1024 * 1024; // 5 MB per image
 const MAX_DIPLOMAS     = 12;
-const BIO_API_URL      = '/bio_content.json';
+// Cloudflare Worker URL. Update this if the Worker is redeployed to a different name.
+// The site's static pages are served from GitHub Pages (daotslabna.com) while the
+// Worker API lives at port.radilov-k.workers.dev. Using an absolute URL here ensures
+// GET/POST to /bio_content.json always reach the Worker, regardless of where this
+// page is hosted. The Worker exposes Access-Control-Allow-Origin: *, so CORS is fine.
+const WORKER_URL       = 'https://port.radilov-k.workers.dev';
+const WORKER_ORIGIN    = window.location.hostname === 'localhost'
+    ? 'http://' + window.location.host   // wrangler dev
+    : WORKER_URL;
+const BIO_API_URL      = WORKER_ORIGIN + '/bio_content.json';
+// Milliseconds to wait after a successful KV save before reloading the preview iframe.
+// Cloudflare KV writes propagate across edge nodes within this window.
+const KV_PROPAGATION_DELAY_MS = 600;
 // NOTE: This password is intentionally stored client-side because this is a
 // static-file site with no server-side auth layer. It provides basic access
 // control; change it to something strong before deploying to production.
@@ -705,6 +717,7 @@ async function loadDataFromServer() {
         const res = await fetch(BIO_API_URL);
         if (!res.ok) {
             console.warn('Failed to load data from server: HTTP ' + res.status);
+            document.getElementById('save-status').textContent = '⚠️ Сървърът е недостъпен — само локален запис';
             return;
         }
         const serverData = await res.json();
@@ -717,7 +730,10 @@ async function loadDataFromServer() {
             applyAllChanges();
             buildThemeGrid();
         }
-    } catch(e) { console.warn('Failed to load data from server:', e); }
+    } catch(e) {
+        console.warn('Failed to load data from server:', e);
+        document.getElementById('save-status').textContent = '⚠️ Сървърът е недостъпен — само локален запис';
+    }
 }
 
 async function saveData() {
@@ -738,11 +754,19 @@ async function saveData() {
         if (res.ok) {
             document.getElementById('save-status').textContent = '✅ Записано ' + new Date().toLocaleTimeString('bg-BG');
             showToast('Промените са записани!');
+            // Reload the preview iframe after a short delay so the user sees bio.html
+            // with the freshly saved data (allows KV write to propagate first).
+            setTimeout(() => {
+                const frame = document.getElementById('bio-frame');
+                frame.src = 'bio.html';
+            }, KV_PROPAGATION_DELAY_MS);
         } else {
-            showToast('Грешка при запис на сървъра: ' + res.status, 'error');
+            document.getElementById('save-status').textContent = '⚠️ Локален запис (сървър недостъпен)';
+            showToast('Записано локално. Сървърът върна грешка: ' + res.status, 'error');
         }
     } catch(e) {
-        showToast('Грешка при запис на сървъра: ' + e.message, 'error');
+        document.getElementById('save-status').textContent = '⚠️ Локален запис (сървър недостъпен)';
+        showToast('Записано локално. Сървърът е недостъпен.', 'error');
     }
 }
 
@@ -923,6 +947,9 @@ function selectElement(idx) {
     document.getElementById('el-color-hex').value    = color;
 
     updateFontPreview();
+
+    // Scroll the editor area into view so the user can see and interact with it
+    editorArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     // Highlight in iframe
     highlightElement(entry.selector);
