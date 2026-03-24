@@ -476,6 +476,7 @@
 const STORAGE_KEY      = 'bioadmin_data';
 const MAX_IMAGE_BYTES  = 5 * 1024 * 1024; // 5 MB per image
 const MAX_DIPLOMAS     = 12;
+const BIO_API_URL      = '/bio_content.json';
 // NOTE: This password is intentionally stored client-side because this is a
 // static-file site with no server-side auth layer. It provides basic access
 // control; change it to something strong before deploying to production.
@@ -679,6 +680,9 @@ function initApp() {
             console.warn('Cannot access iframe document (cross-origin?)', e);
         }
     });
+
+    // Sync latest saved data from the server (source of truth)
+    loadDataFromServer();
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -694,20 +698,63 @@ function loadData() {
     } catch(e) { console.warn('Failed to load saved data:', e); }
 }
 
-function saveData() {
+async function loadDataFromServer() {
+    try {
+        const res = await fetch(BIO_API_URL);
+        if (!res.ok) {
+            console.warn('Failed to load data from server: HTTP ' + res.status);
+            return;
+        }
+        const serverData = await res.json();
+        const EXPECTED_KEYS = ['textOverrides', 'images', 'theme', 'diplomas'];
+        if (serverData && typeof serverData === 'object' && Object.keys(serverData).length > 0) {
+            const filtered = {};
+            EXPECTED_KEYS.forEach(k => { if (k in serverData) filtered[k] = serverData[k]; });
+            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[] }, filtered);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+            applyAllChanges();
+        }
+    } catch(e) { console.warn('Failed to load data from server:', e); }
+}
+
+async function saveData() {
+    // Save to localStorage immediately
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
-        document.getElementById('save-status').textContent = '✅ Записано ' + new Date().toLocaleTimeString('bg-BG');
-        showToast('Промените са записани!');
     } catch(e) {
-        showToast('Грешка при записване: ' + e.message, 'error');
+        showToast('Грешка при локален запис: ' + e.message, 'error');
+    }
+
+    // Save to server (KV) so changes are visible in bio.html for everyone
+    try {
+        const res = await fetch(BIO_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(savedData)
+        });
+        if (res.ok) {
+            document.getElementById('save-status').textContent = '✅ Записано ' + new Date().toLocaleTimeString('bg-BG');
+            showToast('Промените са записани!');
+        } else {
+            showToast('Грешка при запис на сървъра: ' + res.status, 'error');
+        }
+    } catch(e) {
+        showToast('Грешка при запис на сървъра: ' + e.message, 'error');
     }
 }
 
-function resetData() {
+async function resetData() {
     if (!confirm('Сигурен ли си? Всички промени ще бъдат изтрити!')) return;
     localStorage.removeItem(STORAGE_KEY);
     savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[] };
+    // Clear server data as well
+    try {
+        await fetch(BIO_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(savedData)
+        });
+    } catch(e) { console.warn('Failed to reset server data:', e); }
     document.getElementById('bio-frame').contentWindow.location.reload();
     showToast('Нулиране — страницата се презарежда.', 'error');
     document.getElementById('save-status').textContent = '';
