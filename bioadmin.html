@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bio Admin — Д-р Радилов</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ── Reset & base ─────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --sidebar-w: 340px;
+            --header-h:  56px;
+            --c-bg:      #0F1117;
+            --c-surface: #1A1D27;
+            --c-surface2:#22263A;
+            --c-border:  #2E3348;
+            --c-text:    #E2E8F0;
+            --c-muted:   #8892A4;
+            --c-accent:  #6C8EF5;
+            --c-accent2: #4F6EDD;
+            --c-success: #34D399;
+            --c-danger:  #F87171;
+            --c-warn:    #FBBF24;
+            --radius:    10px;
+            --shadow:    0 4px 24px rgba(0,0,0,.45);
+        }
+        html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; background: var(--c-bg); color: var(--c-text); overflow: hidden; }
+
+        /* ── Login overlay ────────────────────────────────────────── */
+        #login-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: linear-gradient(135deg, #0F1117 0%, #1A1D27 100%);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .login-box {
+            background: var(--c-surface); border: 1px solid var(--c-border);
+            border-radius: 16px; padding: 2.5rem 2rem; width: 360px;
+            box-shadow: var(--shadow); text-align: center;
+        }
+        .login-box h1 { font-size: 1.4rem; margin-bottom: .3rem; }
+        .login-box p  { color: var(--c-muted); font-size: .85rem; margin-bottom: 1.5rem; }
+        .login-box input {
+            width: 100%; padding: .75rem 1rem; border-radius: var(--radius);
+            background: var(--c-surface2); border: 1px solid var(--c-border);
+            color: var(--c-text); font-size: .95rem; margin-bottom: .75rem;
+            outline: none; transition: border-color .2s;
+        }
+        .login-box input:focus { border-color: var(--c-accent); }
+        .login-box button {
+            width: 100%; padding: .8rem; border-radius: var(--radius);
+            background: var(--c-accent); color: #fff; font-size: .95rem;
+            font-weight: 600; border: none; cursor: pointer; transition: background .2s;
+        }
+        .login-box button:hover { background: var(--c-accent2); }
+        .login-error { color: var(--c-danger); font-size: .82rem; margin-top: .5rem; min-height: 1.2em; }
+
+        /* ── App shell (hidden until login) ──────────────────────── */
+        #app { display: none; height: 100%; flex-direction: column; }
+        #app.visible { display: flex; }
+
+        /* ── Top header ───────────────────────────────────────────── */
+        .app-header {
+            height: var(--header-h); flex-shrink: 0;
+            background: var(--c-surface); border-bottom: 1px solid var(--c-border);
+            display: flex; align-items: center; gap: 1rem; padding: 0 1.25rem;
+            z-index: 100;
+        }
+        .app-header__logo { font-weight: 700; font-size: 1rem; color: var(--c-accent); white-space: nowrap; }
+        .app-header__logo span { color: var(--c-text); }
+        .app-header__tabs { display: flex; gap: .25rem; flex: 1; }
+        .tab-btn {
+            padding: .4rem .9rem; border-radius: 6px; border: none;
+            background: transparent; color: var(--c-muted); font-size: .82rem;
+            font-weight: 500; cursor: pointer; transition: background .15s, color .15s;
+            white-space: nowrap;
+        }
+        .tab-btn.active, .tab-btn:hover { background: var(--c-surface2); color: var(--c-text); }
+        .tab-btn.active { color: var(--c-accent); }
+        .header-actions { display: flex; gap: .6rem; align-items: center; margin-left: auto; }
+        .btn-sm {
+            padding: .4rem .85rem; border-radius: 6px; font-size: .8rem;
+            font-weight: 600; cursor: pointer; border: none; transition: opacity .15s;
+        }
+        .btn-sm:hover { opacity: .85; }
+        .btn-success { background: var(--c-success); color: #0a1a12; }
+        .btn-warn    { background: var(--c-warn);    color: #1a1000; }
+        .btn-danger  { background: var(--c-danger);  color: #1a0000; }
+        .btn-primary { background: var(--c-accent);  color: #fff; }
+        #save-status { font-size: .78rem; color: var(--c-muted); white-space: nowrap; }
+
+        /* ── Main body ────────────────────────────────────────────── */
+        .app-body { flex: 1; display: flex; overflow: hidden; }
+
+        /* ── Sidebar ──────────────────────────────────────────────── */
+        .sidebar {
+            width: var(--sidebar-w); flex-shrink: 0;
+            background: var(--c-surface); border-right: 1px solid var(--c-border);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .sidebar__inner { flex: 1; overflow-y: auto; padding: 1rem; scrollbar-width: thin; scrollbar-color: var(--c-border) transparent; }
+
+        /* ── Panels ───────────────────────────────────────────────── */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .panel-section { margin-bottom: 1.25rem; }
+        .panel-section__title {
+            font-size: .72rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: .08em; color: var(--c-muted); margin-bottom: .6rem;
+        }
+
+        /* form controls */
+        label { font-size: .82rem; color: var(--c-muted); display: block; margin-bottom: .25rem; }
+        input[type=text], input[type=number], textarea, select {
+            width: 100%; padding: .55rem .75rem; background: var(--c-surface2);
+            border: 1px solid var(--c-border); border-radius: var(--radius);
+            color: var(--c-text); font-size: .85rem; font-family: inherit;
+            outline: none; transition: border-color .2s; resize: vertical;
+        }
+        input[type=text]:focus, input[type=number]:focus, textarea:focus, select:focus { border-color: var(--c-accent); }
+        input[type=color] { height: 36px; padding: 2px; cursor: pointer; border-radius: 6px; }
+        .color-row { display: flex; gap: .5rem; align-items: center; }
+        .color-row input[type=color] { width: 42px; flex-shrink: 0; }
+        .color-row input[type=text]  { flex: 1; }
+        .form-group { margin-bottom: .75rem; }
+        .form-group label { margin-bottom: .3rem; }
+
+        /* element list */
+        .el-list { display: flex; flex-direction: column; gap: .3rem; }
+        .el-item {
+            padding: .55rem .75rem; background: var(--c-surface2);
+            border: 1px solid var(--c-border); border-radius: var(--radius);
+            font-size: .82rem; cursor: pointer; transition: border-color .15s, background .15s;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .el-item:hover { border-color: var(--c-accent); background: #1e2238; }
+        .el-item.selected { border-color: var(--c-accent); background: #1a2040; color: var(--c-accent); }
+
+        /* image upload card */
+        .img-upload-card {
+            border: 1.5px dashed var(--c-border); border-radius: var(--radius);
+            padding: .75rem; text-align: center; cursor: pointer; transition: border-color .2s;
+            margin-bottom: .6rem;
+        }
+        .img-upload-card:hover { border-color: var(--c-accent); }
+        .img-upload-card img { max-height: 100px; max-width: 100%; border-radius: 6px; margin: 0 auto .5rem; display: block; object-fit: cover; }
+        .img-upload-card p { font-size: .78rem; color: var(--c-muted); }
+        .img-upload-card input[type=file] { display: none; }
+
+        /* theme swatches */
+        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+        .theme-swatch {
+            border-radius: 8px; aspect-ratio: 4/3; cursor: pointer;
+            border: 2px solid transparent; transition: border-color .15s, transform .15s;
+            overflow: hidden; position: relative;
+        }
+        .theme-swatch:hover { transform: scale(1.04); }
+        .theme-swatch.selected { border-color: var(--c-accent); }
+        .theme-swatch__inner { width: 100%; height: 100%; display: flex; flex-direction: column; }
+        .theme-swatch__top  { flex: 1; }
+        .theme-swatch__bot  { height: 35%; }
+        .theme-swatch__label {
+            position: absolute; bottom: 4px; left: 0; right: 0;
+            text-align: center; font-size: .65rem; font-weight: 600;
+            color: rgba(255,255,255,.9); text-shadow: 0 1px 3px rgba(0,0,0,.5);
+        }
+
+        /* font picker */
+        .font-preview { margin-top: .5rem; padding: .6rem; background: var(--c-surface2); border-radius: 6px; font-size: 1rem; }
+
+        /* ── iframe preview ───────────────────────────────────────── */
+        .preview-wrap { flex: 1; position: relative; background: #fff; }
+        #bio-frame { width: 100%; height: 100%; border: none; display: block; }
+
+        /* Editing highlight overlay hint */
+        .edit-mode-badge {
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            background: var(--c-accent); color: #fff; font-size: .75rem; font-weight: 600;
+            padding: .3rem .9rem; border-radius: 100px; pointer-events: none;
+            opacity: 0; transition: opacity .3s; z-index: 10;
+        }
+        .edit-mode-badge.visible { opacity: 1; }
+
+        /* ── Notification toast ───────────────────────────────────── */
+        #toast {
+            position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 99999;
+            background: var(--c-surface); border: 1px solid var(--c-border);
+            border-radius: var(--radius); padding: .7rem 1.2rem;
+            font-size: .85rem; box-shadow: var(--shadow);
+            transform: translateY(2rem); opacity: 0; transition: all .3s;
+            pointer-events: none;
+        }
+        #toast.show { transform: translateY(0); opacity: 1; }
+        #toast.success { border-color: var(--c-success); color: var(--c-success); }
+        #toast.error   { border-color: var(--c-danger);  color: var(--c-danger); }
+
+        /* ── Divider ─────────────────────────────────────────────── */
+        hr.divider { border: none; border-top: 1px solid var(--c-border); margin: .8rem 0; }
+
+        /* Responsive fallback */
+        @media (max-width: 640px) {
+            :root { --sidebar-w: 100%; }
+            .app-body { flex-direction: column; }
+            .preview-wrap { min-height: 50vh; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!--  LOGIN OVERLAY                                                    -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="login-overlay">
+    <div class="login-box">
+        <h1>🔐 Bio Admin</h1>
+        <p>Административен панел за bio.html</p>
+        <input type="password" id="pwd-input" placeholder="Парола" autocomplete="current-password">
+        <button id="login-btn">Вход</button>
+        <div class="login-error" id="login-error"></div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!--  APP SHELL                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="app">
+
+    <!-- Top header -->
+    <header class="app-header">
+        <div class="app-header__logo">Bio <span>Admin</span></div>
+
+        <div class="app-header__tabs">
+            <button class="tab-btn active" data-panel="panel-text">✏️ Текст</button>
+            <button class="tab-btn" data-panel="panel-images">🖼️ Снимки</button>
+            <button class="tab-btn" data-panel="panel-theme">🎨 Тема</button>
+        </div>
+
+        <div class="header-actions">
+            <span id="save-status"></span>
+            <button class="btn-sm btn-warn" id="btn-reset">Нулиране</button>
+            <button class="btn-sm btn-success" id="btn-save">💾 Запази</button>
+        </div>
+    </header>
+
+    <!-- Body -->
+    <div class="app-body">
+
+        <!-- Sidebar panels -->
+        <aside class="sidebar">
+            <div class="sidebar__inner">
+
+                <!-- ── PANEL: Text ──────────────────────────────────── -->
+                <div id="panel-text" class="panel active">
+                    <div class="panel-section">
+                        <div class="panel-section__title">Избери елемент за редакция</div>
+                        <p style="font-size:.78rem;color:var(--c-muted);margin-bottom:.6rem;">Щракни върху текст в прегледа или избери от списъка:</p>
+                        <div class="el-list" id="el-list">
+                            <!-- filled by JS -->
+                        </div>
+                    </div>
+
+                    <hr class="divider">
+
+                    <div id="text-editor-area" style="display:none;">
+                        <div class="panel-section">
+                            <div class="panel-section__title">Съдържание</div>
+                            <div class="form-group">
+                                <label>Текст</label>
+                                <textarea id="el-content" rows="4"></textarea>
+                            </div>
+                        </div>
+                        <div class="panel-section">
+                            <div class="panel-section__title">Шрифт</div>
+                            <div class="form-group">
+                                <label>Фамилия шрифт</label>
+                                <select id="el-font-family">
+                                    <option value="">— без промяна —</option>
+                                    <option value="'Playfair Display', Georgia, serif">Playfair Display (serif)</option>
+                                    <option value="'Inter', system-ui, sans-serif">Inter (sans-serif)</option>
+                                    <option value="'DM Mono', monospace">DM Mono (mono)</option>
+                                    <option value="Georgia, serif">Georgia</option>
+                                    <option value="'Times New Roman', serif">Times New Roman</option>
+                                    <option value="Arial, sans-serif">Arial</option>
+                                    <option value="'Roboto', sans-serif">Roboto</option>
+                                    <option value="'Merriweather', serif">Merriweather</option>
+                                    <option value="'Montserrat', sans-serif">Montserrat</option>
+                                    <option value="'Open Sans', sans-serif">Open Sans</option>
+                                </select>
+                                <div class="font-preview" id="font-preview">Пример текст — Д-р Радилов</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Размер (rem)</label>
+                                <input type="number" id="el-font-size" min="0.5" max="8" step="0.05" placeholder="напр. 1.2">
+                            </div>
+                            <div class="form-group">
+                                <label>Дебелина</label>
+                                <select id="el-font-weight">
+                                    <option value="">— без промяна —</option>
+                                    <option value="300">300 — Light</option>
+                                    <option value="400">400 — Regular</option>
+                                    <option value="500">500 — Medium</option>
+                                    <option value="600">600 — Semibold</option>
+                                    <option value="700">700 — Bold</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="panel-section">
+                            <div class="panel-section__title">Цвят</div>
+                            <div class="form-group">
+                                <label>Цвят на текст</label>
+                                <div class="color-row">
+                                    <input type="color" id="el-color-picker">
+                                    <input type="text"  id="el-color-hex" placeholder="#1A1916">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-sm btn-primary" id="btn-apply-text" style="width:100%;margin-top:.25rem;">Приложи промените</button>
+                    </div>
+                </div>
+
+                <!-- ── PANEL: Images ────────────────────────────────── -->
+                <div id="panel-images" class="panel">
+                    <div class="panel-section">
+                        <div class="panel-section__title">Снимки и изображения</div>
+                        <p style="font-size:.78rem;color:var(--c-muted);margin-bottom:.8rem;">Качи ново изображение за всеки елемент. Файлът се запазва локално (Base64).</p>
+
+                        <!-- Hero photo -->
+                        <label style="font-weight:600;margin-bottom:.3rem;display:block;">🧑‍⚕️ Главна снимка (Hero)</label>
+                        <div class="img-upload-card" id="card-hero" onclick="triggerUpload('upload-hero')">
+                            <img id="preview-hero" src="" alt="" style="display:none;">
+                            <p>Щракни за качване<br><span style="font-size:.7rem;">JPG / PNG / WEBP</span></p>
+                            <input type="file" id="upload-hero" accept="image/*" data-target=".hero__photo-wrap img">
+                        </div>
+
+                        <!-- About portrait -->
+                        <label style="font-weight:600;margin-bottom:.3rem;display:block;">👤 Снимка "За мен"</label>
+                        <div class="img-upload-card" id="card-about" onclick="triggerUpload('upload-about')">
+                            <img id="preview-about" src="" alt="" style="display:none;">
+                            <p>Щракни за качване<br><span style="font-size:.7rem;">JPG / PNG / WEBP</span></p>
+                            <input type="file" id="upload-about" accept="image/*" data-target=".about__portrait img">
+                        </div>
+
+                        <!-- Philosophy image -->
+                        <label style="font-weight:600;margin-bottom:.3rem;display:block;">💭 Снимка "Философия"</label>
+                        <div class="img-upload-card" id="card-philosophy" onclick="triggerUpload('upload-philosophy')">
+                            <img id="preview-philosophy" src="" alt="" style="display:none;">
+                            <p>Щракни за качване<br><span style="font-size:.7rem;">JPG / PNG / WEBP</span></p>
+                            <input type="file" id="upload-philosophy" accept="image/*" data-target=".philosophy__visual img">
+                        </div>
+
+                        <hr class="divider">
+
+                        <!-- Diploma images (up to 6) -->
+                        <label style="font-weight:600;margin-bottom:.6rem;display:block;">🎓 Дипломи / Сертификати (до 12)</label>
+                        <div id="diploma-slots"></div>
+                        <button class="btn-sm btn-primary" id="btn-add-diploma" style="width:100%;margin-bottom:.5rem;">+ Добави диплома</button>
+                    </div>
+                </div>
+
+                <!-- ── PANEL: Theme ─────────────────────────────────── -->
+                <div id="panel-theme" class="panel">
+                    <div class="panel-section">
+                        <div class="panel-section__title">Готови теми</div>
+                        <div class="theme-grid" id="theme-grid">
+                            <!-- filled by JS -->
+                        </div>
+                    </div>
+
+                    <hr class="divider">
+
+                    <div class="panel-section">
+                        <div class="panel-section__title">Цветова палитра (по избор)</div>
+
+                        <div class="form-group">
+                            <label>Фон на страницата (--c-bg)</label>
+                            <div class="color-row">
+                                <input type="color" id="c-bg-picker">
+                                <input type="text"  id="c-bg-hex" placeholder="#FAFAF9">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Повърхност / карти (--c-surface)</label>
+                            <div class="color-row">
+                                <input type="color" id="c-surface-picker">
+                                <input type="text"  id="c-surface-hex" placeholder="#FFFFFF">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Основен акцент (--c-accent)</label>
+                            <div class="color-row">
+                                <input type="color" id="c-accent-picker">
+                                <input type="text"  id="c-accent-hex" placeholder="#2C3E50">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Вторичен акцент (--c-accent-2)</label>
+                            <div class="color-row">
+                                <input type="color" id="c-accent2-picker">
+                                <input type="text"  id="c-accent2-hex" placeholder="#7C8FA6">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Злато / highlights (--c-gold)</label>
+                            <div class="color-row">
+                                <input type="color" id="c-gold-picker">
+                                <input type="text"  id="c-gold-hex" placeholder="#B59A6A">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Основен текст (--c-text-1)</label>
+                            <div class="color-row">
+                                <input type="color" id="c-text1-picker">
+                                <input type="text"  id="c-text1-hex" placeholder="#1A1916">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Вторичен текст (--c-text-2)</label>
+                            <div class="color-row">
+                                <input type="color" id="c-text2-picker">
+                                <input type="text"  id="c-text2-hex" placeholder="#57534E">
+                            </div>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="panel-section__title">Шрифтове на темата</div>
+                        <div class="form-group">
+                            <label>Serif шрифт (заглавия)</label>
+                            <select id="theme-font-serif">
+                                <option value="">— без промяна —</option>
+                                <option value="'Playfair Display', Georgia, serif">Playfair Display</option>
+                                <option value="'Merriweather', serif">Merriweather</option>
+                                <option value="'Lora', serif">Lora</option>
+                                <option value="Georgia, serif">Georgia</option>
+                                <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Sans-serif шрифт (тяло)</label>
+                            <select id="theme-font-sans">
+                                <option value="">— без промяна —</option>
+                                <option value="'Inter', system-ui, sans-serif">Inter</option>
+                                <option value="'Open Sans', sans-serif">Open Sans</option>
+                                <option value="'Roboto', sans-serif">Roboto</option>
+                                <option value="'Montserrat', sans-serif">Montserrat</option>
+                                <option value="'Nunito', sans-serif">Nunito</option>
+                            </select>
+                        </div>
+
+                        <button class="btn-sm btn-primary" id="btn-apply-theme" style="width:100%;margin-top:.5rem;">Приложи темата</button>
+                    </div>
+                </div>
+
+            </div><!-- /sidebar__inner -->
+        </aside>
+
+        <!-- iframe preview -->
+        <div class="preview-wrap">
+            <div class="edit-mode-badge" id="edit-badge">✏️ Режим на редакция</div>
+            <iframe id="bio-frame" src="bio.html" title="Преглед на bio.html"></iframe>
+        </div>
+
+    </div><!-- /app-body -->
+</div><!-- /app -->
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   CONSTANTS
+══════════════════════════════════════════════════════════════════ */
+const STORAGE_KEY      = 'bioadmin_data';
+const MAX_IMAGE_BYTES  = 5 * 1024 * 1024; // 5 MB per image
+const MAX_DIPLOMAS     = 12;
+// NOTE: This password is intentionally stored client-side because this is a
+// static-file site with no server-side auth layer. It provides basic access
+// control; change it to something strong before deploying to production.
+const ADMIN_PWD        = 'bioradil2025';
+
+/* ══════════════════════════════════════════════════════════════════
+   LOGIN
+══════════════════════════════════════════════════════════════════ */
+const loginOverlay = document.getElementById('login-overlay');
+const appEl        = document.getElementById('app');
+const pwdInput     = document.getElementById('pwd-input');
+const loginBtn     = document.getElementById('login-btn');
+const loginError   = document.getElementById('login-error');
+
+function tryLogin() {
+    if (pwdInput.value === ADMIN_PWD) {
+        loginOverlay.style.display = 'none';
+        appEl.classList.add('visible');
+        initApp();
+    } else {
+        loginError.textContent = 'Грешна парола. Опитай отново.';
+        pwdInput.value = '';
+        pwdInput.focus();
+    }
+}
+loginBtn.addEventListener('click', tryLogin);
+pwdInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+/* ══════════════════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════════════════ */
+const toastEl = document.getElementById('toast');
+let toastTimer;
+function showToast(msg, type = 'success') {
+    toastEl.textContent = msg;
+    toastEl.className = 'show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toastEl.className = ''; }, 3000);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   EDITABLE ELEMENT REGISTRY
+   Each entry: { label, selector, type: 'text'|'html' }
+══════════════════════════════════════════════════════════════════ */
+const EDITABLE_ELEMENTS = [
+    // Hero
+    { label: 'Hero — Заглавие (h1)',            selector: '.hero__name' },
+    { label: 'Hero — Описание',                 selector: '.hero__desc' },
+    { label: 'Hero — Статистика 1 (число)',     selector: '.hero__stats .stat-card:nth-child(1) .stat-card__num' },
+    { label: 'Hero — Статистика 1 (надпис)',    selector: '.hero__stats .stat-card:nth-child(1) .stat-card__label' },
+    { label: 'Hero — Статистика 2 (число)',     selector: '.hero__stats .stat-card:nth-child(2) .stat-card__num' },
+    { label: 'Hero — Статистика 2 (надпис)',    selector: '.hero__stats .stat-card:nth-child(2) .stat-card__label' },
+    { label: 'Hero — Статистика 3 (число)',     selector: '.hero__stats .stat-card:nth-child(3) .stat-card__num' },
+    { label: 'Hero — Статистика 3 (надпис)',    selector: '.hero__stats .stat-card:nth-child(3) .stat-card__label' },
+    { label: 'Hero — Бутон 1 (текст)',          selector: '.hero__actions .btn--primary' },
+    { label: 'Hero — Бутон 2 (текст)',          selector: '.hero__actions .btn--outline' },
+    // About
+    { label: 'За мен — Заглавие',              selector: '.about__title' },
+    { label: 'За мен — Тяло (параграф 1)',      selector: '.about__body p:nth-child(1)' },
+    { label: 'За мен — Тяло (параграф 2)',      selector: '.about__body p:nth-child(2)' },
+    { label: 'За мен — Бадж "Опит"',           selector: '.about__portrait-badge strong' },
+    { label: 'За мен — Бадж подзаглавие',      selector: '.about__portrait-badge span' },
+    // Expertise
+    { label: 'Компетенции — Заглавие секция',  selector: '#expertise .section-title' },
+    { label: 'Компетенции — Подзаглавие',      selector: '#expertise .section-sub' },
+    { label: 'Карта 1 — Заглавие',             selector: '.exp-card:nth-child(1) .exp-card__title' },
+    { label: 'Карта 1 — Тяло',                 selector: '.exp-card:nth-child(1) .exp-card__body' },
+    { label: 'Карта 2 — Заглавие',             selector: '.exp-card:nth-child(2) .exp-card__title' },
+    { label: 'Карта 2 — Тяло',                 selector: '.exp-card:nth-child(2) .exp-card__body' },
+    { label: 'Карта 3 — Заглавие',             selector: '.exp-card:nth-child(3) .exp-card__title' },
+    { label: 'Карта 3 — Тяло',                 selector: '.exp-card:nth-child(3) .exp-card__body' },
+    // Credentials — Education
+    { label: 'Образование — Т1 година',        selector: '.timeline-item:nth-child(1) .timeline-item__year' },
+    { label: 'Образование — Т1 заглавие',      selector: '.timeline-item:nth-child(1) .timeline-item__title' },
+    { label: 'Образование — Т1 място',         selector: '.timeline-item:nth-child(1) .timeline-item__place' },
+    { label: 'Образование — Т2 година',        selector: '.timeline-item:nth-child(2) .timeline-item__year' },
+    { label: 'Образование — Т2 заглавие',      selector: '.timeline-item:nth-child(2) .timeline-item__title' },
+    { label: 'Образование — Т2 място',         selector: '.timeline-item:nth-child(2) .timeline-item__place' },
+    { label: 'Образование — Т3 заглавие',      selector: '.timeline-item:nth-child(3) .timeline-item__title' },
+    { label: 'Образование — Т3 място',         selector: '.timeline-item:nth-child(3) .timeline-item__place' },
+    { label: 'Образование — Т4 заглавие',      selector: '.timeline-item:nth-child(4) .timeline-item__title' },
+    { label: 'Образование — Т4 място',         selector: '.timeline-item:nth-child(4) .timeline-item__place' },
+    // Certifications
+    { label: 'Серт. 1 — Заглавие',             selector: '.cert-item:nth-child(1) .cert-item__title' },
+    { label: 'Серт. 1 — Тяло',                 selector: '.cert-item:nth-child(1) .cert-item__body' },
+    { label: 'Серт. 2 — Заглавие',             selector: '.cert-item:nth-child(2) .cert-item__title' },
+    { label: 'Серт. 2 — Тяло',                 selector: '.cert-item:nth-child(2) .cert-item__body' },
+    { label: 'Серт. 3 — Заглавие',             selector: '.cert-item:nth-child(3) .cert-item__title' },
+    { label: 'Серт. 3 — Тяло',                 selector: '.cert-item:nth-child(3) .cert-item__body' },
+    { label: 'Серт. 4 — Заглавие',             selector: '.cert-item:nth-child(4) .cert-item__title' },
+    { label: 'Серт. 4 — Тяло',                 selector: '.cert-item:nth-child(4) .cert-item__body' },
+    { label: 'Серт. 5 — Заглавие',             selector: '.cert-item:nth-child(5) .cert-item__title' },
+    { label: 'Серт. 5 — Тяло',                 selector: '.cert-item:nth-child(5) .cert-item__body' },
+    // Philosophy
+    { label: 'Философия — Цитат',              selector: '.philosophy__quote' },
+    { label: 'Философия — Параграф 1',         selector: '.philosophy__body p:nth-child(1)' },
+    { label: 'Философия — Параграф 2',         selector: '.philosophy__body p:nth-child(2)' },
+    { label: 'Философия — Автор',              selector: '.philosophy__author-name' },
+    { label: 'Философия — Позиция',            selector: '.philosophy__author-title' },
+    // Approach steps
+    { label: 'Стъпка 1 — Заглавие',           selector: '.approach-step:nth-child(1) .approach-step__title' },
+    { label: 'Стъпка 1 — Тяло',               selector: '.approach-step:nth-child(1) .approach-step__body' },
+    { label: 'Стъпка 2 — Заглавие',           selector: '.approach-step:nth-child(2) .approach-step__title' },
+    { label: 'Стъпка 2 — Тяло',               selector: '.approach-step:nth-child(2) .approach-step__body' },
+    { label: 'Стъпка 3 — Заглавие',           selector: '.approach-step:nth-child(3) .approach-step__title' },
+    { label: 'Стъпка 3 — Тяло',               selector: '.approach-step:nth-child(3) .approach-step__body' },
+    { label: 'Стъпка 4 — Заглавие',           selector: '.approach-step:nth-child(4) .approach-step__title' },
+    { label: 'Стъпка 4 — Тяло',               selector: '.approach-step:nth-child(4) .approach-step__body' },
+    // Services
+    { label: 'Услуги — Заглавие секция',       selector: '#services .section-title' },
+    { label: 'Услуги — Подзаглавие',           selector: '#services .section-sub' },
+];
+
+/* ══════════════════════════════════════════════════════════════════
+   PRESET THEMES
+══════════════════════════════════════════════════════════════════ */
+const THEMES = [
+    {
+        id: 'classic',
+        name: 'Класик',
+        colors: { '--c-bg':'#FAFAF9','--c-surface':'#FFFFFF','--c-surface-2':'#F4F3F0',
+                  '--c-border':'#E5E3DE','--c-text-1':'#1A1916','--c-text-2':'#57534E',
+                  '--c-text-3':'#A8A29E','--c-accent':'#2C3E50','--c-accent-2':'#7C8FA6',
+                  '--c-gold':'#B59A6A','--c-gold-light':'#E8D9BF' }
+    },
+    {
+        id: 'dark',
+        name: 'Тъмна',
+        colors: { '--c-bg':'#0D1117','--c-surface':'#161B22','--c-surface-2':'#21262D',
+                  '--c-border':'#30363D','--c-text-1':'#E6EDF3','--c-text-2':'#8B949E',
+                  '--c-text-3':'#484F58','--c-accent':'#58A6FF','--c-accent-2':'#388BFD',
+                  '--c-gold':'#D4A843','--c-gold-light':'#2D2010' }
+    },
+    {
+        id: 'emerald',
+        name: 'Смарагд',
+        colors: { '--c-bg':'#F0FDF4','--c-surface':'#FFFFFF','--c-surface-2':'#DCFCE7',
+                  '--c-border':'#BBF7D0','--c-text-1':'#14532D','--c-text-2':'#166534',
+                  '--c-text-3':'#4ADE80','--c-accent':'#16A34A','--c-accent-2':'#15803D',
+                  '--c-gold':'#CA8A04','--c-gold-light':'#FEF9C3' }
+    },
+    {
+        id: 'royal',
+        name: 'Роял',
+        colors: { '--c-bg':'#F8F7FF','--c-surface':'#FFFFFF','--c-surface-2':'#EDE9FE',
+                  '--c-border':'#DDD6FE','--c-text-1':'#1E1B4B','--c-text-2':'#4338CA',
+                  '--c-text-3':'#818CF8','--c-accent':'#4F46E5','--c-accent-2':'#6366F1',
+                  '--c-gold':'#D97706','--c-gold-light':'#FDE68A' }
+    },
+    {
+        id: 'rose',
+        name: 'Роза',
+        colors: { '--c-bg':'#FFF1F2','--c-surface':'#FFFFFF','--c-surface-2':'#FFE4E6',
+                  '--c-border':'#FECDD3','--c-text-1':'#4C0519','--c-text-2':'#9F1239',
+                  '--c-text-3':'#FDA4AF','--c-accent':'#E11D48','--c-accent-2':'#BE123C',
+                  '--c-gold':'#B45309','--c-gold-light':'#FDE68A' }
+    },
+    {
+        id: 'slate',
+        name: 'Слейт',
+        colors: { '--c-bg':'#F8FAFC','--c-surface':'#FFFFFF','--c-surface-2':'#F1F5F9',
+                  '--c-border':'#CBD5E1','--c-text-1':'#0F172A','--c-text-2':'#475569',
+                  '--c-text-3':'#94A3B8','--c-accent':'#334155','--c-accent-2':'#475569',
+                  '--c-gold':'#92400E','--c-gold-light':'#FEF3C7' }
+    },
+];
+
+/* ══════════════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════════════ */
+let savedData = {
+    textOverrides: {},   // selector -> { content, fontFamily, fontSize, fontWeight, color }
+    images: {},          // key -> dataURL
+    theme: {},           // CSS var name -> value
+    diplomas: [],        // array of { label, dataURL }
+};
+let selectedElIndex = -1;
+let bioDoc = null;       // reference to the iframe's document
+
+/* ══════════════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════════════ */
+function initApp() {
+    loadData();
+    buildElementList();
+    buildThemeGrid();
+    setupTabSwitching();
+    setupColorPickers();
+    setupTextEditor();
+    setupImageUploads();
+    setupThemePanel();
+    setupSaveReset();
+
+    const frame = document.getElementById('bio-frame');
+    frame.addEventListener('load', () => {
+        try {
+            bioDoc = frame.contentDocument || frame.contentWindow.document;
+            applyAllChanges();
+            injectClickHandler();
+        } catch(e) {
+            console.warn('Cannot access iframe document (cross-origin?)', e);
+        }
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PERSISTENCE
+══════════════════════════════════════════════════════════════════ */
+function loadData() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[] }, parsed);
+        }
+    } catch(e) { console.warn('Failed to load saved data:', e); }
+}
+
+function saveData() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+        document.getElementById('save-status').textContent = '✅ Записано ' + new Date().toLocaleTimeString('bg-BG');
+        showToast('Промените са записани!');
+    } catch(e) {
+        showToast('Грешка при записване: ' + e.message, 'error');
+    }
+}
+
+function resetData() {
+    if (!confirm('Сигурен ли си? Всички промени ще бъдат изтрити!')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[] };
+    document.getElementById('bio-frame').contentWindow.location.reload();
+    showToast('Нулиране — страницата се презарежда.', 'error');
+    document.getElementById('save-status').textContent = '';
+    renderDiplomaSlots();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   APPLY ALL CHANGES TO IFRAME
+══════════════════════════════════════════════════════════════════ */
+function applyAllChanges() {
+    if (!bioDoc) return;
+    applyTextOverrides();
+    applyImages();
+    applyTheme();
+    applyDiplomas();
+}
+
+function applyTextOverrides() {
+    if (!bioDoc) return;
+    Object.entries(savedData.textOverrides).forEach(([sel, opts]) => {
+        const el = bioDoc.querySelector(sel);
+        if (!el) return;
+        if (opts.content !== undefined) el.textContent = opts.content;
+        if (opts.fontFamily) el.style.fontFamily = opts.fontFamily;
+        if (opts.fontSize)   el.style.fontSize   = opts.fontSize + 'rem';
+        if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
+        if (opts.color)      el.style.color       = opts.color;
+    });
+}
+
+function applyImages() {
+    if (!bioDoc) return;
+    const IMAGE_TARGETS = {
+        hero:       '.hero__photo-wrap img',
+        about:      '.about__portrait img',
+        philosophy: '.philosophy__visual img',
+    };
+    Object.entries(IMAGE_TARGETS).forEach(([key, sel]) => {
+        if (savedData.images[key]) {
+            const el = bioDoc.querySelector(sel);
+            if (el) el.src = savedData.images[key];
+        }
+    });
+}
+
+function applyTheme() {
+    if (!bioDoc) return;
+    const root = bioDoc.documentElement;
+    Object.entries(savedData.theme).forEach(([prop, val]) => {
+        root.style.setProperty(prop, val);
+    });
+    // font families
+    if (savedData.theme['--font-serif']) {
+        bioDoc.querySelectorAll('[style*="font-family"]').forEach(el => {
+            if (el.style.fontFamily.includes('Playfair') || el.style.fontFamily.includes('Georgia')) {
+                el.style.fontFamily = savedData.theme['--font-serif'];
+            }
+        });
+    }
+}
+
+function applyDiplomas() {
+    if (!bioDoc) return;
+    // Remove previously injected diploma section
+    const existing = bioDoc.getElementById('bioadmin-diplomas');
+    if (existing) existing.remove();
+
+    if (!savedData.diplomas || savedData.diplomas.length === 0) return;
+
+    const creds = bioDoc.querySelector('#credentials .container');
+    if (!creds) return;
+
+    const section = bioDoc.createElement('div');
+    section.id = 'bioadmin-diplomas';
+    section.style.cssText = 'margin-top:2rem;';
+
+    const title = bioDoc.createElement('div');
+    title.style.cssText = 'font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--c-text-3);margin-bottom:1rem;';
+    title.textContent = 'Дипломи & Сертификати';
+    section.appendChild(title);
+
+    const grid = bioDoc.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;';
+
+    savedData.diplomas.forEach(d => {
+        const card = bioDoc.createElement('div');
+        card.style.cssText = 'border:1px solid var(--c-border);border-radius:12px;overflow:hidden;background:var(--c-surface);';
+        if (d.dataURL) {
+            const img = bioDoc.createElement('img');
+            img.src = d.dataURL;
+            img.alt = d.label || 'Диплома';
+            img.style.cssText = 'width:100%;height:140px;object-fit:cover;display:block;';
+            card.appendChild(img);
+        }
+        if (d.label) {
+            const lbl = bioDoc.createElement('div');
+            lbl.style.cssText = 'padding:.5rem .75rem;font-size:.78rem;color:var(--c-text-2);';
+            lbl.textContent = d.label;
+            card.appendChild(lbl);
+        }
+        grid.appendChild(card);
+    });
+
+    section.appendChild(grid);
+    creds.appendChild(section);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TAB SWITCHING
+══════════════════════════════════════════════════════════════════ */
+function setupTabSwitching() {
+    document.querySelectorAll('.tab-btn[data-panel]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn[data-panel]').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.panel).classList.add('active');
+        });
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ELEMENT LIST & TEXT EDITOR
+══════════════════════════════════════════════════════════════════ */
+function buildElementList() {
+    const list = document.getElementById('el-list');
+    list.innerHTML = '';
+    EDITABLE_ELEMENTS.forEach((entry, i) => {
+        const item = document.createElement('div');
+        item.className = 'el-item';
+        item.textContent = entry.label;
+        item.dataset.idx = i;
+        item.addEventListener('click', () => selectElement(i));
+        list.appendChild(item);
+    });
+}
+
+function selectElement(idx) {
+    selectedElIndex = idx;
+    document.querySelectorAll('.el-item').forEach((el, i) => {
+        el.classList.toggle('selected', i === idx);
+    });
+    const entry = EDITABLE_ELEMENTS[idx];
+    const overrides = savedData.textOverrides[entry.selector] || {};
+
+    // Populate editor
+    const editorArea = document.getElementById('text-editor-area');
+    editorArea.style.display = 'block';
+
+    // Get current text from iframe
+    let currentText = '';
+    if (bioDoc) {
+        const el = bioDoc.querySelector(entry.selector);
+        if (el) currentText = el.textContent.trim();
+    }
+    document.getElementById('el-content').value = overrides.content !== undefined ? overrides.content : currentText;
+    document.getElementById('el-font-family').value = overrides.fontFamily || '';
+    document.getElementById('el-font-size').value   = overrides.fontSize   || '';
+    document.getElementById('el-font-weight').value = overrides.fontWeight || '';
+
+    const color = overrides.color || '';
+    document.getElementById('el-color-picker').value = color || '#1A1916';
+    document.getElementById('el-color-hex').value    = color;
+
+    updateFontPreview();
+
+    // Highlight in iframe
+    highlightElement(entry.selector);
+    showEditBadge();
+}
+
+function highlightElement(selector) {
+    if (!bioDoc) return;
+    // Remove old highlight
+    bioDoc.querySelectorAll('[data-bioadmin-highlight]').forEach(el => {
+        el.style.outline = '';
+        el.style.outlineOffset = '';
+        delete el.dataset.bioadminHighlight;
+    });
+    const el = bioDoc.querySelector(selector);
+    if (el) {
+        el.style.outline = '2px solid #6C8EF5';
+        el.style.outlineOffset = '2px';
+        el.dataset.bioadminHighlight = '1';
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function showEditBadge() {
+    const badge = document.getElementById('edit-badge');
+    badge.classList.add('visible');
+    setTimeout(() => badge.classList.remove('visible'), 2000);
+}
+
+function setupTextEditor() {
+    // Font family preview update
+    document.getElementById('el-font-family').addEventListener('change', updateFontPreview);
+
+    // Color sync
+    document.getElementById('el-color-picker').addEventListener('input', function() {
+        document.getElementById('el-color-hex').value = this.value;
+    });
+    document.getElementById('el-color-hex').addEventListener('input', function() {
+        const hex = this.value.trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+            document.getElementById('el-color-picker').value = hex;
+        }
+    });
+
+    // Apply button
+    document.getElementById('btn-apply-text').addEventListener('click', applyTextEdit);
+}
+
+function updateFontPreview() {
+    const ff = document.getElementById('el-font-family').value;
+    const preview = document.getElementById('font-preview');
+    preview.style.fontFamily = ff || 'inherit';
+}
+
+function applyTextEdit() {
+    if (selectedElIndex < 0) { showToast('Избери елемент първо.', 'error'); return; }
+    const entry   = EDITABLE_ELEMENTS[selectedElIndex];
+    const content = document.getElementById('el-content').value;
+    const ff      = document.getElementById('el-font-family').value;
+    const fs      = parseFloat(document.getElementById('el-font-size').value) || null;
+    const fw      = document.getElementById('el-font-weight').value;
+    const color   = document.getElementById('el-color-hex').value.trim() || document.getElementById('el-color-picker').value;
+
+    savedData.textOverrides[entry.selector] = {
+        content,
+        fontFamily: ff   || undefined,
+        fontSize:   fs   || undefined,
+        fontWeight: fw   || undefined,
+        color:      color || undefined,
+    };
+
+    // Live update in iframe
+    if (bioDoc) {
+        const el = bioDoc.querySelector(entry.selector);
+        if (el) {
+            el.textContent = content;
+            if (ff)    el.style.fontFamily = ff;
+            if (fs)    el.style.fontSize   = fs + 'rem';
+            if (fw)    el.style.fontWeight  = fw;
+            if (color) el.style.color      = color;
+        }
+    }
+    showToast('Промените са приложени!');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CLICK HANDLER INJECTION INTO IFRAME
+══════════════════════════════════════════════════════════════════ */
+function injectClickHandler() {
+    if (!bioDoc) return;
+    bioDoc.addEventListener('click', (e) => {
+        // Walk up to find a matching editable element
+        let node = e.target;
+        while (node && node !== bioDoc.body) {
+            const idx = EDITABLE_ELEMENTS.findIndex(entry => {
+                const candidate = bioDoc.querySelector(entry.selector);
+                return candidate === node || candidate?.contains(node);
+            });
+            if (idx >= 0) {
+                // Switch to text tab
+                document.querySelector('[data-panel="panel-text"]').click();
+                selectElement(idx);
+                // Scroll sidebar list item into view
+                document.querySelectorAll('.el-item')[idx]?.scrollIntoView({ block: 'nearest' });
+                e.preventDefault();
+                break;
+            }
+            node = node.parentElement;
+        }
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   IMAGE UPLOADS
+══════════════════════════════════════════════════════════════════ */
+function triggerUpload(inputId) {
+    document.getElementById(inputId).click();
+}
+window.triggerUpload = triggerUpload; // expose globally for onclick
+
+function setupImageUploads() {
+    ['hero', 'about', 'philosophy'].forEach(key => {
+        const input = document.getElementById('upload-' + key);
+        input.addEventListener('change', function() {
+            handleImageUpload(this, key);
+        });
+        // Show stored image preview
+        if (savedData.images[key]) {
+            const prevImg = document.getElementById('preview-' + key);
+            prevImg.src = savedData.images[key];
+            prevImg.style.display = 'block';
+        }
+    });
+    renderDiplomaSlots();
+    document.getElementById('btn-add-diploma').addEventListener('click', addDiplomaSlot);
+}
+
+function handleImageUpload(input, key) {
+    const file = input.files[0];
+    if (!file) return;
+    const maxSize = MAX_IMAGE_BYTES;
+    if (file.size > maxSize) { showToast('Файлът е твърде голям (макс. 5 MB).', 'error'); return; }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const dataURL = e.target.result;
+        savedData.images[key] = dataURL;
+
+        // Update preview
+        const prevImg = document.getElementById('preview-' + key);
+        if (prevImg) {
+            prevImg.src = dataURL;
+            prevImg.style.display = 'block';
+        }
+
+        // Live update iframe
+        if (bioDoc) {
+            const targetSel = {
+                hero:       '.hero__photo-wrap img',
+                about:      '.about__portrait img',
+                philosophy: '.philosophy__visual img',
+            }[key];
+            if (targetSel) {
+                const el = bioDoc.querySelector(targetSel);
+                if (el) el.src = dataURL;
+            }
+        }
+        showToast('Снимката е качена!');
+    };
+    reader.readAsDataURL(file);
+}
+
+/* ── Diploma slots ──────────────────────────────────────────────── */
+function renderDiplomaSlots() {
+    const container = document.getElementById('diploma-slots');
+    container.innerHTML = '';
+    (savedData.diplomas || []).forEach((d, i) => {
+        container.appendChild(createDiplomaSlot(i, d));
+    });
+}
+
+function createDiplomaSlot(i, diploma) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'background:var(--c-surface2);border:1px solid var(--c-border);border-radius:var(--radius);padding:.6rem;margin-bottom:.5rem;';
+
+    const lbl = document.createElement('input');
+    lbl.type = 'text'; lbl.placeholder = 'Надпис (напр. NSCA-CPT)';
+    lbl.value = diploma.label || '';
+    lbl.style.cssText = 'margin-bottom:.4rem;';
+    lbl.addEventListener('input', () => { savedData.diplomas[i].label = lbl.value; });
+
+    const card = document.createElement('div');
+    card.className = 'img-upload-card';
+    card.style.margin = '0 0 .4rem 0';
+
+    const img = document.createElement('img');
+    img.style.display = diploma.dataURL ? 'block' : 'none';
+    img.src = diploma.dataURL || '';
+
+    const hint = document.createElement('p');
+    hint.textContent = diploma.dataURL ? 'Щракни за смяна' : 'Щракни за качване';
+    hint.style.fontSize = '.75rem';
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file'; fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    fileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        if (file.size > MAX_IMAGE_BYTES) { showToast('Файлът е твърде голям (макс. 5 MB).', 'error'); return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            savedData.diplomas[i].dataURL = e.target.result;
+            img.src = e.target.result;
+            img.style.display = 'block';
+            hint.textContent = 'Щракни за смяна';
+            applyDiplomas();
+            showToast('Диплома ' + (i + 1) + ' качена!');
+        };
+        reader.readAsDataURL(file);
+    });
+
+    card.addEventListener('click', () => fileInput.click());
+    card.appendChild(img);
+    card.appendChild(hint);
+    card.appendChild(fileInput);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-sm btn-danger';
+    delBtn.style.cssText = 'width:100%;margin-top:.3rem;';
+    delBtn.textContent = '🗑 Изтрий';
+    delBtn.addEventListener('click', () => {
+        savedData.diplomas.splice(i, 1);
+        renderDiplomaSlots();
+        applyDiplomas();
+        showToast('Дипломата е изтрита.');
+    });
+
+    wrap.appendChild(lbl);
+    wrap.appendChild(card);
+    wrap.appendChild(delBtn);
+    return wrap;
+}
+
+function addDiplomaSlot() {
+    if (!savedData.diplomas) savedData.diplomas = [];
+    if (savedData.diplomas.length >= MAX_DIPLOMAS) { showToast(`Максимум ${MAX_DIPLOMAS} дипломи.`, 'error'); return; }
+    savedData.diplomas.push({ label: '', dataURL: '' });
+    renderDiplomaSlots();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   THEME PANEL
+══════════════════════════════════════════════════════════════════ */
+function buildThemeGrid() {
+    const grid = document.getElementById('theme-grid');
+    grid.innerHTML = '';
+    THEMES.forEach(theme => {
+        const swatch = document.createElement('div');
+        swatch.className = 'theme-swatch';
+        swatch.dataset.id = theme.id;
+        if (savedData._activeTheme === theme.id) swatch.classList.add('selected');
+
+        const inner = document.createElement('div');
+        inner.className = 'theme-swatch__inner';
+
+        const top = document.createElement('div');
+        top.className = 'theme-swatch__top';
+        top.style.background = theme.colors['--c-surface'] || '#fff';
+
+        const bot = document.createElement('div');
+        bot.className = 'theme-swatch__bot';
+        bot.style.background = theme.colors['--c-accent'] || '#333';
+
+        const label = document.createElement('div');
+        label.className = 'theme-swatch__label';
+        label.textContent = theme.name;
+
+        inner.appendChild(top);
+        inner.appendChild(bot);
+        swatch.appendChild(inner);
+        swatch.appendChild(label);
+
+        swatch.addEventListener('click', () => applyPresetTheme(theme));
+        grid.appendChild(swatch);
+    });
+}
+
+function applyPresetTheme(theme) {
+    savedData.theme = Object.assign({}, theme.colors);
+    savedData._activeTheme = theme.id;
+
+    // Sync color pickers
+    syncColorPickersFromTheme();
+
+    // Apply to iframe
+    applyTheme();
+
+    // Update swatch selection
+    document.querySelectorAll('.theme-swatch').forEach(s => {
+        s.classList.toggle('selected', s.dataset.id === theme.id);
+    });
+    showToast('Тема "' + theme.name + '" приложена!');
+}
+
+function syncColorPickersFromTheme() {
+    const map = [
+        ['--c-bg',      'c-bg'],
+        ['--c-surface', 'c-surface'],
+        ['--c-accent',  'c-accent'],
+        ['--c-accent-2','c-accent2'],
+        ['--c-gold',    'c-gold'],
+        ['--c-text-1',  'c-text1'],
+        ['--c-text-2',  'c-text2'],
+    ];
+    map.forEach(([cssVar, id]) => {
+        const val = savedData.theme[cssVar] || '';
+        const picker = document.getElementById(id + '-picker');
+        const hex    = document.getElementById(id + '-hex');
+        if (picker) picker.value = val || '#888888';
+        if (hex)    hex.value   = val;
+    });
+}
+
+function setupThemePanel() {
+    // Sync color pickers from saved theme
+    syncColorPickersFromTheme();
+
+    // Color picker <-> hex sync
+    const pairs = [
+        ['c-bg-picker',      'c-bg-hex',      '--c-bg'],
+        ['c-surface-picker', 'c-surface-hex',  '--c-surface'],
+        ['c-accent-picker',  'c-accent-hex',   '--c-accent'],
+        ['c-accent2-picker', 'c-accent2-hex',  '--c-accent-2'],
+        ['c-gold-picker',    'c-gold-hex',     '--c-gold'],
+        ['c-text1-picker',   'c-text1-hex',    '--c-text-1'],
+        ['c-text2-picker',   'c-text2-hex',    '--c-text-2'],
+    ];
+    pairs.forEach(([pickerId, hexId, cssVar]) => {
+        const picker = document.getElementById(pickerId);
+        const hex    = document.getElementById(hexId);
+        picker.addEventListener('input', () => {
+            hex.value = picker.value;
+        });
+        hex.addEventListener('input', () => {
+            const v = hex.value.trim();
+            if (/^#[0-9A-Fa-f]{6}$/.test(v)) picker.value = v;
+        });
+    });
+
+    document.getElementById('btn-apply-theme').addEventListener('click', () => {
+        pairs.forEach(([pickerId, hexId, cssVar]) => {
+            const val = document.getElementById(hexId).value.trim()
+                     || document.getElementById(pickerId).value;
+            if (val) savedData.theme[cssVar] = val;
+        });
+        const fs = document.getElementById('theme-font-serif').value;
+        const fn = document.getElementById('theme-font-sans').value;
+        if (fs) savedData.theme['--font-serif'] = fs;
+        if (fn) savedData.theme['--font-sans']  = fn;
+
+        savedData._activeTheme = 'custom';
+        applyTheme();
+        showToast('Цветовата палитра е приложена!');
+    });
+}
+
+function setupColorPickers() { /* color sync done per-panel */ }
+
+/* ══════════════════════════════════════════════════════════════════
+   SAVE / RESET
+══════════════════════════════════════════════════════════════════ */
+function setupSaveReset() {
+    document.getElementById('btn-save').addEventListener('click', saveData);
+    document.getElementById('btn-reset').addEventListener('click', resetData);
+}
+
+/* Auto-save every 60 s */
+setInterval(() => {
+    if (appEl.classList.contains('visible')) saveData();
+}, 60000);
+</script>
+</body>
+</html>
