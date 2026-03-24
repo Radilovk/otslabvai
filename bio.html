@@ -1636,7 +1636,7 @@
                             <span class="contact__link-icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 9.73a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6.29 6.29l1.27-.76A2 2 0 0 1 17.76 14a12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
                             +359 88 XXX XXXX
                         </a>
-                        <a href="#" class="contact__link">
+                        <a href="#" class="contact__link" data-contact-type="address">
                             <span class="contact__link-icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
                             София, България
                         </a>
@@ -1995,29 +1995,52 @@
             // Contact info overrides
             if (data.contact) {
                 var c = data.contact;
-                if (c.email) {
+                // Validate email: only allow safe email characters
+                if (c.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) {
                     var emailLink = document.querySelector('.contact__link[href^="mailto"]');
-                    if (emailLink) { emailLink.href = 'mailto:' + c.email; emailLink.childNodes[emailLink.childNodes.length - 1].textContent = ' ' + c.email; }
+                    if (emailLink) {
+                        emailLink.href = 'mailto:' + c.email;
+                        var lastEmailNode = emailLink.childNodes[emailLink.childNodes.length - 1];
+                        if (lastEmailNode && lastEmailNode.nodeType === 3) lastEmailNode.textContent = ' ' + c.email;
+                    }
                 }
-                if (c.phone) {
+                // Validate phone: only allow digits, spaces, +, -, (, )
+                if (c.phone && /^[\d\s\+\-\(\)]+$/.test(c.phone)) {
                     var phoneLink = document.querySelector('.contact__link[href^="tel"]');
-                    if (phoneLink) { phoneLink.href = 'tel:' + c.phone.replace(/\s/g, ''); phoneLink.childNodes[phoneLink.childNodes.length - 1].textContent = ' ' + c.phone; }
+                    if (phoneLink) {
+                        phoneLink.href = 'tel:' + c.phone.replace(/[\s\-\(\)]/g, '');
+                        var lastPhoneNode = phoneLink.childNodes[phoneLink.childNodes.length - 1];
+                        if (lastPhoneNode && lastPhoneNode.nodeType === 3) lastPhoneNode.textContent = ' ' + c.phone;
+                    }
                 }
                 if (c.address) {
-                    var addrLinks = document.querySelectorAll('.contact__link');
-                    addrLinks.forEach(function(el) {
-                        if (el.querySelector('.icon-svg path[d^="M20 10c0 6"]') || el.textContent.trim().indexOf('България') >= 0 || el.textContent.trim().indexOf('Sofia') >= 0) {
-                            el.childNodes[el.childNodes.length - 1].textContent = ' ' + c.address;
-                        }
-                    });
+                    var addrLink = document.querySelector('.contact__link[data-contact-type="address"]');
+                    if (addrLink) {
+                        var lastAddrNode = addrLink.childNodes[addrLink.childNodes.length - 1];
+                        if (lastAddrNode && lastAddrNode.nodeType === 3) lastAddrNode.textContent = ' ' + c.address;
+                    }
                 }
-                if (c.instagram) { var ig = document.querySelector('.footer__social[aria-label="Instagram"]'); if (ig) ig.href = c.instagram; }
-                if (c.facebook)  { var fb = document.querySelector('.footer__social[aria-label="Facebook"]');  if (fb) fb.href = c.facebook; }
-                if (c.linkedin)  { var li = document.querySelector('.footer__social[aria-label="LinkedIn"]');  if (li) li.href = c.linkedin; }
+                // Only allow http/https URLs for social links
+                function applySafeHref(selector, url) {
+                    if (!url || !/^https?:\/\//i.test(url)) return;
+                    var el = document.querySelector(selector);
+                    if (el) el.href = url;
+                }
+                applySafeHref('.footer__social[aria-label="Instagram"]', c.instagram);
+                applySafeHref('.footer__social[aria-label="Facebook"]',  c.facebook);
+                applySafeHref('.footer__social[aria-label="LinkedIn"]',  c.linkedin);
             }
 
             // Testimonials overrides
             if (data.testimonials && data.testimonials.length > 0) {
+                function esc(str) {
+                    return String(str)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
+                }
                 function buildTestiCard(t) {
                     var stars = Math.max(1, Math.min(5, t.stars || 5));
                     var starsHtml = '';
@@ -2026,12 +2049,12 @@
                     card.className = 'testi-card';
                     card.innerHTML =
                         '<div class="testi-card__stars">' + starsHtml + '</div>' +
-                        '<p class="testi-card__text">' + t.text.replace(/</g, '&lt;') + '</p>' +
+                        '<p class="testi-card__text">' + esc(t.text || '') + '</p>' +
                         '<div class="testi-card__author">' +
                             '<div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>' +
                             '<div>' +
-                                '<div class="testi-card__author-name">' + (t.authorName || '').replace(/</g, '&lt;') + '</div>' +
-                                '<div class="testi-card__author-sub">' + (t.authorSub || '').replace(/</g, '&lt;') + '</div>' +
+                                '<div class="testi-card__author-name">' + esc(t.authorName || '') + '</div>' +
+                                '<div class="testi-card__author-sub">' + esc(t.authorSub || '') + '</div>' +
                             '</div>' +
                         '</div>';
                     return card;
@@ -2042,7 +2065,7 @@
                     desktopGrid.innerHTML = '';
                     data.testimonials.forEach(function(t, i) {
                         var card = buildTestiCard(t);
-                        card.classList.add('reveal', 'reveal-delay-' + (i + 1));
+                        card.classList.add('reveal', 'reveal-delay-' + Math.min(i + 1, 4));
                         desktopGrid.appendChild(card);
                     });
                 }

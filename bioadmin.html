@@ -956,7 +956,8 @@ function applyContact() {
     if (!bioDoc) return;
     const c = savedData.contact || {};
 
-    if (c.email) {
+    // Validate and apply email
+    if (c.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) {
         const emailLink = bioDoc.querySelector('.contact__link[href^="mailto"]');
         if (emailLink) {
             emailLink.href = 'mailto:' + c.email;
@@ -964,26 +965,31 @@ function applyContact() {
             if (lastNode && lastNode.nodeType === 3) lastNode.textContent = ' ' + c.email;
         }
     }
-    if (c.phone) {
+    // Validate phone: only digits, spaces, +, -, (, )
+    if (c.phone && /^[\d\s\+\-\(\)]+$/.test(c.phone)) {
         const phoneLink = bioDoc.querySelector('.contact__link[href^="tel"]');
         if (phoneLink) {
-            phoneLink.href = 'tel:' + c.phone.replace(/\s/g, '');
+            phoneLink.href = 'tel:' + c.phone.replace(/[\s\-\(\)]/g, '');
             const lastNode = phoneLink.childNodes[phoneLink.childNodes.length - 1];
             if (lastNode && lastNode.nodeType === 3) lastNode.textContent = ' ' + c.phone;
         }
     }
     if (c.address) {
-        bioDoc.querySelectorAll('.contact__link').forEach(el => {
-            const href = el.getAttribute('href') || '';
-            if (href === '#' || href.includes('maps') || el.textContent.includes('България') || el.textContent.includes('Sofia')) {
-                const lastNode = el.childNodes[el.childNodes.length - 1];
-                if (lastNode && lastNode.nodeType === 3) lastNode.textContent = ' ' + c.address;
-            }
-        });
+        const addrLink = bioDoc.querySelector('.contact__link[data-contact-type="address"]');
+        if (addrLink) {
+            const lastNode = addrLink.childNodes[addrLink.childNodes.length - 1];
+            if (lastNode && lastNode.nodeType === 3) lastNode.textContent = ' ' + c.address;
+        }
     }
-    if (c.instagram) { const el = bioDoc.querySelector('.footer__social[aria-label="Instagram"]'); if (el) el.href = c.instagram; }
-    if (c.facebook)  { const el = bioDoc.querySelector('.footer__social[aria-label="Facebook"]');  if (el) el.href = c.facebook; }
-    if (c.linkedin)  { const el = bioDoc.querySelector('.footer__social[aria-label="LinkedIn"]');  if (el) el.href = c.linkedin; }
+    // Only allow http/https URLs for social links
+    function applySafeHref(selector, url) {
+        if (!url || !/^https?:\/\//i.test(url)) return;
+        const el = bioDoc.querySelector(selector);
+        if (el) el.href = url;
+    }
+    applySafeHref('.footer__social[aria-label="Instagram"]', c.instagram);
+    applySafeHref('.footer__social[aria-label="Facebook"]',  c.facebook);
+    applySafeHref('.footer__social[aria-label="LinkedIn"]',  c.linkedin);
 }
 
 function applyTestimonials() {
@@ -1040,7 +1046,12 @@ function applyTestimonials() {
 }
 
 function escapeHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
 }
 
 /* ══════════════════════════════════════════════════════════════════
