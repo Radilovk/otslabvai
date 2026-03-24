@@ -460,7 +460,7 @@
         <!-- iframe preview -->
         <div class="preview-wrap">
             <div class="edit-mode-badge" id="edit-badge">✏️ Режим на редакция</div>
-            <iframe id="bio-frame" src="bio.html" title="Преглед на bio.html"></iframe>
+            <iframe id="bio-frame" title="Преглед на bio.html"></iframe>
         </div>
 
     </div><!-- /app-body -->
@@ -680,6 +680,8 @@ function initApp() {
             console.warn('Cannot access iframe document (cross-origin?)', e);
         }
     });
+    // Set src now (after listener is registered) so the load event is never missed
+    frame.src = 'bio.html';
 
     // Sync latest saved data from the server (source of truth)
     loadDataFromServer();
@@ -706,13 +708,14 @@ async function loadDataFromServer() {
             return;
         }
         const serverData = await res.json();
-        const EXPECTED_KEYS = ['textOverrides', 'images', 'theme', 'diplomas'];
+        const EXPECTED_KEYS = ['textOverrides', 'images', 'theme', 'diplomas', '_activeTheme'];
         if (serverData && typeof serverData === 'object' && Object.keys(serverData).length > 0) {
             const filtered = {};
             EXPECTED_KEYS.forEach(k => { if (k in serverData) filtered[k] = serverData[k]; });
             savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[] }, filtered);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
             applyAllChanges();
+            buildThemeGrid();
         }
     } catch(e) { console.warn('Failed to load data from server:', e); }
 }
@@ -981,7 +984,7 @@ function applyTextEdit() {
     const ff      = document.getElementById('el-font-family').value;
     const fs      = parseFloat(document.getElementById('el-font-size').value) || null;
     const fw      = document.getElementById('el-font-weight').value;
-    const color   = document.getElementById('el-color-hex').value.trim() || document.getElementById('el-color-picker').value;
+    const color   = document.getElementById('el-color-hex').value.trim();
 
     savedData.textOverrides[entry.selector] = {
         content,
