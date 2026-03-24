@@ -2015,7 +2015,14 @@
             }
         }
 
-        fetch('/bio_content.json')
+        // Use the absolute Worker URL so the fetch works whether bio.html is served
+        // from GitHub Pages (daotslabna.com) or directly from the Worker.
+        // NOTE: If WORKER_URL changes, update bioadmin.html (WORKER_URL constant) too.
+        var workerOrigin = window.location.hostname === 'localhost'
+            ? 'http://' + window.location.host
+            : 'https://port.radilov-k.workers.dev';
+
+        fetch(workerOrigin + '/bio_content.json')
             .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
             .then(function(data) {
                 applyBioContent(data);
