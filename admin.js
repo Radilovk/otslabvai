@@ -100,6 +100,10 @@ let activeUndoAction = null;
 let currentModalSaveCallback = null;
 let currentProject = localStorage.getItem('adminProject') || 'main';
 
+// localStorage cache key and TTL for contacts (24 hours is enough)
+const CONTACTS_CACHE_KEY = 'adminContactsCache';
+const CONTACTS_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 // =======================================================
 //          2. API КОМУНИКАЦИЯ
 // =======================================================
@@ -141,9 +145,19 @@ async function fetchOrders() {
     }
 }
 
-async function fetchContacts() {
+async function fetchContacts(forceRefresh = false) {
     try {
-        // For dynamic data like contacts, use no-cache to always get fresh data
+        // Use localStorage cache – contacts need only one backend fetch per 24 hours.
+        if (!forceRefresh) {
+            try {
+                const cached = JSON.parse(localStorage.getItem(CONTACTS_CACHE_KEY) || 'null');
+                if (cached && (Date.now() - cached.timestamp) < CONTACTS_CACHE_TTL_MS) {
+                    contactsData = cached.data;
+                    filteredContactsData = [...contactsData];
+                    return;
+                }
+            } catch (e) { /* ignore corrupt cache entry */ }
+        }
         const response = await fetch(`${API_URL}/contacts`, {
             cache: 'no-cache'
         });
@@ -151,6 +165,10 @@ async function fetchContacts() {
         const rawContacts = await response.json();
         contactsData = rawContacts.map((contact, index) => ({ ...contact, id: contact.id || `contact_${index}_${Date.now()}` }));
         filteredContactsData = [...contactsData];
+        // Persist to localStorage so we skip the backend for the next 24 hours.
+        try {
+            localStorage.setItem(CONTACTS_CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: contactsData }));
+        } catch (e) { /* quota exceeded – ignore */ }
     } catch (error) {
         showNotification('Грешка при зареждане на контактите.', 'error');
         console.error("Грешка при зареждане на контакти:", error);
@@ -1253,7 +1271,7 @@ function setupEventListeners() {
     DOM.contactSearchInput.addEventListener('input', () => filterContacts());
     DOM.refreshContactsBtn.addEventListener('click', async () => {
         showNotification('Опресняване на контактите...', 'info');
-        await fetchContacts();
+        await fetchContacts(true); // force fetch – bypass the 24-hour cache
         filterContacts();
     });
     
