@@ -73,19 +73,14 @@ export default {
       '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css },
       '/bioadmin.html': { file: 'bioadmin.html', type: CONTENT_TYPES.html },
       '/robots.txt': { file: 'robots.txt', type: 'text/plain; charset=utf-8' },
-      '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' },
-      // Content JSON files are served as static files with 1-hour browser caching.
-      // The KV keys (static_page_content.json / static_life_page_content.json) are
-      // written on every admin save so the cached copy is always up to date.
-      '/page_content.json': { file: 'page_content.json', type: 'application/json' },
-      '/life_page_content.json': { file: 'life_page_content.json', type: 'application/json' }
+      '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' }
     };
     
     try {
       let response;
       
       if (url.pathname === '/bio.html') {
-        response = await serveBioHtml(env, request);
+        response = await serveBioHtml(env);
       }
       // Only serve static files for GET — POST/PUT requests must reach the API router.
       else if (request.method === 'GET' && STATIC_FILES[url.pathname]) {
@@ -273,45 +268,46 @@ async function serveStaticFile(env, filename, contentType, request) {
 }
 
 /**
- * Serves bio.html.  When admin saves bio_content (via handleSaveBioContent), the
- * content is baked into a 'baked_bio.html' KV entry at save time.  Serving this
- * pre-baked file avoids a per-request KV read and allows standard 1-hour browser
- * caching so most page loads never touch the backend at all.
- * Falls back to the repo-uploaded 'static_bio.html' (with hardcoded defaults) if
- * the admin has not saved any overrides yet.
- * Supports conditional requests (ETag / If-None-Match).
+ * Serves bio.html with the bio_content KV data injected inline as
+ * window.__bioContent.  The page hides itself via html.bio-loading until the
+ * client-side IIFE applies the overrides and calls reveal(), so there is no
+ * visible flash between the static defaults and the saved content.
+ * Cache-Control is no-store so every refresh gets the latest bio_content from KV,
+ * meaning admin changes via bioadmin.html are immediately visible on the next load.
  */
-async function serveBioHtml(env, request) {
-    // Prefer the baked version (updated every time admin saves bio_content).
-    let htmlContent = await env.PAGE_CONTENT.get('baked_bio.html');
-    if (htmlContent === null) {
-        // No overrides saved yet — serve the static template from the repo.
-        htmlContent = await env.PAGE_CONTENT.get('static_bio.html');
-    }
+async function serveBioHtml(env) {
+    const [htmlContent, bioContent] = await Promise.all([
+        env.PAGE_CONTENT.get('static_bio.html'),
+        env.PAGE_CONTENT.get('bio_content')
+    ]);
     if (htmlContent === null) {
         throw new UserFacingError('File bio.html not found in storage.', 404);
     }
-    const etag = await generateETag(htmlContent);
-    // bio.html contains dynamically-baked content (window.__bioContent injected by
-    // the worker each time admin saves via bioadmin.html).  Using a 1-hour max-age
-    // meant the browser would serve a stale cached copy for up to an hour after the
-    // admin made changes.  'no-cache' forces the browser to revalidate on every
-    // request; the ETag / If-None-Match mechanism below keeps it efficient (304 when
-    // content is unchanged, 200 only when the baked HTML was updated).
-    const cacheControl = 'no-cache, must-revalidate';
-    // Return 304 Not Modified when the browser already has the current version.
-    if (request.headers.get('If-None-Match') === etag) {
-        return new Response(null, {
-            status: 304,
-            headers: { 'Cache-Control': cacheControl, 'ETag': etag }
-        });
+    const bioData = bioContent !== null ? bioContent : '{}';
+    // Escape characters that are unsafe inside an inline <script> block so
+    // that an adversarially-crafted bio_content value cannot break out of the
+    // script context and inject arbitrary HTML.
+    const safeData = bioData
+        .replace(/&/g, '\\u0026')
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e');
+    const inlineScript = `<script id="bio-content-injection-point">window.__bioContent=${safeData};<\/script>`;
+    const injectedHtml = htmlContent.replace(
+        '<script id="bio-content-injection-point">/* bio_content injected by worker */</script>',
+        inlineScript
+    );
+    if (injectedHtml === htmlContent) {
+        // Placeholder not found — static_bio.html in KV may be outdated.
+        // Page will show default hardcoded content until static_bio.html is re-uploaded.
+        console.warn('serveBioHtml: injection point placeholder not found in static_bio.html; serving without bio_content overrides');
     }
-    return new Response(htmlContent, {
+    return new Response(injectedHtml, {
         status: 200,
         headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': cacheControl,
-            'ETag': etag
+            // no-store ensures every request gets the latest bio_content from KV,
+            // so admin changes in bioadmin are immediately visible on the next load.
+            'Cache-Control': 'no-store'
         }
     });
 }
@@ -420,10 +416,7 @@ async function syncPageContentToGitHub(content, env) {
 
 /**
  * Handles POST /page_content.json
- * Saves content to KV (both the live key and the static-serving key) and
- * asynchronously syncs it to the GitHub repository.
- * Updating 'static_page_content.json' means the next browser cache miss will
- * get the new content from the static file endpoint without any dynamic logic.
+ * Saves content to KV and asynchronously syncs it to the GitHub repository.
  */
 async function handleSavePageContent(request, env, ctx) {
     const contentToSave = await request.text();
@@ -432,9 +425,6 @@ async function handleSavePageContent(request, env, ctx) {
         JSON.parse(contentToSave);
         ctx.waitUntil(Promise.all([
             env.PAGE_CONTENT.put('page_content', contentToSave),
-            // Keep the static-serving KV key in sync so GET /page_content.json
-            // (served as a static file) always reflects the latest admin save.
-            env.PAGE_CONTENT.put('static_page_content.json', contentToSave),
             syncPageContentToGitHub(contentToSave, env)
         ]));
         return new Response(JSON.stringify({ success: true, message: 'Content saved.' }), {
@@ -471,8 +461,7 @@ async function handleGetLifePageContent(request, env) {
 
 /**
  * Handles POST /life_page_content.json
- * Saves life content to KV (both the live key and the static-serving key) and
- * asynchronously syncs it to the GitHub repository.
+ * Saves life content to KV and asynchronously syncs it to the GitHub repository.
  */
 async function handleSaveLifePageContent(request, env, ctx) {
     const contentToSave = await request.text();
@@ -480,9 +469,6 @@ async function handleSaveLifePageContent(request, env, ctx) {
         JSON.parse(contentToSave);
         ctx.waitUntil(Promise.all([
             env.PAGE_CONTENT.put('life_page_content', contentToSave),
-            // Keep the static-serving KV key in sync so GET /life_page_content.json
-            // (served as a static file) always reflects the latest admin save.
-            env.PAGE_CONTENT.put('static_life_page_content.json', contentToSave),
             syncLifePageContentToGitHub(contentToSave, env)
         ]));
         return new Response(JSON.stringify({ success: true, message: 'Life content saved.' }), {
@@ -573,42 +559,10 @@ async function handleGetBioContent(request, env) {
 }
 
 /**
- * Maps a CSS font-family value (as stored in bio_content.theme) to its
- * Google Fonts API spec string.  Fonts already loaded by bio.html's default
- * <link> (Playfair Display, Inter, DM Mono) and plain system fonts are omitted
- * because they don't need an extra stylesheet request.
- */
-const BIO_CUSTOM_FONT_MAP = {
-    'Merriweather':      'Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400',
-    'Lora':              'Lora:ital,wght@0,400;0,500;0,700;1,400;1,500',
-    'Cormorant Garamond':'Cormorant+Garamond:ital,wght@0,400;0,500;0,700;1,400;1,500',
-    'Open Sans':         'Open+Sans:wght@300;400;500;600;700',
-    'Roboto':            'Roboto:wght@300;400;500;700',
-    'Montserrat':        'Montserrat:wght@300;400;500;600;700',
-    'Nunito':            'Nunito:wght@300;400;500;600;700',
-};
-
-/**
- * Returns a Google Fonts <link> tag for the given CSS font-family value, or
- * an empty string if the font is already loaded by bio.html's defaults.
- */
-function buildCustomFontLink(fontFamily) {
-    if (!fontFamily || typeof fontFamily !== 'string') return '';
-    // Extract the primary font name: strip surrounding quotes, take the first
-    // entry in the comma-separated stack, then trim whitespace.
-    const name = fontFamily.replace(/['"]/g, '').split(',')[0].trim();
-    const spec = BIO_CUSTOM_FONT_MAP[name];
-    if (!spec) return '';
-    return `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${spec}&display=swap">`;
-}
-
-/**
  * Handles POST /bio_content.json
- * Saves bio page overrides to KV and bakes them into 'baked_bio.html' so that
- * bio.html can be served without a per-request KV read.
- * Also injects <link> tags for any custom Google Fonts referenced in the saved
- * theme or textOverrides so they are preloaded before the page is revealed,
- * preventing a flash of unstyled text (FOUT) for non-default fonts.
+ * Saves bio page overrides to KV.  bio.html is served by serveBioHtml() which
+ * reads bio_content and injects it on every request, so changes are immediately
+ * visible on the next page load without any baking or caching delay.
  */
 async function handleSaveBioContent(request, env, ctx) {
     const contentToSave = await request.text();
@@ -618,48 +572,7 @@ async function handleSaveBioContent(request, env, ctx) {
         if (typeof parsed !== 'object' || parsed === null) {
             throw new UserFacingError('Expected a JSON object in the request body.', 400);
         }
-        ctx.waitUntil((async () => {
-            const puts = [env.PAGE_CONTENT.put('bio_content', contentToSave)];
-            // Bake bio_content into the HTML template so bio.html can be served
-            // without a per-request KV read.
-            const baseHtml = await env.PAGE_CONTENT.get('static_bio.html');
-            if (baseHtml !== null) {
-                const safeData = contentToSave
-                    .replace(/&/g, '\\u0026')
-                    .replace(/</g, '\\u003c')
-                    .replace(/>/g, '\\u003e');
-                const inlineScript = `<script id="bio-content-injection-point">window.__bioContent=${safeData};<\/script>`;
-                let bakedHtml = baseHtml.replace(
-                    /<script id="bio-content-injection-point">[\s\S]*?<\/script>/,
-                    inlineScript
-                );
-
-                // Collect Google Fonts links for any custom fonts in the saved data
-                const seen = new Set();
-                const fontLinks = [];
-                function addFontLink(ff) {
-                    const link = buildCustomFontLink(ff);
-                    if (!link || seen.has(link)) return;
-                    seen.add(link);
-                    fontLinks.push(link);
-                }
-                if (parsed.theme) {
-                    addFontLink(parsed.theme['--font-serif']);
-                    addFontLink(parsed.theme['--font-sans']);
-                }
-                if (parsed.textOverrides && typeof parsed.textOverrides === 'object') {
-                    Object.values(parsed.textOverrides).forEach(opts => {
-                        if (opts && typeof opts === 'object' && opts.fontFamily) addFontLink(opts.fontFamily);
-                    });
-                }
-                if (fontLinks.length > 0) {
-                    bakedHtml = bakedHtml.replace('</head>', fontLinks.join('\n') + '\n</head>');
-                }
-
-                puts.push(env.PAGE_CONTENT.put('baked_bio.html', bakedHtml));
-            }
-            await Promise.all(puts);
-        })());
+        ctx.waitUntil(env.PAGE_CONTENT.put('bio_content', contentToSave));
         return new Response(JSON.stringify({ success: true, message: 'Bio content saved.' }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
