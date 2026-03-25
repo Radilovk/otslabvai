@@ -829,12 +829,11 @@ async function saveData() {
         if (res.ok) {
             document.getElementById('save-status').textContent = '✅ Записано ' + new Date().toLocaleTimeString('bg-BG');
             showToast('Промените са записани!');
-            // Reload the preview iframe after a short delay so the user sees bio.html
-            // with the freshly saved data (allows KV write to propagate first).
-            setTimeout(() => {
-                const frame = document.getElementById('bio-frame');
-                frame.src = 'bio.html';
-            }, KV_PROPAGATION_DELAY_MS);
+            // Signal bio.html that fresh content is available.  The next time
+            // bio.html loads (in any tab on this device) it will check this
+            // cookie, fetch /bio_content.json and re-apply — without the cookie
+            // normal refreshes are served entirely from browser cache.
+            document.cookie = 'bio_dirty=1; path=/';
         } else {
             document.getElementById('save-status').textContent = '⚠️ Локален запис (сървър недостъпен)';
             showToast('Записано локално. Сървърът върна грешка: ' + res.status, 'error');
@@ -857,7 +856,12 @@ async function resetData() {
             body: JSON.stringify(savedData)
         });
     } catch(e) { console.warn('Failed to reset server data:', e); }
-    document.getElementById('bio-frame').contentWindow.location.reload();
+    // After reset we need the iframe to show default content, not the cached HTML
+    // with old overrides baked in.  Use a cache-busting URL so the worker serves a
+    // fresh copy (with empty window.__bioContent) and the bio_dirty cookie triggers
+    // a /bio_content.json fetch that confirms the empty state.
+    document.cookie = 'bio_dirty=1; path=/';
+    document.getElementById('bio-frame').src = 'bio.html?_v=' + Date.now();
     showToast('Нулиране — страницата се презарежда.', 'error');
     document.getElementById('save-status').textContent = '';
     renderDiplomaSlots();

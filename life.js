@@ -1498,20 +1498,37 @@ function initializePageInteractions(settings = {}) {
     // --- Contact Form Submission (Lipolor style) ---
     const orderForm = document.getElementById('order-form');
     if (orderForm) {
-        orderForm.addEventListener('submit', (e) => {
+        orderForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const name = orderForm.querySelector('#contact-name')?.value.trim();
             const email = orderForm.querySelector('#contact-email')?.value.trim();
+            const phone = orderForm.querySelector('#contact-phone')?.value.trim();
             const message = orderForm.querySelector('#contact-message')?.value.trim();
 
             if (!name || !email || !message) {
                 showToast('Моля, попълнете всички задължителни полета.', 'error');
                 return;
             }
-            
-            showToast('Благодарим за вашето запитване! Ще се свържем с вас скоро.', 'success');
-            orderForm.reset();
+
+            const submitBtn = orderForm.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/contacts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, phone, message })
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                showToast('Благодарим за вашето запитване! Ще се свържем с вас скоро.', 'success');
+                orderForm.reset();
+            } catch (err) {
+                console.error('Грешка при изпращане на контакт:', err);
+                showToast('Грешка при изпращане. Моля, опитайте отново.', 'error');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
         });
     }
 }
@@ -1708,8 +1725,12 @@ async function main() {
         // Try to use mock data for testing if API fails
         let response, data;
         try {
+            // If the admin just saved new content, bypass the browser cache so
+            // the fresh version is fetched immediately (cookie cleared right away).
+            const lifeDirty = document.cookie.split(';').some(c => c.trim() === 'life_dirty=1');
+            if (lifeDirty) document.cookie = 'life_dirty=; Max-Age=0; path=/';
             response = await fetch(`${API_URL}/life_page_content.json`, {
-                cache: 'default' // Use browser cache with proper revalidation
+                cache: lifeDirty ? 'no-store' : 'default'
             });
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             data = await response.json();
