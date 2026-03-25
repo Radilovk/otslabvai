@@ -2149,27 +2149,13 @@
         window._bioWorkerOrigin = workerOrigin;
 
         // When served through the worker, bio_content is injected inline as
-        // window.__bioContent to avoid an extra /bio_content.json KV read per
-        // page view.  Fall back to a fetch only in development or when the page
-        // is opened directly (not via the worker).
+        // window.__bioContent.  When served as a static file (e.g. GitHub Pages),
+        // no backend call is made — the page just renders its default static content.
         if (window.__bioContent) {
             applyBioContent(window.__bioContent);
-            clearTimeout(revealTimer);
-            reveal();
-        } else {
-            fetch(workerOrigin + '/bio_content.json')
-                .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
-                .then(function(data) {
-                    applyBioContent(data);
-                    clearTimeout(revealTimer);
-                    reveal();
-                })
-                .catch(function(err) {
-                    console.warn('bio_content.json load failed:', err);
-                    clearTimeout(revealTimer);
-                    reveal();
-                });
         }
+        clearTimeout(revealTimer);
+        reveal();
     })();
     </script>
 </body>
