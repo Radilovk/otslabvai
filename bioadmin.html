@@ -730,6 +730,11 @@ let bioDoc = null;       // reference to the iframe's document
 let frameReady = false;
 let serverDataLoaded = false;
 
+/** Applies all changes to the iframe only when both the frame and server data are ready. */
+function tryApplyChanges() {
+    if (frameReady && serverDataLoaded) applyAllChanges();
+}
+
 function initApp() {
     loadData();
     buildElementList();
@@ -751,7 +756,7 @@ function initApp() {
             frameReady = true;
             // Only apply changes now if server data already arrived; otherwise
             // loadDataFromServer() will call applyAllChanges() when it completes.
-            if (serverDataLoaded) applyAllChanges();
+            tryApplyChanges();
         } catch(e) {
             console.warn('Cannot access iframe document (cross-origin?)', e);
         }
@@ -783,7 +788,7 @@ async function loadDataFromServer() {
             console.warn('Failed to load data from server: HTTP ' + res.status);
             document.getElementById('save-status').textContent = '⚠️ Сървърът е недостъпен — само локален запис';
             serverDataLoaded = true;
-            if (frameReady) applyAllChanges();
+            tryApplyChanges();
             return;
         }
         const serverData = await res.json();
@@ -802,7 +807,7 @@ async function loadDataFromServer() {
         document.getElementById('save-status').textContent = '⚠️ Сървърът е недостъпен — само локален запис';
     } finally {
         serverDataLoaded = true;
-        if (frameReady) applyAllChanges();
+        tryApplyChanges();
     }
 }
 

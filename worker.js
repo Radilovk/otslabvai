@@ -335,6 +335,25 @@ function escHtml(str) {
 }
 
 /**
+ * Strips characters that could break out of a CSS attribute value or inject
+ * additional declarations.  Allows typical CSS value characters.
+ */
+function sanitizeCssValue(val) {
+    // Remove anything that isn't a safe CSS value character
+    return String(val).replace(/[{};\\<>]/g, '');
+}
+
+/**
+ * Validates that a value looks like a safe CSS font-size.
+ * Accepts numeric rem values or strings matching safe CSS unit patterns.
+ */
+function safeFontSize(val) {
+    if (typeof val === 'number') return val + 'rem';
+    if (/^[0-9.]+(?:rem|em|px|%)$/.test(String(val))) return val;
+    return null;
+}
+
+/**
  * Builds the HTML for one testimonial card.
  */
 function buildTestiCardHtml(t) {
@@ -369,7 +388,7 @@ async function serveBioHtml(env) {
 
     let bioData = {};
     if (bioContent !== null) {
-        try { bioData = JSON.parse(bioContent); } catch (_) { /* ignore invalid JSON */ }
+        try { bioData = JSON.parse(bioContent); } catch (e) { console.warn('bio_content JSON parse error:', e.message); }
     }
 
     const rewriter = new HTMLRewriter();
@@ -386,15 +405,13 @@ async function serveBioHtml(env) {
                     el.setInnerContent(capturedOpts.content);
                 }
                 const styleParts = [];
-                if (capturedOpts.fontFamily) styleParts.push(`font-family:${capturedOpts.fontFamily}`);
+                if (capturedOpts.fontFamily) styleParts.push(`font-family:${sanitizeCssValue(capturedOpts.fontFamily)}`);
                 if (capturedOpts.fontSize) {
-                    const fs = typeof capturedOpts.fontSize === 'number'
-                        ? capturedOpts.fontSize + 'rem'
-                        : capturedOpts.fontSize;
-                    styleParts.push(`font-size:${fs}`);
+                    const fs = safeFontSize(capturedOpts.fontSize);
+                    if (fs) styleParts.push(`font-size:${fs}`);
                 }
-                if (capturedOpts.fontWeight) styleParts.push(`font-weight:${capturedOpts.fontWeight}`);
-                if (capturedOpts.color) styleParts.push(`color:${capturedOpts.color}`);
+                if (capturedOpts.fontWeight) styleParts.push(`font-weight:${sanitizeCssValue(capturedOpts.fontWeight)}`);
+                if (capturedOpts.color) styleParts.push(`color:${sanitizeCssValue(capturedOpts.color)}`);
                 if (styleParts.length) el.setAttribute('style', styleParts.join(';'));
             }
         });
@@ -415,7 +432,12 @@ async function serveBioHtml(env) {
     const theme = bioData.theme || {};
     const themeEntries = Object.entries(theme);
     if (themeEntries.length > 0) {
-        const cssVars = themeEntries.map(([k, v]) => `${k}:${v}`).join(';');
+        // Only allow known CSS custom property names (--c-* and --font-*)
+        const safeCssVarName = /^--[a-z][a-z0-9-]*$/;
+        const cssVars = themeEntries
+            .filter(([k]) => safeCssVarName.test(k))
+            .map(([k, v]) => `${k}:${sanitizeCssValue(v)}`)
+            .join(';');
         rewriter.on('head', {
             element(el) {
                 el.append(`<style id="bio-theme-override">:root{${cssVars}}</style>`, { html: true });
@@ -477,7 +499,7 @@ async function serveBioHtml(env) {
             gridHtml += cardHtml.replace('class="testi-card"', `class="testi-card${delayClass}"`);
             trackHtml += cardHtml;
             const isFirst = i === 0;
-            dotsHtml += `<button class="carousel-dot${isFirst ? ' active' : ''}" data-index="${i}" role="tab" aria-label="Слайд ${i + 1}" aria-selected="${isFirst ? 'true' : 'false'}"></button>`;
+            dotsHtml += `<button class="carousel-dot${isFirst ? ' active' : ''}" data-index="${escHtml(String(i))}" role="tab" aria-label="Слайд ${escHtml(String(i + 1))}" aria-selected="${isFirst ? 'true' : 'false'}"></button>`;
         });
         const capturedGrid  = gridHtml;
         const capturedTrack = trackHtml;
@@ -492,7 +514,8 @@ async function serveBioHtml(env) {
     if (Array.isArray(diplomas) && diplomas.length > 0) {
         let diplomaCardsHtml = '';
         for (const d of diplomas) {
-            const imgHtml = d.dataURL
+            // Only render data: URLs that look like images (base64-encoded images from bioadmin)
+            const imgHtml = d.dataURL && /^data:image\//i.test(d.dataURL)
                 ? `<img src="${escHtml(d.dataURL)}" alt="${escHtml(d.label || 'Диплома')}" style="width:100%;height:140px;object-fit:cover;display:block;">`
                 : '';
             const lblHtml = d.label
