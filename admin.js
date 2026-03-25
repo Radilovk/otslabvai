@@ -93,6 +93,7 @@ let ordersData = [];
 let filteredOrdersData = [];
 let contactsData = [];
 let filteredContactsData = [];
+let activeContactSourceFilter = '';
 let promoCodesData = [];
 let filteredPromoCodesData = [];
 let unsavedChanges = false;
@@ -420,7 +421,8 @@ function renderContacts() {
         const originalIndex = contactsData.findIndex(c => c.id === contact.id);
         const row = rowTemplate.querySelector('tr');
         row.dataset.index = originalIndex;
-        
+
+        rowTemplate.querySelector('.contact-source').textContent = contact.source || '—';
         rowTemplate.querySelector('.contact-name').textContent = contact.name || '';
         rowTemplate.querySelector('.contact-email').textContent = contact.email || '';
         rowTemplate.querySelector('.contact-subject').textContent = contact.subject || '(няма тема)';
@@ -1278,6 +1280,15 @@ function setupEventListeners() {
         await fetchContacts(true); // force fetch – bypass the 24-hour cache
         filterContacts();
     });
+
+    document.querySelectorAll('.contact-source-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.contact-source-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeContactSourceFilter = btn.dataset.source;
+            filterContacts();
+        });
+    });
     
     // Promo Codes event listeners
     DOM.refreshPromoBtn.addEventListener('click', async () => {
@@ -1813,10 +1824,13 @@ function filterOrders() {
 
 function filterContacts() {
     const searchTerm = DOM.contactSearchInput.value.toLowerCase().trim();
+    let base = activeContactSourceFilter
+        ? contactsData.filter(c => (c.source || '') === activeContactSourceFilter)
+        : [...contactsData];
     if (!searchTerm) {
-        filteredContactsData = [...contactsData];
+        filteredContactsData = base;
     } else {
-        filteredContactsData = contactsData.filter(contact => {
+        filteredContactsData = base.filter(contact => {
             const name = (contact.name || '').toLowerCase();
             const email = (contact.email || '').toLowerCase();
             const subject = (contact.subject || '').toLowerCase();

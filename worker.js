@@ -776,6 +776,7 @@ async function handleCreateContact(request, env) {
         email: contactData.email,
         subject: contactData.subject || '',
         message: contactData.message,
+        source: contactData.source || '',
         status: 'Нов'
     };
     
