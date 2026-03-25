@@ -605,7 +605,7 @@ async function handleGetOrders(request, env) {
  * --- НОВА ФУНКЦИЯ ---
  * Handles POST /orders (създаване на нова поръчка от checkout)
  */
-async function handleCreateOrder(request, env, ctx) {
+async function handleCreateOrder(request, env) {
     let orderData;
     try {
         orderData = await request.json();
@@ -634,8 +634,9 @@ async function handleCreateOrder(request, env, ctx) {
     // Добавяме новата поръчка
     orders.push(newOrder);
     
-    // Запазваме обратно в KV
-    ctx.waitUntil(env.PAGE_CONTENT.put('orders', JSON.stringify(orders, null, 2)));
+    // Запазваме обратно в KV – await гарантира, че записът е завършен преди да върнем 201,
+    // така поръчката не може да бъде изгубена дори при нестандартно прекратяване на Worker-а.
+    await env.PAGE_CONTENT.put('orders', JSON.stringify(orders, null, 2));
     
     return new Response(JSON.stringify({ success: true, order: newOrder }), {
         status: 201,
@@ -647,7 +648,7 @@ async function handleCreateOrder(request, env, ctx) {
  * --- НОВА ФУНКЦИЯ ---
  * Handles PUT /orders (за промяна на статус)
  */
-async function handleUpdateOrderStatus(request, env, ctx) {
+async function handleUpdateOrderStatus(request, env) {
     const updateData = await request.json();
     if (!updateData || !updateData.id || !updateData.status) {
         throw new UserFacingError("Липсват ID на поръчка или нов статус.", 400);
@@ -663,7 +664,7 @@ async function handleUpdateOrderStatus(request, env, ctx) {
     
     orders[orderIndex].status = updateData.status;
     
-    ctx.waitUntil(env.PAGE_CONTENT.put('orders', JSON.stringify(orders, null, 2)));
+    await env.PAGE_CONTENT.put('orders', JSON.stringify(orders, null, 2));
     
     return new Response(JSON.stringify({ success: true, updatedOrder: orders[orderIndex] }), {
         status: 200,
@@ -691,7 +692,7 @@ async function handleGetContacts(request, env) {
  * --- НОВА ФУНКЦИЯ ---
  * Handles POST /contacts (създаване на нов контакт от формата за контакти)
  */
-async function handleCreateContact(request, env, ctx) {
+async function handleCreateContact(request, env) {
     let contactData;
     try {
         contactData = await request.json();
@@ -721,8 +722,8 @@ async function handleCreateContact(request, env, ctx) {
     // Добавяме новия контакт
     contacts.push(newContact);
     
-    // Запазваме обратно в KV
-    ctx.waitUntil(env.PAGE_CONTENT.put('contacts', JSON.stringify(contacts, null, 2)));
+    // Запазваме обратно в KV – await гарантира, че записът е завършен преди да върнем 201.
+    await env.PAGE_CONTENT.put('contacts', JSON.stringify(contacts, null, 2));
     
     return new Response(JSON.stringify({ success: true, contact: newContact }), {
         status: 201,
