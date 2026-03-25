@@ -100,10 +100,6 @@ let activeUndoAction = null;
 let currentModalSaveCallback = null;
 let currentProject = localStorage.getItem('adminProject') || 'main';
 
-// Auto-refresh interval for orders (new orders must appear immediately in admin)
-let ordersAutoRefreshInterval = null;
-const ORDERS_POLL_INTERVAL_MS = 30_000; // 30 seconds
-
 // localStorage cache key and TTL for contacts (24 hours is enough)
 const CONTACTS_CACHE_KEY = 'adminContactsCache';
 const CONTACTS_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -3450,18 +3446,7 @@ async function init() {
     } else {
         document.querySelector('.admin-container').innerHTML = '<h1>Грешка при зареждане на данните. Проверете конзолата.</h1>';
     }
-
-    // Poll orders every 30 s so new orders appear in the admin panel without manual refresh.
-    ordersAutoRefreshInterval = setInterval(async () => {
-        await fetchOrders();
-        filterOrders();
-    }, ORDERS_POLL_INTERVAL_MS);
 }
 
 // Старт на приложението
 init();
-
-// Clear the orders polling interval when the tab/window is closed.
-window.addEventListener('beforeunload', () => {
-    if (ordersAutoRefreshInterval) clearInterval(ordersAutoRefreshInterval);
-});
