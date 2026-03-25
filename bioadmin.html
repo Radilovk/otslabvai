@@ -726,6 +726,15 @@ let bioDoc = null;       // reference to the iframe's document
 /* ══════════════════════════════════════════════════════════════════
    INIT
 ══════════════════════════════════════════════════════════════════ */
+// Tracks whether the iframe is ready (loaded) and whether server data has arrived.
+let frameReady = false;
+let serverDataLoaded = false;
+
+/** Applies all changes to the iframe only when both the frame and server data are ready. */
+function tryApplyChanges() {
+    if (frameReady && serverDataLoaded) applyAllChanges();
+}
+
 function initApp() {
     loadData();
     buildElementList();
@@ -743,8 +752,11 @@ function initApp() {
     frame.addEventListener('load', () => {
         try {
             bioDoc = frame.contentDocument || frame.contentWindow.document;
-            applyAllChanges();
             injectClickHandler();
+            frameReady = true;
+            // Only apply changes now if server data already arrived; otherwise
+            // loadDataFromServer() will call applyAllChanges() when it completes.
+            tryApplyChanges();
         } catch(e) {
             console.warn('Cannot access iframe document (cross-origin?)', e);
         }
@@ -752,7 +764,7 @@ function initApp() {
     // Set src now (after listener is registered) so the load event is never missed
     frame.src = 'bio.html';
 
-    // Sync latest saved data from the server (source of truth)
+    // Sync latest saved data from the server (single source of truth)
     loadDataFromServer();
 }
 
@@ -775,6 +787,8 @@ async function loadDataFromServer() {
         if (!res.ok) {
             console.warn('Failed to load data from server: HTTP ' + res.status);
             document.getElementById('save-status').textContent = '⚠️ Сървърът е недостъпен — само локален запис';
+            serverDataLoaded = true;
+            tryApplyChanges();
             return;
         }
         const serverData = await res.json();
@@ -784,14 +798,16 @@ async function loadDataFromServer() {
             EXPECTED_KEYS.forEach(k => { if (k in serverData) filtered[k] = serverData[k]; });
             savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] }, filtered);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
-            applyAllChanges();
-            buildThemeGrid();
-            populateContactPanel();
-            renderTestimonialSlots();
         }
+        buildThemeGrid();
+        populateContactPanel();
+        renderTestimonialSlots();
     } catch(e) {
         console.warn('Failed to load data from server:', e);
         document.getElementById('save-status').textContent = '⚠️ Сървърът е недостъпен — само локален запис';
+    } finally {
+        serverDataLoaded = true;
+        tryApplyChanges();
     }
 }
 
@@ -878,9 +894,9 @@ function applyTextOverrides() {
 function applyImages() {
     if (!bioDoc) return;
     const IMAGE_TARGETS = {
-        hero:       '.hero__photo-wrap img',
-        about:      '.about__portrait img',
-        philosophy: '.philosophy__visual img',
+        hero:       '[data-bio-id="img-hero"]',
+        about:      '[data-bio-id="img-about"]',
+        philosophy: '[data-bio-id="img-philosophy"]',
     };
     Object.entries(IMAGE_TARGETS).forEach(([key, sel]) => {
         if (savedData.images[key]) {
@@ -914,7 +930,7 @@ function applyDiplomas() {
 
     if (!savedData.diplomas || savedData.diplomas.length === 0) return;
 
-    const creds = bioDoc.querySelector('#credentials .container');
+    const creds = bioDoc.querySelector('[data-bio-id="credentials-container"]');
     if (!creds) return;
 
     const section = bioDoc.createElement('div');
@@ -958,38 +974,31 @@ function applyContact() {
 
     // Validate and apply email
     if (c.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) {
-        const emailLink = bioDoc.querySelector('.contact__link[href^="mailto"]');
-        if (emailLink) {
-            emailLink.href = 'mailto:' + c.email;
-            const lastNode = emailLink.childNodes[emailLink.childNodes.length - 1];
-            if (lastNode && lastNode.nodeType === 3) lastNode.textContent = ' ' + c.email;
-        }
+        const emailLink = bioDoc.querySelector('[data-bio-id="contact-email"]');
+        if (emailLink) emailLink.href = 'mailto:' + c.email;
+        const emailText = bioDoc.querySelector('[data-bio-id="contact-email-text"]');
+        if (emailText) emailText.textContent = c.email;
     }
     // Validate phone: only digits, spaces, +, -, (, )
-    if (c.phone && /^[\d\s\+\-\(\)]+$/.test(c.phone)) {
-        const phoneLink = bioDoc.querySelector('.contact__link[href^="tel"]');
-        if (phoneLink) {
-            phoneLink.href = 'tel:' + c.phone.replace(/[\s\-\(\)]/g, '');
-            const lastNode = phoneLink.childNodes[phoneLink.childNodes.length - 1];
-            if (lastNode && lastNode.nodeType === 3) lastNode.textContent = ' ' + c.phone;
-        }
+    if (c.phone && /^[\d\s+\-()]+$/.test(c.phone)) {
+        const phoneLink = bioDoc.querySelector('[data-bio-id="contact-phone"]');
+        if (phoneLink) phoneLink.href = 'tel:' + c.phone.replace(/[\s\-()]/g, '');
+        const phoneText = bioDoc.querySelector('[data-bio-id="contact-phone-text"]');
+        if (phoneText) phoneText.textContent = c.phone;
     }
     if (c.address) {
-        const addrLink = bioDoc.querySelector('.contact__link[data-contact-type="address"]');
-        if (addrLink) {
-            const lastNode = addrLink.childNodes[addrLink.childNodes.length - 1];
-            if (lastNode && lastNode.nodeType === 3) lastNode.textContent = ' ' + c.address;
-        }
+        const addrText = bioDoc.querySelector('[data-bio-id="contact-address-text"]');
+        if (addrText) addrText.textContent = c.address;
     }
     // Only allow http/https URLs for social links
-    function applySafeHref(selector, url) {
+    function applySafeHref(bioId, url) {
         if (!url || !/^https?:\/\//i.test(url)) return;
-        const el = bioDoc.querySelector(selector);
+        const el = bioDoc.querySelector(`[data-bio-id="${bioId}"]`);
         if (el) el.href = url;
     }
-    applySafeHref('.footer__social[aria-label="Instagram"]', c.instagram);
-    applySafeHref('.footer__social[aria-label="Facebook"]',  c.facebook);
-    applySafeHref('.footer__social[aria-label="LinkedIn"]',  c.linkedin);
+    applySafeHref('social-instagram', c.instagram);
+    applySafeHref('social-facebook',  c.facebook);
+    applySafeHref('social-linkedin',  c.linkedin);
 }
 
 function applyTestimonials() {

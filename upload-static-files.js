@@ -33,6 +33,11 @@ const FILES_TO_UPLOAD = [
     // Static fallback for page_content – used by the worker when the live 'page_content' KV key is empty
     { file: 'backend/page_content.json', key: 'static_backend_page_content.json' },
     { file: 'backend/life_page_content.json', key: 'static_backend_life_page_content.json' },
+    // Static-serving keys for GET /page_content.json and GET /life_page_content.json.
+    // These are updated by the worker on every admin save, so normal page loads
+    // never trigger a dynamic KV read — the browser caches the static file for 1 hour.
+    { file: 'backend/page_content.json', key: 'static_page_content.json' },
+    { file: 'backend/life_page_content.json', key: 'static_life_page_content.json' },
 ];
 
 // KV Namespace details

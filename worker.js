@@ -73,19 +73,22 @@ export default {
       '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css },
       '/bioadmin.html': { file: 'bioadmin.html', type: CONTENT_TYPES.html },
       '/robots.txt': { file: 'robots.txt', type: 'text/plain; charset=utf-8' },
-      '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' }
+      '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' },
+      // Content JSON files are served as static files with 1-hour browser caching.
+      // The KV keys (static_page_content.json / static_life_page_content.json) are
+      // written on every admin save so the cached copy is always up to date.
+      '/page_content.json': { file: 'page_content.json', type: 'application/json' },
+      '/life_page_content.json': { file: 'life_page_content.json', type: 'application/json' }
     };
     
     try {
       let response;
       
-      // bio.html is served with bio_content injected inline to avoid a
-      // separate /bio_content.json KV read on every page view.
       if (url.pathname === '/bio.html') {
         response = await serveBioHtml(env);
       }
-      // Check if it's a static file request
-      else if (STATIC_FILES[url.pathname]) {
+      // Only serve static files for GET — POST/PUT requests must reach the API router.
+      else if (request.method === 'GET' && STATIC_FILES[url.pathname]) {
         const { file, type } = STATIC_FILES[url.pathname];
         response = await serveStaticFile(env, file, type);
       }
@@ -257,32 +260,24 @@ async function serveStaticFile(env, filename, contentType) {
 }
 
 /**
- * Serves bio.html with the bio_content KV data injected inline as
- * window.__bioContent.  This avoids a separate /bio_content.json request
- * (and the associated KV read) on every page view.
+ * Serves bio.html.  When admin saves bio_content (via handleSaveBioContent), the
+ * content is baked into a 'baked_bio.html' KV entry at save time.  Serving this
+ * pre-baked file avoids a per-request KV read and allows standard 1-hour browser
+ * caching so most page loads never touch the backend at all.
+ * Falls back to the repo-uploaded 'static_bio.html' (with hardcoded defaults) if
+ * the admin has not saved any overrides yet.
  */
 async function serveBioHtml(env) {
-    const [htmlContent, bioContent] = await Promise.all([
-        env.PAGE_CONTENT.get('static_bio.html'),
-        env.PAGE_CONTENT.get('bio_content')
-    ]);
+    // Prefer the baked version (updated every time admin saves bio_content).
+    let htmlContent = await env.PAGE_CONTENT.get('baked_bio.html');
+    if (htmlContent === null) {
+        // No overrides saved yet — serve the static template from the repo.
+        htmlContent = await env.PAGE_CONTENT.get('static_bio.html');
+    }
     if (htmlContent === null) {
         throw new UserFacingError('File bio.html not found in storage.', 404);
     }
-    const bioData = bioContent !== null ? bioContent : '{}';
-    // Escape characters that are unsafe inside an inline <script> block so
-    // that an adversarially-crafted bio_content value cannot break out of the
-    // script context and inject arbitrary HTML.
-    const safeData = bioData
-        .replace(/&/g, '\\u0026')
-        .replace(/</g, '\\u003c')
-        .replace(/>/g, '\\u003e');
-    const inlineScript = `<script id="bio-content-injection-point">window.__bioContent=${safeData};<\/script>`;
-    const injectedHtml = htmlContent.replace(
-        '<script id="bio-content-injection-point">/* bio_content injected by worker */</script>',
-        inlineScript
-    );
-    return new Response(injectedHtml, {
+    return new Response(htmlContent, {
         status: 200,
         headers: {
             'Content-Type': 'text/html; charset=utf-8',
@@ -395,7 +390,10 @@ async function syncPageContentToGitHub(content, env) {
 
 /**
  * Handles POST /page_content.json
- * Saves content to KV and asynchronously syncs it to the GitHub repository.
+ * Saves content to KV (both the live key and the static-serving key) and
+ * asynchronously syncs it to the GitHub repository.
+ * Updating 'static_page_content.json' means the next browser cache miss will
+ * get the new content from the static file endpoint without any dynamic logic.
  */
 async function handleSavePageContent(request, env, ctx) {
     const contentToSave = await request.text();
@@ -404,6 +402,9 @@ async function handleSavePageContent(request, env, ctx) {
         JSON.parse(contentToSave);
         ctx.waitUntil(Promise.all([
             env.PAGE_CONTENT.put('page_content', contentToSave),
+            // Keep the static-serving KV key in sync so GET /page_content.json
+            // (served as a static file) always reflects the latest admin save.
+            env.PAGE_CONTENT.put('static_page_content.json', contentToSave),
             syncPageContentToGitHub(contentToSave, env)
         ]));
         return new Response(JSON.stringify({ success: true, message: 'Content saved.' }), {
@@ -440,7 +441,8 @@ async function handleGetLifePageContent(request, env) {
 
 /**
  * Handles POST /life_page_content.json
- * Saves life content to KV and asynchronously syncs it to the GitHub repository.
+ * Saves life content to KV (both the live key and the static-serving key) and
+ * asynchronously syncs it to the GitHub repository.
  */
 async function handleSaveLifePageContent(request, env, ctx) {
     const contentToSave = await request.text();
@@ -448,6 +450,9 @@ async function handleSaveLifePageContent(request, env, ctx) {
         JSON.parse(contentToSave);
         ctx.waitUntil(Promise.all([
             env.PAGE_CONTENT.put('life_page_content', contentToSave),
+            // Keep the static-serving KV key in sync so GET /life_page_content.json
+            // (served as a static file) always reflects the latest admin save.
+            env.PAGE_CONTENT.put('static_life_page_content.json', contentToSave),
             syncLifePageContentToGitHub(contentToSave, env)
         ]));
         return new Response(JSON.stringify({ success: true, message: 'Life content saved.' }), {
@@ -539,7 +544,8 @@ async function handleGetBioContent(request, env) {
 
 /**
  * Handles POST /bio_content.json
- * Saves bio page overrides to KV.
+ * Saves bio page overrides to KV and bakes them into 'baked_bio.html' so that
+ * bio.html can be served as a static file without a per-request KV read.
  */
 async function handleSaveBioContent(request, env, ctx) {
     const contentToSave = await request.text();
@@ -549,7 +555,25 @@ async function handleSaveBioContent(request, env, ctx) {
         if (typeof parsed !== 'object' || parsed === null) {
             throw new UserFacingError('Expected a JSON object in the request body.', 400);
         }
-        ctx.waitUntil(env.PAGE_CONTENT.put('bio_content', contentToSave));
+        ctx.waitUntil((async () => {
+            const puts = [env.PAGE_CONTENT.put('bio_content', contentToSave)];
+            // Bake bio_content into the HTML template so bio.html can be served
+            // as a plain static file (1-hour browser cache, no per-request KV read).
+            const baseHtml = await env.PAGE_CONTENT.get('static_bio.html');
+            if (baseHtml !== null) {
+                const safeData = contentToSave
+                    .replace(/&/g, '\\u0026')
+                    .replace(/</g, '\\u003c')
+                    .replace(/>/g, '\\u003e');
+                const inlineScript = `<script id="bio-content-injection-point">window.__bioContent=${safeData};<\/script>`;
+                const bakedHtml = baseHtml.replace(
+                    /<script id="bio-content-injection-point">[\s\S]*?<\/script>/,
+                    inlineScript
+                );
+                puts.push(env.PAGE_CONTENT.put('baked_bio.html', bakedHtml));
+            }
+            await Promise.all(puts);
+        })());
         return new Response(JSON.stringify({ success: true, message: 'Bio content saved.' }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
