@@ -162,10 +162,17 @@
                         <button id="refresh-contacts-btn" class="btn btn-secondary">Опресни</button>
                     </div>
                 </div>
+                <div class="contacts-source-filter" style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;">
+                    <button class="btn btn-secondary contact-source-btn active" data-source="">Всички</button>
+                    <button class="btn btn-secondary contact-source-btn" data-source="index.html">index.html</button>
+                    <button class="btn btn-secondary contact-source-btn" data-source="life.html">life.html</button>
+                    <button class="btn btn-secondary contact-source-btn" data-source="bio.html">bio.html</button>
+                </div>
                 <div class="table-wrapper">
                     <table id="contacts-table" class="orders-table">
                         <thead>
                             <tr>
+                                <th>Страница</th>
                                 <th>Име</th>
                                 <th>Email</th>
                                 <th>Тема</th>
@@ -401,6 +408,7 @@
     <!-- Шаблон за ред от таблицата с контакти -->
     <template id="contact-row-template">
         <tr>
+            <td data-label="Страница" class="contact-source"></td>
             <td data-label="Име" class="contact-name"></td>
             <td data-label="Email" class="contact-email"></td>
             <td data-label="Тема" class="contact-subject"></td>

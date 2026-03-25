@@ -1398,7 +1398,7 @@ function initializePageInteractions(settings = {}) {
                 const response = await fetch(`${API_URL}/contacts`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, phone, message })
+                    body: JSON.stringify({ name, email, phone, message, source: 'index.html' })
                 });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 showToast('Благодарим за вашето запитване! Ще се свържем с вас скоро.', 'success');

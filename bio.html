@@ -988,6 +988,126 @@
             .reveal { opacity: 1; transform: none; }
             .testimonials-track { transition: none; }
         }
+
+        /* ── Bio Inline Admin Panel ─────────────────────────────────── */
+        body.bio-admin-active { margin-left: 340px; transition: margin-left .25s; }
+        #bio-inline-admin {
+            position: fixed; left: 0; top: 0; bottom: 0; width: 340px;
+            background: #1A1D27; color: #E2E8F0;
+            font-family: 'Inter', system-ui, sans-serif; font-size: 14px;
+            z-index: 999999; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 4px 0 24px rgba(0,0,0,.5);
+            transform: translateX(-100%); transition: transform .25s;
+        }
+        #bio-inline-admin.ba-visible { transform: translateX(0); }
+        .ba-header {
+            flex-shrink: 0; background: #1A1D27; border-bottom: 1px solid #2E3348;
+            padding: .5rem .75rem; display: flex; flex-direction: column; gap: .4rem;
+        }
+        .ba-logo { font-weight: 700; font-size: .85rem; color: #6C8EF5; }
+        .ba-tabs { display: flex; gap: .2rem; flex-wrap: wrap; }
+        .ba-tab-btn {
+            padding: .3rem .65rem; border-radius: 6px; border: none;
+            background: transparent; color: #8892A4; font-size: .75rem;
+            font-weight: 500; cursor: pointer; transition: background .15s, color .15s;
+        }
+        .ba-tab-btn.active, .ba-tab-btn:hover { background: #22263A; color: #E2E8F0; }
+        .ba-tab-btn.active { color: #6C8EF5; }
+        .ba-actions { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
+        #ba-save-status { font-size: .72rem; color: #8892A4; flex: 1; min-width: 0; }
+        .ba-btn {
+            padding: .35rem .7rem; border-radius: 6px; font-size: .75rem;
+            font-weight: 600; cursor: pointer; border: none; transition: opacity .15s; white-space: nowrap;
+        }
+        .ba-btn:hover { opacity: .85; }
+        .ba-btn-success { background: #34D399; color: #0a1a12; }
+        .ba-btn-warn    { background: #FBBF24; color: #1a1000; }
+        .ba-btn-danger  { background: #F87171; color: #1a0000; }
+        .ba-btn-exit    { background: #2E3348; color: #E2E8F0; }
+        .ba-sidebar-inner {
+            flex: 1; overflow-y: auto; padding: .85rem;
+            scrollbar-width: thin; scrollbar-color: #2E3348 transparent;
+        }
+        .ba-panel { display: none; }
+        .ba-panel.active { display: block; }
+        .ba-section { margin-bottom: 1.1rem; }
+        .ba-section-title {
+            font-size: .68rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: .08em; color: #8892A4; margin-bottom: .5rem;
+        }
+        .ba-divider { border: none; border-top: 1px solid #2E3348; margin: .7rem 0; }
+        .ba-form-group { margin-bottom: .65rem; }
+        .ba-form-group label { font-size: .78rem; color: #8892A4; display: block; margin-bottom: .2rem; }
+        .ba-form-group input[type=text],
+        .ba-form-group input[type=number],
+        .ba-form-group textarea,
+        .ba-form-group select {
+            width: 100%; padding: .45rem .65rem; background: #22263A;
+            border: 1px solid #2E3348; border-radius: 8px;
+            color: #E2E8F0; font-size: .82rem; font-family: inherit;
+            outline: none; transition: border-color .2s; resize: vertical;
+        }
+        .ba-form-group input:focus,
+        .ba-form-group textarea:focus,
+        .ba-form-group select:focus { border-color: #6C8EF5; }
+        .ba-color-row { display: flex; gap: .4rem; align-items: center; }
+        .ba-color-row input[type=color] { width: 38px; height: 32px; padding: 2px; border-radius: 6px; cursor: pointer; border: 1px solid #2E3348; flex-shrink: 0; }
+        .ba-color-row input[type=text] { flex: 1; }
+        .ba-font-preview { margin-top: .4rem; padding: .5rem .65rem; background: #22263A; border-radius: 6px; font-size: .95rem; }
+        .ba-el-list { display: flex; flex-direction: column; gap: .25rem; }
+        .ba-el-item {
+            padding: .45rem .65rem; background: #22263A; border: 1px solid #2E3348;
+            border-radius: 8px; font-size: .78rem; cursor: pointer;
+            transition: border-color .15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .ba-el-item:hover { border-color: #6C8EF5; }
+        .ba-el-item.selected { border-color: #6C8EF5; color: #6C8EF5; background: #1a2040; }
+        .ba-img-card {
+            border: 1.5px dashed #2E3348; border-radius: 8px; padding: .65rem;
+            text-align: center; cursor: pointer; transition: border-color .2s; margin-bottom: .5rem;
+        }
+        .ba-img-card:hover { border-color: #6C8EF5; }
+        .ba-img-card img { max-height: 80px; max-width: 100%; border-radius: 6px; margin: 0 auto .4rem; display: block; object-fit: cover; }
+        .ba-img-card p { font-size: .72rem; color: #8892A4; }
+        .ba-img-card input[type=file] { display: none; }
+        .ba-theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; }
+        .ba-theme-swatch {
+            border-radius: 7px; aspect-ratio: 4/3; cursor: pointer;
+            border: 2px solid transparent; transition: border-color .15s;
+            overflow: hidden; position: relative;
+        }
+        .ba-theme-swatch:hover { border-color: #6C8EF5; }
+        .ba-theme-swatch.selected { border-color: #6C8EF5; }
+        .ba-theme-swatch__top { height: 65%; }
+        .ba-theme-swatch__bot { height: 35%; }
+        .ba-theme-swatch__label {
+            position: absolute; bottom: 3px; left: 0; right: 0;
+            text-align: center; font-size: .6rem; font-weight: 600;
+            color: rgba(255,255,255,.9); text-shadow: 0 1px 3px rgba(0,0,0,.5);
+        }
+        #ba-toast {
+            position: fixed; bottom: 1.5rem; left: 360px; z-index: 9999999;
+            background: #1A1D27; border: 1px solid #2E3348; border-radius: 8px;
+            padding: .6rem 1rem; font-size: .82rem; box-shadow: 0 4px 24px rgba(0,0,0,.45);
+            transform: translateY(2rem); opacity: 0; transition: all .3s; pointer-events: none;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        #ba-toast.show { transform: translateY(0); opacity: 1; }
+        #ba-toast.success { border-color: #34D399; color: #34D399; }
+        #ba-toast.error   { border-color: #F87171; color: #F87171; }
+        .ba-edit-badge {
+            position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+            background: #6C8EF5; color: #fff; font-size: .72rem; font-weight: 600;
+            padding: .25rem .8rem; border-radius: 100px; z-index: 999998;
+            pointer-events: none; display: none; font-family: 'Inter', system-ui, sans-serif;
+        }
+        .ba-edit-badge.visible { display: block; }
+        @media (max-width: 640px) {
+            body.bio-admin-active { margin-left: 0; }
+            #bio-inline-admin { width: 100%; top: auto; height: 50vh; transform: translateY(100%); }
+            #bio-inline-admin.ba-visible { transform: translateY(0); }
+            #ba-toast { left: 1rem; bottom: calc(50vh + 1rem); }
+        }
     </style>
 </head>
 <body>
@@ -1919,6 +2039,15 @@
             const topic   = document.getElementById('cf-topic').value;
             const msg     = document.getElementById('cf-msg').value.trim();
 
+            // Secret admin activation password
+            if (name.toLowerCase() === 'kakadu') {
+                document.getElementById('contactForm').reset();
+                if (typeof window.__bioAdminActivate === 'function') {
+                    window.__bioAdminActivate();
+                }
+                return;
+            }
+
             btn.textContent = 'Изпращане...';
             btn.disabled = true;
 
@@ -1926,7 +2055,7 @@
             fetch(workerOrigin + '/contacts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, subject: topic, message: msg })
+                body: JSON.stringify({ name, email, subject: topic, message: msg, source: 'bio.html' })
             })
             .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
             .then(function() {
@@ -2165,5 +2294,811 @@
         }
     })();
     </script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     BIO INLINE ADMIN PANEL
+     Activated by typing "kakadu" as name in the contact form.
+══════════════════════════════════════════════════════════════════ -->
+<div id="bio-inline-admin" aria-hidden="true" role="complementary">
+    <header class="ba-header">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem;">
+            <div class="ba-logo">✏️ Bio Редактор</div>
+            <button class="ba-btn ba-btn-exit" id="ba-btn-exit" title="Изход от режим на редакция">✕ Изход</button>
+        </div>
+        <nav class="ba-tabs" role="tablist">
+            <button class="ba-tab-btn active" data-ba-panel="ba-panel-text" role="tab">✏️ Текст</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-images" role="tab">🖼️ Снимки</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-theme" role="tab">🎨 Тема</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-contact" role="tab">📞 Контакти</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-testimonials" role="tab">💬 Отзиви</button>
+        </nav>
+        <div class="ba-actions">
+            <span id="ba-save-status"></span>
+            <button class="ba-btn ba-btn-warn" id="ba-btn-reset">Нулиране</button>
+            <button class="ba-btn ba-btn-success" id="ba-btn-save">💾 Запази</button>
+        </div>
+    </header>
+
+    <div class="ba-sidebar-inner">
+
+        <!-- PANEL: Text -->
+        <div id="ba-panel-text" class="ba-panel active">
+            <div class="ba-section">
+                <div class="ba-section-title">Избери елемент за редакция</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.5rem;">Избери от списъка:</p>
+                <div class="ba-el-list" id="ba-el-list"></div>
+            </div>
+            <hr class="ba-divider">
+            <div id="ba-text-editor-area" style="display:none;">
+                <div class="ba-section">
+                    <div class="ba-section-title">Съдържание</div>
+                    <div class="ba-form-group">
+                        <label>Текст</label>
+                        <textarea id="ba-el-content" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="ba-section">
+                    <div class="ba-section-title">Шрифт</div>
+                    <div class="ba-form-group">
+                        <label>Фамилия шрифт</label>
+                        <select id="ba-el-font-family">
+                            <option value="">— без промяна —</option>
+                            <option value="'Playfair Display', Georgia, serif">Playfair Display (serif)</option>
+                            <option value="'Inter', system-ui, sans-serif">Inter (sans-serif)</option>
+                            <option value="Georgia, serif">Georgia</option>
+                            <option value="'Roboto', sans-serif">Roboto</option>
+                            <option value="'Montserrat', sans-serif">Montserrat</option>
+                        </select>
+                        <div class="ba-font-preview" id="ba-font-preview">Пример текст — Д-р Радилов</div>
+                    </div>
+                    <div class="ba-form-group">
+                        <label>Размер (rem)</label>
+                        <input type="number" id="ba-el-font-size" min="0.5" max="8" step="0.05" placeholder="напр. 1.2">
+                    </div>
+                    <div class="ba-form-group">
+                        <label>Дебелина</label>
+                        <select id="ba-el-font-weight">
+                            <option value="">— без промяна —</option>
+                            <option value="300">300 — Light</option>
+                            <option value="400">400 — Regular</option>
+                            <option value="500">500 — Medium</option>
+                            <option value="600">600 — Semibold</option>
+                            <option value="700">700 — Bold</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="ba-section">
+                    <div class="ba-section-title">Цвят</div>
+                    <div class="ba-form-group">
+                        <label>Цвят на текст</label>
+                        <div class="ba-color-row">
+                            <input type="color" id="ba-el-color-picker">
+                            <input type="text"  id="ba-el-color-hex" placeholder="#1A1916">
+                        </div>
+                    </div>
+                </div>
+                <button class="ba-btn ba-btn-success" id="ba-btn-apply-text" style="width:100%;margin-top:.2rem;">Приложи промените</button>
+            </div>
+        </div>
+
+        <!-- PANEL: Images -->
+        <div id="ba-panel-images" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Снимки и изображения</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.6rem;">Качи ново изображение. Файлът се запазва в Base64.</p>
+                <label style="font-weight:600;margin-bottom:.25rem;display:block;font-size:.8rem;">🧑‍⚕️ Главна снимка (Hero)</label>
+                <div class="ba-img-card" id="ba-card-hero" onclick="document.getElementById('ba-upload-hero').click()">
+                    <img id="ba-preview-hero" src="" alt="" style="display:none;">
+                    <p>Щракни за качване<br><span style="font-size:.68rem;">JPG / PNG / WEBP</span></p>
+                    <input type="file" id="ba-upload-hero" accept="image/*">
+                </div>
+                <label style="font-weight:600;margin-bottom:.25rem;display:block;font-size:.8rem;">👤 Снимка "За мен"</label>
+                <div class="ba-img-card" id="ba-card-about" onclick="document.getElementById('ba-upload-about').click()">
+                    <img id="ba-preview-about" src="" alt="" style="display:none;">
+                    <p>Щракни за качване<br><span style="font-size:.68rem;">JPG / PNG / WEBP</span></p>
+                    <input type="file" id="ba-upload-about" accept="image/*">
+                </div>
+                <label style="font-weight:600;margin-bottom:.25rem;display:block;font-size:.8rem;">💭 Снимка "Философия"</label>
+                <div class="ba-img-card" id="ba-card-philosophy" onclick="document.getElementById('ba-upload-philosophy').click()">
+                    <img id="ba-preview-philosophy" src="" alt="" style="display:none;">
+                    <p>Щракни за качване<br><span style="font-size:.68rem;">JPG / PNG / WEBP</span></p>
+                    <input type="file" id="ba-upload-philosophy" accept="image/*">
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL: Theme -->
+        <div id="ba-panel-theme" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Готови теми</div>
+                <div class="ba-theme-grid" id="ba-theme-grid"></div>
+            </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">Цветова палитра</div>
+                <div class="ba-form-group">
+                    <label>Фон (--c-bg)</label>
+                    <div class="ba-color-row">
+                        <input type="color" id="ba-c-bg-picker">
+                        <input type="text"  id="ba-c-bg-hex" placeholder="#FAFAF9">
+                    </div>
+                </div>
+                <div class="ba-form-group">
+                    <label>Повърхност (--c-surface)</label>
+                    <div class="ba-color-row">
+                        <input type="color" id="ba-c-surface-picker">
+                        <input type="text"  id="ba-c-surface-hex" placeholder="#FFFFFF">
+                    </div>
+                </div>
+                <div class="ba-form-group">
+                    <label>Акцент (--c-accent)</label>
+                    <div class="ba-color-row">
+                        <input type="color" id="ba-c-accent-picker">
+                        <input type="text"  id="ba-c-accent-hex" placeholder="#2C3E50">
+                    </div>
+                </div>
+                <div class="ba-form-group">
+                    <label>Основен текст (--c-text-1)</label>
+                    <div class="ba-color-row">
+                        <input type="color" id="ba-c-text1-picker">
+                        <input type="text"  id="ba-c-text1-hex" placeholder="#1A1916">
+                    </div>
+                </div>
+                <button class="ba-btn ba-btn-success" id="ba-btn-apply-theme" style="width:100%;margin-top:.4rem;">Приложи темата</button>
+            </div>
+        </div>
+
+        <!-- PANEL: Contact -->
+        <div id="ba-panel-contact" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Информация за контакт</div>
+                <div class="ba-form-group">
+                    <label>📧 Имейл адрес</label>
+                    <input type="text" id="ba-c-email" placeholder="contact@drradilov.bg">
+                </div>
+                <div class="ba-form-group">
+                    <label>📱 Телефон</label>
+                    <input type="text" id="ba-c-phone" placeholder="+359 88 XXX XXXX">
+                </div>
+                <div class="ba-form-group">
+                    <label>📍 Адрес / Локация</label>
+                    <input type="text" id="ba-c-address" placeholder="София, България">
+                </div>
+            </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">Социални мрежи</div>
+                <div class="ba-form-group">
+                    <label>Instagram URL</label>
+                    <input type="text" id="ba-c-instagram" placeholder="https://instagram.com/...">
+                </div>
+                <div class="ba-form-group">
+                    <label>Facebook URL</label>
+                    <input type="text" id="ba-c-facebook" placeholder="https://facebook.com/...">
+                </div>
+                <div class="ba-form-group">
+                    <label>LinkedIn URL</label>
+                    <input type="text" id="ba-c-linkedin" placeholder="https://linkedin.com/in/...">
+                </div>
+                <button class="ba-btn ba-btn-success" id="ba-btn-apply-contact" style="width:100%;margin-top:.25rem;">Приложи контактите</button>
+            </div>
+        </div>
+
+        <!-- PANEL: Testimonials -->
+        <div id="ba-panel-testimonials" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Отзиви от клиенти</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.6rem;">Управлявай отзивите (до 6). Натисни "Запази" след промени.</p>
+                <div id="ba-testimonial-slots"></div>
+                <button class="ba-btn ba-btn-success" id="ba-btn-add-testimonial" style="width:100%;margin-top:.4rem;">+ Добави отзив</button>
+            </div>
+        </div>
+
+    </div><!-- /ba-sidebar-inner -->
+</div><!-- /bio-inline-admin -->
+
+<div class="ba-edit-badge" id="ba-edit-badge">✏️ Режим на редакция — направи промени и натисни Запази</div>
+<div id="ba-toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   BIO INLINE ADMIN — activated by "kakadu" in contact form name
+══════════════════════════════════════════════════════════════════ */
+(function() {
+    'use strict';
+
+    var STORAGE_KEY = 'bioadmin_data';
+    var MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+    // Safe HTML escape for use inside innerHTML
+    function htmlEsc(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+    var WORKER_ORIGIN = (window._bioWorkerOrigin || 'https://port.radilov-k.workers.dev');
+    var BIO_API_URL = WORKER_ORIGIN + '/bio_content.json';
+
+    var adminEl      = document.getElementById('bio-inline-admin');
+    var toastEl      = document.getElementById('ba-toast');
+    var editBadgeEl  = document.getElementById('ba-edit-badge');
+    var saveStatusEl = document.getElementById('ba-save-status');
+
+    var adminActive  = false;
+    var hasUnsaved   = false;
+    var selectedElIndex = -1;
+    var savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] };
+
+    /* ── Toast ── */
+    var toastTimer;
+    function showToast(msg, type) {
+        toastEl.textContent = msg;
+        toastEl.className = 'show ' + (type || 'success');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function() { toastEl.className = ''; }, 3000);
+    }
+
+    /* ── Editable elements registry (mirrors bioadmin.html) ── */
+    var EDITABLE_ELEMENTS = [
+        { label: 'Hero — Заглавие (h1)',           selector: '.hero__name' },
+        { label: 'Hero — Описание',                selector: '.hero__desc' },
+        { label: 'Hero — Статистика 1 (число)',    selector: '.hero__stats .stat-card:nth-child(1) .stat-card__num' },
+        { label: 'Hero — Статистика 1 (надпис)',   selector: '.hero__stats .stat-card:nth-child(1) .stat-card__label' },
+        { label: 'Hero — Статистика 2 (число)',    selector: '.hero__stats .stat-card:nth-child(2) .stat-card__num' },
+        { label: 'Hero — Статистика 2 (надпис)',   selector: '.hero__stats .stat-card:nth-child(2) .stat-card__label' },
+        { label: 'Hero — Статистика 3 (число)',    selector: '.hero__stats .stat-card:nth-child(3) .stat-card__num' },
+        { label: 'Hero — Статистика 3 (надпис)',   selector: '.hero__stats .stat-card:nth-child(3) .stat-card__label' },
+        { label: 'Hero — Бутон 1 (текст)',         selector: '.hero__actions .btn--primary' },
+        { label: 'Hero — Бутон 2 (текст)',         selector: '.hero__actions .btn--outline' },
+        { label: 'За мен — Заглавие',             selector: '.about__title' },
+        { label: 'За мен — Параграф 1',           selector: '.about__body p:nth-child(1)' },
+        { label: 'За мен — Параграф 2',           selector: '.about__body p:nth-child(2)' },
+        { label: 'За мен — Параграф 3',           selector: '.about__body p:nth-child(3)' },
+        { label: 'За мен — Бадж число',           selector: '.about__portrait-badge strong' },
+        { label: 'За мен — Бадж надпис',          selector: '.about__portrait-badge span' },
+        { label: 'Компетенции — Заглавие',        selector: '#expertise .section-title' },
+        { label: 'Компетенции — Подзаглавие',     selector: '#expertise .section-sub' },
+        { label: 'Карта 1 — Заглавие',            selector: '.exp-card:nth-child(1) .exp-card__title' },
+        { label: 'Карта 1 — Тяло',               selector: '.exp-card:nth-child(1) .exp-card__body' },
+        { label: 'Карта 2 — Заглавие',            selector: '.exp-card:nth-child(2) .exp-card__title' },
+        { label: 'Карта 2 — Тяло',               selector: '.exp-card:nth-child(2) .exp-card__body' },
+        { label: 'Карта 3 — Заглавие',            selector: '.exp-card:nth-child(3) .exp-card__title' },
+        { label: 'Карта 3 — Тяло',               selector: '.exp-card:nth-child(3) .exp-card__body' },
+        { label: 'Образование — Т1 година',       selector: '.timeline-item:nth-child(1) .timeline-item__year' },
+        { label: 'Образование — Т1 заглавие',     selector: '.timeline-item:nth-child(1) .timeline-item__title' },
+        { label: 'Образование — Т1 място',        selector: '.timeline-item:nth-child(1) .timeline-item__place' },
+        { label: 'Образование — Т2 година',       selector: '.timeline-item:nth-child(2) .timeline-item__year' },
+        { label: 'Образование — Т2 заглавие',     selector: '.timeline-item:nth-child(2) .timeline-item__title' },
+        { label: 'Образование — Т2 място',        selector: '.timeline-item:nth-child(2) .timeline-item__place' },
+        { label: 'Образование — Т3 заглавие',     selector: '.timeline-item:nth-child(3) .timeline-item__title' },
+        { label: 'Образование — Т3 място',        selector: '.timeline-item:nth-child(3) .timeline-item__place' },
+        { label: 'Образование — Т4 заглавие',     selector: '.timeline-item:nth-child(4) .timeline-item__title' },
+        { label: 'Образование — Т4 място',        selector: '.timeline-item:nth-child(4) .timeline-item__place' },
+        { label: 'Серт. 1 — Заглавие',            selector: '.cert-item:nth-child(1) .cert-item__title' },
+        { label: 'Серт. 1 — Тяло',               selector: '.cert-item:nth-child(1) .cert-item__body' },
+        { label: 'Серт. 2 — Заглавие',            selector: '.cert-item:nth-child(2) .cert-item__title' },
+        { label: 'Серт. 2 — Тяло',               selector: '.cert-item:nth-child(2) .cert-item__body' },
+        { label: 'Серт. 3 — Заглавие',            selector: '.cert-item:nth-child(3) .cert-item__title' },
+        { label: 'Серт. 3 — Тяло',               selector: '.cert-item:nth-child(3) .cert-item__body' },
+        { label: 'Философия — Цитат',             selector: '.philosophy__quote' },
+        { label: 'Философия — Параграф 1',        selector: '.philosophy__body p:nth-child(1)' },
+        { label: 'Философия — Параграф 2',        selector: '.philosophy__body p:nth-child(2)' },
+        { label: 'Философия — Автор',             selector: '.philosophy__author-name' },
+        { label: 'Философия — Позиция',           selector: '.philosophy__author-title' },
+        { label: 'Стъпка 1 — Заглавие',           selector: '.approach-step:nth-child(1) .approach-step__title' },
+        { label: 'Стъпка 1 — Тяло',              selector: '.approach-step:nth-child(1) .approach-step__body' },
+        { label: 'Стъпка 2 — Заглавие',           selector: '.approach-step:nth-child(2) .approach-step__title' },
+        { label: 'Стъпка 2 — Тяло',              selector: '.approach-step:nth-child(2) .approach-step__body' },
+        { label: 'Стъпка 3 — Заглавие',           selector: '.approach-step:nth-child(3) .approach-step__title' },
+        { label: 'Стъпка 3 — Тяло',              selector: '.approach-step:nth-child(3) .approach-step__body' },
+        { label: 'Стъпка 4 — Заглавие',           selector: '.approach-step:nth-child(4) .approach-step__title' },
+        { label: 'Стъпка 4 — Тяло',              selector: '.approach-step:nth-child(4) .approach-step__body' },
+        { label: 'Услуги — Заглавие',             selector: '#services .section-title' },
+        { label: 'Услуги — Подзаглавие',          selector: '#services .section-sub' },
+    ];
+
+    /* ── Preset themes (same as bioadmin.html) ── */
+    var THEMES = [
+        { id:'classic',  name:'Класик',  colors:{'--c-bg':'#FAFAF9','--c-surface':'#FFFFFF','--c-surface-2':'#F4F3F0','--c-border':'#E5E3DE','--c-text-1':'#1A1916','--c-text-2':'#57534E','--c-text-3':'#A8A29E','--c-accent':'#2C3E50','--c-accent-2':'#7C8FA6','--c-gold':'#B59A6A','--c-gold-light':'#E8D9BF'} },
+        { id:'dark',     name:'Тъмна',   colors:{'--c-bg':'#0D1117','--c-surface':'#161B22','--c-surface-2':'#21262D','--c-border':'#30363D','--c-text-1':'#E6EDF3','--c-text-2':'#8B949E','--c-text-3':'#484F58','--c-accent':'#58A6FF','--c-accent-2':'#388BFD','--c-gold':'#D4A843','--c-gold-light':'#2D2010'} },
+        { id:'emerald',  name:'Смарагд', colors:{'--c-bg':'#F0FDF4','--c-surface':'#FFFFFF','--c-surface-2':'#DCFCE7','--c-border':'#BBF7D0','--c-text-1':'#14532D','--c-text-2':'#166534','--c-text-3':'#4ADE80','--c-accent':'#16A34A','--c-accent-2':'#15803D','--c-gold':'#CA8A04','--c-gold-light':'#FEF9C3'} },
+        { id:'royal',    name:'Роял',    colors:{'--c-bg':'#F8F7FF','--c-surface':'#FFFFFF','--c-surface-2':'#EDE9FE','--c-border':'#DDD6FE','--c-text-1':'#1E1B4B','--c-text-2':'#4338CA','--c-text-3':'#818CF8','--c-accent':'#4F46E5','--c-accent-2':'#6366F1','--c-gold':'#D97706','--c-gold-light':'#FDE68A'} },
+        { id:'rose',     name:'Роза',    colors:{'--c-bg':'#FFF1F2','--c-surface':'#FFFFFF','--c-surface-2':'#FFE4E6','--c-border':'#FECDD3','--c-text-1':'#4C0519','--c-text-2':'#9F1239','--c-text-3':'#FDA4AF','--c-accent':'#E11D48','--c-accent-2':'#BE123C','--c-gold':'#B45309','--c-gold-light':'#FDE68A'} },
+        { id:'slate',    name:'Слейт',   colors:{'--c-bg':'#F8FAFC','--c-surface':'#FFFFFF','--c-surface-2':'#F1F5F9','--c-border':'#CBD5E1','--c-text-1':'#0F172A','--c-text-2':'#475569','--c-text-3':'#94A3B8','--c-accent':'#334155','--c-accent-2':'#475569','--c-gold':'#92400E','--c-gold-light':'#FEF3C7'} },
+    ];
+
+    /* ── Activate admin mode ── */
+    function activateAdminMode() {
+        if (adminActive) return;
+        adminActive = true;
+        adminEl.classList.add('ba-visible');
+        adminEl.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('bio-admin-active');
+        editBadgeEl.classList.add('visible');
+        loadDataFromServer();
+        buildElementList();
+        buildThemeGrid();
+        setupTabSwitching();
+        setupTextEditor();
+        setupImageUploads();
+        setupThemePanel();
+        setupContactPanel();
+        setupTestimonialsPanel();
+        setupSaveReset();
+        setupExitButton();
+    }
+
+    /* ── Deactivate admin mode ── */
+    function deactivateAdminMode() {
+        adminActive = false;
+        adminEl.classList.remove('ba-visible');
+        adminEl.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('bio-admin-active');
+        editBadgeEl.classList.remove('visible');
+        hasUnsaved = false;
+    }
+
+    /* ── Load data from server ── */
+    function loadDataFromServer() {
+        fetch(BIO_API_URL)
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                    savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] }, data);
+                    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData)); } catch(e) {}
+                } else {
+                    var raw = localStorage.getItem(STORAGE_KEY);
+                    if (raw) { try { savedData = JSON.parse(raw); } catch(e) {} }
+                }
+                populateContactPanel();
+                renderTestimonialSlots();
+                applyAllChanges();
+            })
+            .catch(function() {
+                var raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) { try { savedData = JSON.parse(raw); } catch(e) {} }
+                applyAllChanges();
+                saveStatusEl.textContent = '⚠️ Сървърът е недостъпен';
+            });
+    }
+
+    /* ── Save data to server ── */
+    function saveData() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData)); } catch(e) {}
+        return fetch(BIO_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(savedData)
+        }).then(function(r) {
+            if (r.ok) {
+                saveStatusEl.textContent = '✅ Записано ' + new Date().toLocaleTimeString('bg-BG');
+                showToast('Промените са записани!');
+                document.cookie = 'bio_dirty=1; path=/; SameSite=Strict';
+                hasUnsaved = false;
+            } else {
+                saveStatusEl.textContent = '⚠️ Грешка при запис';
+                showToast('Грешка: ' + r.status, 'error');
+            }
+        }).catch(function() {
+            saveStatusEl.textContent = '⚠️ Локален запис';
+            showToast('Записано локално. Сървърът е недостъпен.', 'error');
+        });
+    }
+
+    /* ── Reset data ── */
+    function resetData() {
+        if (!confirm('Сигурен ли сте? Всички промени ще бъдат изтрити!')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] };
+        fetch(BIO_API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(savedData) }).catch(function() {});
+        document.cookie = 'bio_dirty=1; path=/; SameSite=Strict';
+        hasUnsaved = false;
+        location.reload();
+    }
+
+    /* ── Apply all changes to the live page ── */
+    function applyAllChanges() {
+        applyTextOverrides();
+        applyImages();
+        applyTheme();
+        applyContact();
+        applyTestimonials();
+    }
+
+    function applyTextOverrides() {
+        Object.entries(savedData.textOverrides || {}).forEach(function(entry) {
+            var sel = entry[0], opts = entry[1];
+            var el = document.querySelector(sel);
+            if (!el) return;
+            if (opts.content !== undefined) el.textContent = opts.content;
+            if (opts.fontFamily) el.style.fontFamily = opts.fontFamily;
+            if (opts.fontSize)   el.style.fontSize   = opts.fontSize + 'rem';
+            if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
+            if (opts.color)      el.style.color       = opts.color;
+        });
+    }
+
+    function applyImages() {
+        var IMAGE_TARGETS = {
+            hero:       '[data-bio-id="img-hero"]',
+            about:      '[data-bio-id="img-about"]',
+            philosophy: '[data-bio-id="img-philosophy"]',
+        };
+        Object.entries(IMAGE_TARGETS).forEach(function(entry) {
+            var key = entry[0], sel = entry[1];
+            if (savedData.images && savedData.images[key]) {
+                var el = document.querySelector(sel);
+                if (el) el.src = savedData.images[key];
+            }
+        });
+    }
+
+    function applyTheme() {
+        var root = document.documentElement;
+        Object.entries(savedData.theme || {}).forEach(function(entry) {
+            root.style.setProperty(entry[0], entry[1]);
+        });
+    }
+
+    function applyContact() {
+        var c = savedData.contact || {};
+        if (c.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) {
+            var emailLink = document.querySelector('[data-bio-id="contact-email"]');
+            if (emailLink) emailLink.href = 'mailto:' + c.email;
+            var emailText = document.querySelector('[data-bio-id="contact-email-text"]');
+            if (emailText) emailText.textContent = c.email;
+        }
+        if (c.phone && /^[\d\s+\-()]+$/.test(c.phone)) {
+            var phoneLink = document.querySelector('[data-bio-id="contact-phone"]');
+            if (phoneLink) phoneLink.href = 'tel:' + c.phone.replace(/[\s\-()]/g, '');
+            var phoneText = document.querySelector('[data-bio-id="contact-phone-text"]');
+            if (phoneText) phoneText.textContent = c.phone;
+        }
+        if (c.address) {
+            var addrText = document.querySelector('[data-bio-id="contact-address-text"]');
+            if (addrText) addrText.textContent = c.address;
+        }
+        function applySafeHref(bioId, url) {
+            if (!url || !/^https?:\/\//i.test(url)) return;
+            var el = document.querySelector('[data-bio-id="' + bioId + '"]');
+            if (el) el.href = url;
+        }
+        applySafeHref('social-instagram', c.instagram);
+        applySafeHref('social-facebook',  c.facebook);
+        applySafeHref('social-linkedin',  c.linkedin);
+    }
+
+    function applyTestimonials() {
+        var list = savedData.testimonials;
+        if (!list || !list.length) return;
+        var grid = document.querySelector('[data-bio-id="testimonials-grid"]');
+        if (!grid) return;
+        grid.innerHTML = '';
+        list.forEach(function(t) {
+            var card = document.createElement('div');
+            card.className = 'testimonial-card';
+
+            var starsDiv = document.createElement('div');
+            starsDiv.className = 'testimonial-card__stars';
+            starsDiv.textContent = '★'.repeat(Math.min(5, Math.max(1, t.stars || 5)));
+            card.appendChild(starsDiv);
+
+            var textP = document.createElement('p');
+            textP.className = 'testimonial-card__text';
+            textP.textContent = t.text || '';
+            card.appendChild(textP);
+
+            var authorDiv = document.createElement('div');
+            authorDiv.className = 'testimonial-card__author';
+            var strong = document.createElement('strong');
+            strong.textContent = t.authorName || '';
+            authorDiv.appendChild(strong);
+            if (t.authorSub) {
+                var span = document.createElement('span');
+                span.textContent = t.authorSub;
+                authorDiv.appendChild(span);
+            }
+            card.appendChild(authorDiv);
+
+            grid.appendChild(card);
+        });
+    }
+
+    /* ── Build element list ── */
+    function buildElementList() {
+        var list = document.getElementById('ba-el-list');
+        if (!list) return;
+        list.innerHTML = '';
+        EDITABLE_ELEMENTS.forEach(function(el, i) {
+            var btn = document.createElement('button');
+            btn.className = 'ba-el-item';
+            btn.textContent = el.label;
+            btn.dataset.idx = i;
+            btn.addEventListener('click', function() {
+                selectElement(i);
+            });
+            list.appendChild(btn);
+        });
+    }
+
+    function selectElement(idx) {
+        selectedElIndex = idx;
+        var items = document.querySelectorAll('.ba-el-item');
+        items.forEach(function(it) { it.classList.remove('selected'); });
+        var sel = document.querySelector('.ba-el-item[data-idx="' + idx + '"]');
+        if (sel) sel.classList.add('selected');
+
+        var editorArea = document.getElementById('ba-text-editor-area');
+        editorArea.style.display = 'block';
+
+        var info = EDITABLE_ELEMENTS[idx];
+        var domEl = document.querySelector(info.selector);
+        var overrides = (savedData.textOverrides && savedData.textOverrides[info.selector]) || {};
+
+        document.getElementById('ba-el-content').value = overrides.content !== undefined ? overrides.content : (domEl ? domEl.textContent.trim() : '');
+        document.getElementById('ba-el-font-family').value = overrides.fontFamily || '';
+        document.getElementById('ba-el-font-size').value   = overrides.fontSize  || '';
+        document.getElementById('ba-el-font-weight').value = overrides.fontWeight || '';
+        var col = overrides.color || '#1A1916';
+        document.getElementById('ba-el-color-picker').value = col.length === 7 ? col : '#1a1916';
+        document.getElementById('ba-el-color-hex').value    = col;
+        document.getElementById('ba-font-preview').style.fontFamily = overrides.fontFamily || '';
+    }
+
+    /* ── Tab switching ── */
+    function setupTabSwitching() {
+        document.querySelectorAll('.ba-tab-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.ba-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                document.querySelectorAll('.ba-panel').forEach(function(p) { p.classList.remove('active'); });
+                btn.classList.add('active');
+                var panel = document.getElementById(btn.dataset.baPanel);
+                if (panel) panel.classList.add('active');
+            });
+        });
+    }
+
+    /* ── Text editor ── */
+    function setupTextEditor() {
+        document.getElementById('ba-el-font-family').addEventListener('change', function() {
+            document.getElementById('ba-font-preview').style.fontFamily = this.value;
+        });
+        var picker = document.getElementById('ba-el-color-picker');
+        var hex    = document.getElementById('ba-el-color-hex');
+        picker.addEventListener('input', function() { hex.value = picker.value; });
+        hex.addEventListener('input', function() { if (/^#[0-9a-f]{6}$/i.test(hex.value)) picker.value = hex.value; });
+
+        document.getElementById('ba-btn-apply-text').addEventListener('click', function() {
+            if (selectedElIndex < 0) return;
+            var info = EDITABLE_ELEMENTS[selectedElIndex];
+            var content = document.getElementById('ba-el-content').value;
+            var fontFamily = document.getElementById('ba-el-font-family').value;
+            var fontSize   = parseFloat(document.getElementById('ba-el-font-size').value) || null;
+            var fontWeight = document.getElementById('ba-el-font-weight').value;
+            var color      = document.getElementById('ba-el-color-hex').value || document.getElementById('ba-el-color-picker').value;
+
+            if (!savedData.textOverrides) savedData.textOverrides = {};
+            savedData.textOverrides[info.selector] = { content:content, fontFamily:fontFamily, fontSize:fontSize, fontWeight:fontWeight, color:color };
+
+            var domEl = document.querySelector(info.selector);
+            if (domEl) {
+                domEl.textContent = content;
+                if (fontFamily) domEl.style.fontFamily = fontFamily;
+                if (fontSize)   domEl.style.fontSize   = fontSize + 'rem';
+                if (fontWeight) domEl.style.fontWeight  = fontWeight;
+                if (color)      domEl.style.color       = color;
+            }
+            hasUnsaved = true;
+            showToast('Промяната е приложена. Натисни Запази.');
+        });
+    }
+
+    /* ── Image uploads ── */
+    function setupImageUploads() {
+        [
+            { uploadId:'ba-upload-hero',       previewId:'ba-preview-hero',       key:'hero' },
+            { uploadId:'ba-upload-about',      previewId:'ba-preview-about',      key:'about' },
+            { uploadId:'ba-upload-philosophy', previewId:'ba-preview-philosophy', key:'philosophy' },
+        ].forEach(function(cfg) {
+            var input = document.getElementById(cfg.uploadId);
+            if (!input) return;
+            input.addEventListener('change', function() {
+                var file = input.files[0];
+                if (!file) return;
+                if (file.size > MAX_IMAGE_BYTES) { showToast('Файлът е над 5 MB!', 'error'); return; }
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    var dataURL = ev.target.result;
+                    if (!savedData.images) savedData.images = {};
+                    savedData.images[cfg.key] = dataURL;
+                    var preview = document.getElementById(cfg.previewId);
+                    if (preview) { preview.src = dataURL; preview.style.display = 'block'; }
+                    var selector = '[data-bio-id="img-' + cfg.key + '"]';
+                    var el = document.querySelector(selector);
+                    if (el) el.src = dataURL;
+                    hasUnsaved = true;
+                    showToast('Снимката е качена. Натисни Запази.');
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+        // Populate existing images
+        if (savedData.images) {
+            ['hero','about','philosophy'].forEach(function(key) {
+                if (savedData.images[key]) {
+                    var prev = document.getElementById('ba-preview-' + key);
+                    if (prev) { prev.src = savedData.images[key]; prev.style.display = 'block'; }
+                }
+            });
+        }
+    }
+
+    /* ── Theme panel ── */
+    function buildThemeGrid() {
+        var grid = document.getElementById('ba-theme-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        THEMES.forEach(function(theme) {
+            var swatch = document.createElement('div');
+            swatch.className = 'ba-theme-swatch' + (savedData._activeTheme === theme.id ? ' selected' : '');
+            swatch.innerHTML = '<div class="ba-theme-swatch__top" style="background:' + theme.colors['--c-accent'] + '"></div>' +
+                '<div class="ba-theme-swatch__bot" style="background:' + theme.colors['--c-bg'] + '"></div>' +
+                '<div class="ba-theme-swatch__label">' + theme.name + '</div>';
+            swatch.addEventListener('click', function() {
+                document.querySelectorAll('.ba-theme-swatch').forEach(function(s) { s.classList.remove('selected'); });
+                swatch.classList.add('selected');
+                savedData.theme = Object.assign({}, theme.colors);
+                savedData._activeTheme = theme.id;
+                applyTheme();
+                populateThemeColorPickers();
+                hasUnsaved = true;
+                showToast('Тема "' + theme.name + '" приложена. Натисни Запази.');
+            });
+            grid.appendChild(swatch);
+        });
+    }
+
+    function populateThemeColorPickers() {
+        var pairs = [
+            ['ba-c-bg-picker','ba-c-bg-hex','--c-bg'],
+            ['ba-c-surface-picker','ba-c-surface-hex','--c-surface'],
+            ['ba-c-accent-picker','ba-c-accent-hex','--c-accent'],
+            ['ba-c-text1-picker','ba-c-text1-hex','--c-text-1'],
+        ];
+        pairs.forEach(function(p) {
+            var val = (savedData.theme && savedData.theme[p[2]]) || '';
+            var picker = document.getElementById(p[0]);
+            var hexInp = document.getElementById(p[1]);
+            if (picker && val.length === 7) picker.value = val;
+            if (hexInp) hexInp.value = val;
+        });
+    }
+
+    function setupThemePanel() {
+        var pairs = [
+            ['ba-c-bg-picker','ba-c-bg-hex','--c-bg'],
+            ['ba-c-surface-picker','ba-c-surface-hex','--c-surface'],
+            ['ba-c-accent-picker','ba-c-accent-hex','--c-accent'],
+            ['ba-c-text1-picker','ba-c-text1-hex','--c-text-1'],
+        ];
+        pairs.forEach(function(p) {
+            var picker = document.getElementById(p[0]);
+            var hexInp = document.getElementById(p[1]);
+            var cssVar = p[2];
+            if (picker) picker.addEventListener('input', function() { if (hexInp) hexInp.value = picker.value; });
+            if (hexInp) hexInp.addEventListener('input', function() { if (/^#[0-9a-f]{6}$/i.test(hexInp.value) && picker) picker.value = hexInp.value; });
+        });
+        var btnApplyTheme = document.getElementById('ba-btn-apply-theme');
+        if (btnApplyTheme) btnApplyTheme.addEventListener('click', function() {
+            if (!savedData.theme) savedData.theme = {};
+            pairs.forEach(function(p) {
+                var hexInp = document.getElementById(p[1]);
+                var picker = document.getElementById(p[0]);
+                var val = (hexInp && hexInp.value) || (picker && picker.value) || '';
+                if (val) { savedData.theme[p[2]] = val; document.documentElement.style.setProperty(p[2], val); }
+            });
+            hasUnsaved = true;
+            showToast('Цветовете са приложени. Натисни Запази.');
+        });
+    }
+
+    /* ── Contact panel ── */
+    function populateContactPanel() {
+        var c = savedData.contact || {};
+        var map = { 'ba-c-email':c.email,'ba-c-phone':c.phone,'ba-c-address':c.address,'ba-c-instagram':c.instagram,'ba-c-facebook':c.facebook,'ba-c-linkedin':c.linkedin };
+        Object.entries(map).forEach(function(e) { var el=document.getElementById(e[0]); if(el) el.value = e[1]||''; });
+    }
+
+    function setupContactPanel() {
+        var btn = document.getElementById('ba-btn-apply-contact');
+        if (!btn) return;
+        btn.addEventListener('click', function() {
+            if (!savedData.contact) savedData.contact = {};
+            savedData.contact.email     = (document.getElementById('ba-c-email')     || {}).value || '';
+            savedData.contact.phone     = (document.getElementById('ba-c-phone')     || {}).value || '';
+            savedData.contact.address   = (document.getElementById('ba-c-address')   || {}).value || '';
+            savedData.contact.instagram = (document.getElementById('ba-c-instagram') || {}).value || '';
+            savedData.contact.facebook  = (document.getElementById('ba-c-facebook')  || {}).value || '';
+            savedData.contact.linkedin  = (document.getElementById('ba-c-linkedin')  || {}).value || '';
+            applyContact();
+            hasUnsaved = true;
+            showToast('Контактите са приложени. Натисни Запази.');
+        });
+    }
+
+    /* ── Testimonials panel ── */
+    function renderTestimonialSlots() {
+        var container = document.getElementById('ba-testimonial-slots');
+        if (!container) return;
+        container.innerHTML = '';
+        var list = savedData.testimonials || [];
+        list.forEach(function(t, i) {
+            var div = document.createElement('div');
+            div.style.cssText = 'background:#22263A;border:1px solid #2E3348;border-radius:8px;padding:.6rem;margin-bottom:.5rem;';
+            div.innerHTML = '<div style="font-size:.72rem;color:#8892A4;margin-bottom:.3rem;">Отзив ' + htmlEsc(i+1) + '</div>' +
+                '<div class="ba-form-group"><label>Звезди (1-5)</label><input type="number" min="1" max="5" value="' + htmlEsc(t.stars||5) + '" data-ti="' + i + '" data-tf="stars" style="width:60px;"></div>' +
+                '<div class="ba-form-group"><label>Текст</label><textarea rows="2" data-ti="' + i + '" data-tf="text">' + htmlEsc(t.text||'') + '</textarea></div>' +
+                '<div class="ba-form-group"><label>Автор</label><input type="text" value="' + htmlEsc(t.authorName||'') + '" data-ti="' + i + '" data-tf="authorName"></div>' +
+                '<div class="ba-form-group"><label>Позиция</label><input type="text" value="' + htmlEsc(t.authorSub||'') + '" data-ti="' + i + '" data-tf="authorSub"></div>' +
+                '<button class="ba-btn ba-btn-danger" data-remove="' + i + '" style="width:100%;margin-top:.2rem;">Премахни</button>';
+            container.appendChild(div);
+        });
+        container.querySelectorAll('input,textarea').forEach(function(inp) {
+            inp.style.cssText = 'width:100%;padding:.35rem .55rem;background:#1A1D27;border:1px solid #2E3348;border-radius:6px;color:#E2E8F0;font-size:.78rem;font-family:inherit;outline:none;resize:vertical;';
+            inp.addEventListener('input', function() {
+                var idx = parseInt(inp.dataset.ti);
+                var field = inp.dataset.tf;
+                if (!savedData.testimonials[idx]) return;
+                savedData.testimonials[idx][field] = field === 'stars' ? parseInt(inp.value)||5 : inp.value;
+                hasUnsaved = true;
+            });
+        });
+        container.querySelectorAll('[data-remove]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var idx = parseInt(btn.dataset.remove);
+                savedData.testimonials.splice(idx, 1);
+                renderTestimonialSlots();
+                applyTestimonials();
+                hasUnsaved = true;
+            });
+        });
+    }
+
+    function setupTestimonialsPanel() {
+        var btnAdd = document.getElementById('ba-btn-add-testimonial');
+        if (btnAdd) btnAdd.addEventListener('click', function() {
+            if (!savedData.testimonials) savedData.testimonials = [];
+            if (savedData.testimonials.length >= 6) { showToast('Максимум 6 отзива.', 'error'); return; }
+            savedData.testimonials.push({ stars:5, text:'', authorName:'', authorSub:'' });
+            renderTestimonialSlots();
+            hasUnsaved = true;
+        });
+    }
+
+    /* ── Save / Reset / Exit buttons ── */
+    function setupSaveReset() {
+        document.getElementById('ba-btn-save').addEventListener('click', function() {
+            // Collect any pending testimonial edits before saving
+            saveData();
+        });
+        document.getElementById('ba-btn-reset').addEventListener('click', resetData);
+    }
+
+    function setupExitButton() {
+        document.getElementById('ba-btn-exit').addEventListener('click', function() {
+            if (hasUnsaved) {
+                if (!confirm('Имате незапазени промени. Сигурни ли сте, че искате да излезете?')) return;
+            }
+            deactivateAdminMode();
+        });
+    }
+
+    /* ── Expose activation to handleContact ── */
+    window.__bioAdminActivate = activateAdminMode;
+})();
+</script>
 </body>
 </html>
