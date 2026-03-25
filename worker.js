@@ -80,7 +80,7 @@ export default {
       let response;
       
       if (url.pathname === '/bio.html') {
-        response = await serveBioHtml(env);
+        response = await serveBioHtml(env, request);
       }
       // Only serve static files for GET — POST/PUT requests must reach the API router.
       else if (request.method === 'GET' && STATIC_FILES[url.pathname]) {
@@ -269,12 +269,15 @@ async function serveStaticFile(env, filename, contentType, request) {
 
 /**
  * Serves bio.html with the bio_content KV data injected inline as
- * window.__bioContent.  The page hides itself via html.bio-loading until the
- * client-side IIFE applies the overrides and calls reveal(), so there is no
- * visible flash between the static defaults and the saved content.
- * Cache-Control is no-store so every request gets fresh bio_content from KV.
+ * window.__bioContent.  Supports conditional GET via ETag/If-None-Match:
+ * the browser caches the page locally and on every load sends If-None-Match;
+ * the worker returns 304 Not Modified (no body) when bio_content is unchanged,
+ * or 200 with fresh HTML when content has changed.  This way the page only
+ * downloads full data from the backend when there are actual changes.
+ * @param {object} env - Worker environment bindings
+ * @param {Request} request - Incoming request (used for If-None-Match check)
  */
-async function serveBioHtml(env) {
+async function serveBioHtml(env, request) {
     const [htmlContent, bioContent] = await Promise.all([
         env.PAGE_CONTENT.get('static_bio.html'),
         env.PAGE_CONTENT.get('bio_content')
@@ -300,14 +303,26 @@ async function serveBioHtml(env) {
         // Page will show default hardcoded content until static_bio.html is re-uploaded.
         console.warn('serveBioHtml: injection point placeholder not found in static_bio.html; serving without bio_content overrides');
     }
+    // ETag is derived from the full rendered HTML so it changes automatically
+    // when either bio_content or static_bio.html is updated.
+    const etag = await generateETag(injectedHtml);
+    const cacheControl = 'no-cache';
+    // Return 304 Not Modified when the browser already has the current version.
+    if (request.headers.get('If-None-Match') === etag) {
+        return new Response(null, {
+            status: 304,
+            headers: { 'Cache-Control': cacheControl, 'ETag': etag }
+        });
+    }
     return new Response(injectedHtml, {
         status: 200,
         headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            // no-store: bio.html contains bio_content injected from KV, so it must
-            // never be cached by the browser or CDN.  Any cache would serve stale
-            // content after bioadmin saves changes.
-            'Cache-Control': 'no-store'
+            // no-cache: browser stores the page but revalidates on every load via
+            // If-None-Match.  304 is returned when nothing has changed (zero body
+            // transfer); full 200 is returned only when bio_content actually changed.
+            'Cache-Control': cacheControl,
+            'ETag': etag
         }
     });
 }
