@@ -292,7 +292,13 @@ async function serveBioHtml(env, request) {
         throw new UserFacingError('File bio.html not found in storage.', 404);
     }
     const etag = await generateETag(htmlContent);
-    const cacheControl = `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`;
+    // bio.html contains dynamically-baked content (window.__bioContent injected by
+    // the worker each time admin saves via bioadmin.html).  Using a 1-hour max-age
+    // meant the browser would serve a stale cached copy for up to an hour after the
+    // admin made changes.  'no-cache' forces the browser to revalidate on every
+    // request; the ETag / If-None-Match mechanism below keeps it efficient (304 when
+    // content is unchanged, 200 only when the baked HTML was updated).
+    const cacheControl = 'no-cache, must-revalidate';
     // Return 304 Not Modified when the browser already has the current version.
     if (request.headers.get('If-None-Match') === etag) {
         return new Response(null, {
@@ -567,9 +573,42 @@ async function handleGetBioContent(request, env) {
 }
 
 /**
+ * Maps a CSS font-family value (as stored in bio_content.theme) to its
+ * Google Fonts API spec string.  Fonts already loaded by bio.html's default
+ * <link> (Playfair Display, Inter, DM Mono) and plain system fonts are omitted
+ * because they don't need an extra stylesheet request.
+ */
+const BIO_CUSTOM_FONT_MAP = {
+    'Merriweather':      'Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400',
+    'Lora':              'Lora:ital,wght@0,400;0,500;0,700;1,400;1,500',
+    'Cormorant Garamond':'Cormorant+Garamond:ital,wght@0,400;0,500;0,700;1,400;1,500',
+    'Open Sans':         'Open+Sans:wght@300;400;500;600;700',
+    'Roboto':            'Roboto:wght@300;400;500;700',
+    'Montserrat':        'Montserrat:wght@300;400;500;600;700',
+    'Nunito':            'Nunito:wght@300;400;500;600;700',
+};
+
+/**
+ * Returns a Google Fonts <link> tag for the given CSS font-family value, or
+ * an empty string if the font is already loaded by bio.html's defaults.
+ */
+function buildCustomFontLink(fontFamily) {
+    if (!fontFamily || typeof fontFamily !== 'string') return '';
+    // Extract the primary font name: strip surrounding quotes, take the first
+    // entry in the comma-separated stack, then trim whitespace.
+    const name = fontFamily.replace(/['"]/g, '').split(',')[0].trim();
+    const spec = BIO_CUSTOM_FONT_MAP[name];
+    if (!spec) return '';
+    return `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${spec}&display=swap">`;
+}
+
+/**
  * Handles POST /bio_content.json
  * Saves bio page overrides to KV and bakes them into 'baked_bio.html' so that
- * bio.html can be served as a static file without a per-request KV read.
+ * bio.html can be served without a per-request KV read.
+ * Also injects <link> tags for any custom Google Fonts referenced in the saved
+ * theme or textOverrides so they are preloaded before the page is revealed,
+ * preventing a flash of unstyled text (FOUT) for non-default fonts.
  */
 async function handleSaveBioContent(request, env, ctx) {
     const contentToSave = await request.text();
@@ -582,7 +621,7 @@ async function handleSaveBioContent(request, env, ctx) {
         ctx.waitUntil((async () => {
             const puts = [env.PAGE_CONTENT.put('bio_content', contentToSave)];
             // Bake bio_content into the HTML template so bio.html can be served
-            // as a plain static file (1-hour browser cache, no per-request KV read).
+            // without a per-request KV read.
             const baseHtml = await env.PAGE_CONTENT.get('static_bio.html');
             if (baseHtml !== null) {
                 const safeData = contentToSave
@@ -590,10 +629,33 @@ async function handleSaveBioContent(request, env, ctx) {
                     .replace(/</g, '\\u003c')
                     .replace(/>/g, '\\u003e');
                 const inlineScript = `<script id="bio-content-injection-point">window.__bioContent=${safeData};<\/script>`;
-                const bakedHtml = baseHtml.replace(
+                let bakedHtml = baseHtml.replace(
                     /<script id="bio-content-injection-point">[\s\S]*?<\/script>/,
                     inlineScript
                 );
+
+                // Collect Google Fonts links for any custom fonts in the saved data
+                const seen = new Set();
+                const fontLinks = [];
+                function addFontLink(ff) {
+                    const link = buildCustomFontLink(ff);
+                    if (!link || seen.has(link)) return;
+                    seen.add(link);
+                    fontLinks.push(link);
+                }
+                if (parsed.theme) {
+                    addFontLink(parsed.theme['--font-serif']);
+                    addFontLink(parsed.theme['--font-sans']);
+                }
+                if (parsed.textOverrides && typeof parsed.textOverrides === 'object') {
+                    Object.values(parsed.textOverrides).forEach(opts => {
+                        if (opts && typeof opts === 'object' && opts.fontFamily) addFontLink(opts.fontFamily);
+                    });
+                }
+                if (fontLinks.length > 0) {
+                    bakedHtml = bakedHtml.replace('</head>', fontLinks.join('\n') + '\n</head>');
+                }
+
                 puts.push(env.PAGE_CONTENT.put('baked_bio.html', bakedHtml));
             }
             await Promise.all(puts);
