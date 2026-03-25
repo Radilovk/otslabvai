@@ -85,12 +85,12 @@ export default {
       let response;
       
       if (url.pathname === '/bio.html') {
-        response = await serveBioHtml(env);
+        response = await serveBioHtml(env, request);
       }
       // Only serve static files for GET — POST/PUT requests must reach the API router.
       else if (request.method === 'GET' && STATIC_FILES[url.pathname]) {
         const { file, type } = STATIC_FILES[url.pathname];
-        response = await serveStaticFile(env, file, type);
+        response = await serveStaticFile(env, file, type, request);
       }
       else {
         switch (url.pathname) {
@@ -122,9 +122,9 @@ export default {
               if (request.method === 'GET') {
                   response = await handleGetOrders(request, env);
               } else if (request.method === 'POST') {
-                  response = await handleCreateOrder(request, env, ctx);
+                  response = await handleCreateOrder(request, env);
               } else if (request.method === 'PUT') {
-                  response = await handleUpdateOrderStatus(request, env, ctx);
+                  response = await handleUpdateOrderStatus(request, env);
               } else {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
@@ -134,7 +134,7 @@ export default {
               if (request.method === 'GET') {
                   response = await handleGetContacts(request, env);
               } else if (request.method === 'POST') {
-                  response = await handleCreateContact(request, env, ctx);
+                  response = await handleCreateContact(request, env);
               } else {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
@@ -238,23 +238,36 @@ export default {
 // --- СПЕЦИФИЧНИ ОБРАБОТЧИЦИ НА ЕНДПОЙНТИ ---
 
 /**
- * Serves static files from KV storage
+ * Serves static files from KV storage.
+ * Supports conditional requests (ETag / If-None-Match) so the browser never
+ * re-downloads unchanged content after the 1-hour cache expires.
  * @param {object} env - Environment with KV bindings
  * @param {string} filename - Name of the file to serve
  * @param {string} contentType - MIME type for the response
- * @returns {Promise<Response>} Response object with file content
+ * @param {Request} request - Incoming request (used for If-None-Match check)
+ * @returns {Promise<Response>} 200 with content, or 304 Not Modified
  * @throws {UserFacingError} When file is not found in storage (404)
  */
-async function serveStaticFile(env, filename, contentType) {
+async function serveStaticFile(env, filename, contentType, request) {
     const fileContent = await env.PAGE_CONTENT.get(`static_${filename}`);
     if (fileContent === null) {
         throw new UserFacingError(`File ${filename} not found in storage.`, 404);
+    }
+    const etag = await generateETag(fileContent);
+    const cacheControl = `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`;
+    // Return 304 Not Modified when the browser already has the current version.
+    if (request.headers.get('If-None-Match') === etag) {
+        return new Response(null, {
+            status: 304,
+            headers: { 'Cache-Control': cacheControl, 'ETag': etag }
+        });
     }
     return new Response(fileContent, {
         status: 200,
         headers: { 
             'Content-Type': contentType,
-            'Cache-Control': `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`
+            'Cache-Control': cacheControl,
+            'ETag': etag
         }
     });
 }
@@ -266,8 +279,9 @@ async function serveStaticFile(env, filename, contentType) {
  * caching so most page loads never touch the backend at all.
  * Falls back to the repo-uploaded 'static_bio.html' (with hardcoded defaults) if
  * the admin has not saved any overrides yet.
+ * Supports conditional requests (ETag / If-None-Match).
  */
-async function serveBioHtml(env) {
+async function serveBioHtml(env, request) {
     // Prefer the baked version (updated every time admin saves bio_content).
     let htmlContent = await env.PAGE_CONTENT.get('baked_bio.html');
     if (htmlContent === null) {
@@ -277,11 +291,21 @@ async function serveBioHtml(env) {
     if (htmlContent === null) {
         throw new UserFacingError('File bio.html not found in storage.', 404);
     }
+    const etag = await generateETag(htmlContent);
+    const cacheControl = `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`;
+    // Return 304 Not Modified when the browser already has the current version.
+    if (request.headers.get('If-None-Match') === etag) {
+        return new Response(null, {
+            status: 304,
+            headers: { 'Cache-Control': cacheControl, 'ETag': etag }
+        });
+    }
     return new Response(htmlContent, {
         status: 200,
         headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`
+            'Cache-Control': cacheControl,
+            'ETag': etag
         }
     });
 }
