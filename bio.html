@@ -2137,11 +2137,32 @@
         // When served through the worker, bio_content is injected inline as
         // window.__bioContent and the page is hidden (bio-loading) until we
         // apply overrides and call reveal() — so there is no flash.
-        if (window.__bioContent) {
-            applyBioContent(window.__bioContent);
+        //
+        // Cookie-based refresh trigger: bioadmin sets bio_dirty=1 after every
+        // save.  When that cookie is present we fetch /bio_content.json for the
+        // latest data and apply it on top of (potentially cached) HTML.
+        // Without the cookie the page reveals using only window.__bioContent
+        // — zero extra backend requests on every normal refresh.
+        var bioDirty = document.cookie.split(';').some(function(c) {
+            return c.trim() === 'bio_dirty=1';
+        });
+
+        if (bioDirty) {
+            // Consume the trigger immediately so subsequent refreshes skip the fetch
+            document.cookie = 'bio_dirty=; Max-Age=0; path=/';
+            // Apply stale cached content first to reduce perceived latency
+            if (window.__bioContent) applyBioContent(window.__bioContent);
+            // Fetch the freshly saved data from the server
+            fetch('/bio_content.json')
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(data) { if (data) applyBioContent(data); })
+                .catch(function() {})
+                .finally(function() { clearTimeout(revealTimer); reveal(); });
+        } else {
+            if (window.__bioContent) applyBioContent(window.__bioContent);
+            clearTimeout(revealTimer);
+            reveal();
         }
-        clearTimeout(revealTimer);
-        reveal();
     })();
     </script>
 </body>
