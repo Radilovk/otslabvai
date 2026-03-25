@@ -272,11 +272,7 @@ async function serveStaticFile(env, filename, contentType, request) {
  * window.__bioContent.  The page hides itself via html.bio-loading until the
  * client-side IIFE applies the overrides and calls reveal(), so there is no
  * visible flash between the static defaults and the saved content.
- * Cache-Control is public, max-age=3600 — browsers cache bio.html for 1 hour.
- * When bioadmin saves changes it sets a bio_dirty=1 cookie; bio.html detects
- * that cookie on the next load, fetches /bio_content.json for fresh content,
- * and clears the cookie.  Normal refreshes without the cookie need no backend
- * request at all.
+ * Cache-Control is no-store so every request gets fresh bio_content from KV.
  */
 async function serveBioHtml(env) {
     const [htmlContent, bioContent] = await Promise.all([
@@ -308,12 +304,10 @@ async function serveBioHtml(env) {
         status: 200,
         headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            // Browser may cache bio.html for 1 hour.  When bioadmin saves changes it
-            // sets a bio_dirty=1 cookie; bio.html checks that cookie on load and
-            // fetches /bio_content.json for fresh data (clearing the cookie afterwards).
-            // Without the cookie, refreshes are served entirely from browser cache with
-            // zero backend requests.
-            'Cache-Control': 'public, max-age=3600'
+            // no-store: bio.html contains bio_content injected from KV, so it must
+            // never be cached by the browser or CDN.  Any cache would serve stale
+            // content after bioadmin saves changes.
+            'Cache-Control': 'no-store'
         }
     });
 }
