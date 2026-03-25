@@ -1031,33 +1031,33 @@
                 <span class="tag"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><path d="M9 8h6M9 16h6"/><path d="M3 9h3M18 9h3M3 15h3M18 15h3"/></svg> Фитнес</span>
                 <span class="tag"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg> Нутриция</span>
             </div>
-            <h1 class="hero__name">
+            <h1 class="hero__name" data-bio-id="hero-name">
                 Д-р<br><em>Константин</em><br>Радилов
             </h1>
-            <p class="hero__desc">
+            <p class="hero__desc" data-bio-id="hero-desc">
                 Дипломиран диетолог и клиничен нутриционист с медицинско образование
                 и сертификация като персонален треньор. Специализирам в програми за
                 отслабване, спортно хранене и здравословен начин на живот — изградени
                 на научна основа и персонализирани за всеки клиент.
             </p>
             <div class="hero__actions">
-                <a href="#contact" class="btn btn--primary">Запази консултация</a>
-                <a href="#about"   class="btn btn--outline">Научи повече</a>
+                <a href="#contact" class="btn btn--primary" data-bio-id="cta-primary">Запази консултация</a>
+                <a href="#about"   class="btn btn--outline" data-bio-id="cta-outline">Научи повече</a>
             </div>
 
             <!-- Stats row below CTA -->
             <div class="hero__stats" style="position:static; justify-content:flex-start; gap:.75rem; margin-top:2.5rem; flex-wrap:wrap;">
                 <div class="stat-card">
-                    <div class="stat-card__num" data-count="10" data-suffix="+">10+</div>
-                    <div class="stat-card__label">Години опит</div>
+                    <div class="stat-card__num" data-count="10" data-suffix="+" data-bio-id="stat-1-num">10+</div>
+                    <div class="stat-card__label" data-bio-id="stat-1-label">Години опит</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-card__num" data-count="500" data-suffix="+">500+</div>
-                    <div class="stat-card__label">Клиенти</div>
+                    <div class="stat-card__num" data-count="500" data-suffix="+" data-bio-id="stat-2-num">500+</div>
+                    <div class="stat-card__label" data-bio-id="stat-2-label">Клиенти</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-card__num" data-count="3" data-suffix="">3</div>
-                    <div class="stat-card__label">Специалности</div>
+                    <div class="stat-card__num" data-count="3" data-suffix="" data-bio-id="stat-3-num">3</div>
+                    <div class="stat-card__label" data-bio-id="stat-3-label">Специалности</div>
                 </div>
             </div>
         </div>
@@ -1068,6 +1068,7 @@
                     src="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png"
                     alt="Д-р Константин Радилов"
                     loading="eager"
+                    data-bio-id="img-hero"
                 >
                 <div class="hero__photo-overlay"></div>
             </div>
@@ -1090,37 +1091,38 @@
                         src="https://radilovk.github.io/face/assets/scientist-holding-medical-testing-tubes-600nw-2506585825.webp"
                         alt="Д-р Радилов в практика"
                         loading="lazy"
+                        data-bio-id="img-about"
                     >
                     <div class="about__portrait-badge">
-                        <strong>10+</strong>
-                        <span>Години практика</span>
+                        <strong data-bio-id="badge-num">10+</strong>
+                        <span data-bio-id="badge-label">Години практика</span>
                     </div>
                 </div>
 
                 <div>
                     <div class="about__header reveal">
                         <div class="tag tag--dark">За мен</div>
-                        <h2 class="about__title" style="margin-top:.8rem;">
+                        <h2 class="about__title" data-bio-id="about-title" style="margin-top:.8rem;">
                             Интегративен подход<br>
                             към здравето и<br>
                             физическата форма
                         </h2>
                     </div>
                     <div class="about__body reveal reveal-delay-1">
-                        <p>
+                        <p data-bio-id="about-p1">
                             Аз съм Константин Радилов — медицински специалист с дълбок интерес
                             към превантивната медицина, функционалното хранене и атлетичната
                             подготовка. Моят подход обединява клиничната медицина, науката
                             за хранене и методологията на фитнес тренировките в една цялостна
                             стратегия за здраве.
                         </p>
-                        <p>
+                        <p data-bio-id="about-p2">
                             Вярвам, че истинската промяна се постига само когато работим
                             едновременно с тялото, ума и начина на живот. Не продавам бързи
                             решения — изграждам устойчиви навици, базирани на медицинска
                             наука и индивидуален подход.
                         </p>
-                        <p>
+                        <p data-bio-id="about-p3">
                             С опит в работата с над 500 клиента — от спортисти до хора
                             с хронични заболявания — разработвам персонализирани планове,
                             съобразени с биохимията, физиологията и целите на всеки човек.
@@ -1152,8 +1154,8 @@
         <div class="container">
             <div class="expertise__intro reveal">
                 <div class="section-label">Компетенции</div>
-                <h2 class="section-title">Три специалности.<br>Един цялостен подход.</h2>
-                <p class="section-sub">
+                <h2 class="section-title" data-bio-id="expertise-title">Три специалности.<br>Един цялостен подход.</h2>
+                <p class="section-sub" data-bio-id="expertise-sub">
                     Комбинирам знания от медицината, нутриционизма и тренировъчната наука,
                     за да предложа решения, надхвърлящи границите на всяка отделна дисциплина.
                 </p>
@@ -1164,8 +1166,8 @@
                 <div class="exp-card reveal reveal-delay-1">
                     <div class="exp-card__num">01 / 03</div>
                     <div class="exp-card__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-                    <div class="exp-card__title">Медицинска практика</div>
-                    <div class="exp-card__body">
+                    <div class="exp-card__title" data-bio-id="expcard-1-title">Медицинска практика</div>
+                    <div class="exp-card__body" data-bio-id="expcard-1-body">
                         Превантивна медицина, функционална оценка и клинично управление
                         на хронични заболявания. Работя с лабораторни показатели, хормонален
                         профил и метаболитна диагностика за прецизна медицинска стратегия.
@@ -1180,8 +1182,8 @@
                 <div class="exp-card reveal reveal-delay-2">
                     <div class="exp-card__num">02 / 03</div>
                     <div class="exp-card__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><path d="M9 8h6M9 16h6"/><path d="M3 9h3M18 9h3M3 15h3M18 15h3"/></svg></div>
-                    <div class="exp-card__title">Персонален треньор</div>
-                    <div class="exp-card__body">
+                    <div class="exp-card__title" data-bio-id="expcard-2-title">Персонален треньор</div>
+                    <div class="exp-card__body" data-bio-id="expcard-2-body">
                         Периодизирани тренировъчни програми, базирани на физиология,
                         биомеханика и индивидуална оценка на силата и движението.
                         Работя с клиенти от начинаещи до изявени атлети.
@@ -1196,8 +1198,8 @@
                 <div class="exp-card reveal reveal-delay-3">
                     <div class="exp-card__num">03 / 03</div>
                     <div class="exp-card__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
-                    <div class="exp-card__title">Клинична нутриция</div>
-                    <div class="exp-card__body">
+                    <div class="exp-card__title" data-bio-id="expcard-3-title">Клинична нутриция</div>
+                    <div class="exp-card__body" data-bio-id="expcard-3-body">
                         Изготвям индивидуализирани хранителни планове, базирани на
                         метаболитни нужди, хранителни дефицити и здравни цели.
                         Специализация в диети за отслабване, мускулен растеж и болестни
@@ -1216,7 +1218,7 @@
 
     <!-- ── CREDENTIALS ────────────────────────────────────────────── -->
     <section class="section section--alt" id="credentials">
-        <div class="container">
+        <div class="container" data-bio-id="credentials-container">
             <div class="deco-line reveal">
                 <span class="deco-line__text">Образование &amp; Квалификации</span>
             </div>
@@ -1230,33 +1232,33 @@
                         <div class="timeline-item">
                             <div class="timeline-item__dot"></div>
                             <div>
-                                <div class="timeline-item__year">2010 – 2016</div>
-                                <div class="timeline-item__title">Магистър по медицина</div>
-                                <div class="timeline-item__place">Медицински университет, София</div>
+                                <div class="timeline-item__year" data-bio-id="edu-1-year">2010 – 2016</div>
+                                <div class="timeline-item__title" data-bio-id="edu-1-title">Магистър по медицина</div>
+                                <div class="timeline-item__place" data-bio-id="edu-1-place">Медицински университет, София</div>
                             </div>
                         </div>
                         <div class="timeline-item">
                             <div class="timeline-item__dot"></div>
                             <div>
-                                <div class="timeline-item__year">2017 – 2018</div>
-                                <div class="timeline-item__title">Специализация по превантивна медицина</div>
-                                <div class="timeline-item__place">Национален център по обществено здраве</div>
+                                <div class="timeline-item__year" data-bio-id="edu-2-year">2017 – 2018</div>
+                                <div class="timeline-item__title" data-bio-id="edu-2-title">Специализация по превантивна медицина</div>
+                                <div class="timeline-item__place" data-bio-id="edu-2-place">Национален център по обществено здраве</div>
                             </div>
                         </div>
                         <div class="timeline-item">
                             <div class="timeline-item__dot"></div>
                             <div>
                                 <div class="timeline-item__year">2019</div>
-                                <div class="timeline-item__title">Клинична нутриция</div>
-                                <div class="timeline-item__place">Международна академия по нутриция</div>
+                                <div class="timeline-item__title" data-bio-id="edu-3-title">Клинична нутриция</div>
+                                <div class="timeline-item__place" data-bio-id="edu-3-place">Международна академия по нутриция</div>
                             </div>
                         </div>
                         <div class="timeline-item">
                             <div class="timeline-item__dot"></div>
                             <div>
                                 <div class="timeline-item__year">2021</div>
-                                <div class="timeline-item__title">Сертификат по функционална медицина</div>
-                                <div class="timeline-item__place">Institute for Functional Medicine (IFM)</div>
+                                <div class="timeline-item__title" data-bio-id="edu-4-title">Сертификат по функционална медицина</div>
+                                <div class="timeline-item__place" data-bio-id="edu-4-place">Institute for Functional Medicine (IFM)</div>
                             </div>
                         </div>
                     </div>
@@ -1269,36 +1271,36 @@
                         <div class="cert-item">
                             <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><path d="M9 8h6M9 16h6"/><path d="M3 9h3M18 9h3M3 15h3M18 15h3"/></svg></div>
                             <div>
-                                <div class="cert-item__title">NSCA Certified Personal Trainer (NSCA-CPT)</div>
-                                <div class="cert-item__body">National Strength &amp; Conditioning Association</div>
+                                <div class="cert-item__title" data-bio-id="cert-1-title">NSCA Certified Personal Trainer (NSCA-CPT)</div>
+                                <div class="cert-item__body" data-bio-id="cert-1-body">National Strength &amp; Conditioning Association</div>
                             </div>
                         </div>
                         <div class="cert-item">
                             <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
                             <div>
-                                <div class="cert-item__title">Precision Nutrition Level 2</div>
-                                <div class="cert-item__body">PN2 — Клинична нутриционна практика</div>
+                                <div class="cert-item__title" data-bio-id="cert-2-title">Precision Nutrition Level 2</div>
+                                <div class="cert-item__body" data-bio-id="cert-2-body">PN2 — Клинична нутриционна практика</div>
                             </div>
                         </div>
                         <div class="cert-item">
                             <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6M9 22c1.798-1.998 2.518-3.995 2.807-5.993M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m2 9 20 6"/></svg></div>
                             <div>
-                                <div class="cert-item__title">Functional Medicine Certified Practitioner</div>
-                                <div class="cert-item__body">Institute for Functional Medicine (IFM)</div>
+                                <div class="cert-item__title" data-bio-id="cert-3-title">Functional Medicine Certified Practitioner</div>
+                                <div class="cert-item__body" data-bio-id="cert-3-body">Institute for Functional Medicine (IFM)</div>
                             </div>
                         </div>
                         <div class="cert-item">
                             <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
                             <div>
-                                <div class="cert-item__title">Sports Medicine &amp; Performance</div>
-                                <div class="cert-item__body">American College of Sports Medicine (ACSM)</div>
+                                <div class="cert-item__title" data-bio-id="cert-4-title">Sports Medicine &amp; Performance</div>
+                                <div class="cert-item__body" data-bio-id="cert-4-body">American College of Sports Medicine (ACSM)</div>
                             </div>
                         </div>
                         <div class="cert-item">
                             <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24A2.5 2.5 0 0 0 14.5 2Z"/></svg></div>
                             <div>
-                                <div class="cert-item__title">Behavioral Change Specialist</div>
-                                <div class="cert-item__body">ACE Health Coaching — мотивация и навици</div>
+                                <div class="cert-item__title" data-bio-id="cert-5-title">Behavioral Change Specialist</div>
+                                <div class="cert-item__body" data-bio-id="cert-5-body">ACE Health Coaching — мотивация и навици</div>
                             </div>
                         </div>
                     </div>
@@ -1316,20 +1318,21 @@
                     src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80"
                     alt="Философия на здравето"
                     loading="lazy"
+                    data-bio-id="img-philosophy"
                 >
             </div>
             <div class="reveal reveal-delay-1">
                 <div class="philosophy__label">Моята философия</div>
-                <blockquote class="philosophy__quote">
+                <blockquote class="philosophy__quote" data-bio-id="philosophy-quote">
                     „Здравето не е дестинация — то е динамичен процес на постоянен избор."
                 </blockquote>
                 <div class="philosophy__body">
-                    <p>
+                    <p data-bio-id="philosophy-p1">
                         Вярвам в триъгълника: медицина — движение — хранене. Никой от
                         трите стълба не е достатъчен сам по себе си. Само тяхното
                         синергично взаимодействие създава трайно, устойчиво здраве.
                     </p>
-                    <p>
+                    <p data-bio-id="philosophy-p2">
                         Работя с доказателствена медицина и приоритизирам дългосрочните
                         резултати пред краткосрочните трикове. Всеки план е базиран на
                         лабораторни данни, физиологична оценка и личните цели на клиента.
@@ -1338,8 +1341,8 @@
                 <div class="philosophy__author">
                     <div class="philosophy__author-line"></div>
                     <div>
-                        <div class="philosophy__author-name">Д-р Константин Радилов</div>
-                        <div class="philosophy__author-title">Медицина · Треньор · Нутриционист</div>
+                        <div class="philosophy__author-name" data-bio-id="philosophy-author">Д-р Константин Радилов</div>
+                        <div class="philosophy__author-title" data-bio-id="philosophy-author-title">Медицина · Треньор · Нутриционист</div>
                     </div>
                 </div>
             </div>
@@ -1358,8 +1361,8 @@
                 <div class="approach-step reveal reveal-delay-1">
                     <div class="approach-step__num">01</div>
                     <div class="approach-step__divider"></div>
-                    <div class="approach-step__title">Оценка</div>
-                    <div class="approach-step__body">
+                    <div class="approach-step__title" data-bio-id="step-1-title">Оценка</div>
+                    <div class="approach-step__body" data-bio-id="step-1-body">
                         Задълбочен медицински анализ: лабораторни изследвания, телесен
                         състав, анамнеза и фитнес тест.
                     </div>
@@ -1367,8 +1370,8 @@
                 <div class="approach-step reveal reveal-delay-2">
                     <div class="approach-step__num">02</div>
                     <div class="approach-step__divider"></div>
-                    <div class="approach-step__title">Стратегия</div>
-                    <div class="approach-step__body">
+                    <div class="approach-step__title" data-bio-id="step-2-title">Стратегия</div>
+                    <div class="approach-step__body" data-bio-id="step-2-body">
                         Персонализиран план, интегриращ медицинска интервенция,
                         тренировъчна програма и хранителна стратегия.
                     </div>
@@ -1376,8 +1379,8 @@
                 <div class="approach-step reveal reveal-delay-3">
                     <div class="approach-step__num">03</div>
                     <div class="approach-step__divider"></div>
-                    <div class="approach-step__title">Изпълнение</div>
-                    <div class="approach-step__body">
+                    <div class="approach-step__title" data-bio-id="step-3-title">Изпълнение</div>
+                    <div class="approach-step__body" data-bio-id="step-3-body">
                         Постоянна подкрепа, корекции в реално време и проследяване
                         на напредъка чрез обективни измервания.
                     </div>
@@ -1385,8 +1388,8 @@
                 <div class="approach-step reveal reveal-delay-4">
                     <div class="approach-step__num">04</div>
                     <div class="approach-step__divider"></div>
-                    <div class="approach-step__title">Поддръжка</div>
-                    <div class="approach-step__body">
+                    <div class="approach-step__title" data-bio-id="step-4-title">Поддръжка</div>
+                    <div class="approach-step__body" data-bio-id="step-4-body">
                         Дългосрочен мониторинг и адаптация на плана спрямо
                         промените в живота и целите ви.
                     </div>
@@ -1400,8 +1403,8 @@
         <div class="container">
             <div class="expertise__intro reveal">
                 <div class="section-label">Услуги</div>
-                <h2 class="section-title">Програми и консултации</h2>
-                <p class="section-sub">
+                <h2 class="section-title" data-bio-id="services-title">Програми и консултации</h2>
+                <p class="section-sub" data-bio-id="services-sub">
                     Всяка услуга е изградена около вашите индивидуални нужди, цели
                     и здравен статус — без универсални решения, само персонализиран подход.
                 </p>
@@ -1496,7 +1499,7 @@
             </div>
 
             <!-- Desktop grid (hidden on mobile via CSS) -->
-            <div class="testimonials__grid">
+            <div class="testimonials__grid" data-bio-id="testimonials-grid">
                 <div class="testi-card reveal reveal-delay-1">
                     <div class="testi-card__stars">
                         <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
@@ -1554,7 +1557,7 @@
 
             <!-- Mobile swipeable carousel -->
             <div class="testimonials-carousel" id="testiCarousel" aria-label="Отзиви от клиенти">
-                <div class="testimonials-track" id="testiTrack">
+                <div class="testimonials-track" id="testiTrack" data-bio-id="testimonials-track">
                     <div class="testi-card">
                         <div class="testi-card__stars">
                             <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
@@ -1607,7 +1610,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="carousel-dots" role="tablist" aria-label="Слайд навигация">
+                <div class="carousel-dots" role="tablist" aria-label="Слайд навигация" data-bio-id="carousel-dots">
                     <button class="carousel-dot active" data-index="0" role="tab" aria-label="Слайд 1" aria-selected="true"></button>
                     <button class="carousel-dot" data-index="1" role="tab" aria-label="Слайд 2" aria-selected="false"></button>
                     <button class="carousel-dot" data-index="2" role="tab" aria-label="Слайд 3" aria-selected="false"></button>
@@ -1628,17 +1631,17 @@
                         стратегия за здраве, движение и хранене.
                     </p>
                     <div class="contact__links">
-                        <a href="mailto:contact@drradilov.bg" class="contact__link">
+                        <a href="mailto:contact@drradilov.bg" class="contact__link" data-bio-id="contact-email">
                             <span class="contact__link-icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></span>
-                            contact@drradilov.bg
+                            <span data-bio-id="contact-email-text">contact@drradilov.bg</span>
                         </a>
-                        <a href="tel:+35988XXXXXXX" class="contact__link">
+                        <a href="tel:+35988XXXXXXX" class="contact__link" data-bio-id="contact-phone">
                             <span class="contact__link-icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 9.73a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6.29 6.29l1.27-.76A2 2 0 0 1 17.76 14a12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
-                            +359 88 XXX XXXX
+                            <span data-bio-id="contact-phone-text">+359 88 XXX XXXX</span>
                         </a>
-                        <a href="#" class="contact__link" data-contact-type="address">
+                        <a href="#" class="contact__link" data-contact-type="address" data-bio-id="contact-address">
                             <span class="contact__link-icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
-                            София, България
+                            <span data-bio-id="contact-address-text">София, България</span>
                         </a>
                     </div>
                 </div>
@@ -1715,9 +1718,9 @@
                     © <span id="footerYear"></span> Д-р Константин Радилов. Всички права запазени.
                 </p>
                 <div class="footer__socials">
-                    <a href="#" class="footer__social" aria-label="Instagram"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
-                    <a href="#" class="footer__social" aria-label="Facebook"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
-                    <a href="#" class="footer__social" aria-label="LinkedIn"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg></a>
+                    <a href="#" class="footer__social" aria-label="Instagram" data-bio-id="social-instagram"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+                    <a href="#" class="footer__social" aria-label="Facebook" data-bio-id="social-facebook"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+                    <a href="#" class="footer__social" aria-label="LinkedIn" data-bio-id="social-linkedin"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg></a>
                 </div>
             </div>
         </div>
@@ -1939,223 +1942,21 @@
         }
     </script>
 
-    <!-- Apply bioadmin overrides: fetch from server and patch the page -->
-    <!-- The worker replaces the script below with the actual bio_content JSON. -->
-    <script id="bio-content-injection-point">/* bio_content injected by worker */</script>
+    <!-- Content is rendered server-side by the worker; no client-side patching needed. -->
     <script>
     (function() {
-        var IMAGE_TARGETS = {
-            hero:       '.hero__photo-wrap img',
-            about:      '.about__portrait img',
-            philosophy: '.philosophy__visual img',
-        };
-
         // Reveal the page (removes the bio-loading class added in <head>)
         function reveal() {
             document.documentElement.classList.remove('bio-loading');
         }
+        // Reveal immediately — content is already correct from server-side rendering.
+        reveal();
 
-        // Failsafe: always reveal within 1.5 s even if the fetch is slow or fails
-        var revealTimer = setTimeout(reveal, 1500);
-
-        function applyBioContent(data) {
-            if (!data || typeof data !== 'object') return;
-
-            // Text overrides
-            if (data.textOverrides) {
-                Object.entries(data.textOverrides).forEach(function(entry) {
-                    var sel = entry[0], opts = entry[1];
-                    var el = document.querySelector(sel);
-                    if (!el) return;
-                    if (opts.content !== undefined) el.textContent = opts.content;
-                    if (opts.fontFamily) el.style.fontFamily = opts.fontFamily;
-                    if (opts.fontSize)   el.style.fontSize   = (typeof opts.fontSize === 'number' ? opts.fontSize + 'rem' : opts.fontSize);
-                    if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
-                    if (opts.color)      el.style.color       = opts.color;
-                });
-            }
-
-            // Image overrides
-            if (data.images) {
-                Object.entries(IMAGE_TARGETS).forEach(function(entry) {
-                    var key = entry[0], sel = entry[1];
-                    if (data.images[key]) {
-                        var el = document.querySelector(sel);
-                        if (el) el.src = data.images[key];
-                    }
-                });
-            }
-
-            // Theme / CSS variable overrides
-            if (data.theme) {
-                var root = document.documentElement;
-                Object.entries(data.theme).forEach(function(entry) {
-                    root.style.setProperty(entry[0], entry[1]);
-                });
-            }
-
-            // Contact info overrides
-            if (data.contact) {
-                var c = data.contact;
-                // Validate email: only allow safe email characters
-                if (c.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) {
-                    var emailLink = document.querySelector('.contact__link[href^="mailto"]');
-                    if (emailLink) {
-                        emailLink.href = 'mailto:' + c.email;
-                        var lastEmailNode = emailLink.childNodes[emailLink.childNodes.length - 1];
-                        if (lastEmailNode && lastEmailNode.nodeType === 3) lastEmailNode.textContent = ' ' + c.email;
-                    }
-                }
-                // Validate phone: only allow digits, spaces, +, -, (, )
-                if (c.phone && /^[\d\s\+\-\(\)]+$/.test(c.phone)) {
-                    var phoneLink = document.querySelector('.contact__link[href^="tel"]');
-                    if (phoneLink) {
-                        phoneLink.href = 'tel:' + c.phone.replace(/[\s\-\(\)]/g, '');
-                        var lastPhoneNode = phoneLink.childNodes[phoneLink.childNodes.length - 1];
-                        if (lastPhoneNode && lastPhoneNode.nodeType === 3) lastPhoneNode.textContent = ' ' + c.phone;
-                    }
-                }
-                if (c.address) {
-                    var addrLink = document.querySelector('.contact__link[data-contact-type="address"]');
-                    if (addrLink) {
-                        var lastAddrNode = addrLink.childNodes[addrLink.childNodes.length - 1];
-                        if (lastAddrNode && lastAddrNode.nodeType === 3) lastAddrNode.textContent = ' ' + c.address;
-                    }
-                }
-                // Only allow http/https URLs for social links
-                function applySafeHref(selector, url) {
-                    if (!url || !/^https?:\/\//i.test(url)) return;
-                    var el = document.querySelector(selector);
-                    if (el) el.href = url;
-                }
-                applySafeHref('.footer__social[aria-label="Instagram"]', c.instagram);
-                applySafeHref('.footer__social[aria-label="Facebook"]',  c.facebook);
-                applySafeHref('.footer__social[aria-label="LinkedIn"]',  c.linkedin);
-            }
-
-            // Testimonials overrides
-            if (data.testimonials && data.testimonials.length > 0) {
-                function esc(str) {
-                    return String(str)
-                        .replace(/&/g, '&amp;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;')
-                        .replace(/"/g, '&quot;')
-                        .replace(/'/g, '&#39;');
-                }
-                function buildTestiCard(t) {
-                    var stars = Math.max(1, Math.min(5, t.stars || 5));
-                    var starsHtml = '';
-                    for (var i = 0; i < stars; i++) starsHtml += '<span>★</span>';
-                    var card = document.createElement('div');
-                    card.className = 'testi-card';
-                    card.innerHTML =
-                        '<div class="testi-card__stars">' + starsHtml + '</div>' +
-                        '<p class="testi-card__text">' + esc(t.text || '') + '</p>' +
-                        '<div class="testi-card__author">' +
-                            '<div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>' +
-                            '<div>' +
-                                '<div class="testi-card__author-name">' + esc(t.authorName || '') + '</div>' +
-                                '<div class="testi-card__author-sub">' + esc(t.authorSub || '') + '</div>' +
-                            '</div>' +
-                        '</div>';
-                    return card;
-                }
-                // Desktop grid
-                var desktopGrid = document.querySelector('.testimonials__grid');
-                if (desktopGrid) {
-                    desktopGrid.innerHTML = '';
-                    data.testimonials.forEach(function(t, i) {
-                        var card = buildTestiCard(t);
-                        card.classList.add('reveal', 'reveal-delay-' + Math.min(i + 1, 4));
-                        desktopGrid.appendChild(card);
-                    });
-                }
-                // Mobile carousel
-                var track = document.getElementById('testiTrack');
-                if (track) {
-                    track.innerHTML = '';
-                    data.testimonials.forEach(function(t) {
-                        track.appendChild(buildTestiCard(t));
-                    });
-                    // Rebuild carousel dots
-                    var dotsWrap = document.querySelector('.carousel-dots');
-                    if (dotsWrap) {
-                        dotsWrap.innerHTML = '';
-                        data.testimonials.forEach(function(_, i) {
-                            var btn = document.createElement('button');
-                            btn.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-                            btn.dataset.index = i;
-                            btn.setAttribute('role', 'tab');
-                            btn.setAttribute('aria-label', 'Слайд ' + (i + 1));
-                            btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
-                            dotsWrap.appendChild(btn);
-                        });
-                    }
-                }
-            }
-
-            // Diplomas section
-            var existing = document.getElementById('bioadmin-diplomas');
-            if (existing) existing.remove();
-            if (data.diplomas && data.diplomas.length > 0) {
-                var creds = document.querySelector('#credentials .container');
-                if (creds) {
-                    var section = document.createElement('div');
-                    section.id = 'bioadmin-diplomas';
-                    section.style.cssText = 'margin-top:2rem;';
-
-                    var title = document.createElement('div');
-                    title.style.cssText = 'font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--c-text-3);margin-bottom:1rem;';
-                    title.textContent = 'Дипломи & Сертификати';
-                    section.appendChild(title);
-
-                    var grid = document.createElement('div');
-                    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;';
-
-                    data.diplomas.forEach(function(d) {
-                        var card = document.createElement('div');
-                        card.style.cssText = 'border:1px solid var(--c-border);border-radius:12px;overflow:hidden;background:var(--c-surface);';
-                        if (d.dataURL) {
-                            var img = document.createElement('img');
-                            img.src = d.dataURL;
-                            img.alt = d.label || 'Диплома';
-                            img.style.cssText = 'width:100%;height:140px;object-fit:cover;display:block;';
-                            card.appendChild(img);
-                        }
-                        if (d.label) {
-                            var lbl = document.createElement('div');
-                            lbl.style.cssText = 'padding:.5rem .75rem;font-size:.78rem;color:var(--c-text-2);';
-                            lbl.textContent = d.label;
-                            card.appendChild(lbl);
-                        }
-                        grid.appendChild(card);
-                    });
-
-                    section.appendChild(grid);
-                    creds.appendChild(section);
-                }
-            }
-        }
-
-        // Use the absolute Worker URL so the fetch works whether bio.html is served
-        // from GitHub Pages (daotslabna.com) or directly from the Worker.
-        // NOTE: If WORKER_URL changes, update bioadmin.html (WORKER_URL constant) too.
+        // Store worker origin for contact form
         var workerOrigin = window.location.hostname === 'localhost'
             ? 'http://' + window.location.host
             : 'https://port.radilov-k.workers.dev';
-
-        // Store worker origin for contact form
         window._bioWorkerOrigin = workerOrigin;
-
-        // When served through the worker, bio_content is injected inline as
-        // window.__bioContent.  When served as a static file (e.g. GitHub Pages),
-        // no backend call is made — the page just renders its default static content.
-        if (window.__bioContent) {
-            applyBioContent(window.__bioContent);
-        }
-        clearTimeout(revealTimer);
-        reveal();
     })();
     </script>
 </body>

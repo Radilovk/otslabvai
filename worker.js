@@ -257,9 +257,106 @@ async function serveStaticFile(env, filename, contentType) {
 }
 
 /**
- * Serves bio.html with the bio_content KV data injected inline as
- * window.__bioContent.  This avoids a separate /bio_content.json request
- * (and the associated KV read) on every page view.
+ * CSS-selector → data-bio-id mapping for all text-editable elements.
+ * Must match the EDITABLE_ELEMENTS selectors in bioadmin.html.
+ */
+const BIO_SELECTOR_TO_ID = {
+    '.hero__name':                                                   'hero-name',
+    '.hero__desc':                                                   'hero-desc',
+    '.hero__stats .stat-card:nth-child(1) .stat-card__num':         'stat-1-num',
+    '.hero__stats .stat-card:nth-child(1) .stat-card__label':       'stat-1-label',
+    '.hero__stats .stat-card:nth-child(2) .stat-card__num':         'stat-2-num',
+    '.hero__stats .stat-card:nth-child(2) .stat-card__label':       'stat-2-label',
+    '.hero__stats .stat-card:nth-child(3) .stat-card__num':         'stat-3-num',
+    '.hero__stats .stat-card:nth-child(3) .stat-card__label':       'stat-3-label',
+    '.hero__actions .btn--primary':                                  'cta-primary',
+    '.hero__actions .btn--outline':                                  'cta-outline',
+    '.about__title':                                                 'about-title',
+    '.about__body p:nth-child(1)':                                   'about-p1',
+    '.about__body p:nth-child(2)':                                   'about-p2',
+    '.about__body p:nth-child(3)':                                   'about-p3',
+    '.about__portrait-badge strong':                                 'badge-num',
+    '.about__portrait-badge span':                                   'badge-label',
+    '#expertise .section-title':                                     'expertise-title',
+    '#expertise .section-sub':                                       'expertise-sub',
+    '.exp-card:nth-child(1) .exp-card__title':                      'expcard-1-title',
+    '.exp-card:nth-child(1) .exp-card__body':                       'expcard-1-body',
+    '.exp-card:nth-child(2) .exp-card__title':                      'expcard-2-title',
+    '.exp-card:nth-child(2) .exp-card__body':                       'expcard-2-body',
+    '.exp-card:nth-child(3) .exp-card__title':                      'expcard-3-title',
+    '.exp-card:nth-child(3) .exp-card__body':                       'expcard-3-body',
+    '.timeline-item:nth-child(1) .timeline-item__year':             'edu-1-year',
+    '.timeline-item:nth-child(1) .timeline-item__title':            'edu-1-title',
+    '.timeline-item:nth-child(1) .timeline-item__place':            'edu-1-place',
+    '.timeline-item:nth-child(2) .timeline-item__year':             'edu-2-year',
+    '.timeline-item:nth-child(2) .timeline-item__title':            'edu-2-title',
+    '.timeline-item:nth-child(2) .timeline-item__place':            'edu-2-place',
+    '.timeline-item:nth-child(3) .timeline-item__title':            'edu-3-title',
+    '.timeline-item:nth-child(3) .timeline-item__place':            'edu-3-place',
+    '.timeline-item:nth-child(4) .timeline-item__title':            'edu-4-title',
+    '.timeline-item:nth-child(4) .timeline-item__place':            'edu-4-place',
+    '.cert-item:nth-child(1) .cert-item__title':                    'cert-1-title',
+    '.cert-item:nth-child(1) .cert-item__body':                     'cert-1-body',
+    '.cert-item:nth-child(2) .cert-item__title':                    'cert-2-title',
+    '.cert-item:nth-child(2) .cert-item__body':                     'cert-2-body',
+    '.cert-item:nth-child(3) .cert-item__title':                    'cert-3-title',
+    '.cert-item:nth-child(3) .cert-item__body':                     'cert-3-body',
+    '.cert-item:nth-child(4) .cert-item__title':                    'cert-4-title',
+    '.cert-item:nth-child(4) .cert-item__body':                     'cert-4-body',
+    '.cert-item:nth-child(5) .cert-item__title':                    'cert-5-title',
+    '.cert-item:nth-child(5) .cert-item__body':                     'cert-5-body',
+    '.philosophy__quote':                                            'philosophy-quote',
+    '.philosophy__body p:nth-child(1)':                             'philosophy-p1',
+    '.philosophy__body p:nth-child(2)':                             'philosophy-p2',
+    '.philosophy__author-name':                                      'philosophy-author',
+    '.philosophy__author-title':                                     'philosophy-author-title',
+    '.approach-step:nth-child(1) .approach-step__title':            'step-1-title',
+    '.approach-step:nth-child(1) .approach-step__body':             'step-1-body',
+    '.approach-step:nth-child(2) .approach-step__title':            'step-2-title',
+    '.approach-step:nth-child(2) .approach-step__body':             'step-2-body',
+    '.approach-step:nth-child(3) .approach-step__title':            'step-3-title',
+    '.approach-step:nth-child(3) .approach-step__body':             'step-3-body',
+    '.approach-step:nth-child(4) .approach-step__title':            'step-4-title',
+    '.approach-step:nth-child(4) .approach-step__body':             'step-4-body',
+    '#services .section-title':                                      'services-title',
+    '#services .section-sub':                                        'services-sub',
+};
+
+/**
+ * Escapes a string for safe use as HTML text content.
+ */
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/**
+ * Builds the HTML for one testimonial card.
+ */
+function buildTestiCardHtml(t) {
+    const stars = Math.max(1, Math.min(5, t.stars || 5));
+    const starsHtml = '<span>★</span>'.repeat(stars);
+    const avatarSvg = '<svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>';
+    return `<div class="testi-card">` +
+        `<div class="testi-card__stars">${starsHtml}</div>` +
+        `<p class="testi-card__text">${escHtml(t.text || '')}</p>` +
+        `<div class="testi-card__author">` +
+            `<div class="testi-card__avatar">${avatarSvg}</div>` +
+            `<div>` +
+                `<div class="testi-card__author-name">${escHtml(t.authorName || '')}</div>` +
+                `<div class="testi-card__author-sub">${escHtml(t.authorSub || '')}</div>` +
+            `</div>` +
+        `</div>` +
+        `</div>`;
+}
+
+/**
+ * Serves bio.html with all bio_content data applied server-side via HTMLRewriter.
+ * This is the single source of truth — no client-side DOM patching is needed.
  */
 async function serveBioHtml(env) {
     const [htmlContent, bioContent] = await Promise.all([
@@ -269,26 +366,163 @@ async function serveBioHtml(env) {
     if (htmlContent === null) {
         throw new UserFacingError('File bio.html not found in storage.', 404);
     }
-    const bioData = bioContent !== null ? bioContent : '{}';
-    // Escape characters that are unsafe inside an inline <script> block so
-    // that an adversarially-crafted bio_content value cannot break out of the
-    // script context and inject arbitrary HTML.
-    const safeData = bioData
-        .replace(/&/g, '\\u0026')
-        .replace(/</g, '\\u003c')
-        .replace(/>/g, '\\u003e');
-    const inlineScript = `<script id="bio-content-injection-point">window.__bioContent=${safeData};<\/script>`;
-    const injectedHtml = htmlContent.replace(
-        '<script id="bio-content-injection-point">/* bio_content injected by worker */</script>',
-        inlineScript
-    );
-    return new Response(injectedHtml, {
-        status: 200,
-        headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`
+
+    let bioData = {};
+    if (bioContent !== null) {
+        try { bioData = JSON.parse(bioContent); } catch (_) { /* ignore invalid JSON */ }
+    }
+
+    const rewriter = new HTMLRewriter();
+
+    // ── 1. Text overrides ──────────────────────────────────────────────
+    const textOverrides = bioData.textOverrides || {};
+    for (const [selector, opts] of Object.entries(textOverrides)) {
+        const bioId = BIO_SELECTOR_TO_ID[selector];
+        if (!bioId) continue;
+        const capturedOpts = opts; // capture for closure
+        rewriter.on(`[data-bio-id="${bioId}"]`, {
+            element(el) {
+                if (capturedOpts.content !== undefined) {
+                    el.setInnerContent(capturedOpts.content);
+                }
+                const styleParts = [];
+                if (capturedOpts.fontFamily) styleParts.push(`font-family:${capturedOpts.fontFamily}`);
+                if (capturedOpts.fontSize) {
+                    const fs = typeof capturedOpts.fontSize === 'number'
+                        ? capturedOpts.fontSize + 'rem'
+                        : capturedOpts.fontSize;
+                    styleParts.push(`font-size:${fs}`);
+                }
+                if (capturedOpts.fontWeight) styleParts.push(`font-weight:${capturedOpts.fontWeight}`);
+                if (capturedOpts.color) styleParts.push(`color:${capturedOpts.color}`);
+                if (styleParts.length) el.setAttribute('style', styleParts.join(';'));
+            }
+        });
+    }
+
+    // ── 2. Image overrides ─────────────────────────────────────────────
+    const images = bioData.images || {};
+    const imageMap = { hero: 'img-hero', about: 'img-about', philosophy: 'img-philosophy' };
+    for (const [key, bioId] of Object.entries(imageMap)) {
+        if (!images[key]) continue;
+        const src = images[key];
+        rewriter.on(`[data-bio-id="${bioId}"]`, {
+            element(el) { el.setAttribute('src', src); }
+        });
+    }
+
+    // ── 3. Theme (CSS variable) overrides ─────────────────────────────
+    const theme = bioData.theme || {};
+    const themeEntries = Object.entries(theme);
+    if (themeEntries.length > 0) {
+        const cssVars = themeEntries.map(([k, v]) => `${k}:${v}`).join(';');
+        rewriter.on('head', {
+            element(el) {
+                el.append(`<style id="bio-theme-override">:root{${cssVars}}</style>`, { html: true });
+            }
+        });
+    }
+
+    // ── 4. Contact overrides ───────────────────────────────────────────
+    const contact = bioData.contact || {};
+    if (contact.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)) {
+        const email = contact.email;
+        rewriter.on('[data-bio-id="contact-email"]', {
+            element(el) { el.setAttribute('href', 'mailto:' + email); }
+        });
+        rewriter.on('[data-bio-id="contact-email-text"]', {
+            element(el) { el.setInnerContent(email); }
+        });
+    }
+    if (contact.phone && /^[\d\s+\-()]+$/.test(contact.phone)) {
+        const phone = contact.phone;
+        const phoneHref = 'tel:' + phone.replace(/[\s\-()]/g, '');
+        rewriter.on('[data-bio-id="contact-phone"]', {
+            element(el) { el.setAttribute('href', phoneHref); }
+        });
+        rewriter.on('[data-bio-id="contact-phone-text"]', {
+            element(el) { el.setInnerContent(phone); }
+        });
+    }
+    if (contact.address) {
+        const address = contact.address;
+        rewriter.on('[data-bio-id="contact-address-text"]', {
+            element(el) { el.setInnerContent(address); }
+        });
+    }
+    const socialFields = [
+        ['instagram', 'social-instagram'],
+        ['facebook',  'social-facebook'],
+        ['linkedin',  'social-linkedin'],
+    ];
+    for (const [field, bioId] of socialFields) {
+        const url = contact[field];
+        if (!url || !/^https?:\/\//i.test(url)) continue;
+        const captured = url;
+        rewriter.on(`[data-bio-id="${bioId}"]`, {
+            element(el) { el.setAttribute('href', captured); }
+        });
+    }
+
+    // ── 5. Testimonials ────────────────────────────────────────────────
+    const testimonials = bioData.testimonials;
+    if (Array.isArray(testimonials) && testimonials.length > 0) {
+        let gridHtml = '';
+        let trackHtml = '';
+        let dotsHtml = '';
+        testimonials.forEach((t, i) => {
+            const cardHtml = buildTestiCardHtml(t);
+            // Desktop grid cards get reveal animation classes
+            const delayClass = i < 4 ? ` reveal reveal-delay-${i + 1}` : ' reveal';
+            gridHtml += cardHtml.replace('class="testi-card"', `class="testi-card${delayClass}"`);
+            trackHtml += cardHtml;
+            const isFirst = i === 0;
+            dotsHtml += `<button class="carousel-dot${isFirst ? ' active' : ''}" data-index="${i}" role="tab" aria-label="Слайд ${i + 1}" aria-selected="${isFirst ? 'true' : 'false'}"></button>`;
+        });
+        const capturedGrid  = gridHtml;
+        const capturedTrack = trackHtml;
+        const capturedDots  = dotsHtml;
+        rewriter.on('[data-bio-id="testimonials-grid"]',  { element(el) { el.setInnerContent(capturedGrid,  { html: true }); } });
+        rewriter.on('[data-bio-id="testimonials-track"]', { element(el) { el.setInnerContent(capturedTrack, { html: true }); } });
+        rewriter.on('[data-bio-id="carousel-dots"]',      { element(el) { el.setInnerContent(capturedDots,  { html: true }); } });
+    }
+
+    // ── 6. Diplomas ────────────────────────────────────────────────────
+    const diplomas = bioData.diplomas;
+    if (Array.isArray(diplomas) && diplomas.length > 0) {
+        let diplomaCardsHtml = '';
+        for (const d of diplomas) {
+            const imgHtml = d.dataURL
+                ? `<img src="${escHtml(d.dataURL)}" alt="${escHtml(d.label || 'Диплома')}" style="width:100%;height:140px;object-fit:cover;display:block;">`
+                : '';
+            const lblHtml = d.label
+                ? `<div style="padding:.5rem .75rem;font-size:.78rem;color:var(--c-text-2);">${escHtml(d.label)}</div>`
+                : '';
+            diplomaCardsHtml += `<div style="border:1px solid var(--c-border);border-radius:12px;overflow:hidden;background:var(--c-surface);">${imgHtml}${lblHtml}</div>`;
         }
-    });
+        const diplomaSection =
+            `<div id="bioadmin-diplomas" style="margin-top:2rem;">` +
+                `<div style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--c-text-3);margin-bottom:1rem;">Дипломи &amp; Сертификати</div>` +
+                `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;">${diplomaCardsHtml}</div>` +
+            `</div>`;
+        const capturedSection = diplomaSection;
+        rewriter.on('[data-bio-id="credentials-container"]', {
+            element(el) { el.append(capturedSection, { html: true }); }
+        });
+    }
+
+    const transformed = rewriter.transform(
+        new Response(htmlContent, {
+            status: 200,
+            headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                // no-store ensures every request gets fresh SSR content from KV,
+                // so changes made in bioadmin are visible immediately on next load.
+                'Cache-Control': 'no-store'
+            }
+        })
+    );
+    return transformed;
 }
 
 /**
