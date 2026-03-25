@@ -212,6 +212,10 @@ async function saveData() {
         if (response.ok) {
             setUnsavedChanges(false);
             showNotification('Промените са записани успешно.', 'success');
+            // Signal the public-facing page that its cached JSON is stale so that
+            // the next visit bypasses the browser cache and fetches fresh content.
+            const dirtyCookie = currentProject === 'life' ? 'life_dirty=1' : 'page_dirty=1';
+            document.cookie = dirtyCookie + '; path=/';
         } else {
             throw new Error(`Грешка от сървъра: ${response.statusText}`);
         }

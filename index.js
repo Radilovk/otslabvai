@@ -1633,8 +1633,12 @@ async function main() {
         // Try to use mock data for testing if API fails
         let response, data;
         try {
+            // If the admin just saved new content, bypass the browser cache so
+            // the fresh version is fetched immediately (cookie cleared right away).
+            const pageDirty = document.cookie.split(';').some(c => c.trim() === 'page_dirty=1');
+            if (pageDirty) document.cookie = 'page_dirty=; Max-Age=0; path=/';
             response = await fetch(`${API_URL}/page_content.json`, {
-                cache: 'default' // Use browser cache with proper revalidation
+                cache: pageDirty ? 'no-store' : 'default'
             });
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             data = await response.json();
