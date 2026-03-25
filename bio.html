@@ -1942,21 +1942,206 @@
         }
     </script>
 
-    <!-- Content is rendered server-side by the worker; no client-side patching needed. -->
+    <!-- Apply bioadmin overrides: bio_content is injected inline by the worker. -->
+    <!-- The worker replaces the script below with the actual bio_content JSON. -->
+    <script id="bio-content-injection-point">/* bio_content injected by worker */</script>
     <script>
     (function() {
+        var IMAGE_TARGETS = {
+            hero:       '.hero__photo-wrap img',
+            about:      '.about__portrait img',
+            philosophy: '.philosophy__visual img',
+        };
+
         // Reveal the page (removes the bio-loading class added in <head>)
         function reveal() {
             document.documentElement.classList.remove('bio-loading');
         }
-        // Reveal immediately — content is already correct from server-side rendering.
-        reveal();
+
+        // Failsafe: always reveal within 1.5 s even if something goes wrong
+        var revealTimer = setTimeout(reveal, 1500);
+
+        function applyBioContent(data) {
+            if (!data || typeof data !== 'object') return;
+
+            // Text overrides
+            if (data.textOverrides) {
+                Object.entries(data.textOverrides).forEach(function(entry) {
+                    var sel = entry[0], opts = entry[1];
+                    var el = document.querySelector(sel);
+                    if (!el) return;
+                    if (opts.content !== undefined) el.textContent = opts.content;
+                    if (opts.fontFamily) el.style.fontFamily = opts.fontFamily;
+                    if (opts.fontSize)   el.style.fontSize   = (typeof opts.fontSize === 'number' ? opts.fontSize + 'rem' : opts.fontSize);
+                    if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
+                    if (opts.color)      el.style.color       = opts.color;
+                });
+            }
+
+            // Image overrides
+            if (data.images) {
+                Object.entries(IMAGE_TARGETS).forEach(function(entry) {
+                    var key = entry[0], sel = entry[1];
+                    if (data.images[key]) {
+                        var el = document.querySelector(sel);
+                        if (el) el.src = data.images[key];
+                    }
+                });
+            }
+
+            // Theme / CSS variable overrides
+            if (data.theme) {
+                var root = document.documentElement;
+                Object.entries(data.theme).forEach(function(entry) {
+                    root.style.setProperty(entry[0], entry[1]);
+                });
+            }
+
+            // Contact info overrides
+            if (data.contact) {
+                var c = data.contact;
+                if (c.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) {
+                    var emailLink = document.querySelector('[data-bio-id="contact-email"]');
+                    if (emailLink) {
+                        emailLink.href = 'mailto:' + c.email;
+                        var emailText = document.querySelector('[data-bio-id="contact-email-text"]');
+                        if (emailText) emailText.textContent = c.email;
+                    }
+                }
+                if (c.phone && /^[\d\s+\-()]+$/.test(c.phone)) {
+                    var phoneLink = document.querySelector('[data-bio-id="contact-phone"]');
+                    if (phoneLink) {
+                        phoneLink.href = 'tel:' + c.phone.replace(/[\s\-(  )]/g, '');
+                        var phoneText = document.querySelector('[data-bio-id="contact-phone-text"]');
+                        if (phoneText) phoneText.textContent = c.phone;
+                    }
+                }
+                if (c.address) {
+                    var addrText = document.querySelector('[data-bio-id="contact-address-text"]');
+                    if (addrText) addrText.textContent = c.address;
+                }
+                function applySafeHref(bioId, url) {
+                    if (!url || !/^https?:\/\//i.test(url)) return;
+                    var el = document.querySelector('[data-bio-id="' + bioId + '"]');
+                    if (el) el.href = url;
+                }
+                applySafeHref('social-instagram', c.instagram);
+                applySafeHref('social-facebook',  c.facebook);
+                applySafeHref('social-linkedin',  c.linkedin);
+            }
+
+            // Testimonials overrides
+            if (data.testimonials && data.testimonials.length > 0) {
+                function esc(str) {
+                    return String(str)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
+                }
+                function buildTestiCard(t) {
+                    var stars = Math.max(1, Math.min(5, t.stars || 5));
+                    var starsHtml = '';
+                    for (var i = 0; i < stars; i++) starsHtml += '<span>★</span>';
+                    var card = document.createElement('div');
+                    card.className = 'testi-card';
+                    card.innerHTML =
+                        '<div class="testi-card__stars">' + starsHtml + '</div>' +
+                        '<p class="testi-card__text">' + esc(t.text || '') + '</p>' +
+                        '<div class="testi-card__author">' +
+                            '<div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>' +
+                            '<div>' +
+                                '<div class="testi-card__author-name">' + esc(t.authorName || '') + '</div>' +
+                                '<div class="testi-card__author-sub">' + esc(t.authorSub || '') + '</div>' +
+                            '</div>' +
+                        '</div>';
+                    return card;
+                }
+                var desktopGrid = document.querySelector('.testimonials__grid');
+                if (desktopGrid) {
+                    desktopGrid.innerHTML = '';
+                    data.testimonials.forEach(function(t, i) {
+                        var card = buildTestiCard(t);
+                        card.classList.add('reveal', 'reveal-delay-' + Math.min(i + 1, 4));
+                        desktopGrid.appendChild(card);
+                    });
+                }
+                var track = document.getElementById('testiTrack');
+                if (track) {
+                    track.innerHTML = '';
+                    data.testimonials.forEach(function(t) {
+                        track.appendChild(buildTestiCard(t));
+                    });
+                    var dotsWrap = document.querySelector('.carousel-dots');
+                    if (dotsWrap) {
+                        dotsWrap.innerHTML = '';
+                        data.testimonials.forEach(function(_, i) {
+                            var btn = document.createElement('button');
+                            btn.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                            btn.dataset.index = i;
+                            btn.setAttribute('role', 'tab');
+                            btn.setAttribute('aria-label', 'Слайд ' + (i + 1));
+                            btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+                            dotsWrap.appendChild(btn);
+                        });
+                    }
+                }
+            }
+
+            // Diplomas section
+            var existing = document.getElementById('bioadmin-diplomas');
+            if (existing) existing.remove();
+            if (data.diplomas && data.diplomas.length > 0) {
+                var creds = document.querySelector('[data-bio-id="credentials-container"]');
+                if (creds) {
+                    var section = document.createElement('div');
+                    section.id = 'bioadmin-diplomas';
+                    section.style.cssText = 'margin-top:2rem;';
+                    var title = document.createElement('div');
+                    title.style.cssText = 'font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--c-text-3);margin-bottom:1rem;';
+                    title.textContent = 'Дипломи & Сертификати';
+                    section.appendChild(title);
+                    var grid = document.createElement('div');
+                    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;';
+                    data.diplomas.forEach(function(d) {
+                        var card = document.createElement('div');
+                        card.style.cssText = 'border:1px solid var(--c-border);border-radius:12px;overflow:hidden;background:var(--c-surface);';
+                        if (d.dataURL && /^data:image\//i.test(d.dataURL)) {
+                            var img = document.createElement('img');
+                            img.src = d.dataURL;
+                            img.alt = d.label || 'Диплома';
+                            img.style.cssText = 'width:100%;height:140px;object-fit:cover;display:block;';
+                            card.appendChild(img);
+                        }
+                        if (d.label) {
+                            var lbl = document.createElement('div');
+                            lbl.style.cssText = 'padding:.5rem .75rem;font-size:.78rem;color:var(--c-text-2);';
+                            lbl.textContent = d.label;
+                            card.appendChild(lbl);
+                        }
+                        grid.appendChild(card);
+                    });
+                    section.appendChild(grid);
+                    creds.appendChild(section);
+                }
+            }
+        }
 
         // Store worker origin for contact form
         var workerOrigin = window.location.hostname === 'localhost'
             ? 'http://' + window.location.host
             : 'https://port.radilov-k.workers.dev';
         window._bioWorkerOrigin = workerOrigin;
+
+        // When served through the worker, bio_content is injected inline as
+        // window.__bioContent and the page is hidden (bio-loading) until we
+        // apply overrides and call reveal() — so there is no flash.
+        if (window.__bioContent) {
+            applyBioContent(window.__bioContent);
+        }
+        clearTimeout(revealTimer);
+        reveal();
     })();
     </script>
 </body>
