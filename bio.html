@@ -1767,7 +1767,7 @@
                 </div>
 
                 <div class="contact__form reveal reveal-delay-1">
-                    <form id="contactForm" onsubmit="handleContact(event)">
+                    <form id="contactForm" onsubmit="handleContact(event)" novalidate>
                         <div class="form-group">
                             <label for="cf-name">Вашето име</label>
                             <input type="text" id="cf-name" class="form-control" placeholder="Иван Иванов" required>
@@ -2047,6 +2047,9 @@
                 }
                 return;
             }
+
+            if (!name) { document.getElementById('cf-name').reportValidity(); return; }
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('cf-email').reportValidity(); return; }
 
             btn.textContent = 'Изпращане...';
             btn.disabled = true;
