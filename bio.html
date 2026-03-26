@@ -1363,12 +1363,179 @@
             #bio-inline-admin.ba-visible { transform: translateY(0); }
             #ba-toast { left: 1rem; bottom: calc(50vh + 1rem); }
         }
+
+        /* ── Floating inline text editor ──────────────────── */
+        #ba-float-toolbar {
+            position: absolute;
+            z-index: 99999;
+            background: #1A1E2E;
+            border: 1px solid #2E3348;
+            border-radius: 12px;
+            padding: 8px 10px;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.5);
+            min-width: 260px;
+            max-width: 320px;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 12px;
+            color: #C8D0E0;
+        }
+        #ba-float-toolbar.visible { display: flex; }
+        #ba-float-toolbar textarea {
+            width: 100%; min-height: 52px; background: #22263A;
+            border: 1px solid #2E3348; border-radius: 6px;
+            color: #E8ECF4; padding: 5px 7px; font-size: 12px;
+            resize: vertical; font-family: inherit;
+        }
+        .ba-float-row { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+        .ba-float-row label { font-size: 11px; color: #6C8EF5; width: 52px; flex-shrink: 0; }
+        .ba-float-row select,
+        .ba-float-row input[type=text],
+        .ba-float-row input[type=number] {
+            flex: 1; background: #22263A; border: 1px solid #2E3348;
+            border-radius: 5px; color: #E8ECF4; padding: 3px 6px;
+            font-size: 11px; min-width: 0;
+        }
+        .ba-float-row input[type=color] {
+            width: 28px; height: 24px; border: none; border-radius: 4px;
+            cursor: pointer; padding: 0; flex-shrink: 0;
+        }
+        .ba-float-actions { display: flex; gap: 5px; margin-top: 2px; }
+        .ba-float-btn {
+            flex: 1; padding: 5px 8px; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 11px; font-weight: 600;
+            transition: opacity .15s;
+        }
+        .ba-float-btn:hover { opacity: .85; }
+        .ba-float-btn-apply { background: #6C8EF5; color: #fff; }
+        .ba-float-btn-del   { background: #E05252; color: #fff; }
+        .ba-float-btn-close { background: #2E3348; color: #C8D0E0; flex: 0; padding: 2px 8px; }
+        .ba-float-align { display: flex; gap: 3px; }
+        .ba-float-align button {
+            background: #22263A; border: 1px solid #2E3348; border-radius: 4px;
+            color: #C8D0E0; cursor: pointer; padding: 3px 7px; font-size: 12px;
+        }
+        .ba-float-align button.active {
+            background: #6C8EF5; border-color: #6C8EF5; color: #fff;
+        }
+
+        /* ── Image replace overlay ─────────────────────────── */
+        .ba-img-wrap { position: relative; display: inline-block; }
+        .ba-img-replace-btn {
+            position: absolute; top: 8px; right: 8px; z-index: 9999;
+            background: #6C8EF5; color: #fff; border: none; border-radius: 20px;
+            padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+            display: none; box-shadow: 0 2px 8px rgba(0,0,0,.4);
+            white-space: nowrap;
+        }
+        body.bio-admin-active .ba-img-replace-btn { display: block; }
+
+        /* ── Mobile touch drag ─────────────────────────────── */
+        .ba-mobile-drag-active {
+            outline: 2px dashed #6C8EF5 !important;
+            background: rgba(108,142,245,.05) !important;
+        }
+
+        /* ── Background ambient orbs ───────────────────────── */
+        .bio-bg-orbs {
+            position: fixed; inset: 0; pointer-events: none;
+            z-index: 0; overflow: hidden;
+        }
+        .bio-bg-orbs__orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(80px); opacity: .16;
+            animation: bioOrbDrift linear infinite;
+        }
+        .bio-bg-orbs__orb:nth-child(1) {
+            width: 520px; height: 520px; top: -120px; left: -100px;
+            background: radial-gradient(circle, #B59A6A 0%, transparent 70%);
+            animation-duration: 30s;
+        }
+        .bio-bg-orbs__orb:nth-child(2) {
+            width: 380px; height: 380px; bottom: 10%; right: -80px;
+            background: radial-gradient(circle, #2C3E50 0%, transparent 70%);
+            animation-duration: 38s; animation-delay: -12s;
+        }
+        .bio-bg-orbs__orb:nth-child(3) {
+            width: 280px; height: 280px; top: 50%; left: 40%;
+            background: radial-gradient(circle, #7C8FA6 0%, transparent 70%);
+            animation-duration: 44s; animation-delay: -22s;
+        }
+        @keyframes bioOrbDrift {
+            0%,100% { transform: translate(0,0) scale(1); }
+            33%      { transform: translate(30px,-40px) scale(1.06); }
+            66%      { transform: translate(-20px,20px) scale(.94); }
+        }
+
+        /* ── Title reveal animation ────────────────────────── */
+        @keyframes bioTitleReveal {
+            from { opacity:0; transform:translateY(22px); filter:blur(4px); }
+            to   { opacity:1; transform:translateY(0);    filter:blur(0); }
+        }
+        .section-title { position: relative; }
+        .section-title::after {
+            content:''; display:block; width:48px; height:3px; margin-top:12px;
+            background: linear-gradient(90deg, var(--c-gold), transparent);
+            border-radius: 2px;
+        }
+        .section-title.in-view,
+        .hero__name.in-view {
+            animation: bioTitleReveal 0.65s cubic-bezier(0.19,1,0.22,1) both;
+        }
+        .hero__name { opacity:0; }
+        .hero__name.in-view { opacity:1; }
+
+        /* ── Stat card gradient text ────────────────────────── */
+        .stat-card { position:relative; overflow:hidden; }
+        .stat-card::before {
+            content:''; position:absolute; inset:0;
+            background: linear-gradient(135deg, rgba(181,154,106,.08) 0%, transparent 60%);
+            border-radius: inherit; pointer-events:none;
+        }
+        .stat-card__num {
+            background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-gold) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── Card hover lift ────────────────────────────────── */
+        .exp-card, .service-card {
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+        .exp-card:hover, .service-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* ── Mobile-first improvements ──────────────────────── */
+        @media (max-width: 600px) {
+            .hero__name { font-size: clamp(2.2rem, 11vw, 3.5rem); }
+            .section-title { font-size: clamp(1.4rem, 6vw, 2rem); }
+            .btn { padding: .75rem 1.5rem; font-size: .9rem; }
+            .stat-card { padding: .75rem 1rem; }
+            .exp-card, .service-card { padding: 1.25rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .bio-bg-orbs { display: none; }
+            .section-title.in-view,
+            .hero__name.in-view { animation: none; opacity: 1; filter: none; }
+        }
     </style>
 </head>
 <body>
 
     <!-- ── Scroll progress ────────────────────────────────────────── -->
     <div class="scroll-progress" id="scrollProgress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Прочетено"></div>
+
+    <!-- ── Ambient background orbs ───────────────────────────────── -->
+    <div class="bio-bg-orbs" aria-hidden="true">
+        <div class="bio-bg-orbs__orb"></div>
+        <div class="bio-bg-orbs__orb"></div>
+        <div class="bio-bg-orbs__orb"></div>
+    </div>
 
     <!-- ── NAV ────────────────────────────────────────────────────── -->
     <nav class="nav" id="mainNav">
@@ -2168,6 +2335,8 @@
             });
         }, { threshold: 0.12 });
         document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+        // Also trigger title reveal animation for section titles and hero name
+        document.querySelectorAll('.section-title, .hero__name').forEach(el => revealObserver.observe(el));
 
         // ── Counter animation ─────────────────────────────────────
         function animateCounter(el) {
@@ -3083,12 +3252,98 @@
                     <button class="ba-btn ba-btn-exit" id="ba-btn-preview-desktop" style="flex:1;">🖥️ Десктоп</button>
                 </div>
             </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">🎨 Кастомен CSS</div>
+                <p style="font-size:.72rem;color:#8892A4;margin-bottom:.4rem;">Добавяш CSS правила директно към страницата:</p>
+                <textarea id="ba-custom-css" style="width:100%;min-height:80px;background:#22263A;border:1px solid #2E3348;border-radius:6px;color:#E8ECF4;padding:6px 8px;font-size:11px;font-family:monospace;resize:vertical;" placeholder=".hero__name { color: red; }"></textarea>
+                <button class="ba-btn ba-btn-success" id="ba-btn-apply-css" style="width:100%;margin-top:.3rem;">Приложи CSS</button>
+            </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">📋 Дублиране на секция</div>
+                <div class="ba-form-group">
+                    <label>Избери секция</label>
+                    <select id="ba-dup-section-sel">
+                        <option value="">— избери —</option>
+                        <option value="hero">Hero</option>
+                        <option value="about">За мен</option>
+                        <option value="expertise">Компетенции</option>
+                        <option value="services">Услуги</option>
+                        <option value="credentials">Квалификации</option>
+                        <option value="philosophy">Философия</option>
+                        <option value="testimonials">Отзиви</option>
+                        <option value="contact">Контакт</option>
+                    </select>
+                </div>
+                <button class="ba-btn ba-btn-warn" id="ba-btn-dup-section" style="width:100%;">📋 Дублирай секцията</button>
+            </div>
         </div>
 
     </div><!-- /ba-sidebar-inner -->
 </div><!-- /bio-inline-admin -->
 
 <div class="ba-edit-badge" id="ba-edit-badge">✏️ Режим на редакция — направи промени и натисни Запази</div>
+
+<!-- ── Floating inline text editor ──────────────────────────── -->
+<div id="ba-float-toolbar" role="dialog" aria-label="Редактор на текст">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+        <span style="font-size:11px;color:#6C8EF5;font-weight:700;">✏️ Редактор на текст</span>
+        <button class="ba-float-btn ba-float-btn-close" id="ba-float-close">✕</button>
+    </div>
+    <textarea id="ba-float-content" placeholder="Текст..."></textarea>
+    <div class="ba-float-row">
+        <label>Шрифт</label>
+        <select id="ba-float-font">
+            <option value="">— без —</option>
+            <option value="'Inter', system-ui, sans-serif">Inter</option>
+            <option value="'Playfair Display', Georgia, serif">Playfair</option>
+            <option value="'DM Mono', monospace">DM Mono</option>
+            <option value="'Roboto', sans-serif">Roboto</option>
+            <option value="'Montserrat', sans-serif">Montserrat</option>
+            <option value="Georgia, serif">Georgia</option>
+        </select>
+    </div>
+    <div class="ba-float-row">
+        <label>Размер</label>
+        <input type="number" id="ba-float-size" min="0.5" max="6" step="0.125" placeholder="rem">
+        <label style="width:auto;margin-left:4px;">Тежест</label>
+        <select id="ba-float-weight" style="flex:1;">
+            <option value="">—</option>
+            <option value="300">300</option>
+            <option value="400">400</option>
+            <option value="500">500</option>
+            <option value="600">600</option>
+            <option value="700">700</option>
+            <option value="800">800</option>
+        </select>
+    </div>
+    <div class="ba-float-row">
+        <label>Цвят</label>
+        <input type="color" id="ba-float-color" value="#1a1916">
+        <input type="text" id="ba-float-color-hex" placeholder="#hex" style="width:70px;flex:none;">
+        <label style="width:auto;margin-left:4px;">Наредба</label>
+        <div class="ba-float-align">
+            <button data-align="left"   title="Ляво">≡</button>
+            <button data-align="center" title="Центъм">☰</button>
+            <button data-align="right"  title="Дясно">≣</button>
+        </div>
+    </div>
+    <div class="ba-float-row">
+        <label>Ред-вис</label>
+        <input type="number" id="ba-float-lh" min="1" max="3" step="0.05" placeholder="1.6">
+        <label style="width:auto;margin-left:4px;">Разтег</label>
+        <input type="text" id="ba-float-ls" placeholder="0em" style="width:54px;flex:none;">
+    </div>
+    <div class="ba-float-actions">
+        <button class="ba-float-btn ba-float-btn-apply" id="ba-float-apply">💾 Приложи</button>
+        <button class="ba-float-btn ba-float-btn-del"   id="ba-float-delete">🗑 Изтрий</button>
+    </div>
+</div>
+
+<!-- Hidden file input for image replacement -->
+<input type="file" id="ba-any-img-file" accept="image/*,image/svg+xml" style="display:none;">
+
 <div id="ba-toast"></div>
 
 <script>
@@ -3300,6 +3555,10 @@
         applyContact();
         applyTestimonials();
         applyEduItems();
+        // Apply custom CSS if available (function defined later in the IIFE)
+        if (typeof applyCustomCSS === 'function' && savedData.globalSettings && savedData.globalSettings.customCSS) {
+            applyCustomCSS(savedData.globalSettings.customCSS);
+        }
     }
 
     function applyTextOverrides() {
@@ -4421,7 +4680,345 @@
     }
 
     /* ── Expose activation to handleContact ── */
-    window.__bioAdminActivate = activateAdminMode;
+
+    /* ──────────────────────────────────────────────────────────────
+       FLOATING INLINE TEXT EDITOR
+    ────────────────────────────────────────────────────────────── */
+    var DEFAULT_TEXT_COLOR = '#1a1916';
+    var _baFloatTarget = null;
+    var _baFloatSel    = null;
+
+    function baFloatPosition(el) {
+        var rect = el.getBoundingClientRect();
+        var tb   = document.getElementById('ba-float-toolbar');
+        var tbW  = tb.offsetWidth || 280;
+        var top  = rect.bottom + 6 + window.scrollY;
+        var left = rect.left   + window.scrollX;
+        if (left + tbW > window.innerWidth - 8) left = window.innerWidth - tbW - 8;
+        if (left < 4) left = 4;
+        tb.style.top  = top  + 'px';
+        tb.style.left = left + 'px';
+    }
+
+    function baFloatOpen(el, sel) {
+        _baFloatTarget = el;
+        _baFloatSel    = sel;
+        var ov = (savedData.textOverrides && savedData.textOverrides[sel]) || {};
+        document.getElementById('ba-float-content').value = ov.content !== undefined ? ov.content : el.textContent.trim();
+        document.getElementById('ba-float-font').value    = ov.fontFamily   || '';
+        document.getElementById('ba-float-size').value    = ov.fontSize     || '';
+        document.getElementById('ba-float-weight').value  = ov.fontWeight   || '';
+        document.getElementById('ba-float-lh').value      = ov.lineHeight   || '';
+        document.getElementById('ba-float-ls').value      = ov.letterSpacing|| '';
+        var col = ov.color || DEFAULT_TEXT_COLOR;
+        document.getElementById('ba-float-color').value     = /^#[0-9a-fA-F]{6}$/.test(col) ? col : DEFAULT_TEXT_COLOR;
+        document.getElementById('ba-float-color-hex').value = col;
+        document.querySelectorAll('.ba-float-align button').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.align === (ov.textAlign || ''));
+        });
+        baFloatPosition(el);
+        document.getElementById('ba-float-toolbar').classList.add('visible');
+        document.getElementById('ba-float-content').focus();
+    }
+
+    function baFloatClose() {
+        document.getElementById('ba-float-toolbar').classList.remove('visible');
+        if (_baFloatTarget) _baFloatTarget.classList.remove('ba-selected-el');
+        _baFloatTarget = null;
+        _baFloatSel    = null;
+    }
+
+    function baFloatApply() {
+        if (!_baFloatTarget || !_baFloatSel) return;
+        var content  = document.getElementById('ba-float-content').value;
+        var fontFam  = document.getElementById('ba-float-font').value;
+        var fontSize = parseFloat(document.getElementById('ba-float-size').value) || null;
+        var fontW    = document.getElementById('ba-float-weight').value;
+        var color    = document.getElementById('ba-float-color-hex').value ||
+                       document.getElementById('ba-float-color').value;
+        var lh       = parseFloat(document.getElementById('ba-float-lh').value) || null;
+        var ls       = document.getElementById('ba-float-ls').value.trim() || null;
+        var alignBtn = document.querySelector('.ba-float-align button.active');
+        var align    = alignBtn ? alignBtn.dataset.align : null;
+
+        if (!savedData.textOverrides) savedData.textOverrides = {};
+        savedData.textOverrides[_baFloatSel] = {
+            content:content, fontFamily:fontFam, fontSize:fontSize,
+            fontWeight:fontW, color:color, lineHeight:lh,
+            letterSpacing:ls, textAlign:align
+        };
+        var el = _baFloatTarget;
+        el.textContent = content;
+        if (fontFam)  el.style.fontFamily    = fontFam;
+        if (fontSize) el.style.fontSize      = fontSize + 'rem';
+        if (fontW)    el.style.fontWeight    = fontW;
+        if (color)    el.style.color         = color;
+        if (lh)       el.style.lineHeight    = lh;
+        if (ls)       el.style.letterSpacing = ls;
+        if (align)    el.style.textAlign     = align;
+        hasUnsaved = true;
+        showToast('✅ Приложено. Натисни Запази.');
+        baFloatClose();
+    }
+
+    (function initFloatToolbar() {
+        var tb = document.getElementById('ba-float-toolbar');
+        if (!tb) return;
+
+        document.getElementById('ba-float-close').addEventListener('click', baFloatClose);
+        document.getElementById('ba-float-apply').addEventListener('click', baFloatApply);
+
+        document.getElementById('ba-float-delete').addEventListener('click', function() {
+            if (!_baFloatTarget || !_baFloatSel) return;
+            if (!confirm('Изтрий съдържанието на този елемент?')) return;
+            _baFloatTarget.textContent = '';
+            if (!savedData.textOverrides) savedData.textOverrides = {};
+            savedData.textOverrides[_baFloatSel] = { content: '' };
+            hasUnsaved = true;
+            showToast('🗑 Изтрито.');
+            baFloatClose();
+        });
+
+        document.getElementById('ba-float-color').addEventListener('input', function() {
+            document.getElementById('ba-float-color-hex').value = this.value;
+        });
+        document.getElementById('ba-float-color-hex').addEventListener('input', function() {
+            if (/^#[0-9a-fA-F]{6}$/.test(this.value))
+                document.getElementById('ba-float-color').value = this.value;
+        });
+
+        document.querySelectorAll('.ba-float-align button').forEach(function(b) {
+            b.addEventListener('click', function() {
+                document.querySelectorAll('.ba-float-align button').forEach(function(x) { x.classList.remove('active'); });
+                b.classList.add('active');
+            });
+        });
+
+        // Close when clicking outside toolbar
+        document.addEventListener('click', function(e) {
+            if (!adminActive) return;
+            if (!tb.classList.contains('visible')) return;
+            if (!tb.contains(e.target) && e.target !== _baFloatTarget) baFloatClose();
+        }, true);
+    })();
+
+    /* ──────────────────────────────────────────────────────────────
+       CLICK-TO-REPLACE ANY IMAGE
+    ────────────────────────────────────────────────────────────── */
+    var _baImgCounter  = 0;
+    var _baPendingImg  = null;
+
+    function baGenImgId(img) {
+        return img.getAttribute('data-bio-id') ||
+               ('img-' + Date.now().toString(36) + '-' + (++_baImgCounter));
+    }
+
+    function baSvgSafe(dataUrl) {
+        var text = dataUrl;
+        if (text.indexOf('base64,') !== -1) {
+            try { text = atob(text.split('base64,')[1]); } catch(e) { return false; }
+        }
+        if (/<script[\s>]/i.test(text))               return false;
+        if (/on[a-z]+\s*=/i.test(text))               return false;
+        if (/javascript\s*:/i.test(text))             return false;
+        if (/<use[^>]+href\s*=\s*["']?\s*data:/i.test(text)) return false;
+        return true;
+    }
+
+    function baAttachImgButtons() {
+        document.querySelectorAll('img[data-bio-id]').forEach(function(img) {
+            if (img.closest('.ba-img-wrap')) return;
+            var wrap = document.createElement('div');
+            wrap.className = 'ba-img-wrap';
+            img.parentNode.insertBefore(wrap, img);
+            wrap.appendChild(img);
+            var btn = document.createElement('button');
+            btn.className = 'ba-img-replace-btn';
+            btn.textContent = '📷 Замени';
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                _baPendingImg = img;
+                document.getElementById('ba-any-img-file').click();
+            });
+            wrap.appendChild(btn);
+        });
+    }
+
+    (function initImgReplace() {
+        var fi = document.getElementById('ba-any-img-file');
+        if (!fi) return;
+        fi.addEventListener('change', function() {
+            if (!this.files || !this.files[0] || !_baPendingImg) return;
+            var file = this.files[0];
+            if (file.size > MAX_IMAGE_BYTES) {
+                showToast('Файлът е твърде голям (макс. 5MB)', 'error'); return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                var dataUrl = ev.target.result;
+                if (file.type === 'image/svg+xml' && !baSvgSafe(dataUrl)) {
+                    showToast('SVG съдържа нежелан код', 'error'); return;
+                }
+                var bioId = baGenImgId(_baPendingImg);
+                _baPendingImg.src = dataUrl;
+                if (!savedData.images) savedData.images = {};
+                savedData.images[bioId] = dataUrl;
+                hasUnsaved = true;
+                showToast('✅ Изображението е заменено. Натисни Запази.');
+            };
+            reader.readAsDataURL(file);
+            this.value = '';
+        });
+    })();
+
+    /* ──────────────────────────────────────────────────────────────
+       MOBILE TOUCH DRAG-TO-REORDER SECTIONS
+    ────────────────────────────────────────────────────────────── */
+    var _baDragSrc  = null;
+    var _baDragMain = null;
+
+    function baTouchSections() {
+        return Array.from((_baDragMain || document.body).children)
+            .filter(function(el) { return el.tagName === 'SECTION' && el.id; });
+    }
+
+    function baInitTouchDrag() {
+        _baDragMain = document.querySelector('main') || document.body;
+        baTouchSections().forEach(function(sec) {
+            var handle = sec.querySelector('.ba-reorder-handle');
+            if (!handle) {
+                handle = document.createElement('button');
+                handle.className = 'ba-reorder-handle';
+                handle.setAttribute('aria-label', 'Преместване');
+                handle.textContent = '⠿';
+                sec.style.position = sec.style.position || 'relative';
+                sec.prepend(handle);
+            }
+            handle.addEventListener('touchstart', function(e) {
+                if (!adminActive) return;
+                e.preventDefault();
+                _baDragSrc = sec;
+                _baDragSrc.classList.add('ba-mobile-drag-active');
+                document.addEventListener('touchmove',  baTouchMove, { passive: false });
+                document.addEventListener('touchend',   baTouchEnd,  { passive: false });
+            }, { passive: false });
+        });
+    }
+
+    function baTouchMove(e) {
+        e.preventDefault();
+        var touch  = e.touches[0];
+        var hit    = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!hit) return;
+        var tgt = hit.closest('section[id]');
+        if (tgt && tgt !== _baDragSrc && _baDragMain.contains(tgt)) {
+            var secs = baTouchSections();
+            if (secs.indexOf(_baDragSrc) < secs.indexOf(tgt)) {
+                _baDragMain.insertBefore(_baDragSrc, tgt.nextSibling);
+            } else {
+                _baDragMain.insertBefore(_baDragSrc, tgt);
+            }
+        }
+    }
+
+    function baTouchEnd() {
+        document.removeEventListener('touchmove', baTouchMove);
+        document.removeEventListener('touchend',  baTouchEnd);
+        if (_baDragSrc) {
+            _baDragSrc.classList.remove('ba-mobile-drag-active');
+            savedData.sectionOrder = baTouchSections().map(function(s) { return s.id; });
+            hasUnsaved = true;
+            showToast('📐 Подредбата е запазена. Натисни Запази.');
+            _baDragSrc = null;
+        }
+    }
+
+    /* ──────────────────────────────────────────────────────────────
+       CUSTOM CSS PANEL
+    ────────────────────────────────────────────────────────────── */
+    function applyCustomCSS(css) {
+        var tag = document.getElementById('ba-custom-css-tag');
+        if (!tag) {
+            tag = document.createElement('style');
+            tag.id = 'ba-custom-css-tag';
+            document.head.appendChild(tag);
+        }
+        tag.textContent = css || '';
+    }
+
+    (function initCustomCSS() {
+        var btn = document.getElementById('ba-btn-apply-css');
+        var ta  = document.getElementById('ba-custom-css');
+        if (!btn || !ta) return;
+        btn.addEventListener('click', function() {
+            var css = ta.value.trim();
+            if (!savedData.globalSettings) savedData.globalSettings = {};
+            savedData.globalSettings.customCSS = css;
+            applyCustomCSS(css);
+            hasUnsaved = true;
+            showToast('🎨 CSS приложен.');
+        });
+    })();
+
+    /* ──────────────────────────────────────────────────────────────
+       SECTION DUPLICATOR
+    ────────────────────────────────────────────────────────────── */
+    (function initDupSection() {
+        var btn = document.getElementById('ba-btn-dup-section');
+        if (!btn) return;
+        btn.addEventListener('click', function() {
+            var sel  = document.getElementById('ba-dup-section-sel').value;
+            if (!sel) return;
+            var orig = document.getElementById(sel);
+            if (!orig) { showToast('Секцията не е намерена', 'error'); return; }
+            var uid   = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            var clone = orig.cloneNode(true);
+            clone.id  = sel + '-copy-' + uid;
+            clone.querySelectorAll('[data-bio-id]').forEach(function(el) {
+                el.setAttribute('data-bio-id', el.getAttribute('data-bio-id') + '-copy-' + uid);
+            });
+            orig.parentNode.insertBefore(clone, orig.nextSibling);
+            hasUnsaved = true;
+            showToast('📋 Секцията е дублирана.');
+        });
+    })();
+
+    /* ──────────────────────────────────────────────────────────────
+       PATCH setupClickToEdit — OPEN FLOATING TOOLBAR ON CLICK
+    ────────────────────────────────────────────────────────────── */
+    (function patchClickToEdit() {
+        // Override the global click capture to also open float toolbar
+        document.addEventListener('click', function(e) {
+            if (!adminActive) return;
+            var target = e.target.closest('[data-bio-id]');
+            if (!target) return;
+            if (target.closest('#bio-inline-admin') || target.closest('#ba-float-toolbar')) return;
+            // Open float toolbar for the clicked element
+            var bioId = target.getAttribute('data-bio-id');
+            var sel   = '[data-bio-id="' + bioId + '"]';
+            baFloatOpen(target, sel);
+        }, false); // bubble phase, after setupClickToEdit's capture phase
+    })();
+
+    /* ──────────────────────────────────────────────────────────────
+       HOOK INTO activateAdminMode
+    ────────────────────────────────────────────────────────────── */
+    var _origActivate = activateAdminMode;
+    function activateAdminModeEnhanced() {
+        _origActivate();
+        setTimeout(function() {
+            baAttachImgButtons();
+            baInitTouchDrag();
+            // Load saved custom CSS
+            if (savedData.globalSettings && savedData.globalSettings.customCSS) {
+                applyCustomCSS(savedData.globalSettings.customCSS);
+                var ta = document.getElementById('ba-custom-css');
+                if (ta) ta.value = savedData.globalSettings.customCSS;
+            }
+        }, 350);
+    }
+
+    window.__bioAdminActivate = activateAdminModeEnhanced;
 })();
 </script>
 </body>
