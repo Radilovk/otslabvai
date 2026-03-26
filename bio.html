@@ -49,6 +49,14 @@
             --font-sans:     'Inter', system-ui, sans-serif;
             --font-mono:     'DM Mono', monospace;
             --max-w:         1200px;
+            --fs-xs:    0.8125rem;   /* 13px — smallest allowed */
+            --fs-sm:    0.875rem;    /* 14px — small labels, meta */
+            --fs-base:  1rem;        /* 16px — body text */
+            --fs-md:    1.125rem;    /* 18px — slightly larger */
+            --fs-lg:    1.25rem;     /* 20px — card titles */
+            --fs-xl:    1.5rem;      /* 24px — section subtitles */
+            --fs-2xl:   clamp(1.75rem, 3vw, 2.25rem);  /* section titles */
+            --fs-3xl:   clamp(2.5rem, 5vw, 4rem);      /* hero name */
         }
 
         /* ─── Reset & Base ──────────────────────────────────────────── */
@@ -72,7 +80,7 @@
 
         .tag {
             display: inline-flex; align-items: center; gap: .4rem;
-            font-family: var(--font-mono); font-size: .7rem; font-weight: 500;
+            font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500;
             letter-spacing: .12em; text-transform: uppercase;
             color: var(--c-gold); background: var(--c-gold-light);
             border: 1px solid rgba(181,154,106,.3);
@@ -85,7 +93,7 @@
 
         .btn {
             display: inline-flex; align-items: center; gap: .5rem;
-            font-family: var(--font-sans); font-size: .9rem; font-weight: 600;
+            font-family: var(--font-sans); font-size: var(--fs-base); font-weight: 600;
             padding: .85rem 2rem; border-radius: 100px;
             cursor: pointer; border: none;
             transition: var(--transition);
@@ -102,8 +110,12 @@
         .btn--outline:hover { background: var(--c-accent); color: #fff; transform: translateY(-2px); }
 
         /* ─── Scroll-reveal animation ───────────────────────────────── */
-        .reveal { opacity: 0; transform: translateY(32px); transition: opacity .7s ease, transform .7s ease; }
-        .reveal.in-view { opacity: 1; transform: none; }
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s cubic-bezier(.25,.8,.25,1), transform 0.6s cubic-bezier(.25,.8,.25,1);
+        }
+        .reveal.in-view { opacity: 1; transform: translateY(0); }
         .reveal-delay-1 { transition-delay: .1s; }
         .reveal-delay-2 { transition-delay: .2s; }
         .reveal-delay-3 { transition-delay: .3s; }
@@ -117,7 +129,8 @@
         }
         .nav.scrolled {
             background: rgba(250,250,249,.92);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
             box-shadow: 0 1px 0 var(--c-border);
         }
         .nav__inner {
@@ -125,7 +138,7 @@
         }
         .nav__logo {
             font-family: var(--font-serif);
-            font-size: 1.1rem;
+            font-size: var(--fs-md);
             font-weight: 700;
             letter-spacing: -.01em;
             color: var(--c-text-1);
@@ -135,11 +148,11 @@
             display: flex; align-items: center; gap: 2rem;
         }
         .nav__links a {
-            font-size: .85rem; font-weight: 500; color: var(--c-text-2);
+            font-size: var(--fs-sm); font-weight: 500; color: var(--c-text-2);
             transition: color var(--transition);
         }
         .nav__links a:hover { color: var(--c-text-1); }
-        .nav__cta { font-size: .85rem !important; padding: .6rem 1.4rem; }
+        .nav__cta { font-size: var(--fs-sm) !important; padding: .6rem 1.4rem; }
         .nav__links .nav__cta { color: #fff; background: var(--c-accent); }
         .nav__hamburger {
             display: none; flex-direction: column; gap: 5px;
@@ -184,7 +197,7 @@
         }
         .hero__name {
             font-family: var(--font-serif);
-            font-size: clamp(2.8rem, 5.5vw, 5rem);
+            font-size: var(--fs-3xl);
             font-weight: 700;
             line-height: 1.1;
             letter-spacing: -.02em;
@@ -193,7 +206,7 @@
         }
         .hero__name em { font-style: italic; color: var(--c-gold); }
         .hero__desc {
-            font-size: 1.05rem; color: var(--c-text-2);
+            font-size: var(--fs-md); color: var(--c-text-2);
             line-height: 1.75; max-width: 480px;
             margin-bottom: 2.4rem;
         }
@@ -237,15 +250,20 @@
             text-align: center;
             box-shadow: var(--shadow-md);
             min-width: 110px;
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-sm);
         }
         .stat-card__num {
             font-family: var(--font-serif);
-            font-size: 1.8rem; font-weight: 700;
+            font-size: var(--fs-xl); font-weight: 700;
             color: var(--c-text-1);
             line-height: 1;
         }
         .stat-card__label {
-            font-size: .7rem; font-weight: 500;
+            font-size: var(--fs-xs); font-weight: 500;
             color: var(--c-text-3);
             letter-spacing: .06em;
             text-transform: uppercase;
@@ -257,7 +275,7 @@
             position: absolute; bottom: 2.5rem; left: 50%;
             transform: translateX(-50%);
             display: flex; flex-direction: column; align-items: center; gap: .5rem;
-            font-size: .7rem; font-weight: 500;
+            font-size: var(--fs-xs); font-weight: 500;
             letter-spacing: .1em; text-transform: uppercase;
             color: var(--c-text-3); z-index: 3;
         }
@@ -299,10 +317,10 @@
         .about__portrait-badge strong {
             display: block;
             font-family: var(--font-serif);
-            font-size: 2rem; line-height: 1;
+            font-size: var(--fs-2xl); line-height: 1;
         }
         .about__portrait-badge span {
-            font-size: .7rem; font-weight: 500;
+            font-size: var(--fs-xs); font-weight: 500;
             letter-spacing: .06em; text-transform: uppercase;
             opacity: .8; margin-top: .3rem; display: block;
         }
@@ -311,10 +329,10 @@
         .about__header .tag { margin-bottom: 1rem; }
         .about__title {
             font-family: var(--font-serif);
-            font-size: clamp(2rem, 3.5vw, 2.8rem);
+            font-size: var(--fs-2xl);
             font-weight: 700; line-height: 1.2;
         }
-        .about__body { color: var(--c-text-2); line-height: 1.8; font-size: 1rem; }
+        .about__body { color: var(--c-text-2); line-height: 1.8; font-size: var(--fs-base); }
         .about__body p + p { margin-top: 1rem; }
 
         .about__pillars {
@@ -338,7 +356,7 @@
             margin: 0 auto .85rem;
         }
         .pillar__title {
-            font-size: .9rem; font-weight: 600;
+            font-size: var(--fs-base); font-weight: 600;
             color: var(--c-text-1); letter-spacing: .02em;
         }
 
@@ -351,18 +369,18 @@
         }
         .section-label {
             font-family: var(--font-mono);
-            font-size: .7rem; font-weight: 500;
+            font-size: var(--fs-xs); font-weight: 500;
             letter-spacing: .16em; text-transform: uppercase;
             color: var(--c-gold); margin-bottom: .8rem;
         }
         .section-title {
             font-family: var(--font-serif);
-            font-size: clamp(2rem, 3.5vw, 2.8rem);
+            font-size: var(--fs-2xl);
             font-weight: 700; line-height: 1.2;
             color: var(--c-text-1);
         }
         .section-sub {
-            color: var(--c-text-2); font-size: 1rem;
+            color: var(--c-text-2); font-size: var(--fs-base);
             line-height: 1.7; margin-top: .8rem;
         }
 
@@ -394,19 +412,19 @@
 
         .exp-card__num {
             font-family: var(--font-mono);
-            font-size: .65rem; color: var(--c-text-3);
+            font-size: var(--fs-xs); color: var(--c-text-3);
             letter-spacing: .1em; margin-bottom: 1.2rem;
         }
         .exp-card__icon {
-            font-size: 2.2rem; margin-bottom: 1rem;
+            font-size: var(--fs-2xl); margin-bottom: 1rem;
         }
         .exp-card__title {
             font-family: var(--font-serif);
-            font-size: 1.2rem; font-weight: 600;
+            font-size: var(--fs-lg); font-weight: 600;
             color: var(--c-text-1); margin-bottom: .75rem;
         }
         .exp-card__body {
-            font-size: .9rem; color: var(--c-text-2);
+            font-size: var(--fs-base); color: var(--c-text-2);
             line-height: 1.75;
         }
         .exp-card__skills {
@@ -422,7 +440,7 @@
         }
         .creds__col-title {
             font-family: var(--font-serif);
-            font-size: 1.4rem; font-weight: 600;
+            font-size: var(--fs-lg); font-weight: 600;
             margin-bottom: 2rem;
             display: flex; align-items: center; gap: .8rem;
         }
@@ -456,15 +474,15 @@
         }
         .timeline-item__year {
             font-family: var(--font-mono);
-            font-size: .7rem; color: var(--c-text-3);
+            font-size: var(--fs-xs); color: var(--c-text-3);
             letter-spacing: .06em; white-space: nowrap;
         }
         .timeline-item__title {
-            font-weight: 600; font-size: .95rem;
+            font-weight: 600; font-size: var(--fs-base);
             color: var(--c-text-1); margin-bottom: .2rem;
         }
         .timeline-item__place {
-            font-size: .85rem; color: var(--c-text-2);
+            font-size: var(--fs-sm); color: var(--c-text-2);
         }
 
         /* cert badges */
@@ -478,9 +496,9 @@
             transition: var(--transition);
         }
         .cert-item:hover { border-color: var(--c-gold); box-shadow: var(--shadow-xs); }
-        .cert-item__icon { font-size: 1.4rem; flex-shrink: 0; }
-        .cert-item__title { font-weight: 600; font-size: .9rem; color: var(--c-text-1); }
-        .cert-item__body  { font-size: .8rem; color: var(--c-text-2); margin-top: .15rem; }
+        .cert-item__icon { font-size: var(--fs-lg); flex-shrink: 0; }
+        .cert-item__title { font-weight: 600; font-size: var(--fs-base); color: var(--c-text-1); }
+        .cert-item__body  { font-size: var(--fs-sm); color: var(--c-text-2); margin-top: .15rem; }
 
         /* ─── EDUCATION ITEMS (replaces timeline) ───────────────────── */
         .edu-list { display: flex; flex-direction: column; gap: .75rem; }
@@ -503,16 +521,16 @@
         }
         .edu-item__year {
             font-family: var(--font-mono);
-            font-size: .72rem; color: var(--c-gold);
+            font-size: var(--fs-xs); color: var(--c-gold);
             letter-spacing: .05em; white-space: nowrap; flex-shrink: 0;
             background: var(--c-gold-light);
             border-radius: 100px; padding: .2rem .65rem;
         }
         .edu-item__content { flex: 1; min-width: 0; }
-        .edu-item__title { font-weight: 600; font-size: .9rem; color: var(--c-text-1); }
-        .edu-item__place { font-size: .8rem; color: var(--c-text-2); margin-top: .1rem; }
+        .edu-item__title { font-weight: 600; font-size: var(--fs-base); color: var(--c-text-1); }
+        .edu-item__place { font-size: var(--fs-sm); color: var(--c-text-2); margin-top: .1rem; }
         .edu-item__arrow {
-            color: var(--c-text-3); font-size: .85rem; flex-shrink: 0;
+            color: var(--c-text-3); font-size: var(--fs-sm); flex-shrink: 0;
             transition: color var(--transition), transform var(--transition);
         }
         .edu-item:hover .edu-item__arrow { color: var(--c-gold); transform: translateX(3px); }
@@ -544,7 +562,7 @@
             width: 32px; height: 32px;
             border: 1px solid var(--c-border); border-radius: 50%;
             background: var(--c-surface-2);
-            cursor: pointer; font-size: 1rem; color: var(--c-text-2);
+            cursor: pointer; font-size: var(--fs-base); color: var(--c-text-2);
             display: grid; place-items: center;
             transition: var(--transition); line-height: 1;
         }
@@ -558,15 +576,15 @@
         .edu-modal__img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; display: block; }
         .edu-modal__img-wrap:hover img { transform: scale(1.04); }
         .edu-modal__year {
-            font-family: var(--font-mono); font-size: .75rem; color: var(--c-gold);
+            font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--c-gold);
             letter-spacing: .08em; margin-bottom: .5rem;
         }
         .edu-modal__title {
-            font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700;
+            font-family: var(--font-serif); font-size: var(--fs-lg); font-weight: 700;
             color: var(--c-text-1); margin-bottom: .4rem; line-height: 1.25; padding-right: 2rem;
         }
-        .edu-modal__place { font-size: .9rem; color: var(--c-text-2); margin-bottom: 1rem; font-style: italic; }
-        .edu-modal__desc { font-size: .92rem; color: var(--c-text-2); line-height: 1.75; }
+        .edu-modal__place { font-size: var(--fs-base); color: var(--c-text-2); margin-bottom: 1rem; font-style: italic; }
+        .edu-modal__desc { font-size: var(--fs-base); color: var(--c-text-2); line-height: 1.75; }
 
         /* ─── FULLSCREEN IMAGE VIEWER ───────────────────────────────── */
         .edu-img-fullscreen {
@@ -584,7 +602,7 @@
             width: 42px; height: 42px;
             border: none; border-radius: 50%;
             background: rgba(255,255,255,.12);
-            cursor: pointer; font-size: 1.2rem; color: #fff;
+            cursor: pointer; font-size: var(--fs-lg); color: #fff;
             display: grid; place-items: center;
             transition: background .2s;
         }
@@ -615,26 +633,26 @@
             content: '"';
             position: absolute; top: -2rem; left: -1rem;
             font-family: var(--font-serif);
-            font-size: 10rem; line-height: 1;
+            font-size: 8rem; line-height: 1;
             color: rgba(255,255,255,.08);
             pointer-events: none;
         }
 
         .philosophy__label {
             font-family: var(--font-mono);
-            font-size: .7rem; letter-spacing: .16em; text-transform: uppercase;
+            font-size: var(--fs-xs); letter-spacing: .16em; text-transform: uppercase;
             color: var(--c-gold); margin-bottom: 1.2rem;
         }
         .philosophy__quote {
             font-family: var(--font-serif);
-            font-size: clamp(1.5rem, 2.5vw, 2.1rem);
+            font-size: var(--fs-xl);
             font-weight: 500; font-style: italic;
             line-height: 1.45;
             color: rgba(255,255,255,.95);
             margin-bottom: 1.6rem;
         }
         .philosophy__body {
-            font-size: .95rem; line-height: 1.8;
+            font-size: var(--fs-base); line-height: 1.8;
             color: rgba(255,255,255,.7);
         }
         .philosophy__body p + p { margin-top: .8rem; }
@@ -647,11 +665,11 @@
             background: var(--c-gold);
         }
         .philosophy__author-name {
-            font-weight: 600; font-size: .9rem;
+            font-weight: 600; font-size: var(--fs-base);
             color: rgba(255,255,255,.9);
         }
         .philosophy__author-title {
-            font-size: .78rem; color: rgba(255,255,255,.5);
+            font-size: var(--fs-sm); color: rgba(255,255,255,.5);
         }
 
         /* ─── APPROACH / STEPS ──────────────────────────────────────── */
@@ -665,7 +683,7 @@
         }
         .approach-step__num {
             font-family: var(--font-serif);
-            font-size: 3.5rem; font-weight: 700;
+            font-size: var(--fs-3xl); font-weight: 700;
             color: var(--c-gold-light);
             line-height: 1; margin-bottom: .6rem;
         }
@@ -675,11 +693,11 @@
             margin-inline: auto; margin-bottom: 1rem;
         }
         .approach-step__title {
-            font-weight: 600; font-size: 1rem;
+            font-weight: 600; font-size: var(--fs-base);
             color: var(--c-text-1); margin-bottom: .6rem;
         }
         .approach-step__body {
-            font-size: .88rem; color: var(--c-text-2);
+            font-size: var(--fs-base); color: var(--c-text-2);
             line-height: 1.7;
         }
 
@@ -700,9 +718,9 @@
             display: flex; gap: 3px;
             margin-bottom: 1rem;
         }
-        .testi-card__stars span { color: var(--c-gold); font-size: .9rem; }
+        .testi-card__stars span { color: var(--c-gold); font-size: var(--fs-base); }
         .testi-card__text {
-            font-size: .95rem; line-height: 1.8;
+            font-size: var(--fs-base); line-height: 1.8;
             color: var(--c-text-2);
             font-style: italic;
         }
@@ -718,10 +736,10 @@
             overflow: hidden;
             flex-shrink: 0;
             display: grid; place-items: center;
-            font-size: 1.1rem;
+            font-size: var(--fs-md);
         }
-        .testi-card__author-name { font-weight: 600; font-size: .9rem; }
-        .testi-card__author-sub  { font-size: .78rem; color: var(--c-text-3); }
+        .testi-card__author-name { font-weight: 600; font-size: var(--fs-base); }
+        .testi-card__author-sub  { font-size: var(--fs-sm); color: var(--c-text-3); }
 
         /* ─── CONTACT ───────────────────────────────────────────────── */
         .contact__inner {
@@ -732,18 +750,18 @@
         }
         .contact__title {
             font-family: var(--font-serif);
-            font-size: clamp(2rem, 3vw, 2.6rem);
+            font-size: var(--fs-2xl);
             font-weight: 700; line-height: 1.2;
             margin-bottom: 1rem;
         }
         .contact__sub {
-            font-size: 1rem; color: var(--c-text-2);
+            font-size: var(--fs-base); color: var(--c-text-2);
             line-height: 1.75; margin-bottom: 2rem;
         }
         .contact__links { display: flex; flex-direction: column; gap: .75rem; }
         .contact__link {
             display: flex; align-items: center; gap: .9rem;
-            font-size: .95rem; color: var(--c-text-2);
+            font-size: var(--fs-base); color: var(--c-text-2);
             transition: color var(--transition);
         }
         .contact__link:hover { color: var(--c-text-1); }
@@ -753,7 +771,7 @@
             border: 1px solid var(--c-border);
             border-radius: 10px;
             display: grid; place-items: center;
-            font-size: .9rem;
+            font-size: var(--fs-base);
             flex-shrink: 0;
         }
 
@@ -766,12 +784,12 @@
         }
         .form-group { margin-bottom: 1.2rem; }
         .form-group label {
-            display: block; font-size: .82rem; font-weight: 500;
+            display: block; font-size: var(--fs-sm); font-weight: 500;
             color: var(--c-text-2); margin-bottom: .4rem;
         }
         .form-control {
             width: 100%;
-            font-family: var(--font-sans); font-size: .93rem;
+            font-family: var(--font-sans); font-size: var(--fs-base);
             color: var(--c-text-1);
             background: var(--c-surface-2);
             border: 1px solid var(--c-border);
@@ -802,18 +820,18 @@
         }
         .footer__logo {
             font-family: var(--font-serif);
-            font-size: 1.2rem; font-weight: 700;
+            font-size: var(--fs-lg); font-weight: 700;
             color: #fff;
         }
         .footer__logo span { color: var(--c-gold); }
-        .footer__copy { font-size: .82rem; }
+        .footer__copy { font-size: var(--fs-sm); }
         .footer__socials { display: flex; gap: 1rem; }
         .footer__social {
             width: 36px; height: 36px;
             border-radius: 50%;
             border: 1px solid rgba(255,255,255,.15);
             display: grid; place-items: center;
-            font-size: .9rem; color: rgba(255,255,255,.6);
+            font-size: var(--fs-base); color: rgba(255,255,255,.6);
             transition: var(--transition);
         }
         .footer__social:hover { border-color: var(--c-gold); color: var(--c-gold); }
@@ -842,7 +860,7 @@
             .pillar { padding: 1.5rem 1rem 1.3rem; }
             .pillar__icon { width: 56px; height: 56px; }
             .pillar__icon .icon-svg { width: 1.75rem; height: 1.75rem; }
-            .pillar__title { font-size: 1rem; }
+            .pillar__title { font-size: var(--fs-base); }
 
             .expertise__grid { grid-template-columns: 1fr; }
             .creds__layout { grid-template-columns: 1fr; }
@@ -859,26 +877,26 @@
 
             /* ── Mobile typography improvements ── */
             /* Bump all very small text up to readable sizes on mobile */
-            .section-label       { font-size: .82rem; letter-spacing: .1em; }
-            .deco-line__text     { font-size: .75rem; letter-spacing: .09em; }
-            .tag                 { font-size: .75rem; padding: .3rem .85rem; }
-            .exp-card__num       { font-size: .72rem; }
-            .service-card__badge { font-size: .72rem; }
-            .cert-item__title    { font-size: .9rem; }
-            .cert-item__body     { font-size: .82rem; }
-            .edu-item__year      { font-size: .75rem; }
-            .edu-item__title     { font-size: .92rem; }
-            .edu-item__place     { font-size: .82rem; }
-            .timeline-item__year { font-size: .78rem; }
-            .section-title       { font-size: clamp(1.7rem, 5.5vw, 2.8rem); }
-            .section-sub         { font-size: 1rem; }
-            .creds__col-title    { font-size: 1.2rem; }
-            .stat-card__num      { font-size: 1.7rem; }
-            .stat-card__label    { font-size: .78rem; }
-            .about__body         { font-size: .97rem; }
-            .exp-card__body      { font-size: .9rem; }
-            .approach-step__body { font-size: .9rem; }
-            .testi-card__text    { font-size: .92rem; }
+            .section-label       { font-size: var(--fs-sm); letter-spacing: .1em; }
+            .deco-line__text     { font-size: var(--fs-sm); letter-spacing: .09em; }
+            .tag                 { font-size: var(--fs-xs); padding: .3rem .85rem; }
+            .exp-card__num       { font-size: var(--fs-xs); }
+            .service-card__badge { font-size: var(--fs-xs); }
+            .cert-item__title    { font-size: var(--fs-base); }
+            .cert-item__body     { font-size: var(--fs-sm); }
+            .edu-item__year      { font-size: var(--fs-sm); }
+            .edu-item__title     { font-size: var(--fs-base); }
+            .edu-item__place     { font-size: var(--fs-sm); }
+            .timeline-item__year { font-size: var(--fs-sm); }
+            .section-title       { font-size: var(--fs-2xl); }
+            .section-sub         { font-size: var(--fs-base); }
+            .creds__col-title    { font-size: var(--fs-lg); }
+            .stat-card__num      { font-size: var(--fs-xl); }
+            .stat-card__label    { font-size: var(--fs-sm); }
+            .about__body         { font-size: var(--fs-base); }
+            .exp-card__body      { font-size: var(--fs-base); }
+            .approach-step__body { font-size: var(--fs-base); }
+            .testi-card__text    { font-size: var(--fs-base); }
             .hero__name          { font-size: clamp(2.5rem, 10vw, 4.5rem); }
         }
 
@@ -886,11 +904,11 @@
             .about__pillars { grid-template-columns: 1fr 1fr; }
             .approach__grid { grid-template-columns: 1fr; }
             .hero__actions { flex-direction: column; }
-            .section-label   { font-size: .8rem; }
-            .deco-line__text { font-size: .72rem; }
-            .bottom-nav__item { font-size: .65rem; }
+            .section-label   { font-size: var(--fs-sm); }
+            .deco-line__text { font-size: var(--fs-xs); }
+            .bottom-nav__item { font-size: var(--fs-xs); }
             .edu-item { padding: .8rem .9rem; gap: .7rem; }
-            .edu-item__year { font-size: .72rem; }
+            .edu-item__year { font-size: var(--fs-xs); }
         }
 
         /* ─── Mobile menu overlay ───────────────────────────────────── */
@@ -907,14 +925,14 @@
         .nav__mobile.open { display: flex; }
         .nav__mobile a {
             font-family: var(--font-serif);
-            font-size: 1.8rem; font-weight: 600;
+            font-size: var(--fs-xl); font-weight: 600;
             color: var(--c-text-1);
             transition: color var(--transition);
         }
         .nav__mobile a:hover { color: var(--c-gold); }
         .nav__mobile-close {
             position: absolute; top: 1.5rem; right: 1.5rem;
-            font-size: 1.8rem; background: none; border: none;
+            font-size: var(--fs-xl); background: none; border: none;
             cursor: pointer; color: var(--c-text-2);
         }
 
@@ -929,7 +947,7 @@
         }
         .deco-line__text {
             font-family: var(--font-mono);
-            font-size: .65rem; color: var(--c-text-3);
+            font-size: var(--fs-xs); color: var(--c-text-3);
             letter-spacing: .12em; text-transform: uppercase;
             white-space: nowrap;
         }
@@ -995,6 +1013,24 @@
             to { transform: scale(4); opacity: 0; }
         }
 
+        /* ─── Life.html-style animations ───────────────────────────── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes subtleFloat {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-6px); }
+        }
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(181,154,106,.15); }
+            50%      { box-shadow: 0 8px 32px rgba(181,154,106,.3); }
+        }
+
         /* ─── Parallax hero visual ──────────────────────────────────── */
         .hero__photo-wrap img {
             will-change: transform;
@@ -1016,7 +1052,7 @@
         .bottom-nav__item {
             display: flex; flex-direction: column; align-items: center;
             gap: 2px;
-            font-size: .6rem; font-weight: 600;
+            font-size: var(--fs-xs); font-weight: 600;
             letter-spacing: .04em; text-transform: uppercase;
             color: var(--c-text-3);
             padding: .4rem .6rem;
@@ -1100,7 +1136,7 @@
         }
         .service-card__badge {
             display: inline-block;
-            font-family: var(--font-mono); font-size: .65rem;
+            font-family: var(--font-mono); font-size: var(--fs-xs);
             font-weight: 600; letter-spacing: .1em;
             text-transform: uppercase;
             background: var(--c-surface-2);
@@ -1116,16 +1152,16 @@
         }
         .service-card__title {
             font-family: var(--font-serif);
-            font-size: 1.2rem; font-weight: 600;
+            font-size: var(--fs-lg); font-weight: 600;
             color: var(--c-text-1); margin-bottom: .75rem;
         }
         .service-card__body {
-            font-size: .9rem; color: var(--c-text-2);
+            font-size: var(--fs-base); color: var(--c-text-2);
             line-height: 1.75; margin-bottom: 1.2rem;
         }
         .service-card__list { display: flex; flex-direction: column; gap: .45rem; }
         .service-card__list li {
-            font-size: .85rem; color: var(--c-text-2);
+            font-size: var(--fs-sm); color: var(--c-text-2);
             display: flex; align-items: center; gap: .6rem;
         }
         .service-card__list li::before {
@@ -1275,6 +1311,52 @@
             pointer-events: none; display: none; font-family: 'Inter', system-ui, sans-serif;
         }
         .ba-edit-badge.visible { display: block; }
+
+        /* ── Click-to-edit highlight ─────────────────────────── */
+        body.bio-admin-active [data-bio-id] {
+            cursor: pointer; outline: 2px dashed transparent; outline-offset: 3px;
+            transition: outline-color .15s;
+        }
+        body.bio-admin-active [data-bio-id]:hover {
+            outline-color: rgba(108,142,245,.5);
+        }
+        body.bio-admin-active [data-bio-id].ba-selected-el {
+            outline-color: #6C8EF5; outline-style: solid;
+            background: rgba(108,142,245,.06);
+        }
+        /* ── Click-to-edit for SVG icons ──────────────────── */
+        body.bio-admin-active .icon-svg,
+        body.bio-admin-active .exp-card__icon svg,
+        body.bio-admin-active .service-card__icon svg,
+        body.bio-admin-active .contact__icon svg {
+            cursor: pointer; outline: 2px dashed transparent; outline-offset: 2px;
+            transition: outline-color .15s;
+        }
+        body.bio-admin-active .icon-svg:hover,
+        body.bio-admin-active .exp-card__icon svg:hover,
+        body.bio-admin-active .service-card__icon svg:hover,
+        body.bio-admin-active .contact__icon svg:hover {
+            outline-color: rgba(248,113,113,.5);
+        }
+        /* ── Section reorder handles (mobile) ────────────── */
+        .ba-reorder-handle {
+            position: absolute; top: 4px; right: 4px; z-index: 10;
+            background: #6C8EF5; color: #fff; border: none; border-radius: 6px;
+            width: 32px; height: 32px; font-size: 16px; cursor: grab;
+            display: none; place-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,.25);
+        }
+        body.bio-admin-active .ba-reorder-handle { display: grid; }
+        .ba-section-dragging { opacity: .5; outline: 2px dashed #6C8EF5; }
+        /* ── Additional admin tool styles ─────────────────── */
+        .ba-section-toggle { display: flex; justify-content: space-between; align-items: center; padding: .5rem .65rem; background: #22263A; border: 1px solid #2E3348; border-radius: 8px; margin-bottom: .3rem; }
+        .ba-section-toggle label { font-size: .78rem; color: #C8D0E0; flex: 1; }
+        .ba-section-toggle input[type=checkbox] { width: 18px; height: 18px; accent-color: #6C8EF5; cursor: pointer; }
+        .ba-spacing-row { display: flex; gap: .3rem; align-items: center; margin-bottom: .35rem; }
+        .ba-spacing-row label { font-size: .72rem; color: #8892A4; width: 90px; flex-shrink: 0; }
+        .ba-spacing-row input { flex: 1; }
+        .ba-export-btn { display: flex; gap: .4rem; margin-top: .4rem; }
+        .ba-export-btn button { flex: 1; }
         @media (max-width: 640px) {
             body.bio-admin-active { margin-left: 0; }
             #bio-inline-admin { width: 100%; top: auto; height: 50vh; transform: translateY(100%); }
@@ -1784,7 +1866,7 @@
     </section>
 
     <!-- ── TESTIMONIALS ───────────────────────────────────────────── -->
-    <section class="section section--alt">
+    <section class="section section--alt" id="testimonials">
         <div class="container">
             <div class="expertise__intro reveal">
                 <div class="section-label">Отзиви</div>
@@ -2313,6 +2395,9 @@
                     if (opts.fontSize)   el.style.fontSize   = (typeof opts.fontSize === 'number' ? opts.fontSize + 'rem' : opts.fontSize);
                     if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
                     if (opts.color)      el.style.color       = opts.color;
+                    if (opts.lineHeight) el.style.lineHeight  = opts.lineHeight;
+                    if (opts.letterSpacing) el.style.letterSpacing = opts.letterSpacing;
+                    if (opts.textAlign)  el.style.textAlign   = opts.textAlign;
                 });
             }
 
@@ -2467,6 +2552,72 @@
             }
             // Store education items for modal access
             window.__eduItems = data.educationItems || [];
+
+            // Icon overrides (replace SVG icons with uploaded images)
+            if (data.iconOverrides) {
+                var ICON_TARGETS_PUBLIC = [
+                    { key: 'exp-icon-1', selector: '.exp-card:nth-child(1) .exp-card__icon' },
+                    { key: 'exp-icon-2', selector: '.exp-card:nth-child(2) .exp-card__icon' },
+                    { key: 'exp-icon-3', selector: '.exp-card:nth-child(3) .exp-card__icon' },
+                    { key: 'svc-icon-1', selector: '.service-card:nth-child(1) .service-card__icon' },
+                    { key: 'svc-icon-2', selector: '.service-card:nth-child(2) .service-card__icon' },
+                    { key: 'svc-icon-3', selector: '.service-card:nth-child(3) .service-card__icon' },
+                    { key: 'contact-icon-1', selector: '.contact__detail:nth-child(1) .contact__icon' },
+                    { key: 'contact-icon-2', selector: '.contact__detail:nth-child(2) .contact__icon' },
+                    { key: 'contact-icon-3', selector: '.contact__detail:nth-child(3) .contact__icon' },
+                ];
+                Object.entries(data.iconOverrides).forEach(function(entry) {
+                    var key = entry[0], dataURL = entry[1];
+                    if (!dataURL || !/^data:image\//i.test(dataURL)) return;
+                    var target = ICON_TARGETS_PUBLIC.find(function(t) { return t.key === key; });
+                    if (!target) return;
+                    var container = document.querySelector(target.selector);
+                    if (!container) return;
+                    var svg = container.querySelector('svg');
+                    if (svg) svg.style.display = 'none';
+                    var img = document.createElement('img');
+                    img.src = dataURL;
+                    img.alt = 'Icon';
+                    img.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+                    container.appendChild(img);
+                });
+            }
+
+            // Section reordering
+            if (data.sectionOrder && data.sectionOrder.length > 0) {
+                var parent = document.querySelector('main') || document.body;
+                data.sectionOrder.forEach(function(id) {
+                    var section = document.getElementById(id);
+                    if (section) parent.appendChild(section);
+                });
+            }
+
+            // Section visibility
+            if (data.sectionVisibility) {
+                Object.entries(data.sectionVisibility).forEach(function(entry) {
+                    if (entry[1] === false) {
+                        var el = document.getElementById(entry[0]);
+                        if (el) el.style.display = 'none';
+                    }
+                });
+            }
+
+            // Section spacing
+            if (data.sectionSpacing) {
+                Object.entries(data.sectionSpacing).forEach(function(entry) {
+                    if (entry[1]) {
+                        var el = document.getElementById(entry[0]);
+                        if (el) el.style.paddingBlock = entry[1];
+                    }
+                });
+            }
+
+            // Global settings
+            if (data.globalSettings) {
+                if (data.globalSettings.bodyFont) document.body.style.fontFamily = data.globalSettings.bodyFont;
+                if (data.globalSettings.baseFontSize) document.documentElement.style.fontSize = data.globalSettings.baseFontSize + 'px';
+                if (data.globalSettings.baseLineHeight) document.body.style.lineHeight = data.globalSettings.baseLineHeight;
+            }
         }
 
         // ── Education item renderer ───────────────────────────────
@@ -2633,6 +2784,9 @@
             <button class="ba-tab-btn" data-ba-panel="ba-panel-theme" role="tab">🎨 Тема</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-contact" role="tab">📞 Контакти</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-testimonials" role="tab">💬 Отзиви</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-icons" role="tab">🎯 Икони</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-layout" role="tab">📐 Подредба</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-tools" role="tab">🔧 Инструменти</button>
         </nav>
         <div class="ba-actions">
             <span id="ba-save-status"></span>
@@ -2686,6 +2840,24 @@
                             <option value="500">500 — Medium</option>
                             <option value="600">600 — Semibold</option>
                             <option value="700">700 — Bold</option>
+                        </select>
+                    </div>
+                    <div class="ba-form-group">
+                        <label>Междуредие (line-height)</label>
+                        <input type="number" id="ba-el-line-height" min="0.8" max="3" step="0.05" placeholder="напр. 1.6">
+                    </div>
+                    <div class="ba-form-group">
+                        <label>Разстояние м/у букви (letter-spacing)</label>
+                        <input type="text" id="ba-el-letter-spacing" placeholder="напр. 0.05em или 1px">
+                    </div>
+                    <div class="ba-form-group">
+                        <label>Подравняване на текст</label>
+                        <select id="ba-el-text-align">
+                            <option value="">— без промяна —</option>
+                            <option value="left">Ляво</option>
+                            <option value="center">Център</option>
+                            <option value="right">Дясно</option>
+                            <option value="justify">Justified</option>
                         </select>
                     </div>
                 </div>
@@ -2826,6 +2998,93 @@
             </div>
         </div>
 
+        <!-- PANEL: Icons (SVG replacement) -->
+        <div id="ba-panel-icons" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Замяна на SVG икони</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.6rem;">Кликни върху икона в сайта (маркирана с червен контур), след което качи PNG/SVG изображение. Или избери от списъка:</p>
+                <div id="ba-icon-list" style="display:flex;flex-direction:column;gap:.25rem;margin-bottom:.6rem;"></div>
+                <div id="ba-icon-editor-area" style="display:none;">
+                    <div class="ba-form-group">
+                        <label id="ba-icon-label">Избрана икона</label>
+                        <div class="ba-img-card" id="ba-icon-upload-card" style="border-color:#F87171;">
+                            <img id="ba-icon-preview" src="" alt="" style="display:none;max-height:60px;">
+                            <p>Качи PNG / SVG за замяна</p>
+                            <input type="file" id="ba-icon-upload" accept="image/png,image/svg+xml,image/webp">
+                        </div>
+                    </div>
+                    <button class="ba-btn ba-btn-danger" id="ba-btn-icon-reset" style="width:100%;margin-top:.2rem;">↩️ Възстанови оригинала</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL: Layout (Section reordering) -->
+        <div id="ba-panel-layout" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Подредба на секции</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.6rem;">Влачи за пренареждане на секциите. Промените се запазват в мобилен и десктоп изглед.</p>
+                <div id="ba-layout-list" style="display:flex;flex-direction:column;gap:.3rem;"></div>
+            </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">Видимост на секции</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.5rem;">Скрий/покажи секции от сайта:</p>
+                <div id="ba-visibility-list"></div>
+            </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">Разстояния (padding)</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.5rem;">Настрой вертикалния padding на всяка секция:</p>
+                <div id="ba-spacing-list"></div>
+            </div>
+        </div>
+
+        <!-- PANEL: Tools (Export/Import, extra) -->
+        <div id="ba-panel-tools" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Експорт / Импорт</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.5rem;">Запази настройките като файл или зареди от файл:</p>
+                <div class="ba-export-btn">
+                    <button class="ba-btn ba-btn-success" id="ba-btn-export">📥 Експорт JSON</button>
+                    <button class="ba-btn ba-btn-warn" id="ba-btn-import">📤 Импорт JSON</button>
+                </div>
+                <input type="file" id="ba-import-file" accept=".json" style="display:none;">
+            </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">Глобални настройки</div>
+                <div class="ba-form-group">
+                    <label>Основен шрифт (body)</label>
+                    <select id="ba-global-font">
+                        <option value="">— без промяна —</option>
+                        <option value="'Inter', system-ui, sans-serif">Inter (sans-serif)</option>
+                        <option value="'Playfair Display', Georgia, serif">Playfair Display (serif)</option>
+                        <option value="'Roboto', sans-serif">Roboto</option>
+                        <option value="'Montserrat', sans-serif">Montserrat</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="system-ui, sans-serif">System UI</option>
+                    </select>
+                </div>
+                <div class="ba-form-group">
+                    <label>Базов размер на шрифт (px)</label>
+                    <input type="number" id="ba-global-font-size" min="12" max="22" step="1" placeholder="16">
+                </div>
+                <div class="ba-form-group">
+                    <label>Базово междуредие</label>
+                    <input type="number" id="ba-global-line-height" min="1" max="2.5" step="0.05" placeholder="1.6">
+                </div>
+                <button class="ba-btn ba-btn-success" id="ba-btn-apply-global" style="width:100%;margin-top:.3rem;">Приложи глобални</button>
+            </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">Бърз преглед</div>
+                <div style="display:flex;gap:.3rem;flex-wrap:wrap;">
+                    <button class="ba-btn ba-btn-exit" id="ba-btn-preview-mobile" style="flex:1;">📱 Мобилен</button>
+                    <button class="ba-btn ba-btn-exit" id="ba-btn-preview-desktop" style="flex:1;">🖥️ Десктоп</button>
+                </div>
+            </div>
+        </div>
+
     </div><!-- /ba-sidebar-inner -->
 </div><!-- /bio-inline-admin -->
 
@@ -2862,8 +3121,10 @@
     var adminActive  = false;
     var hasUnsaved   = false;
     var selectedElIndex = -1;
-    var savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] };
-
+    function defaultSavedData() {
+        return { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} };
+    }
+    var savedData = defaultSavedData();
     /* ── Toast ── */
     var toastTimer;
     function showToast(msg, type) {
@@ -2952,6 +3213,10 @@
         setupEduPanel();
         setupSaveReset();
         setupExitButton();
+        setupClickToEdit();
+        setupIconPanel();
+        setupLayoutPanel();
+        setupToolsPanel();
     }
 
     /* ── Deactivate admin mode ── */
@@ -2961,6 +3226,10 @@
         adminEl.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('bio-admin-active');
         editBadgeEl.classList.remove('visible');
+        // Remove click-to-edit highlights
+        document.querySelectorAll('.ba-selected-el').forEach(function(el) { el.classList.remove('ba-selected-el'); });
+        // Remove reorder handles
+        document.querySelectorAll('.ba-reorder-handle').forEach(function(h) { h.remove(); });
         hasUnsaved = false;
     }
 
@@ -2970,7 +3239,7 @@
             .then(function(r) { return r.ok ? r.json() : null; })
             .then(function(data) {
                 if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-                    savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] }, data);
+                    savedData = Object.assign(defaultSavedData(), data);
                     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData)); } catch(e) {}
                 } else {
                     var raw = localStorage.getItem(STORAGE_KEY);
@@ -3016,7 +3285,7 @@
     function resetData() {
         if (!confirm('Сигурен ли сте? Всички промени ще бъдат изтрити!')) return;
         localStorage.removeItem(STORAGE_KEY);
-        savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] };
+        savedData = defaultSavedData();
         fetch(BIO_API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(savedData) }).catch(function() {});
         document.cookie = 'bio_dirty=1; path=/; SameSite=Strict';
         hasUnsaved = false;
@@ -3043,6 +3312,9 @@
             if (opts.fontSize)   el.style.fontSize   = opts.fontSize + 'rem';
             if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
             if (opts.color)      el.style.color       = opts.color;
+            if (opts.lineHeight) el.style.lineHeight  = opts.lineHeight;
+            if (opts.letterSpacing) el.style.letterSpacing = opts.letterSpacing;
+            if (opts.textAlign)  el.style.textAlign   = opts.textAlign;
         });
     }
 
@@ -3188,10 +3460,20 @@
         document.getElementById('ba-el-font-family').value = overrides.fontFamily || '';
         document.getElementById('ba-el-font-size').value   = overrides.fontSize  || '';
         document.getElementById('ba-el-font-weight').value = overrides.fontWeight || '';
+        document.getElementById('ba-el-line-height').value = overrides.lineHeight || '';
+        document.getElementById('ba-el-letter-spacing').value = overrides.letterSpacing || '';
+        document.getElementById('ba-el-text-align').value  = overrides.textAlign || '';
         var col = overrides.color || '#1A1916';
         document.getElementById('ba-el-color-picker').value = col.length === 7 ? col : '#1a1916';
         document.getElementById('ba-el-color-hex').value    = col;
         document.getElementById('ba-font-preview').style.fontFamily = overrides.fontFamily || '';
+
+        // Highlight the selected element on page
+        document.querySelectorAll('.ba-selected-el').forEach(function(el) { el.classList.remove('ba-selected-el'); });
+        if (domEl) {
+            domEl.classList.add('ba-selected-el');
+            domEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 
     /* ── Tab switching ── */
@@ -3225,9 +3507,16 @@
             var fontSize   = parseFloat(document.getElementById('ba-el-font-size').value) || null;
             var fontWeight = document.getElementById('ba-el-font-weight').value;
             var color      = document.getElementById('ba-el-color-hex').value || document.getElementById('ba-el-color-picker').value;
+            var lineHeight = parseFloat(document.getElementById('ba-el-line-height').value) || null;
+            var letterSpacing = document.getElementById('ba-el-letter-spacing').value.trim() || null;
+            var textAlign  = document.getElementById('ba-el-text-align').value || null;
 
             if (!savedData.textOverrides) savedData.textOverrides = {};
-            savedData.textOverrides[info.selector] = { content:content, fontFamily:fontFamily, fontSize:fontSize, fontWeight:fontWeight, color:color };
+            savedData.textOverrides[info.selector] = {
+                content:content, fontFamily:fontFamily, fontSize:fontSize,
+                fontWeight:fontWeight, color:color,
+                lineHeight:lineHeight, letterSpacing:letterSpacing, textAlign:textAlign
+            };
 
             var domEl = document.querySelector(info.selector);
             if (domEl) {
@@ -3236,6 +3525,9 @@
                 if (fontSize)   domEl.style.fontSize   = fontSize + 'rem';
                 if (fontWeight) domEl.style.fontWeight  = fontWeight;
                 if (color)      domEl.style.color       = color;
+                if (lineHeight) domEl.style.lineHeight  = lineHeight;
+                if (letterSpacing) domEl.style.letterSpacing = letterSpacing;
+                if (textAlign)  domEl.style.textAlign   = textAlign;
             }
             hasUnsaved = true;
             showToast('Промяната е приложена. Натисни Запази.');
@@ -3580,6 +3872,552 @@
             }
             deactivateAdminMode();
         });
+    }
+
+    /* ── Click-to-edit: click any [data-bio-id] element to select it ── */
+    function setupClickToEdit() {
+        // Build O(1) lookup map: data-bio-id → EDITABLE_ELEMENTS index
+        var bioIdToIndex = {};
+        EDITABLE_ELEMENTS.forEach(function(el, i) {
+            var domEl = document.querySelector(el.selector);
+            if (domEl) {
+                var bid = domEl.getAttribute('data-bio-id');
+                if (bid) bioIdToIndex[bid] = i;
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!adminActive) return;
+            // Find closest editable element
+            var target = e.target.closest('[data-bio-id]');
+            if (!target) return;
+            // Don't interfere with admin panel clicks
+            if (target.closest('#bio-inline-admin')) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Find matching EDITABLE_ELEMENTS entry via lookup map
+            var bioId = target.getAttribute('data-bio-id');
+            var matchIndex = bioIdToIndex.hasOwnProperty(bioId) ? bioIdToIndex[bioId] : -1;
+
+            if (matchIndex >= 0) {
+                // Switch to Text panel and select element
+                document.querySelectorAll('.ba-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                document.querySelectorAll('.ba-panel').forEach(function(p) { p.classList.remove('active'); });
+                var textTab = document.querySelector('[data-ba-panel="ba-panel-text"]');
+                if (textTab) textTab.classList.add('active');
+                var textPanel = document.getElementById('ba-panel-text');
+                if (textPanel) textPanel.classList.add('active');
+                selectElement(matchIndex);
+            } else {
+                // For elements not in the list, allow inline editing dynamically
+                document.querySelectorAll('.ba-selected-el').forEach(function(el) { el.classList.remove('ba-selected-el'); });
+                target.classList.add('ba-selected-el');
+
+                // Switch to Text panel
+                document.querySelectorAll('.ba-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                document.querySelectorAll('.ba-panel').forEach(function(p) { p.classList.remove('active'); });
+                var textTab2 = document.querySelector('[data-ba-panel="ba-panel-text"]');
+                if (textTab2) textTab2.classList.add('active');
+                var textPanel2 = document.getElementById('ba-panel-text');
+                if (textPanel2) textPanel2.classList.add('active');
+
+                // Create a dynamic selector using data-bio-id
+                var dynSelector = '[data-bio-id="' + bioId + '"]';
+                selectedElIndex = -1; // Custom element, not in list
+
+                var editorArea = document.getElementById('ba-text-editor-area');
+                editorArea.style.display = 'block';
+
+                var overrides = (savedData.textOverrides && savedData.textOverrides[dynSelector]) || {};
+                document.getElementById('ba-el-content').value = overrides.content !== undefined ? overrides.content : target.textContent.trim();
+                document.getElementById('ba-el-font-family').value = overrides.fontFamily || '';
+                document.getElementById('ba-el-font-size').value   = overrides.fontSize  || '';
+                document.getElementById('ba-el-font-weight').value = overrides.fontWeight || '';
+                document.getElementById('ba-el-line-height').value = overrides.lineHeight || '';
+                document.getElementById('ba-el-letter-spacing').value = overrides.letterSpacing || '';
+                document.getElementById('ba-el-text-align').value  = overrides.textAlign || '';
+                var col = overrides.color || '#1A1916';
+                document.getElementById('ba-el-color-picker').value = col.length === 7 ? col : '#1a1916';
+                document.getElementById('ba-el-color-hex').value    = col;
+
+                // Temporarily store the dynamic selector for the apply button
+                window.__baDynSelector = dynSelector;
+                window.__baDynTarget = target;
+            }
+        }, true);
+
+        // Override the apply button to handle dynamic selections
+        var origApply = document.getElementById('ba-btn-apply-text');
+        if (origApply) {
+            var origHandler = origApply.onclick;
+            origApply.addEventListener('click', function() {
+                if (selectedElIndex >= 0 || !window.__baDynSelector) return; // handled by original
+                var sel = window.__baDynSelector;
+                var domEl = window.__baDynTarget;
+                var content = document.getElementById('ba-el-content').value;
+                var fontFamily = document.getElementById('ba-el-font-family').value;
+                var fontSize   = parseFloat(document.getElementById('ba-el-font-size').value) || null;
+                var fontWeight = document.getElementById('ba-el-font-weight').value;
+                var color      = document.getElementById('ba-el-color-hex').value || document.getElementById('ba-el-color-picker').value;
+                var lineHeight = parseFloat(document.getElementById('ba-el-line-height').value) || null;
+                var letterSpacing = document.getElementById('ba-el-letter-spacing').value.trim() || null;
+                var textAlign  = document.getElementById('ba-el-text-align').value || null;
+
+                if (!savedData.textOverrides) savedData.textOverrides = {};
+                savedData.textOverrides[sel] = {
+                    content:content, fontFamily:fontFamily, fontSize:fontSize,
+                    fontWeight:fontWeight, color:color,
+                    lineHeight:lineHeight, letterSpacing:letterSpacing, textAlign:textAlign
+                };
+
+                if (domEl) {
+                    domEl.textContent = content;
+                    if (fontFamily) domEl.style.fontFamily = fontFamily;
+                    if (fontSize)   domEl.style.fontSize   = fontSize + 'rem';
+                    if (fontWeight) domEl.style.fontWeight  = fontWeight;
+                    if (color)      domEl.style.color       = color;
+                    if (lineHeight) domEl.style.lineHeight  = lineHeight;
+                    if (letterSpacing) domEl.style.letterSpacing = letterSpacing;
+                    if (textAlign)  domEl.style.textAlign   = textAlign;
+                }
+                hasUnsaved = true;
+                showToast('Промяната е приложена. Натисни Запази.');
+            });
+        }
+    }
+
+    /* ── SVG Icon replacement panel ── */
+    var ICON_TARGETS = [
+        { label: 'Компетенция 1 — Икона', selector: '.exp-card:nth-child(1) .exp-card__icon', key: 'exp-icon-1' },
+        { label: 'Компетенция 2 — Икона', selector: '.exp-card:nth-child(2) .exp-card__icon', key: 'exp-icon-2' },
+        { label: 'Компетенция 3 — Икона', selector: '.exp-card:nth-child(3) .exp-card__icon', key: 'exp-icon-3' },
+        { label: 'Услуга 1 — Икона', selector: '.service-card:nth-child(1) .service-card__icon', key: 'svc-icon-1' },
+        { label: 'Услуга 2 — Икона', selector: '.service-card:nth-child(2) .service-card__icon', key: 'svc-icon-2' },
+        { label: 'Услуга 3 — Икона', selector: '.service-card:nth-child(3) .service-card__icon', key: 'svc-icon-3' },
+        { label: 'Контакт — Имейл икона', selector: '.contact__detail:nth-child(1) .contact__icon', key: 'contact-icon-1' },
+        { label: 'Контакт — Телефон икона', selector: '.contact__detail:nth-child(2) .contact__icon', key: 'contact-icon-2' },
+        { label: 'Контакт — Адрес икона', selector: '.contact__detail:nth-child(3) .contact__icon', key: 'contact-icon-3' },
+    ];
+    var selectedIconKey = null;
+
+    function setupIconPanel() {
+        var list = document.getElementById('ba-icon-list');
+        if (!list) return;
+        list.innerHTML = '';
+        ICON_TARGETS.forEach(function(icon) {
+            var btn = document.createElement('button');
+            btn.className = 'ba-el-item';
+            btn.textContent = icon.label;
+            btn.dataset.key = icon.key;
+            btn.addEventListener('click', function() {
+                selectIcon(icon.key);
+                list.querySelectorAll('.ba-el-item').forEach(function(b) { b.classList.remove('selected'); });
+                btn.classList.add('selected');
+            });
+            list.appendChild(btn);
+        });
+
+        var uploadInput = document.getElementById('ba-icon-upload');
+        var uploadCard = document.getElementById('ba-icon-upload-card');
+        if (uploadCard) {
+            uploadCard.addEventListener('click', function() { if (uploadInput) uploadInput.click(); });
+        }
+        if (uploadInput) {
+            uploadInput.addEventListener('change', function() {
+                if (!selectedIconKey || !this.files || !this.files[0]) return;
+                var file = this.files[0];
+                if (file.size > MAX_IMAGE_BYTES) { showToast('Файлът е прекалено голям (макс. 5MB)', 'error'); return; }
+                // Only allow safe image formats
+                var allowedTypes = ['image/png', 'image/svg+xml', 'image/webp'];
+                if (allowedTypes.indexOf(file.type) === -1) {
+                    showToast('Разрешени формати: PNG, SVG, WebP', 'error');
+                    return;
+                }
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var dataURL = e.target.result;
+                    // For SVG files, sanitize by stripping script tags and event handlers
+                    if (file.type === 'image/svg+xml') {
+                        try {
+                            var svgText = atob(dataURL.split(',')[1] || '');
+                            if (/<script[\s>]/i.test(svgText) || /on\w+\s*=/i.test(svgText) || /javascript:/i.test(svgText)) {
+                                showToast('SVG файлът съдържа небезопасен код!', 'error');
+                                return;
+                            }
+                        } catch(err) { /* base64 decode failed, reject */ showToast('Невалиден SVG файл', 'error'); return; }
+                    }
+                    if (!savedData.iconOverrides) savedData.iconOverrides = {};
+                    savedData.iconOverrides[selectedIconKey] = dataURL;
+                    applyIconOverride(selectedIconKey, dataURL);
+                    var preview = document.getElementById('ba-icon-preview');
+                    if (preview) { preview.src = dataURL; preview.style.display = 'block'; }
+                    hasUnsaved = true;
+                    showToast('Иконата е заменена. Натисни Запази.');
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        var resetBtn = document.getElementById('ba-btn-icon-reset');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function() {
+                if (!selectedIconKey) return;
+                if (savedData.iconOverrides) delete savedData.iconOverrides[selectedIconKey];
+                // Restore original SVG by reloading
+                var target = ICON_TARGETS.find(function(t) { return t.key === selectedIconKey; });
+                if (target) {
+                    var el = document.querySelector(target.selector);
+                    if (el) {
+                        var img = el.querySelector('img.ba-icon-replacement');
+                        if (img) { img.remove(); }
+                        var svg = el.querySelector('svg');
+                        if (svg) svg.style.display = '';
+                    }
+                }
+                var preview = document.getElementById('ba-icon-preview');
+                if (preview) { preview.src = ''; preview.style.display = 'none'; }
+                hasUnsaved = true;
+                showToast('Иконата е възстановена.');
+            });
+        }
+
+        // Apply saved icon overrides
+        if (savedData.iconOverrides) {
+            Object.entries(savedData.iconOverrides).forEach(function(entry) {
+                applyIconOverride(entry[0], entry[1]);
+            });
+        }
+    }
+
+    function selectIcon(key) {
+        selectedIconKey = key;
+        var editorArea = document.getElementById('ba-icon-editor-area');
+        if (editorArea) editorArea.style.display = 'block';
+        var label = document.getElementById('ba-icon-label');
+        var target = ICON_TARGETS.find(function(t) { return t.key === key; });
+        if (label && target) label.textContent = target.label;
+        var preview = document.getElementById('ba-icon-preview');
+        if (preview && savedData.iconOverrides && savedData.iconOverrides[key]) {
+            preview.src = savedData.iconOverrides[key];
+            preview.style.display = 'block';
+        } else if (preview) {
+            preview.style.display = 'none';
+        }
+    }
+
+    function applyIconOverride(key, dataURL) {
+        if (!dataURL || !/^data:image\//i.test(dataURL)) return;
+        var target = ICON_TARGETS.find(function(t) { return t.key === key; });
+        if (!target) return;
+        var container = document.querySelector(target.selector);
+        if (!container) return;
+        // Hide existing SVG
+        var svg = container.querySelector('svg');
+        if (svg) svg.style.display = 'none';
+        // Add/update replacement image
+        var existing = container.querySelector('img.ba-icon-replacement');
+        if (!existing) {
+            existing = document.createElement('img');
+            existing.className = 'ba-icon-replacement';
+            existing.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+            container.appendChild(existing);
+        }
+        existing.src = dataURL;
+        existing.alt = 'Custom icon';
+    }
+
+    /* ── Section reordering & visibility panel ── */
+    var SECTIONS_LIST = [
+        { id: 'hero', label: '🏠 Hero (Начало)' },
+        { id: 'about', label: '👤 За мен' },
+        { id: 'expertise', label: '🎯 Компетенции' },
+        { id: 'credentials', label: '📜 Квалификации' },
+        { id: 'philosophy', label: '💭 Философия' },
+        { id: 'approach', label: '🔄 Подход' },
+        { id: 'services', label: '💼 Услуги' },
+        { id: 'testimonials', label: '💬 Отзиви' },
+        { id: 'contact', label: '📞 Контакт' },
+    ];
+
+    function setupLayoutPanel() {
+        buildLayoutList();
+        buildVisibilityList();
+        buildSpacingList();
+    }
+
+    function buildLayoutList() {
+        var list = document.getElementById('ba-layout-list');
+        if (!list) return;
+        list.innerHTML = '';
+
+        var order = savedData.sectionOrder && savedData.sectionOrder.length > 0
+            ? savedData.sectionOrder
+            : SECTIONS_LIST.map(function(s) { return s.id; });
+
+        order.forEach(function(sectionId) {
+            var sec = SECTIONS_LIST.find(function(s) { return s.id === sectionId; });
+            if (!sec) return;
+            var item = document.createElement('div');
+            item.className = 'ba-el-item';
+            item.draggable = true;
+            item.dataset.sectionId = sectionId;
+            item.style.cssText = 'display:flex;align-items:center;gap:.4rem;cursor:grab;padding:.5rem .65rem;';
+            item.innerHTML = '<span style="font-size:.9rem;cursor:grab;">⠿</span> ' + htmlEsc(sec.label);
+
+            item.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('text/plain', sectionId);
+                item.classList.add('ba-section-dragging');
+            });
+            item.addEventListener('dragend', function() {
+                item.classList.remove('ba-section-dragging');
+            });
+            item.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                item.style.borderTopColor = '#6C8EF5';
+            });
+            item.addEventListener('dragleave', function() {
+                item.style.borderTopColor = '';
+            });
+            item.addEventListener('drop', function(e) {
+                e.preventDefault();
+                item.style.borderTopColor = '';
+                var draggedId = e.dataTransfer.getData('text/plain');
+                if (draggedId === sectionId) return;
+                reorderSections(draggedId, sectionId);
+            });
+
+            list.appendChild(item);
+        });
+    }
+
+    function reorderSections(draggedId, targetId) {
+        var order = savedData.sectionOrder && savedData.sectionOrder.length > 0
+            ? savedData.sectionOrder.slice()
+            : SECTIONS_LIST.map(function(s) { return s.id; });
+
+        var fromIdx = order.indexOf(draggedId);
+        var toIdx = order.indexOf(targetId);
+        if (fromIdx < 0 || toIdx < 0) return;
+
+        order.splice(fromIdx, 1);
+        order.splice(toIdx, 0, draggedId);
+        savedData.sectionOrder = order;
+
+        // Apply to DOM
+        var parent = document.querySelector('main') || document.body;
+        order.forEach(function(id) {
+            var section = document.getElementById(id);
+            if (section) parent.appendChild(section);
+        });
+
+        buildLayoutList();
+        hasUnsaved = true;
+        showToast('Секциите са пренаредени.');
+    }
+
+    function buildVisibilityList() {
+        var list = document.getElementById('ba-visibility-list');
+        if (!list) return;
+        list.innerHTML = '';
+        SECTIONS_LIST.forEach(function(sec) {
+            var hidden = savedData.sectionVisibility && savedData.sectionVisibility[sec.id] === false;
+            var item = document.createElement('div');
+            item.className = 'ba-section-toggle';
+            item.innerHTML = '<label>' + htmlEsc(sec.label) + '</label><input type="checkbox" ' + (hidden ? '' : 'checked') + '>';
+            var checkbox = item.querySelector('input');
+            checkbox.addEventListener('change', function() {
+                if (!savedData.sectionVisibility) savedData.sectionVisibility = {};
+                savedData.sectionVisibility[sec.id] = checkbox.checked;
+                var el = document.getElementById(sec.id);
+                if (el) el.style.display = checkbox.checked ? '' : 'none';
+                hasUnsaved = true;
+            });
+            list.appendChild(item);
+        });
+
+        // Apply saved visibility
+        if (savedData.sectionVisibility) {
+            Object.entries(savedData.sectionVisibility).forEach(function(entry) {
+                if (entry[1] === false) {
+                    var el = document.getElementById(entry[0]);
+                    if (el) el.style.display = 'none';
+                }
+            });
+        }
+    }
+
+    function buildSpacingList() {
+        var list = document.getElementById('ba-spacing-list');
+        if (!list) return;
+        list.innerHTML = '';
+        SECTIONS_LIST.forEach(function(sec) {
+            var spacing = (savedData.sectionSpacing && savedData.sectionSpacing[sec.id]) || '';
+            var row = document.createElement('div');
+            row.className = 'ba-spacing-row';
+            row.innerHTML =
+                '<label>' + htmlEsc(sec.label.replace(/^.+\s/, '')) + '</label>' +
+                '<input type="text" placeholder="напр. 3rem 0" value="' + htmlEsc(spacing) + '" style="padding:.3rem .5rem;background:#22263A;border:1px solid #2E3348;border-radius:6px;color:#E2E8F0;font-size:.78rem;">';
+            var input = row.querySelector('input');
+            input.addEventListener('change', function() {
+                if (!savedData.sectionSpacing) savedData.sectionSpacing = {};
+                var val = input.value.trim();
+                // Strict validation: only 1-4 CSS length values like "3rem" or "2rem 1rem"
+                if (val && !/^(\d+\.?\d*(?:rem|em|px|%|vh|vw)?)(\s+\d+\.?\d*(?:rem|em|px|%|vh|vw)?){0,3}$/.test(val)) {
+                    showToast('Невалидна стойност (напр. 3rem или 2rem 1rem)', 'error');
+                    return;
+                }
+                savedData.sectionSpacing[sec.id] = val;
+                var el = document.getElementById(sec.id);
+                if (el) el.style.paddingBlock = val;
+                hasUnsaved = true;
+            });
+            list.appendChild(row);
+        });
+
+        // Apply saved spacing
+        if (savedData.sectionSpacing) {
+            Object.entries(savedData.sectionSpacing).forEach(function(entry) {
+                if (entry[1]) {
+                    var el = document.getElementById(entry[0]);
+                    if (el) el.style.paddingBlock = entry[1];
+                }
+            });
+        }
+    }
+
+    /* ── Tools panel (Export/Import, Global settings, Preview) ── */
+    function setupToolsPanel() {
+        // Export
+        var exportBtn = document.getElementById('ba-btn-export');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', function() {
+                var json = JSON.stringify(savedData, null, 2);
+                var blob = new Blob([json], { type: 'application/json' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'bio-admin-config-' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('Конфигурацията е експортирана.');
+            });
+        }
+
+        // Import
+        var importBtn = document.getElementById('ba-btn-import');
+        var importFile = document.getElementById('ba-import-file');
+        if (importBtn && importFile) {
+            importBtn.addEventListener('click', function() { importFile.click(); });
+            importFile.addEventListener('change', function() {
+                if (!this.files || !this.files[0]) return;
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        var data = JSON.parse(e.target.result);
+                        if (data && typeof data === 'object') {
+                            savedData = Object.assign(defaultSavedData(), data);
+                            applyAllChanges();
+                            applyIconOverrides();
+                            applyLayoutOverrides();
+                            applyGlobalSettings();
+                            hasUnsaved = true;
+                            showToast('Конфигурацията е импортирана. Натисни Запази.');
+                        }
+                    } catch (err) {
+                        showToast('Грешка при импорт: невалиден JSON', 'error');
+                    }
+                };
+                reader.readAsText(this.files[0]);
+            });
+        }
+
+        // Global settings
+        var applyGlobalBtn = document.getElementById('ba-btn-apply-global');
+        if (applyGlobalBtn) {
+            applyGlobalBtn.addEventListener('click', function() {
+                var font = document.getElementById('ba-global-font').value;
+                var fontSize = parseInt(document.getElementById('ba-global-font-size').value, 10) || null;
+                var lineHeight = parseFloat(document.getElementById('ba-global-line-height').value) || null;
+
+                if (!savedData.globalSettings) savedData.globalSettings = {};
+                if (font) savedData.globalSettings.bodyFont = font;
+                if (fontSize) savedData.globalSettings.baseFontSize = fontSize;
+                if (lineHeight) savedData.globalSettings.baseLineHeight = lineHeight;
+
+                applyGlobalSettings();
+                hasUnsaved = true;
+                showToast('Глобалните настройки са приложени.');
+            });
+        }
+
+        // Preview buttons
+        var mobileBtn = document.getElementById('ba-btn-preview-mobile');
+        var desktopBtn = document.getElementById('ba-btn-preview-desktop');
+        if (mobileBtn) {
+            mobileBtn.addEventListener('click', function() {
+                var vp = document.querySelector('meta[name="viewport"]');
+                if (vp) vp.setAttribute('content', 'width=375, initial-scale=1.0');
+                showToast('📱 Мобилен преглед (375px). Натисни Десктоп за връщане.');
+            });
+        }
+        if (desktopBtn) {
+            desktopBtn.addEventListener('click', function() {
+                var vp = document.querySelector('meta[name="viewport"]');
+                if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0');
+                showToast('🖥️ Десктоп преглед възстановен.');
+            });
+        }
+
+        // Populate global settings from savedData
+        if (savedData.globalSettings) {
+            if (savedData.globalSettings.bodyFont) document.getElementById('ba-global-font').value = savedData.globalSettings.bodyFont;
+            if (savedData.globalSettings.baseFontSize) document.getElementById('ba-global-font-size').value = savedData.globalSettings.baseFontSize;
+            if (savedData.globalSettings.baseLineHeight) document.getElementById('ba-global-line-height').value = savedData.globalSettings.baseLineHeight;
+        }
+    }
+
+    function applyGlobalSettings() {
+        var gs = savedData.globalSettings || {};
+        if (gs.bodyFont) document.body.style.fontFamily = gs.bodyFont;
+        if (gs.baseFontSize) document.documentElement.style.fontSize = gs.baseFontSize + 'px';
+        if (gs.baseLineHeight) document.body.style.lineHeight = gs.baseLineHeight;
+    }
+
+    function applyIconOverrides() {
+        if (!savedData.iconOverrides) return;
+        Object.entries(savedData.iconOverrides).forEach(function(entry) {
+            applyIconOverride(entry[0], entry[1]);
+        });
+    }
+
+    function applyLayoutOverrides() {
+        // Section order
+        if (savedData.sectionOrder && savedData.sectionOrder.length > 0) {
+            var parent = document.querySelector('main') || document.body;
+            savedData.sectionOrder.forEach(function(id) {
+                var section = document.getElementById(id);
+                if (section) parent.appendChild(section);
+            });
+        }
+        // Section visibility
+        if (savedData.sectionVisibility) {
+            Object.entries(savedData.sectionVisibility).forEach(function(entry) {
+                if (entry[1] === false) {
+                    var el = document.getElementById(entry[0]);
+                    if (el) el.style.display = 'none';
+                }
+            });
+        }
+        // Section spacing
+        if (savedData.sectionSpacing) {
+            Object.entries(savedData.sectionSpacing).forEach(function(entry) {
+                if (entry[1]) {
+                    var el = document.getElementById(entry[0]);
+                    if (el) el.style.paddingBlock = entry[1];
+                }
+            });
+        }
     }
 
     /* ── Expose activation to handleContact ── */
