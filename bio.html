@@ -3385,7 +3385,7 @@
             var div = document.createElement('div');
             div.style.cssText = 'background:#22263A;border:1px solid #2E3348;border-radius:8px;padding:.6rem;margin-bottom:.5rem;';
             div.innerHTML = '<div style="font-size:.72rem;color:#8892A4;margin-bottom:.3rem;">Отзив ' + htmlEsc(String(i + 1)) + '</div>' +
-                '<div class="ba-form-group"><label>Звезди (1-5)</label><input type="number" min="1" max="5" value="' + htmlEsc(t.stars||5) + '" data-ti="' + i + '" data-tf="stars" style="width:60px;"></div>' +
+                '<div class="ba-form-group"><label>Звезди (1-5)</label><input type="number" min="1" max="5" value="' + htmlEsc(String(t.stars || 5)) + '" data-ti="' + i + '" data-tf="stars" style="width:60px;"></div>' +
                 '<div class="ba-form-group"><label>Текст</label><textarea rows="2" data-ti="' + i + '" data-tf="text">' + htmlEsc(t.text||'') + '</textarea></div>' +
                 '<div class="ba-form-group"><label>Автор</label><input type="text" value="' + htmlEsc(t.authorName||'') + '" data-ti="' + i + '" data-tf="authorName"></div>' +
                 '<div class="ba-form-group"><label>Позиция</label><input type="text" value="' + htmlEsc(t.authorSub||'') + '" data-ti="' + i + '" data-tf="authorSub"></div>' +
