@@ -297,17 +297,17 @@ function renderBioHtml(htmlTemplate, bioContent) {
 /**
  * Serves bio.html using the pre-baked KV key 'baked_bio.html'.
  *
- * Baking strategy (zero-cost caching):
+ * Baking strategy:
  *   • handleSaveBioContent() renders and stores 'baked_bio.html' in KV
  *     every time the admin saves bio_content.  The heavy rendering work
  *     (2 KV reads + string replace) happens ONCE at save time, not on
  *     every page view.
- *   • Cache-Control: public, max-age=3600 — browser (and CDN) caches the
- *     page for 1 hour.  During that window zero Worker invocations occur.
- *   • After the cache expires the browser sends If-None-Match.  The Worker
- *     does ONE KV read (baked_bio.html) and returns 304 if unchanged —
- *     still a single cheap operation.
- *   • A full 200 is returned only when the admin has actually saved changes.
+ *   • Cache-Control: no-cache — браузърът винаги изпраща If-None-Match при
+ *     следващо зареждане.  Ако съдържанието не е сменено Worker връща 304
+ *     (без тяло, 1 KV четене) — бързо и евтино.  Ако админът е запазил
+ *     промени ETag е различен и браузърът получава новия HTML веднага.
+ *   • Избрано e no-cache (вместо max-age=3600) за да може потребителят да
+ *     вижда промените веднага след admin save без да чака изтичане на кеш.
  *
  * Fallback: if 'baked_bio.html' does not exist yet (first deploy before
  * first admin save) the Worker falls back to building from static_bio.html
@@ -340,7 +340,11 @@ async function serveBioHtml(env, request, ctx) {
     }
 
     const etag = await generateETag(finalHtml);
-    const cacheControl = `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`;
+    // no-cache: браузърът и CDN винаги валидират с If-None-Match преди да използват
+    // кеша.  Когато съдържанието не се е променило Worker връща 304 (без тяло) —
+    // евтино и бързо.  Когато админът запази промени ETag се сменя и браузърът
+    // получава новия HTML веднага при следващото зареждане.
+    const cacheControl = 'no-cache';
 
     // Return 304 Not Modified when the browser already has the current version.
     if (request.headers.get('If-None-Match') === etag) {
@@ -353,9 +357,6 @@ async function serveBioHtml(env, request, ctx) {
         status: 200,
         headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            // public + max-age: browser and CDN cache for 1 hour — zero backend
-            // cost during that window.  After expiry the browser revalidates via
-            // If-None-Match; 304 is returned when nothing has changed.
             'Cache-Control': cacheControl,
             'ETag': etag
         }
