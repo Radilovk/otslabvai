@@ -5159,44 +5159,57 @@
     })();
 
     /* ──────────────────────────────────────────────────────────────
-       PATCH setupClickToEdit — OPEN FLOATING TOOLBAR ON CLICK
+       SHARED AUTO-TAG CONSTANTS & FUNCTION
+       Assigns stable position-based data-bio-id to text elements.
     ────────────────────────────────────────────────────────────── */
-    (function patchClickToEdit() {
-        // Selector for elements that should NOT open the float toolbar
-        var SKIP_TAGS = { IMG: 1, SVG: 1, INPUT: 1, TEXTAREA: 1, SELECT: 1, FORM: 1, NAV: 1, VIDEO: 1, AUDIO: 1, CANVAS: 1, IFRAME: 1 };
-        var SKIP_SELECTORS = '#bio-inline-admin,#ba-float-toolbar,#edu-modal,#edu-img-fullscreen,nav,footer';
+    var BA_AUTOTAG_SKIP  = '#bio-inline-admin,#ba-float-toolbar,#edu-modal,#edu-img-fullscreen,nav,footer,script,style,noscript';
+    var BA_AUTOTAG_TAGS  = 'h1,h2,h3,h4,h5,h6,p,blockquote,span,div,li,label,a,button,strong,em';
+    var BA_SKIP_TAGS     = { IMG: 1, SVG: 1, INPUT: 1, TEXTAREA: 1, SELECT: 1, FORM: 1, NAV: 1, VIDEO: 1, AUDIO: 1, CANVAS: 1, IFRAME: 1 };
 
-        // Generate a stable data-bio-id for elements that don't have one
-        function baGenStableId(el) {
+    function baAutoTag() {
+        var groups = {};
+        document.querySelectorAll(BA_AUTOTAG_TAGS).forEach(function(el) {
+            if (el.closest(BA_AUTOTAG_SKIP)) return;
             var tag = el.tagName.toLowerCase();
             var cls = el.classList[0] ? el.classList[0].replace(/[^a-z0-9_-]/gi, '') : '';
             var key = 'gen-' + tag + (cls ? '-' + cls : '');
-            // Find position among same tag+class elements (1-based)
-            var sel = tag + (cls ? '.' + el.classList[0] : '');
-            var siblings = document.querySelectorAll(sel);
-            var idx = Array.prototype.indexOf.call(siblings, el);
-            return key + '-' + (idx >= 0 ? idx + 1 : Date.now());
-        }
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(el);
+        });
+        Object.keys(groups).forEach(function(key) {
+            groups[key].forEach(function(el, idx) {
+                if (el.getAttribute('data-bio-id')) return;
+                var hasDirectText = Array.from(el.childNodes).some(function(n) {
+                    return n.nodeType === 3 && n.textContent.trim().length > 2;
+                });
+                if (!hasDirectText) return;
+                el.setAttribute('data-bio-id', key + '-' + (idx + 1));
+            });
+        });
+    }
 
+    /* ──────────────────────────────────────────────────────────────
+       PATCH setupClickToEdit — OPEN FLOATING TOOLBAR ON CLICK
+    ────────────────────────────────────────────────────────────── */
+    (function patchClickToEdit() {
         document.addEventListener('click', function(e) {
             if (!adminActive) return;
             var target = e.target;
             if (!target) return;
-            if (target.closest(SKIP_SELECTORS)) return;
-            if (SKIP_TAGS[target.tagName]) return;
+            if (target.closest(BA_AUTOTAG_SKIP)) return;
+            if (BA_SKIP_TAGS[target.tagName]) return;
             if (target.closest('svg')) return;
 
-            // Walk up to find the nearest text-bearing element (or use target if it has text)
+            // Walk up to find the nearest text-bearing element
             var el = target;
             var hasText = Array.from(el.childNodes).some(function(n) {
                 return n.nodeType === 3 && n.textContent.trim().length > 0;
             });
             if (!hasText) {
-                // Try parent up to 3 levels
                 var p = el.parentElement;
                 for (var i = 0; i < 3 && p; i++) {
-                    if (p.closest(SKIP_SELECTORS)) break;
-                    if (SKIP_TAGS[p.tagName]) break;
+                    if (p.closest(BA_AUTOTAG_SKIP)) break;
+                    if (BA_SKIP_TAGS[p.tagName]) break;
                     var pText = Array.from(p.childNodes).some(function(n) {
                         return n.nodeType === 3 && n.textContent.trim().length > 0;
                     });
@@ -5206,9 +5219,16 @@
             }
             if (!hasText) return;
 
-            // Ensure the element has a data-bio-id
+            // Ensure the element has a data-bio-id (assign one if missing)
             if (!el.getAttribute('data-bio-id')) {
-                el.setAttribute('data-bio-id', baGenStableId(el));
+                // Use baAutoTag to consistently assign position-based IDs
+                baAutoTag();
+                // Fallback if still untagged (e.g. element has no direct text > 2 chars)
+                if (!el.getAttribute('data-bio-id')) {
+                    var tag = el.tagName.toLowerCase();
+                    var cls = el.classList[0] ? el.classList[0].replace(/[^a-z0-9_-]/gi, '') : '';
+                    el.setAttribute('data-bio-id', 'gen-' + tag + (cls ? '-' + cls : '') + '-' + Date.now());
+                }
             }
 
             var bioId = el.getAttribute('data-bio-id');
@@ -5227,29 +5247,7 @@
         requestAnimationFrame(function() {
             requestAnimationFrame(function() {
                 // Re-run auto-tagging to catch any dynamically added elements
-                (function() {
-                    var SKIP = '#bio-inline-admin,#ba-float-toolbar,#edu-modal,#edu-img-fullscreen,nav,footer,script,style,noscript';
-                    var tags = 'h1,h2,h3,h4,h5,h6,p,blockquote,span,div,li,label,a,button,strong,em';
-                    var groups = {};
-                    document.querySelectorAll(tags).forEach(function(el) {
-                        if (el.closest(SKIP)) return;
-                        var tag = el.tagName.toLowerCase();
-                        var cls = el.classList[0] ? el.classList[0].replace(/[^a-z0-9_-]/gi, '') : '';
-                        var key = 'gen-' + tag + (cls ? '-' + cls : '');
-                        if (!groups[key]) groups[key] = [];
-                        groups[key].push(el);
-                    });
-                    Object.keys(groups).forEach(function(key) {
-                        groups[key].forEach(function(el, idx) {
-                            if (el.getAttribute('data-bio-id')) return;
-                            var hasDirectText = Array.from(el.childNodes).some(function(n) {
-                                return n.nodeType === 3 && n.textContent.trim().length > 2;
-                            });
-                            if (!hasDirectText) return;
-                            el.setAttribute('data-bio-id', key + '-' + (idx + 1));
-                        });
-                    });
-                })();
+                baAutoTag();
                 baAttachImgButtons();
                 baInitTouchDrag();
                 // Load saved custom CSS
