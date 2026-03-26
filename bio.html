@@ -4062,12 +4062,7 @@
         }
     }
 
-    var DEFAULT_SERVICES = [
-        { badge:'Стартова точка', featured:false, title:'Първоначална консултация', body:'Задълбочена оценка на здравния статус, хранителните навици, телесния състав и лабораторните показатели. Завършва с изготвяне на вашия индивидуален хранителен план.', listItems:['Хранителен и метаболитен анализ','Анализ на телесния състав','Персонализиран хранителен план','Суплементационна схема'], price:'', duration:'' },
-        { badge:'Най-търсено', featured:true, title:'Програма за отслабване', body:'Медицински обоснована програма за устойчива загуба на тегло — без глад, без стрес. Диетата е адаптирана към вашия метаболизъм, хормонален профил и начин на живот.', listItems:['Метаболитна оценка и калориен дефицит','Хранителен план без глад','Тренировъчен протокол','Месечен мониторинг и корекции'], price:'', duration:'' },
-        { badge:'За спортисти', featured:false, title:'Спортна нутриция', body:'Оптимизирана диета за атлетична производителност, мускулен растеж и по-бързо възстановяване. Планирана в синхрон с тренировъчния ви цикъл.', listItems:['Периодизация на храненето','Протоколи за мускулен растеж','Суплементация за спортисти','Анализ на ефективността'], price:'', duration:'' },
-        { badge:'Цялостен подход', featured:false, title:'Здравословен начин на живот', body:'Интегрална стратегия за превантивно здраве — хранене, движение, сън и управление на стреса в един съгласуван план за дългосрочни резултати.', listItems:['Антиинфламаторна и балансирана диета','Хигиена на съня и биоритъм','Управление на стреса','Дългосрочен мониторинг'], price:'', duration:'' }
-    ];
+    var DEFAULT_SERVICES = window.__defaultServices || [];
 
     function applyServices() {
         var grid = document.getElementById('services-grid');
@@ -4229,11 +4224,10 @@
         var container = document.getElementById('ba-service-slots');
         if (!container) return;
         container.innerHTML = '';
-        var list = savedData.services && savedData.services.length ? savedData.services : JSON.parse(JSON.stringify(DEFAULT_SERVICES));
         if (!savedData.services || !savedData.services.length) {
             savedData.services = JSON.parse(JSON.stringify(DEFAULT_SERVICES));
         }
-        list = savedData.services;
+        var list = savedData.services;
 
         list.forEach(function(svc, i) {
             var div = document.createElement('div');
