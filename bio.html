@@ -3325,12 +3325,12 @@
         <label style="width:auto;margin-left:4px;">Наредба</label>
         <div class="ba-float-align">
             <button data-align="left"   title="Ляво">≡</button>
-            <button data-align="center" title="Центъм">☰</button>
+            <button data-align="center" title="Център">☰</button>
             <button data-align="right"  title="Дясно">≣</button>
         </div>
     </div>
     <div class="ba-float-row">
-        <label>Ред-вис</label>
+        <label>Междуредие</label>
         <input type="number" id="ba-float-lh" min="1" max="3" step="0.05" placeholder="1.6">
         <label style="width:auto;margin-left:4px;">Разтег</label>
         <input type="text" id="ba-float-ls" placeholder="0em" style="width:54px;flex:none;">
@@ -4711,7 +4711,7 @@
         document.getElementById('ba-float-lh').value      = ov.lineHeight   || '';
         document.getElementById('ba-float-ls').value      = ov.letterSpacing|| '';
         var col = ov.color || DEFAULT_TEXT_COLOR;
-        document.getElementById('ba-float-color').value     = /^#[0-9a-fA-F]{6}$/.test(col) ? col : DEFAULT_TEXT_COLOR;
+        document.getElementById('ba-float-color').value     = /^#[0-9a-fA-F]{3,6}$/.test(col) ? col : DEFAULT_TEXT_COLOR;
         document.getElementById('ba-float-color-hex').value = col;
         document.querySelectorAll('.ba-float-align button').forEach(function(b) {
             b.classList.toggle('active', b.dataset.align === (ov.textAlign || ''));
@@ -4783,7 +4783,7 @@
             document.getElementById('ba-float-color-hex').value = this.value;
         });
         document.getElementById('ba-float-color-hex').addEventListener('input', function() {
-            if (/^#[0-9a-fA-F]{6}$/.test(this.value))
+            if (/^#[0-9a-fA-F]{3,6}$/.test(this.value))
                 document.getElementById('ba-float-color').value = this.value;
         });
 
@@ -4798,7 +4798,7 @@
         document.addEventListener('click', function(e) {
             if (!adminActive) return;
             if (!tb.classList.contains('visible')) return;
-            if (!tb.contains(e.target) && e.target !== _baFloatTarget) baFloatClose();
+            if (!tb.contains(e.target) && !(_baFloatTarget && _baFloatTarget.contains(e.target))) baFloatClose();
         }, true);
     })();
 
@@ -4819,7 +4819,7 @@
             try { text = atob(text.split('base64,')[1]); } catch(e) { return false; }
         }
         if (/<script[\s>]/i.test(text))               return false;
-        if (/on[a-z]+\s*=/i.test(text))               return false;
+        if (/on[a-zA-Z]+\s*=/i.test(text))              return false;
         if (/javascript\s*:/i.test(text))             return false;
         if (/<use[^>]+href\s*=\s*["']?\s*data:/i.test(text)) return false;
         return true;
@@ -4971,7 +4971,7 @@
             if (!sel) return;
             var orig = document.getElementById(sel);
             if (!orig) { showToast('Секцията не е намерена', 'error'); return; }
-            var uid   = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            var uid   = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
             var clone = orig.cloneNode(true);
             clone.id  = sel + '-copy-' + uid;
             clone.querySelectorAll('[data-bio-id]').forEach(function(el) {
@@ -5006,16 +5006,19 @@
     var _origActivate = activateAdminMode;
     function activateAdminModeEnhanced() {
         _origActivate();
-        setTimeout(function() {
-            baAttachImgButtons();
-            baInitTouchDrag();
-            // Load saved custom CSS
-            if (savedData.globalSettings && savedData.globalSettings.customCSS) {
-                applyCustomCSS(savedData.globalSettings.customCSS);
-                var ta = document.getElementById('ba-custom-css');
-                if (ta) ta.value = savedData.globalSettings.customCSS;
-            }
-        }, 350);
+        // Use requestAnimationFrame to ensure DOM has settled after admin panel activation
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                baAttachImgButtons();
+                baInitTouchDrag();
+                // Load saved custom CSS
+                if (savedData.globalSettings && savedData.globalSettings.customCSS) {
+                    applyCustomCSS(savedData.globalSettings.customCSS);
+                    var ta = document.getElementById('ba-custom-css');
+                    if (ta) ta.value = savedData.globalSettings.customCSS;
+                }
+            });
+        });
     }
 
     window.__bioAdminActivate = activateAdminModeEnhanced;
