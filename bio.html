@@ -3121,7 +3121,10 @@
     var adminActive  = false;
     var hasUnsaved   = false;
     var selectedElIndex = -1;
-    var savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} };
+    function defaultSavedData() {
+        return { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} };
+    }
+    var savedData = defaultSavedData();
     /* ── Toast ── */
     var toastTimer;
     function showToast(msg, type) {
@@ -3236,7 +3239,7 @@
             .then(function(r) { return r.ok ? r.json() : null; })
             .then(function(data) {
                 if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-                    savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} }, data);
+                    savedData = Object.assign(defaultSavedData(), data);
                     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData)); } catch(e) {}
                 } else {
                     var raw = localStorage.getItem(STORAGE_KEY);
@@ -3282,7 +3285,7 @@
     function resetData() {
         if (!confirm('Сигурен ли сте? Всички промени ще бъдат изтрити!')) return;
         localStorage.removeItem(STORAGE_KEY);
-        savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} };
+        savedData = defaultSavedData();
         fetch(BIO_API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(savedData) }).catch(function() {});
         document.cookie = 'bio_dirty=1; path=/; SameSite=Strict';
         hasUnsaved = false;
@@ -3873,6 +3876,16 @@
 
     /* ── Click-to-edit: click any [data-bio-id] element to select it ── */
     function setupClickToEdit() {
+        // Build O(1) lookup map: data-bio-id → EDITABLE_ELEMENTS index
+        var bioIdToIndex = {};
+        EDITABLE_ELEMENTS.forEach(function(el, i) {
+            var domEl = document.querySelector(el.selector);
+            if (domEl) {
+                var bid = domEl.getAttribute('data-bio-id');
+                if (bid) bioIdToIndex[bid] = i;
+            }
+        });
+
         document.addEventListener('click', function(e) {
             if (!adminActive) return;
             // Find closest editable element
@@ -3883,16 +3896,9 @@
             e.preventDefault();
             e.stopPropagation();
 
-            // Find matching EDITABLE_ELEMENTS entry by selector
+            // Find matching EDITABLE_ELEMENTS entry via lookup map
             var bioId = target.getAttribute('data-bio-id');
-            var matchIndex = -1;
-            for (var i = 0; i < EDITABLE_ELEMENTS.length; i++) {
-                var el = document.querySelector(EDITABLE_ELEMENTS[i].selector);
-                if (el === target || el && el.getAttribute('data-bio-id') === bioId) {
-                    matchIndex = i;
-                    break;
-                }
-            }
+            var matchIndex = bioIdToIndex.hasOwnProperty(bioId) ? bioIdToIndex[bioId] : -1;
 
             if (matchIndex >= 0) {
                 // Switch to Text panel and select element
@@ -4022,9 +4028,25 @@
                 if (!selectedIconKey || !this.files || !this.files[0]) return;
                 var file = this.files[0];
                 if (file.size > MAX_IMAGE_BYTES) { showToast('Файлът е прекалено голям (макс. 5MB)', 'error'); return; }
+                // Only allow safe image formats
+                var allowedTypes = ['image/png', 'image/svg+xml', 'image/webp'];
+                if (allowedTypes.indexOf(file.type) === -1) {
+                    showToast('Разрешени формати: PNG, SVG, WebP', 'error');
+                    return;
+                }
                 var reader = new FileReader();
                 reader.onload = function(e) {
                     var dataURL = e.target.result;
+                    // For SVG files, sanitize by stripping script tags and event handlers
+                    if (file.type === 'image/svg+xml') {
+                        try {
+                            var svgText = atob(dataURL.split(',')[1] || '');
+                            if (/<script[\s>]/i.test(svgText) || /on\w+\s*=/i.test(svgText) || /javascript:/i.test(svgText)) {
+                                showToast('SVG файлът съдържа небезопасен код!', 'error');
+                                return;
+                            }
+                        } catch(err) { /* base64 decode failed, reject */ showToast('Невалиден SVG файл', 'error'); return; }
+                    }
                     if (!savedData.iconOverrides) savedData.iconOverrides = {};
                     savedData.iconOverrides[selectedIconKey] = dataURL;
                     applyIconOverride(selectedIconKey, dataURL);
@@ -4240,9 +4262,9 @@
             input.addEventListener('change', function() {
                 if (!savedData.sectionSpacing) savedData.sectionSpacing = {};
                 var val = input.value.trim();
-                // Validate: only allow safe CSS values (digits, rem, em, px, %, spaces)
-                if (val && !/^[\d\s.]+(?:rem|em|px|%|vh|vw)?(?:\s+[\d\s.]+(?:rem|em|px|%|vh|vw)?)*$/.test(val)) {
-                    showToast('Невалидна стойност за padding', 'error');
+                // Strict validation: only 1-4 CSS length values like "3rem" or "2rem 1rem"
+                if (val && !/^(\d+\.?\d*(?:rem|em|px|%|vh|vw)?)(\s+\d+\.?\d*(?:rem|em|px|%|vh|vw)?){0,3}$/.test(val)) {
+                    showToast('Невалидна стойност (напр. 3rem или 2rem 1rem)', 'error');
                     return;
                 }
                 savedData.sectionSpacing[sec.id] = val;
@@ -4294,7 +4316,7 @@
                     try {
                         var data = JSON.parse(e.target.result);
                         if (data && typeof data === 'object') {
-                            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} }, data);
+                            savedData = Object.assign(defaultSavedData(), data);
                             applyAllChanges();
                             applyIconOverrides();
                             applyLayoutOverrides();
