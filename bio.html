@@ -435,8 +435,9 @@
         /* ─── CREDENTIALS / TIMELINE ────────────────────────────────── */
         .creds__layout {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(2rem, 5vw, 5rem);
+            grid-template-columns: 1fr;
+            max-width: 56rem;
+            margin-inline: auto;
         }
         .creds__col-title {
             font-family: var(--font-serif);
@@ -485,20 +486,6 @@
             font-size: var(--fs-sm); color: var(--c-text-2);
         }
 
-        /* cert badges */
-        .cert-list { display: flex; flex-direction: column; gap: .9rem; }
-        .cert-item {
-            display: flex; align-items: center; gap: 1rem;
-            background: var(--c-surface-2);
-            border: 1px solid var(--c-border);
-            border-radius: var(--radius-md);
-            padding: .9rem 1.1rem;
-            transition: var(--transition);
-        }
-        .cert-item:hover { border-color: var(--c-gold); box-shadow: var(--shadow-xs); }
-        .cert-item__icon { font-size: var(--fs-lg); flex-shrink: 0; }
-        .cert-item__title { font-weight: 600; font-size: var(--fs-base); color: var(--c-text-1); }
-        .cert-item__body  { font-size: var(--fs-sm); color: var(--c-text-2); margin-top: .15rem; }
 
         /* ─── EDUCATION ITEMS (replaces timeline) ───────────────────── */
         .edu-list { display: flex; flex-direction: column; gap: .75rem; }
@@ -882,8 +869,6 @@
             .tag                 { font-size: var(--fs-xs); padding: .3rem .85rem; }
             .exp-card__num       { font-size: var(--fs-xs); }
             .service-card__badge { font-size: var(--fs-xs); }
-            .cert-item__title    { font-size: var(--fs-base); }
-            .cert-item__body     { font-size: var(--fs-sm); }
             .edu-item__year      { font-size: var(--fs-sm); }
             .edu-item__title     { font-size: var(--fs-base); }
             .edu-item__place     { font-size: var(--fs-sm); }
@@ -976,12 +961,6 @@
             color: var(--c-gold);
         }
         .exp-card__icon { color: var(--c-gold); }
-        .cert-item__icon .icon-svg {
-            width: 1.6rem; height: 1.6rem;
-            display: block;
-            color: var(--c-gold);
-        }
-        .cert-item__icon { display: flex; align-items: center; }
         .contact__link-icon .icon-svg {
             width: 1.1rem; height: 1.1rem;
             color: var(--c-text-2);
@@ -1360,6 +1339,14 @@
             outline-color: #6C8EF5; outline-style: solid;
             background: rgba(108,142,245,.06);
         }
+        /* Broader hover hint — covers any text element not yet auto-tagged */
+        body.bio-admin-active p:hover,
+        body.bio-admin-active h1:hover, body.bio-admin-active h2:hover,
+        body.bio-admin-active h3:hover, body.bio-admin-active h4:hover,
+        body.bio-admin-active span:not([data-bio-id]):hover,
+        body.bio-admin-active div:not([data-bio-id]):not(#bio-inline-admin):hover {
+            cursor: pointer;
+        }
         /* ── Click-to-edit for SVG icons ──────────────────── */
         body.bio-admin-active .icon-svg,
         body.bio-admin-active .exp-card__icon svg,
@@ -1710,15 +1697,15 @@
                     <div class="about__pillars reveal reveal-delay-2">
                         <div class="pillar">
                             <div class="pillar__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-                            <div class="pillar__title">Медицина</div>
+                            <div class="pillar__title" data-bio-id="pillar-1-title">Медицина</div>
                         </div>
                         <div class="pillar">
                             <div class="pillar__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><rect x="4" y="7" width="4" height="10" rx="1"/><rect x="16" y="7" width="4" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-                            <div class="pillar__title">Тренировки</div>
+                            <div class="pillar__title" data-bio-id="pillar-2-title">Тренировки</div>
                         </div>
                         <div class="pillar">
                             <div class="pillar__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
-                            <div class="pillar__title">Нутриция</div>
+                            <div class="pillar__title" data-bio-id="pillar-3-title">Нутриция</div>
                         </div>
                     </div>
                 </div>
@@ -1731,7 +1718,7 @@
     <section class="section" id="expertise">
         <div class="container">
             <div class="expertise__intro reveal">
-                <div class="section-label">Компетенции</div>
+                <div class="section-label" data-bio-id="expertise-label">Компетенции</div>
                 <h2 class="section-title" data-bio-id="expertise-title">Три специалности.<br>Един цялостен подход.</h2>
                 <p class="section-sub" data-bio-id="expertise-sub">
                     Комбинирам знания от медицината, нутриционизма и тренировъчната наука,
@@ -1798,14 +1785,14 @@
     <section class="section section--alt" id="credentials">
         <div class="container" data-bio-id="credentials-container">
             <div class="deco-line reveal">
-                <span class="deco-line__text">Образование &amp; Квалификации</span>
+                <span class="deco-line__text" data-bio-id="creds-section-title">Образование &amp; Квалификации</span>
             </div>
 
             <div class="creds__layout">
 
                 <!-- Education items (replaces timeline) -->
                 <div class="reveal">
-                    <div class="creds__col-title"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> Образование</div>
+                    <div class="creds__col-title" data-bio-id="edu-col-title"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> Образование и Квалификации</div>
                     <div class="edu-list" id="edu-list">
                         <div class="edu-item" data-edu-idx="0" role="button" tabindex="0" aria-haspopup="dialog">
                             <span class="edu-item__year">2010 – 2016</span>
@@ -1842,48 +1829,6 @@
                     </div>
                 </div>
 
-                <!-- Certifications -->
-                <div class="reveal reveal-delay-1">
-                    <div class="creds__col-title"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Сертификати</div>
-                    <div class="cert-list">
-                        <div class="cert-item">
-                            <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><path d="M9 8h6M9 16h6"/><path d="M3 9h3M18 9h3M3 15h3M18 15h3"/></svg></div>
-                            <div>
-                                <div class="cert-item__title" data-bio-id="cert-1-title">NSCA Certified Personal Trainer (NSCA-CPT)</div>
-                                <div class="cert-item__body" data-bio-id="cert-1-body">National Strength &amp; Conditioning Association</div>
-                            </div>
-                        </div>
-                        <div class="cert-item">
-                            <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
-                            <div>
-                                <div class="cert-item__title" data-bio-id="cert-2-title">Precision Nutrition Level 2</div>
-                                <div class="cert-item__body" data-bio-id="cert-2-body">PN2 — Клинична нутриционна практика</div>
-                            </div>
-                        </div>
-                        <div class="cert-item">
-                            <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6M9 22c1.798-1.998 2.518-3.995 2.807-5.993M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m2 9 20 6"/></svg></div>
-                            <div>
-                                <div class="cert-item__title" data-bio-id="cert-3-title">Functional Medicine Certified Practitioner</div>
-                                <div class="cert-item__body" data-bio-id="cert-3-body">Institute for Functional Medicine (IFM)</div>
-                            </div>
-                        </div>
-                        <div class="cert-item">
-                            <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
-                            <div>
-                                <div class="cert-item__title" data-bio-id="cert-4-title">Sports Medicine &amp; Performance</div>
-                                <div class="cert-item__body" data-bio-id="cert-4-body">American College of Sports Medicine (ACSM)</div>
-                            </div>
-                        </div>
-                        <div class="cert-item">
-                            <div class="cert-item__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24A2.5 2.5 0 0 0 14.5 2Z"/></svg></div>
-                            <div>
-                                <div class="cert-item__title" data-bio-id="cert-5-title">Behavioral Change Specialist</div>
-                                <div class="cert-item__body" data-bio-id="cert-5-body">ACE Health Coaching — мотивация и навици</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </section>
@@ -1900,7 +1845,7 @@
                 >
             </div>
             <div class="reveal reveal-delay-1">
-                <div class="philosophy__label">Моята философия</div>
+                <div class="philosophy__label" data-bio-id="philosophy-label">Моята философия</div>
                 <blockquote class="philosophy__quote" data-bio-id="philosophy-quote">
                     „Здравето не е дестинация — то е динамичен процес на постоянен избор."
                 </blockquote>
@@ -1931,8 +1876,8 @@
     <section class="section" id="approach">
         <div class="container">
             <div class="expertise__intro reveal">
-                <div class="section-label">Как работя</div>
-                <h2 class="section-title">Четири стъпки към резултат</h2>
+                <div class="section-label" data-bio-id="approach-label">Как работя</div>
+                <h2 class="section-title" data-bio-id="approach-title">Четири стъпки към резултат</h2>
             </div>
 
             <div class="approach__grid">
@@ -1980,7 +1925,7 @@
     <section class="section section--alt" id="services">
         <div class="container">
             <div class="expertise__intro reveal">
-                <div class="section-label">Услуги</div>
+                <div class="section-label" data-bio-id="services-label">Услуги</div>
                 <h2 class="section-title" data-bio-id="services-title">Програми и консултации</h2>
                 <p class="section-sub" data-bio-id="services-sub">
                     Всяка услуга е изградена около вашите индивидуални нужди, цели
@@ -2002,8 +1947,8 @@
     <section class="section section--alt" id="testimonials">
         <div class="container">
             <div class="expertise__intro reveal">
-                <div class="section-label">Отзиви</div>
-                <h2 class="section-title">Какво казват клиентите</h2>
+                <div class="section-label" data-bio-id="testimonials-label">Отзиви</div>
+                <h2 class="section-title" data-bio-id="testimonials-title">Какво казват клиентите</h2>
             </div>
 
             <!-- Desktop grid (hidden on mobile via CSS) -->
@@ -2132,9 +2077,9 @@
         <div class="container">
             <div class="contact__inner">
                 <div class="reveal">
-                    <div class="section-label">Свържете се</div>
-                    <h2 class="contact__title">Готови за&nbsp;промяна?</h2>
-                    <p class="contact__sub">
+                    <div class="section-label" data-bio-id="contact-label">Свържете се</div>
+                    <h2 class="contact__title" data-bio-id="contact-title">Готови за&nbsp;промяна?</h2>
+                    <p class="contact__sub" data-bio-id="contact-sub">
                         Запишете консултация и заедно ще изградим вашата персонализирана
                         стратегия за здраве, движение и хранене.
                     </p>
@@ -2962,6 +2907,33 @@
         // latest data and apply it on top of (potentially cached) HTML.
         // Without the cookie the page reveals using only window.__bioContent
         // — zero extra backend requests on every normal refresh.
+        // Auto-tag any remaining text elements with stable data-bio-id attributes
+        // so that saved textOverrides can locate them on every page load.
+        (function bioAutoTag() {
+            var SKIP = '#bio-inline-admin,#ba-float-toolbar,#edu-modal,#edu-img-fullscreen,nav,footer,script,style,noscript';
+            var tags = 'h1,h2,h3,h4,h5,h6,p,blockquote,span,div,li,label,a,button,strong,em';
+            // Group by tag+class to assign stable position-based IDs
+            var groups = {};
+            document.querySelectorAll(tags).forEach(function(el) {
+                if (el.closest(SKIP)) return;
+                var tag = el.tagName.toLowerCase();
+                var cls = el.classList[0] ? el.classList[0].replace(/[^a-z0-9_-]/gi, '') : '';
+                var key = 'gen-' + tag + (cls ? '-' + cls : '');
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(el);
+            });
+            Object.keys(groups).forEach(function(key) {
+                groups[key].forEach(function(el, idx) {
+                    if (el.getAttribute('data-bio-id')) return;
+                    var hasDirectText = Array.from(el.childNodes).some(function(n) {
+                        return n.nodeType === 3 && n.textContent.trim().length > 2;
+                    });
+                    if (!hasDirectText) return;
+                    el.setAttribute('data-bio-id', key + '-' + (idx + 1));
+                });
+            });
+        })();
+
         var bioDirty = document.cookie.split(';').some(function(c) {
             return c.trim() === 'bio_dirty=1';
         });
@@ -3475,12 +3447,13 @@
         { label: 'Карта 2 — Тяло',               selector: '.exp-card:nth-child(2) .exp-card__body' },
         { label: 'Карта 3 — Заглавие',            selector: '.exp-card:nth-child(3) .exp-card__title' },
         { label: 'Карта 3 — Тяло',               selector: '.exp-card:nth-child(3) .exp-card__body' },
-        { label: 'Серт. 1 — Заглавие',            selector: '.cert-item:nth-child(1) .cert-item__title' },
-        { label: 'Серт. 1 — Тяло',               selector: '.cert-item:nth-child(1) .cert-item__body' },
-        { label: 'Серт. 2 — Заглавие',            selector: '.cert-item:nth-child(2) .cert-item__title' },
-        { label: 'Серт. 2 — Тяло',               selector: '.cert-item:nth-child(2) .cert-item__body' },
-        { label: 'Серт. 3 — Заглавие',            selector: '.cert-item:nth-child(3) .cert-item__title' },
-        { label: 'Серт. 3 — Тяло',               selector: '.cert-item:nth-child(3) .cert-item__body' },
+        { label: 'Компетенции — Надпис',          selector: '[data-bio-id="expertise-label"]' },
+        { label: 'Стълб 1 — Медицина',            selector: '[data-bio-id="pillar-1-title"]' },
+        { label: 'Стълб 2 — Тренировки',          selector: '[data-bio-id="pillar-2-title"]' },
+        { label: 'Стълб 3 — Нутриция',           selector: '[data-bio-id="pillar-3-title"]' },
+        { label: 'Образование — Заглавие секция', selector: '[data-bio-id="creds-section-title"]' },
+        { label: 'Образование — Колона заглавие', selector: '[data-bio-id="edu-col-title"]' },
+        { label: 'Философия — Надпис',            selector: '[data-bio-id="philosophy-label"]' },
         { label: 'Философия — Цитат',             selector: '.philosophy__quote' },
         { label: 'Философия — Параграф 1',        selector: '.philosophy__body p:nth-child(1)' },
         { label: 'Философия — Параграф 2',        selector: '.philosophy__body p:nth-child(2)' },
@@ -3494,8 +3467,16 @@
         { label: 'Стъпка 3 — Тяло',              selector: '.approach-step:nth-child(3) .approach-step__body' },
         { label: 'Стъпка 4 — Заглавие',           selector: '.approach-step:nth-child(4) .approach-step__title' },
         { label: 'Стъпка 4 — Тяло',              selector: '.approach-step:nth-child(4) .approach-step__body' },
+        { label: 'Подход — Надпис',               selector: '[data-bio-id="approach-label"]' },
+        { label: 'Подход — Заглавие',             selector: '[data-bio-id="approach-title"]' },
+        { label: 'Услуги — Надпис',               selector: '[data-bio-id="services-label"]' },
         { label: 'Услуги — Заглавие',             selector: '#services .section-title' },
         { label: 'Услуги — Подзаглавие',          selector: '#services .section-sub' },
+        { label: 'Отзиви — Надпис',               selector: '[data-bio-id="testimonials-label"]' },
+        { label: 'Отзиви — Заглавие',             selector: '[data-bio-id="testimonials-title"]' },
+        { label: 'Контакт — Надпис',              selector: '[data-bio-id="contact-label"]' },
+        { label: 'Контакт — Заглавие',            selector: '[data-bio-id="contact-title"]' },
+        { label: 'Контакт — Подзаглавие',         selector: '[data-bio-id="contact-sub"]' },
     ];
 
     /* ── Preset themes (same as bioadmin.html) ── */
@@ -5181,17 +5162,59 @@
        PATCH setupClickToEdit — OPEN FLOATING TOOLBAR ON CLICK
     ────────────────────────────────────────────────────────────── */
     (function patchClickToEdit() {
-        // Override the global click capture to also open float toolbar
+        // Selector for elements that should NOT open the float toolbar
+        var SKIP_TAGS = { IMG: 1, SVG: 1, INPUT: 1, TEXTAREA: 1, SELECT: 1, FORM: 1, NAV: 1, VIDEO: 1, AUDIO: 1, CANVAS: 1, IFRAME: 1 };
+        var SKIP_SELECTORS = '#bio-inline-admin,#ba-float-toolbar,#edu-modal,#edu-img-fullscreen,nav,footer';
+
+        // Generate a stable data-bio-id for elements that don't have one
+        function baGenStableId(el) {
+            var tag = el.tagName.toLowerCase();
+            var cls = el.classList[0] ? el.classList[0].replace(/[^a-z0-9_-]/gi, '') : '';
+            var key = 'gen-' + tag + (cls ? '-' + cls : '');
+            // Find position among same tag+class elements (1-based)
+            var sel = tag + (cls ? '.' + el.classList[0] : '');
+            var siblings = document.querySelectorAll(sel);
+            var idx = Array.prototype.indexOf.call(siblings, el);
+            return key + '-' + (idx >= 0 ? idx + 1 : Date.now());
+        }
+
         document.addEventListener('click', function(e) {
             if (!adminActive) return;
-            var target = e.target.closest('[data-bio-id]');
+            var target = e.target;
             if (!target) return;
-            if (target.closest('#bio-inline-admin') || target.closest('#ba-float-toolbar')) return;
-            // Open float toolbar for the clicked element
-            var bioId = target.getAttribute('data-bio-id');
+            if (target.closest(SKIP_SELECTORS)) return;
+            if (SKIP_TAGS[target.tagName]) return;
+            if (target.closest('svg')) return;
+
+            // Walk up to find the nearest text-bearing element (or use target if it has text)
+            var el = target;
+            var hasText = Array.from(el.childNodes).some(function(n) {
+                return n.nodeType === 3 && n.textContent.trim().length > 0;
+            });
+            if (!hasText) {
+                // Try parent up to 3 levels
+                var p = el.parentElement;
+                for (var i = 0; i < 3 && p; i++) {
+                    if (p.closest(SKIP_SELECTORS)) break;
+                    if (SKIP_TAGS[p.tagName]) break;
+                    var pText = Array.from(p.childNodes).some(function(n) {
+                        return n.nodeType === 3 && n.textContent.trim().length > 0;
+                    });
+                    if (pText) { el = p; hasText = true; break; }
+                    p = p.parentElement;
+                }
+            }
+            if (!hasText) return;
+
+            // Ensure the element has a data-bio-id
+            if (!el.getAttribute('data-bio-id')) {
+                el.setAttribute('data-bio-id', baGenStableId(el));
+            }
+
+            var bioId = el.getAttribute('data-bio-id');
             var sel   = '[data-bio-id="' + bioId + '"]';
-            baFloatOpen(target, sel);
-        }, false); // bubble phase, after setupClickToEdit's capture phase
+            baFloatOpen(el, sel);
+        }, true); // capture phase — fires before setupClickToEdit's stopPropagation
     })();
 
     /* ──────────────────────────────────────────────────────────────
@@ -5203,6 +5226,30 @@
         // Use requestAnimationFrame to ensure DOM has settled after admin panel activation
         requestAnimationFrame(function() {
             requestAnimationFrame(function() {
+                // Re-run auto-tagging to catch any dynamically added elements
+                (function() {
+                    var SKIP = '#bio-inline-admin,#ba-float-toolbar,#edu-modal,#edu-img-fullscreen,nav,footer,script,style,noscript';
+                    var tags = 'h1,h2,h3,h4,h5,h6,p,blockquote,span,div,li,label,a,button,strong,em';
+                    var groups = {};
+                    document.querySelectorAll(tags).forEach(function(el) {
+                        if (el.closest(SKIP)) return;
+                        var tag = el.tagName.toLowerCase();
+                        var cls = el.classList[0] ? el.classList[0].replace(/[^a-z0-9_-]/gi, '') : '';
+                        var key = 'gen-' + tag + (cls ? '-' + cls : '');
+                        if (!groups[key]) groups[key] = [];
+                        groups[key].push(el);
+                    });
+                    Object.keys(groups).forEach(function(key) {
+                        groups[key].forEach(function(el, idx) {
+                            if (el.getAttribute('data-bio-id')) return;
+                            var hasDirectText = Array.from(el.childNodes).some(function(n) {
+                                return n.nodeType === 3 && n.textContent.trim().length > 2;
+                            });
+                            if (!hasDirectText) return;
+                            el.setAttribute('data-bio-id', key + '-' + (idx + 1));
+                        });
+                    });
+                })();
                 baAttachImgButtons();
                 baInitTouchDrag();
                 // Load saved custom CSS
