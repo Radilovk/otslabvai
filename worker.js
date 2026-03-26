@@ -295,31 +295,49 @@ function renderBioHtml(htmlTemplate, bioContent) {
 }
 
 /**
- * Serves bio.html by reading static_bio.html + bio_content from KV on every
- * request and injecting bio_content inline.
+ * Serves bio.html using a pre-baked HTML strategy to minimise Worker cost.
  *
- * Cache-Control: no-store — браузърът и CDN никога не кешират страницата.
- * Всяка заявка получава свежото съдържание директно от KV.  Това гарантира
- * че промените, направени от админа, се виждат веднага при следващото
- * зареждане на страницата от всеки потребител.
+ * On every admin save, handleSaveBioContent() writes a fully-rendered
+ * "baked_bio.html" to KV.  This function reads that single key and serves it
+ * with a 1-hour public cache + ETag so normal user page loads never reach the
+ * Worker at all — the browser or CDN serves the cached copy.
+ *
+ * First-request fallback: if baked_bio.html is absent (e.g. fresh deploy
+ * before the first admin save) we build it on-the-fly from static_bio.html +
+ * bio_content, store it for subsequent requests, and serve it immediately.
  *
  * @param {object} env - Worker environment bindings
  * @param {Request} request - Incoming request
  */
 async function serveBioHtml(env, request) {
-    const [htmlTemplate, bioContent] = await Promise.all([
-        env.PAGE_CONTENT.get('static_bio.html'),
-        env.PAGE_CONTENT.get('bio_content')
-    ]);
-    if (htmlTemplate === null) {
-        throw new UserFacingError('File bio.html not found in storage.', 404);
+    let finalHtml = await env.PAGE_CONTENT.get('baked_bio.html');
+
+    if (finalHtml === null) {
+        // First-request fallback: bake on-the-fly
+        const [htmlTemplate, bioContent] = await Promise.all([
+            env.PAGE_CONTENT.get('static_bio.html'),
+            env.PAGE_CONTENT.get('bio_content')
+        ]);
+        if (htmlTemplate === null) {
+            throw new UserFacingError('File bio.html not found in storage.', 404);
+        }
+        finalHtml = renderBioHtml(htmlTemplate, bioContent);
+        // Store so subsequent requests skip the double KV read
+        await env.PAGE_CONTENT.put('baked_bio.html', finalHtml);
     }
-    const finalHtml = renderBioHtml(htmlTemplate, bioContent);
+
+    const etag = await generateETag(finalHtml);
+    const ifNoneMatch = request.headers.get('If-None-Match');
+    if (ifNoneMatch === etag) {
+        return new Response(null, { status: 304, headers: { 'ETag': etag } });
+    }
+
     return new Response(finalHtml, {
         status: 200,
         headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-store'
+            'Cache-Control': `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`,
+            'ETag': etag
         }
     });
 }
@@ -572,11 +590,9 @@ async function handleGetBioContent(request, env) {
 
 /**
  * Handles POST /bio_content.json
- * Saves bio page overrides to KV.  The write is awaited BEFORE the 200
- * response is returned so the admin is certain the data is persisted.
- * Because serveBioHtml() now reads bio_content fresh on every request there
- * is no baked HTML to update — the next page load will automatically pick up
- * the new content from KV.
+ * Saves bio page overrides to KV and immediately bakes the new baked_bio.html
+ * so that the next user page load serves the updated cached copy.
+ * Both writes are awaited before the 200 response is returned.
  */
 async function handleSaveBioContent(request, env) {
     const contentToSave = await request.text();
@@ -586,9 +602,17 @@ async function handleSaveBioContent(request, env) {
         if (typeof parsed !== 'object' || parsed === null) {
             throw new UserFacingError('Expected a JSON object in the request body.', 400);
         }
-        // Await the KV write so we are sure it completed before telling the
-        // client that the save succeeded.
+        // Write bio_content first so it is available for future fallback reads.
         await env.PAGE_CONTENT.put('bio_content', contentToSave);
+
+        // Bake the new HTML and store as baked_bio.html so that user page loads
+        // never need to reach the Worker — they get the cached baked copy.
+        const htmlTemplate = await env.PAGE_CONTENT.get('static_bio.html');
+        if (htmlTemplate !== null) {
+            const bakedHtml = renderBioHtml(htmlTemplate, contentToSave);
+            await env.PAGE_CONTENT.put('baked_bio.html', bakedHtml);
+        }
+
         return new Response(JSON.stringify({ success: true, message: 'Bio content saved.' }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
