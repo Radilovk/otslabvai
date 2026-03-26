@@ -1311,6 +1311,52 @@
             pointer-events: none; display: none; font-family: 'Inter', system-ui, sans-serif;
         }
         .ba-edit-badge.visible { display: block; }
+
+        /* ── Click-to-edit highlight ─────────────────────────── */
+        body.bio-admin-active [data-bio-id] {
+            cursor: pointer; outline: 2px dashed transparent; outline-offset: 3px;
+            transition: outline-color .15s;
+        }
+        body.bio-admin-active [data-bio-id]:hover {
+            outline-color: rgba(108,142,245,.5);
+        }
+        body.bio-admin-active [data-bio-id].ba-selected-el {
+            outline-color: #6C8EF5; outline-style: solid;
+            background: rgba(108,142,245,.06);
+        }
+        /* ── Click-to-edit for SVG icons ──────────────────── */
+        body.bio-admin-active .icon-svg,
+        body.bio-admin-active .exp-card__icon svg,
+        body.bio-admin-active .service-card__icon svg,
+        body.bio-admin-active .contact__icon svg {
+            cursor: pointer; outline: 2px dashed transparent; outline-offset: 2px;
+            transition: outline-color .15s;
+        }
+        body.bio-admin-active .icon-svg:hover,
+        body.bio-admin-active .exp-card__icon svg:hover,
+        body.bio-admin-active .service-card__icon svg:hover,
+        body.bio-admin-active .contact__icon svg:hover {
+            outline-color: rgba(248,113,113,.5);
+        }
+        /* ── Section reorder handles (mobile) ────────────── */
+        .ba-reorder-handle {
+            position: absolute; top: 4px; right: 4px; z-index: 10;
+            background: #6C8EF5; color: #fff; border: none; border-radius: 6px;
+            width: 32px; height: 32px; font-size: 16px; cursor: grab;
+            display: none; place-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,.25);
+        }
+        body.bio-admin-active .ba-reorder-handle { display: grid; }
+        .ba-section-dragging { opacity: .5; outline: 2px dashed #6C8EF5; }
+        /* ── Additional admin tool styles ─────────────────── */
+        .ba-section-toggle { display: flex; justify-content: space-between; align-items: center; padding: .5rem .65rem; background: #22263A; border: 1px solid #2E3348; border-radius: 8px; margin-bottom: .3rem; }
+        .ba-section-toggle label { font-size: .78rem; color: #C8D0E0; flex: 1; }
+        .ba-section-toggle input[type=checkbox] { width: 18px; height: 18px; accent-color: #6C8EF5; cursor: pointer; }
+        .ba-spacing-row { display: flex; gap: .3rem; align-items: center; margin-bottom: .35rem; }
+        .ba-spacing-row label { font-size: .72rem; color: #8892A4; width: 90px; flex-shrink: 0; }
+        .ba-spacing-row input { flex: 1; }
+        .ba-export-btn { display: flex; gap: .4rem; margin-top: .4rem; }
+        .ba-export-btn button { flex: 1; }
         @media (max-width: 640px) {
             body.bio-admin-active { margin-left: 0; }
             #bio-inline-admin { width: 100%; top: auto; height: 50vh; transform: translateY(100%); }
@@ -1820,7 +1866,7 @@
     </section>
 
     <!-- ── TESTIMONIALS ───────────────────────────────────────────── -->
-    <section class="section section--alt">
+    <section class="section section--alt" id="testimonials">
         <div class="container">
             <div class="expertise__intro reveal">
                 <div class="section-label">Отзиви</div>
@@ -2349,6 +2395,9 @@
                     if (opts.fontSize)   el.style.fontSize   = (typeof opts.fontSize === 'number' ? opts.fontSize + 'rem' : opts.fontSize);
                     if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
                     if (opts.color)      el.style.color       = opts.color;
+                    if (opts.lineHeight) el.style.lineHeight  = opts.lineHeight;
+                    if (opts.letterSpacing) el.style.letterSpacing = opts.letterSpacing;
+                    if (opts.textAlign)  el.style.textAlign   = opts.textAlign;
                 });
             }
 
@@ -2503,6 +2552,72 @@
             }
             // Store education items for modal access
             window.__eduItems = data.educationItems || [];
+
+            // Icon overrides (replace SVG icons with uploaded images)
+            if (data.iconOverrides) {
+                var ICON_TARGETS_PUBLIC = [
+                    { key: 'exp-icon-1', selector: '.exp-card:nth-child(1) .exp-card__icon' },
+                    { key: 'exp-icon-2', selector: '.exp-card:nth-child(2) .exp-card__icon' },
+                    { key: 'exp-icon-3', selector: '.exp-card:nth-child(3) .exp-card__icon' },
+                    { key: 'svc-icon-1', selector: '.service-card:nth-child(1) .service-card__icon' },
+                    { key: 'svc-icon-2', selector: '.service-card:nth-child(2) .service-card__icon' },
+                    { key: 'svc-icon-3', selector: '.service-card:nth-child(3) .service-card__icon' },
+                    { key: 'contact-icon-1', selector: '.contact__detail:nth-child(1) .contact__icon' },
+                    { key: 'contact-icon-2', selector: '.contact__detail:nth-child(2) .contact__icon' },
+                    { key: 'contact-icon-3', selector: '.contact__detail:nth-child(3) .contact__icon' },
+                ];
+                Object.entries(data.iconOverrides).forEach(function(entry) {
+                    var key = entry[0], dataURL = entry[1];
+                    if (!dataURL || !/^data:image\//i.test(dataURL)) return;
+                    var target = ICON_TARGETS_PUBLIC.find(function(t) { return t.key === key; });
+                    if (!target) return;
+                    var container = document.querySelector(target.selector);
+                    if (!container) return;
+                    var svg = container.querySelector('svg');
+                    if (svg) svg.style.display = 'none';
+                    var img = document.createElement('img');
+                    img.src = dataURL;
+                    img.alt = 'Icon';
+                    img.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+                    container.appendChild(img);
+                });
+            }
+
+            // Section reordering
+            if (data.sectionOrder && data.sectionOrder.length > 0) {
+                var parent = document.querySelector('main') || document.body;
+                data.sectionOrder.forEach(function(id) {
+                    var section = document.getElementById(id);
+                    if (section) parent.appendChild(section);
+                });
+            }
+
+            // Section visibility
+            if (data.sectionVisibility) {
+                Object.entries(data.sectionVisibility).forEach(function(entry) {
+                    if (entry[1] === false) {
+                        var el = document.getElementById(entry[0]);
+                        if (el) el.style.display = 'none';
+                    }
+                });
+            }
+
+            // Section spacing
+            if (data.sectionSpacing) {
+                Object.entries(data.sectionSpacing).forEach(function(entry) {
+                    if (entry[1]) {
+                        var el = document.getElementById(entry[0]);
+                        if (el) el.style.paddingBlock = entry[1];
+                    }
+                });
+            }
+
+            // Global settings
+            if (data.globalSettings) {
+                if (data.globalSettings.bodyFont) document.body.style.fontFamily = data.globalSettings.bodyFont;
+                if (data.globalSettings.baseFontSize) document.documentElement.style.fontSize = data.globalSettings.baseFontSize + 'px';
+                if (data.globalSettings.baseLineHeight) document.body.style.lineHeight = data.globalSettings.baseLineHeight;
+            }
         }
 
         // ── Education item renderer ───────────────────────────────
@@ -2669,6 +2784,9 @@
             <button class="ba-tab-btn" data-ba-panel="ba-panel-theme" role="tab">🎨 Тема</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-contact" role="tab">📞 Контакти</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-testimonials" role="tab">💬 Отзиви</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-icons" role="tab">🎯 Икони</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-layout" role="tab">📐 Подредба</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-tools" role="tab">🔧 Инструменти</button>
         </nav>
         <div class="ba-actions">
             <span id="ba-save-status"></span>
@@ -2722,6 +2840,24 @@
                             <option value="500">500 — Medium</option>
                             <option value="600">600 — Semibold</option>
                             <option value="700">700 — Bold</option>
+                        </select>
+                    </div>
+                    <div class="ba-form-group">
+                        <label>Междуредие (line-height)</label>
+                        <input type="number" id="ba-el-line-height" min="0.8" max="3" step="0.05" placeholder="напр. 1.6">
+                    </div>
+                    <div class="ba-form-group">
+                        <label>Разстояние м/у букви (letter-spacing)</label>
+                        <input type="text" id="ba-el-letter-spacing" placeholder="напр. 0.05em или 1px">
+                    </div>
+                    <div class="ba-form-group">
+                        <label>Подравняване на текст</label>
+                        <select id="ba-el-text-align">
+                            <option value="">— без промяна —</option>
+                            <option value="left">Ляво</option>
+                            <option value="center">Център</option>
+                            <option value="right">Дясно</option>
+                            <option value="justify">Justified</option>
                         </select>
                     </div>
                 </div>
@@ -2862,6 +2998,93 @@
             </div>
         </div>
 
+        <!-- PANEL: Icons (SVG replacement) -->
+        <div id="ba-panel-icons" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Замяна на SVG икони</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.6rem;">Кликни върху икона в сайта (маркирана с червен контур), след което качи PNG/SVG изображение. Или избери от списъка:</p>
+                <div id="ba-icon-list" style="display:flex;flex-direction:column;gap:.25rem;margin-bottom:.6rem;"></div>
+                <div id="ba-icon-editor-area" style="display:none;">
+                    <div class="ba-form-group">
+                        <label id="ba-icon-label">Избрана икона</label>
+                        <div class="ba-img-card" id="ba-icon-upload-card" style="border-color:#F87171;">
+                            <img id="ba-icon-preview" src="" alt="" style="display:none;max-height:60px;">
+                            <p>Качи PNG / SVG за замяна</p>
+                            <input type="file" id="ba-icon-upload" accept="image/png,image/svg+xml,image/webp">
+                        </div>
+                    </div>
+                    <button class="ba-btn ba-btn-danger" id="ba-btn-icon-reset" style="width:100%;margin-top:.2rem;">↩️ Възстанови оригинала</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL: Layout (Section reordering) -->
+        <div id="ba-panel-layout" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Подредба на секции</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.6rem;">Влачи за пренареждане на секциите. Промените се запазват в мобилен и десктоп изглед.</p>
+                <div id="ba-layout-list" style="display:flex;flex-direction:column;gap:.3rem;"></div>
+            </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">Видимост на секции</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.5rem;">Скрий/покажи секции от сайта:</p>
+                <div id="ba-visibility-list"></div>
+            </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">Разстояния (padding)</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.5rem;">Настрой вертикалния padding на всяка секция:</p>
+                <div id="ba-spacing-list"></div>
+            </div>
+        </div>
+
+        <!-- PANEL: Tools (Export/Import, extra) -->
+        <div id="ba-panel-tools" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Експорт / Импорт</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.5rem;">Запази настройките като файл или зареди от файл:</p>
+                <div class="ba-export-btn">
+                    <button class="ba-btn ba-btn-success" id="ba-btn-export">📥 Експорт JSON</button>
+                    <button class="ba-btn ba-btn-warn" id="ba-btn-import">📤 Импорт JSON</button>
+                </div>
+                <input type="file" id="ba-import-file" accept=".json" style="display:none;">
+            </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">Глобални настройки</div>
+                <div class="ba-form-group">
+                    <label>Основен шрифт (body)</label>
+                    <select id="ba-global-font">
+                        <option value="">— без промяна —</option>
+                        <option value="'Inter', system-ui, sans-serif">Inter (sans-serif)</option>
+                        <option value="'Playfair Display', Georgia, serif">Playfair Display (serif)</option>
+                        <option value="'Roboto', sans-serif">Roboto</option>
+                        <option value="'Montserrat', sans-serif">Montserrat</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="system-ui, sans-serif">System UI</option>
+                    </select>
+                </div>
+                <div class="ba-form-group">
+                    <label>Базов размер на шрифт (px)</label>
+                    <input type="number" id="ba-global-font-size" min="12" max="22" step="1" placeholder="16">
+                </div>
+                <div class="ba-form-group">
+                    <label>Базово междуредие</label>
+                    <input type="number" id="ba-global-line-height" min="1" max="2.5" step="0.05" placeholder="1.6">
+                </div>
+                <button class="ba-btn ba-btn-success" id="ba-btn-apply-global" style="width:100%;margin-top:.3rem;">Приложи глобални</button>
+            </div>
+            <hr class="ba-divider">
+            <div class="ba-section">
+                <div class="ba-section-title">Бърз преглед</div>
+                <div style="display:flex;gap:.3rem;flex-wrap:wrap;">
+                    <button class="ba-btn ba-btn-exit" id="ba-btn-preview-mobile" style="flex:1;">📱 Мобилен</button>
+                    <button class="ba-btn ba-btn-exit" id="ba-btn-preview-desktop" style="flex:1;">🖥️ Десктоп</button>
+                </div>
+            </div>
+        </div>
+
     </div><!-- /ba-sidebar-inner -->
 </div><!-- /bio-inline-admin -->
 
@@ -2898,8 +3121,7 @@
     var adminActive  = false;
     var hasUnsaved   = false;
     var selectedElIndex = -1;
-    var savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] };
-
+    var savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} };
     /* ── Toast ── */
     var toastTimer;
     function showToast(msg, type) {
@@ -2988,6 +3210,10 @@
         setupEduPanel();
         setupSaveReset();
         setupExitButton();
+        setupClickToEdit();
+        setupIconPanel();
+        setupLayoutPanel();
+        setupToolsPanel();
     }
 
     /* ── Deactivate admin mode ── */
@@ -2997,6 +3223,10 @@
         adminEl.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('bio-admin-active');
         editBadgeEl.classList.remove('visible');
+        // Remove click-to-edit highlights
+        document.querySelectorAll('.ba-selected-el').forEach(function(el) { el.classList.remove('ba-selected-el'); });
+        // Remove reorder handles
+        document.querySelectorAll('.ba-reorder-handle').forEach(function(h) { h.remove(); });
         hasUnsaved = false;
     }
 
@@ -3006,7 +3236,7 @@
             .then(function(r) { return r.ok ? r.json() : null; })
             .then(function(data) {
                 if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-                    savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] }, data);
+                    savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} }, data);
                     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData)); } catch(e) {}
                 } else {
                     var raw = localStorage.getItem(STORAGE_KEY);
@@ -3052,7 +3282,7 @@
     function resetData() {
         if (!confirm('Сигурен ли сте? Всички промени ще бъдат изтрити!')) return;
         localStorage.removeItem(STORAGE_KEY);
-        savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] };
+        savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} };
         fetch(BIO_API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(savedData) }).catch(function() {});
         document.cookie = 'bio_dirty=1; path=/; SameSite=Strict';
         hasUnsaved = false;
@@ -3079,6 +3309,9 @@
             if (opts.fontSize)   el.style.fontSize   = opts.fontSize + 'rem';
             if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
             if (opts.color)      el.style.color       = opts.color;
+            if (opts.lineHeight) el.style.lineHeight  = opts.lineHeight;
+            if (opts.letterSpacing) el.style.letterSpacing = opts.letterSpacing;
+            if (opts.textAlign)  el.style.textAlign   = opts.textAlign;
         });
     }
 
@@ -3224,10 +3457,20 @@
         document.getElementById('ba-el-font-family').value = overrides.fontFamily || '';
         document.getElementById('ba-el-font-size').value   = overrides.fontSize  || '';
         document.getElementById('ba-el-font-weight').value = overrides.fontWeight || '';
+        document.getElementById('ba-el-line-height').value = overrides.lineHeight || '';
+        document.getElementById('ba-el-letter-spacing').value = overrides.letterSpacing || '';
+        document.getElementById('ba-el-text-align').value  = overrides.textAlign || '';
         var col = overrides.color || '#1A1916';
         document.getElementById('ba-el-color-picker').value = col.length === 7 ? col : '#1a1916';
         document.getElementById('ba-el-color-hex').value    = col;
         document.getElementById('ba-font-preview').style.fontFamily = overrides.fontFamily || '';
+
+        // Highlight the selected element on page
+        document.querySelectorAll('.ba-selected-el').forEach(function(el) { el.classList.remove('ba-selected-el'); });
+        if (domEl) {
+            domEl.classList.add('ba-selected-el');
+            domEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 
     /* ── Tab switching ── */
@@ -3261,9 +3504,16 @@
             var fontSize   = parseFloat(document.getElementById('ba-el-font-size').value) || null;
             var fontWeight = document.getElementById('ba-el-font-weight').value;
             var color      = document.getElementById('ba-el-color-hex').value || document.getElementById('ba-el-color-picker').value;
+            var lineHeight = parseFloat(document.getElementById('ba-el-line-height').value) || null;
+            var letterSpacing = document.getElementById('ba-el-letter-spacing').value.trim() || null;
+            var textAlign  = document.getElementById('ba-el-text-align').value || null;
 
             if (!savedData.textOverrides) savedData.textOverrides = {};
-            savedData.textOverrides[info.selector] = { content:content, fontFamily:fontFamily, fontSize:fontSize, fontWeight:fontWeight, color:color };
+            savedData.textOverrides[info.selector] = {
+                content:content, fontFamily:fontFamily, fontSize:fontSize,
+                fontWeight:fontWeight, color:color,
+                lineHeight:lineHeight, letterSpacing:letterSpacing, textAlign:textAlign
+            };
 
             var domEl = document.querySelector(info.selector);
             if (domEl) {
@@ -3272,6 +3522,9 @@
                 if (fontSize)   domEl.style.fontSize   = fontSize + 'rem';
                 if (fontWeight) domEl.style.fontWeight  = fontWeight;
                 if (color)      domEl.style.color       = color;
+                if (lineHeight) domEl.style.lineHeight  = lineHeight;
+                if (letterSpacing) domEl.style.letterSpacing = letterSpacing;
+                if (textAlign)  domEl.style.textAlign   = textAlign;
             }
             hasUnsaved = true;
             showToast('Промяната е приложена. Натисни Запази.');
@@ -3616,6 +3869,533 @@
             }
             deactivateAdminMode();
         });
+    }
+
+    /* ── Click-to-edit: click any [data-bio-id] element to select it ── */
+    function setupClickToEdit() {
+        document.addEventListener('click', function(e) {
+            if (!adminActive) return;
+            // Find closest editable element
+            var target = e.target.closest('[data-bio-id]');
+            if (!target) return;
+            // Don't interfere with admin panel clicks
+            if (target.closest('#bio-inline-admin')) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Find matching EDITABLE_ELEMENTS entry by selector
+            var bioId = target.getAttribute('data-bio-id');
+            var matchIndex = -1;
+            for (var i = 0; i < EDITABLE_ELEMENTS.length; i++) {
+                var el = document.querySelector(EDITABLE_ELEMENTS[i].selector);
+                if (el === target || el && el.getAttribute('data-bio-id') === bioId) {
+                    matchIndex = i;
+                    break;
+                }
+            }
+
+            if (matchIndex >= 0) {
+                // Switch to Text panel and select element
+                document.querySelectorAll('.ba-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                document.querySelectorAll('.ba-panel').forEach(function(p) { p.classList.remove('active'); });
+                var textTab = document.querySelector('[data-ba-panel="ba-panel-text"]');
+                if (textTab) textTab.classList.add('active');
+                var textPanel = document.getElementById('ba-panel-text');
+                if (textPanel) textPanel.classList.add('active');
+                selectElement(matchIndex);
+            } else {
+                // For elements not in the list, allow inline editing dynamically
+                document.querySelectorAll('.ba-selected-el').forEach(function(el) { el.classList.remove('ba-selected-el'); });
+                target.classList.add('ba-selected-el');
+
+                // Switch to Text panel
+                document.querySelectorAll('.ba-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                document.querySelectorAll('.ba-panel').forEach(function(p) { p.classList.remove('active'); });
+                var textTab2 = document.querySelector('[data-ba-panel="ba-panel-text"]');
+                if (textTab2) textTab2.classList.add('active');
+                var textPanel2 = document.getElementById('ba-panel-text');
+                if (textPanel2) textPanel2.classList.add('active');
+
+                // Create a dynamic selector using data-bio-id
+                var dynSelector = '[data-bio-id="' + bioId + '"]';
+                selectedElIndex = -1; // Custom element, not in list
+
+                var editorArea = document.getElementById('ba-text-editor-area');
+                editorArea.style.display = 'block';
+
+                var overrides = (savedData.textOverrides && savedData.textOverrides[dynSelector]) || {};
+                document.getElementById('ba-el-content').value = overrides.content !== undefined ? overrides.content : target.textContent.trim();
+                document.getElementById('ba-el-font-family').value = overrides.fontFamily || '';
+                document.getElementById('ba-el-font-size').value   = overrides.fontSize  || '';
+                document.getElementById('ba-el-font-weight').value = overrides.fontWeight || '';
+                document.getElementById('ba-el-line-height').value = overrides.lineHeight || '';
+                document.getElementById('ba-el-letter-spacing').value = overrides.letterSpacing || '';
+                document.getElementById('ba-el-text-align').value  = overrides.textAlign || '';
+                var col = overrides.color || '#1A1916';
+                document.getElementById('ba-el-color-picker').value = col.length === 7 ? col : '#1a1916';
+                document.getElementById('ba-el-color-hex').value    = col;
+
+                // Temporarily store the dynamic selector for the apply button
+                window.__baDynSelector = dynSelector;
+                window.__baDynTarget = target;
+            }
+        }, true);
+
+        // Override the apply button to handle dynamic selections
+        var origApply = document.getElementById('ba-btn-apply-text');
+        if (origApply) {
+            var origHandler = origApply.onclick;
+            origApply.addEventListener('click', function() {
+                if (selectedElIndex >= 0 || !window.__baDynSelector) return; // handled by original
+                var sel = window.__baDynSelector;
+                var domEl = window.__baDynTarget;
+                var content = document.getElementById('ba-el-content').value;
+                var fontFamily = document.getElementById('ba-el-font-family').value;
+                var fontSize   = parseFloat(document.getElementById('ba-el-font-size').value) || null;
+                var fontWeight = document.getElementById('ba-el-font-weight').value;
+                var color      = document.getElementById('ba-el-color-hex').value || document.getElementById('ba-el-color-picker').value;
+                var lineHeight = parseFloat(document.getElementById('ba-el-line-height').value) || null;
+                var letterSpacing = document.getElementById('ba-el-letter-spacing').value.trim() || null;
+                var textAlign  = document.getElementById('ba-el-text-align').value || null;
+
+                if (!savedData.textOverrides) savedData.textOverrides = {};
+                savedData.textOverrides[sel] = {
+                    content:content, fontFamily:fontFamily, fontSize:fontSize,
+                    fontWeight:fontWeight, color:color,
+                    lineHeight:lineHeight, letterSpacing:letterSpacing, textAlign:textAlign
+                };
+
+                if (domEl) {
+                    domEl.textContent = content;
+                    if (fontFamily) domEl.style.fontFamily = fontFamily;
+                    if (fontSize)   domEl.style.fontSize   = fontSize + 'rem';
+                    if (fontWeight) domEl.style.fontWeight  = fontWeight;
+                    if (color)      domEl.style.color       = color;
+                    if (lineHeight) domEl.style.lineHeight  = lineHeight;
+                    if (letterSpacing) domEl.style.letterSpacing = letterSpacing;
+                    if (textAlign)  domEl.style.textAlign   = textAlign;
+                }
+                hasUnsaved = true;
+                showToast('Промяната е приложена. Натисни Запази.');
+            });
+        }
+    }
+
+    /* ── SVG Icon replacement panel ── */
+    var ICON_TARGETS = [
+        { label: 'Компетенция 1 — Икона', selector: '.exp-card:nth-child(1) .exp-card__icon', key: 'exp-icon-1' },
+        { label: 'Компетенция 2 — Икона', selector: '.exp-card:nth-child(2) .exp-card__icon', key: 'exp-icon-2' },
+        { label: 'Компетенция 3 — Икона', selector: '.exp-card:nth-child(3) .exp-card__icon', key: 'exp-icon-3' },
+        { label: 'Услуга 1 — Икона', selector: '.service-card:nth-child(1) .service-card__icon', key: 'svc-icon-1' },
+        { label: 'Услуга 2 — Икона', selector: '.service-card:nth-child(2) .service-card__icon', key: 'svc-icon-2' },
+        { label: 'Услуга 3 — Икона', selector: '.service-card:nth-child(3) .service-card__icon', key: 'svc-icon-3' },
+        { label: 'Контакт — Имейл икона', selector: '.contact__detail:nth-child(1) .contact__icon', key: 'contact-icon-1' },
+        { label: 'Контакт — Телефон икона', selector: '.contact__detail:nth-child(2) .contact__icon', key: 'contact-icon-2' },
+        { label: 'Контакт — Адрес икона', selector: '.contact__detail:nth-child(3) .contact__icon', key: 'contact-icon-3' },
+    ];
+    var selectedIconKey = null;
+
+    function setupIconPanel() {
+        var list = document.getElementById('ba-icon-list');
+        if (!list) return;
+        list.innerHTML = '';
+        ICON_TARGETS.forEach(function(icon) {
+            var btn = document.createElement('button');
+            btn.className = 'ba-el-item';
+            btn.textContent = icon.label;
+            btn.dataset.key = icon.key;
+            btn.addEventListener('click', function() {
+                selectIcon(icon.key);
+                list.querySelectorAll('.ba-el-item').forEach(function(b) { b.classList.remove('selected'); });
+                btn.classList.add('selected');
+            });
+            list.appendChild(btn);
+        });
+
+        var uploadInput = document.getElementById('ba-icon-upload');
+        var uploadCard = document.getElementById('ba-icon-upload-card');
+        if (uploadCard) {
+            uploadCard.addEventListener('click', function() { if (uploadInput) uploadInput.click(); });
+        }
+        if (uploadInput) {
+            uploadInput.addEventListener('change', function() {
+                if (!selectedIconKey || !this.files || !this.files[0]) return;
+                var file = this.files[0];
+                if (file.size > MAX_IMAGE_BYTES) { showToast('Файлът е прекалено голям (макс. 5MB)', 'error'); return; }
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var dataURL = e.target.result;
+                    if (!savedData.iconOverrides) savedData.iconOverrides = {};
+                    savedData.iconOverrides[selectedIconKey] = dataURL;
+                    applyIconOverride(selectedIconKey, dataURL);
+                    var preview = document.getElementById('ba-icon-preview');
+                    if (preview) { preview.src = dataURL; preview.style.display = 'block'; }
+                    hasUnsaved = true;
+                    showToast('Иконата е заменена. Натисни Запази.');
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        var resetBtn = document.getElementById('ba-btn-icon-reset');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function() {
+                if (!selectedIconKey) return;
+                if (savedData.iconOverrides) delete savedData.iconOverrides[selectedIconKey];
+                // Restore original SVG by reloading
+                var target = ICON_TARGETS.find(function(t) { return t.key === selectedIconKey; });
+                if (target) {
+                    var el = document.querySelector(target.selector);
+                    if (el) {
+                        var img = el.querySelector('img.ba-icon-replacement');
+                        if (img) { img.remove(); }
+                        var svg = el.querySelector('svg');
+                        if (svg) svg.style.display = '';
+                    }
+                }
+                var preview = document.getElementById('ba-icon-preview');
+                if (preview) { preview.src = ''; preview.style.display = 'none'; }
+                hasUnsaved = true;
+                showToast('Иконата е възстановена.');
+            });
+        }
+
+        // Apply saved icon overrides
+        if (savedData.iconOverrides) {
+            Object.entries(savedData.iconOverrides).forEach(function(entry) {
+                applyIconOverride(entry[0], entry[1]);
+            });
+        }
+    }
+
+    function selectIcon(key) {
+        selectedIconKey = key;
+        var editorArea = document.getElementById('ba-icon-editor-area');
+        if (editorArea) editorArea.style.display = 'block';
+        var label = document.getElementById('ba-icon-label');
+        var target = ICON_TARGETS.find(function(t) { return t.key === key; });
+        if (label && target) label.textContent = target.label;
+        var preview = document.getElementById('ba-icon-preview');
+        if (preview && savedData.iconOverrides && savedData.iconOverrides[key]) {
+            preview.src = savedData.iconOverrides[key];
+            preview.style.display = 'block';
+        } else if (preview) {
+            preview.style.display = 'none';
+        }
+    }
+
+    function applyIconOverride(key, dataURL) {
+        if (!dataURL || !/^data:image\//i.test(dataURL)) return;
+        var target = ICON_TARGETS.find(function(t) { return t.key === key; });
+        if (!target) return;
+        var container = document.querySelector(target.selector);
+        if (!container) return;
+        // Hide existing SVG
+        var svg = container.querySelector('svg');
+        if (svg) svg.style.display = 'none';
+        // Add/update replacement image
+        var existing = container.querySelector('img.ba-icon-replacement');
+        if (!existing) {
+            existing = document.createElement('img');
+            existing.className = 'ba-icon-replacement';
+            existing.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+            container.appendChild(existing);
+        }
+        existing.src = dataURL;
+        existing.alt = 'Custom icon';
+    }
+
+    /* ── Section reordering & visibility panel ── */
+    var SECTIONS_LIST = [
+        { id: 'hero', label: '🏠 Hero (Начало)' },
+        { id: 'about', label: '👤 За мен' },
+        { id: 'expertise', label: '🎯 Компетенции' },
+        { id: 'credentials', label: '📜 Квалификации' },
+        { id: 'philosophy', label: '💭 Философия' },
+        { id: 'approach', label: '🔄 Подход' },
+        { id: 'services', label: '💼 Услуги' },
+        { id: 'testimonials', label: '💬 Отзиви' },
+        { id: 'contact', label: '📞 Контакт' },
+    ];
+
+    function setupLayoutPanel() {
+        buildLayoutList();
+        buildVisibilityList();
+        buildSpacingList();
+    }
+
+    function buildLayoutList() {
+        var list = document.getElementById('ba-layout-list');
+        if (!list) return;
+        list.innerHTML = '';
+
+        var order = savedData.sectionOrder && savedData.sectionOrder.length > 0
+            ? savedData.sectionOrder
+            : SECTIONS_LIST.map(function(s) { return s.id; });
+
+        order.forEach(function(sectionId) {
+            var sec = SECTIONS_LIST.find(function(s) { return s.id === sectionId; });
+            if (!sec) return;
+            var item = document.createElement('div');
+            item.className = 'ba-el-item';
+            item.draggable = true;
+            item.dataset.sectionId = sectionId;
+            item.style.cssText = 'display:flex;align-items:center;gap:.4rem;cursor:grab;padding:.5rem .65rem;';
+            item.innerHTML = '<span style="font-size:.9rem;cursor:grab;">⠿</span> ' + htmlEsc(sec.label);
+
+            item.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('text/plain', sectionId);
+                item.classList.add('ba-section-dragging');
+            });
+            item.addEventListener('dragend', function() {
+                item.classList.remove('ba-section-dragging');
+            });
+            item.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                item.style.borderTopColor = '#6C8EF5';
+            });
+            item.addEventListener('dragleave', function() {
+                item.style.borderTopColor = '';
+            });
+            item.addEventListener('drop', function(e) {
+                e.preventDefault();
+                item.style.borderTopColor = '';
+                var draggedId = e.dataTransfer.getData('text/plain');
+                if (draggedId === sectionId) return;
+                reorderSections(draggedId, sectionId);
+            });
+
+            list.appendChild(item);
+        });
+    }
+
+    function reorderSections(draggedId, targetId) {
+        var order = savedData.sectionOrder && savedData.sectionOrder.length > 0
+            ? savedData.sectionOrder.slice()
+            : SECTIONS_LIST.map(function(s) { return s.id; });
+
+        var fromIdx = order.indexOf(draggedId);
+        var toIdx = order.indexOf(targetId);
+        if (fromIdx < 0 || toIdx < 0) return;
+
+        order.splice(fromIdx, 1);
+        order.splice(toIdx, 0, draggedId);
+        savedData.sectionOrder = order;
+
+        // Apply to DOM
+        var parent = document.querySelector('main') || document.body;
+        order.forEach(function(id) {
+            var section = document.getElementById(id);
+            if (section) parent.appendChild(section);
+        });
+
+        buildLayoutList();
+        hasUnsaved = true;
+        showToast('Секциите са пренаредени.');
+    }
+
+    function buildVisibilityList() {
+        var list = document.getElementById('ba-visibility-list');
+        if (!list) return;
+        list.innerHTML = '';
+        SECTIONS_LIST.forEach(function(sec) {
+            var hidden = savedData.sectionVisibility && savedData.sectionVisibility[sec.id] === false;
+            var item = document.createElement('div');
+            item.className = 'ba-section-toggle';
+            item.innerHTML = '<label>' + htmlEsc(sec.label) + '</label><input type="checkbox" ' + (hidden ? '' : 'checked') + '>';
+            var checkbox = item.querySelector('input');
+            checkbox.addEventListener('change', function() {
+                if (!savedData.sectionVisibility) savedData.sectionVisibility = {};
+                savedData.sectionVisibility[sec.id] = checkbox.checked;
+                var el = document.getElementById(sec.id);
+                if (el) el.style.display = checkbox.checked ? '' : 'none';
+                hasUnsaved = true;
+            });
+            list.appendChild(item);
+        });
+
+        // Apply saved visibility
+        if (savedData.sectionVisibility) {
+            Object.entries(savedData.sectionVisibility).forEach(function(entry) {
+                if (entry[1] === false) {
+                    var el = document.getElementById(entry[0]);
+                    if (el) el.style.display = 'none';
+                }
+            });
+        }
+    }
+
+    function buildSpacingList() {
+        var list = document.getElementById('ba-spacing-list');
+        if (!list) return;
+        list.innerHTML = '';
+        SECTIONS_LIST.forEach(function(sec) {
+            var spacing = (savedData.sectionSpacing && savedData.sectionSpacing[sec.id]) || '';
+            var row = document.createElement('div');
+            row.className = 'ba-spacing-row';
+            row.innerHTML =
+                '<label>' + htmlEsc(sec.label.replace(/^.+\s/, '')) + '</label>' +
+                '<input type="text" placeholder="напр. 3rem 0" value="' + htmlEsc(spacing) + '" style="padding:.3rem .5rem;background:#22263A;border:1px solid #2E3348;border-radius:6px;color:#E2E8F0;font-size:.78rem;">';
+            var input = row.querySelector('input');
+            input.addEventListener('change', function() {
+                if (!savedData.sectionSpacing) savedData.sectionSpacing = {};
+                var val = input.value.trim();
+                // Validate: only allow safe CSS values (digits, rem, em, px, %, spaces)
+                if (val && !/^[\d\s.]+(?:rem|em|px|%|vh|vw)?(?:\s+[\d\s.]+(?:rem|em|px|%|vh|vw)?)*$/.test(val)) {
+                    showToast('Невалидна стойност за padding', 'error');
+                    return;
+                }
+                savedData.sectionSpacing[sec.id] = val;
+                var el = document.getElementById(sec.id);
+                if (el) el.style.paddingBlock = val;
+                hasUnsaved = true;
+            });
+            list.appendChild(row);
+        });
+
+        // Apply saved spacing
+        if (savedData.sectionSpacing) {
+            Object.entries(savedData.sectionSpacing).forEach(function(entry) {
+                if (entry[1]) {
+                    var el = document.getElementById(entry[0]);
+                    if (el) el.style.paddingBlock = entry[1];
+                }
+            });
+        }
+    }
+
+    /* ── Tools panel (Export/Import, Global settings, Preview) ── */
+    function setupToolsPanel() {
+        // Export
+        var exportBtn = document.getElementById('ba-btn-export');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', function() {
+                var json = JSON.stringify(savedData, null, 2);
+                var blob = new Blob([json], { type: 'application/json' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'bio-admin-config-' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('Конфигурацията е експортирана.');
+            });
+        }
+
+        // Import
+        var importBtn = document.getElementById('ba-btn-import');
+        var importFile = document.getElementById('ba-import-file');
+        if (importBtn && importFile) {
+            importBtn.addEventListener('click', function() { importFile.click(); });
+            importFile.addEventListener('change', function() {
+                if (!this.files || !this.files[0]) return;
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        var data = JSON.parse(e.target.result);
+                        if (data && typeof data === 'object') {
+                            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} }, data);
+                            applyAllChanges();
+                            applyIconOverrides();
+                            applyLayoutOverrides();
+                            applyGlobalSettings();
+                            hasUnsaved = true;
+                            showToast('Конфигурацията е импортирана. Натисни Запази.');
+                        }
+                    } catch (err) {
+                        showToast('Грешка при импорт: невалиден JSON', 'error');
+                    }
+                };
+                reader.readAsText(this.files[0]);
+            });
+        }
+
+        // Global settings
+        var applyGlobalBtn = document.getElementById('ba-btn-apply-global');
+        if (applyGlobalBtn) {
+            applyGlobalBtn.addEventListener('click', function() {
+                var font = document.getElementById('ba-global-font').value;
+                var fontSize = parseInt(document.getElementById('ba-global-font-size').value, 10) || null;
+                var lineHeight = parseFloat(document.getElementById('ba-global-line-height').value) || null;
+
+                if (!savedData.globalSettings) savedData.globalSettings = {};
+                if (font) savedData.globalSettings.bodyFont = font;
+                if (fontSize) savedData.globalSettings.baseFontSize = fontSize;
+                if (lineHeight) savedData.globalSettings.baseLineHeight = lineHeight;
+
+                applyGlobalSettings();
+                hasUnsaved = true;
+                showToast('Глобалните настройки са приложени.');
+            });
+        }
+
+        // Preview buttons
+        var mobileBtn = document.getElementById('ba-btn-preview-mobile');
+        var desktopBtn = document.getElementById('ba-btn-preview-desktop');
+        if (mobileBtn) {
+            mobileBtn.addEventListener('click', function() {
+                var vp = document.querySelector('meta[name="viewport"]');
+                if (vp) vp.setAttribute('content', 'width=375, initial-scale=1.0');
+                showToast('📱 Мобилен преглед (375px). Натисни Десктоп за връщане.');
+            });
+        }
+        if (desktopBtn) {
+            desktopBtn.addEventListener('click', function() {
+                var vp = document.querySelector('meta[name="viewport"]');
+                if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0');
+                showToast('🖥️ Десктоп преглед възстановен.');
+            });
+        }
+
+        // Populate global settings from savedData
+        if (savedData.globalSettings) {
+            if (savedData.globalSettings.bodyFont) document.getElementById('ba-global-font').value = savedData.globalSettings.bodyFont;
+            if (savedData.globalSettings.baseFontSize) document.getElementById('ba-global-font-size').value = savedData.globalSettings.baseFontSize;
+            if (savedData.globalSettings.baseLineHeight) document.getElementById('ba-global-line-height').value = savedData.globalSettings.baseLineHeight;
+        }
+    }
+
+    function applyGlobalSettings() {
+        var gs = savedData.globalSettings || {};
+        if (gs.bodyFont) document.body.style.fontFamily = gs.bodyFont;
+        if (gs.baseFontSize) document.documentElement.style.fontSize = gs.baseFontSize + 'px';
+        if (gs.baseLineHeight) document.body.style.lineHeight = gs.baseLineHeight;
+    }
+
+    function applyIconOverrides() {
+        if (!savedData.iconOverrides) return;
+        Object.entries(savedData.iconOverrides).forEach(function(entry) {
+            applyIconOverride(entry[0], entry[1]);
+        });
+    }
+
+    function applyLayoutOverrides() {
+        // Section order
+        if (savedData.sectionOrder && savedData.sectionOrder.length > 0) {
+            var parent = document.querySelector('main') || document.body;
+            savedData.sectionOrder.forEach(function(id) {
+                var section = document.getElementById(id);
+                if (section) parent.appendChild(section);
+            });
+        }
+        // Section visibility
+        if (savedData.sectionVisibility) {
+            Object.entries(savedData.sectionVisibility).forEach(function(entry) {
+                if (entry[1] === false) {
+                    var el = document.getElementById(entry[0]);
+                    if (el) el.style.display = 'none';
+                }
+            });
+        }
+        // Section spacing
+        if (savedData.sectionSpacing) {
+            Object.entries(savedData.sectionSpacing).forEach(function(entry) {
+                if (entry[1]) {
+                    var el = document.getElementById(entry[0]);
+                    if (el) el.style.paddingBlock = entry[1];
+                }
+            });
+        }
     }
 
     /* ── Expose activation to handleContact ── */
