@@ -3424,11 +3424,13 @@
             var imgPreviewId = 'ba-edu-img-prev-' + i;
             var imgUploadId  = 'ba-edu-img-up-' + i;
             var hasImg = item.certImage && /^data:image\//i.test(item.certImage);
+            var imgHtml = '<img id="' + imgPreviewId + '" src="' + (hasImg ? htmlEsc(item.certImage) : '') + '"' +
+                ' style="max-height:70px;max-width:100%;border-radius:4px;display:' + (hasImg ? 'block' : 'none') + ';margin:0 auto .3rem;">';
 
             div.innerHTML =
                 '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem;">' +
                     '<span style="font-size:.9rem;cursor:grab;" title="Влачи за пренареждане">⠿</span>' +
-                    '<span style="font-size:.72rem;color:#8892A4;flex:1;">Запис ' + htmlEsc(i+1) + '</span>' +
+                    '<span style="font-size:.72rem;color:#8892A4;flex:1;">Запис ' + htmlEsc(String(i + 1)) + '</span>' +
                     '<button class="ba-btn ba-btn-danger" data-edu-remove="' + i + '" style="padding:.2rem .5rem;font-size:.7rem;">✕</button>' +
                 '</div>' +
                 '<div class="ba-form-group"><label>Заглавие</label><input type="text" data-ei="' + i + '" data-ef="title" value="' + htmlEsc(item.title||'') + '"></div>' +
@@ -3437,7 +3439,7 @@
                 '<div class="ba-form-group"><label>Описание (за модала)</label><textarea rows="2" data-ei="' + i + '" data-ef="desc">' + htmlEsc(item.desc||'') + '</textarea></div>' +
                 '<div class="ba-form-group"><label>Снимка на сертификата</label>' +
                     '<div style="border:1.5px dashed #2E3348;border-radius:6px;padding:.5rem;text-align:center;cursor:pointer;margin-top:.2rem;" onclick="document.getElementById(\'' + imgUploadId + '\').click()">' +
-                        (hasImg ? '<img id="' + imgPreviewId + '" src="' + htmlEsc(item.certImage) + '" style="max-height:70px;max-width:100%;border-radius:4px;display:block;margin:0 auto .3rem;">' : '<img id="' + imgPreviewId + '" src="" style="max-height:70px;max-width:100%;border-radius:4px;display:' + (hasImg ? 'block' : 'none') + ';margin:0 auto .3rem;">') +
+                        imgHtml +
                         '<span style="font-size:.7rem;color:#8892A4;">📷 Качи снимка</span>' +
                     '</div>' +
                     '<input type="file" id="' + imgUploadId + '" accept="image/*" data-edu-img="' + i + '" style="display:none;">' +
