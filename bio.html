@@ -140,6 +140,7 @@
         }
         .nav__links a:hover { color: var(--c-text-1); }
         .nav__cta { font-size: .85rem !important; padding: .6rem 1.4rem; }
+        .nav__links .nav__cta { color: #fff; background: var(--c-accent); }
         .nav__hamburger {
             display: none; flex-direction: column; gap: 5px;
             background: none; border: none; cursor: pointer; padding: 4px;
@@ -281,6 +282,7 @@
         }
         .about__portrait {
             position: relative;
+            padding-bottom: 1.5rem;
         }
         .about__portrait img {
             width: 100%; aspect-ratio: 3/4;
@@ -323,12 +325,20 @@
             background: var(--c-surface-2);
             border: 1px solid var(--c-border);
             border-radius: var(--radius-md);
-            padding: 1.2rem 1rem;
+            padding: 1.4rem 1rem 1.2rem;
             text-align: center;
+            transition: box-shadow var(--transition), border-color var(--transition);
         }
-        .pillar__icon { font-size: 1.6rem; margin-bottom: .5rem; }
+        .pillar:hover { box-shadow: var(--shadow-sm); border-color: var(--c-gold-light); }
+        .pillar__icon {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            background: var(--c-gold-light);
+            display: grid; place-items: center;
+            margin: 0 auto .85rem;
+        }
         .pillar__title {
-            font-size: .8rem; font-weight: 600;
+            font-size: .9rem; font-weight: 600;
             color: var(--c-text-1); letter-spacing: .02em;
         }
 
@@ -704,14 +714,20 @@
             .hero { grid-template-columns: 1fr; min-height: auto; }
             .hero::after { display: none; }
             .hero__content { padding-top: 7rem; padding-bottom: 2rem; }
-            .hero__visual { min-height: 60vw; }
-            .hero__photo-wrap img { object-position: top; }
+            .hero__visual { min-height: 70vw; }
+            .hero__photo-wrap img { object-position: top center; }
+            .hero__photo-overlay { background: linear-gradient(to top, rgba(250,250,249,.85) 0%, rgba(250,250,249,.2) 50%, transparent 75%); }
             .hero__stats { position: static; padding-top: 1rem; justify-content: flex-start; }
             .scroll-hint { display: none; }
 
             .about__grid { grid-template-columns: 1fr; }
-            .about__portrait-badge { right: 1rem; bottom: -1rem; }
+            .about__portrait { padding-bottom: 0; }
+            .about__portrait-badge { right: 1rem; bottom: 1rem; }
             .about__pillars { grid-template-columns: 1fr 1fr; }
+            .pillar { padding: 1.5rem 1rem 1.3rem; }
+            .pillar__icon { width: 56px; height: 56px; }
+            .pillar__icon .icon-svg { width: 1.75rem; height: 1.75rem; }
+            .pillar__title { font-size: 1rem; }
 
             .expertise__grid { grid-template-columns: 1fr; }
             .creds__layout { grid-template-columns: 1fr; }
@@ -728,7 +744,7 @@
         }
 
         @media (max-width: 480px) {
-            .about__pillars { grid-template-columns: 1fr; }
+            .about__pillars { grid-template-columns: 1fr 1fr; }
             .approach__grid { grid-template-columns: 1fr; }
             .hero__actions { flex-direction: column; }
         }
@@ -793,8 +809,8 @@
         }
         .pillar__icon .icon-svg,
         .exp-card__icon .icon-svg {
-            width: 2rem; height: 2rem;
-            display: block; margin-bottom: .5rem;
+            width: 1.5rem; height: 1.5rem;
+            display: block;
             color: var(--c-gold);
         }
         .exp-card__icon { color: var(--c-gold); }
@@ -1251,11 +1267,11 @@
 
                     <div class="about__pillars reveal reveal-delay-2">
                         <div class="pillar">
-                            <div class="pillar__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+                            <div class="pillar__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
                             <div class="pillar__title">Медицина</div>
                         </div>
                         <div class="pillar">
-                            <div class="pillar__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><path d="M9 8h6M9 16h6"/><path d="M3 9h3M18 9h3M3 15h3M18 15h3"/></svg></div>
+                            <div class="pillar__icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><rect x="4" y="7" width="4" height="10" rx="1"/><rect x="16" y="7" width="4" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
                             <div class="pillar__title">Тренировки</div>
                         </div>
                         <div class="pillar">
@@ -1873,8 +1889,13 @@
 
         // ── Mobile menu ───────────────────────────────────────────
         document.getElementById('navToggle').addEventListener('click', () => {
-            document.getElementById('mobileMenu').classList.add('open');
-            document.body.style.overflow = 'hidden';
+            const menu = document.getElementById('mobileMenu');
+            if (menu.classList.contains('open')) {
+                closeMobileMenu();
+            } else {
+                menu.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
         });
         document.getElementById('mobileClose').addEventListener('click', closeMobileMenu);
         function closeMobileMenu() {
