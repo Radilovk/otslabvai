@@ -2407,6 +2407,26 @@
                 return;
             }
 
+            // "update" command — fetch latest bio_content from backend and rebake the page
+            if (name.toLowerCase() === 'update') {
+                document.getElementById('contactForm').reset();
+                btn.textContent = 'Обновяване...';
+                btn.disabled = true;
+                const workerOrigin = window._bioWorkerOrigin || 'https://port.radilov-k.workers.dev';
+                fetch(workerOrigin + '/bio_rebake', { method: 'POST' })
+                    .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
+                    .then(function() {
+                        // Hard-reload bypassing browser + CDN cache
+                        window.location.href = window.location.pathname + '?v=' + Date.now();
+                    })
+                    .catch(function(err) {
+                        console.warn('Bio rebake error:', err);
+                        btn.textContent = 'Грешка при обновяване';
+                        btn.disabled = false;
+                    });
+                return;
+            }
+
             if (!name) { document.getElementById('cf-name').reportValidity(); return; }
             if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('cf-email').reportValidity(); return; }
 

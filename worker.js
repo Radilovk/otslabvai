@@ -80,7 +80,7 @@ export default {
       let response;
       
       if (url.pathname === '/bio.html') {
-        response = await serveBioHtml(env, request, ctx);
+        response = await serveBioHtml(env, request);
       }
       // Only serve static files for GET — POST/PUT requests must reach the API router.
       else if (request.method === 'GET' && STATIC_FILES[url.pathname]) {
@@ -187,7 +187,15 @@ export default {
               if (request.method === 'GET') {
                   response = await handleGetBioContent(request, env);
               } else if (request.method === 'POST') {
-                  response = await handleSaveBioContent(request, env, ctx);
+                  response = await handleSaveBioContent(request, env);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
+
+          case '/bio_rebake':
+              if (request.method === 'POST') {
+                  response = await handleBioRebake(env);
               } else {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
@@ -295,34 +303,25 @@ function renderBioHtml(htmlTemplate, bioContent) {
 }
 
 /**
- * Serves bio.html using the pre-baked KV key 'baked_bio.html'.
+ * Serves bio.html using a pre-baked HTML strategy to minimise Worker cost.
  *
- * Baking strategy (zero-cost caching):
- *   • handleSaveBioContent() renders and stores 'baked_bio.html' in KV
- *     every time the admin saves bio_content.  The heavy rendering work
- *     (2 KV reads + string replace) happens ONCE at save time, not on
- *     every page view.
- *   • Cache-Control: public, max-age=3600 — browser (and CDN) caches the
- *     page for 1 hour.  During that window zero Worker invocations occur.
- *   • After the cache expires the browser sends If-None-Match.  The Worker
- *     does ONE KV read (baked_bio.html) and returns 304 if unchanged —
- *     still a single cheap operation.
- *   • A full 200 is returned only when the admin has actually saved changes.
+ * On every admin save, handleSaveBioContent() writes a fully-rendered
+ * "baked_bio.html" to KV.  This function reads that single key and serves it
+ * with a 1-hour public cache + ETag so normal user page loads never reach the
+ * Worker at all — the browser or CDN serves the cached copy.
  *
- * Fallback: if 'baked_bio.html' does not exist yet (first deploy before
- * first admin save) the Worker falls back to building from static_bio.html
- * + bio_content on the fly, and also writes baked_bio.html for next time.
+ * First-request fallback: if baked_bio.html is absent (e.g. fresh deploy
+ * before the first admin save) we build it on-the-fly from static_bio.html +
+ * bio_content, store it for subsequent requests, and serve it immediately.
  *
  * @param {object} env - Worker environment bindings
- * @param {Request} request - Incoming request (used for If-None-Match check)
- * @param {object} ctx - Execution context (used for waitUntil)
+ * @param {Request} request - Incoming request
  */
-async function serveBioHtml(env, request, ctx) {
-    // Prefer the pre-baked HTML — just ONE KV read on the happy path.
+async function serveBioHtml(env, request) {
     let finalHtml = await env.PAGE_CONTENT.get('baked_bio.html');
 
     if (finalHtml === null) {
-        // Fallback: bake on the fly (happens only before the first admin save).
+        // First-request fallback: bake on-the-fly
         const [htmlTemplate, bioContent] = await Promise.all([
             env.PAGE_CONTENT.get('static_bio.html'),
             env.PAGE_CONTENT.get('bio_content')
@@ -331,32 +330,21 @@ async function serveBioHtml(env, request, ctx) {
             throw new UserFacingError('File bio.html not found in storage.', 404);
         }
         finalHtml = renderBioHtml(htmlTemplate, bioContent);
-        // Store the baked result so future requests are cheap.
-        ctx.waitUntil(
-            env.PAGE_CONTENT.put('baked_bio.html', finalHtml).catch(err =>
-                console.error('serveBioHtml: failed to store baked_bio.html fallback:', err)
-            )
-        );
+        // Store so subsequent requests skip the double KV read
+        await env.PAGE_CONTENT.put('baked_bio.html', finalHtml);
     }
 
     const etag = await generateETag(finalHtml);
-    const cacheControl = `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`;
-
-    // Return 304 Not Modified when the browser already has the current version.
-    if (request.headers.get('If-None-Match') === etag) {
-        return new Response(null, {
-            status: 304,
-            headers: { 'Cache-Control': cacheControl, 'ETag': etag }
-        });
+    const ifNoneMatch = request.headers.get('If-None-Match');
+    if (ifNoneMatch === etag) {
+        return new Response(null, { status: 304, headers: { 'ETag': etag } });
     }
+
     return new Response(finalHtml, {
         status: 200,
         headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            // public + max-age: browser and CDN cache for 1 hour — zero backend
-            // cost during that window.  After expiry the browser revalidates via
-            // If-None-Match; 304 is returned when nothing has changed.
-            'Cache-Control': cacheControl,
+            'Cache-Control': `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`,
             'ETag': etag
         }
     });
@@ -610,11 +598,11 @@ async function handleGetBioContent(request, env) {
 
 /**
  * Handles POST /bio_content.json
- * Saves bio page overrides to KV and immediately re-bakes baked_bio.html so
- * the next page load gets the fresh content without any Worker rendering cost.
- * After this save all page visitors benefit from the 1-hour browser cache.
+ * Saves bio page overrides to KV only.
+ * baked_bio.html is NOT updated here — it is rebuilt on demand via POST /bio_rebake
+ * (triggered by the "update" command in bio.html's contact form).
  */
-async function handleSaveBioContent(request, env, ctx) {
+async function handleSaveBioContent(request, env) {
     const contentToSave = await request.text();
     try {
         // Validate that the body is valid JSON before storing
@@ -622,22 +610,7 @@ async function handleSaveBioContent(request, env, ctx) {
         if (typeof parsed !== 'object' || parsed === null) {
             throw new UserFacingError('Expected a JSON object in the request body.', 400);
         }
-        // Bake the final HTML now (at save time) so that serveBioHtml() only
-        // needs one cheap KV read on every subsequent page load.
-        ctx.waitUntil((async () => {
-            try {
-                await env.PAGE_CONTENT.put('bio_content', contentToSave);
-                const htmlTemplate = await env.PAGE_CONTENT.get('static_bio.html');
-                if (htmlTemplate !== null) {
-                    const bakedHtml = renderBioHtml(htmlTemplate, contentToSave);
-                    await env.PAGE_CONTENT.put('baked_bio.html', bakedHtml);
-                } else {
-                    console.warn('handleSaveBioContent: static_bio.html not found in KV; baked_bio.html not updated');
-                }
-            } catch (err) {
-                console.error('handleSaveBioContent: failed to bake bio.html:', err);
-            }
-        })());
+        await env.PAGE_CONTENT.put('bio_content', contentToSave);
         return new Response(JSON.stringify({ success: true, message: 'Bio content saved.' }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
@@ -646,6 +619,29 @@ async function handleSaveBioContent(request, env, ctx) {
         if (e instanceof UserFacingError) throw e;
         throw new UserFacingError('Invalid JSON provided in the request body.', 400);
     }
+}
+
+/**
+ * Handles POST /bio_rebake
+ * Reads bio_content and static_bio.html from KV, renders the final HTML,
+ * and stores it as baked_bio.html so the next user page load gets the
+ * updated cached copy.  Called only when the "update" command is issued
+ * from bio.html's contact form — never triggered automatically.
+ */
+async function handleBioRebake(env) {
+    const [htmlTemplate, bioContent] = await Promise.all([
+        env.PAGE_CONTENT.get('static_bio.html'),
+        env.PAGE_CONTENT.get('bio_content')
+    ]);
+    if (htmlTemplate === null) {
+        throw new UserFacingError('static_bio.html not found in storage.', 500);
+    }
+    const bakedHtml = renderBioHtml(htmlTemplate, bioContent);
+    await env.PAGE_CONTENT.put('baked_bio.html', bakedHtml);
+    return new Response(JSON.stringify({ success: true, message: 'Bio page updated.' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
 }
 
 /**
