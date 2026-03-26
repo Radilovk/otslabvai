@@ -798,7 +798,7 @@ async function loadDataFromServer() {
             return;
         }
         const serverData = await res.json();
-        const EXPECTED_KEYS = ['textOverrides', 'images', 'theme', 'diplomas', '_activeTheme', 'contact', 'testimonials', 'educationItems'];
+        const EXPECTED_KEYS = ['textOverrides', 'images', 'theme', 'diplomas', '_activeTheme', 'contact', 'testimonials', 'educationItems', 'services'];
         if (serverData && typeof serverData === 'object' && Object.keys(serverData).length > 0) {
             const filtered = {};
             EXPECTED_KEYS.forEach(k => { if (k in serverData) filtered[k] = serverData[k]; });
