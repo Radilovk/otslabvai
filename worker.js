@@ -192,6 +192,14 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
+
+          case '/bio_rebake':
+              if (request.method === 'POST') {
+                  response = await handleBioRebake(env);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
             
           default:
             // Try to serve 404.html for unknown routes
@@ -590,9 +598,9 @@ async function handleGetBioContent(request, env) {
 
 /**
  * Handles POST /bio_content.json
- * Saves bio page overrides to KV and immediately bakes the new baked_bio.html
- * so that the next user page load serves the updated cached copy.
- * Both writes are awaited before the 200 response is returned.
+ * Saves bio page overrides to KV only.
+ * baked_bio.html is NOT updated here — it is rebuilt on demand via POST /bio_rebake
+ * (triggered by the "update" command in bio.html's contact form).
  */
 async function handleSaveBioContent(request, env) {
     const contentToSave = await request.text();
@@ -602,17 +610,7 @@ async function handleSaveBioContent(request, env) {
         if (typeof parsed !== 'object' || parsed === null) {
             throw new UserFacingError('Expected a JSON object in the request body.', 400);
         }
-        // Write bio_content first so it is available for future fallback reads.
         await env.PAGE_CONTENT.put('bio_content', contentToSave);
-
-        // Bake the new HTML and store as baked_bio.html so that user page loads
-        // never need to reach the Worker — they get the cached baked copy.
-        const htmlTemplate = await env.PAGE_CONTENT.get('static_bio.html');
-        if (htmlTemplate !== null) {
-            const bakedHtml = renderBioHtml(htmlTemplate, contentToSave);
-            await env.PAGE_CONTENT.put('baked_bio.html', bakedHtml);
-        }
-
         return new Response(JSON.stringify({ success: true, message: 'Bio content saved.' }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
@@ -621,6 +619,29 @@ async function handleSaveBioContent(request, env) {
         if (e instanceof UserFacingError) throw e;
         throw new UserFacingError('Invalid JSON provided in the request body.', 400);
     }
+}
+
+/**
+ * Handles POST /bio_rebake
+ * Reads bio_content and static_bio.html from KV, renders the final HTML,
+ * and stores it as baked_bio.html so the next user page load gets the
+ * updated cached copy.  Called only when the "update" command is issued
+ * from bio.html's contact form — never triggered automatically.
+ */
+async function handleBioRebake(env) {
+    const [htmlTemplate, bioContent] = await Promise.all([
+        env.PAGE_CONTENT.get('static_bio.html'),
+        env.PAGE_CONTENT.get('bio_content')
+    ]);
+    if (htmlTemplate === null) {
+        throw new UserFacingError('static_bio.html not found in storage.', 500);
+    }
+    const bakedHtml = renderBioHtml(htmlTemplate, bioContent);
+    await env.PAGE_CONTENT.put('baked_bio.html', bakedHtml);
+    return new Response(JSON.stringify({ success: true, message: 'Bio page updated.' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
 }
 
 /**
