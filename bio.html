@@ -1171,6 +1171,42 @@
             border-radius: 50%;
             background: var(--c-gold);
         }
+        .service-card__meta {
+            display: flex; align-items: center; gap: .75rem;
+            margin: 1rem 0 .8rem; flex-wrap: wrap;
+        }
+        .service-card__price {
+            font-family: var(--font-serif); font-size: var(--fs-lg);
+            font-weight: 700; color: var(--c-accent);
+        }
+        .service-card__duration {
+            font-size: var(--fs-xs); color: var(--c-text-3);
+            background: var(--c-surface-2); border: 1px solid var(--c-border);
+            padding: .15rem .55rem; border-radius: 100px;
+            font-family: var(--font-mono); letter-spacing: .04em;
+        }
+        .service-card__cta {
+            display: block; width: 100%; margin-top: 1.25rem;
+            padding: .65rem 1rem; border-radius: var(--radius-md);
+            background: var(--c-accent); color: #fff;
+            font-size: var(--fs-sm); font-weight: 600; text-align: center;
+            text-decoration: none; border: none; cursor: pointer;
+            transition: opacity .2s, transform .15s;
+        }
+        .service-card__cta:hover { opacity: .88; transform: translateY(-1px); }
+        /* floating book button */
+        #bio-float-cta {
+            position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9000;
+            background: var(--c-accent); color: #fff;
+            border: none; border-radius: 100px;
+            padding: .75rem 1.5rem; font-size: var(--fs-sm); font-weight: 700;
+            box-shadow: 0 6px 24px rgba(0,0,0,.22);
+            cursor: pointer; text-decoration: none; display: none;
+            transition: opacity .3s, transform .3s;
+        }
+        #bio-float-cta.visible { display: flex; align-items: center; gap: .5rem; }
+        #bio-float-cta:hover { opacity: .9; transform: translateY(-2px); }
+        body.bio-admin-active #bio-float-cta { display: none !important; }
         @media (max-width: 640px) {
             .services__grid { grid-template-columns: 1fr; }
         }
@@ -1952,85 +1988,15 @@
                 </p>
             </div>
 
-            <div class="services__grid">
-
-                <div class="service-card reveal reveal-delay-1">
-                    <div class="service-card__icon">
-                        <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                    </div>
-                    <div class="service-card__badge">Стартова точка</div>
-                    <div class="service-card__title">Първоначална консултация</div>
-                    <div class="service-card__body">
-                        Задълбочена оценка на здравния статус, хранителните навици, телесния
-                        състав и лабораторните показатели. Завършва с изготвяне на вашия
-                        индивидуален хранителен план.
-                    </div>
-                    <ul class="service-card__list">
-                        <li>Хранителен и метаболитен анализ</li>
-                        <li>Анализ на телесния състав</li>
-                        <li>Персонализиран хранителен план</li>
-                        <li>Суплементационна схема</li>
-                    </ul>
-                </div>
-
-                <div class="service-card reveal reveal-delay-2">
-                    <div class="service-card__icon">
-                        <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/><path d="M8 6V4M16 6V4M8 12v2M16 12v2"/></svg>
-                    </div>
-                    <div class="service-card__badge service-card__badge--featured">Най-търсено</div>
-                    <div class="service-card__title">Програма за отслабване</div>
-                    <div class="service-card__body">
-                        Медицински обоснована програма за устойчива загуба на тегло — без
-                        глад, без стрес. Диетата е адаптирана към вашия метаболизъм,
-                        хормонален профил и начин на живот.
-                    </div>
-                    <ul class="service-card__list">
-                        <li>Метаболитна оценка и калориен дефицит</li>
-                        <li>Хранителен план без глад</li>
-                        <li>Тренировъчен протокол</li>
-                        <li>Месечен мониторинг и корекции</li>
-                    </ul>
-                </div>
-
-                <div class="service-card reveal reveal-delay-3">
-                    <div class="service-card__icon">
-                        <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16"/><path d="M9 8h6M9 16h6"/><path d="M3 9h3M18 9h3M3 15h3M18 15h3"/></svg>
-                    </div>
-                    <div class="service-card__badge">За спортисти</div>
-                    <div class="service-card__title">Спортна нутриция</div>
-                    <div class="service-card__body">
-                        Оптимизирана диета за атлетична производителност, мускулен растеж
-                        и по-бързо възстановяване. Планирана в синхрон с тренировъчния ви цикъл.
-                    </div>
-                    <ul class="service-card__list">
-                        <li>Периодизация на храненето</li>
-                        <li>Протоколи за мускулен растеж</li>
-                        <li>Суплементация за спортисти</li>
-                        <li>Анализ на ефективността</li>
-                    </ul>
-                </div>
-
-                <div class="service-card reveal reveal-delay-4">
-                    <div class="service-card__icon">
-                        <svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                    </div>
-                    <div class="service-card__badge">Цялостен подход</div>
-                    <div class="service-card__title">Здравословен начин на живот</div>
-                    <div class="service-card__body">
-                        Интегрална стратегия за превантивно здраве — хранене, движение, сън
-                        и управление на стреса в един съгласуван план за дългосрочни резултати.
-                    </div>
-                    <ul class="service-card__list">
-                        <li>Антиинфламаторна и балансирана диета</li>
-                        <li>Хигиена на съня и биоритъм</li>
-                        <li>Управление на стреса</li>
-                        <li>Дългосрочен мониторинг</li>
-                    </ul>
-                </div>
-
-            </div>
+            <div class="services__grid" id="services-grid"></div>
         </div>
     </section>
+
+    <!-- floating book CTA -->
+    <a href="#contact" id="bio-float-cta" aria-label="Запази час">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Запази час
+    </a>
 
     <!-- ── TESTIMONIALS ───────────────────────────────────────────── -->
     <section class="section section--alt" id="testimonials">
@@ -2334,6 +2300,7 @@
                 }
             });
         }, { threshold: 0.12 });
+        window.__revealObserver = revealObserver;
         document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
         // Also trigger title reveal animation for section titles and hero name
         document.querySelectorAll('.section-title, .hero__name').forEach(el => revealObserver.observe(el));
@@ -2414,6 +2381,18 @@
                 }
             }, { passive: true });
         }
+
+        // ── Floating book CTA visibility ──────────────────────────
+        (function() {
+            var floatBtn = document.getElementById('bio-float-cta');
+            if (!floatBtn) return;
+            var threshold = window.innerHeight * 0.8;
+            function updateFloatCta() {
+                if (window.scrollY > threshold) floatBtn.classList.add('visible');
+                else floatBtn.classList.remove('visible');
+            }
+            window.addEventListener('scroll', updateFloatCta, { passive: true });
+        })();
 
         // ── Swipeable testimonials carousel (mobile only) ─────────
         (function() {
@@ -2541,6 +2520,38 @@
             about:      '.about__portrait img',
             philosophy: '.philosophy__visual img',
         };
+
+        var DEFAULT_SERVICES_DATA = [
+            { badge:'Стартова точка', featured:false, title:'Първоначална консултация', body:'Задълбочена оценка на здравния статус, хранителните навици, телесния състав и лабораторните показатели. Завършва с изготвяне на вашия индивидуален хранителен план.', listItems:['Хранителен и метаболитен анализ','Анализ на телесния състав','Персонализиран хранителен план','Суплементационна схема'], price:'', duration:'' },
+            { badge:'Най-търсено', featured:true, title:'Програма за отслабване', body:'Медицински обоснована програма за устойчива загуба на тегло — без глад, без стрес. Диетата е адаптирана към вашия метаболизъм, хормонален профил и начин на живот.', listItems:['Метаболитна оценка и калориен дефицит','Хранителен план без глад','Тренировъчен протокол','Месечен мониторинг и корекции'], price:'', duration:'' },
+            { badge:'За спортисти', featured:false, title:'Спортна нутриция', body:'Оптимизирана диета за атлетична производителност, мускулен растеж и по-бързо възстановяване. Планирана в синхрон с тренировъчния ви цикъл.', listItems:['Периодизация на храненето','Протоколи за мускулен растеж','Суплементация за спортисти','Анализ на ефективността'], price:'', duration:'' },
+            { badge:'Цялостен подход', featured:false, title:'Здравословен начин на живот', body:'Интегрална стратегия за превантивно здраве — хранене, движение, сън и управление на стреса в един съгласуван план за дългосрочни резултати.', listItems:['Антиинфламаторна и балансирана диета','Хигиена на съня и биоритъм','Управление на стреса','Дългосрочен мониторинг'], price:'', duration:'' }
+        ];
+        window.__defaultServices = DEFAULT_SERVICES_DATA;
+
+        // Render default services immediately so grid is never empty
+        (function renderInitialServices() {
+            var grid = document.getElementById('services-grid');
+            if (!grid || grid.children.length > 0) return;
+            DEFAULT_SERVICES_DATA.forEach(function(svc, i) {
+                var badgeClass = 'service-card__badge' + (svc.featured ? ' service-card__badge--featured' : '');
+                var itemsHtml = '<ul class="service-card__list">';
+                (svc.listItems || []).forEach(function(li) { if (li) itemsHtml += '<li>' + li + '</li>'; });
+                itemsHtml += '</ul>';
+                var card = document.createElement('div');
+                card.className = 'service-card reveal reveal-delay-' + (i + 1);
+                card.innerHTML =
+                    '<div class="' + badgeClass + '">' + svc.badge + '</div>' +
+                    '<div class="service-card__title">' + svc.title + '</div>' +
+                    '<div class="service-card__body">' + svc.body + '</div>' +
+                    itemsHtml +
+                    '<a href="#contact" class="service-card__cta">Запази час</a>';
+                grid.appendChild(card);
+            });
+            if (window.__revealObserver) {
+                grid.querySelectorAll('.reveal').forEach(function(el) { window.__revealObserver.observe(el); });
+            }
+        })();
 
         // Reveal the page (removes the bio-loading class added in <head>)
         function reveal() {
@@ -2787,6 +2798,44 @@
                 if (data.globalSettings.baseFontSize) document.documentElement.style.fontSize = data.globalSettings.baseFontSize + 'px';
                 if (data.globalSettings.baseLineHeight) document.body.style.lineHeight = data.globalSettings.baseLineHeight;
             }
+
+            // Services rendering
+            var svcGrid = document.getElementById('services-grid');
+            if (svcGrid) {
+                var svcList = (data.services && data.services.length > 0) ? data.services : window.__defaultServices;
+                if (svcList) {
+                    var svcDelays = ['reveal-delay-1','reveal-delay-2','reveal-delay-3','reveal-delay-4'];
+                    svcGrid.innerHTML = '';
+                    svcList.forEach(function(svc, i) {
+                        var badgeClass = 'service-card__badge' + (svc.featured ? ' service-card__badge--featured' : '');
+                        var metaHtml = '';
+                        if (svc.price || svc.duration) {
+                            metaHtml = '<div class="service-card__meta">';
+                            if (svc.price)    metaHtml += '<span class="service-card__price">' + esc(svc.price) + '</span>';
+                            if (svc.duration) metaHtml += '<span class="service-card__duration">⏱ ' + esc(svc.duration) + '</span>';
+                            metaHtml += '</div>';
+                        }
+                        var itemsHtml = '';
+                        if (svc.listItems && svc.listItems.length) {
+                            itemsHtml = '<ul class="service-card__list">';
+                            svc.listItems.forEach(function(li) { if (li) itemsHtml += '<li>' + esc(li) + '</li>'; });
+                            itemsHtml += '</ul>';
+                        }
+                        var card = document.createElement('div');
+                        card.className = 'service-card reveal ' + (svcDelays[i] || 'reveal-delay-1');
+                        card.innerHTML =
+                            '<div class="' + badgeClass + '">' + esc(svc.badge || '') + '</div>' +
+                            '<div class="service-card__title">' + esc(svc.title || '') + '</div>' +
+                            '<div class="service-card__body">' + esc(svc.body || '') + '</div>' +
+                            metaHtml + itemsHtml +
+                            '<a href="#contact" class="service-card__cta">Запази час</a>';
+                        svcGrid.appendChild(card);
+                    });
+                    if (window.__revealObserver) {
+                        svcGrid.querySelectorAll('.reveal').forEach(function(el) { window.__revealObserver.observe(el); });
+                    }
+                }
+            }
         }
 
         // ── Education item renderer ───────────────────────────────
@@ -2953,6 +3002,7 @@
             <button class="ba-tab-btn" data-ba-panel="ba-panel-theme" role="tab">🎨 Тема</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-contact" role="tab">📞 Контакти</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-testimonials" role="tab">💬 Отзиви</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-services" role="tab">💼 Услуги</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-icons" role="tab">🎯 Икони</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-layout" role="tab">📐 Подредба</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-tools" role="tab">🔧 Инструменти</button>
@@ -3154,6 +3204,16 @@
                 <p style="font-size:.74rem;color:#8892A4;margin-bottom:.6rem;">Управлявай отзивите (до 6). Натисни "Запази" след промени.</p>
                 <div id="ba-testimonial-slots"></div>
                 <button class="ba-btn ba-btn-success" id="ba-btn-add-testimonial" style="width:100%;margin-top:.4rem;">+ Добави отзив</button>
+            </div>
+        </div>
+
+        <!-- PANEL: Services -->
+        <div id="ba-panel-services" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Услуги &amp; Програми</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.6rem;">Управлявай картите с услуги. Добавяй, редактирай, премахвай. Натисни "Запази" след промени.</p>
+                <div id="ba-service-slots"></div>
+                <button class="ba-btn ba-btn-success" id="ba-btn-add-service" style="width:100%;margin-top:.4rem;">+ Добави услуга</button>
             </div>
         </div>
 
@@ -3377,7 +3437,7 @@
     var hasUnsaved   = false;
     var selectedElIndex = -1;
     function defaultSavedData() {
-        return { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} };
+        return { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], services:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{} };
     }
     var savedData = defaultSavedData();
     /* ── Toast ── */
@@ -3466,6 +3526,7 @@
         setupContactPanel();
         setupTestimonialsPanel();
         setupEduPanel();
+        setupServicesPanel();
         setupSaveReset();
         setupExitButton();
         setupClickToEdit();
@@ -3555,6 +3616,7 @@
         applyContact();
         applyTestimonials();
         applyEduItems();
+        applyServices();
         // Apply custom CSS if available (function defined later in the IIFE)
         if (typeof applyCustomCSS === 'function' && savedData.globalSettings && savedData.globalSettings.customCSS) {
             applyCustomCSS(savedData.globalSettings.customCSS);
@@ -4000,6 +4062,51 @@
         }
     }
 
+    var DEFAULT_SERVICES = [
+        { badge:'Стартова точка', featured:false, title:'Първоначална консултация', body:'Задълбочена оценка на здравния статус, хранителните навици, телесния състав и лабораторните показатели. Завършва с изготвяне на вашия индивидуален хранителен план.', listItems:['Хранителен и метаболитен анализ','Анализ на телесния състав','Персонализиран хранителен план','Суплементационна схема'], price:'', duration:'' },
+        { badge:'Най-търсено', featured:true, title:'Програма за отслабване', body:'Медицински обоснована програма за устойчива загуба на тегло — без глад, без стрес. Диетата е адаптирана към вашия метаболизъм, хормонален профил и начин на живот.', listItems:['Метаболитна оценка и калориен дефицит','Хранителен план без глад','Тренировъчен протокол','Месечен мониторинг и корекции'], price:'', duration:'' },
+        { badge:'За спортисти', featured:false, title:'Спортна нутриция', body:'Оптимизирана диета за атлетична производителност, мускулен растеж и по-бързо възстановяване. Планирана в синхрон с тренировъчния ви цикъл.', listItems:['Периодизация на храненето','Протоколи за мускулен растеж','Суплементация за спортисти','Анализ на ефективността'], price:'', duration:'' },
+        { badge:'Цялостен подход', featured:false, title:'Здравословен начин на живот', body:'Интегрална стратегия за превантивно здраве — хранене, движение, сън и управление на стреса в един съгласуван план за дългосрочни резултати.', listItems:['Антиинфламаторна и балансирана диета','Хигиена на съня и биоритъм','Управление на стреса','Дългосрочен мониторинг'], price:'', duration:'' }
+    ];
+
+    function applyServices() {
+        var grid = document.getElementById('services-grid');
+        if (!grid) return;
+        var list = (savedData.services && savedData.services.length) ? savedData.services : DEFAULT_SERVICES;
+        var delays = ['reveal-delay-1','reveal-delay-2','reveal-delay-3','reveal-delay-4'];
+        grid.innerHTML = '';
+        list.forEach(function(svc, i) {
+            var badgeClass = 'service-card__badge' + (svc.featured ? ' service-card__badge--featured' : '');
+            var metaHtml = '';
+            if (svc.price || svc.duration) {
+                metaHtml = '<div class="service-card__meta">';
+                if (svc.price)    metaHtml += '<span class="service-card__price">' + htmlEsc(svc.price) + '</span>';
+                if (svc.duration) metaHtml += '<span class="service-card__duration">⏱ ' + htmlEsc(svc.duration) + '</span>';
+                metaHtml += '</div>';
+            }
+            var itemsHtml = '';
+            if (svc.listItems && svc.listItems.length) {
+                itemsHtml = '<ul class="service-card__list">';
+                svc.listItems.forEach(function(li) { if (li) itemsHtml += '<li>' + htmlEsc(li) + '</li>'; });
+                itemsHtml += '</ul>';
+            }
+            var card = document.createElement('div');
+            card.className = 'service-card reveal ' + (delays[i] || 'reveal-delay-1');
+            card.innerHTML =
+                '<div class="' + badgeClass + '">' + htmlEsc(svc.badge || '') + '</div>' +
+                '<div class="service-card__title">' + htmlEsc(svc.title || '') + '</div>' +
+                '<div class="service-card__body">' + htmlEsc(svc.body || '') + '</div>' +
+                metaHtml +
+                itemsHtml +
+                '<a href="#contact" class="service-card__cta">Запази час</a>';
+            grid.appendChild(card);
+        });
+        // Re-observe new cards for reveal animation
+        if (window.__revealObserver) {
+            grid.querySelectorAll('.reveal').forEach(function(el) { window.__revealObserver.observe(el); });
+        }
+    }
+
     function renderEduSlots() {
         var container = document.getElementById('ba-edu-slots');
         if (!container) return;
@@ -4111,6 +4218,99 @@
             savedData.educationItems.push({ title:'', year:'', place:'', desc:'', certImage:'' });
             renderEduSlots();
             applyEduItems();
+            hasUnsaved = true;
+        });
+    }
+
+    /* ── Services panel ── */
+    var SVC_INPUT_STYLE = 'width:100%;padding:.35rem .55rem;background:#1A1D27;border:1px solid #2E3348;border-radius:6px;color:#E2E8F0;font-size:.78rem;font-family:inherit;outline:none;resize:vertical;';
+
+    function renderServiceSlots() {
+        var container = document.getElementById('ba-service-slots');
+        if (!container) return;
+        container.innerHTML = '';
+        var list = savedData.services && savedData.services.length ? savedData.services : JSON.parse(JSON.stringify(DEFAULT_SERVICES));
+        if (!savedData.services || !savedData.services.length) {
+            savedData.services = JSON.parse(JSON.stringify(DEFAULT_SERVICES));
+        }
+        list = savedData.services;
+
+        list.forEach(function(svc, i) {
+            var div = document.createElement('div');
+            div.dataset.svcI = i;
+            div.style.cssText = 'background:#1e2238;border:1px solid #2E3348;border-radius:8px;padding:.6rem;margin-bottom:.5rem;';
+
+            var itemsVal = (svc.listItems || []).join('\n');
+            div.innerHTML =
+                '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem;">' +
+                    '<span style="font-size:.72rem;color:#8892A4;flex:1;">Услуга ' + htmlEsc(String(i + 1)) + '</span>' +
+                    '<button class="ba-btn ba-btn-danger" data-svc-remove="' + i + '" style="padding:.2rem .5rem;font-size:.7rem;">✕</button>' +
+                '</div>' +
+                '<div class="ba-form-group"><label>Бадж текст</label><input type="text" data-si="' + i + '" data-sf="badge" value="' + htmlEsc(svc.badge||'') + '"></div>' +
+                '<div class="ba-form-group" style="display:flex;align-items:center;gap:.5rem;">' +
+                    '<input type="checkbox" id="ba-svc-feat-' + i + '" data-si="' + i + '" data-sf="featured"' + (svc.featured ? ' checked' : '') + '>' +
+                    '<label for="ba-svc-feat-' + i + '" style="margin:0;">Маркирай като „Най-търсено"</label>' +
+                '</div>' +
+                '<div class="ba-form-group"><label>Заглавие</label><input type="text" data-si="' + i + '" data-sf="title" value="' + htmlEsc(svc.title||'') + '"></div>' +
+                '<div class="ba-form-group"><label>Описание</label><textarea rows="3" data-si="' + i + '" data-sf="body">' + htmlEsc(svc.body||'') + '</textarea></div>' +
+                '<div class="ba-form-group"><label>Цена (напр. 120 лв.)</label><input type="text" data-si="' + i + '" data-sf="price" value="' + htmlEsc(svc.price||'') + '"></div>' +
+                '<div class="ba-form-group"><label>Продължителност (напр. 60 мин.)</label><input type="text" data-si="' + i + '" data-sf="duration" value="' + htmlEsc(svc.duration||'') + '"></div>' +
+                '<div class="ba-form-group"><label>Включва (по един ред на точка)</label><textarea rows="4" data-si="' + i + '" data-sf="listItems">' + htmlEsc(itemsVal) + '</textarea></div>';
+            container.appendChild(div);
+        });
+
+        // Style inputs
+        container.querySelectorAll('input[type=text],textarea').forEach(function(inp) {
+            inp.style.cssText = SVC_INPUT_STYLE;
+        });
+
+        // Text + textarea change
+        container.querySelectorAll('input[type=text],textarea').forEach(function(inp) {
+            inp.addEventListener('input', function() {
+                var idx = parseInt(inp.dataset.si, 10);
+                var field = inp.dataset.sf;
+                if (!savedData.services[idx]) return;
+                if (field === 'listItems') {
+                    savedData.services[idx].listItems = inp.value.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+                } else {
+                    savedData.services[idx][field] = inp.value;
+                }
+                applyServices();
+                hasUnsaved = true;
+            });
+        });
+
+        // Checkbox change
+        container.querySelectorAll('input[type=checkbox]').forEach(function(chk) {
+            chk.addEventListener('change', function() {
+                var idx = parseInt(chk.dataset.si, 10);
+                if (!savedData.services[idx]) return;
+                savedData.services[idx].featured = chk.checked;
+                applyServices();
+                hasUnsaved = true;
+            });
+        });
+
+        // Remove buttons
+        container.querySelectorAll('[data-svc-remove]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var idx = parseInt(btn.dataset.svcRemove, 10);
+                savedData.services.splice(idx, 1);
+                renderServiceSlots();
+                applyServices();
+                hasUnsaved = true;
+            });
+        });
+    }
+
+    function setupServicesPanel() {
+        renderServiceSlots();
+        var btnAdd = document.getElementById('ba-btn-add-service');
+        if (btnAdd) btnAdd.addEventListener('click', function() {
+            if (!savedData.services) savedData.services = [];
+            savedData.services.push({ badge:'Нова услуга', featured:false, title:'', body:'', listItems:[], price:'', duration:'' });
+            renderServiceSlots();
+            applyServices();
             hasUnsaved = true;
         });
     }
