@@ -80,7 +80,7 @@ export default {
       let response;
       
       if (url.pathname === '/bio.html') {
-        response = await serveBioHtml(env, request, ctx);
+        response = await serveBioHtml(env, request);
       }
       // Only serve static files for GET — POST/PUT requests must reach the API router.
       else if (request.method === 'GET' && STATIC_FILES[url.pathname]) {
@@ -187,7 +187,7 @@ export default {
               if (request.method === 'GET') {
                   response = await handleGetBioContent(request, env);
               } else if (request.method === 'POST') {
-                  response = await handleSaveBioContent(request, env, ctx);
+                  response = await handleSaveBioContent(request, env);
               } else {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
@@ -295,70 +295,31 @@ function renderBioHtml(htmlTemplate, bioContent) {
 }
 
 /**
- * Serves bio.html using the pre-baked KV key 'baked_bio.html'.
+ * Serves bio.html by reading static_bio.html + bio_content from KV on every
+ * request and injecting bio_content inline.
  *
- * Baking strategy:
- *   • handleSaveBioContent() renders and stores 'baked_bio.html' in KV
- *     every time the admin saves bio_content.  The heavy rendering work
- *     (2 KV reads + string replace) happens ONCE at save time, not on
- *     every page view.
- *   • Cache-Control: no-cache — браузърът винаги изпраща If-None-Match при
- *     следващо зареждане.  Ако съдържанието не е сменено Worker връща 304
- *     (без тяло, 1 KV четене) — бързо и евтино.  Ако админът е запазил
- *     промени ETag е различен и браузърът получава новия HTML веднага.
- *   • Избрано e no-cache (вместо max-age=3600) за да може потребителят да
- *     вижда промените веднага след admin save без да чака изтичане на кеш.
- *
- * Fallback: if 'baked_bio.html' does not exist yet (first deploy before
- * first admin save) the Worker falls back to building from static_bio.html
- * + bio_content on the fly, and also writes baked_bio.html for next time.
+ * Cache-Control: no-store — браузърът и CDN никога не кешират страницата.
+ * Всяка заявка получава свежото съдържание директно от KV.  Това гарантира
+ * че промените, направени от админа, се виждат веднага при следващото
+ * зареждане на страницата от всеки потребител.
  *
  * @param {object} env - Worker environment bindings
- * @param {Request} request - Incoming request (used for If-None-Match check)
- * @param {object} ctx - Execution context (used for waitUntil)
+ * @param {Request} request - Incoming request
  */
-async function serveBioHtml(env, request, ctx) {
-    // Prefer the pre-baked HTML — just ONE KV read on the happy path.
-    let finalHtml = await env.PAGE_CONTENT.get('baked_bio.html');
-
-    if (finalHtml === null) {
-        // Fallback: bake on the fly (happens only before the first admin save).
-        const [htmlTemplate, bioContent] = await Promise.all([
-            env.PAGE_CONTENT.get('static_bio.html'),
-            env.PAGE_CONTENT.get('bio_content')
-        ]);
-        if (htmlTemplate === null) {
-            throw new UserFacingError('File bio.html not found in storage.', 404);
-        }
-        finalHtml = renderBioHtml(htmlTemplate, bioContent);
-        // Store the baked result so future requests are cheap.
-        ctx.waitUntil(
-            env.PAGE_CONTENT.put('baked_bio.html', finalHtml).catch(err =>
-                console.error('serveBioHtml: failed to store baked_bio.html fallback:', err)
-            )
-        );
+async function serveBioHtml(env, request) {
+    const [htmlTemplate, bioContent] = await Promise.all([
+        env.PAGE_CONTENT.get('static_bio.html'),
+        env.PAGE_CONTENT.get('bio_content')
+    ]);
+    if (htmlTemplate === null) {
+        throw new UserFacingError('File bio.html not found in storage.', 404);
     }
-
-    const etag = await generateETag(finalHtml);
-    // no-cache: браузърът и CDN винаги валидират с If-None-Match преди да използват
-    // кеша.  Когато съдържанието не се е променило Worker връща 304 (без тяло) —
-    // евтино и бързо.  Когато админът запази промени ETag се сменя и браузърът
-    // получава новия HTML веднага при следващото зареждане.
-    const cacheControl = 'no-cache';
-
-    // Return 304 Not Modified when the browser already has the current version.
-    if (request.headers.get('If-None-Match') === etag) {
-        return new Response(null, {
-            status: 304,
-            headers: { 'Cache-Control': cacheControl, 'ETag': etag }
-        });
-    }
+    const finalHtml = renderBioHtml(htmlTemplate, bioContent);
     return new Response(finalHtml, {
         status: 200,
         headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': cacheControl,
-            'ETag': etag
+            'Cache-Control': 'no-store'
         }
     });
 }
@@ -611,11 +572,13 @@ async function handleGetBioContent(request, env) {
 
 /**
  * Handles POST /bio_content.json
- * Saves bio page overrides to KV and immediately re-bakes baked_bio.html so
- * the next page load gets the fresh content without any Worker rendering cost.
- * After this save all page visitors benefit from the 1-hour browser cache.
+ * Saves bio page overrides to KV.  The write is awaited BEFORE the 200
+ * response is returned so the admin is certain the data is persisted.
+ * Because serveBioHtml() now reads bio_content fresh on every request there
+ * is no baked HTML to update — the next page load will automatically pick up
+ * the new content from KV.
  */
-async function handleSaveBioContent(request, env, ctx) {
+async function handleSaveBioContent(request, env) {
     const contentToSave = await request.text();
     try {
         // Validate that the body is valid JSON before storing
@@ -623,22 +586,9 @@ async function handleSaveBioContent(request, env, ctx) {
         if (typeof parsed !== 'object' || parsed === null) {
             throw new UserFacingError('Expected a JSON object in the request body.', 400);
         }
-        // Bake the final HTML now (at save time) so that serveBioHtml() only
-        // needs one cheap KV read on every subsequent page load.
-        ctx.waitUntil((async () => {
-            try {
-                await env.PAGE_CONTENT.put('bio_content', contentToSave);
-                const htmlTemplate = await env.PAGE_CONTENT.get('static_bio.html');
-                if (htmlTemplate !== null) {
-                    const bakedHtml = renderBioHtml(htmlTemplate, contentToSave);
-                    await env.PAGE_CONTENT.put('baked_bio.html', bakedHtml);
-                } else {
-                    console.warn('handleSaveBioContent: static_bio.html not found in KV; baked_bio.html not updated');
-                }
-            } catch (err) {
-                console.error('handleSaveBioContent: failed to bake bio.html:', err);
-            }
-        })());
+        // Await the KV write so we are sure it completed before telling the
+        // client that the save succeeded.
+        await env.PAGE_CONTENT.put('bio_content', contentToSave);
         return new Response(JSON.stringify({ success: true, message: 'Bio content saved.' }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
