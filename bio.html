@@ -1151,6 +1151,10 @@
 
         /* ── Bio Inline Admin Panel ─────────────────────────────────── */
         body.bio-admin-active { margin-left: 340px; transition: margin-left .25s; }
+        /* On mobile, admin panel overlays the page instead of pushing it */
+        @media (max-width: 600px) {
+            body.bio-admin-active { margin-left: 0; }
+        }
         #bio-inline-admin {
             position: fixed; left: 0; top: 0; bottom: 0; width: 340px;
             background: #1A1D27; color: #E2E8F0;
@@ -1158,6 +1162,10 @@
             z-index: 999999; display: flex; flex-direction: column; overflow: hidden;
             box-shadow: 4px 0 24px rgba(0,0,0,.5);
             transform: translateX(-100%); transition: transform .25s;
+        }
+        /* On very small screens expand to full width */
+        @media (max-width: 600px) {
+            #bio-inline-admin { width: 100%; }
         }
         #bio-inline-admin.ba-visible { transform: translateX(0); }
         .ba-header {
@@ -2159,13 +2167,14 @@
         // ── Swipeable testimonials carousel (mobile only) ─────────
         (function() {
             const track = document.getElementById('testiTrack');
-            const dots  = document.querySelectorAll('.carousel-dot');
-            if (!track || !dots.length) return;
+            if (!track) return;
             let current = 0;
-            const total = track.children.length;
             let startX = 0, isDragging = false;
 
             function goTo(index) {
+                // Read total dynamically so rebuilt carousels work correctly
+                const total = track.children.length;
+                if (total === 0) return;
                 current = (index + total) % total;
                 if (!prefersReducedMotion) {
                     track.style.transform = 'translateX(-' + current * 100 + '%)';
@@ -2173,15 +2182,20 @@
                     track.style.transition = 'none';
                     track.style.transform = 'translateX(-' + current * 100 + '%)';
                 }
-                dots.forEach((d, i) => {
+                // Query dots live so rebuilt dots are always updated
+                document.querySelectorAll('.carousel-dot').forEach((d, i) => {
                     d.classList.toggle('active', i === current);
                     d.setAttribute('aria-selected', i === current ? 'true' : 'false');
                 });
             }
 
-            dots.forEach(dot => {
+            // Bind initial static dots
+            document.querySelectorAll('.carousel-dot').forEach(dot => {
                 dot.addEventListener('click', () => goTo(parseInt(dot.dataset.index, 10)));
             });
+
+            // Expose goTo so applyBioContent / applyTestimonials can rebind rebuilt dots
+            window.__testiGoTo = goTo;
 
             // Touch support — passive listeners are safe here because we only read
             // touch coordinates; we never call preventDefault() to block scrolling.
@@ -2399,6 +2413,10 @@
                             btn.setAttribute('role', 'tab');
                             btn.setAttribute('aria-label', 'Слайд ' + (i + 1));
                             btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+                            // Rebind to the shared goTo function exposed by the carousel IIFE
+                            if (typeof window.__testiGoTo === 'function') {
+                                btn.addEventListener('click', function() { window.__testiGoTo(i); });
+                            }
                             dotsWrap.appendChild(btn);
                         });
                     }
@@ -3081,37 +3099,58 @@
     function applyTestimonials() {
         var list = savedData.testimonials;
         if (!list || !list.length) return;
-        var grid = document.querySelector('[data-bio-id="testimonials-grid"]');
-        if (!grid) return;
-        grid.innerHTML = '';
-        list.forEach(function(t) {
+
+        function buildTestiCard(t) {
+            var stars = Math.max(1, Math.min(5, t.stars || 5));
+            var starsHtml = '';
+            for (var i = 0; i < stars; i++) starsHtml += '<span>★</span>';
             var card = document.createElement('div');
-            card.className = 'testimonial-card';
+            card.className = 'testi-card';
+            card.innerHTML =
+                '<div class="testi-card__stars">' + starsHtml + '</div>' +
+                '<p class="testi-card__text">' + htmlEsc(t.text || '') + '</p>' +
+                '<div class="testi-card__author">' +
+                    '<div class="testi-card__avatar"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>' +
+                    '<div><div class="testi-card__author-name">' + htmlEsc(t.authorName || '') + '</div>' +
+                    '<div class="testi-card__author-sub">' + htmlEsc(t.authorSub || '') + '</div></div>' +
+                '</div>';
+            return card;
+        }
 
-            var starsDiv = document.createElement('div');
-            starsDiv.className = 'testimonial-card__stars';
-            starsDiv.textContent = '★'.repeat(Math.min(5, Math.max(1, t.stars || 5)));
-            card.appendChild(starsDiv);
+        // Desktop grid
+        var grid = document.querySelector('[data-bio-id="testimonials-grid"]');
+        if (grid) {
+            grid.innerHTML = '';
+            list.forEach(function(t, i) {
+                var card = buildTestiCard(t);
+                card.classList.add('reveal', 'reveal-delay-' + Math.min(i + 1, 4));
+                grid.appendChild(card);
+            });
+        }
 
-            var textP = document.createElement('p');
-            textP.className = 'testimonial-card__text';
-            textP.textContent = t.text || '';
-            card.appendChild(textP);
-
-            var authorDiv = document.createElement('div');
-            authorDiv.className = 'testimonial-card__author';
-            var strong = document.createElement('strong');
-            strong.textContent = t.authorName || '';
-            authorDiv.appendChild(strong);
-            if (t.authorSub) {
-                var span = document.createElement('span');
-                span.textContent = t.authorSub;
-                authorDiv.appendChild(span);
+        // Mobile carousel track
+        var track = document.getElementById('testiTrack');
+        if (track) {
+            track.innerHTML = '';
+            list.forEach(function(t) { track.appendChild(buildTestiCard(t)); });
+            // Rebuild dots and rebind the carousel goTo function
+            var dotsWrap = document.querySelector('.carousel-dots');
+            if (dotsWrap) {
+                dotsWrap.innerHTML = '';
+                list.forEach(function(_, i) {
+                    var btn = document.createElement('button');
+                    btn.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                    btn.dataset.index = i;
+                    btn.setAttribute('role', 'tab');
+                    btn.setAttribute('aria-label', 'Слайд ' + (i + 1));
+                    btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+                    if (typeof window.__testiGoTo === 'function') {
+                        btn.addEventListener('click', function() { window.__testiGoTo(i); });
+                    }
+                    dotsWrap.appendChild(btn);
+                });
             }
-            card.appendChild(authorDiv);
-
-            grid.appendChild(card);
-        });
+        }
     }
 
     /* ── Build element list ── */
@@ -3345,7 +3384,7 @@
         list.forEach(function(t, i) {
             var div = document.createElement('div');
             div.style.cssText = 'background:#22263A;border:1px solid #2E3348;border-radius:8px;padding:.6rem;margin-bottom:.5rem;';
-            div.innerHTML = '<div style="font-size:.72rem;color:#8892A4;margin-bottom:.3rem;">Отзив ' + htmlEsc(i+1) + '</div>' +
+            div.innerHTML = '<div style="font-size:.72rem;color:#8892A4;margin-bottom:.3rem;">Отзив ' + htmlEsc(String(i + 1)) + '</div>' +
                 '<div class="ba-form-group"><label>Звезди (1-5)</label><input type="number" min="1" max="5" value="' + htmlEsc(t.stars||5) + '" data-ti="' + i + '" data-tf="stars" style="width:60px;"></div>' +
                 '<div class="ba-form-group"><label>Текст</label><textarea rows="2" data-ti="' + i + '" data-tf="text">' + htmlEsc(t.text||'') + '</textarea></div>' +
                 '<div class="ba-form-group"><label>Автор</label><input type="text" value="' + htmlEsc(t.authorName||'') + '" data-ti="' + i + '" data-tf="authorName"></div>' +
