@@ -482,6 +482,121 @@
         .cert-item__title { font-weight: 600; font-size: .9rem; color: var(--c-text-1); }
         .cert-item__body  { font-size: .8rem; color: var(--c-text-2); margin-top: .15rem; }
 
+        /* ─── EDUCATION ITEMS (replaces timeline) ───────────────────── */
+        .edu-list { display: flex; flex-direction: column; gap: .75rem; }
+        .edu-item {
+            display: flex; align-items: center; gap: .9rem;
+            background: var(--c-surface-2);
+            border: 1px solid var(--c-border);
+            border-radius: var(--radius-md);
+            padding: .9rem 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .edu-item:hover, .edu-item:focus-visible {
+            border-color: var(--c-gold);
+            box-shadow: var(--shadow-xs);
+            transform: translateX(3px);
+            outline: none;
+        }
+        .edu-item__year {
+            font-family: var(--font-mono);
+            font-size: .72rem; color: var(--c-gold);
+            letter-spacing: .05em; white-space: nowrap; flex-shrink: 0;
+            background: var(--c-gold-light);
+            border-radius: 100px; padding: .2rem .65rem;
+        }
+        .edu-item__content { flex: 1; min-width: 0; }
+        .edu-item__title { font-weight: 600; font-size: .9rem; color: var(--c-text-1); }
+        .edu-item__place { font-size: .8rem; color: var(--c-text-2); margin-top: .1rem; }
+        .edu-item__arrow {
+            color: var(--c-text-3); font-size: .85rem; flex-shrink: 0;
+            transition: color var(--transition), transform var(--transition);
+        }
+        .edu-item:hover .edu-item__arrow { color: var(--c-gold); transform: translateX(3px); }
+
+        /* ─── EDUCATION / CERT MODAL ────────────────────────────────── */
+        .edu-modal {
+            position: fixed; inset: 0; z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+            padding: 1rem;
+        }
+        .edu-modal[hidden] { display: none; }
+        .edu-modal__overlay {
+            position: absolute; inset: 0;
+            background: rgba(26,25,22,.6);
+            backdrop-filter: blur(6px);
+            cursor: pointer;
+        }
+        .edu-modal__box {
+            position: relative; z-index: 1;
+            background: var(--c-surface);
+            border-radius: var(--radius-lg);
+            padding: 2rem 1.75rem 1.75rem;
+            width: 100%; max-width: 480px;
+            box-shadow: var(--shadow-lg);
+            max-height: 90vh; overflow-y: auto;
+        }
+        .edu-modal__close {
+            position: absolute; top: 1rem; right: 1rem;
+            width: 32px; height: 32px;
+            border: 1px solid var(--c-border); border-radius: 50%;
+            background: var(--c-surface-2);
+            cursor: pointer; font-size: 1rem; color: var(--c-text-2);
+            display: grid; place-items: center;
+            transition: var(--transition); line-height: 1;
+        }
+        .edu-modal__close:hover { background: var(--c-border); color: var(--c-text-1); }
+        .edu-modal__img-wrap {
+            width: 100%; height: 180px; border-radius: var(--radius-md);
+            overflow: hidden; margin-bottom: 1.5rem;
+            cursor: zoom-in;
+            border: 1px solid var(--c-border);
+        }
+        .edu-modal__img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; display: block; }
+        .edu-modal__img-wrap:hover img { transform: scale(1.04); }
+        .edu-modal__year {
+            font-family: var(--font-mono); font-size: .75rem; color: var(--c-gold);
+            letter-spacing: .08em; margin-bottom: .5rem;
+        }
+        .edu-modal__title {
+            font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700;
+            color: var(--c-text-1); margin-bottom: .4rem; line-height: 1.25; padding-right: 2rem;
+        }
+        .edu-modal__place { font-size: .9rem; color: var(--c-text-2); margin-bottom: 1rem; font-style: italic; }
+        .edu-modal__desc { font-size: .92rem; color: var(--c-text-2); line-height: 1.75; }
+
+        /* ─── FULLSCREEN IMAGE VIEWER ───────────────────────────────── */
+        .edu-img-fullscreen {
+            position: fixed; inset: 0; z-index: 20000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .edu-img-fullscreen[hidden] { display: none; }
+        .edu-img-fullscreen__overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,.92);
+            cursor: zoom-out;
+        }
+        .edu-img-fullscreen__close {
+            position: absolute; top: 1rem; right: 1rem; z-index: 1;
+            width: 42px; height: 42px;
+            border: none; border-radius: 50%;
+            background: rgba(255,255,255,.12);
+            cursor: pointer; font-size: 1.2rem; color: #fff;
+            display: grid; place-items: center;
+            transition: background .2s;
+        }
+        .edu-img-fullscreen__close:hover { background: rgba(255,255,255,.25); }
+        .edu-img-fullscreen__img {
+            position: relative; z-index: 1;
+            max-width: 92vw; max-height: 90vh;
+            object-fit: contain;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+        }
+
         /* ─── PHILOSOPHY ────────────────────────────────────────────── */
         .philosophy {
             background: var(--c-accent);
@@ -741,12 +856,41 @@
 
             .nav__links { display: none; }
             .nav__hamburger { display: flex; }
+
+            /* ── Mobile typography improvements ── */
+            /* Bump all very small text up to readable sizes on mobile */
+            .section-label       { font-size: .82rem; letter-spacing: .1em; }
+            .deco-line__text     { font-size: .75rem; letter-spacing: .09em; }
+            .tag                 { font-size: .75rem; padding: .3rem .85rem; }
+            .exp-card__num       { font-size: .72rem; }
+            .service-card__badge { font-size: .72rem; }
+            .cert-item__title    { font-size: .9rem; }
+            .cert-item__body     { font-size: .82rem; }
+            .edu-item__year      { font-size: .75rem; }
+            .edu-item__title     { font-size: .92rem; }
+            .edu-item__place     { font-size: .82rem; }
+            .timeline-item__year { font-size: .78rem; }
+            .section-title       { font-size: clamp(1.7rem, 5.5vw, 2.8rem); }
+            .section-sub         { font-size: 1rem; }
+            .creds__col-title    { font-size: 1.2rem; }
+            .stat-card__num      { font-size: 1.7rem; }
+            .stat-card__label    { font-size: .78rem; }
+            .about__body         { font-size: .97rem; }
+            .exp-card__body      { font-size: .9rem; }
+            .approach-step__body { font-size: .9rem; }
+            .testi-card__text    { font-size: .92rem; }
+            .hero__name          { font-size: clamp(2.5rem, 10vw, 4.5rem); }
         }
 
         @media (max-width: 480px) {
             .about__pillars { grid-template-columns: 1fr 1fr; }
             .approach__grid { grid-template-columns: 1fr; }
             .hero__actions { flex-direction: column; }
+            .section-label   { font-size: .8rem; }
+            .deco-line__text { font-size: .72rem; }
+            .bottom-nav__item { font-size: .65rem; }
+            .edu-item { padding: .8rem .9rem; gap: .7rem; }
+            .edu-item__year { font-size: .72rem; }
         }
 
         /* ─── Mobile menu overlay ───────────────────────────────────── */
@@ -1048,12 +1192,17 @@
         .ba-panel.active { display: block; }
         .ba-section { margin-bottom: 1.1rem; }
         .ba-section-title {
-            font-size: .68rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: .08em; color: #8892A4; margin-bottom: .5rem;
+            font-size: .68rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .1em; color: #6C8EF5;
+            margin-bottom: .5rem;
+            padding: .25rem .5rem;
+            background: rgba(108,142,245,.08);
+            border-left: 2px solid #6C8EF5;
+            border-radius: 0 3px 3px 0;
         }
         .ba-divider { border: none; border-top: 1px solid #2E3348; margin: .7rem 0; }
         .ba-form-group { margin-bottom: .65rem; }
-        .ba-form-group label { font-size: .78rem; color: #8892A4; display: block; margin-bottom: .2rem; }
+        .ba-form-group label { font-size: .78rem; color: #a0abbe; display: block; margin-bottom: .2rem; font-weight: 500; }
         .ba-form-group input[type=text],
         .ba-form-group input[type=number],
         .ba-form-group textarea,
@@ -1065,7 +1214,7 @@
         }
         .ba-form-group input:focus,
         .ba-form-group textarea:focus,
-        .ba-form-group select:focus { border-color: #6C8EF5; }
+        .ba-form-group select:focus { border-color: #6C8EF5; box-shadow: 0 0 0 2px rgba(108,142,245,.15); }
         .ba-color-row { display: flex; gap: .4rem; align-items: center; }
         .ba-color-row input[type=color] { width: 38px; height: 32px; padding: 2px; border-radius: 6px; cursor: pointer; border: 1px solid #2E3348; flex-shrink: 0; }
         .ba-color-row input[type=text] { flex: 1; }
@@ -1074,9 +1223,9 @@
         .ba-el-item {
             padding: .45rem .65rem; background: #22263A; border: 1px solid #2E3348;
             border-radius: 8px; font-size: .78rem; cursor: pointer;
-            transition: border-color .15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transition: border-color .15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #C8D0E0;
         }
-        .ba-el-item:hover { border-color: #6C8EF5; }
+        .ba-el-item:hover { border-color: #6C8EF5; color: #E2E8F0; }
         .ba-el-item.selected { border-color: #6C8EF5; color: #6C8EF5; background: #1a2040; }
         .ba-img-card {
             border: 1.5px dashed #2E3348; border-radius: 8px; padding: .65rem;
@@ -1361,41 +1510,41 @@
 
             <div class="creds__layout">
 
-                <!-- Education timeline -->
+                <!-- Education items (replaces timeline) -->
                 <div class="reveal">
                     <div class="creds__col-title"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> Образование</div>
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <div class="timeline-item__dot"></div>
-                            <div>
-                                <div class="timeline-item__year" data-bio-id="edu-1-year">2010 – 2016</div>
-                                <div class="timeline-item__title" data-bio-id="edu-1-title">Магистър по медицина</div>
-                                <div class="timeline-item__place" data-bio-id="edu-1-place">Медицински университет, София</div>
+                    <div class="edu-list" id="edu-list">
+                        <div class="edu-item" data-edu-idx="0" role="button" tabindex="0" aria-haspopup="dialog">
+                            <span class="edu-item__year">2010 – 2016</span>
+                            <div class="edu-item__content">
+                                <div class="edu-item__title">Магистър по медицина</div>
+                                <div class="edu-item__place">Медицински университет, София</div>
                             </div>
+                            <span class="edu-item__arrow">›</span>
                         </div>
-                        <div class="timeline-item">
-                            <div class="timeline-item__dot"></div>
-                            <div>
-                                <div class="timeline-item__year" data-bio-id="edu-2-year">2017 – 2018</div>
-                                <div class="timeline-item__title" data-bio-id="edu-2-title">Специализация по превантивна медицина</div>
-                                <div class="timeline-item__place" data-bio-id="edu-2-place">Национален център по обществено здраве</div>
+                        <div class="edu-item" data-edu-idx="1" role="button" tabindex="0" aria-haspopup="dialog">
+                            <span class="edu-item__year">2017 – 2018</span>
+                            <div class="edu-item__content">
+                                <div class="edu-item__title">Специализация по превантивна медицина</div>
+                                <div class="edu-item__place">Национален център по обществено здраве</div>
                             </div>
+                            <span class="edu-item__arrow">›</span>
                         </div>
-                        <div class="timeline-item">
-                            <div class="timeline-item__dot"></div>
-                            <div>
-                                <div class="timeline-item__year">2019</div>
-                                <div class="timeline-item__title" data-bio-id="edu-3-title">Клинична нутриция</div>
-                                <div class="timeline-item__place" data-bio-id="edu-3-place">Международна академия по нутриция</div>
+                        <div class="edu-item" data-edu-idx="2" role="button" tabindex="0" aria-haspopup="dialog">
+                            <span class="edu-item__year">2019</span>
+                            <div class="edu-item__content">
+                                <div class="edu-item__title">Клинична нутриция</div>
+                                <div class="edu-item__place">Международна академия по нутриция</div>
                             </div>
+                            <span class="edu-item__arrow">›</span>
                         </div>
-                        <div class="timeline-item">
-                            <div class="timeline-item__dot"></div>
-                            <div>
-                                <div class="timeline-item__year">2021</div>
-                                <div class="timeline-item__title" data-bio-id="edu-4-title">Сертификат по функционална медицина</div>
-                                <div class="timeline-item__place" data-bio-id="edu-4-place">Institute for Functional Medicine (IFM)</div>
+                        <div class="edu-item" data-edu-idx="3" role="button" tabindex="0" aria-haspopup="dialog">
+                            <span class="edu-item__year">2021</span>
+                            <div class="edu-item__content">
+                                <div class="edu-item__title">Сертификат по функционална медицина</div>
+                                <div class="edu-item__place">Institute for Functional Medicine (IFM)</div>
                             </div>
+                            <span class="edu-item__arrow">›</span>
                         </div>
                     </div>
                 </div>
@@ -2098,6 +2247,28 @@
     <!-- Apply bioadmin overrides: bio_content is injected inline by the worker. -->
     <!-- The worker replaces the script below with the actual bio_content JSON. -->
     <script id="bio-content-injection-point">/* bio_content injected by worker */</script>
+
+    <!-- ── Education qualification modal ──────────────────────────── -->
+    <div id="edu-modal" class="edu-modal" role="dialog" aria-modal="true" aria-labelledby="edu-modal-title" hidden>
+        <div class="edu-modal__overlay" id="edu-modal-overlay"></div>
+        <div class="edu-modal__box">
+            <button class="edu-modal__close" id="edu-modal-close" aria-label="Затвори">✕</button>
+            <div class="edu-modal__img-wrap" id="edu-modal-img-wrap" style="display:none;" role="button" aria-label="Уголеми снимката" tabindex="0">
+                <img id="edu-modal-img" src="" alt="Сертификат">
+            </div>
+            <div class="edu-modal__year" id="edu-modal-year"></div>
+            <h3 class="edu-modal__title" id="edu-modal-title"></h3>
+            <div class="edu-modal__place" id="edu-modal-place"></div>
+            <p class="edu-modal__desc" id="edu-modal-desc"></p>
+        </div>
+    </div>
+
+    <!-- ── Fullscreen image viewer ────────────────────────────────── -->
+    <div id="edu-img-fullscreen" class="edu-img-fullscreen" hidden>
+        <div class="edu-img-fullscreen__overlay" id="edu-img-fs-overlay"></div>
+        <button class="edu-img-fullscreen__close" id="edu-img-fs-close" aria-label="Затвори">✕</button>
+        <img id="edu-img-fs-img" class="edu-img-fullscreen__img" src="" alt="Сертификат — пълен размер">
+    </div>
     <script>
     (function() {
         var IMAGE_TARGETS = {
@@ -2185,14 +2356,6 @@
 
             // Testimonials overrides
             if (data.testimonials && data.testimonials.length > 0) {
-                function esc(str) {
-                    return String(str)
-                        .replace(/&/g, '&amp;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;')
-                        .replace(/"/g, '&quot;')
-                        .replace(/'/g, '&#39;');
-                }
                 function buildTestiCard(t) {
                     var stars = Math.max(1, Math.min(5, t.stars || 5));
                     var starsHtml = '';
@@ -2279,7 +2442,123 @@
                     creds.appendChild(section);
                 }
             }
+
+            // Education items rendering
+            if (data.educationItems && data.educationItems.length > 0) {
+                renderEduItems(data.educationItems);
+            }
+            // Store education items for modal access
+            window.__eduItems = data.educationItems || [];
         }
+
+        // ── Education item renderer ───────────────────────────────
+        function esc(s) {
+            return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+        function renderEduItems(items) {
+            var list = document.getElementById('edu-list');
+            if (!list) return;
+            list.innerHTML = '';
+            items.forEach(function(item, i) {
+                var div = document.createElement('div');
+                div.className = 'edu-item';
+                div.dataset.eduIdx = i;
+                div.setAttribute('role','button');
+                div.setAttribute('tabindex','0');
+                div.setAttribute('aria-haspopup','dialog');
+                div.innerHTML =
+                    '<span class="edu-item__year">' + esc(item.year || '') + '</span>' +
+                    '<div class="edu-item__content">' +
+                        '<div class="edu-item__title">' + esc(item.title || '') + '</div>' +
+                        '<div class="edu-item__place">' + esc(item.place || '') + '</div>' +
+                    '</div>' +
+                    '<span class="edu-item__arrow">›</span>';
+                list.appendChild(div);
+            });
+            bindEduItemClicks();
+        }
+
+        // ── Modal logic ───────────────────────────────────────────
+        var eduModal    = document.getElementById('edu-modal');
+        var eduFsModal  = document.getElementById('edu-img-fullscreen');
+
+        function openEduModal(idx) {
+            var items = window.__eduItems || [];
+            var eduList = document.getElementById('edu-list');
+            // Fallback: read from DOM if no data
+            var item = items[idx];
+            if (!item && eduList) {
+                var domItem = eduList.children[idx];
+                if (domItem) {
+                    var t = domItem.querySelector('.edu-item__title');
+                    var p = domItem.querySelector('.edu-item__place');
+                    var y = domItem.querySelector('.edu-item__year');
+                    item = { title: t ? t.textContent : '', place: p ? p.textContent : '', year: y ? y.textContent : '', desc: '', certImage: '' };
+                }
+            }
+            if (!item) return;
+
+            document.getElementById('edu-modal-year').textContent  = item.year  || '';
+            document.getElementById('edu-modal-title').textContent = item.title || '';
+            document.getElementById('edu-modal-place').textContent = item.place || '';
+            document.getElementById('edu-modal-desc').textContent  = item.desc  || '';
+            var imgWrap = document.getElementById('edu-modal-img-wrap');
+            var img     = document.getElementById('edu-modal-img');
+            if (item.certImage && /^data:image\//i.test(item.certImage)) {
+                img.src = item.certImage;
+                imgWrap.style.display = 'block';
+            } else {
+                imgWrap.style.display = 'none';
+                img.src = '';
+            }
+            eduModal.removeAttribute('hidden');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('edu-modal-close').focus();
+        }
+
+        function closeEduModal() {
+            eduModal.setAttribute('hidden','');
+            if (!eduFsModal.hasAttribute('hidden')) closeEduImgFs();
+            document.body.style.overflow = '';
+        }
+
+        function openEduImgFs() {
+            var img = document.getElementById('edu-modal-img');
+            if (!img.src) return;
+            document.getElementById('edu-img-fs-img').src = img.src;
+            eduFsModal.removeAttribute('hidden');
+        }
+
+        function closeEduImgFs() {
+            eduFsModal.setAttribute('hidden','');
+        }
+
+        function bindEduItemClicks() {
+            document.querySelectorAll('.edu-item').forEach(function(el) {
+                el.onclick = null;
+                el.onkeydown = null;
+                el.addEventListener('click', function() { openEduModal(parseInt(el.dataset.eduIdx, 10)); });
+                el.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEduModal(parseInt(el.dataset.eduIdx, 10)); } });
+            });
+        }
+
+        if (eduModal) {
+            document.getElementById('edu-modal-close').addEventListener('click', closeEduModal);
+            document.getElementById('edu-modal-overlay').addEventListener('click', closeEduModal);
+            document.getElementById('edu-modal-img-wrap').addEventListener('click', openEduImgFs);
+            document.getElementById('edu-modal-img-wrap').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEduImgFs(); } });
+            document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { if (!eduFsModal.hasAttribute('hidden')) closeEduImgFs(); else if (!eduModal.hasAttribute('hidden')) closeEduModal(); } });
+        }
+        if (eduFsModal) {
+            document.getElementById('edu-img-fs-close').addEventListener('click', closeEduImgFs);
+            document.getElementById('edu-img-fs-overlay').addEventListener('click', closeEduImgFs);
+        }
+
+        // Bind clicks on default (static) edu items
+        bindEduItemClicks();
+        // Expose for inline admin access
+        window.__renderEduItems    = renderEduItems;
+        window.__bindEduItemClicks = bindEduItemClicks;
 
         // Store worker origin for contact form
         var workerOrigin = window.location.hostname === 'localhost'
@@ -2332,6 +2611,7 @@
         <nav class="ba-tabs" role="tablist">
             <button class="ba-tab-btn active" data-ba-panel="ba-panel-text" role="tab">✏️ Текст</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-images" role="tab">🖼️ Снимки</button>
+            <button class="ba-tab-btn" data-ba-panel="ba-panel-edu" role="tab">🎓 Образование</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-theme" role="tab">🎨 Тема</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-contact" role="tab">📞 Контакти</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-testimonials" role="tab">💬 Отзиви</button>
@@ -2518,6 +2798,16 @@
             </div>
         </div>
 
+        <!-- PANEL: Education -->
+        <div id="ba-panel-edu" class="ba-panel">
+            <div class="ba-section">
+                <div class="ba-section-title">Образование &amp; Квалификации</div>
+                <p style="font-size:.74rem;color:#8892A4;margin-bottom:.6rem;">Управлявай образователните карти. Влачи за пренареждане. Натисни "Запази" след промени.</p>
+                <div id="ba-edu-slots"></div>
+                <button class="ba-btn ba-btn-success" id="ba-btn-add-edu" style="width:100%;margin-top:.4rem;">+ Добави запис</button>
+            </div>
+        </div>
+
     </div><!-- /ba-sidebar-inner -->
 </div><!-- /bio-inline-admin -->
 
@@ -2554,7 +2844,7 @@
     var adminActive  = false;
     var hasUnsaved   = false;
     var selectedElIndex = -1;
-    var savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] };
+    var savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] };
 
     /* ── Toast ── */
     var toastTimer;
@@ -2591,16 +2881,6 @@
         { label: 'Карта 2 — Тяло',               selector: '.exp-card:nth-child(2) .exp-card__body' },
         { label: 'Карта 3 — Заглавие',            selector: '.exp-card:nth-child(3) .exp-card__title' },
         { label: 'Карта 3 — Тяло',               selector: '.exp-card:nth-child(3) .exp-card__body' },
-        { label: 'Образование — Т1 година',       selector: '.timeline-item:nth-child(1) .timeline-item__year' },
-        { label: 'Образование — Т1 заглавие',     selector: '.timeline-item:nth-child(1) .timeline-item__title' },
-        { label: 'Образование — Т1 място',        selector: '.timeline-item:nth-child(1) .timeline-item__place' },
-        { label: 'Образование — Т2 година',       selector: '.timeline-item:nth-child(2) .timeline-item__year' },
-        { label: 'Образование — Т2 заглавие',     selector: '.timeline-item:nth-child(2) .timeline-item__title' },
-        { label: 'Образование — Т2 място',        selector: '.timeline-item:nth-child(2) .timeline-item__place' },
-        { label: 'Образование — Т3 заглавие',     selector: '.timeline-item:nth-child(3) .timeline-item__title' },
-        { label: 'Образование — Т3 място',        selector: '.timeline-item:nth-child(3) .timeline-item__place' },
-        { label: 'Образование — Т4 заглавие',     selector: '.timeline-item:nth-child(4) .timeline-item__title' },
-        { label: 'Образование — Т4 място',        selector: '.timeline-item:nth-child(4) .timeline-item__place' },
         { label: 'Серт. 1 — Заглавие',            selector: '.cert-item:nth-child(1) .cert-item__title' },
         { label: 'Серт. 1 — Тяло',               selector: '.cert-item:nth-child(1) .cert-item__body' },
         { label: 'Серт. 2 — Заглавие',            selector: '.cert-item:nth-child(2) .cert-item__title' },
@@ -2651,6 +2931,7 @@
         setupThemePanel();
         setupContactPanel();
         setupTestimonialsPanel();
+        setupEduPanel();
         setupSaveReset();
         setupExitButton();
     }
@@ -2671,7 +2952,7 @@
             .then(function(r) { return r.ok ? r.json() : null; })
             .then(function(data) {
                 if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-                    savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] }, data);
+                    savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] }, data);
                     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData)); } catch(e) {}
                 } else {
                     var raw = localStorage.getItem(STORAGE_KEY);
@@ -2679,6 +2960,7 @@
                 }
                 populateContactPanel();
                 renderTestimonialSlots();
+                renderEduSlots();
                 applyAllChanges();
             })
             .catch(function() {
@@ -2716,7 +2998,7 @@
     function resetData() {
         if (!confirm('Сигурен ли сте? Всички промени ще бъдат изтрити!')) return;
         localStorage.removeItem(STORAGE_KEY);
-        savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] };
+        savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] };
         fetch(BIO_API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(savedData) }).catch(function() {});
         document.cookie = 'bio_dirty=1; path=/; SameSite=Strict';
         hasUnsaved = false;
@@ -2730,6 +3012,7 @@
         applyTheme();
         applyContact();
         applyTestimonials();
+        applyEduItems();
     }
 
     function applyTextOverrides() {
@@ -3098,6 +3381,144 @@
             if (savedData.testimonials.length >= 6) { showToast('Максимум 6 отзива.', 'error'); return; }
             savedData.testimonials.push({ stars:5, text:'', authorName:'', authorSub:'' });
             renderTestimonialSlots();
+            hasUnsaved = true;
+        });
+    }
+
+    /* ── Education panel ── */
+    var EDU_INPUT_STYLE = 'width:100%;padding:.35rem .55rem;background:#1A1D27;border:1px solid #2E3348;border-radius:6px;color:#E2E8F0;font-size:.78rem;font-family:inherit;outline:none;resize:vertical;';
+
+    function applyEduItems() {
+        var items = savedData.educationItems;
+        if (!items || !items.length) return;
+        window.__eduItems = items;
+        if (typeof window.__renderEduItems === 'function') {
+            window.__renderEduItems(items);
+        } else {
+            var list = document.getElementById('edu-list');
+            if (!list) return;
+            list.innerHTML = '';
+            items.forEach(function(item, i) {
+                var div = document.createElement('div');
+                div.className = 'edu-item';
+                div.dataset.eduIdx = i;
+                div.setAttribute('role','button'); div.setAttribute('tabindex','0'); div.setAttribute('aria-haspopup','dialog');
+                div.innerHTML = '<span class="edu-item__year">' + htmlEsc(item.year||'') + '</span><div class="edu-item__content"><div class="edu-item__title">' + htmlEsc(item.title||'') + '</div><div class="edu-item__place">' + htmlEsc(item.place||'') + '</div></div><span class="edu-item__arrow">›</span>';
+                list.appendChild(div);
+            });
+            if (typeof window.__bindEduItemClicks === 'function') window.__bindEduItemClicks();
+        }
+    }
+
+    function renderEduSlots() {
+        var container = document.getElementById('ba-edu-slots');
+        if (!container) return;
+        container.innerHTML = '';
+        var list = savedData.educationItems || [];
+        list.forEach(function(item, i) {
+            var div = document.createElement('div');
+            div.draggable = true;
+            div.dataset.eduI = i;
+            div.style.cssText = 'background:#1e2238;border:1px solid #2E3348;border-radius:8px;padding:.6rem;margin-bottom:.5rem;cursor:grab;';
+
+            var imgPreviewId = 'ba-edu-img-prev-' + i;
+            var imgUploadId  = 'ba-edu-img-up-' + i;
+            var hasImg = item.certImage && /^data:image\//i.test(item.certImage);
+
+            div.innerHTML =
+                '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem;">' +
+                    '<span style="font-size:.9rem;cursor:grab;" title="Влачи за пренареждане">⠿</span>' +
+                    '<span style="font-size:.72rem;color:#8892A4;flex:1;">Запис ' + htmlEsc(i+1) + '</span>' +
+                    '<button class="ba-btn ba-btn-danger" data-edu-remove="' + i + '" style="padding:.2rem .5rem;font-size:.7rem;">✕</button>' +
+                '</div>' +
+                '<div class="ba-form-group"><label>Заглавие</label><input type="text" data-ei="' + i + '" data-ef="title" value="' + htmlEsc(item.title||'') + '"></div>' +
+                '<div class="ba-form-group"><label>Период / Година</label><input type="text" data-ei="' + i + '" data-ef="year" value="' + htmlEsc(item.year||'') + '"></div>' +
+                '<div class="ba-form-group"><label>Институция</label><input type="text" data-ei="' + i + '" data-ef="place" value="' + htmlEsc(item.place||'') + '"></div>' +
+                '<div class="ba-form-group"><label>Описание (за модала)</label><textarea rows="2" data-ei="' + i + '" data-ef="desc">' + htmlEsc(item.desc||'') + '</textarea></div>' +
+                '<div class="ba-form-group"><label>Снимка на сертификата</label>' +
+                    '<div style="border:1.5px dashed #2E3348;border-radius:6px;padding:.5rem;text-align:center;cursor:pointer;margin-top:.2rem;" onclick="document.getElementById(\'' + imgUploadId + '\').click()">' +
+                        (hasImg ? '<img id="' + imgPreviewId + '" src="' + htmlEsc(item.certImage) + '" style="max-height:70px;max-width:100%;border-radius:4px;display:block;margin:0 auto .3rem;">' : '<img id="' + imgPreviewId + '" src="" style="max-height:70px;max-width:100%;border-radius:4px;display:' + (hasImg ? 'block' : 'none') + ';margin:0 auto .3rem;">') +
+                        '<span style="font-size:.7rem;color:#8892A4;">📷 Качи снимка</span>' +
+                    '</div>' +
+                    '<input type="file" id="' + imgUploadId + '" accept="image/*" data-edu-img="' + i + '" style="display:none;">' +
+                '</div>';
+            container.appendChild(div);
+        });
+
+        // Input change listeners
+        container.querySelectorAll('input[type=text],textarea').forEach(function(inp) {
+            inp.style.cssText = EDU_INPUT_STYLE;
+            inp.addEventListener('input', function() {
+                var idx = parseInt(inp.dataset.ei, 10);
+                var field = inp.dataset.ef;
+                if (!savedData.educationItems[idx]) return;
+                savedData.educationItems[idx][field] = inp.value;
+                hasUnsaved = true;
+            });
+        });
+
+        // Image upload listeners
+        container.querySelectorAll('input[type=file][data-edu-img]').forEach(function(input) {
+            input.addEventListener('change', function() {
+                var idx = parseInt(input.dataset.eduImg, 10);
+                var file = input.files[0];
+                if (!file) return;
+                if (file.size > MAX_IMAGE_BYTES) { showToast('Файлът е над 5 MB!', 'error'); return; }
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    var dataURL = ev.target.result;
+                    if (!savedData.educationItems[idx]) return;
+                    savedData.educationItems[idx].certImage = dataURL;
+                    var prev = document.getElementById('ba-edu-img-prev-' + idx);
+                    if (prev) { prev.src = dataURL; prev.style.display = 'block'; }
+                    hasUnsaved = true;
+                    showToast('Снимката е качена. Натисни Запази.');
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Remove buttons
+        container.querySelectorAll('[data-edu-remove]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var idx = parseInt(btn.dataset.eduRemove, 10);
+                savedData.educationItems.splice(idx, 1);
+                renderEduSlots();
+                applyEduItems();
+                hasUnsaved = true;
+            });
+        });
+
+        // Drag-and-drop reorder
+        var dragSrcIdx = -1;
+        container.querySelectorAll('[data-edu-i]').forEach(function(el) {
+            el.addEventListener('dragstart', function(e) {
+                dragSrcIdx = parseInt(el.dataset.eduI, 10);
+                e.dataTransfer.effectAllowed = 'move';
+                el.style.opacity = '.4';
+            });
+            el.addEventListener('dragend', function() { el.style.opacity = '1'; });
+            el.addEventListener('dragover', function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+            el.addEventListener('drop', function(e) {
+                e.preventDefault();
+                var targetIdx = parseInt(el.dataset.eduI, 10);
+                if (dragSrcIdx === targetIdx) return;
+                var moved = savedData.educationItems.splice(dragSrcIdx, 1)[0];
+                savedData.educationItems.splice(targetIdx, 0, moved);
+                hasUnsaved = true;
+                renderEduSlots();
+                applyEduItems();
+            });
+        });
+    }
+
+    function setupEduPanel() {
+        var btnAdd = document.getElementById('ba-btn-add-edu');
+        if (btnAdd) btnAdd.addEventListener('click', function() {
+            if (!savedData.educationItems) savedData.educationItems = [];
+            savedData.educationItems.push({ title:'', year:'', place:'', desc:'', certImage:'' });
+            renderEduSlots();
+            applyEduItems();
             hasUnsaved = true;
         });
     }

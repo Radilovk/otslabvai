@@ -108,19 +108,23 @@
 
         .panel-section { margin-bottom: 1.25rem; }
         .panel-section__title {
-            font-size: .72rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: .08em; color: var(--c-muted); margin-bottom: .6rem;
+            font-size: .72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .1em; color: var(--c-accent);
+            margin-bottom: .6rem; padding: .3rem .5rem;
+            background: rgba(108,142,245,.08);
+            border-left: 3px solid var(--c-accent);
+            border-radius: 0 4px 4px 0;
         }
 
         /* form controls */
-        label { font-size: .82rem; color: var(--c-muted); display: block; margin-bottom: .25rem; }
+        label { font-size: .82rem; color: #a0abbe; display: block; margin-bottom: .25rem; font-weight: 500; }
         input[type=text], input[type=number], textarea, select {
             width: 100%; padding: .55rem .75rem; background: var(--c-surface2);
             border: 1px solid var(--c-border); border-radius: var(--radius);
             color: var(--c-text); font-size: .85rem; font-family: inherit;
             outline: none; transition: border-color .2s; resize: vertical;
         }
-        input[type=text]:focus, input[type=number]:focus, textarea:focus, select:focus { border-color: var(--c-accent); }
+        input[type=text]:focus, input[type=number]:focus, textarea:focus, select:focus { border-color: var(--c-accent); box-shadow: 0 0 0 2px rgba(108,142,245,.15); }
         input[type=color] { height: 36px; padding: 2px; cursor: pointer; border-radius: 6px; }
         .color-row { display: flex; gap: .5rem; align-items: center; }
         .color-row input[type=color] { width: 42px; flex-shrink: 0; }
@@ -235,6 +239,7 @@
         <div class="app-header__tabs">
             <button class="tab-btn active" data-panel="panel-text">✏️ Текст</button>
             <button class="tab-btn" data-panel="panel-images">🖼️ Снимки</button>
+            <button class="tab-btn" data-panel="panel-edu">🎓 Образование</button>
             <button class="tab-btn" data-panel="panel-theme">🎨 Тема</button>
             <button class="tab-btn" data-panel="panel-contact">📞 Контакти</button>
             <button class="tab-btn" data-panel="panel-testimonials">💬 Отзиви</button>
@@ -506,6 +511,16 @@
                     </div>
                 </div>
 
+                <!-- ── PANEL: Education ──────────────────────────────── -->
+                <div id="panel-edu" class="panel">
+                    <div class="panel-section">
+                        <div class="panel-section__title">Образование &amp; Квалификации</div>
+                        <p style="font-size:.78rem;color:var(--c-muted);margin-bottom:.8rem;">Управлявай образователните карти. Влачи за пренареждане. Натисни "Запази" след промени.</p>
+                        <div id="edu-slots"></div>
+                        <button class="btn-sm btn-primary" id="btn-add-edu" style="width:100%;margin-top:.5rem;">+ Добави запис</button>
+                    </div>
+                </div>
+
             </div><!-- /sidebar__inner -->
         </aside>
 
@@ -613,17 +628,6 @@ const EDITABLE_ELEMENTS = [
     { label: 'Карта 2 — Тяло',                 selector: '.exp-card:nth-child(2) .exp-card__body' },
     { label: 'Карта 3 — Заглавие',             selector: '.exp-card:nth-child(3) .exp-card__title' },
     { label: 'Карта 3 — Тяло',                 selector: '.exp-card:nth-child(3) .exp-card__body' },
-    // Credentials — Education
-    { label: 'Образование — Т1 година',        selector: '.timeline-item:nth-child(1) .timeline-item__year' },
-    { label: 'Образование — Т1 заглавие',      selector: '.timeline-item:nth-child(1) .timeline-item__title' },
-    { label: 'Образование — Т1 място',         selector: '.timeline-item:nth-child(1) .timeline-item__place' },
-    { label: 'Образование — Т2 година',        selector: '.timeline-item:nth-child(2) .timeline-item__year' },
-    { label: 'Образование — Т2 заглавие',      selector: '.timeline-item:nth-child(2) .timeline-item__title' },
-    { label: 'Образование — Т2 място',         selector: '.timeline-item:nth-child(2) .timeline-item__place' },
-    { label: 'Образование — Т3 заглавие',      selector: '.timeline-item:nth-child(3) .timeline-item__title' },
-    { label: 'Образование — Т3 място',         selector: '.timeline-item:nth-child(3) .timeline-item__place' },
-    { label: 'Образование — Т4 заглавие',      selector: '.timeline-item:nth-child(4) .timeline-item__title' },
-    { label: 'Образование — Т4 място',         selector: '.timeline-item:nth-child(4) .timeline-item__place' },
     // Certifications
     { label: 'Серт. 1 — Заглавие',             selector: '.cert-item:nth-child(1) .cert-item__title' },
     { label: 'Серт. 1 — Тяло',                 selector: '.cert-item:nth-child(1) .cert-item__body' },
@@ -719,6 +723,7 @@ let savedData = {
     diplomas: [],        // array of { label, dataURL }
     contact: {},         // email, phone, address, instagram, facebook, linkedin
     testimonials: [],    // array of { stars, text, authorName, authorSub }
+    educationItems: [],  // array of { title, year, place, desc, certImage }
 };
 let selectedElIndex = -1;
 let bioDoc = null;       // reference to the iframe's document
@@ -746,6 +751,7 @@ function initApp() {
     setupThemePanel();
     setupContactPanel();
     setupTestimonialsPanel();
+    setupEduPanel();
     setupSaveReset();
 
     const frame = document.getElementById('bio-frame');
@@ -776,7 +782,7 @@ function loadData() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
             const parsed = JSON.parse(raw);
-            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] }, parsed);
+            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] }, parsed);
         }
     } catch(e) { console.warn('Failed to load saved data:', e); }
 }
@@ -792,16 +798,17 @@ async function loadDataFromServer() {
             return;
         }
         const serverData = await res.json();
-        const EXPECTED_KEYS = ['textOverrides', 'images', 'theme', 'diplomas', '_activeTheme', 'contact', 'testimonials'];
+        const EXPECTED_KEYS = ['textOverrides', 'images', 'theme', 'diplomas', '_activeTheme', 'contact', 'testimonials', 'educationItems'];
         if (serverData && typeof serverData === 'object' && Object.keys(serverData).length > 0) {
             const filtered = {};
             EXPECTED_KEYS.forEach(k => { if (k in serverData) filtered[k] = serverData[k]; });
-            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] }, filtered);
+            savedData = Object.assign({ textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] }, filtered);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
         }
         buildThemeGrid();
         populateContactPanel();
         renderTestimonialSlots();
+        renderEduSlots();
     } catch(e) {
         console.warn('Failed to load data from server:', e);
         document.getElementById('save-status').textContent = '⚠️ Сървърът е недостъпен — само локален запис';
@@ -847,7 +854,7 @@ async function saveData() {
 async function resetData() {
     if (!confirm('Сигурен ли си? Всички промени ще бъдат изтрити!')) return;
     localStorage.removeItem(STORAGE_KEY);
-    savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[] };
+    savedData = { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[] };
     // Clear server data as well
     try {
         await fetch(BIO_API_URL, {
@@ -867,6 +874,7 @@ async function resetData() {
     renderDiplomaSlots();
     populateContactPanel();
     renderTestimonialSlots();
+    renderEduSlots();
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -880,6 +888,7 @@ function applyAllChanges() {
     applyDiplomas();
     applyContact();
     applyTestimonials();
+    applyEduItems();
 }
 
 function applyTextOverrides() {
@@ -1068,8 +1077,144 @@ function escapeHtml(str) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   CONTACT PANEL
+   EDUCATION PANEL
 ══════════════════════════════════════════════════════════════════ */
+function applyEduItems() {
+    if (!bioDoc) return;
+    const items = savedData.educationItems;
+    if (!items || !items.length) return;
+    const list = bioDoc.getElementById('edu-list');
+    if (!list) return;
+    list.innerHTML = '';
+    items.forEach((item, i) => {
+        const div = bioDoc.createElement('div');
+        div.className = 'edu-item';
+        div.dataset.eduIdx = i;
+        div.setAttribute('role','button');
+        div.setAttribute('tabindex','0');
+        div.setAttribute('aria-haspopup','dialog');
+        div.innerHTML =
+            `<span class="edu-item__year">${escapeHtml(item.year||'')}</span>` +
+            `<div class="edu-item__content">` +
+                `<div class="edu-item__title">${escapeHtml(item.title||'')}</div>` +
+                `<div class="edu-item__place">${escapeHtml(item.place||'')}</div>` +
+            `</div>` +
+            `<span class="edu-item__arrow">›</span>`;
+        list.appendChild(div);
+    });
+    // Store items in iframe window for modal
+    if (bioDoc.defaultView) bioDoc.defaultView.__eduItems = items;
+}
+
+function renderEduSlots() {
+    const container = document.getElementById('edu-slots');
+    if (!container) return;
+    container.innerHTML = '';
+    const list = savedData.educationItems || [];
+    list.forEach((item, i) => {
+        const div = document.createElement('div');
+        div.draggable = true;
+        div.dataset.eduI = i;
+        div.style.cssText = 'background:var(--c-surface2);border:1px solid var(--c-border);border-radius:var(--radius);padding:.7rem;margin-bottom:.6rem;cursor:grab;';
+
+        const imgPreviewId = 'adm-edu-img-prev-' + i;
+        const imgUploadId  = 'adm-edu-img-up-' + i;
+        const hasImg = item.certImage && /^data:image\//i.test(item.certImage);
+
+        div.innerHTML =
+            `<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem;">` +
+                `<span style="font-size:.9rem;" title="Влачи за пренареждане">⠿</span>` +
+                `<span style="font-size:.72rem;color:var(--c-muted);flex:1;font-weight:600;">Запис ${i+1}</span>` +
+                `<button class="btn-sm btn-danger" data-edu-remove="${i}" style="padding:.2rem .5rem;font-size:.7rem;">✕</button>` +
+            `</div>` +
+            `<div class="form-group"><label>Заглавие</label><input type="text" data-ei="${i}" data-ef="title" value="${escapeHtml(item.title||'')}"></div>` +
+            `<div class="form-group"><label>Период / Година</label><input type="text" data-ei="${i}" data-ef="year" value="${escapeHtml(item.year||'')}"></div>` +
+            `<div class="form-group"><label>Институция</label><input type="text" data-ei="${i}" data-ef="place" value="${escapeHtml(item.place||'')}"></div>` +
+            `<div class="form-group"><label>Описание (за модала)</label><textarea rows="2" data-ei="${i}" data-ef="desc">${escapeHtml(item.desc||'')}</textarea></div>` +
+            `<div class="form-group"><label>Снимка на сертификата</label>` +
+                `<div style="border:1.5px dashed var(--c-border);border-radius:var(--radius);padding:.5rem;text-align:center;cursor:pointer;" onclick="document.getElementById('${imgUploadId}').click()">` +
+                    `<img id="${imgPreviewId}" src="${hasImg ? escapeHtml(item.certImage) : ''}" style="max-height:80px;max-width:100%;border-radius:4px;display:${hasImg?'block':'none'};margin:0 auto .3rem;">` +
+                    `<span style="font-size:.78rem;color:var(--c-muted);">📷 Качи снимка на сертификата</span>` +
+                `</div>` +
+                `<input type="file" id="${imgUploadId}" accept="image/*" data-edu-img="${i}" style="display:none;">` +
+            `</div>`;
+        container.appendChild(div);
+    });
+
+    // Input change listeners
+    container.querySelectorAll('input[type=text],textarea').forEach(inp => {
+        inp.addEventListener('input', () => {
+            const idx = parseInt(inp.dataset.ei, 10);
+            const field = inp.dataset.ef;
+            if (!savedData.educationItems[idx]) return;
+            savedData.educationItems[idx][field] = inp.value;
+            applyEduItems();
+        });
+    });
+
+    // Image upload listeners
+    container.querySelectorAll('input[type=file][data-edu-img]').forEach(input => {
+        input.addEventListener('change', () => {
+            const idx = parseInt(input.dataset.eduImg, 10);
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > MAX_IMAGE_BYTES) { showToast('Файлът е над 5 MB!', 'error'); return; }
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const dataURL = ev.target.result;
+                if (!savedData.educationItems[idx]) return;
+                savedData.educationItems[idx].certImage = dataURL;
+                const prev = document.getElementById('adm-edu-img-prev-' + idx);
+                if (prev) { prev.src = dataURL; prev.style.display = 'block'; }
+                applyEduItems();
+                showToast('Снимката е качена. Натисни Запази.');
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+
+    // Remove buttons
+    container.querySelectorAll('[data-edu-remove]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.eduRemove, 10);
+            savedData.educationItems.splice(idx, 1);
+            renderEduSlots();
+            applyEduItems();
+        });
+    });
+
+    // Drag-and-drop reorder
+    let dragSrcIdx = -1;
+    container.querySelectorAll('[data-edu-i]').forEach(el => {
+        el.addEventListener('dragstart', e => {
+            dragSrcIdx = parseInt(el.dataset.eduI, 10);
+            e.dataTransfer.effectAllowed = 'move';
+            el.style.opacity = '.4';
+        });
+        el.addEventListener('dragend', () => { el.style.opacity = '1'; });
+        el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+        el.addEventListener('drop', e => {
+            e.preventDefault();
+            const targetIdx = parseInt(el.dataset.eduI, 10);
+            if (dragSrcIdx === targetIdx) return;
+            const moved = savedData.educationItems.splice(dragSrcIdx, 1)[0];
+            savedData.educationItems.splice(targetIdx, 0, moved);
+            renderEduSlots();
+            applyEduItems();
+        });
+    });
+}
+
+function setupEduPanel() {
+    renderEduSlots();
+    const btnAdd = document.getElementById('btn-add-edu');
+    if (btnAdd) btnAdd.addEventListener('click', () => {
+        if (!savedData.educationItems) savedData.educationItems = [];
+        savedData.educationItems.push({ title:'', year:'', place:'', desc:'', certImage:'' });
+        renderEduSlots();
+        applyEduItems();
+    });
+}
 function populateContactPanel() {
     const c = savedData.contact || {};
     document.getElementById('c-email').value     = c.email     || '';
