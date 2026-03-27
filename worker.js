@@ -167,6 +167,14 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
+
+          case '/api/speedy/offices':
+              if (request.method === 'GET') {
+                  response = await handleSpeedyOffices(request, env);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
             
           default:
             throw new UserFacingError('Not Found', 404);
@@ -199,6 +207,80 @@ export default {
 
 
 // --- СПЕЦИФИЧНИ ОБРАБОТЧИЦИ НА ЕНДПОЙНТИ ---
+
+/**
+ * Proxies Speedy office data for a given city name.
+ * Requires SPEEDY_USERNAME and SPEEDY_PASSWORD environment variables.
+ * Returns 501 if credentials are not configured (frontend falls back to iframe).
+ *
+ * GET /api/speedy/offices?city=<city_name>
+ */
+async function handleSpeedyOffices(request, env) {
+    const SPEEDY_USER = env.SPEEDY_USERNAME;
+    const SPEEDY_PASS = env.SPEEDY_PASSWORD;
+
+    if (!SPEEDY_USER || !SPEEDY_PASS) {
+        return new Response(JSON.stringify({ error: 'not_configured' }), {
+            status: 501,
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+    }
+
+    const url = new URL(request.url);
+    const cityName = (url.searchParams.get('city') || '').trim();
+    if (!cityName) {
+        return new Response(JSON.stringify({ offices: [] }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+    }
+
+    const auth = btoa(SPEEDY_USER + ':' + SPEEDY_PASS);
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + auth
+    };
+
+    // Step 1: Find city/site by name
+    const siteRes = await fetch('https://services.speedy.bg/api/v2.2/location/site/', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ language: 'BG', countryId: 100, name: cityName })
+    });
+    if (!siteRes.ok) {
+        return new Response(JSON.stringify({ offices: [] }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+    }
+    const sites = await siteRes.json();
+    const siteId = Array.isArray(sites) && sites[0] ? sites[0].id : null;
+    if (!siteId) {
+        return new Response(JSON.stringify({ offices: [] }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+    }
+
+    // Step 2: Fetch offices for the found city
+    const officeRes = await fetch('https://services.speedy.bg/api/v2.2/location/office/', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ language: 'BG', siteId })
+    });
+    if (!officeRes.ok) {
+        return new Response(JSON.stringify({ offices: [] }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+    }
+    const offices = await officeRes.json();
+    return new Response(JSON.stringify({ offices: Array.isArray(offices) ? offices : [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' }
+    });
+}
+
 
 /**
  * Returns the visitor's detected country and preferred language based on Cloudflare geo headers.
