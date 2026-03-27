@@ -232,7 +232,7 @@ function handleGetGeo(request) {
  * @returns {object} Merged content object
  */
 function mergeContentOverlay(base, overlay) {
-    const merged = JSON.parse(JSON.stringify(base)); // deep clone base
+    const merged = structuredClone(base); // deep clone base
 
     if (overlay.settings) {
         merged.settings = Object.assign({}, merged.settings);
@@ -315,7 +315,7 @@ async function handleGetPageContent(request, env) {
             try {
                 const merged = mergeContentOverlay(JSON.parse(pageContent), JSON.parse(overlayRaw));
                 pageContent = JSON.stringify(merged);
-            } catch (_) { /* overlay parse error – serve base content */ }
+            } catch (e) { console.warn('page_content overlay merge error (serving base content):', e.message); }
         }
     }
 
@@ -455,7 +455,7 @@ async function handleGetLifePageContent(request, env) {
             try {
                 const merged = mergeContentOverlay(JSON.parse(pageContent), JSON.parse(overlayRaw));
                 pageContent = JSON.stringify(merged);
-            } catch (_) { /* overlay parse error – serve base content */ }
+            } catch (e) { console.warn('life_page_content overlay merge error (serving base content):', e.message); }
         }
     }
 
