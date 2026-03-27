@@ -1579,6 +1579,15 @@
         let selectedSpeedyOffice = null;
         let speedyChangeHandlerAttached = false;
 
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function loadSpeedyOffices() {
             const speedyInput = document.getElementById('speedy-office-search');
             const speedyDropdown = document.getElementById('speedy-offices-dropdown');
@@ -1623,9 +1632,9 @@
 
                     if (filteredOffices.length > 0) {
                         speedyDropdown.innerHTML = filteredOffices.map(office => {
-                            return `<div class="speedy-dropdown-item" data-office-id="${office.id}">
-                                <span class="speedy-dropdown-item-name">${office.name}</span>
-                                <span class="speedy-dropdown-item-address">${office.address}</span>
+                            return `<div class="speedy-dropdown-item" data-office-id="${escapeHtml(office.id)}">
+                                <span class="speedy-dropdown-item-name">${escapeHtml(office.name)}</span>
+                                <span class="speedy-dropdown-item-address">${escapeHtml(office.address)}</span>
                             </div>`;
                         }).join('');
                         speedyDropdown.style.display = 'block';

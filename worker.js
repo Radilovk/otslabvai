@@ -1611,7 +1611,14 @@ async function saveAIResult(env, clientId, recommendation) {
  */
 async function handleGetSpeedyOffices(env) {
     const cached = await env.PAGE_CONTENT.get('speedy_offices_cache');
-    const offices = cached ? JSON.parse(cached) : [];
+    let offices = [];
+    if (cached) {
+        try {
+            offices = JSON.parse(cached);
+        } catch (e) {
+            console.error('handleGetSpeedyOffices: invalid JSON in KV cache', e);
+        }
+    }
     return new Response(JSON.stringify(offices), {
         status: 200,
         headers: {
@@ -1641,12 +1648,14 @@ async function refreshSpeedyOfficesCache(env) {
         // Speedy returns either a plain array or an object with an `offices` key.
         const items = Array.isArray(raw) ? raw : (raw.offices || []);
 
-        const offices = items.map(o => ({
-            id: o.id,
-            name: o.name || o.nameEn || '',
-            address: (o.address && o.address.fullAddressString) ? o.address.fullAddressString : '',
-            city: (o.address && (o.address.siteName || o.address.city)) ? (o.address.siteName || o.address.city) : ''
-        }));
+        const offices = items
+            .filter(o => o && typeof o === 'object')
+            .map(o => ({
+                id: o.id,
+                name: String(o.name || o.nameEn || ''),
+                address: (o.address && o.address.fullAddressString) ? String(o.address.fullAddressString) : '',
+                city: (o.address && (o.address.siteName || o.address.city)) ? String(o.address.siteName || o.address.city) : ''
+            }));
 
         await env.PAGE_CONTENT.put('speedy_offices_cache', JSON.stringify(offices));
         console.log(`refreshSpeedyOfficesCache: cached ${offices.length} offices`);
