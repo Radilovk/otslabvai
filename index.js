@@ -1638,6 +1638,76 @@ function isValidGradient(gradientStr) {
 
 
 // =======================================================
+//          6b. GEO-BASED LANGUAGE DETECTION
+// =======================================================
+
+/**
+ * Supported UI languages. 'bg' is the default/base; 'en' is the English overlay.
+ */
+const SUPPORTED_LANGS = ['bg', 'en'];
+
+/**
+ * Detects the visitor's preferred language.
+ * Priority:
+ *   1. Saved localStorage preference ('userLang')
+ *   2. /geo endpoint (Cloudflare IP-based country detection)
+ *   3. navigator.language fallback
+ * Returns one of SUPPORTED_LANGS, defaulting to 'bg'.
+ */
+async function detectLanguage() {
+    try {
+        const saved = localStorage.getItem('userLang');
+        if (saved && SUPPORTED_LANGS.includes(saved)) return saved;
+    } catch (_) { /* localStorage unavailable */ }
+
+    try {
+        const geoRes = await fetch(`${API_URL}/geo`, { cache: 'no-store' });
+        if (geoRes.ok) {
+            const geo = await geoRes.json();
+            const lang = geo.language;
+            if (lang && SUPPORTED_LANGS.includes(lang)) {
+                try { localStorage.setItem('userLang', lang); } catch (_) { /* ignore */ }
+                return lang;
+            }
+        }
+    } catch (_) { /* geo endpoint unreachable */ }
+
+    // Fallback: parse browser language (e.g. "en-US" → "en")
+    const navLang = (navigator.language || 'bg').split('-')[0].toLowerCase();
+    const lang = SUPPORTED_LANGS.includes(navLang) ? navLang : 'bg';
+    try { localStorage.setItem('userLang', lang); } catch (_) { /* ignore */ }
+    return lang;
+}
+
+/**
+ * Applies the given language to the page:
+ *   - sets document.documentElement.lang
+ *   - marks the active lang button in .lang-switcher
+ */
+function applyLangToPage(lang) {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('#lang-switcher .lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+}
+
+/**
+ * Wires the language switcher buttons to save the preference and reload content.
+ */
+function initLangSwitcher(onSwitch) {
+    document.querySelectorAll('#lang-switcher .lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const lang = btn.dataset.lang;
+            if (!SUPPORTED_LANGS.includes(lang)) return;
+            try { localStorage.setItem('userLang', lang); } catch (_) { /* ignore */ }
+            applyLangToPage(lang);
+            onSwitch(lang);
+        });
+    });
+}
+
+
+// =======================================================
 //          7. ГЛАВНА ИЗПЪЛНЯВАЩА ФУНКЦИЯ (MAIN)
 // =======================================================
 async function main() {
@@ -1645,6 +1715,17 @@ async function main() {
     initializeLogoFromCache();
     
     initializeGlobalScripts();
+
+    // Detect language before fetching content
+    const lang = await detectLanguage();
+    applyLangToPage(lang);
+
+    /**
+     * Fetches and renders page content for the given language.
+     * Called on first load and when the user switches language.
+     */
+    async function loadContent(activeLang) {
+        applyLangToPage(activeLang);
     
     try {
         // Try to use mock data for testing if API fails
@@ -1654,7 +1735,8 @@ async function main() {
             // the fresh version is fetched immediately (cookie cleared right away).
             const pageDirty = document.cookie.split(';').some(c => c.trim() === 'page_dirty=1');
             if (pageDirty) document.cookie = 'page_dirty=; Max-Age=0; path=/';
-            response = await fetch(`${API_URL}/page_content.json`, {
+            const langParam = activeLang !== 'bg' ? `?lang=${encodeURIComponent(activeLang)}` : '';
+            response = await fetch(`${API_URL}/page_content.json${langParam}`, {
                 cache: pageDirty ? 'no-store' : 'default'
             });
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
@@ -1777,6 +1859,13 @@ async function main() {
                  </div>`;
         }
     }
+    } // end loadContent
+
+    // Wire language switcher: re-fetch and re-render content on language change
+    initLangSwitcher((newLang) => { loadContent(newLang); });
+
+    // Initial load
+    await loadContent(lang);
 }
 
 // =======================================================

@@ -1,0 +1,89 @@
+{
+  "settings": {
+    "site_name": "LOSE WEIGHT",
+    "site_slogan": "Mission Possible",
+    "promo_banner": {
+      "text": "SPECIAL OFFER: Up to 30% discount on orders over €100!"
+    },
+    "about_us_page": {
+      "hero_title": "About Us",
+      "hero_subtitle": "Your trusted partner on the path to a healthy life",
+      "main_image_alt": "Scientific Research"
+    }
+  },
+  "navigation": [
+    { "text": "Top Weight Loss Products", "link": "#weight-loss-products" },
+    { "text": "Weight Loss & Cleansing", "link": "#fat-burners" },
+    { "text": "About Us", "link": "about-us.html" },
+    { "text": "Contact", "link": "contact.html" }
+  ],
+  "page_content": [
+    {
+      "type": "hero_banner",
+      "title": "An Elegant Figure — Effortlessly",
+      "subtitle": "The most effective solutions for women: weight loss, detox and beauty",
+      "buttons": {
+        "primary": { "text": "Browse Products" },
+        "secondary": { "text": "Learn More" }
+      },
+      "stats": [
+        { "label": "Satisfied Clients" },
+        { "label": "Success Rate" },
+        { "label": "Natural Ingredients" }
+      ],
+      "trust_badges": [
+        { "text": "Visible results in 10 days" },
+        { "text": "Curated products" },
+        { "text": "% Discount codes %" }
+      ],
+      "text": "30-day guarantee"
+    },
+    {
+      "type": "info_card",
+      "title": "Your Personalised Plan for Change",
+      "content": "Discover the right formula for your body and lifestyle",
+      "button": { "text": "Start Now" }
+    },
+    {
+      "type": "product_category",
+      "title": "TOP Weight Loss Products",
+      "description": "Discover our selection of the most effective weight loss products to help you achieve your goals quickly and safely."
+    },
+    {
+      "type": "product_category",
+      "title": "Selected Weight Loss Products",
+      "description": "Hand-picked products made from high-quality natural ingredients that support metabolism and accelerate the weight loss process."
+    },
+    {
+      "type": "product_category",
+      "title": "Anti-Aging — Revolutionary Solutions for Youth",
+      "description": "We leave cosmetic illusions and placebo marketing behind. The focus is entirely on raw, clinically validated mechanisms that intervene in the very code of cellular ageing."
+    }
+  ],
+  "footer": {
+    "columns": [
+      { "type": "logo", "title": "", "links": [] },
+      {
+        "type": "links",
+        "title": "Quick Links",
+        "links": [
+          { "text": "Home", "url": "#" },
+          { "text": "Top Weight Loss Products", "url": "#weight-loss-products" },
+          { "text": "Energy & Support", "url": "#fat-burners" }
+        ]
+      },
+      {
+        "type": "links",
+        "title": "Information",
+        "links": [
+          { "text": "About Us", "url": "about-us.html" },
+          { "text": "Contact", "url": "contact.html" },
+          { "text": "Privacy Policy", "url": "policy.html" },
+          { "text": "Shipping", "url": "shipping.html" },
+          { "text": "Terms & Conditions", "url": "terms.html" }
+        ]
+      }
+    ],
+    "copyright_text": "© 2025 LOSE WEIGHT. All rights reserved."
+  }
+}
