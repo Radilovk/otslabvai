@@ -831,13 +831,26 @@
         }
 
         @media (max-width: 768px) {
-            .hero { grid-template-columns: 1fr; min-height: auto; }
+            /* ── Hero: flex column so we can reorder children ── */
+            .hero { display: flex; flex-direction: column; min-height: auto; }
             .hero::after { display: none; }
-            .hero__content { padding-top: 7rem; padding-bottom: 2rem; }
-            .hero__visual { min-height: 70vw; }
+            /* Flatten hero__content so its children become direct flex items of hero */
+            .hero__content { display: contents; }
+            /* 1. Hide eyebrow tags on mobile */
+            .hero__eyebrow { display: none; }
+            /* 2. Hero name — top of the screen */
+            .hero__name { order: 1; padding: 5.5rem 1.5rem .75rem; margin-bottom: 0; }
+            /* 3. Hero photo (with stats pinned at its bottom) */
+            .hero__visual { order: 2; min-height: 75vw; position: relative; }
             .hero__photo-wrap img { object-position: top center; }
             .hero__photo-overlay { background: linear-gradient(to top, rgba(250,250,249,.85) 0%, rgba(250,250,249,.2) 50%, transparent 75%); }
-            .hero__stats { position: static; padding-top: 1rem; justify-content: flex-start; }
+            /* Stats: one row, centered, at very bottom of photo */
+            .hero__stats { bottom: 0; justify-content: center; flex-wrap: nowrap; gap: .5rem; padding: .75rem 1rem; }
+            .hero__stats .stat-card { flex: 1 1 0; min-width: 0; padding: .75rem .5rem; }
+            /* 4. Hero description */
+            .hero__desc { order: 3; padding: 1.75rem 1.5rem .25rem; max-width: 100%; margin-bottom: 1.25rem; }
+            /* 5. Hero action buttons */
+            .hero__actions { order: 4; padding: 0 1.5rem 2.5rem; }
             .scroll-hint { display: none; }
 
             .about__grid { grid-template-columns: 1fr; }
@@ -1609,9 +1622,21 @@
                 <a href="#contact" class="btn btn--primary" data-bio-id="cta-primary">Запази консултация</a>
                 <a href="#about"   class="btn btn--outline" data-bio-id="cta-outline">Научи повече</a>
             </div>
+        </div>
 
-            <!-- Stats row below CTA -->
-            <div class="hero__stats" style="position:static; justify-content:flex-start; gap:.75rem; margin-top:2.5rem; flex-wrap:wrap;">
+        <div class="hero__visual">
+            <div class="hero__photo-wrap">
+                <img
+                    src="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png"
+                    alt="Д-р Константин Радилов"
+                    loading="eager"
+                    data-bio-id="img-hero"
+                >
+                <div class="hero__photo-overlay"></div>
+            </div>
+
+            <!-- Stat cards pinned to bottom of photo -->
+            <div class="hero__stats">
                 <div class="stat-card">
                     <div class="stat-card__num" data-count="10" data-suffix="+" data-bio-id="stat-1-num">10+</div>
                     <div class="stat-card__label" data-bio-id="stat-1-label">Години опит</div>
@@ -1624,18 +1649,6 @@
                     <div class="stat-card__num" data-count="3" data-suffix="" data-bio-id="stat-3-num">3</div>
                     <div class="stat-card__label" data-bio-id="stat-3-label">Специалности</div>
                 </div>
-            </div>
-        </div>
-
-        <div class="hero__visual">
-            <div class="hero__photo-wrap">
-                <img
-                    src="https://radilovk.github.io/face/assets/ChatGPT%20Image%20Jul%205,%202025,%2007_00_41%20PM.png"
-                    alt="Д-р Константин Радилов"
-                    loading="eager"
-                    data-bio-id="img-hero"
-                >
-                <div class="hero__photo-overlay"></div>
             </div>
 
             <!-- Scroll hint -->
