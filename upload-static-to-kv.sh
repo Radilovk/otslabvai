@@ -36,6 +36,8 @@ declare -a files=(
     "404.html"
     "robots.txt"
     "sitemap.xml"
+    "bio.html"
+    "bioadmin.html"
 )
 
 # Upload each file

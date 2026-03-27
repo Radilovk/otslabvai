@@ -1,5 +1,9 @@
 // ==== ВЕРСИЯ 4.0: ФУНКЦИОНАЛЕН АДМИН ПАНЕЛ ====
 
+// Bio injection-point constants — shared by renderBioHtml and handleBioRebake
+const BIO_INJECTION_PLACEHOLDER = '<script id="bio-content-injection-point">/* bio_content injected by worker */</script>';
+const BIO_INJECTION_RE = /<script id="bio-content-injection-point">window\.__bioContent=[\s\S]*?;<\/script>/;
+
 // Cache configuration constants
 const CACHE_CONFIG = {
     PAGE_CONTENT_MAX_AGE: 300,        // 5 minutes
@@ -293,7 +297,7 @@ function renderBioHtml(htmlTemplate, bioContent) {
         .replace(/>/g, '\\u003e');
     const inlineScript = `<script id="bio-content-injection-point">window.__bioContent=${safeData};<\/script>`;
     const rendered = htmlTemplate.replace(
-        '<script id="bio-content-injection-point">/* bio_content injected by worker */</script>',
+        BIO_INJECTION_PLACEHOLDER,
         inlineScript
     );
     if (rendered === htmlTemplate) {
@@ -627,16 +631,40 @@ async function handleSaveBioContent(request, env) {
  * and stores it as baked_bio.html so the next user page load gets the
  * updated cached copy.  Called only when the "update" command is issued
  * from bio.html's contact form — never triggered automatically.
+ *
+ * Fallback: if static_bio.html is missing from KV (e.g. upload script was
+ * not run after deploy), we restore the template from the existing
+ * baked_bio.html by replacing the rendered injection script back to the
+ * original placeholder.  This lets rebake succeed without manual re-upload.
  */
 async function handleBioRebake(env) {
     const [htmlTemplate, bioContent] = await Promise.all([
         env.PAGE_CONTENT.get('static_bio.html'),
         env.PAGE_CONTENT.get('bio_content')
     ]);
-    if (htmlTemplate === null) {
-        throw new UserFacingError('static_bio.html not found in storage.', 500);
+
+    let template = htmlTemplate;
+    if (template === null) {
+        // Attempt to recover template from baked_bio.html by reversing the injection
+        const bakedExisting = await env.PAGE_CONTENT.get('baked_bio.html');
+        if (bakedExisting !== null) {
+            const recovered = bakedExisting.replace(BIO_INJECTION_RE, BIO_INJECTION_PLACEHOLDER);
+            if (recovered === bakedExisting) {
+                // Regex didn't match — baked_bio.html is either the raw template (no prior
+                // rebake) or corrupt.  Use it as-is: renderBioHtml will warn if the
+                // placeholder is absent.
+                template = bakedExisting;
+            } else {
+                template = recovered;
+            }
+            // Persist the recovered template so future rebakes skip this fallback
+            await env.PAGE_CONTENT.put('static_bio.html', template);
+        } else {
+            throw new UserFacingError('static_bio.html not found in storage.', 500);
+        }
     }
-    const bakedHtml = renderBioHtml(htmlTemplate, bioContent);
+
+    const bakedHtml = renderBioHtml(template, bioContent);
     await env.PAGE_CONTENT.put('baked_bio.html', bakedHtml);
     return new Response(JSON.stringify({ success: true, message: 'Bio page updated.' }), {
         status: 200,
