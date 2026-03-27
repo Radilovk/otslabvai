@@ -276,78 +276,16 @@ async function serveStaticFile(env, filename, contentType, request) {
 }
 
 /**
- * Renders the final bio.html by injecting bio_content into static_bio.html.
- * Used both when baking on save and when building the fallback at serve time.
- * @param {string} htmlTemplate - The static_bio.html template string
- * @param {string} bioContent - The bio_content JSON string (may be '{}')
- * @returns {string} The fully-rendered HTML ready to serve
- */
-function renderBioHtml(htmlTemplate, bioContent) {
-    const bioData = bioContent !== null ? bioContent : '{}';
-    // Escape characters that are unsafe inside an inline <script> block so
-    // that an adversarially-crafted bio_content value cannot break out of the
-    // script context and inject arbitrary HTML.
-    const safeData = bioData
-        .replace(/&/g, '\\u0026')
-        .replace(/</g, '\\u003c')
-        .replace(/>/g, '\\u003e');
-    const inlineScript = `<script id="bio-content-injection-point">window.__bioContent=${safeData};<\/script>`;
-    const rendered = htmlTemplate.replace(
-        '<script id="bio-content-injection-point">/* bio_content injected by worker */</script>',
-        inlineScript
-    );
-    if (rendered === htmlTemplate) {
-        console.warn('renderBioHtml: injection point placeholder not found; serving without bio_content overrides');
-    }
-    return rendered;
-}
-
-/**
- * Serves bio.html using a pre-baked HTML strategy to minimise Worker cost.
- *
- * On every admin save, handleSaveBioContent() writes a fully-rendered
- * "baked_bio.html" to KV.  This function reads that single key and serves it
- * with a 1-hour public cache + ETag so normal user page loads never reach the
- * Worker at all — the browser or CDN serves the cached copy.
- *
- * First-request fallback: if baked_bio.html is absent (e.g. fresh deploy
- * before the first admin save) we build it on-the-fly from static_bio.html +
- * bio_content, store it for subsequent requests, and serve it immediately.
+ * Serves bio.html as a plain static file from KV.
+ * bio.html works with default content on load — no backend requests.
+ * Only the "update" command in the contact form triggers a fetch of
+ * /bio_content.json and applies it client-side.
  *
  * @param {object} env - Worker environment bindings
  * @param {Request} request - Incoming request
  */
 async function serveBioHtml(env, request) {
-    let finalHtml = await env.PAGE_CONTENT.get('baked_bio.html');
-
-    if (finalHtml === null) {
-        // First-request fallback: bake on-the-fly
-        const [htmlTemplate, bioContent] = await Promise.all([
-            env.PAGE_CONTENT.get('static_bio.html'),
-            env.PAGE_CONTENT.get('bio_content')
-        ]);
-        if (htmlTemplate === null) {
-            throw new UserFacingError('File bio.html not found in storage.', 404);
-        }
-        finalHtml = renderBioHtml(htmlTemplate, bioContent);
-        // Store so subsequent requests skip the double KV read
-        await env.PAGE_CONTENT.put('baked_bio.html', finalHtml);
-    }
-
-    const etag = await generateETag(finalHtml);
-    const ifNoneMatch = request.headers.get('If-None-Match');
-    if (ifNoneMatch === etag) {
-        return new Response(null, { status: 304, headers: { 'ETag': etag } });
-    }
-
-    return new Response(finalHtml, {
-        status: 200,
-        headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`,
-            'ETag': etag
-        }
-    });
+    return serveStaticFile(env, 'bio.html', CONTENT_TYPES.html, request);
 }
 
 /**
@@ -623,21 +561,12 @@ async function handleSaveBioContent(request, env) {
 
 /**
  * Handles POST /bio_rebake
- * Reads bio_content and static_bio.html from KV, renders the final HTML,
- * and stores it as baked_bio.html so the next user page load gets the
- * updated cached copy.  Called only when the "update" command is issued
- * from bio.html's contact form — never triggered automatically.
+ * bio_content is already in KV after POST /bio_content.json, and bio.html
+ * fetches it client-side on every load — no server-side baking required.
+ * This endpoint remains for backwards compatibility (bio.html may still POST
+ * here from the "update" command in older cached versions).
  */
 async function handleBioRebake(env) {
-    const [htmlTemplate, bioContent] = await Promise.all([
-        env.PAGE_CONTENT.get('static_bio.html'),
-        env.PAGE_CONTENT.get('bio_content')
-    ]);
-    if (htmlTemplate === null) {
-        throw new UserFacingError('static_bio.html not found in storage.', 500);
-    }
-    const bakedHtml = renderBioHtml(htmlTemplate, bioContent);
-    await env.PAGE_CONTENT.put('baked_bio.html', bakedHtml);
     return new Response(JSON.stringify({ success: true, message: 'Bio page updated.' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
