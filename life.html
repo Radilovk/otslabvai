@@ -11,7 +11,7 @@
     <meta name="author" content="Life Protocols">
     <link rel="canonical" href="https://daotslabna.com/life.html">
     <link rel="alternate" hreflang="bg" href="https://daotslabna.com/life.html">
-    <link rel="alternate" hreflang="en" href="https://daotslabna.com/life.html">
+
     <link rel="alternate" hreflang="x-default" href="https://daotslabna.com/life.html">
     <meta property="og:title" content="Life Protocols - Протоколи за Здраве и Дълголетие">
     <meta property="og:description" content="Иновативни продукти за биохакинг на клетъчно ниво. Пептиди, хранителни добавки и протоколи за антиейджинг и подмладяване.">
@@ -105,10 +105,6 @@
                         </div>
                         <div id="search-results" class="search-results" aria-live="polite" aria-atomic="true"></div>
                     </div>
-                </div>
-                <div class="lang-switcher" id="lang-switcher" aria-label="Language selector">
-                    <button class="lang-btn" data-lang="bg" aria-label="Български">BG</button>
-                    <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
                 </div>
                 <a href="life-checkout.html" class="cart-icon-btn" aria-label="Количка">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2073,44 +2069,6 @@ function isValidGradient(gradientStr) {
 
 
 // =======================================================
-//          6b. LANGUAGE DETECTION
-// =======================================================
-
-const SUPPORTED_LANGS = ['bg', 'en'];
-
-async function detectLanguage() {
-    try {
-        const saved = localStorage.getItem('userLang');
-        if (saved && SUPPORTED_LANGS.includes(saved)) return saved;
-    } catch (_) { /* localStorage unavailable */ }
-
-    const navLang = (navigator.language || 'bg').split('-')[0].toLowerCase();
-    const lang = SUPPORTED_LANGS.includes(navLang) ? navLang : 'bg';
-    try { localStorage.setItem('userLang', lang); } catch (_) { /* ignore */ }
-    return lang;
-}
-
-function applyLangToPage(lang) {
-    document.documentElement.lang = lang;
-    document.querySelectorAll('#lang-switcher .lang-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === lang);
-    });
-}
-
-function initLangSwitcher(onSwitch) {
-    document.querySelectorAll('#lang-switcher .lang-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const lang = btn.dataset.lang;
-            if (!SUPPORTED_LANGS.includes(lang)) return;
-            try { localStorage.setItem('userLang', lang); } catch (_) { /* ignore */ }
-            applyLangToPage(lang);
-            onSwitch(lang);
-        });
-    });
-}
-
-
-// =======================================================
 //          7. ГЛАВНА ИЗПЪЛНЯВАЩА ФУНКЦИЯ (MAIN)
 // =======================================================
 async function main() {
@@ -2119,19 +2077,11 @@ async function main() {
     
     initializeGlobalScripts();
 
-    // Detect language before fetching content
-    const lang = await detectLanguage();
-    applyLangToPage(lang);
-
-    async function loadContent(activeLang) {
-        applyLangToPage(activeLang);
-
     try {
         // Try to use mock data for testing if API fails
         let response, data;
         try {
-            const langParam = activeLang !== 'bg' ? `?lang=${encodeURIComponent(activeLang)}` : '';
-            response = await fetch(`${API_URL}/life_page_content.json${langParam}`, {
+            response = await fetch(`${API_URL}/life_page_content.json`, {
                 cache: 'default' // Use browser cache with proper revalidation
             });
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
@@ -2256,13 +2206,6 @@ async function main() {
                  </div>`;
         }
     }
-    } // end loadContent
-
-    // Wire language switcher: re-fetch and re-render content on language change
-    initLangSwitcher((newLang) => { loadContent(newLang); });
-
-    // Initial load
-    await loadContent(lang);
 }
 
 // =======================================================
