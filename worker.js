@@ -23,6 +23,37 @@ class UserFacingError extends Error {
   }
 }
 
+// Content type constants
+const CONTENT_TYPES = {
+  html: 'text/html; charset=utf-8',
+  js: 'application/javascript; charset=utf-8',
+  css: 'text/css; charset=utf-8'
+};
+
+// Static file configuration
+const STATIC_FILES = {
+  '/': { file: 'index.html', type: CONTENT_TYPES.html },
+  '/index.html': { file: 'index.html', type: CONTENT_TYPES.html },
+  '/index.js': { file: 'index.js', type: CONTENT_TYPES.js },
+  '/index.css': { file: 'index.css', type: CONTENT_TYPES.css },
+  '/config.js': { file: 'config.js', type: CONTENT_TYPES.js },
+  '/admin.html': { file: 'admin.html', type: CONTENT_TYPES.html },
+  '/admin.js': { file: 'admin.js', type: CONTENT_TYPES.js },
+  '/admin.css': { file: 'admin.css', type: CONTENT_TYPES.css },
+  '/product.html': { file: 'product.html', type: CONTENT_TYPES.html },
+  '/product.js': { file: 'product.js', type: CONTENT_TYPES.js },
+  '/checkout.html': { file: 'checkout.html', type: CONTENT_TYPES.html },
+  '/life.html': { file: 'life.html', type: CONTENT_TYPES.html },
+  '/life.js': { file: 'life.js', type: CONTENT_TYPES.js },
+  '/life.css': { file: 'life.css', type: CONTENT_TYPES.css },
+  '/quest.html': { file: 'quest.html', type: CONTENT_TYPES.html },
+  '/questionnaire.js': { file: 'questionnaire.js', type: CONTENT_TYPES.js },
+  '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css },
+  '/bioadmin.html': { file: 'bioadmin.html', type: CONTENT_TYPES.html },
+  '/robots.txt': { file: 'robots.txt', type: 'text/plain; charset=utf-8' },
+  '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' }
+};
+
 // --- ОСНОВЕН РУТЕР И ОБРАБОТКА НА ЗАЯВКИ ---
 
 export default {
@@ -44,37 +75,6 @@ export default {
     }
 
     const url = new URL(request.url);
-    
-    // Content type constants
-    const CONTENT_TYPES = {
-      html: 'text/html; charset=utf-8',
-      js: 'application/javascript; charset=utf-8',
-      css: 'text/css; charset=utf-8'
-    };
-    
-    // Static file configuration
-    const STATIC_FILES = {
-      '/': { file: 'index.html', type: CONTENT_TYPES.html },
-      '/index.html': { file: 'index.html', type: CONTENT_TYPES.html },
-      '/index.js': { file: 'index.js', type: CONTENT_TYPES.js },
-      '/index.css': { file: 'index.css', type: CONTENT_TYPES.css },
-      '/config.js': { file: 'config.js', type: CONTENT_TYPES.js },
-      '/admin.html': { file: 'admin.html', type: CONTENT_TYPES.html },
-      '/admin.js': { file: 'admin.js', type: CONTENT_TYPES.js },
-      '/admin.css': { file: 'admin.css', type: CONTENT_TYPES.css },
-      '/product.html': { file: 'product.html', type: CONTENT_TYPES.html },
-      '/product.js': { file: 'product.js', type: CONTENT_TYPES.js },
-      '/checkout.html': { file: 'checkout.html', type: CONTENT_TYPES.html },
-      '/life.html': { file: 'life.html', type: CONTENT_TYPES.html },
-      '/life.js': { file: 'life.js', type: CONTENT_TYPES.js },
-      '/life.css': { file: 'life.css', type: CONTENT_TYPES.css },
-      '/quest.html': { file: 'quest.html', type: CONTENT_TYPES.html },
-      '/questionnaire.js': { file: 'questionnaire.js', type: CONTENT_TYPES.js },
-      '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css },
-      '/bioadmin.html': { file: 'bioadmin.html', type: CONTENT_TYPES.html },
-      '/robots.txt': { file: 'robots.txt', type: 'text/plain; charset=utf-8' },
-      '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' }
-    };
     
     try {
       let response;
