@@ -2073,7 +2073,7 @@ function isValidGradient(gradientStr) {
 
 
 // =======================================================
-//          6b. GEO-BASED LANGUAGE DETECTION
+//          6b. LANGUAGE DETECTION
 // =======================================================
 
 const SUPPORTED_LANGS = ['bg', 'en'];
@@ -2083,18 +2083,6 @@ async function detectLanguage() {
         const saved = localStorage.getItem('userLang');
         if (saved && SUPPORTED_LANGS.includes(saved)) return saved;
     } catch (_) { /* localStorage unavailable */ }
-
-    try {
-        const geoRes = await fetch(`${API_URL}/geo`, { cache: 'no-store' });
-        if (geoRes.ok) {
-            const geo = await geoRes.json();
-            const lang = geo.language;
-            if (lang && SUPPORTED_LANGS.includes(lang)) {
-                try { localStorage.setItem('userLang', lang); } catch (_) { /* ignore */ }
-                return lang;
-            }
-        }
-    } catch (_) { /* geo endpoint unreachable */ }
 
     const navLang = (navigator.language || 'bg').split('-')[0].toLowerCase();
     const lang = SUPPORTED_LANGS.includes(navLang) ? navLang : 'bg';

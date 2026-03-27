@@ -160,14 +160,6 @@ export default {
               }
               break;
 
-          case '/geo':
-              if (request.method === 'GET') {
-                  response = handleGetGeo(request);
-              } else {
-                  throw new UserFacingError('Method Not Allowed.', 405);
-              }
-              break;
-            
           default:
             throw new UserFacingError('Not Found', 404);
         }
@@ -199,25 +191,6 @@ export default {
 
 
 // --- СПЕЦИФИЧНИ ОБРАБОТЧИЦИ НА ЕНДПОЙНТИ ---
-
-/**
- * Returns the visitor's detected country and preferred language based on Cloudflare geo headers.
- * Country code comes from request.cf.country (ISO 3166-1 alpha-2).
- * Supported languages: 'bg' (Bulgaria) and 'en' (everywhere else).
- */
-function handleGetGeo(request) {
-    const cf = request.cf || {};
-    const country = (cf.country || 'XX').toUpperCase();
-    const language = country === 'BG' ? 'bg' : 'en';
-    const body = JSON.stringify({ country, language });
-    return new Response(body, {
-        status: 200,
-        headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-store'
-        }
-    });
-}
 
 /**
  * Deep-merges a language overlay onto base content returned from KV.

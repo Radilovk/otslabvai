@@ -1638,7 +1638,7 @@ function isValidGradient(gradientStr) {
 
 
 // =======================================================
-//          6b. GEO-BASED LANGUAGE DETECTION
+//          6b. LANGUAGE DETECTION
 // =======================================================
 
 /**
@@ -1650,8 +1650,7 @@ const SUPPORTED_LANGS = ['bg', 'en'];
  * Detects the visitor's preferred language.
  * Priority:
  *   1. Saved localStorage preference ('userLang')
- *   2. /geo endpoint (Cloudflare IP-based country detection)
- *   3. navigator.language fallback
+ *   2. navigator.language fallback
  * Returns one of SUPPORTED_LANGS, defaulting to 'bg'.
  */
 async function detectLanguage() {
@@ -1659,18 +1658,6 @@ async function detectLanguage() {
         const saved = localStorage.getItem('userLang');
         if (saved && SUPPORTED_LANGS.includes(saved)) return saved;
     } catch (_) { /* localStorage unavailable */ }
-
-    try {
-        const geoRes = await fetch(`${API_URL}/geo`, { cache: 'no-store' });
-        if (geoRes.ok) {
-            const geo = await geoRes.json();
-            const lang = geo.language;
-            if (lang && SUPPORTED_LANGS.includes(lang)) {
-                try { localStorage.setItem('userLang', lang); } catch (_) { /* ignore */ }
-                return lang;
-            }
-        }
-    } catch (_) { /* geo endpoint unreachable */ }
 
     // Fallback: parse browser language (e.g. "en-US" → "en")
     const navLang = (navigator.language || 'bg').split('-')[0].toLowerCase();
