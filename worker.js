@@ -162,7 +162,7 @@ export default {
 
           case '/speedy-offices':
               if (request.method === 'GET') {
-                  response = await handleGetSpeedyOffices(env);
+                  response = await handleGetSpeedyOffices(env, ctx);
               } else {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
@@ -1607,9 +1607,9 @@ async function saveAIResult(env, clientId, recommendation) {
 /**
  * Handles GET /speedy-offices
  * Returns the cached Speedy offices list from KV.
- * Falls back to an empty array if the cache has not been populated yet.
+ * If the cache is empty, triggers a background refresh so the next request will find data.
  */
-async function handleGetSpeedyOffices(env) {
+async function handleGetSpeedyOffices(env, ctx) {
     const cached = await env.PAGE_CONTENT.get('speedy_offices_cache');
     let offices = [];
     if (cached) {
@@ -1619,11 +1619,16 @@ async function handleGetSpeedyOffices(env) {
             console.error('handleGetSpeedyOffices: invalid JSON in KV cache', e);
         }
     }
+    // If cache is empty, seed it in the background so the next request succeeds quickly.
+    if (offices.length === 0 && ctx) {
+        ctx.waitUntil(refreshSpeedyOfficesCache(env));
+    }
     return new Response(JSON.stringify(offices), {
         status: 200,
         headers: {
             'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=3600, stale-while-revalidate=300'
+            // No-cache when empty so the browser retries immediately.
+            'Cache-Control': offices.length > 0 ? 'public, max-age=3600, stale-while-revalidate=300' : 'no-store'
         }
     });
 }
@@ -1650,12 +1655,15 @@ async function refreshSpeedyOfficesCache(env) {
 
         const offices = items
             .filter(o => o && typeof o === 'object')
-            .map(o => ({
-                id: o.id,
-                name: String(o.name || o.nameEn || ''),
-                address: (o.address && o.address.fullAddressString) ? String(o.address.fullAddressString) : '',
-                city: (o.address && (o.address.siteName || o.address.city)) ? String(o.address.siteName || o.address.city) : ''
-            }));
+            .map(o => {
+                const addr = o.address || {};
+                return {
+                    id: o.id,
+                    name: String(o.name || o.nameEn || ''),
+                    address: addr.fullAddressString ? String(addr.fullAddressString) : '',
+                    city: String(addr.siteName || addr.city || '')
+                };
+            });
 
         await env.PAGE_CONTENT.put('speedy_offices_cache', JSON.stringify(offices));
         console.log(`refreshSpeedyOfficesCache: cached ${offices.length} offices`);

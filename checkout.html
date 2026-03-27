@@ -205,11 +205,19 @@
             display: block;
         }
         
+        .speedy-dropdown-item-city {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #e30613;
+            display: inline-block;
+            margin-top: 2px;
+            margin-right: 4px;
+        }
+        
         .speedy-dropdown-item-address {
             font-size: 0.85rem;
             color: var(--text-secondary);
-            display: block;
-            margin-top: 2px;
+            display: inline;
         }
         
         .speedy-dropdown-item-empty {
@@ -1609,29 +1617,44 @@
                 .replace(/'/g, '&#39;');
         }
 
+        function showSpeedyRetry(statusText, message) {
+            statusText.innerHTML = `${message} <button type="button" id="speedy-retry-btn" style="background:none;border:none;color:#e30613;cursor:pointer;text-decoration:underline;padding:0;font-size:inherit;">Опитай отново</button>`;
+            const retryBtn = document.getElementById('speedy-retry-btn');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', function() {
+                    speedyOfficesLoaded = false;
+                    allSpeedyOffices = [];
+                    loadSpeedyOffices();
+                });
+            }
+        }
+
         function loadSpeedyOffices() {
             const speedyInput = document.getElementById('speedy-office-search');
             const speedyDropdown = document.getElementById('speedy-offices-dropdown');
             const hiddenInput = document.getElementById('final-speedy-id');
             const statusText = document.getElementById('speedy-status-text');
 
+            statusText.textContent = 'Зареждане...';
+            statusText.style.color = 'gray';
+
             fetch('/speedy-offices')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data) && data.length > 0) {
                     allSpeedyOffices = data;
-                    statusText.textContent = '✓ Готово';
-                    statusText.style.color = 'green';
+                    statusText.textContent = 'Напишете град или адрес.';
+                    statusText.style.color = 'gray';
                     speedyOfficesLoaded = true;
                 } else {
-                    statusText.textContent = 'Офисите се зареждат – моля опитайте след малко.';
-                    statusText.style.color = 'orange';
+                    // Cache empty – show retry option; worker is seeding it in the background
+                    showSpeedyRetry(statusText, 'Офисите се зареждат.');
                 }
             })
             .catch(err => {
                 console.error('Error loading Speedy offices:', err);
-                statusText.textContent = 'Грешка при зареждане. Опитайте отново.';
-                statusText.style.color = 'red';
+                showSpeedyRetry(statusText, 'Грешка при зареждане.');
+            });
             });
 
             // Attach event listeners only once
@@ -1651,13 +1674,32 @@
                                office.city.toLowerCase().includes(searchValue);
                     });
 
-                    if (filteredOffices.length > 0) {
-                        speedyDropdown.innerHTML = filteredOffices.map(office => {
+                    // Sort: entries where search matches the start of city first
+                    filteredOffices.sort((a, b) => {
+                        const aCity = a.city.toLowerCase();
+                        const bCity = b.city.toLowerCase();
+                        const aStart = aCity.startsWith(searchValue) ? 0 : 1;
+                        const bStart = bCity.startsWith(searchValue) ? 0 : 1;
+                        return aStart - bStart;
+                    });
+
+                    const MAX_RESULTS = 15;
+                    const displayOffices = filteredOffices.slice(0, MAX_RESULTS);
+                    const remaining = filteredOffices.length - MAX_RESULTS;
+
+                    if (displayOffices.length > 0) {
+                        let html = displayOffices.map(office => {
+                            const cityLine = office.city && !office.name.toLowerCase().includes(office.city.toLowerCase())
+                                ? `<span class="speedy-dropdown-item-city">${escapeHtml(office.city)}</span>` : '';
                             return `<div class="speedy-dropdown-item" data-office-id="${escapeHtml(office.id)}">
                                 <span class="speedy-dropdown-item-name">${escapeHtml(office.name)}</span>
-                                <span class="speedy-dropdown-item-address">${escapeHtml(office.address)}</span>
+                                ${cityLine}<span class="speedy-dropdown-item-address">${escapeHtml(office.address)}</span>
                             </div>`;
                         }).join('');
+                        if (remaining > 0) {
+                            html += `<div class="speedy-dropdown-item-empty">и ${remaining} повече – прецизирайте търсенето</div>`;
+                        }
+                        speedyDropdown.innerHTML = html;
                         speedyDropdown.style.display = 'block';
                         speedyWidget.classList.add('expanded');
                     } else {
@@ -1677,7 +1719,8 @@
                             speedyInput.value = office.name;
                             hiddenInput.value = office.id;
                             selectedSpeedyOffice = office;
-                            statusText.textContent = `✓ Избран: ${office.name}${office.address ? ' - ' + office.address : ''}`;
+                            const cityLabel = office.city ? `${office.city}, ` : '';
+                            statusText.textContent = `✓ Избран: ${office.name} – ${cityLabel}${office.address}`;
                             statusText.style.color = '#c0000a';
                             speedyDropdown.style.display = 'none';
                             speedyWidget.classList.remove('expanded');
