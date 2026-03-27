@@ -144,20 +144,96 @@
         
         /* Ensure Speedy widget doesn't expand parent container horizontally */
         #speedy-widget {
-            overflow-x: hidden; /* Prevent container from expanding horizontally */
-            overflow-y: visible; /* Allow iframe to extend vertically if needed */
+            overflow-x: hidden;
+            overflow-y: visible;
         }
+
+        /* Speedy city/office autocomplete inputs */
+        .speedy-search-group {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 0.75rem;
+            position: relative;
+        }
+        .speedy-search-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        .speedy-search-group input[type="text"] {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .speedy-search-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 224, 224, 0.2);
+        }
+        .speedy-ac-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .speedy-ac-dropdown li {
+            padding: 0.65rem 0.8rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .speedy-ac-dropdown li:last-child { border-bottom: none; }
+        .speedy-ac-dropdown li:hover,
+        .speedy-ac-dropdown li.ac-active {
+            background-color: rgba(0, 224, 224, 0.1);
+        }
+        .speedy-map-link {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-decoration: underline;
+            padding: 0;
+            margin-top: 0.5rem;
+            display: block;
+            text-align: center;
+            width: 100%;
+            font-family: inherit;
+        }
+        .speedy-map-link:hover { color: var(--text-primary); }
         
         /* Ekont widget should allow dropdowns to overflow */
         #ekont-widget {
             overflow: visible; /* Allow dropdowns to extend beyond container */
         }
         
-        /* Responsive iframe for Speedy widget */
+        /* Speedy iframe (shown only when user toggles map fallback) */
         #frameOfficeLocator {
             width: 100%;
             max-width: 400px;
-            height: 400px !important;
+            height: 400px;
             display: block;
             margin: 0 auto;
             border: 1px solid #ccc;
@@ -173,8 +249,8 @@
         .speedy-widget-container {
             font-family: Arial, sans-serif;
             max-width: 100%;
-            overflow-x: hidden; /* Prevent horizontal expansion */
-            overflow-y: visible; /* Allow iframe to be visible */
+            overflow-x: hidden;
+            overflow-y: visible;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -911,17 +987,29 @@
                         <!-- Speedy Office Selection Widget -->
                         <div id="speedy-widget" class="courier-widget" style="display: none; margin-top: 1rem;">
                             <div class="speedy-widget-container">
-                                <label><strong>Избери офис на Спиди:</strong></label>
-                                <br><br>
-                                <iframe id="frameOfficeLocator" name="frameOfficeLocator" 
-                                        src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=Избор"
-                                        sandbox="allow-scripts allow-same-origin"
-                                        style="width: 100%; height: 400px;">
-                                </iframe>
+                                <label style="margin-bottom: 0.75rem;"><strong>Доставка до офис на Спиди:</strong></label>
+
+                                <!-- Step 1: City search -->
+                                <div class="speedy-search-group" id="speedy-city-group">
+                                    <label for="speedy-city-input">Населено място</label>
+                                    <input type="text" id="speedy-city-input" placeholder="Въведи град или село..." autocomplete="off">
+                                    <ul class="speedy-ac-dropdown" id="speedy-city-list"></ul>
+                                </div>
+
+                                <!-- Result display (after PostMessage from iframe) -->
                                 <div id="speedy-result-info" style="display: none;">
                                     <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
                                     <span id="view-office-addr">-</span>
+                                    <br>
+                                    <button type="button" class="speedy-map-link" id="speedy-change-selection">Промени избора ✎</button>
                                 </div>
+
+                                <!-- Iframe — shown after city selection, pre-filtered to chosen city -->
+                                <iframe id="frameOfficeLocator" name="frameOfficeLocator"
+                                        src="about:blank"
+                                        sandbox="allow-scripts allow-same-origin"
+                                        style="width: 100%; height: 420px; display: none; margin-top: 0.5rem;">
+                                </iframe>
                                 <input type="hidden" name="speedy_office_id" id="final-speedy-id">
                             </div>
                         </div>
@@ -1620,25 +1708,138 @@
         speedyRadio.addEventListener('change', toggleCourierWidgets);
         ekontRadio.addEventListener('change', toggleCourierWidgets);
         
-        // Speedy widget logic - listen for office selection
-        window.addEventListener('message', function(event) {
-            // Security: Accept data only from Speedy's exact domain
-            if (event.origin !== 'https://services.speedy.bg') return;
-            
-            const data = event.data;
-            
-            if (data && data.id) {
-                // Show selected office info
-                document.getElementById('speedy-result-info').style.display = 'block';
-                document.getElementById('view-office-name').textContent = data.name;
-                document.getElementById('view-office-addr').textContent = data.address.fullAddressString;
-                
-                // Store office ID in hidden field
-                document.getElementById('final-speedy-id').value = data.id;
-                
-                console.log("Успешно избран офис на Спиди ID: " + data.id);
+        // ─── Speedy city autocomplete + pre-filtered iframe ───────────────────────────
+        (function () {
+            var BG_CITIES = [
+                'Айтос','Аксаково','Антоново','Асеновград','Ахелой','Ахтопол',
+                'Банско','Батак','Белене','Белоградчик','Берковица','Благоевград',
+                'Ботевград','Брезник','Бургас','Варна','Велико Търново','Велинград',
+                'Видин','Враца','Габрово','Горна Оряховица','Гоце Делчев','Гълъбово',
+                'Девня','Димитровград','Добрич','Долна Митрополия','Долна Оряховица',
+                'Дулово','Дупница','Елена','Елин Пелин','Елхово','Етрополе',
+                'Златоград','Ихтиман','Казанлък','Карлово','Карнобат','Козлодуй',
+                'Костенец','Котел','Кюстендил','Кърджали','Левски','Ловеч',
+                'Луковит','Лясковец','Мездра','Момчилград','Монтана','Несебър',
+                'Нова Загора','Нови Пазар','Обзор','Оряхово','Панагюрище','Пазарджик',
+                'Перник','Петрич','Пещера','Плевен','Пловдив','Поморие','Попово',
+                'Правец','Провадия','Радомир','Раднево','Разград','Разлог','Русе',
+                'Самоков','Сандански','Свиленград','Свищов','Севлиево','Силистра',
+                'Сливен','Сливница','Смолян','Созопол','София','Средец','Стара Загора',
+                'Стралджа','Тетевен','Търговище','Троян','Трявна','Тутракан',
+                'Харманли','Хасково','Царево','Червен бряг','Чирпан','Шумен','Ямбол'
+            ].sort(function (a, b) { return a.localeCompare(b, 'bg'); });
+
+            var cityInput    = document.getElementById('speedy-city-input');
+            var cityList     = document.getElementById('speedy-city-list');
+            var resultInfo   = document.getElementById('speedy-result-info');
+            var changeBtn    = document.getElementById('speedy-change-selection');
+            var iframe       = document.getElementById('frameOfficeLocator');
+            var finalId      = document.getElementById('final-speedy-id');
+            var officeNameEl = document.getElementById('view-office-name');
+            var officeAddrEl = document.getElementById('view-office-addr');
+
+            if (!cityInput) return;
+
+            var SPEEDY_BASE = 'https://services.speedy.bg/office_locator_widget_v3/office_locator.php' +
+                '?lang=bg&showOfficesList=1&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=Избор';
+
+            // ── City autocomplete ─────────────────────────────────────────────────
+            cityInput.addEventListener('input', function () {
+                var q = this.value.trim().toLowerCase();
+                if (q.length < 1) { hideList(cityList); return; }
+                var matches = BG_CITIES.filter(function (c) {
+                    return c.toLowerCase().indexOf(q) !== -1;
+                }).slice(0, 10);
+                renderList(cityList, matches.map(function (c) { return { label: c }; }), function (item) {
+                    cityInput.value = item.label;
+                    hideList(cityList);
+                    openIframeForCity(item.label);
+                });
+            });
+            cityInput.addEventListener('keydown', function (e) { handleKeyNav(e, cityList); });
+            cityInput.addEventListener('blur', function () {
+                setTimeout(function () { hideList(cityList); }, 180);
+            });
+
+            function openIframeForCity(cityName) {
+                finalId.value = '';
+                resultInfo.style.display = 'none';
+                iframe.src = SPEEDY_BASE + '&cityName=' + encodeURIComponent(cityName);
+                iframe.style.display = 'block';
             }
-        }, false);
+
+            // ── PostMessage: user clicks office in iframe ─────────────────────────
+            window.addEventListener('message', function (event) {
+                if (event.origin !== 'https://services.speedy.bg') return;
+                var data = event.data;
+                if (data && data.id) {
+                    finalId.value = data.id;
+                    officeNameEl.textContent = data.name || '';
+                    officeAddrEl.textContent = (data.address && data.address.fullAddressString) ? data.address.fullAddressString : '';
+                    if (data.address && data.address.city) cityInput.value = data.address.city;
+                    iframe.style.display = 'none';
+                    resultInfo.style.display = 'block';
+                    console.log('Успешно избран офис на Спиди ID: ' + data.id);
+                }
+            }, false);
+
+            // ── "Промени избора" → re-open iframe for same city ───────────────────
+            if (changeBtn) {
+                changeBtn.addEventListener('click', function () {
+                    resultInfo.style.display = 'none';
+                    finalId.value = '';
+                    var city = cityInput.value.trim();
+                    if (city) {
+                        openIframeForCity(city);
+                    } else {
+                        iframe.style.display = 'none';
+                    }
+                });
+            }
+
+            // ── Helpers ───────────────────────────────────────────────────────────
+            function renderList(list, items, onSelect) {
+                list.innerHTML = '';
+                if (!items.length) { hideList(list); return; }
+                items.forEach(function (item) {
+                    var li = document.createElement('li');
+                    li.textContent = item.label;
+                    li.addEventListener('mousedown', function (e) {
+                        e.preventDefault();
+                        onSelect(item);
+                    });
+                    list.appendChild(li);
+                });
+                list.style.display = 'block';
+            }
+
+            function hideList(list) {
+                list.style.display = 'none';
+                list.innerHTML = '';
+            }
+
+            function handleKeyNav(e, list) {
+                var items = list.querySelectorAll('li');
+                if (!items.length && e.key !== 'Escape') return;
+                var curIdx = -1;
+                items.forEach(function (li, i) { if (li.classList.contains('ac-active')) curIdx = i; });
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    curIdx = Math.min(curIdx + 1, items.length - 1);
+                    items.forEach(function (li, i) { li.classList.toggle('ac-active', i === curIdx); });
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    curIdx = Math.max(curIdx - 1, 0);
+                    items.forEach(function (li, i) { li.classList.toggle('ac-active', i === curIdx); });
+                } else if (e.key === 'Enter' && curIdx >= 0) {
+                    e.preventDefault();
+                    var activeLi = items[curIdx];
+                    if (activeLi) activeLi.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+                } else if (e.key === 'Escape') {
+                    hideList(list);
+                }
+            }
+        })();
         
         // Econt office selection logic
         let ekontOfficesLoaded = false;
@@ -1885,7 +2086,7 @@
                 if (speedyRadio.checked) {
                     const speedyOfficeId = document.getElementById('final-speedy-id').value;
                     if (!speedyOfficeId) {
-                        alert('Моля, изберете офис на Speedy от картата.');
+                        alert('Моля, изберете офис на Speedy.');
                         isValid = false;
                     }
                 } else if (ekontRadio.checked) {

@@ -1645,7 +1645,7 @@ async function main() {
     initializeLogoFromCache();
     
     initializeGlobalScripts();
-    
+
     try {
         // Try to use mock data for testing if API fails
         let response, data;

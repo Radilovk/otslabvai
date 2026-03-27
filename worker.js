@@ -159,7 +159,7 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
-            
+
           default:
             throw new UserFacingError('Not Found', 404);
         }
@@ -205,6 +205,7 @@ async function handleGetPageContent(request, env) {
     if (pageContent === null) {
         throw new UserFacingError("Content not found.", 404);
     }
+
     return new Response(pageContent, {
         status: 200,
         headers: { 
@@ -329,6 +330,7 @@ async function handleGetLifePageContent(request, env) {
     if (pageContent === null) {
         throw new UserFacingError("Life content not found.", 404);
     }
+
     return new Response(pageContent, {
         status: 200,
         headers: { 
