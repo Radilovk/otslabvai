@@ -2407,23 +2407,10 @@
                 return;
             }
 
-            // "update" command — fetch latest bio_content from backend and rebake the page
+            // "update" command — reload to show the latest bioadmin changes
             if (name.toLowerCase() === 'update') {
                 document.getElementById('contactForm').reset();
-                btn.textContent = 'Обновяване...';
-                btn.disabled = true;
-                const workerOrigin = window._bioWorkerOrigin || 'https://port.radilov-k.workers.dev';
-                fetch(workerOrigin + '/bio_rebake', { method: 'POST' })
-                    .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
-                    .then(function() {
-                        // Hard-reload bypassing browser + CDN cache
-                        window.location.href = window.location.pathname + '?v=' + Date.now();
-                    })
-                    .catch(function(err) {
-                        console.warn('Bio rebake error:', err);
-                        btn.textContent = 'Грешка при обновяване';
-                        btn.disabled = false;
-                    });
+                window.location.href = window.location.pathname + '?v=' + Date.now();
                 return;
             }
 
@@ -2957,23 +2944,18 @@
         var bioDirty = document.cookie.split(';').some(function(c) {
             return c.trim() === 'bio_dirty=1';
         });
-
         if (bioDirty) {
-            // Consume the trigger immediately so subsequent refreshes skip the fetch
+            // Consume the trigger so subsequent refreshes don't re-fetch unnecessarily
             document.cookie = 'bio_dirty=; Max-Age=0; path=/';
-            // Apply stale cached content first to reduce perceived latency
-            if (window.__bioContent) applyBioContent(window.__bioContent);
-            // Fetch the freshly saved data from the server
-            fetch('/bio_content.json')
-                .then(function(r) { return r.ok ? r.json() : null; })
-                .then(function(data) { if (data) applyBioContent(data); })
-                .catch(function() {})
-                .finally(function() { clearTimeout(revealTimer); reveal(); });
-        } else {
-            if (window.__bioContent) applyBioContent(window.__bioContent);
-            clearTimeout(revealTimer);
-            reveal();
         }
+
+        // Always fetch the latest bio_content so bioadmin changes are visible to
+        // every visitor on every load — no server-side injection or cookies needed.
+        fetch('/bio_content.json')
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) { if (data) applyBioContent(data); })
+            .catch(function() {})
+            .finally(function() { clearTimeout(revealTimer); reveal(); });
     })();
     </script>
 
