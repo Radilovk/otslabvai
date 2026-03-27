@@ -2407,25 +2407,24 @@
                 return;
             }
 
-            // "update" command — fetch latest bio_content from backend and apply it
+            // "update" command — bake bio_content permanently into bio.html via GitHub commit
             if (name.toLowerCase() === 'update') {
                 document.getElementById('contactForm').reset();
-                btn.textContent = 'Обновяване...';
+                btn.textContent = 'Вграждане...';
                 btn.disabled = true;
                 const workerOrigin = window._bioWorkerOrigin || 'https://port.radilov-k.workers.dev';
-                fetch(workerOrigin + '/bio_content.json')
+                fetch(workerOrigin + '/bio_rebake', { method: 'POST' })
                     .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
-                    .then(function(data) {
-                        if (data && typeof window.__applyBioContent === 'function') window.__applyBioContent(data);
-                        btn.textContent = '✅ Актуализирано!';
+                    .then(function() {
+                        btn.textContent = '✅ Вградено в сайта!';
                         setTimeout(function() {
                             btn.textContent = 'Изпрати';
                             btn.disabled = false;
-                        }, 2000);
+                        }, 4000);
                     })
                     .catch(function(err) {
-                        console.warn('Bio update error:', err);
-                        btn.textContent = 'Грешка при обновяване';
+                        console.warn('Bio rebake error:', err);
+                        btn.textContent = 'Грешка при вграждане';
                         btn.disabled = false;
                     });
                 return;
@@ -2478,6 +2477,9 @@
         <button class="edu-img-fullscreen__close" id="edu-img-fs-close" aria-label="Затвори">✕</button>
         <img id="edu-img-fs-img" class="edu-img-fullscreen__img" src="" alt="Сертификат — пълен размер">
     </div>
+    <!-- __BIO_CONTENT_BAKED_START__ -->
+<script>window.__BAKED_BIO_CONTENT__=null;</script>
+<!-- __BIO_CONTENT_BAKED_END__ -->
     <script>
     (function() {
         var IMAGE_TARGETS = {
@@ -2946,8 +2948,13 @@
             });
         })();
 
-        // No backend requests on normal load — page works with default content.
-        // Bio content is fetched only when the "update" command is issued.
+        // Apply baked bio_content (embedded in this file by the "update" command via GitHub commit).
+        // Runs on every page load without any backend request — works for ALL users.
+        if (window.__BAKED_BIO_CONTENT__ && typeof applyBioContent === 'function') {
+            applyBioContent(window.__BAKED_BIO_CONTENT__);
+        }
+
+        // No backend requests on normal load — page works with baked or default content.
         clearTimeout(revealTimer);
         reveal();
     })();
