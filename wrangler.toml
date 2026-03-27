@@ -2,6 +2,12 @@ name = "port-worker"
 main = "worker.js"
 compatibility_date = "2024-04-05"
 
+# Static HTML/JS/CSS files are bundled from the repo at deploy time and served
+# directly by the Cloudflare edge — they never touch the Worker or KV.
+# Only API routes (/page_content.json, /orders, /contacts, etc.) hit the Worker.
+[assets]
+directory = "."
+
 # KV пространствата съхраняват поръчките и съдържанието на сайта.
 [[kv_namespaces]]
 binding = "ORDERS"

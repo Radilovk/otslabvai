@@ -23,37 +23,6 @@ class UserFacingError extends Error {
   }
 }
 
-// Content type constants
-const CONTENT_TYPES = {
-  html: 'text/html; charset=utf-8',
-  js: 'application/javascript; charset=utf-8',
-  css: 'text/css; charset=utf-8'
-};
-
-// Static file configuration
-const STATIC_FILES = {
-  '/': { file: 'index.html', type: CONTENT_TYPES.html },
-  '/index.html': { file: 'index.html', type: CONTENT_TYPES.html },
-  '/index.js': { file: 'index.js', type: CONTENT_TYPES.js },
-  '/index.css': { file: 'index.css', type: CONTENT_TYPES.css },
-  '/config.js': { file: 'config.js', type: CONTENT_TYPES.js },
-  '/admin.html': { file: 'admin.html', type: CONTENT_TYPES.html },
-  '/admin.js': { file: 'admin.js', type: CONTENT_TYPES.js },
-  '/admin.css': { file: 'admin.css', type: CONTENT_TYPES.css },
-  '/product.html': { file: 'product.html', type: CONTENT_TYPES.html },
-  '/product.js': { file: 'product.js', type: CONTENT_TYPES.js },
-  '/checkout.html': { file: 'checkout.html', type: CONTENT_TYPES.html },
-  '/life.html': { file: 'life.html', type: CONTENT_TYPES.html },
-  '/life.js': { file: 'life.js', type: CONTENT_TYPES.js },
-  '/life.css': { file: 'life.css', type: CONTENT_TYPES.css },
-  '/quest.html': { file: 'quest.html', type: CONTENT_TYPES.html },
-  '/questionnaire.js': { file: 'questionnaire.js', type: CONTENT_TYPES.js },
-  '/questionnaire.css': { file: 'questionnaire.css', type: CONTENT_TYPES.css },
-  '/bioadmin.html': { file: 'bioadmin.html', type: CONTENT_TYPES.html },
-  '/robots.txt': { file: 'robots.txt', type: 'text/plain; charset=utf-8' },
-  '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' }
-};
-
 // --- ОСНОВЕН РУТЕР И ОБРАБОТКА НА ЗАЯВКИ ---
 
 export default {
@@ -79,16 +48,7 @@ export default {
     try {
       let response;
       
-      if (url.pathname === '/bio.html') {
-        response = await serveBioHtml(env, request);
-      }
-      // Only serve static files for GET — POST/PUT requests must reach the API router.
-      else if (request.method === 'GET' && STATIC_FILES[url.pathname]) {
-        const { file, type } = STATIC_FILES[url.pathname];
-        response = await serveStaticFile(env, file, type, request);
-      }
-      else {
-        switch (url.pathname) {
+      switch (url.pathname) {
           case '/quest-submit':
             response = await handleQuestSubmit(request, env, ctx);
             break;
@@ -202,18 +162,8 @@ export default {
               break;
             
           default:
-            // Try to serve 404.html for unknown routes
-            const notFoundFile = await env.PAGE_CONTENT.get('static_404.html');
-            if (notFoundFile) {
-              response = new Response(notFoundFile, {
-                status: 404,
-                headers: { 'Content-Type': 'text/html; charset=utf-8' }
-              });
-            } else {
-              throw new UserFacingError('Not Found', 404);
-            }
+            throw new UserFacingError('Not Found', 404);
         }
-      }
 
       // Добавяме CORS хедъри към всеки успешен отговор
       Object.keys(corsHeaders).forEach(key => {
@@ -239,54 +189,6 @@ export default {
 
 
 // --- СПЕЦИФИЧНИ ОБРАБОТЧИЦИ НА ЕНДПОЙНТИ ---
-
-/**
- * Serves static files from KV storage.
- * Supports conditional requests (ETag / If-None-Match) so the browser never
- * re-downloads unchanged content after the 1-hour cache expires.
- * @param {object} env - Environment with KV bindings
- * @param {string} filename - Name of the file to serve
- * @param {string} contentType - MIME type for the response
- * @param {Request} request - Incoming request (used for If-None-Match check)
- * @returns {Promise<Response>} 200 with content, or 304 Not Modified
- * @throws {UserFacingError} When file is not found in storage (404)
- */
-async function serveStaticFile(env, filename, contentType, request) {
-    const fileContent = await env.PAGE_CONTENT.get(`static_${filename}`);
-    if (fileContent === null) {
-        throw new UserFacingError(`File ${filename} not found in storage.`, 404);
-    }
-    const etag = await generateETag(fileContent);
-    const cacheControl = `public, max-age=${CACHE_CONFIG.STATIC_FILE_MAX_AGE}`;
-    // Return 304 Not Modified when the browser already has the current version.
-    if (request.headers.get('If-None-Match') === etag) {
-        return new Response(null, {
-            status: 304,
-            headers: { 'Cache-Control': cacheControl, 'ETag': etag }
-        });
-    }
-    return new Response(fileContent, {
-        status: 200,
-        headers: { 
-            'Content-Type': contentType,
-            'Cache-Control': cacheControl,
-            'ETag': etag
-        }
-    });
-}
-
-/**
- * Serves bio.html as a plain static file from KV.
- * bio.html works with default content on load — no backend requests.
- * Only the "update" command in the contact form triggers a fetch of
- * /bio_content.json and applies it client-side.
- *
- * @param {object} env - Worker environment bindings
- * @param {Request} request - Incoming request
- */
-async function serveBioHtml(env, request) {
-    return serveStaticFile(env, 'bio.html', CONTENT_TYPES.html, request);
-}
 
 /**
  * Handles GET /page_content.json

@@ -12,32 +12,13 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Files to upload
+// Files to upload — ONLY data files that the Worker API reads from KV.
+// HTML, JS, and CSS are served directly from the GitHub repo via Cloudflare
+// Workers Assets and must NEVER be uploaded to KV.
 const FILES_TO_UPLOAD = [
-    { file: 'index.html', key: 'static_index.html' },
-    { file: 'index.js', key: 'static_index.js' },
-    { file: 'index.css', key: 'static_index.css' },
-    { file: 'config.js', key: 'static_config.js' },
-    { file: 'admin.html', key: 'static_admin.html' },
-    { file: 'admin.js', key: 'static_admin.js' },
-    { file: 'admin.css', key: 'static_admin.css' },
-    { file: 'checkout.html', key: 'static_checkout.html' },
-    { file: 'life.html', key: 'static_life.html' },
-    { file: 'life.js', key: 'static_life.js' },
-    { file: 'life.css', key: 'static_life.css' },
-    { file: 'quest.html', key: 'static_quest.html' },
-    { file: 'questionnaire.js', key: 'static_questionnaire.js' },
-    { file: 'questionnaire.css', key: 'static_questionnaire.css' },
-    { file: 'bio.html', key: 'static_bio.html' },
-    { file: 'bioadmin.html', key: 'static_bioadmin.html' },
     // Static fallback for page_content – used by the worker when the live 'page_content' KV key is empty
     { file: 'backend/page_content.json', key: 'static_backend_page_content.json' },
     { file: 'backend/life_page_content.json', key: 'static_backend_life_page_content.json' },
-    // Static-serving keys for GET /page_content.json and GET /life_page_content.json.
-    // These are updated by the worker on every admin save, so normal page loads
-    // never trigger a dynamic KV read — the browser caches the static file for 1 hour.
-    { file: 'backend/page_content.json', key: 'static_page_content.json' },
-    { file: 'backend/life_page_content.json', key: 'static_life_page_content.json' },
 ];
 
 // KV Namespace details

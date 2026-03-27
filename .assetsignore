@@ -1,0 +1,37 @@
+# Worker and test files (not web assets)
+worker.js
+worker.test.js
+upload-static-files.js
+jest.config.js
+
+# Python scripts
+*.py
+
+# Binary and media files
+*.zip
+*.pdf
+*.jpg
+*.webm
+*.xlsx
+
+# Documentation and notes
+*.md
+formula.txt
+
+# Shell scripts
+*.sh
+
+# Node / TypeScript config
+package.json
+package-lock.json
+tsconfig.json
+*.toml
+
+# JSON data files (served dynamically by the Worker API, never as static files)
+*.json
+
+# Directories that contain non-web content
+products/
+backend/
+node_modules/
+.git/
