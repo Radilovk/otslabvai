@@ -277,8 +277,9 @@ async function serveStaticFile(env, filename, contentType, request) {
 
 /**
  * Serves bio.html as a plain static file from KV.
- * bio.html fetches /bio_content.json client-side on every load so bioadmin
- * changes are always visible without any server-side injection or baking.
+ * bio.html works with default content on load — no backend requests.
+ * Only the "update" command in the contact form triggers a fetch of
+ * /bio_content.json and applies it client-side.
  *
  * @param {object} env - Worker environment bindings
  * @param {Request} request - Incoming request

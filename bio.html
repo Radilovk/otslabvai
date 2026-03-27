@@ -2407,10 +2407,27 @@
                 return;
             }
 
-            // "update" command — reload to show the latest bioadmin changes
+            // "update" command — fetch latest bio_content from backend and apply it
             if (name.toLowerCase() === 'update') {
                 document.getElementById('contactForm').reset();
-                window.location.href = window.location.pathname + '?v=' + Date.now();
+                btn.textContent = 'Обновяване...';
+                btn.disabled = true;
+                const workerOrigin = window._bioWorkerOrigin || 'https://port.radilov-k.workers.dev';
+                fetch(workerOrigin + '/bio_content.json')
+                    .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
+                    .then(function(data) {
+                        if (data) applyBioContent(data);
+                        btn.textContent = '✅ Актуализирано!';
+                        setTimeout(function() {
+                            btn.textContent = 'Изпрати';
+                            btn.disabled = false;
+                        }, 2000);
+                    })
+                    .catch(function(err) {
+                        console.warn('Bio update error:', err);
+                        btn.textContent = 'Грешка при обновяване';
+                        btn.disabled = false;
+                    });
                 return;
             }
 
@@ -2439,10 +2456,6 @@
             });
         }
     </script>
-
-    <!-- Apply bioadmin overrides: bio_content is injected inline by the worker. -->
-    <!-- The worker replaces the script below with the actual bio_content JSON. -->
-    <script id="bio-content-injection-point">/* bio_content injected by worker */</script>
 
     <!-- ── Education qualification modal ──────────────────────────── -->
     <div id="edu-modal" class="edu-modal" role="dialog" aria-modal="true" aria-labelledby="edu-modal-title" hidden>
@@ -2905,15 +2918,6 @@
             : 'https://port.radilov-k.workers.dev';
         window._bioWorkerOrigin = workerOrigin;
 
-        // When served through the worker, bio_content is injected inline as
-        // window.__bioContent and the page is hidden (bio-loading) until we
-        // apply overrides and call reveal() — so there is no flash.
-        //
-        // Cookie-based refresh trigger: bioadmin sets bio_dirty=1 after every
-        // save.  When that cookie is present we fetch /bio_content.json for the
-        // latest data and apply it on top of (potentially cached) HTML.
-        // Without the cookie the page reveals using only window.__bioContent
-        // — zero extra backend requests on every normal refresh.
         // Auto-tag any remaining text elements with stable data-bio-id attributes
         // so that saved textOverrides can locate them on every page load.
         (function bioAutoTag() {
@@ -2941,21 +2945,10 @@
             });
         })();
 
-        var bioDirty = document.cookie.split(';').some(function(c) {
-            return c.trim() === 'bio_dirty=1';
-        });
-        if (bioDirty) {
-            // Consume the trigger so subsequent refreshes don't re-fetch unnecessarily
-            document.cookie = 'bio_dirty=; Max-Age=0; path=/';
-        }
-
-        // Always fetch the latest bio_content so bioadmin changes are visible to
-        // every visitor on every load — no server-side injection or cookies needed.
-        fetch('/bio_content.json')
-            .then(function(r) { return r.ok ? r.json() : null; })
-            .then(function(data) { if (data) applyBioContent(data); })
-            .catch(function() {})
-            .finally(function() { clearTimeout(revealTimer); reveal(); });
+        // No backend requests on normal load — page works with default content.
+        // Bio content is fetched only when the "update" command is issued.
+        clearTimeout(revealTimer);
+        reveal();
     })();
     </script>
 
