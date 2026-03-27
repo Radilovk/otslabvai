@@ -2407,7 +2407,7 @@
                 return;
             }
 
-            // "update" command — fetch latest bio_content from backend and apply it
+            // "update" command — fetch latest bio_content from backend and hardcode it locally
             if (name.toLowerCase() === 'update') {
                 document.getElementById('contactForm').reset();
                 btn.textContent = 'Обновяване...';
@@ -2417,7 +2417,9 @@
                     .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
                     .then(function(data) {
                         if (data && typeof window.__applyBioContent === 'function') window.__applyBioContent(data);
-                        btn.textContent = '✅ Актуализирано!';
+                        // Hardcode changes locally — persists across page reloads without further backend calls
+                        try { localStorage.setItem('bio_content_cache', JSON.stringify(data)); } catch(e) {}
+                        btn.textContent = '✅ Записано трайно!';
                         setTimeout(function() {
                             btn.textContent = 'Изпрати';
                             btn.disabled = false;
@@ -2944,6 +2946,18 @@
                     el.setAttribute('data-bio-id', key + '-' + (idx + 1));
                 });
             });
+        })();
+
+        // Apply locally-cached bio_content (written by the "update" command) so
+        // changes persist across reloads without further backend calls.
+        (function() {
+            try {
+                var cached = localStorage.getItem('bio_content_cache');
+                if (cached) {
+                    var data = JSON.parse(cached);
+                    if (data && typeof window.__applyBioContent === 'function') window.__applyBioContent(data);
+                }
+            } catch(e) {}
         })();
 
         // No backend requests on normal load — page works with default content.
