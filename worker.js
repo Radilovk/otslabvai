@@ -4,7 +4,6 @@
 const CACHE_CONFIG = {
     PAGE_CONTENT_MAX_AGE: 300,        // 5 minutes
     PAGE_CONTENT_STALE_WHILE_REVALIDATE: 60,  // 1 minute
-    STATIC_FILE_MAX_AGE: 3600         // 1 hour
 };
 
 // GitHub sync configuration – keeps backend/page_content.json in the repo in sync with KV
@@ -172,8 +171,11 @@ export default {
       return response;
 
     } catch (e) {
-      console.error("Top-level error:", e.stack);
       const statusCode = e instanceof UserFacingError ? e.status : 500;
+      // Log unexpected server errors; skip logging for expected 404s (e.g. bots hitting the API root).
+      if (statusCode !== 404) {
+        console.error("Top-level error:", e.stack);
+      }
       const userErrorMessage = (e instanceof UserFacingError) 
         ? e.message 
         : "An unexpected internal error occurred.";
@@ -438,9 +440,8 @@ async function handleGetBioContent(request, env) {
 
 /**
  * Handles POST /bio_content.json
- * Saves bio page overrides to KV only.
- * baked_bio.html is NOT updated here — it is rebuilt on demand via POST /bio_rebake
- * (triggered by the "update" command in bio.html's contact form).
+ * Saves bio page overrides to KV. bio.html fetches /bio_content.json client-side
+ * on every load and applies it inline — no server-side HTML generation.
  */
 async function handleSaveBioContent(request, env) {
     const contentToSave = await request.text();
@@ -463,10 +464,8 @@ async function handleSaveBioContent(request, env) {
 
 /**
  * Handles POST /bio_rebake
- * bio_content is already in KV after POST /bio_content.json, and bio.html
- * fetches it client-side on every load — no server-side baking required.
- * This endpoint remains for backwards compatibility (bio.html may still POST
- * here from the "update" command in older cached versions).
+ * No-op endpoint — bio.html fetches /bio_content.json client-side, no server baking.
+ * Kept so the "update" command in bio.html's contact form does not error.
  */
 async function handleBioRebake(env) {
     return new Response(JSON.stringify({ success: true, message: 'Bio page updated.' }), {
