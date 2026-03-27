@@ -19,9 +19,6 @@ const FILES_TO_UPLOAD = [
     // Static fallback for page_content – used by the worker when the live 'page_content' KV key is empty
     { file: 'backend/page_content.json', key: 'static_backend_page_content.json' },
     { file: 'backend/life_page_content.json', key: 'static_backend_life_page_content.json' },
-    // English overlays – merged onto the base content when ?lang=en is requested
-    { file: 'backend/page_content_en.json', key: 'static_backend_page_content_en.json' },
-    { file: 'backend/life_page_content_en.json', key: 'static_backend_life_page_content_en.json' },
 ];
 
 // KV Namespace details

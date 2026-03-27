@@ -193,85 +193,10 @@ export default {
 // --- СПЕЦИФИЧНИ ОБРАБОТЧИЦИ НА ЕНДПОЙНТИ ---
 
 /**
- * Deep-merges a language overlay onto base content returned from KV.
- * Rules:
- *  - settings:     overlay fields overwrite base fields (logos/gradients kept from base when absent in overlay)
- *  - navigation:   overlay array replaces base array entirely when present
- *  - page_content: overlay items are merged by index; text/label fields from overlay overwrite base,
- *                  but the `products` array is always taken from the base (never from overlay)
- *  - footer:       overlay columns replace base columns when present; copyright_text merged similarly
- * @param {object} base    Parsed base content (Bulgarian)
- * @param {object} overlay Parsed language overlay (e.g. English)
- * @returns {object} Merged content object
- */
-function mergeContentOverlay(base, overlay) {
-    const merged = structuredClone(base); // deep clone base
-
-    if (overlay.settings) {
-        merged.settings = Object.assign({}, merged.settings);
-        for (const [k, v] of Object.entries(overlay.settings)) {
-            if (v !== null && v !== undefined) {
-                if (typeof v === 'object' && !Array.isArray(v) && typeof merged.settings[k] === 'object') {
-                    merged.settings[k] = Object.assign({}, merged.settings[k], v);
-                } else {
-                    merged.settings[k] = v;
-                }
-            }
-        }
-    }
-
-    if (Array.isArray(overlay.navigation) && overlay.navigation.length > 0) {
-        merged.navigation = overlay.navigation;
-    }
-
-    if (Array.isArray(overlay.page_content) && overlay.page_content.length > 0) {
-        merged.page_content = merged.page_content.map((baseItem, idx) => {
-            const overlayItem = overlay.page_content[idx];
-            if (!overlayItem) return baseItem;
-            const mergedItem = Object.assign({}, baseItem);
-            for (const [k, v] of Object.entries(overlayItem)) {
-                if (k === 'products') continue; // always keep products from base
-                if (v !== null && v !== undefined) {
-                    if (typeof v === 'object' && !Array.isArray(v) && typeof mergedItem[k] === 'object') {
-                        mergedItem[k] = Object.assign({}, mergedItem[k], v);
-                    } else if (Array.isArray(v) && Array.isArray(mergedItem[k])) {
-                        // For arrays of objects (stats, trust_badges, etc.) merge element-by-element
-                        mergedItem[k] = mergedItem[k].map((baseEl, i) => {
-                            const overlayEl = v[i];
-                            if (!overlayEl) return baseEl;
-                            return Object.assign({}, baseEl, overlayEl);
-                        });
-                    } else {
-                        mergedItem[k] = v;
-                    }
-                }
-            }
-            return mergedItem;
-        });
-    }
-
-    if (overlay.footer) {
-        merged.footer = Object.assign({}, merged.footer);
-        if (Array.isArray(overlay.footer.columns) && overlay.footer.columns.length > 0) {
-            merged.footer.columns = overlay.footer.columns;
-        }
-        if (overlay.footer.copyright_text) {
-            merged.footer.copyright_text = overlay.footer.copyright_text;
-        }
-    }
-
-    return merged;
-}
-
-/**
  * Handles GET /page_content.json
- * Supports optional ?lang=en query param to merge an English overlay onto the Bulgarian base.
  * Falls back to static_backend_page_content.json if the dynamic KV key is not set.
  */
 async function handleGetPageContent(request, env) {
-    const url = new URL(request.url);
-    const lang = (url.searchParams.get('lang') || 'bg').toLowerCase();
-
     let pageContent = await env.PAGE_CONTENT.get('page_content');
     if (pageContent === null) {
         // Fallback: use the static copy uploaded from backend/page_content.json
@@ -279,17 +204,6 @@ async function handleGetPageContent(request, env) {
     }
     if (pageContent === null) {
         throw new UserFacingError("Content not found.", 404);
-    }
-
-    if (lang !== 'bg') {
-        const overlayRaw = await env.PAGE_CONTENT.get(`page_content_${lang}`) ||
-                           await env.PAGE_CONTENT.get(`static_backend_page_content_${lang}.json`);
-        if (overlayRaw) {
-            try {
-                const merged = mergeContentOverlay(JSON.parse(pageContent), JSON.parse(overlayRaw));
-                pageContent = JSON.stringify(merged);
-            } catch (e) { console.warn('page_content overlay merge error (serving base content):', e.message); }
-        }
     }
 
     return new Response(pageContent, {
@@ -406,30 +320,15 @@ async function handleSavePageContent(request, env, ctx) {
 
 /**
  * Handles GET /life_page_content.json
- * Supports optional ?lang=en query param to merge an English overlay onto the Bulgarian base.
  * Falls back to static_backend_life_page_content.json if the dynamic KV key is not set.
  */
 async function handleGetLifePageContent(request, env) {
-    const url = new URL(request.url);
-    const lang = (url.searchParams.get('lang') || 'bg').toLowerCase();
-
     let pageContent = await env.PAGE_CONTENT.get('life_page_content');
     if (pageContent === null) {
         pageContent = await env.PAGE_CONTENT.get('static_backend_life_page_content.json');
     }
     if (pageContent === null) {
         throw new UserFacingError("Life content not found.", 404);
-    }
-
-    if (lang !== 'bg') {
-        const overlayRaw = await env.PAGE_CONTENT.get(`life_page_content_${lang}`) ||
-                           await env.PAGE_CONTENT.get(`static_backend_life_page_content_${lang}.json`);
-        if (overlayRaw) {
-            try {
-                const merged = mergeContentOverlay(JSON.parse(pageContent), JSON.parse(overlayRaw));
-                pageContent = JSON.stringify(merged);
-            } catch (e) { console.warn('life_page_content overlay merge error (serving base content):', e.message); }
-        }
     }
 
     return new Response(pageContent, {
