@@ -2416,7 +2416,7 @@
                 fetch(workerOrigin + '/bio_content.json')
                     .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
                     .then(function(data) {
-                        if (data) applyBioContent(data);
+                        if (data && typeof window.__applyBioContent === 'function') window.__applyBioContent(data);
                         btn.textContent = '✅ Актуализирано!';
                         setTimeout(function() {
                             btn.textContent = 'Изпрати';
@@ -2908,9 +2908,10 @@
 
         // Bind clicks on default (static) edu items
         bindEduItemClicks();
-        // Expose for inline admin access
+        // Expose for inline admin access and contact-form "update" command
         window.__renderEduItems    = renderEduItems;
         window.__bindEduItemClicks = bindEduItemClicks;
+        window.__applyBioContent   = applyBioContent;
 
         // Store worker origin for contact form
         var workerOrigin = window.location.hostname === 'localhost'
