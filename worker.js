@@ -464,11 +464,91 @@ async function handleSaveBioContent(request, env) {
 
 /**
  * Handles POST /bio_rebake
- * No-op endpoint — bio.html fetches /bio_content.json client-side, no server baking.
- * Kept so the "update" command in bio.html's contact form does not error.
+ * Reads bio_content from KV, fetches the current bio.html from GitHub,
+ * replaces the bake-marker block with the serialised JSON, and commits
+ * the updated file back — so the content is permanently embedded in the
+ * static asset for every user (no client-side backend call required).
  */
 async function handleBioRebake(env) {
-    return new Response(JSON.stringify({ success: true, message: 'Bio page updated.' }), {
+    const token = env.GITHUB_API_TOKEN || await env.PAGE_CONTENT.get('api_token');
+    if (!token) {
+        throw new UserFacingError('GitHub token not configured.', 503);
+    }
+
+    // 1. Read latest bio_content from KV
+    const bioContentRaw = await env.PAGE_CONTENT.get('bio_content');
+    if (!bioContentRaw) {
+        throw new UserFacingError('No bio content found in KV.', 404);
+    }
+    // Validate JSON before embedding
+    JSON.parse(bioContentRaw);
+
+    // 2. Fetch current bio.html from GitHub
+    const { owner, repo, branch } = GITHUB_SYNC_CONFIG;
+    const filePath = 'bio.html';
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`;
+
+    const getResponse = await fetch(apiUrl, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'Cloudflare-Worker'
+        }
+    });
+    if (!getResponse.ok) {
+        throw new UserFacingError('Failed to read bio.html from GitHub.', 502);
+    }
+    const fileData = await getResponse.json();
+    const sha = fileData.sha;
+
+    // Decode UTF-8 content (GitHub API returns base64)
+    const binaryStr = atob(fileData.content.replace(/\n/g, ''));
+    const rawBytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) rawBytes[i] = binaryStr.charCodeAt(i);
+    const bioHtml = new TextDecoder('utf-8').decode(rawBytes);
+
+    // 3. Replace the marker block with the baked JSON
+    const MARKER_START = '<!-- __BIO_CONTENT_BAKED_START__ -->';
+    const MARKER_END   = '<!-- __BIO_CONTENT_BAKED_END__ -->';
+    if (!bioHtml.includes(MARKER_START) || !bioHtml.includes(MARKER_END)) {
+        throw new UserFacingError('bio.html bake markers not found — please redeploy the base file first.', 500);
+    }
+
+    const startIdx = bioHtml.indexOf(MARKER_START);
+    const endIdx   = bioHtml.indexOf(MARKER_END) + MARKER_END.length;
+    // Escape </script> sequences inside the JSON so they cannot break the script tag
+    const safeJson = bioContentRaw.replace(/<\/script>/gi, '<\\/script>');
+    const bakedBlock = `${MARKER_START}\n<script>window.__BAKED_BIO_CONTENT__=${safeJson};<\/script>\n${MARKER_END}`;
+    const bakedHtml = bioHtml.slice(0, startIdx) + bakedBlock + bioHtml.slice(endIdx);
+
+    // 4. Commit updated bio.html to GitHub (triggers auto-deploy via GitHub Actions)
+    const encodedBytes = new TextEncoder().encode(bakedHtml);
+    const base64Content = btoa(Array.from(encodedBytes, b => String.fromCharCode(b)).join(''));
+
+    const putResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'Cloudflare-Worker'
+        },
+        body: JSON.stringify({
+            message: 'sync: bake bio_content into bio.html',
+            content: base64Content,
+            branch,
+            sha
+        })
+    });
+
+    if (!putResponse.ok) {
+        const errText = await putResponse.text();
+        console.error(`handleBioRebake GitHub commit failed: ${putResponse.status} - ${errText}`);
+        throw new UserFacingError('Failed to commit bio.html to GitHub.', 502);
+    }
+
+    console.log('handleBioRebake: bio.html committed to GitHub successfully');
+    return new Response(JSON.stringify({ success: true, message: 'Bio content baked into bio.html and committed to GitHub.' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
     });
