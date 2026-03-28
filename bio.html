@@ -57,6 +57,7 @@
             --fs-xl:    1.5rem;      /* 24px — section subtitles */
             --fs-2xl:   clamp(1.75rem, 3vw, 2.25rem);  /* section titles */
             --fs-3xl:   clamp(2.5rem, 5vw, 4rem);      /* hero name */
+            --bottom-nav-h: 4rem;              /* mobile bottom-nav height */
         }
 
         /* ─── Reset & Base ──────────────────────────────────────────── */
@@ -1064,7 +1065,7 @@
         @media (max-width: 768px) {
             .bottom-nav { display: block; }
             /* push footer above bottom-nav */
-            body { padding-bottom: 4rem; }
+            body { padding-bottom: var(--bottom-nav-h); }
         }
 
         /* ─── Swipeable testimonials ────────────────────────────────── */
@@ -1207,6 +1208,9 @@
         #bio-float-cta.visible { display: flex; align-items: center; gap: .5rem; }
         #bio-float-cta:hover { opacity: .9; transform: translateY(-2px); }
         body.bio-admin-active #bio-float-cta { display: none !important; }
+        @media (max-width: 768px) {
+            #bio-float-cta { bottom: calc(var(--bottom-nav-h) + 0.5rem + env(safe-area-inset-bottom)); right: 1rem; }
+        }
         @media (max-width: 640px) {
             .services__grid { grid-template-columns: 1fr; }
         }
@@ -3143,10 +3147,17 @@
                     </div>
                 </div>
                 <div class="ba-form-group">
-                    <label>Акцент (--c-accent)</label>
+                    <label>Повърхност 2 (--c-surface-2)</label>
                     <div class="ba-color-row">
-                        <input type="color" id="ba-c-accent-picker">
-                        <input type="text"  id="ba-c-accent-hex" placeholder="#2C3E50">
+                        <input type="color" id="ba-c-surface2-picker">
+                        <input type="text"  id="ba-c-surface2-hex" placeholder="#F4F3F0">
+                    </div>
+                </div>
+                <div class="ba-form-group">
+                    <label>Рамки (--c-border)</label>
+                    <div class="ba-color-row">
+                        <input type="color" id="ba-c-border-picker">
+                        <input type="text"  id="ba-c-border-hex" placeholder="#E5E3DE">
                     </div>
                 </div>
                 <div class="ba-form-group">
@@ -3154,6 +3165,48 @@
                     <div class="ba-color-row">
                         <input type="color" id="ba-c-text1-picker">
                         <input type="text"  id="ba-c-text1-hex" placeholder="#1A1916">
+                    </div>
+                </div>
+                <div class="ba-form-group">
+                    <label>Вторичен текст (--c-text-2)</label>
+                    <div class="ba-color-row">
+                        <input type="color" id="ba-c-text2-picker">
+                        <input type="text"  id="ba-c-text2-hex" placeholder="#57534E">
+                    </div>
+                </div>
+                <div class="ba-form-group">
+                    <label>Третичен текст (--c-text-3)</label>
+                    <div class="ba-color-row">
+                        <input type="color" id="ba-c-text3-picker">
+                        <input type="text"  id="ba-c-text3-hex" placeholder="#A8A29E">
+                    </div>
+                </div>
+                <div class="ba-form-group">
+                    <label>Акцент (--c-accent)</label>
+                    <div class="ba-color-row">
+                        <input type="color" id="ba-c-accent-picker">
+                        <input type="text"  id="ba-c-accent-hex" placeholder="#2C3E50">
+                    </div>
+                </div>
+                <div class="ba-form-group">
+                    <label>Акцент 2 (--c-accent-2)</label>
+                    <div class="ba-color-row">
+                        <input type="color" id="ba-c-accent2-picker">
+                        <input type="text"  id="ba-c-accent2-hex" placeholder="#7C8FA6">
+                    </div>
+                </div>
+                <div class="ba-form-group">
+                    <label>Злато (--c-gold)</label>
+                    <div class="ba-color-row">
+                        <input type="color" id="ba-c-gold-picker">
+                        <input type="text"  id="ba-c-gold-hex" placeholder="#B59A6A">
+                    </div>
+                </div>
+                <div class="ba-form-group">
+                    <label>Светло злато (--c-gold-light)</label>
+                    <div class="ba-color-row">
+                        <input type="color" id="ba-c-gold-light-picker">
+                        <input type="text"  id="ba-c-gold-light-hex" placeholder="#E8D9BF">
                     </div>
                 </div>
                 <button class="ba-btn ba-btn-success" id="ba-btn-apply-theme" style="width:100%;margin-top:.4rem;">Приложи темата</button>
@@ -3932,8 +3985,15 @@
         var pairs = [
             ['ba-c-bg-picker','ba-c-bg-hex','--c-bg'],
             ['ba-c-surface-picker','ba-c-surface-hex','--c-surface'],
-            ['ba-c-accent-picker','ba-c-accent-hex','--c-accent'],
+            ['ba-c-surface2-picker','ba-c-surface2-hex','--c-surface-2'],
+            ['ba-c-border-picker','ba-c-border-hex','--c-border'],
             ['ba-c-text1-picker','ba-c-text1-hex','--c-text-1'],
+            ['ba-c-text2-picker','ba-c-text2-hex','--c-text-2'],
+            ['ba-c-text3-picker','ba-c-text3-hex','--c-text-3'],
+            ['ba-c-accent-picker','ba-c-accent-hex','--c-accent'],
+            ['ba-c-accent2-picker','ba-c-accent2-hex','--c-accent-2'],
+            ['ba-c-gold-picker','ba-c-gold-hex','--c-gold'],
+            ['ba-c-gold-light-picker','ba-c-gold-light-hex','--c-gold-light'],
         ];
         pairs.forEach(function(p) {
             var val = (savedData.theme && savedData.theme[p[2]]) || '';
@@ -3948,8 +4008,15 @@
         var pairs = [
             ['ba-c-bg-picker','ba-c-bg-hex','--c-bg'],
             ['ba-c-surface-picker','ba-c-surface-hex','--c-surface'],
-            ['ba-c-accent-picker','ba-c-accent-hex','--c-accent'],
+            ['ba-c-surface2-picker','ba-c-surface2-hex','--c-surface-2'],
+            ['ba-c-border-picker','ba-c-border-hex','--c-border'],
             ['ba-c-text1-picker','ba-c-text1-hex','--c-text-1'],
+            ['ba-c-text2-picker','ba-c-text2-hex','--c-text-2'],
+            ['ba-c-text3-picker','ba-c-text3-hex','--c-text-3'],
+            ['ba-c-accent-picker','ba-c-accent-hex','--c-accent'],
+            ['ba-c-accent2-picker','ba-c-accent2-hex','--c-accent-2'],
+            ['ba-c-gold-picker','ba-c-gold-hex','--c-gold'],
+            ['ba-c-gold-light-picker','ba-c-gold-light-hex','--c-gold-light'],
         ];
         pairs.forEach(function(p) {
             var picker = document.getElementById(p[0]);
