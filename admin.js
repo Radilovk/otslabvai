@@ -1318,14 +1318,14 @@ function setupEventListeners() {
     // Speedy offices manual sync
     DOM.speedySyncBtn.addEventListener('click', async () => {
         DOM.speedySyncBtn.disabled = true;
-        DOM.speedySyncStatus.textContent = 'Синхронизиране...';
+        DOM.speedySyncStatus.textContent = 'Стартиране на синхронизиране...';
         DOM.speedySyncStatus.style.color = 'var(--text-secondary)';
         try {
             const res = await fetch(`${API_URL}/speedy-refresh`, { method: 'POST' });
             const data = await res.json();
             if (data.ok) {
                 DOM.speedySyncStatus.textContent = data.message;
-                DOM.speedySyncStatus.style.color = 'var(--success-color, green)';
+                DOM.speedySyncStatus.style.color = data.initiated ? 'var(--text-secondary)' : 'var(--success-color, green)';
                 showNotification(data.message, 'success');
             } else {
                 DOM.speedySyncStatus.textContent = data.message || 'Грешка при синхронизиране.';

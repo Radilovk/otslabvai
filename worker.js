@@ -207,9 +207,16 @@ export default {
   /**
    * Scheduled cron handler – refreshes the Speedy offices cache in KV once a day.
    * Configured via wrangler.toml [triggers] crons.
+   * Dispatches a GitHub Actions workflow so the fetch runs from Azure IPs,
+   * bypassing any Cloudflare-IP-based 403 blocks from Speedy.
    */
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(refreshSpeedyOfficesCache(env));
+    ctx.waitUntil(triggerSpeedyGithubSync(env).then(triggered => {
+      if (!triggered) {
+        // No GitHub token – fall back to direct Speedy fetch (may 403)
+        return refreshSpeedyOfficesCache(env);
+      }
+    }));
   }
 };
 
@@ -1645,7 +1652,7 @@ async function handleGetSpeedyOffices(env, ctx) {
  * Fetches the full Speedy office list from Speedy's public endpoint,
  * normalises each entry to { id, name, address, city }, and stores
  * the result in KV under the key `speedy_offices_cache`.
- * Called daily by the scheduled cron handler.
+ * Used as a last-resort fallback when GitHub Actions is not configured.
  * Returns the number of offices cached, or -1 on failure.
  */
 async function refreshSpeedyOfficesCache(env) {
@@ -1687,13 +1694,70 @@ async function refreshSpeedyOfficesCache(env) {
 }
 
 /**
- * Handles POST /speedy-refresh
- * Manually triggers a Speedy offices cache refresh and returns the result.
+ * Dispatches the speedy-offices-sync GitHub Actions workflow via workflow_dispatch.
+ * The workflow runs on Azure IPs (not Cloudflare), bypassing Speedy's 403 block.
+ * Requires env.GITHUB_API_TOKEN to be set.
+ * Returns true if the dispatch was accepted (HTTP 204), false otherwise.
+ */
+async function triggerSpeedyGithubSync(env) {
+    const token = env.GITHUB_API_TOKEN;
+    if (!token) return false;
+
+    const { owner, repo } = GITHUB_SYNC_CONFIG;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/actions/workflows/speedy-offices-sync.yml/dispatches`;
+
+    try {
+        const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Cloudflare-Worker',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ref: GITHUB_SYNC_CONFIG.branch })
+        });
+        if (res.status === 204) {
+            console.log('triggerSpeedyGithubSync: workflow dispatched');
+            return true;
+        }
+        console.error('triggerSpeedyGithubSync: unexpected status', res.status);
+        return false;
+    } catch (e) {
+        console.error('triggerSpeedyGithubSync error:', e);
+        return false;
+    }
+}
+
+/**
+ * Handles POST /speedy-refresh.
+ *
+ * Dispatches the GitHub Actions speedy-offices-sync workflow via workflow_dispatch.
+ * The workflow runs on Azure IPs (not blocked by Speedy), fetches the office list,
+ * and writes the result directly to KV using the Cloudflare KV REST API with the
+ * existing CLOUDFLARE_API_TOKEN — no new secrets required.
+ *
+ * Falls back to a direct Speedy fetch if GITHUB_API_TOKEN is not configured
+ * (may return 403 from Cloudflare IPs, but keeps things working in dev).
  */
 async function handleRefreshSpeedyOffices(env) {
+    // Dispatch GitHub Actions workflow — it writes to KV via CF API directly.
+    const triggered = await triggerSpeedyGithubSync(env);
+    if (triggered) {
+        return new Response(JSON.stringify({
+            ok: true,
+            initiated: true,
+            message: 'Синхронизирането е стартирано чрез GitHub Actions. Офисите ще бъдат обновени след около 1–2 минути.'
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    // Fallback: direct Speedy fetch (likely 403 from CF IPs, but better than nothing).
     const count = await refreshSpeedyOfficesCache(env);
     if (count < 0) {
-        return new Response(JSON.stringify({ ok: false, message: 'Грешка при извличане на офиси от Speedy. Вижте логовете на Worker-а.' }), {
+        return new Response(JSON.stringify({ ok: false, message: 'Грешка при извличане на офиси от Speedy. Конфигурирайте GITHUB_API_TOKEN за автоматичен синх.' }), {
             status: 502,
             headers: { 'Content-Type': 'application/json' }
         });
