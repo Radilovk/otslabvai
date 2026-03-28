@@ -4,9 +4,11 @@ name: Sync Speedy Offices
 # Can also be triggered manually from the GitHub Actions UI or via workflow_dispatch API
 # (the admin panel's "Синхронизирай офисите" button does this automatically).
 #
-# No new secrets required — uses the existing CLOUDFLARE_API_TOKEN and
-# CLOUDFLARE_ACCOUNT_ID already present for deployment to write directly
-# to the Cloudflare KV namespace via the REST API.
+# Uses Speedy's PUBLIC widget endpoint — NO API key or password required.
+# Endpoint: https://services.speedy.bg/office_locator_widget_v3/offices_list.php?lang=bg
+# Returns a JSON array of offices with fields: id, name, address, city
+#
+# Only secret required: CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID (existing deployment secrets).
 on:
   schedule:
     - cron: '0 2 * * *'
@@ -24,31 +26,17 @@ jobs:
     permissions: {}
 
     steps:
-      - name: Fetch Speedy offices from speedy.bg
-        env:
-          SPEEDY_USERNAME: ${{ secrets.SPEEDY_USERNAME }}
-          SPEEDY_PASSWORD: ${{ secrets.SPEEDY_PASSWORD }}
+      - name: Fetch Speedy offices (public widget endpoint)
         run: |
-          # Write credentials to a temp file to avoid shell interpolation in process listings
-          python3 -c "
-          import json, os
-          payload = {'userName': os.environ['SPEEDY_USERNAME'], 'password': os.environ['SPEEDY_PASSWORD'], 'language': 'BG', 'countryId': 100}
-          with open('speedy_request.json', 'w') as f:
-              json.dump(payload, f)
-          "
-
           HTTP_STATUS=$(curl -s -o offices_raw.json -w "%{http_code}" \
-            -X POST \
-            -H "Content-Type: application/json" \
             -H "Accept: application/json" \
-            --data-binary @speedy_request.json \
-            "https://api.speedy.bg/v1/location/office/")
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" \
+            "https://services.speedy.bg/office_locator_widget_v3/offices_list.php?lang=bg")
 
-          rm -f speedy_request.json
           echo "HTTP status: $HTTP_STATUS"
 
           if [ "$HTTP_STATUS" != "200" ]; then
-            echo "ERROR: Speedy offices API returned HTTP $HTTP_STATUS"
+            echo "ERROR: Speedy offices endpoint returned HTTP $HTTP_STATUS"
             cat offices_raw.json || true
             exit 1
           fi
@@ -57,7 +45,7 @@ jobs:
           import json
           with open('offices_raw.json') as f:
               raw = json.load(f)
-          items = raw.get('offices', [])
+          items = raw if isinstance(raw, list) else raw.get('offices', [])
           print(len(items))
           ")
           echo "Fetched $OFFICE_COUNT offices from Speedy"
@@ -70,18 +58,27 @@ jobs:
           with open('offices_raw.json', 'r', encoding='utf-8') as f:
               raw = json.load(f)
 
-          items = raw.get('offices', [])
+          # Widget endpoint returns a plain JSON array; each item already has
+          # flat fields: id, name, address, city
+          items = raw if isinstance(raw, list) else raw.get('offices', [])
 
           offices = []
           for o in items:
               if not isinstance(o, dict):
                   continue
-              addr = o.get('address') or {}
+              # Support both flat (widget) and nested (api.speedy.bg) response shapes
+              addr = o.get('address')
+              if isinstance(addr, dict):
+                  address_str = str(addr.get('localAddressString') or addr.get('fullAddressString') or '')
+                  city_str = str(addr.get('siteName') or addr.get('city') or '')
+              else:
+                  address_str = str(addr or '')
+                  city_str = str(o.get('city') or '')
               offices.append({
                   'id': o.get('id'),
                   'name': str(o.get('name') or ''),
-                  'address': str(addr.get('localAddressString') or ''),
-                  'city': str(addr.get('siteName') or '')
+                  'address': address_str,
+                  'city': city_str
               })
 
           with open('offices_normalized.json', 'w', encoding='utf-8') as f:
