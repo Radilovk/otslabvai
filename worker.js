@@ -167,6 +167,14 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
+
+          case '/speedy-refresh':
+              if (request.method === 'POST') {
+                  response = await handleRefreshSpeedyOffices(env);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
             
           default:
             throw new UserFacingError('Not Found', 404);
@@ -1638,15 +1646,19 @@ async function handleGetSpeedyOffices(env, ctx) {
  * normalises each entry to { id, name, address, city }, and stores
  * the result in KV under the key `speedy_offices_cache`.
  * Called daily by the scheduled cron handler.
+ * Returns the number of offices cached, or -1 on failure.
  */
 async function refreshSpeedyOfficesCache(env) {
     try {
         const res = await fetch('https://services.speedy.bg/offices_list/offices.json', {
-            headers: { 'Accept': 'application/json' }
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (compatible; CloudflareWorker/1.0; +https://radilovk.github.io)'
+            }
         });
         if (!res.ok) {
             console.error('refreshSpeedyOfficesCache: HTTP', res.status);
-            return;
+            return -1;
         }
         const raw = await res.json();
 
@@ -1667,7 +1679,27 @@ async function refreshSpeedyOfficesCache(env) {
 
         await env.PAGE_CONTENT.put('speedy_offices_cache', JSON.stringify(offices));
         console.log(`refreshSpeedyOfficesCache: cached ${offices.length} offices`);
+        return offices.length;
     } catch (e) {
         console.error('refreshSpeedyOfficesCache error:', e);
+        return -1;
     }
+}
+
+/**
+ * Handles POST /speedy-refresh
+ * Manually triggers a Speedy offices cache refresh and returns the result.
+ */
+async function handleRefreshSpeedyOffices(env) {
+    const count = await refreshSpeedyOfficesCache(env);
+    if (count < 0) {
+        return new Response(JSON.stringify({ ok: false, message: 'Грешка при извличане на офиси от Speedy. Вижте логовете на Worker-а.' }), {
+            status: 502,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+    return new Response(JSON.stringify({ ok: true, count, message: `Успешно синхронизирани ${count} офиса на Speedy.` }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
 }
