@@ -1638,7 +1638,7 @@
             statusText.textContent = 'Зареждане...';
             statusText.style.color = 'gray';
 
-            fetch('/speedy-offices')
+            fetch(`${API_URL}/speedy-offices`)
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data) && data.length > 0) {
