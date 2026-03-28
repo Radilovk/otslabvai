@@ -1657,11 +1657,16 @@ async function handleGetSpeedyOffices(env, ctx) {
  */
 async function refreshSpeedyOfficesCache(env) {
     try {
-        const res = await fetch('https://services.speedy.bg/offices_list/offices.json', {
-            headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (compatible; CloudflareWorker/1.0; +https://radilovk.github.io)'
-            }
+        const username = env.SPEEDY_USERNAME;
+        const password = env.SPEEDY_PASSWORD;
+        if (!username || !password) {
+            console.error('refreshSpeedyOfficesCache: SPEEDY_USERNAME/SPEEDY_PASSWORD not configured');
+            return -1;
+        }
+        const res = await fetch('https://api.speedy.bg/v1/location/office/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ userName: username, password, language: 'BG', countryId: 100 })
         });
         if (!res.ok) {
             console.error('refreshSpeedyOfficesCache: HTTP', res.status);
@@ -1669,8 +1674,7 @@ async function refreshSpeedyOfficesCache(env) {
         }
         const raw = await res.json();
 
-        // Speedy returns either a plain array or an object with an `offices` key.
-        const items = Array.isArray(raw) ? raw : (raw.offices || []);
+        const items = raw.offices || [];
 
         const offices = items
             .filter(o => o && typeof o === 'object')
@@ -1678,9 +1682,9 @@ async function refreshSpeedyOfficesCache(env) {
                 const addr = o.address || {};
                 return {
                     id: o.id,
-                    name: String(o.name || o.nameEn || ''),
-                    address: addr.fullAddressString ? String(addr.fullAddressString) : '',
-                    city: String(addr.siteName || addr.city || '')
+                    name: String(o.name || ''),
+                    address: String(addr.localAddressString || ''),
+                    city: String(addr.siteName || '')
                 };
             });
 

@@ -25,19 +25,22 @@ jobs:
 
     steps:
       - name: Fetch Speedy offices from speedy.bg
+        env:
+          SPEEDY_USERNAME: ${{ secrets.SPEEDY_USERNAME }}
+          SPEEDY_PASSWORD: ${{ secrets.SPEEDY_PASSWORD }}
         run: |
           HTTP_STATUS=$(curl -s -o offices_raw.json -w "%{http_code}" \
-            -H "Accept: application/json, text/plain, */*" \
-            -H "Accept-Language: bg-BG,bg;q=0.9,en-US;q=0.8,en;q=0.7" \
-            -H "Cache-Control: no-cache" \
-            -H "Pragma: no-cache" \
-            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" \
-            "https://services.speedy.bg/offices_list/offices.json")
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            --data-raw "{\"userName\":\"${SPEEDY_USERNAME}\",\"password\":\"${SPEEDY_PASSWORD}\",\"language\":\"BG\",\"countryId\":100}" \
+            "https://api.speedy.bg/v1/location/office/")
 
           echo "HTTP status: $HTTP_STATUS"
 
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "ERROR: Speedy offices API returned HTTP $HTTP_STATUS"
+            cat offices_raw.json || true
             exit 1
           fi
 
@@ -45,7 +48,7 @@ jobs:
           import json
           with open('offices_raw.json') as f:
               raw = json.load(f)
-          items = raw if isinstance(raw, list) else raw.get('offices', [])
+          items = raw.get('offices', [])
           print(len(items))
           ")
           echo "Fetched $OFFICE_COUNT offices from Speedy"
@@ -58,7 +61,7 @@ jobs:
           with open('offices_raw.json', 'r', encoding='utf-8') as f:
               raw = json.load(f)
 
-          items = raw if isinstance(raw, list) else raw.get('offices', [])
+          items = raw.get('offices', [])
 
           offices = []
           for o in items:
@@ -67,9 +70,9 @@ jobs:
               addr = o.get('address') or {}
               offices.append({
                   'id': o.get('id'),
-                  'name': str(o.get('name') or o.get('nameEn') or ''),
-                  'address': str(addr.get('fullAddressString') or ''),
-                  'city': str(addr.get('siteName') or addr.get('city') or '')
+                  'name': str(o.get('name') or ''),
+                  'address': str(addr.get('localAddressString') or ''),
+                  'city': str(addr.get('siteName') or '')
               })
 
           with open('offices_normalized.json', 'w', encoding='utf-8') as f:
