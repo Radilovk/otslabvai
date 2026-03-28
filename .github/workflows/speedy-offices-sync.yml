@@ -3,10 +3,19 @@ name: Sync Speedy Offices
 # Runs daily at 02:00 UTC (before the Worker cron at 03:00 UTC).
 # Can also be triggered manually from the GitHub Actions UI or via workflow_dispatch API
 # (the admin panel's "Синхронизирай офисите" button does this automatically).
+#
+# No new secrets required — uses the existing CLOUDFLARE_API_TOKEN and
+# CLOUDFLARE_ACCOUNT_ID already present for deployment to write directly
+# to the Cloudflare KV namespace via the REST API.
 on:
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
+
+# KV namespace ID for PAGE_CONTENT (from wrangler.toml — not a secret).
+env:
+  CF_KV_NAMESPACE_ID: d220db696e414b7cb3da2b19abd53d0f
+  CF_KV_KEY: speedy_offices_cache
 
 jobs:
   sync:
@@ -15,8 +24,7 @@ jobs:
     permissions: {}
 
     steps:
-      - name: Fetch Speedy offices
-        id: fetch
+      - name: Fetch Speedy offices from speedy.bg
         run: |
           HTTP_STATUS=$(curl -s -o offices_raw.json -w "%{http_code}" \
             -H "Accept: application/json, text/plain, */*" \
@@ -34,7 +42,7 @@ jobs:
           fi
 
           OFFICE_COUNT=$(python3 -c "
-          import json, sys
+          import json
           with open('offices_raw.json') as f:
               raw = json.load(f)
           items = raw if isinstance(raw, list) else raw.get('offices', [])
@@ -42,10 +50,10 @@ jobs:
           ")
           echo "Fetched $OFFICE_COUNT offices from Speedy"
 
-      - name: Normalize and push to Worker KV
+      - name: Normalize offices
         run: |
           python3 - <<'EOF'
-          import json, urllib.request, os, sys
+          import json
 
           with open('offices_raw.json', 'r', encoding='utf-8') as f:
               raw = json.load(f)
@@ -64,33 +72,38 @@ jobs:
                   'city': str(addr.get('siteName') or addr.get('city') or '')
               })
 
-          print(f"Normalized {len(offices)} offices", flush=True)
+          with open('offices_normalized.json', 'w', encoding='utf-8') as f:
+              json.dump(offices, f, ensure_ascii=False)
 
-          worker_url = os.environ['WORKER_URL'].rstrip('/')
-          token = os.environ['SPEEDY_SYNC_TOKEN']
-
-          payload = json.dumps({'token': token, 'offices': offices}).encode('utf-8')
-          req = urllib.request.Request(
-              f"{worker_url}/speedy-refresh",
-              data=payload,
-              headers={'Content-Type': 'application/json'},
-              method='POST'
-          )
-
-          try:
-              with urllib.request.urlopen(req, timeout=30) as r:
-                  result = json.load(r)
-          except urllib.error.HTTPError as e:
-              body = e.read().decode('utf-8', errors='replace')
-              print(f"ERROR: HTTP {e.code} from worker: {body}", file=sys.stderr)
-              sys.exit(1)
-
-          if result.get('ok'):
-              print(f"✓ {result.get('message', 'OK')}", flush=True)
-          else:
-              print(f"✗ {result.get('message', 'Failed')}", file=sys.stderr)
-              sys.exit(1)
+          print(f"Normalized {len(offices)} offices")
           EOF
-        env:
-          WORKER_URL: ${{ secrets.WORKER_URL }}
-          SPEEDY_SYNC_TOKEN: ${{ secrets.SPEEDY_SYNC_TOKEN }}
+
+      - name: Write to Cloudflare KV
+        run: |
+          HTTP_STATUS=$(curl -s -o cf_response.json -w "%{http_code}" \
+            -X PUT \
+            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/${CF_KV_KEY}" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data-binary @offices_normalized.json)
+
+          echo "Cloudflare KV response (HTTP $HTTP_STATUS):"
+          cat cf_response.json
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "ERROR: Cloudflare KV write failed with HTTP $HTTP_STATUS"
+            exit 1
+          fi
+
+          SUCCESS=$(python3 -c "
+          import json
+          with open('cf_response.json') as f:
+              r = json.load(f)
+          print('yes' if r.get('success') else 'no')
+          ")
+          if [ "$SUCCESS" != "yes" ]; then
+            echo "ERROR: Cloudflare KV API returned success=false"
+            exit 1
+          fi
+
+          echo "✓ Speedy offices written to KV successfully"
