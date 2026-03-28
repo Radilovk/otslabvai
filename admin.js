@@ -61,6 +61,9 @@ const DOM = {
     promoSearchInput: document.getElementById('promo-search-input'),
     addPromoBtn: document.getElementById('add-promo-btn'),
     refreshPromoBtn: document.getElementById('refresh-promo-btn'),
+    // Speedy
+    speedySyncBtn: document.getElementById('speedy-sync-btn'),
+    speedySyncStatus: document.getElementById('speedy-sync-status'),
     // Добавяне на компонент
     addComponentDropdown: document.getElementById('add-component-dropdown'),
     addComponentToggleBtn: document.querySelector('[data-action="toggle-add-component-menu"]'),
@@ -1312,6 +1315,33 @@ function setupEventListeners() {
     
     DOM.promoSearchInput.addEventListener('input', filterPromoCodes);
     
+    // Speedy offices manual sync
+    DOM.speedySyncBtn.addEventListener('click', async () => {
+        DOM.speedySyncBtn.disabled = true;
+        DOM.speedySyncStatus.textContent = 'Синхронизиране...';
+        DOM.speedySyncStatus.style.color = 'var(--text-secondary)';
+        try {
+            const res = await fetch(`${API_URL}/speedy-refresh`, { method: 'POST' });
+            const data = await res.json();
+            if (data.ok) {
+                DOM.speedySyncStatus.textContent = data.message;
+                DOM.speedySyncStatus.style.color = 'var(--success-color, green)';
+                showNotification(data.message, 'success');
+            } else {
+                DOM.speedySyncStatus.textContent = data.message || 'Грешка при синхронизиране.';
+                DOM.speedySyncStatus.style.color = 'var(--error-color, red)';
+                showNotification(data.message || 'Грешка при синхронизиране на офисите на Speedy.', 'error');
+            }
+        } catch (e) {
+            const msg = 'Мрежова грешка при синхронизиране на офисите на Speedy.';
+            DOM.speedySyncStatus.textContent = msg;
+            DOM.speedySyncStatus.style.color = 'var(--error-color, red)';
+            showNotification(msg, 'error');
+        } finally {
+            DOM.speedySyncBtn.disabled = false;
+        }
+    });
+
     // Promo codes table actions
     DOM.promoCodesTableBody.addEventListener('click', async (e) => {
         const row = e.target.closest('tr');
