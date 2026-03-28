@@ -1,0 +1,96 @@
+name: Sync Speedy Offices
+
+# Runs daily at 02:00 UTC (before the Worker cron at 03:00 UTC).
+# Can also be triggered manually from the GitHub Actions UI or via workflow_dispatch API
+# (the admin panel's "Синхронизирай офисите" button does this automatically).
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: {}
+
+    steps:
+      - name: Fetch Speedy offices
+        id: fetch
+        run: |
+          HTTP_STATUS=$(curl -s -o offices_raw.json -w "%{http_code}" \
+            -H "Accept: application/json, text/plain, */*" \
+            -H "Accept-Language: bg-BG,bg;q=0.9,en-US;q=0.8,en;q=0.7" \
+            -H "Cache-Control: no-cache" \
+            -H "Pragma: no-cache" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" \
+            "https://services.speedy.bg/offices_list/offices.json")
+
+          echo "HTTP status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "ERROR: Speedy offices API returned HTTP $HTTP_STATUS"
+            exit 1
+          fi
+
+          OFFICE_COUNT=$(python3 -c "
+          import json, sys
+          with open('offices_raw.json') as f:
+              raw = json.load(f)
+          items = raw if isinstance(raw, list) else raw.get('offices', [])
+          print(len(items))
+          ")
+          echo "Fetched $OFFICE_COUNT offices from Speedy"
+
+      - name: Normalize and push to Worker KV
+        run: |
+          python3 - <<'EOF'
+          import json, urllib.request, os, sys
+
+          with open('offices_raw.json', 'r', encoding='utf-8') as f:
+              raw = json.load(f)
+
+          items = raw if isinstance(raw, list) else raw.get('offices', [])
+
+          offices = []
+          for o in items:
+              if not isinstance(o, dict):
+                  continue
+              addr = o.get('address') or {}
+              offices.append({
+                  'id': o.get('id'),
+                  'name': str(o.get('name') or o.get('nameEn') or ''),
+                  'address': str(addr.get('fullAddressString') or ''),
+                  'city': str(addr.get('siteName') or addr.get('city') or '')
+              })
+
+          print(f"Normalized {len(offices)} offices", flush=True)
+
+          worker_url = os.environ['WORKER_URL'].rstrip('/')
+          token = os.environ['SPEEDY_SYNC_TOKEN']
+
+          payload = json.dumps({'token': token, 'offices': offices}).encode('utf-8')
+          req = urllib.request.Request(
+              f"{worker_url}/speedy-refresh",
+              data=payload,
+              headers={'Content-Type': 'application/json'},
+              method='POST'
+          )
+
+          try:
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  result = json.load(r)
+          except urllib.error.HTTPError as e:
+              body = e.read().decode('utf-8', errors='replace')
+              print(f"ERROR: HTTP {e.code} from worker: {body}", file=sys.stderr)
+              sys.exit(1)
+
+          if result.get('ok'):
+              print(f"✓ {result.get('message', 'OK')}", flush=True)
+          else:
+              print(f"✗ {result.get('message', 'Failed')}", file=sys.stderr)
+              sys.exit(1)
+          EOF
+        env:
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          SPEEDY_SYNC_TOKEN: ${{ secrets.SPEEDY_SYNC_TOKEN }}

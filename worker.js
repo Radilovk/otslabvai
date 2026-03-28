@@ -170,7 +170,7 @@ export default {
 
           case '/speedy-refresh':
               if (request.method === 'POST') {
-                  response = await handleRefreshSpeedyOffices(env);
+                  response = await handleRefreshSpeedyOffices(env, request);
               } else {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
@@ -207,9 +207,16 @@ export default {
   /**
    * Scheduled cron handler – refreshes the Speedy offices cache in KV once a day.
    * Configured via wrangler.toml [triggers] crons.
+   * Dispatches a GitHub Actions workflow so the fetch runs from Azure IPs,
+   * bypassing any Cloudflare-IP-based 403 blocks from Speedy.
    */
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(refreshSpeedyOfficesCache(env));
+    ctx.waitUntil(triggerSpeedyGithubSync(env).then(triggered => {
+      if (!triggered) {
+        // No GitHub token – fall back to direct Speedy fetch (may 403)
+        return refreshSpeedyOfficesCache(env);
+      }
+    }));
   }
 };
 
@@ -1645,7 +1652,7 @@ async function handleGetSpeedyOffices(env, ctx) {
  * Fetches the full Speedy office list from Speedy's public endpoint,
  * normalises each entry to { id, name, address, city }, and stores
  * the result in KV under the key `speedy_offices_cache`.
- * Called daily by the scheduled cron handler.
+ * Used as a last-resort fallback when GitHub Actions is not configured.
  * Returns the number of offices cached, or -1 on failure.
  */
 async function refreshSpeedyOfficesCache(env) {
@@ -1687,13 +1694,121 @@ async function refreshSpeedyOfficesCache(env) {
 }
 
 /**
- * Handles POST /speedy-refresh
- * Manually triggers a Speedy offices cache refresh and returns the result.
+ * Dispatches the speedy-offices-sync GitHub Actions workflow via workflow_dispatch.
+ * The workflow runs on Azure IPs (not Cloudflare), bypassing Speedy's 403 block.
+ * Requires env.GITHUB_API_TOKEN to be set.
+ * Returns true if the dispatch was accepted (HTTP 204), false otherwise.
  */
-async function handleRefreshSpeedyOffices(env) {
+async function triggerSpeedyGithubSync(env) {
+    const token = env.GITHUB_API_TOKEN;
+    if (!token) return false;
+
+    const { owner, repo } = GITHUB_SYNC_CONFIG;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/actions/workflows/speedy-offices-sync.yml/dispatches`;
+
+    try {
+        const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Cloudflare-Worker',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ref: GITHUB_SYNC_CONFIG.branch })
+        });
+        if (res.status === 204) {
+            console.log('triggerSpeedyGithubSync: workflow dispatched');
+            return true;
+        }
+        console.error('triggerSpeedyGithubSync: unexpected status', res.status);
+        return false;
+    } catch (e) {
+        console.error('triggerSpeedyGithubSync error:', e);
+        return false;
+    }
+}
+
+/**
+ * Handles POST /speedy-refresh.
+ *
+ * Two modes:
+ *
+ * 1. Data-push mode (called by GitHub Actions):
+ *    Body: { token: "<SPEEDY_SYNC_TOKEN>", offices: [...] }
+ *    Validates the shared secret, then stores the offices array directly in KV.
+ *    Returns { ok, count, message }.
+ *
+ * 2. Admin-trigger mode (called by the admin panel with no / empty body):
+ *    Dispatches the GitHub Actions speedy-offices-sync workflow via workflow_dispatch.
+ *    The workflow fetches offices from Azure IPs (bypassing Speedy's CF-IP block) and
+ *    calls back in data-push mode.
+ *    Returns { ok, initiated, message }.
+ */
+async function handleRefreshSpeedyOffices(env, request) {
+    // Try to read and parse an optional request body.
+    let body = null;
+    try {
+        const text = await request.text();
+        if (text) body = JSON.parse(text);
+    } catch (_) {
+        // Ignore parse errors – treat as no-body (admin trigger mode).
+    }
+
+    // ── Data-push mode (GitHub Actions → Worker) ──────────────────────────────
+    if (body && Array.isArray(body.offices)) {
+        const syncToken = env.SPEEDY_SYNC_TOKEN;
+        if (!syncToken) {
+            return new Response(JSON.stringify({ ok: false, message: 'SPEEDY_SYNC_TOKEN не е конфигуриран в Worker.' }), {
+                status: 503,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+        // Use HMAC-based constant-time comparison to prevent timing attacks.
+        const encoder = new TextEncoder();
+        const hmacKey = await crypto.subtle.generateKey({ name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+        const [sigProvided, sigExpected] = await Promise.all([
+            crypto.subtle.sign('HMAC', hmacKey, encoder.encode(body.token || '')),
+            crypto.subtle.sign('HMAC', hmacKey, encoder.encode(syncToken))
+        ]);
+        const ua = new Uint8Array(sigProvided);
+        const ub = new Uint8Array(sigExpected);
+        let diff = ua.length !== ub.length ? 1 : 0;
+        for (let i = 0; i < Math.min(ua.length, ub.length); i++) diff |= ua[i] ^ ub[i];
+        if (diff !== 0) {
+            return new Response(JSON.stringify({ ok: false, message: 'Невалиден токен.' }), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // GitHub Actions already normalises the data; store directly.
+        await env.PAGE_CONTENT.put('speedy_offices_cache', JSON.stringify(body.offices));
+        const count = body.offices.length;
+        console.log(`handleRefreshSpeedyOffices: stored ${count} offices from GitHub Actions push`);
+        return new Response(JSON.stringify({ ok: true, count, message: `Успешно синхронизирани ${count} офиса на Speedy.` }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    // ── Admin-trigger mode (admin panel button → GitHub Actions dispatch) ─────
+    const triggered = await triggerSpeedyGithubSync(env);
+    if (triggered) {
+        return new Response(JSON.stringify({
+            ok: true,
+            initiated: true,
+            message: 'Синхронизирането е стартирано чрез GitHub Actions. Офисите ще бъдат обновени след около 1–2 минути.'
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    // ── Last-resort fallback: direct Speedy fetch (likely 403 from CF IPs) ────
     const count = await refreshSpeedyOfficesCache(env);
     if (count < 0) {
-        return new Response(JSON.stringify({ ok: false, message: 'Грешка при извличане на офиси от Speedy. Вижте логовете на Worker-а.' }), {
+        return new Response(JSON.stringify({ ok: false, message: 'Грешка при извличане на офиси от Speedy. Конфигурирайте GITHUB_API_TOKEN за автоматичен синх.' }), {
             status: 502,
             headers: { 'Content-Type': 'application/json' }
         });
