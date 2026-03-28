@@ -499,6 +499,10 @@ async function handleSaveBioContent(request, env) {
  * replaces the bake-marker block with the serialised JSON, and commits
  * the updated file back — so the content is permanently embedded in the
  * static asset for every user (no client-side backend call required).
+ *
+ * bio.html is >1 MB so the Contents API returns an empty `content` field.
+ * We therefore fetch the raw file via the Git Blob API after getting the
+ * blob SHA from the Contents API metadata response.
  */
 async function handleBioRebake(env) {
     const token = env.GITHUB_API_TOKEN || await env.PAGE_CONTENT.get('api_token');
@@ -515,25 +519,38 @@ async function handleBioRebake(env) {
     JSON.parse(bioContentRaw);
 
     // 2. Fetch current bio.html from GitHub
+    // bio.html is >1 MB, so the Contents API returns empty `content`.
+    // Step 2a: get metadata (blob SHA) via the Contents API.
     const { owner, repo, branch } = GITHUB_SYNC_CONFIG;
     const filePath = 'bio.html';
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`;
+    const apiHeaders = {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'Cloudflare-Worker'
+    };
 
-    const getResponse = await fetch(apiUrl, {
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'Cloudflare-Worker'
-        }
-    });
-    if (!getResponse.ok) {
-        throw new UserFacingError('Failed to read bio.html from GitHub.', 502);
+    const metaResponse = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`,
+        { headers: apiHeaders }
+    );
+    if (!metaResponse.ok) {
+        throw new UserFacingError('Failed to read bio.html metadata from GitHub.', 502);
     }
-    const fileData = await getResponse.json();
-    const sha = fileData.sha;
+    const fileMeta = await metaResponse.json();
+    const sha = fileMeta.sha; // blob SHA, used for the commit PUT
+
+    // Step 2b: fetch full file content via the Git Blob API (no size limit).
+    const blobResponse = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/git/blobs/${sha}`,
+        { headers: apiHeaders }
+    );
+    if (!blobResponse.ok) {
+        throw new UserFacingError('Failed to read bio.html blob from GitHub.', 502);
+    }
+    const blobData = await blobResponse.json();
 
     // Decode UTF-8 content (GitHub API returns base64)
-    const binaryStr = atob(fileData.content.replace(/\n/g, ''));
+    const binaryStr = atob(blobData.content.replace(/\n/g, ''));
     const rawBytes = new Uint8Array(binaryStr.length);
     for (let i = 0; i < binaryStr.length; i++) rawBytes[i] = binaryStr.charCodeAt(i);
     const bioHtml = new TextDecoder('utf-8').decode(rawBytes);

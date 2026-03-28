@@ -112,6 +112,19 @@
 
 ---
 
+### 2026-03-28 — Поправка: handleBioRebake — bio.html > 1 MB
+
+**Проблем:** `POST /bio_rebake` хвърляше грешка "bio.html bake markers not found".
+Причина: bio.html е 1.3 MB — GitHub Contents API връща **празно** `content` поле за файлове > 1 MB.
+
+**Поправка:** Двустъпков fetch:
+1. GET `/repos/.../contents/bio.html?ref=main` → взима само `sha` (blob SHA)
+2. GET `/repos/.../git/blobs/{sha}` → взима пълното съдържание на файла (без ограничение)
+
+**Файлове:** `worker.js` → `handleBioRebake()`
+
+---
+
 ## Правила за бъдещи агенти
 
 1. **НЕ добавяй HTML файлове в KV.** HTML е в GitHub и се сервира от Cloudflare Assets.
