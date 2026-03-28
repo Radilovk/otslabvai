@@ -1674,7 +1674,10 @@ async function refreshSpeedyOfficesCache(env) {
         }
         const raw = await res.json();
 
-        const items = raw.offices || [];
+        const items = Array.isArray(raw.offices) ? raw.offices : [];
+        if (!Array.isArray(raw.offices)) {
+            console.error('refreshSpeedyOfficesCache: unexpected response shape', JSON.stringify(raw).slice(0, 200));
+        }
 
         const offices = items
             .filter(o => o && typeof o === 'object')

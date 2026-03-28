@@ -29,13 +29,22 @@ jobs:
           SPEEDY_USERNAME: ${{ secrets.SPEEDY_USERNAME }}
           SPEEDY_PASSWORD: ${{ secrets.SPEEDY_PASSWORD }}
         run: |
+          # Write credentials to a temp file to avoid shell interpolation in process listings
+          python3 -c "
+          import json, os
+          payload = {'userName': os.environ['SPEEDY_USERNAME'], 'password': os.environ['SPEEDY_PASSWORD'], 'language': 'BG', 'countryId': 100}
+          with open('speedy_request.json', 'w') as f:
+              json.dump(payload, f)
+          "
+
           HTTP_STATUS=$(curl -s -o offices_raw.json -w "%{http_code}" \
             -X POST \
             -H "Content-Type: application/json" \
             -H "Accept: application/json" \
-            --data-raw "{\"userName\":\"${SPEEDY_USERNAME}\",\"password\":\"${SPEEDY_PASSWORD}\",\"language\":\"BG\",\"countryId\":100}" \
+            --data-binary @speedy_request.json \
             "https://api.speedy.bg/v1/location/office/")
 
+          rm -f speedy_request.json
           echo "HTTP status: $HTTP_STATUS"
 
           if [ "$HTTP_STATUS" != "200" ]; then
