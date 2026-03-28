@@ -1657,30 +1657,44 @@ async function handleGetSpeedyOffices(env, ctx) {
  */
 async function refreshSpeedyOfficesCache(env) {
     try {
-        const res = await fetch('https://services.speedy.bg/offices_list/offices.json', {
-            headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (compatible; CloudflareWorker/1.0; +https://radilovk.github.io)'
+        // Public widget endpoint — no API key or password required.
+        const res = await fetch(
+            'https://services.speedy.bg/office_locator_widget_v3/offices_list.php?lang=bg',
+            {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'Mozilla/5.0 (compatible; CloudflareWorker/1.0)'
+                }
             }
-        });
+        );
         if (!res.ok) {
             console.error('refreshSpeedyOfficesCache: HTTP', res.status);
             return -1;
         }
         const raw = await res.json();
 
-        // Speedy returns either a plain array or an object with an `offices` key.
+        // Widget endpoint returns a plain JSON array; each item has flat fields:
+        // id, name, address (string or object), city
         const items = Array.isArray(raw) ? raw : (raw.offices || []);
+        if (!Array.isArray(items) || items.length === 0) {
+            console.error('refreshSpeedyOfficesCache: unexpected response shape', JSON.stringify(raw).slice(0, 200));
+        }
 
         const offices = items
             .filter(o => o && typeof o === 'object')
             .map(o => {
-                const addr = o.address || {};
+                const addr = o.address;
+                const addressStr = typeof addr === 'object' && addr !== null
+                    ? String(addr.localAddressString || addr.fullAddressString || '')
+                    : String(addr || '');
+                const cityStr = typeof addr === 'object' && addr !== null
+                    ? String(addr.siteName || addr.city || o.city || '')
+                    : String(o.city || '');
                 return {
                     id: o.id,
-                    name: String(o.name || o.nameEn || ''),
-                    address: addr.fullAddressString ? String(addr.fullAddressString) : '',
-                    city: String(addr.siteName || addr.city || '')
+                    name: String(o.name || ''),
+                    address: addressStr,
+                    city: cityStr
                 };
             });
 
