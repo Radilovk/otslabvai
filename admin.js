@@ -380,7 +380,7 @@ function renderOrders() {
     filteredOrdersData.forEach((order) => {
         const rowTemplate = DOM.templates.orderRow.content.cloneNode(true);
         const customer = order.customer || {};
-        const products = (order.products || []).map(p => `${p.name} x${p.quantity}`).join('<br>');
+        const products = (order.products || []).map(p => `${escAdminHtml(p.name)} x${escAdminHtml(p.quantity)}`).join('<br>');
         const originalIndex = ordersData.findIndex(o => o.id === order.id);
         const row = rowTemplate.querySelector('tr');
         row.dataset.index = originalIndex;
@@ -392,19 +392,19 @@ function renderOrders() {
         // Format delivery information
         let deliveryInfo = '';
         if (customer.deliveryMethod === 'courier') {
-            deliveryInfo = `${customer.courierCompany || 'Куриер'}<br>`;
+            deliveryInfo = `${escAdminHtml(customer.courierCompany || 'Куриер')}<br>`;
             if (customer.courierOfficeName) {
-                deliveryInfo += customer.courierOfficeName;
+                deliveryInfo += escAdminHtml(customer.courierOfficeName);
             }
             if (customer.courierOfficeAddress) {
-                deliveryInfo += `<br><small>${customer.courierOfficeAddress}</small>`;
+                deliveryInfo += `<br><small>${escAdminHtml(customer.courierOfficeAddress)}</small>`;
             }
         } else {
             // Personal address delivery
             deliveryInfo = 'До адрес<br>';
-            if (customer.address) deliveryInfo += `${customer.address}<br>`;
-            if (customer.city) deliveryInfo += `${customer.city}`;
-            if (customer.postcode) deliveryInfo += `, ${customer.postcode}`;
+            if (customer.address) deliveryInfo += `${escAdminHtml(customer.address)}<br>`;
+            if (customer.city) deliveryInfo += escAdminHtml(customer.city);
+            if (customer.postcode) deliveryInfo += `, ${escAdminHtml(customer.postcode)}`;
         }
         rowTemplate.querySelector('.order-delivery').innerHTML = deliveryInfo;
         
@@ -412,6 +412,15 @@ function renderOrders() {
         statusSelect.value = order.status || 'Нова';
         DOM.ordersTableBody.appendChild(rowTemplate);
     });
+}
+
+function escAdminHtml(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function renderContacts() {

@@ -159,6 +159,14 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
+
+          case '/speedy-offices':
+              if (request.method === 'GET') {
+                  response = await handleGetSpeedyOffices(env, ctx);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
             
           default:
             throw new UserFacingError('Not Found', 404);
@@ -186,6 +194,14 @@ export default {
       });
       return errorResponse;
     }
+  },
+
+  /**
+   * Scheduled cron handler – refreshes the Speedy offices cache in KV once a day.
+   * Configured via wrangler.toml [triggers] crons.
+   */
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(refreshSpeedyOfficesCache(env));
   }
 };
 
@@ -1586,4 +1602,72 @@ async function saveAIResult(env, clientId, recommendation) {
   } catch (e) {
     console.error("Failed to save AI result to KV:", e);
   }
+}
+
+/**
+ * Handles GET /speedy-offices
+ * Returns the cached Speedy offices list from KV.
+ * If the cache is empty, triggers a background refresh so the next request will find data.
+ */
+async function handleGetSpeedyOffices(env, ctx) {
+    const cached = await env.PAGE_CONTENT.get('speedy_offices_cache');
+    let offices = [];
+    if (cached) {
+        try {
+            offices = JSON.parse(cached);
+        } catch (e) {
+            console.error('handleGetSpeedyOffices: invalid JSON in KV cache', e);
+        }
+    }
+    // If cache is empty, seed it in the background so the next request succeeds quickly.
+    if (offices.length === 0 && ctx) {
+        ctx.waitUntil(refreshSpeedyOfficesCache(env));
+    }
+    return new Response(JSON.stringify(offices), {
+        status: 200,
+        headers: {
+            'Content-Type': 'application/json',
+            // No-cache when empty so the browser retries immediately.
+            'Cache-Control': offices.length > 0 ? 'public, max-age=3600, stale-while-revalidate=300' : 'no-store'
+        }
+    });
+}
+
+/**
+ * Fetches the full Speedy office list from Speedy's public endpoint,
+ * normalises each entry to { id, name, address, city }, and stores
+ * the result in KV under the key `speedy_offices_cache`.
+ * Called daily by the scheduled cron handler.
+ */
+async function refreshSpeedyOfficesCache(env) {
+    try {
+        const res = await fetch('https://services.speedy.bg/offices_list/offices.json', {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (!res.ok) {
+            console.error('refreshSpeedyOfficesCache: HTTP', res.status);
+            return;
+        }
+        const raw = await res.json();
+
+        // Speedy returns either a plain array or an object with an `offices` key.
+        const items = Array.isArray(raw) ? raw : (raw.offices || []);
+
+        const offices = items
+            .filter(o => o && typeof o === 'object')
+            .map(o => {
+                const addr = o.address || {};
+                return {
+                    id: o.id,
+                    name: String(o.name || o.nameEn || ''),
+                    address: addr.fullAddressString ? String(addr.fullAddressString) : '',
+                    city: String(addr.siteName || addr.city || '')
+                };
+            });
+
+        await env.PAGE_CONTENT.put('speedy_offices_cache', JSON.stringify(offices));
+        console.log(`refreshSpeedyOfficesCache: cached ${offices.length} offices`);
+    } catch (e) {
+        console.error('refreshSpeedyOfficesCache error:', e);
+    }
 }

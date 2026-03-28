@@ -143,75 +143,85 @@
         }
         
         /* Ensure Speedy widget doesn't expand parent container horizontally */
-        #speedy-widget {
-            overflow-x: hidden; /* Prevent container from expanding horizontally */
-            overflow-y: visible; /* Allow iframe to extend vertically if needed */
-        }
-        
-        /* Ekont widget should allow dropdowns to overflow */
+        /* Speedy and Ekont widgets allow dropdowns to overflow */
+        #speedy-widget,
         #ekont-widget {
-            overflow: visible; /* Allow dropdowns to extend beyond container */
+            overflow: visible;
         }
         
-        /* Responsive iframe for Speedy widget */
-        #frameOfficeLocator {
-            width: 100%;
-            max-width: 400px;
-            height: 400px !important;
-            display: block;
-            margin: 0 auto;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        
-        /* Expanded state for ekont-widget when dropdown is shown */
+        /* Expanded state for speedy/ekont widget when dropdown is shown */
+        #speedy-widget.expanded,
         #ekont-widget.expanded {
             padding-bottom: var(--ekont-dropdown-expansion-height);
             transition: padding-bottom 0.3s ease-in-out;
         }
-        .speedy-widget-container {
+        .speedy-container {
             font-family: Arial, sans-serif;
             max-width: 100%;
-            overflow-x: hidden; /* Prevent horizontal expansion */
-            overflow-y: visible; /* Allow iframe to be visible */
+        }
+        
+        /* Speedy custom dropdown styles */
+        .speedy-dropdown-wrapper {
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            z-index: 1000;
         }
         
-        /* Speedy result info styling */
-        #speedy-result-info {
-            margin-top: 10px;
+        .speedy-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--bg-secondary);
+            border: 2px solid #e30613;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            z-index: 1001;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .speedy-dropdown-item {
             padding: 10px;
-            background-color: var(--bg-secondary);
-            border-left: 4px solid var(--accent-secondary);
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+        
+        .speedy-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .speedy-dropdown-item:hover {
+            background-color: rgba(227, 6, 19, 0.08);
+        }
+        
+        .speedy-dropdown-item-name {
+            font-weight: 600;
             color: var(--text-primary);
-            font-size: 14px;
-            max-width: 100%;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: normal;
-            box-sizing: border-box;
-        }
-        
-        #view-office-name {
-            display: inline-block;
-            max-width: 100%;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: normal;
-        }
-        
-        #view-office-addr {
-            color: var(--text-secondary);
             display: block;
-            max-width: 100%;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: normal;
-            margin-top: 0.25rem;
+        }
+        
+        .speedy-dropdown-item-city {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #e30613;
+            display: inline-block;
+            margin-top: 2px;
+            margin-right: 4px;
+        }
+        
+        .speedy-dropdown-item-address {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: inline;
+        }
+        
+        .speedy-dropdown-item-empty {
+            padding: 10px;
+            cursor: default;
+            color: var(--text-secondary);
+            text-align: center;
         }
         
         .econt-container {
@@ -306,93 +316,44 @@
                 max-width: 100%;
             }
             
-            /* Allow speedy widget to have iframe extend outside on mobile */
-            #speedy-widget {
-                overflow: visible; /* Allow iframe to extend outside */
-            }
-            
             /* Mobile-optimized courier selection */
             .courier-widget {
                 padding: 0.5rem;
                 margin-top: 0.75rem;
                 max-width: 100%;
-                overflow: visible; /* Allow iframe to extend outside */
+                overflow: visible;
                 box-sizing: border-box;
             }
             
-            .speedy-widget-container {
-                max-width: 100%;
-                overflow: visible; /* Allow iframe to extend outside container */
-                margin: 0 auto;
-                display: flex;
-                flex-direction: column;
-                align-items: stretch; /* Changed from center to allow negative margin approach */
-                position: relative;
-            }
-            
+            .speedy-container,
             .econt-container {
                 max-width: 100%;
-                overflow: visible; /* Changed from hidden to allow dropdown to display */
+                overflow: visible;
                 position: relative;
             }
             
-            /* Speedy iframe mobile optimization - fixed 400px width that extends outside container */
-            #frameOfficeLocator {
-                width: 400px !important;
-                height: 400px !important;
-                box-sizing: border-box;
-                /* Center using calc - when container < 400px, negative margins center the wider iframe */
-                margin: 0 calc((100% - 400px) / 2);
-            }
-            
-            /* Ensure Econt dropdown has high z-index on mobile */
+            /* Ensure dropdowns have high z-index on mobile */
+            .speedy-dropdown,
             .econt-dropdown {
                 z-index: 1001;
             }
             
-            .speedy-widget-container label,
+            .speedy-container label,
             .econt-container label {
                 font-size: 0.9rem;
                 display: block;
                 margin-bottom: 0.5rem;
             }
             
-            /* Enhanced result info display for mobile - THIS IS THE KEY FIX */
-            #speedy-result-info {
-                font-size: 0.85rem;
-                padding: 0.75rem;
-                max-width: 100%;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                white-space: normal;
-                box-sizing: border-box;
-            }
-            
-            /* Make office name and address display properly on mobile */
-            #view-office-name {
-                display: inline-block;
-                max-width: 100%;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                white-space: normal;
-            }
-            
-            #view-office-addr {
-                display: block;
-                max-width: 100%;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                white-space: normal;
-                margin-top: 0.25rem;
-            }
-            
             /* Better mobile input styling */
+            #speedy-office-search,
             #ekont-office-search {
                 font-size: 16px !important; /* Prevents zoom on iOS */
                 width: 100%;
                 box-sizing: border-box;
             }
             
+            #speedy-status-text,
             #ekont-status-text {
                 font-size: 0.75rem;
             }
@@ -910,19 +871,15 @@
                         
                         <!-- Speedy Office Selection Widget -->
                         <div id="speedy-widget" class="courier-widget" style="display: none; margin-top: 1rem;">
-                            <div class="speedy-widget-container">
-                                <label><strong>Избери офис на Спиди:</strong></label>
-                                <br><br>
-                                <iframe id="frameOfficeLocator" name="frameOfficeLocator" 
-                                        src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=Избор"
-                                        sandbox="allow-scripts allow-same-origin"
-                                        style="width: 100%; height: 400px;">
-                                </iframe>
-                                <div id="speedy-result-info" style="display: none;">
-                                    <strong>✓ Избран:</strong> <span id="view-office-name">-</span><br>
-                                    <span id="view-office-addr">-</span>
+                            <div class="speedy-container">
+                                <label for="speedy-office-search"><strong>Избери офис на Спиди:</strong></label>
+                                <br>
+                                <div class="speedy-dropdown-wrapper">
+                                    <input type="text" id="speedy-office-search" placeholder="Град или адрес на офис..." autocomplete="off" style="width: 100%; padding: 10px; border: 2px solid #e30613; border-radius: 5px; font-size: 15px; margin-top: 0.5rem;">
+                                    <div id="speedy-offices-dropdown" class="speedy-dropdown" style="display: none;"></div>
                                 </div>
                                 <input type="hidden" name="speedy_office_id" id="final-speedy-id">
+                                <div id="speedy-status-text" style="font-size: 12px; color: gray; margin-top: 5px;">Зареждане...</div>
                             </div>
                         </div>
                         
@@ -1602,6 +1559,10 @@
             if (speedyRadio.checked) {
                 speedyWidget.style.display = 'block';
                 ekontWidget.style.display = 'none';
+                // Load Speedy offices if not already loaded
+                if (!speedyOfficesLoaded) {
+                    loadSpeedyOffices();
+                }
             } else if (ekontRadio.checked) {
                 speedyWidget.style.display = 'none';
                 ekontWidget.style.display = 'block';
@@ -1620,25 +1581,145 @@
         speedyRadio.addEventListener('change', toggleCourierWidgets);
         ekontRadio.addEventListener('change', toggleCourierWidgets);
         
-        // Speedy widget logic - listen for office selection
-        window.addEventListener('message', function(event) {
-            // Security: Accept data only from Speedy's exact domain
-            if (event.origin !== 'https://services.speedy.bg') return;
-            
-            const data = event.data;
-            
-            if (data && data.id) {
-                // Show selected office info
-                document.getElementById('speedy-result-info').style.display = 'block';
-                document.getElementById('view-office-name').textContent = data.name;
-                document.getElementById('view-office-addr').textContent = data.address.fullAddressString;
-                
-                // Store office ID in hidden field
-                document.getElementById('final-speedy-id').value = data.id;
-                
-                console.log("Успешно избран офис на Спиди ID: " + data.id);
+        // Speedy office selection logic
+        let speedyOfficesLoaded = false;
+        let allSpeedyOffices = [];
+        let selectedSpeedyOffice = null;
+        let speedyChangeHandlerAttached = false;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function showSpeedyRetry(statusText, message) {
+            statusText.innerHTML = `${message} <button type="button" id="speedy-retry-btn" style="background:none;border:none;color:#e30613;cursor:pointer;text-decoration:underline;padding:0;font-size:inherit;">Опитай отново</button>`;
+            const retryBtn = document.getElementById('speedy-retry-btn');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', function() {
+                    speedyOfficesLoaded = false;
+                    allSpeedyOffices = [];
+                    loadSpeedyOffices();
+                });
             }
-        }, false);
+        }
+
+        function loadSpeedyOffices() {
+            const speedyInput = document.getElementById('speedy-office-search');
+            const speedyDropdown = document.getElementById('speedy-offices-dropdown');
+            const hiddenInput = document.getElementById('final-speedy-id');
+            const statusText = document.getElementById('speedy-status-text');
+
+            statusText.textContent = 'Зареждане...';
+            statusText.style.color = 'gray';
+
+            fetch('/speedy-offices')
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                    allSpeedyOffices = data;
+                    statusText.textContent = 'Напишете град или адрес.';
+                    statusText.style.color = 'gray';
+                    speedyOfficesLoaded = true;
+                } else {
+                    showSpeedyRetry(statusText, 'Офисите се зареждат.');
+                }
+            })
+            .catch(err => {
+                console.error('Error loading Speedy offices:', err);
+                showSpeedyRetry(statusText, 'Грешка при зареждане.');
+            });
+
+            // Attach event listeners only once
+            if (!speedyChangeHandlerAttached) {
+                speedyInput.addEventListener('input', function() {
+                    const searchValue = this.value.toLowerCase().trim();
+
+                    if (searchValue.length < 2) {
+                        speedyDropdown.style.display = 'none';
+                        speedyWidget.classList.remove('expanded');
+                        return;
+                    }
+
+                    const filteredOffices = allSpeedyOffices.filter(office => {
+                        return office.name.toLowerCase().includes(searchValue) ||
+                               office.address.toLowerCase().includes(searchValue) ||
+                               office.city.toLowerCase().includes(searchValue);
+                    });
+
+                    filteredOffices.sort((a, b) => {
+                        const aCity = a.city.toLowerCase();
+                        const bCity = b.city.toLowerCase();
+                        const aStart = aCity.startsWith(searchValue) ? 0 : 1;
+                        const bStart = bCity.startsWith(searchValue) ? 0 : 1;
+                        return aStart - bStart;
+                    });
+
+                    const MAX_RESULTS = 15;
+                    const displayOffices = filteredOffices.slice(0, MAX_RESULTS);
+                    const remaining = filteredOffices.length - MAX_RESULTS;
+
+                    if (displayOffices.length > 0) {
+                        let html = displayOffices.map(office => {
+                            const cityLine = office.city && !office.name.toLowerCase().includes(office.city.toLowerCase())
+                                ? `<span class="speedy-dropdown-item-city">${escapeHtml(office.city)}</span>` : '';
+                            return `<div class="speedy-dropdown-item" data-office-id="${escapeHtml(office.id)}">
+                                <span class="speedy-dropdown-item-name">${escapeHtml(office.name)}</span>
+                                ${cityLine}<span class="speedy-dropdown-item-address">${escapeHtml(office.address)}</span>
+                            </div>`;
+                        }).join('');
+                        if (remaining > 0) {
+                            html += `<div class="speedy-dropdown-item-empty">и ${remaining} повече – прецизирайте търсенето</div>`;
+                        }
+                        speedyDropdown.innerHTML = html;
+                        speedyDropdown.style.display = 'block';
+                        speedyWidget.classList.add('expanded');
+                    } else {
+                        speedyDropdown.innerHTML = '<div class="speedy-dropdown-item-empty">Няма намерени офиси</div>';
+                        speedyDropdown.style.display = 'block';
+                        speedyWidget.classList.add('expanded');
+                    }
+                });
+
+                speedyDropdown.addEventListener('click', function(e) {
+                    const item = e.target.closest('.speedy-dropdown-item');
+                    if (item && item.dataset.officeId) {
+                        const officeId = parseInt(item.dataset.officeId, 10);
+                        const office = allSpeedyOffices.find(o => o.id === officeId);
+
+                        if (office) {
+                            speedyInput.value = office.name;
+                            hiddenInput.value = office.id;
+                            selectedSpeedyOffice = office;
+                            const cityLabel = office.city ? `${office.city}, ` : '';
+                            statusText.textContent = `✓ Избран: ${office.name} – ${cityLabel}${office.address}`;
+                            statusText.style.color = '#c0000a';
+                            speedyDropdown.style.display = 'none';
+                            speedyWidget.classList.remove('expanded');
+                        }
+                    }
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!speedyInput.contains(e.target) && !speedyDropdown.contains(e.target)) {
+                        speedyDropdown.style.display = 'none';
+                        speedyWidget.classList.remove('expanded');
+                    }
+                });
+
+                speedyInput.addEventListener('focus', function() {
+                    if (this.value.length >= 2) {
+                        speedyInput.dispatchEvent(new Event('input'));
+                    }
+                });
+
+                speedyChangeHandlerAttached = true;
+            }
+        }
         
         // Econt office selection logic
         let ekontOfficesLoaded = false;
@@ -1776,8 +1857,10 @@
                     if (speedyRadio.checked) {
                         orderData.courierCompany = 'Speedy';
                         orderData.courierOfficeId = document.getElementById('final-speedy-id').value;
-                        orderData.courierOfficeName = document.getElementById('view-office-name').textContent;
-                        orderData.courierOfficeAddress = document.getElementById('view-office-addr').textContent;
+                        if (selectedSpeedyOffice) {
+                            orderData.courierOfficeName = selectedSpeedyOffice.name;
+                            orderData.courierOfficeAddress = selectedSpeedyOffice.address || '';
+                        }
                     } else if (ekontRadio.checked) {
                         orderData.courierCompany = 'Econt';
                         orderData.courierOfficeId = document.getElementById('final-office-id').value;
@@ -1885,7 +1968,7 @@
                 if (speedyRadio.checked) {
                     const speedyOfficeId = document.getElementById('final-speedy-id').value;
                     if (!speedyOfficeId) {
-                        alert('Моля, изберете офис на Speedy от картата.');
+                        alert('Моля, изберете офис на Speedy от списъка.');
                         isValid = false;
                     }
                 } else if (ekontRadio.checked) {
