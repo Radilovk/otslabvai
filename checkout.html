@@ -204,9 +204,10 @@
         .speedy-map-close:hover {
             color: #e30613;
         }
-        #speedy-map-iframe {
+        #frameOfficeLocator {
             flex: 1;
             width: 100%;
+            height: 100%;
             border: none;
         }
         /* Button to open Speedy map */
@@ -1024,9 +1025,12 @@
                 <h3>Избери офис на Спиди</h3>
                 <button type="button" class="speedy-map-close" id="close-speedy-map-btn" aria-label="Затвори">&times;</button>
             </div>
-            <iframe id="speedy-map-iframe"
-                    src=""
-                    title="Карта на офисите на Спиди">
+            <iframe id="frameOfficeLocator"
+                    name="frameOfficeLocator"
+                    src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=1&pickUp=1&officeType=ALL&officesFilterOnTheMap=1&selectOfficeButtonCaption=Избиране на офис/автомат"
+                    title="Карта на офисите на Спиди"
+                    width="100%"
+                    height="100%">
             </iframe>
         </div>
     </div>
@@ -1636,7 +1640,7 @@
         
         // Speedy map modal logic
         const speedyMapModal = document.getElementById('speedy-map-modal');
-        const speedyMapIframe = document.getElementById('speedy-map-iframe');
+        const speedyMapIframe = document.getElementById('frameOfficeLocator');
         const speedyMapOverlay = document.getElementById('speedy-map-overlay');
         const openSpeedyBtn = document.getElementById('open-speedy-map-btn');
         const closeSpeedyBtn = document.getElementById('close-speedy-map-btn');
@@ -1645,12 +1649,7 @@
         const speedySelectedName = document.getElementById('speedy-selected-name');
         const speedySelectedAddr = document.getElementById('speedy-selected-addr');
 
-        const SPEEDY_WIDGET_URL = 'https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=1&pickUp=1&officeType=ALL&officesFilterOnTheMap=1&selectOfficeButtonCaption=%D0%98%D0%B7%D0%B1%D0%B8%D1%80%D0%B0%D0%BD%D0%B5%20%D0%BD%D0%B0%20%D0%BE%D1%84%D0%B8%D1%81%2F%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82';
-
         function openSpeedyMap() {
-            if (!speedyMapIframe.getAttribute('src')) {
-                speedyMapIframe.src = SPEEDY_WIDGET_URL;
-            }
             speedyMapModal.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
