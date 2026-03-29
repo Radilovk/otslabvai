@@ -68,6 +68,19 @@
 
 ## Хронология на промените
 
+### 2026-03-29 — checkout.html: Speedy офис — интерактивна карта като модален прозорец
+
+**Промяна:** Текстовото поле за търсене на офиси на Спиди (search input + dropdown) е заменено с бутон, който отваря интерактивната карта на Спиди (`office_locator_widget_v3`) в модален прозорец.
+
+**Детайли:**
+- Премахнато: `#speedy-office-search`, `#speedy-offices-dropdown`, `#speedy-status-text`, всички свързани CSS класове и JS логика (`loadSpeedyOffices`, `showSpeedyRetry`, `escapeHtml`, `speedyOfficesLoaded` и др.)
+- Добавено: бутон "🗺️ Избери от картата" → отваря `#speedy-map-modal` с `<iframe>` към `https://services.speedy.bg/office_locator_widget_v3/office_locator.php`
+- Добавено: `window.addEventListener('message', ...)` слуша `postMessage` от iframe → попълва `#final-speedy-id` и показва избрания офис под бутона
+- Модалът е responsive: `min(92vw, 700px)` × `min(85vh, 620px)`, на мобилен `96vw` × `88vh`
+- `checkout.html` вече не прави `fetch('/speedy-offices')` — офисите се избират директно от картата на Спиди
+
+**Файлове:** `checkout.html`
+
 ### 2026-03-27 (PR #270) — Refactor: Cloudflare Workers Assets
 **Проблем:** worker.js сервираше HTML от KV (`serveStaticFile`, `serveBioHtml`), което беше грешен подход.
 
