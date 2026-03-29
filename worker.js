@@ -529,7 +529,7 @@ async function handleBioRebake(env) {
     }
 
     console.log('handleBioRebake: bio_content.json committed to GitHub — deploy will bake into bio.html');
-    return new Response(JSON.stringify({ success: true, message: 'Bio content committed to GitHub — deploy will bake it into bio.html automatically.' }), {
+    return new Response(JSON.stringify({ success: true, message: 'Bio content committed as bio_content.json to GitHub — deploy workflow will bake it into bio.html automatically.' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
     });
