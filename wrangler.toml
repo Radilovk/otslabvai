@@ -20,6 +20,3 @@ binding = "PAGE_CONTENT"
 id = "d220db696e414b7cb3da2b19abd53d0f"
 preview_id = "d220db696e414b7cb3da2b19abd53d0f"
 
-# Refresh the Speedy offices KV cache once a day at 03:00 UTC.
-[triggers]
-crons = ["0 3 * * *"]
