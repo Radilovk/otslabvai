@@ -182,3 +182,26 @@
 | `console.error` за 404 на `/` | Не е реална грешка | Бот/браузър удря API URL директно |
 | Speedy офиси с `SPEEDY_USERNAME`/`SPEEDY_PASSWORD` | Не нужни, има публичен endpoint | `GET office_locator_widget_v3/offices_list.php` |
 | Speedy `POST api.speedy.bg/v1/location/office/` | Изисква платен акаунт | Публичният widget endpoint е безплатен |
+
+---
+
+### 2026-03-29 — Централизиране на текст от bio.html в bio_content.json
+
+**Проблем:** Много текстови полета в bio.html бяха hardcoded и не се съдържаха в bio_content.json. Редактирането на текст ставаше само чрез admin панела (за 22 текстови полета), а директното редактиране на bio_content.json не покриваше всички текстове. Освен това: KV и bio_content.json файла не бяха синхронизирани — admin промени чрез "update" се губеха при следващ deploy (deploy.yml преписваше bio.html от старото bio_content.json).
+
+**Решение:**
+
+1. **bio_content.json** — добавени 35 нови текстови полета в `textOverrides` (stat-1-num, stat-2-num, stat-3-num, cta-primary, cta-outline, badge-num, badge-label, pillar-1/2/3-title, creds-section-title, philosophy-*, approach-*, step-1/2/3/4-*, services-label/title/sub, testimonials-label/title, contact-label/title/sub). Всего: 57 textOverrides.
+
+2. **deploy.yml** — добавена стъпка "Sync bio_content.json to KV" (curl PUT към Cloudflare KV API след bake). Осигурява, че директно редактиране на bio_content.json (и push) се отразява и в KV, което чете admin панелът.
+
+3. **worker.js → handleBioRebake** — преписана функцията: вместо да бейква bio_content в bio.html и да комитва bio.html (което след това deploy.yml презаписваше с file данните), сега:
+   - Чете bio_content от KV
+   - Комитва bio_content.json в GitHub (pretty-printed, за четимост)
+   - Deploy workflow автоматично бейква в bio.html и ъплоудва в KV
+
+**Резултат — два начина за редакция, напълно синхронизирани:**
+- **Файлов начин**: редакция на `bio_content.json` → push → deploy бейква в bio.html + ъплоудва в KV
+- **Admin начин**: admin панел → запис в KV → "update" → handleBioRebake комитва bio_content.json → deploy бейква в bio.html + ъплоудва в KV
+
+**Файлове:** `bio_content.json`, `.github/workflows/deploy.yml`, `worker.js`

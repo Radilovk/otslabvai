@@ -464,14 +464,9 @@ async function handleSaveBioContent(request, env) {
 
 /**
  * Handles POST /bio_rebake
- * Reads bio_content from KV, fetches the current bio.html from GitHub,
- * replaces the bake-marker block with the serialised JSON, and commits
- * the updated file back — so the content is permanently embedded in the
- * static asset for every user (no client-side backend call required).
- *
- * bio.html is >1 MB so the Contents API returns an empty `content` field.
- * We therefore fetch the raw file via the Git Blob API after getting the
- * blob SHA from the Contents API metadata response.
+ * Reads bio_content from KV and commits it as bio_content.json to GitHub.
+ * The deploy workflow then bakes bio_content.json into bio.html automatically
+ * and syncs it back to KV — keeping repo file, KV, and deployed site in sync.
  */
 async function handleBioRebake(env) {
     const token = env.GITHUB_API_TOKEN || await env.PAGE_CONTENT.get('api_token');
@@ -479,19 +474,16 @@ async function handleBioRebake(env) {
         throw new UserFacingError('GitHub token not configured.', 503);
     }
 
-    // 1. Read latest bio_content from KV
+    // 1. Read latest bio_content from KV and validate
     const bioContentRaw = await env.PAGE_CONTENT.get('bio_content');
     if (!bioContentRaw) {
         throw new UserFacingError('No bio content found in KV.', 404);
     }
-    // Validate JSON before embedding
-    JSON.parse(bioContentRaw);
+    const parsed = JSON.parse(bioContentRaw); // Validate JSON
 
-    // 2. Fetch current bio.html from GitHub
-    // bio.html is >1 MB, so the Contents API returns empty `content`.
-    // Step 2a: get metadata (blob SHA) via the Contents API.
+    // 2. Get current sha of bio_content.json from GitHub (required for the PUT)
     const { owner, repo, branch } = GITHUB_SYNC_CONFIG;
-    const filePath = 'bio.html';
+    const filePath = 'bio_content.json';
     const apiHeaders = {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/vnd.github.v3+json',
@@ -503,43 +495,15 @@ async function handleBioRebake(env) {
         { headers: apiHeaders }
     );
     if (!metaResponse.ok) {
-        throw new UserFacingError('Failed to read bio.html metadata from GitHub.', 502);
+        throw new UserFacingError('Failed to read bio_content.json metadata from GitHub.', 502);
     }
     const fileMeta = await metaResponse.json();
-    const sha = fileMeta.sha; // blob SHA, used for the commit PUT
+    const sha = fileMeta.sha;
 
-    // Step 2b: fetch full file content via the Git Blob API (no size limit).
-    const blobResponse = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/git/blobs/${sha}`,
-        { headers: apiHeaders }
-    );
-    if (!blobResponse.ok) {
-        throw new UserFacingError('Failed to read bio.html blob from GitHub.', 502);
-    }
-    const blobData = await blobResponse.json();
-
-    // Decode UTF-8 content (GitHub API returns base64)
-    const binaryStr = atob(blobData.content.replace(/\n/g, ''));
-    const rawBytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) rawBytes[i] = binaryStr.charCodeAt(i);
-    const bioHtml = new TextDecoder('utf-8').decode(rawBytes);
-
-    // 3. Replace the marker block with the baked JSON
-    const MARKER_START = '<!-- __BIO_CONTENT_BAKED_START__ -->';
-    const MARKER_END   = '<!-- __BIO_CONTENT_BAKED_END__ -->';
-    if (!bioHtml.includes(MARKER_START) || !bioHtml.includes(MARKER_END)) {
-        throw new UserFacingError('bio.html bake markers not found — please redeploy the base file first.', 500);
-    }
-
-    const startIdx = bioHtml.indexOf(MARKER_START);
-    const endIdx   = bioHtml.indexOf(MARKER_END) + MARKER_END.length;
-    // Escape </script> sequences inside the JSON so they cannot break the script tag
-    const safeJson = bioContentRaw.replace(/<\/script>/gi, '<\\/script>');
-    const bakedBlock = `${MARKER_START}\n<script>window.__BAKED_BIO_CONTENT__=${safeJson};<\/script>\n${MARKER_END}`;
-    const bakedHtml = bioHtml.slice(0, startIdx) + bakedBlock + bioHtml.slice(endIdx);
-
-    // 4. Commit updated bio.html to GitHub (triggers auto-deploy via GitHub Actions)
-    const encodedBytes = new TextEncoder().encode(bakedHtml);
+    // 3. Commit bio_content.json to GitHub (triggers deploy which bakes it into bio.html)
+    // Pretty-print for human readability in the repo file.
+    const prettyJson = JSON.stringify(parsed, null, 2);
+    const encodedBytes = new TextEncoder().encode(prettyJson);
     const base64Content = btoa(Array.from(encodedBytes, b => String.fromCharCode(b)).join(''));
 
     const putResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
@@ -551,7 +515,7 @@ async function handleBioRebake(env) {
             'User-Agent': 'Cloudflare-Worker'
         },
         body: JSON.stringify({
-            message: 'sync: bake bio_content into bio.html',
+            message: 'sync: update bio_content.json from admin panel',
             content: base64Content,
             branch,
             sha
@@ -561,11 +525,11 @@ async function handleBioRebake(env) {
     if (!putResponse.ok) {
         const errText = await putResponse.text();
         console.error(`handleBioRebake GitHub commit failed: ${putResponse.status} - ${errText}`);
-        throw new UserFacingError('Failed to commit bio.html to GitHub.', 502);
+        throw new UserFacingError('Failed to commit bio_content.json to GitHub.', 502);
     }
 
-    console.log('handleBioRebake: bio.html committed to GitHub successfully');
-    return new Response(JSON.stringify({ success: true, message: 'Bio content baked into bio.html and committed to GitHub.' }), {
+    console.log('handleBioRebake: bio_content.json committed to GitHub — deploy will bake into bio.html');
+    return new Response(JSON.stringify({ success: true, message: 'Bio content committed to GitHub — deploy will bake it into bio.html automatically.' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
     });

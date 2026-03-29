@@ -93,6 +93,111 @@
     },
     "[data-bio-id=\"mobnav-label-contact\"]": {
       "content": "Контакт"
+    },
+    "[data-bio-id=\"stat-1-num\"]": {
+      "content": "10+"
+    },
+    "[data-bio-id=\"stat-2-num\"]": {
+      "content": "500+"
+    },
+    "[data-bio-id=\"stat-3-num\"]": {
+      "content": "3"
+    },
+    "[data-bio-id=\"cta-primary\"]": {
+      "content": "Запази консултация"
+    },
+    "[data-bio-id=\"cta-outline\"]": {
+      "content": "Научи повече"
+    },
+    "[data-bio-id=\"badge-num\"]": {
+      "content": "10+"
+    },
+    "[data-bio-id=\"badge-label\"]": {
+      "content": "Години практика"
+    },
+    "[data-bio-id=\"pillar-1-title\"]": {
+      "content": "Медицина"
+    },
+    "[data-bio-id=\"pillar-2-title\"]": {
+      "content": "Тренировки"
+    },
+    "[data-bio-id=\"pillar-3-title\"]": {
+      "content": "Нутриция"
+    },
+    "[data-bio-id=\"creds-section-title\"]": {
+      "content": "Образование & Квалификации"
+    },
+    "[data-bio-id=\"philosophy-label\"]": {
+      "content": "Моята философия"
+    },
+    "[data-bio-id=\"philosophy-quote\"]": {
+      "content": "„Здравето не е дестинация — то е динамичен процес на постоянен избор.“"
+    },
+    "[data-bio-id=\"philosophy-p1\"]": {
+      "content": "Вярвам в триъгълника: медицина — движение — хранене. Никой от трите стълба не е достатъчен сам по себе си. Само тяхното синергично взаимодействие създава трайно, устойчиво здраве."
+    },
+    "[data-bio-id=\"philosophy-p2\"]": {
+      "content": "Работя с доказателствена медицина и приоритизирам дългосрочните резултати пред краткосрочните трикове. Всеки план е базиран на лабораторни данни, физиологична оценка и личните цели на клиента."
+    },
+    "[data-bio-id=\"philosophy-author\"]": {
+      "content": "Камен Радилов"
+    },
+    "[data-bio-id=\"philosophy-author-title\"]": {
+      "content": "Медицина · Треньор · Нутриционист"
+    },
+    "[data-bio-id=\"approach-label\"]": {
+      "content": "Как работя"
+    },
+    "[data-bio-id=\"approach-title\"]": {
+      "content": "Четири стъпки към резултат"
+    },
+    "[data-bio-id=\"step-1-title\"]": {
+      "content": "Оценка"
+    },
+    "[data-bio-id=\"step-1-body\"]": {
+      "content": "Задълбочен медицински анализ: лабораторни изследвания, телесен състав, анамнеза и фитнес тест."
+    },
+    "[data-bio-id=\"step-2-title\"]": {
+      "content": "Стратегия"
+    },
+    "[data-bio-id=\"step-2-body\"]": {
+      "content": "Персонализиран план, интегриращ медицинска интервенция, тренировъчна програма и хранителна стратегия."
+    },
+    "[data-bio-id=\"step-3-title\"]": {
+      "content": "Изпълнение"
+    },
+    "[data-bio-id=\"step-3-body\"]": {
+      "content": "Постоянна подкрепа, корекции в реално време и проследяване на напредъка чрез обективни измервания."
+    },
+    "[data-bio-id=\"step-4-title\"]": {
+      "content": "Поддръжка"
+    },
+    "[data-bio-id=\"step-4-body\"]": {
+      "content": "Дългосрочен мониторинг и адаптация на плана спрямо промените в живота и целите ви."
+    },
+    "[data-bio-id=\"services-label\"]": {
+      "content": "Услуги"
+    },
+    "[data-bio-id=\"services-title\"]": {
+      "content": "Програми и консултации"
+    },
+    "[data-bio-id=\"services-sub\"]": {
+      "content": "Всяка услуга е изградена около вашите индивидуални нужди, цели и здравен статус — без универсални решения, само персонализиран подход."
+    },
+    "[data-bio-id=\"testimonials-label\"]": {
+      "content": "Отзиви"
+    },
+    "[data-bio-id=\"testimonials-title\"]": {
+      "content": "Какво казват клиентите"
+    },
+    "[data-bio-id=\"contact-label\"]": {
+      "content": "Свържете се"
+    },
+    "[data-bio-id=\"contact-title\"]": {
+      "content": "Готови за промяна?"
+    },
+    "[data-bio-id=\"contact-sub\"]": {
+      "content": "Запишете консултация и заедно ще изградим вашата персонализирана стратегия за здраве, движение и хранене."
     }
   },
   "images": {
