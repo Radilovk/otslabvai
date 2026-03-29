@@ -1,0 +1,1 @@
+Направи този фрейм адаптивен към екрана. Вкарай го в html : <iframe id="frameOfficeLocator" name="frameOfficeLocator" src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=1&pickUp=1&officeType=ALL&officesFilterOnTheMap=1&selectOfficeButtonCaption=Избиране на офис/автомат " width="400px" height="600px" ></iframe>
