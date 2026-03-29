@@ -143,8 +143,12 @@
             font-weight: 700;
             letter-spacing: -.01em;
             color: var(--c-text-1);
+            display: flex;
+            align-items: center;
+            gap: .5rem;
         }
         .nav__logo span { color: var(--c-gold); }
+        .nav__logo-img { height: 34px; width: auto; display: block; }
         .nav__links {
             display: flex; align-items: center; gap: 2rem;
         }
@@ -1590,7 +1594,7 @@
     <!-- ── NAV ────────────────────────────────────────────────────── -->
     <nav class="nav" id="mainNav">
         <div class="container nav__inner">
-            <a href="#hero" class="nav__logo">Камен <span>Радилов</span></a>
+            <a href="#hero" class="nav__logo"><img src="/images/KRlogo.png" alt="КР" class="nav__logo-img">Камен <span>Радилов</span></a>
             <ul class="nav__links">
                 <li><a href="#about">За мен</a></li>
                 <li><a href="#expertise">Компетенции</a></li>
