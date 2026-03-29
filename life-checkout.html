@@ -908,7 +908,7 @@
                             <label><strong>Избери офис на Спиди:</strong></label>
                             <br>
                             <button type="button" class="speedy-choose-btn" id="open-speedy-map-btn">
-                                🗺️ Избери от картата
+                                Избери от картата
                             </button>
                             <input type="hidden" name="speedy_office_id" id="final-speedy-id">
                             <div id="speedy-selected-info" class="speedy-selected-info">
@@ -1013,7 +1013,7 @@
         <div class="speedy-map-overlay" id="speedy-map-overlay" aria-hidden="true"></div>
         <div class="speedy-map-content">
             <div class="speedy-map-header">
-                <h3>🗺️ Избери офис на Спиди</h3>
+                <h3>Избери офис на Спиди</h3>
                 <button type="button" class="speedy-map-close" id="close-speedy-map-btn" aria-label="Затвори">&times;</button>
             </div>
             <iframe id="speedy-map-iframe"
@@ -1658,7 +1658,7 @@
 
         // Listen for office selection from Speedy iframe
         window.addEventListener('message', function(event) {
-            if (event.origin !== 'https://services.speedy.bg') return;
+            if (event.origin.indexOf('speedy.bg') === -1) return;
             const data = event.data;
             if (data && data.id) {
                 speedyHiddenInput.value = data.id;
@@ -1666,7 +1666,7 @@
                 const addr = (data.address && data.address.fullAddressString) ? data.address.fullAddressString : '';
                 speedySelectedAddr.textContent = addr;
                 speedySelectedInfo.style.display = 'block';
-                if (openSpeedyBtn) openSpeedyBtn.textContent = '🗺️ Смени офиса';
+                if (openSpeedyBtn) openSpeedyBtn.textContent = 'Смени офиса';
                 closeSpeedyMap();
             }
         }, false);
