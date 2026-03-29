@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оценка на емоционалното хранене</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #166088;
+            --background: #f4f9f9;
+            --text: #333;
+            --light-bg: #fff;
+            --border: #dbe4ee;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+       .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--light-bg);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        h1, h2, h3 { color: var(--secondary); }
+        h1 { text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+       .hidden { display: none; }
+       .question-box { margin-bottom: 20px; }
+       .question-text { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; color: var(--primary); }
+        textarea {
+            width: 100%; height: 100px; padding: 10px;
+            border: 1px solid var(--border); border-radius: 5px;
+            font-size: 1em; resize: vertical; box-sizing: border-box;
+        }
+        button {
+            background-color: var(--primary); color: white;
+            border: none; padding: 10px 20px; font-size: 1em;
+            border-radius: 5px; cursor: pointer; transition: background 0.3s;
+        }
+        button:hover { background-color: var(--secondary); }
+       .progress { margin-bottom: 20px; font-size: 0.9em; color: #666; }
+       .results-section,.therapy-section { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); }
+       .card { background: var(--background); padding: 15px; margin-bottom: 15px; border-left: 4px solid var(--primary); border-radius: 4px; }
+       .answer-review { font-style: italic; color: #555; background: #eee; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+       .answer-review p { margin-top: 0; margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
+       .answer-review p:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Емоционално хранене: Оценка и Самотерапия</h1>
+    
+    <div id="intro-screen">
+        <p>Добре дошли. Този инструмент използва проективни незавършени изречения, за да заобиколи логическия ви филтър и да разкрие подсъзнателните модели зад хранителните ви навици.</p>
+        <p><strong>Инструкция:</strong> Отговаряйте бързо, като завършите изречението с първото, което ви хрумне, без да го цензурирате.</p>
+        <button onclick="app.start()">Започни въпросника</button>
+    </div>
+
+    <div id="question-screen" class="hidden">
+        <div class="progress" id="progress-text">Въпрос 1 от 15</div>
+        <div class="question-box">
+            <div class="question-text" id="q-text"></div>
+            <textarea id="q-answer" placeholder="Довършете изречението тук..."></textarea>
+        </div>
+        <button onclick="app.nextQuestion()">Следващ въпрос</button>
+    </div>
+
+    <div id="results-screen" class="hidden">
+        <h2>Вашите отговори и схема за разчитане</h2>
+        <p>Прегледайте своите отговори през призмата на следните клинични концепции. Тези интерпретации ще ви помогнат да разкодирате нуждите си.</p>
+        
+        <div id="interpretations-container"></div>
+
+        <div class="therapy-section">
+            <h2>Практически методи за самотерапия</h2>
+            <div id="therapy-container"></div>
+        </div>
+        
+        <button onclick="location.reload()" style="margin-top: 20px; background-color: #666;">Започни отначало</button>
+    </div>
+</div>
+
+<script src="data.js"></script>
+
+<script>
+const app = {
+    currentIndex: 0,
+    answers:,
+    
+    start() {
+        if (typeof projectData === 'undefined') {
+            alert("Грешка: Файлът data.js липсва или не е зареден правилно.");
+            return;
+        }
+        document.getElementById('intro-screen').classList.add('hidden');
+        document.getElementById('question-screen').classList.remove('hidden');
+        this.renderQuestion();
+    },
+    
+    renderQuestion() {
+        document.getElementById('progress-text').innerText = `Въпрос ${this.currentIndex + 1} от ${projectData.questions.length}`;
+        document.getElementById('q-text').innerText = projectData.questions[this.currentIndex];
+        document.getElementById('q-answer').value = '';
+        document.getElementById('q-answer').focus();
+    },
+    
+    nextQuestion() {
+        const answer = document.getElementById('q-answer').value.trim();
+        this.answers.push({
+            question: projectData.questions[this.currentIndex],
+            answer: answer |
+
+| "[Оставен празен]"
+        });
+        
+        this.currentIndex++;
+        if (this.currentIndex < projectData.questions.length) {
+            this.renderQuestion();
+        } else {
+            this.showResults();
+        }
+    },
+    
+    showResults() {
+        document.getElementById('question-screen').classList.add('hidden');
+        document.getElementById('results-screen').classList.remove('hidden');
+        
+        const interpretationsContainer = document.getElementById('interpretations-container');
+        
+        let answersHTML = "<h3>Вашите нередактирани отговори:</h3><div class='answer-review'>";
+        this.answers.forEach((item, index) => {
+            answersHTML += `<p><strong>${index + 1}. ${item.question}</strong><br><em>... ${item.answer}</em></p>`;
+        });
+        answersHTML += "</div>";
+        
+        let schemaHTML = "<h3>Ключ за самоанализ:</h3>";
+        projectData.interpretations.forEach(item => {
+            schemaHTML += `
+                <div class="card">
+                    <strong>${item.title}</strong>
+                    <p>${item.desc}</p>
+                </div>`;
+        });
+        
+        interpretationsContainer.innerHTML = answersHTML + schemaHTML;
+        
+        const therapyContainer = document.getElementById('therapy-container');
+        let therapyHTML = "";
+        projectData.therapy.forEach(item => {
+            therapyHTML += `
+                <div class="card">
+                    <strong>${item.title}</strong>
+                    <p>${item.desc}</p>
+                </div>`;
+        });
+        therapyContainer.innerHTML = therapyHTML;
+    }
+};
+</script>
+
+</body>
+</html>
