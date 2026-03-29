@@ -168,3 +168,73 @@ const app = {
 
 </body>
 </html>
+            return;
+        }
+        document.getElementById('intro-screen').classList.add('hidden');
+        document.getElementById('question-screen').classList.remove('hidden');
+        this.renderQuestion();
+    },
+    
+    renderQuestion() {
+        document.getElementById('progress-text').innerText = `Въпрос ${this.currentIndex + 1} от ${projectData.questions.length}`;
+        document.getElementById('q-text').innerText = projectData.questions[this.currentIndex];
+        document.getElementById('q-answer').value = '';
+        document.getElementById('q-answer').focus();
+    },
+    
+    nextQuestion() {
+        const answer = document.getElementById('q-answer').value.trim();
+        this.answers.push({
+            question: projectData.questions[this.currentIndex],
+            answer: answer |
+
+| "[Оставен празен]"
+        });
+        
+        this.currentIndex++;
+        if (this.currentIndex < projectData.questions.length) {
+            this.renderQuestion();
+        } else {
+            this.showResults();
+        }
+    },
+    
+    showResults() {
+        document.getElementById('question-screen').classList.add('hidden');
+        document.getElementById('results-screen').classList.remove('hidden');
+        
+        const interpretationsContainer = document.getElementById('interpretations-container');
+        
+        let answersHTML = "<h3>Вашите нередактирани отговори:</h3><div class='answer-review'>";
+        this.answers.forEach((item, index) => {
+            answersHTML += `<p><strong>${index + 1}. ${item.question}</strong><br><em>... ${item.answer}</em></p>`;
+        });
+        answersHTML += "</div>";
+        
+        let schemaHTML = "<h3>Ключ за самоанализ:</h3>";
+        projectData.interpretations.forEach(item => {
+            schemaHTML += `
+                <div class="card">
+                    <strong>${item.title}</strong>
+                    <p>${item.desc}</p>
+                </div>`;
+        });
+        
+        interpretationsContainer.innerHTML = answersHTML + schemaHTML;
+        
+        const therapyContainer = document.getElementById('therapy-container');
+        let therapyHTML = "";
+        projectData.therapy.forEach(item => {
+            therapyHTML += `
+                <div class="card">
+                    <strong>${item.title}</strong>
+                    <p>${item.desc}</p>
+                </div>`;
+        });
+        therapyContainer.innerHTML = therapyHTML;
+    }
+};
+</script>
+
+</body>
+</html>
