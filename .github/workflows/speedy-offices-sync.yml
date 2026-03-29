@@ -8,7 +8,10 @@ name: Sync Speedy Offices
 # Endpoint: https://services.speedy.bg/office_locator_widget_v3/offices_list.php?lang=bg
 # Returns a JSON array of offices with fields: id, name, address, city
 #
-# Only secret required: CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID (existing deployment secrets).
+# Uses Playwright (headless Chromium) to bypass Cloudflare bot protection (403 on plain curl).
+# The real browser fingerprint passes Cloudflare's checks automatically.
+#
+# Only secrets required: CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID (existing deployment secrets).
 on:
   schedule:
     - cron: '0 2 * * *'
@@ -22,33 +25,81 @@ env:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions: {}
 
     steps:
-      - name: Fetch Speedy offices (public widget endpoint)
+      - name: Install Playwright and Chromium
         run: |
-          HTTP_STATUS=$(curl -s -o offices_raw.json -w "%{http_code}" \
-            -H "Accept: application/json" \
-            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" \
-            "https://services.speedy.bg/office_locator_widget_v3/offices_list.php?lang=bg")
+          npm init -y
+          npm install playwright
+          npx playwright install chromium --with-deps
 
-          echo "HTTP status: $HTTP_STATUS"
+      - name: Fetch Speedy offices via headless browser
+        run: |
+          cat > fetch_speedy.js << 'NODEOF'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
 
-          if [ "$HTTP_STATUS" != "200" ]; then
-            echo "ERROR: Speedy offices endpoint returned HTTP $HTTP_STATUS"
-            cat offices_raw.json || true
-            exit 1
-          fi
+          (async () => {
+            const browser = await chromium.launch({
+              headless: true,
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
 
-          OFFICE_COUNT=$(python3 -c "
-          import json
-          with open('offices_raw.json') as f:
-              raw = json.load(f)
-          items = raw if isinstance(raw, list) else raw.get('offices', [])
-          print(len(items))
-          ")
-          echo "Fetched $OFFICE_COUNT offices from Speedy"
+            const context = await browser.newContext({
+              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+              viewport: { width: 1920, height: 1080 },
+              locale: 'bg-BG'
+            });
+
+            const page = await context.newPage();
+
+            console.log('Navigating to Speedy offices endpoint...');
+            await page.goto('https://services.speedy.bg/office_locator_widget_v3/offices_list.php?lang=bg', {
+              waitUntil: 'networkidle',
+              timeout: 60000
+            });
+
+            // Poll until the page body contains valid JSON (Cloudflare challenge pages start with <!DOCTYPE).
+            // Retry up to 6 times (max ~30 seconds) to handle slow Cloudflare validation.
+            console.log('Waiting for Cloudflare validation and JSON content...');
+            let bodyText = '';
+            for (let attempt = 1; attempt <= 6; attempt++) {
+              await page.waitForTimeout(5000);
+              bodyText = await page.evaluate(() => document.body.innerText.trim());
+              if (bodyText.startsWith('[') || bodyText.startsWith('{')) {
+                console.log(`JSON content ready after ${attempt * 5}s`);
+                break;
+              }
+              console.log(`Attempt ${attempt}: content not yet JSON (${bodyText.slice(0, 80)}...)`);
+              if (attempt === 6) {
+                console.error('Timed out waiting for JSON content. Last body preview:', bodyText.slice(0, 500));
+                await browser.close();
+                process.exit(1);
+              }
+            }
+
+            await browser.close();
+
+            let offices;
+            try {
+              offices = JSON.parse(bodyText);
+            } catch (e) {
+              console.error('Failed to parse JSON. Page content preview:', bodyText.slice(0, 500));
+              process.exit(1);
+            }
+
+            if (!Array.isArray(offices)) {
+              console.error('Expected JSON array, got:', typeof offices, JSON.stringify(offices).slice(0, 200));
+              process.exit(1);
+            }
+
+            fs.writeFileSync('offices_raw.json', JSON.stringify(offices));
+            console.log(`Successfully fetched ${offices.length} offices via headless browser`);
+          })();
+          NODEOF
+          node fetch_speedy.js
 
       - name: Normalize offices
         run: |
