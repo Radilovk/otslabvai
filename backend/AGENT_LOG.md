@@ -28,15 +28,12 @@
   - `GET /api-token` — API token
   - `GET/POST /bio_content.json` — bio страница съдържание (KV: `bio_content`)
   - `POST /bio_rebake` — no-op, запазен за съвместимост
-  - `GET /speedy-offices` — список на офисите на Спиди (KV: `speedy_offices_cache`)
-  - `POST /speedy-refresh` — тригва GitHub Actions за обновяване на офисите
 
 ### KV съхранение
 - KV `PAGE_CONTENT` namespace съхранява:
   - `page_content` — JSON данни за главната страница
   - `life_page_content` — JSON данни за Life страницата
   - `bio_content` — JSON данни за bio страницата
-  - `speedy_offices_cache` — JSON масив с офисите на Спиди (обновява се от GitHub Actions)
   - `static_backend_page_content.json` — fallback при празен `page_content`
   - `static_backend_life_page_content.json` — fallback при празен `life_page_content`
 - KV `ORDERS` namespace — поръчки (по ID)
@@ -50,23 +47,31 @@
 | Workflow | Trigger | Цел |
 |----------|---------|-----|
 | `deploy.yml` | push to main | Deploy worker.js + assets към Cloudflare |
-| `speedy-offices-sync.yml` | daily 02:00 UTC + manual | Изтегля офисите на Спиди и ги записва в KV |
 
-### Speedy офиси — архитектура
-- **Публичен endpoint (без credentials):**
-  `GET https://services.speedy.bg/office_locator_widget_v3/offices_list.php?lang=bg`
-  Връща JSON масив с `{ id, name, address, city }` за всеки офис. **Не изисква API key или парола.**
-- **KV ключ:** `speedy_offices_cache` в `PAGE_CONTENT` namespace
-- **Формат в KV:** `[{ id, name, address, city }, ...]`
-- **GitHub Actions** (`speedy-offices-sync.yml`) изтегля от публичния endpoint и записва в KV веднъж дневно (02:00 UTC).
-- **Worker cron** (`wrangler.toml`: `0 3 * * *`) извиква `refreshSpeedyOfficesCache()` като backup.
-- **Admin panel** бутон "Синхронизирай офисите" → `POST /speedy-refresh` → тригва GitHub Actions workflow_dispatch.
-- **Секрети нужни:** само `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` (вече съществуват за deploy).
-- **speedy.html** — интерактивен widget с iframe карта (потребителят избира офис от картата), слуша `postMessage` от iframe.
+### Speedy офиси — архитектура (АКТУАЛНА)
+- `checkout.html` и `life-checkout.html` използват **директно** Speedy's iframe widget (`office_locator_widget_v3/office_locator.php`) в модален прозорец.
+- Офисите **не се кешират в KV**. Няма `/speedy-offices` или `/speedy-refresh` endpoints.
+- Слушат `postMessage` от iframe → попълват `#final-speedy-id`.
+- **speedy.html** — отделна тестова страница за iframe widget-а.
 
 ---
 
 ## Хронология на промените
+
+### 2026-03-29 — Пълно почистване: Speedy KV кеш → директен iframe widget
+
+**Промяна:** Завършване на миграцията от текстово търсене към интерактивна карта. Всички Speedy KV-caching инфраструктура е премахната.
+
+**Детайли:**
+- `life-checkout.html`: мигрирана от текстово търсене (`loadSpeedyOffices`, `fetch('/speedy-offices')`) към iframe карта (същото като `checkout.html`)
+- `admin.html` / `admin.js`: премахнат бутонът "Синхронизирай офиси сега" и свързания handler
+- `worker.js`: премахнати `handleGetSpeedyOffices`, `handleRefreshSpeedyOffices`, `refreshSpeedyOfficesCache`, `triggerSpeedyGithubSync`, routes `/speedy-offices` и `/speedy-refresh`, и `scheduled` cron handler
+- `wrangler.toml`: премахнат `[triggers] crons`
+- `.github/workflows/speedy-offices-sync.yml`: изтрит (вече не е нужен)
+
+**Файлове:** `life-checkout.html`, `admin.html`, `admin.js`, `worker.js`, `wrangler.toml`
+
+---
 
 ### 2026-03-29 — checkout.html: Speedy офис — интерактивна карта като модален прозорец
 
@@ -80,7 +85,6 @@
 - `checkout.html` вече не прави `fetch('/speedy-offices')` — офисите се избират директно от картата на Спиди
 - След избор на офис: бутонът сменя текста на "🗺️ Смени офиса"; валидационното съобщение коригирано на "от картата"
 - Почистено мъртво JS: `ekontWidget.classList.add/remove('expanded')` (без CSS правило); мъртва CSS переменна `--ekont-dropdown-expansion-height`
-- **Забележка:** `/speedy-offices` и `/speedy-refresh` API-та в `worker.js` остават — `life-checkout.html` и `admin.js` ги използват
 
 **Файлове:** `checkout.html`
 
