@@ -81,6 +81,18 @@
     },
     "[data-bio-id=\"about-p3\"]": {
       "content": "Разработвам персонализирани протоколи за ефективно редуциране на тегло, антиейджинг, възстановяване след бременност и цялостно подобряване на здравето — базирани на медицинска наука и индивидуален анализ."
+    },
+    "[data-bio-id=\"mobnav-label-about\"]": {
+      "content": "За мен"
+    },
+    "[data-bio-id=\"mobnav-label-credentials\"]": {
+      "content": "Квалификации"
+    },
+    "[data-bio-id=\"mobnav-label-services\"]": {
+      "content": "Услуги"
+    },
+    "[data-bio-id=\"mobnav-label-contact\"]": {
+      "content": "Контакт"
     }
   },
   "images": {
