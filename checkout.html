@@ -33,9 +33,6 @@
     </script>
     <style>
         /* Reuse global CSS variables from index.css */
-        :root {
-            --ekont-dropdown-expansion-height: 200px;
-        }
         
         body { 
             font-family: var(--font-secondary); 
@@ -145,86 +142,108 @@
             position: relative; /* Establish positioning context */
         }
         
-        /* Ensure Speedy widget doesn't expand parent container horizontally */
-        /* Speedy and Ekont widgets allow dropdowns to overflow */
-        #speedy-widget,
-        #ekont-widget {
-            overflow: visible;
-        }
-        
-        /* Expanded state for speedy/ekont widget when dropdown is shown */
-        #speedy-widget.expanded,
-        #ekont-widget.expanded {
-            padding-bottom: var(--ekont-dropdown-expansion-height);
-            transition: padding-bottom 0.3s ease-in-out;
-        }
-        .speedy-container {
-            font-family: Arial, sans-serif;
-            max-width: 100%;
-        }
-        
-        /* Speedy custom dropdown styles */
-        .speedy-dropdown-wrapper {
-            position: relative;
-            z-index: 1000;
-        }
-        
-        .speedy-dropdown {
-            position: absolute;
-            top: 100%;
+        /* Speedy map modal */
+        .speedy-map-modal {
+            display: none;
+            position: fixed;
+            top: 0;
             left: 0;
-            right: 0;
-            max-height: 300px;
-            overflow-y: auto;
-            background: var(--bg-secondary);
-            border: 2px solid #e30613;
-            border-top: none;
-            border-radius: 0 0 5px 5px;
-            z-index: 1001;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
         }
-        
-        .speedy-dropdown-item {
-            padding: 10px;
-            cursor: pointer;
+        .speedy-map-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .speedy-map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+        }
+        .speedy-map-content {
+            position: relative;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 0;
+            width: min(92vw, 700px);
+            height: min(85vh, 620px);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            z-index: 1;
+            overflow: hidden;
+        }
+        .speedy-map-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
             border-bottom: 1px solid var(--border-color);
-            transition: background-color 0.2s;
+            flex-shrink: 0;
         }
-        
-        .speedy-dropdown-item:last-child {
-            border-bottom: none;
-        }
-        
-        .speedy-dropdown-item:hover {
-            background-color: rgba(227, 6, 19, 0.08);
-        }
-        
-        .speedy-dropdown-item-name {
-            font-weight: 600;
+        .speedy-map-header h3 {
+            margin: 0;
+            font-size: 1rem;
             color: var(--text-primary);
-            display: block;
         }
-        
-        .speedy-dropdown-item-city {
-            font-size: 0.78rem;
-            font-weight: 600;
+        .speedy-map-close {
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0 0.25rem;
+            line-height: 1;
+        }
+        .speedy-map-close:hover {
             color: #e30613;
-            display: inline-block;
-            margin-top: 2px;
-            margin-right: 4px;
         }
-        
-        .speedy-dropdown-item-address {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            display: inline;
+        #speedy-map-iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
         }
-        
-        .speedy-dropdown-item-empty {
-            padding: 10px;
-            cursor: default;
-            color: var(--text-secondary);
-            text-align: center;
+        /* Button to open Speedy map */
+        .speedy-choose-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+            padding: 10px 18px;
+            background: #e30613;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .speedy-choose-btn:hover {
+            background: #b8000f;
+        }
+        /* Selected office info */
+        .speedy-selected-info {
+            display: none;
+            margin-top: 0.6rem;
+            padding: 0.6rem 0.8rem;
+            background: #e6eeff;
+            border-left: 4px solid #005696;
+            border-radius: 4px;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        [data-theme="dark"] .speedy-selected-info {
+            background: rgba(0, 86, 150, 0.2);
+        }
+        .speedy-selected-info strong {
+            color: #005696;
         }
         
         .econt-container {
@@ -328,7 +347,6 @@
                 box-sizing: border-box;
             }
             
-            .speedy-container,
             .econt-container {
                 max-width: 100%;
                 overflow: visible;
@@ -336,12 +354,10 @@
             }
             
             /* Ensure dropdowns have high z-index on mobile */
-            .speedy-dropdown,
             .econt-dropdown {
                 z-index: 1001;
             }
             
-            .speedy-container label,
             .econt-container label {
                 font-size: 0.9rem;
                 display: block;
@@ -349,16 +365,21 @@
             }
             
             /* Better mobile input styling */
-            #speedy-office-search,
             #ekont-office-search {
                 font-size: 16px !important; /* Prevents zoom on iOS */
                 width: 100%;
                 box-sizing: border-box;
             }
             
-            #speedy-status-text,
             #ekont-status-text {
                 font-size: 0.75rem;
+            }
+            
+            /* Speedy map modal on small screens */
+            .speedy-map-content {
+                width: 96vw;
+                height: 88vh;
+                border-radius: 8px;
             }
             
             /* Compact form groups on mobile */
@@ -892,15 +913,15 @@
                         
                         <!-- Speedy Office Selection Widget -->
                         <div id="speedy-widget" class="courier-widget" style="display: none; margin-top: 1rem;">
-                            <div class="speedy-container">
-                                <label for="speedy-office-search"><strong>Избери офис на Спиди:</strong></label>
-                                <br>
-                                <div class="speedy-dropdown-wrapper">
-                                    <input type="text" id="speedy-office-search" placeholder="Град или адрес на офис..." autocomplete="off" style="width: 100%; padding: 10px; border: 2px solid #e30613; border-radius: 5px; font-size: 15px; margin-top: 0.5rem;">
-                                    <div id="speedy-offices-dropdown" class="speedy-dropdown" style="display: none;"></div>
-                                </div>
-                                <input type="hidden" name="speedy_office_id" id="final-speedy-id">
-                                <div id="speedy-status-text" style="font-size: 12px; color: gray; margin-top: 5px;">Зареждане...</div>
+                            <label><strong>Избери офис на Спиди:</strong></label>
+                            <br>
+                            <button type="button" class="speedy-choose-btn" id="open-speedy-map-btn">
+                                🗺️ Избери от картата
+                            </button>
+                            <input type="hidden" name="speedy_office_id" id="final-speedy-id">
+                            <div id="speedy-selected-info" class="speedy-selected-info">
+                                <strong>Избран офис:</strong> <span id="speedy-selected-name"></span><br>
+                                <span id="speedy-selected-addr" style="font-size:13px;"></span>
                             </div>
                         </div>
                         
@@ -994,6 +1015,21 @@
     </footer>
 
     <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
+
+    <!-- Speedy Map Modal -->
+    <div id="speedy-map-modal" class="speedy-map-modal" role="dialog" aria-modal="true" aria-label="Избор на офис на Спиди">
+        <div class="speedy-map-overlay" id="speedy-map-overlay" aria-hidden="true"></div>
+        <div class="speedy-map-content">
+            <div class="speedy-map-header">
+                <h3>🗺️ Избери офис на Спиди</h3>
+                <button type="button" class="speedy-map-close" id="close-speedy-map-btn" aria-label="Затвори">&times;</button>
+            </div>
+            <iframe id="speedy-map-iframe"
+                    src=""
+                    title="Карта на офисите на Спиди">
+            </iframe>
+        </div>
+    </div>
 
     <!-- Success Modal -->
     <div id="success-modal" class="success-modal" role="dialog" aria-modal="true" aria-labelledby="success-title">
@@ -1580,10 +1616,6 @@
             if (speedyRadio.checked) {
                 speedyWidget.style.display = 'block';
                 ekontWidget.style.display = 'none';
-                // Load Speedy offices if not already loaded
-                if (!speedyOfficesLoaded) {
-                    loadSpeedyOffices();
-                }
             } else if (ekontRadio.checked) {
                 speedyWidget.style.display = 'none';
                 ekontWidget.style.display = 'block';
@@ -1602,147 +1634,56 @@
         speedyRadio.addEventListener('change', toggleCourierWidgets);
         ekontRadio.addEventListener('change', toggleCourierWidgets);
         
-        // Speedy office selection logic
-        let speedyOfficesLoaded = false;
-        let allSpeedyOffices = [];
-        let selectedSpeedyOffice = null;
-        let speedyChangeHandlerAttached = false;
+        // Speedy map modal logic
+        const speedyMapModal = document.getElementById('speedy-map-modal');
+        const speedyMapIframe = document.getElementById('speedy-map-iframe');
+        const speedyMapOverlay = document.getElementById('speedy-map-overlay');
+        const openSpeedyBtn = document.getElementById('open-speedy-map-btn');
+        const closeSpeedyBtn = document.getElementById('close-speedy-map-btn');
+        const speedyHiddenInput = document.getElementById('final-speedy-id');
+        const speedySelectedInfo = document.getElementById('speedy-selected-info');
+        const speedySelectedName = document.getElementById('speedy-selected-name');
+        const speedySelectedAddr = document.getElementById('speedy-selected-addr');
 
-        function escapeHtml(str) {
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
+        const SPEEDY_WIDGET_URL = 'https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=%D0%98%D0%B7%D0%B1%D0%BE%D1%80';
 
-        function showSpeedyRetry(statusText, message) {
-            statusText.innerHTML = `${message} <button type="button" id="speedy-retry-btn" style="background:none;border:none;color:#e30613;cursor:pointer;text-decoration:underline;padding:0;font-size:inherit;">Опитай отново</button>`;
-            const retryBtn = document.getElementById('speedy-retry-btn');
-            if (retryBtn) {
-                retryBtn.addEventListener('click', function() {
-                    speedyOfficesLoaded = false;
-                    allSpeedyOffices = [];
-                    loadSpeedyOffices();
-                });
+        function openSpeedyMap() {
+            if (!speedyMapIframe.getAttribute('src')) {
+                speedyMapIframe.src = SPEEDY_WIDGET_URL;
             }
+            speedyMapModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
-        function loadSpeedyOffices() {
-            const speedyInput = document.getElementById('speedy-office-search');
-            const speedyDropdown = document.getElementById('speedy-offices-dropdown');
-            const hiddenInput = document.getElementById('final-speedy-id');
-            const statusText = document.getElementById('speedy-status-text');
+        function closeSpeedyMap() {
+            speedyMapModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
 
-            statusText.textContent = 'Зареждане...';
-            statusText.style.color = 'gray';
+        if (openSpeedyBtn) openSpeedyBtn.addEventListener('click', openSpeedyMap);
+        if (closeSpeedyBtn) closeSpeedyBtn.addEventListener('click', closeSpeedyMap);
+        if (speedyMapOverlay) speedyMapOverlay.addEventListener('click', closeSpeedyMap);
 
-            fetch(`${API_URL}/speedy-offices`)
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data) && data.length > 0) {
-                    allSpeedyOffices = data;
-                    statusText.textContent = 'Напишете град или адрес.';
-                    statusText.style.color = 'gray';
-                    speedyOfficesLoaded = true;
-                } else {
-                    // Cache empty – show retry option; worker is seeding it in the background
-                    showSpeedyRetry(statusText, 'Офисите се зареждат.');
-                }
-            })
-            .catch(err => {
-                console.error('Error loading Speedy offices:', err);
-                showSpeedyRetry(statusText, 'Грешка при зареждане.');
-            });
-
-            // Attach event listeners only once
-            if (!speedyChangeHandlerAttached) {
-                speedyInput.addEventListener('input', function() {
-                    const searchValue = this.value.toLowerCase().trim();
-
-                    if (searchValue.length < 2) {
-                        speedyDropdown.style.display = 'none';
-                        speedyWidget.classList.remove('expanded');
-                        return;
-                    }
-
-                    const filteredOffices = allSpeedyOffices.filter(office => {
-                        return office.name.toLowerCase().includes(searchValue) ||
-                               office.address.toLowerCase().includes(searchValue) ||
-                               office.city.toLowerCase().includes(searchValue);
-                    });
-
-                    // Sort: entries where search matches the start of city first
-                    filteredOffices.sort((a, b) => {
-                        const aCity = a.city.toLowerCase();
-                        const bCity = b.city.toLowerCase();
-                        const aStart = aCity.startsWith(searchValue) ? 0 : 1;
-                        const bStart = bCity.startsWith(searchValue) ? 0 : 1;
-                        return aStart - bStart;
-                    });
-
-                    const MAX_RESULTS = 15;
-                    const displayOffices = filteredOffices.slice(0, MAX_RESULTS);
-                    const remaining = filteredOffices.length - MAX_RESULTS;
-
-                    if (displayOffices.length > 0) {
-                        let html = displayOffices.map(office => {
-                            const cityLine = office.city && !office.name.toLowerCase().includes(office.city.toLowerCase())
-                                ? `<span class="speedy-dropdown-item-city">${escapeHtml(office.city)}</span>` : '';
-                            return `<div class="speedy-dropdown-item" data-office-id="${escapeHtml(office.id)}">
-                                <span class="speedy-dropdown-item-name">${escapeHtml(office.name)}</span>
-                                ${cityLine}<span class="speedy-dropdown-item-address">${escapeHtml(office.address)}</span>
-                            </div>`;
-                        }).join('');
-                        if (remaining > 0) {
-                            html += `<div class="speedy-dropdown-item-empty">и ${remaining} повече – прецизирайте търсенето</div>`;
-                        }
-                        speedyDropdown.innerHTML = html;
-                        speedyDropdown.style.display = 'block';
-                        speedyWidget.classList.add('expanded');
-                    } else {
-                        speedyDropdown.innerHTML = '<div class="speedy-dropdown-item-empty">Няма намерени офиси</div>';
-                        speedyDropdown.style.display = 'block';
-                        speedyWidget.classList.add('expanded');
-                    }
-                });
-
-                speedyDropdown.addEventListener('click', function(e) {
-                    const item = e.target.closest('.speedy-dropdown-item');
-                    if (item && item.dataset.officeId) {
-                        const officeId = parseInt(item.dataset.officeId, 10);
-                        const office = allSpeedyOffices.find(o => o.id === officeId);
-
-                        if (office) {
-                            speedyInput.value = office.name;
-                            hiddenInput.value = office.id;
-                            selectedSpeedyOffice = office;
-                            const cityLabel = office.city ? `${office.city}, ` : '';
-                            statusText.textContent = `✓ Избран: ${office.name} – ${cityLabel}${office.address}`;
-                            statusText.style.color = '#c0000a';
-                            speedyDropdown.style.display = 'none';
-                            speedyWidget.classList.remove('expanded');
-                        }
-                    }
-                });
-
-                document.addEventListener('click', function(e) {
-                    if (!speedyInput.contains(e.target) && !speedyDropdown.contains(e.target)) {
-                        speedyDropdown.style.display = 'none';
-                        speedyWidget.classList.remove('expanded');
-                    }
-                });
-
-                speedyInput.addEventListener('focus', function() {
-                    if (this.value.length >= 2) {
-                        speedyInput.dispatchEvent(new Event('input'));
-                    }
-                });
-
-                speedyChangeHandlerAttached = true;
+        // Listen for office selection from Speedy iframe
+        window.addEventListener('message', function(event) {
+            if (event.origin !== 'https://services.speedy.bg') return;
+            const data = event.data;
+            if (data && data.id) {
+                speedyHiddenInput.value = data.id;
+                speedySelectedName.textContent = data.name || '';
+                const addr = (data.address && data.address.fullAddressString) ? data.address.fullAddressString : '';
+                speedySelectedAddr.textContent = addr;
+                speedySelectedInfo.style.display = 'block';
+                if (openSpeedyBtn) openSpeedyBtn.textContent = '🗺️ Смени офиса';
+                closeSpeedyMap();
             }
-        }
+        }, false);
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && speedyMapModal.classList.contains('active')) {
+                closeSpeedyMap();
+            }
+        });
         
         // Econt office selection logic
         let ekontOfficesLoaded = false;
@@ -1784,7 +1725,6 @@
                     
                     if (searchValue.length < 2) {
                         ekontDropdown.style.display = 'none';
-                        ekontWidget.classList.remove('expanded');
                         return;
                     }
                     
@@ -1815,11 +1755,9 @@
                             </div>`;
                         }).join('');
                         ekontDropdown.style.display = 'block';
-                        ekontWidget.classList.add('expanded');
                     } else {
                         ekontDropdown.innerHTML = '<div class="econt-dropdown-item-empty">Няма намерени офиси</div>';
                         ekontDropdown.style.display = 'block';
-                        ekontWidget.classList.add('expanded');
                     }
                 });
                 
@@ -1843,7 +1781,6 @@
                             statusText.textContent = `✓ Избран: ${cleanName}${fullAddr ? ' - ' + fullAddr : ''}`;
                             statusText.style.color = "#0056b3";
                             ekontDropdown.style.display = 'none';
-                            ekontWidget.classList.remove('expanded');
                         }
                     }
                 });
@@ -1852,7 +1789,6 @@
                 document.addEventListener('click', function(e) {
                     if (!ekontInput.contains(e.target) && !ekontDropdown.contains(e.target)) {
                         ekontDropdown.style.display = 'none';
-                        ekontWidget.classList.remove('expanded');
                     }
                 });
                 
@@ -1880,9 +1816,11 @@
                     if (speedyRadio.checked) {
                         orderData.courierCompany = 'Speedy';
                         orderData.courierOfficeId = document.getElementById('final-speedy-id').value;
-                        if (selectedSpeedyOffice) {
-                            orderData.courierOfficeName = selectedSpeedyOffice.name;
-                            orderData.courierOfficeAddress = selectedSpeedyOffice.address || '';
+                        const selName = document.getElementById('speedy-selected-name');
+                        const selAddr = document.getElementById('speedy-selected-addr');
+                        if (selName && selName.textContent) {
+                            orderData.courierOfficeName = selName.textContent;
+                            orderData.courierOfficeAddress = selAddr ? selAddr.textContent : '';
                         }
                     } else if (ekontRadio.checked) {
                         orderData.courierCompany = 'Econt';
@@ -1991,7 +1929,7 @@
                 if (speedyRadio.checked) {
                     const speedyOfficeId = document.getElementById('final-speedy-id').value;
                     if (!speedyOfficeId) {
-                        alert('Моля, изберете офис на Speedy от списъка.');
+                        alert('Моля, изберете офис на Speedy от картата.');
                         isValid = false;
                     }
                 } else if (ekontRadio.checked) {
