@@ -112,6 +112,20 @@
 
 ---
 
+### 2026-03-29 — Speedy офиси: Playwright headless browser вместо curl
+
+**Проблем:** `speedy-offices-sync.yml` използваше `curl` за да изтегли офисите от Speedy. Cloudflare разпозна заявките като "роботизирани" и върна 403.
+
+**Решение:** Заменихме `curl` с Playwright (headless Chromium) в GitHub Actions:
+- Истински Chrome браузър отваря endpoint-а
+- Изчаква 5 секунди (Cloudflare минча валидацията)
+- Чете `document.body.innerText` (JSON-а) и го записва в файл
+- Следващите стъпки (нормализиране + KV запис) остават непроменени
+
+**Файлове:** `.github/workflows/speedy-offices-sync.yml` — стъпката "Fetch Speedy offices" сменена с Playwright Node.js скрипт. Timeout увеличен на 15 минути.
+
+---
+
 ### 2026-03-28 — Поправка: handleBioRebake — bio.html > 1 MB
 
 **Проблем:** `POST /bio_rebake` хвърляше грешка "bio.html bake markers not found".
