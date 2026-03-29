@@ -33,9 +33,6 @@
     </script>
     <style>
         /* Reuse global CSS variables from index.css */
-        :root {
-            --ekont-dropdown-expansion-height: 200px;
-        }
         
         body { 
             font-family: var(--font-secondary); 
@@ -1677,6 +1674,7 @@
                 const addr = (data.address && data.address.fullAddressString) ? data.address.fullAddressString : '';
                 speedySelectedAddr.textContent = addr;
                 speedySelectedInfo.style.display = 'block';
+                if (openSpeedyBtn) openSpeedyBtn.textContent = '🗺️ Смени офиса';
                 closeSpeedyMap();
             }
         }, false);
@@ -1727,7 +1725,6 @@
                     
                     if (searchValue.length < 2) {
                         ekontDropdown.style.display = 'none';
-                        ekontWidget.classList.remove('expanded');
                         return;
                     }
                     
@@ -1758,11 +1755,9 @@
                             </div>`;
                         }).join('');
                         ekontDropdown.style.display = 'block';
-                        ekontWidget.classList.add('expanded');
                     } else {
                         ekontDropdown.innerHTML = '<div class="econt-dropdown-item-empty">Няма намерени офиси</div>';
                         ekontDropdown.style.display = 'block';
-                        ekontWidget.classList.add('expanded');
                     }
                 });
                 
@@ -1786,7 +1781,6 @@
                             statusText.textContent = `✓ Избран: ${cleanName}${fullAddr ? ' - ' + fullAddr : ''}`;
                             statusText.style.color = "#0056b3";
                             ekontDropdown.style.display = 'none';
-                            ekontWidget.classList.remove('expanded');
                         }
                     }
                 });
@@ -1795,7 +1789,6 @@
                 document.addEventListener('click', function(e) {
                     if (!ekontInput.contains(e.target) && !ekontDropdown.contains(e.target)) {
                         ekontDropdown.style.display = 'none';
-                        ekontWidget.classList.remove('expanded');
                     }
                 });
                 
@@ -1936,7 +1929,7 @@
                 if (speedyRadio.checked) {
                     const speedyOfficeId = document.getElementById('final-speedy-id').value;
                     if (!speedyOfficeId) {
-                        alert('Моля, изберете офис на Speedy от списъка.');
+                        alert('Моля, изберете офис на Speedy от картата.');
                         isValid = false;
                     }
                 } else if (ekontRadio.checked) {
