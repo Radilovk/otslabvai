@@ -41,6 +41,14 @@ jobs:
           print('bio_content.json baked into bio.html successfully')
           PYEOF
 
+      - name: Sync bio_content.json to KV
+        run: |
+          curl -s -X PUT \
+            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/d220db696e414b7cb3da2b19abd53d0f/values/bio_content" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data-binary "@bio_content.json" | python3 -c "import sys,json; r=json.load(sys.stdin); print('KV sync:', 'OK' if r.get('success') else r)"
+
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
