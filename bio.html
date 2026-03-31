@@ -1492,6 +1492,60 @@
             background: #6C8EF5; border-color: #6C8EF5; color: #fff;
         }
 
+        /* ── Rich Text Editor (WYSIWYG) ─────────────────────── */
+        #ba-float-toolbar { max-width: 380px; min-width: 320px; }
+        .ba-rte-toolbar {
+            display: flex; flex-wrap: wrap; gap: 3px; padding: 4px 0;
+            border-bottom: 1px solid #2E3348; margin-bottom: 6px;
+        }
+        .ba-rte-toolbar button {
+            background: #22263A; border: 1px solid #2E3348; border-radius: 4px;
+            color: #C8D0E0; cursor: pointer; padding: 4px 8px; font-size: 12px;
+            min-width: 28px; transition: all .15s;
+        }
+        .ba-rte-toolbar button:hover { background: #2E3348; }
+        .ba-rte-toolbar button.active {
+            background: #6C8EF5; border-color: #6C8EF5; color: #fff;
+        }
+        .ba-rte-toolbar .ba-rte-sep {
+            width: 1px; background: #2E3348; margin: 0 4px;
+        }
+        #ba-float-rte-content {
+            width: 100%; min-height: 80px; max-height: 200px; overflow-y: auto;
+            background: #22263A; border: 1px solid #2E3348; border-radius: 6px;
+            color: #E8ECF4; padding: 8px 10px; font-size: 13px;
+            font-family: inherit; line-height: 1.5;
+            outline: none; cursor: text;
+        }
+        #ba-float-rte-content:focus {
+            border-color: #6C8EF5; box-shadow: 0 0 0 2px rgba(108,142,245,.2);
+        }
+        #ba-float-rte-content ul, #ba-float-rte-content ol {
+            margin: 4px 0 4px 18px; padding: 0;
+        }
+        #ba-float-rte-content li { margin: 2px 0; }
+        #ba-float-rte-content a { color: #6C8EF5; text-decoration: underline; }
+        #ba-float-rte-content:empty:before {
+            content: attr(placeholder);
+            color: #6C8EF5;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .ba-rte-color-picker {
+            display: flex; align-items: center; gap: 4px;
+            padding: 2px 4px; background: #22263A; border: 1px solid #2E3348;
+            border-radius: 4px;
+        }
+        .ba-rte-color-picker input[type="color"] {
+            width: 20px; height: 20px; border: none; border-radius: 3px;
+            cursor: pointer; padding: 0;
+        }
+        .ba-rte-color-picker span { font-size: 10px; color: #8892A4; }
+        .ba-rte-size-select {
+            background: #22263A; border: 1px solid #2E3348; border-radius: 4px;
+            color: #C8D0E0; padding: 3px 6px; font-size: 11px; cursor: pointer;
+        }
+
         /* ── Image replace overlay ─────────────────────────── */
         .ba-img-wrap { position: relative; display: inline-block; }
         .ba-img-replace-btn {
@@ -2580,13 +2634,18 @@
         function applyBioContent(data) {
             if (!data || typeof data !== 'object') return;
 
-            // Text overrides
+            // Text overrides (supports rich HTML content)
             if (data.textOverrides) {
                 Object.entries(data.textOverrides).forEach(function(entry) {
                     var sel = entry[0], opts = entry[1];
                     var el = document.querySelector(sel);
                     if (!el) return;
-                    if (opts.content !== undefined) el.textContent = opts.content;
+                    // Prefer htmlContent (rich text) over plain content
+                    if (opts.htmlContent !== undefined && opts.htmlContent !== '') {
+                        el.innerHTML = opts.htmlContent;
+                    } else if (opts.content !== undefined) {
+                        el.textContent = opts.content;
+                    }
                     if (opts.fontFamily) el.style.fontFamily = opts.fontFamily;
                     if (opts.fontSize)   el.style.fontSize   = (typeof opts.fontSize === 'number' ? opts.fontSize + 'rem' : opts.fontSize);
                     if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
@@ -3442,56 +3501,98 @@
 
 <div class="ba-edit-badge" id="ba-edit-badge">✏️ Режим на редакция — направи промени и натисни Запази</div>
 
-<!-- ── Floating inline text editor ──────────────────────────── -->
+<!-- ── Floating inline text editor (Rich Text WYSIWYG) ──────────────────────────── -->
 <div id="ba-float-toolbar" role="dialog" aria-label="Редактор на текст">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
         <span style="font-size:11px;color:#6C8EF5;font-weight:700;">✏️ Редактор на текст</span>
         <button class="ba-float-btn ba-float-btn-close" id="ba-float-close">✕</button>
     </div>
-    <textarea id="ba-float-content" placeholder="Текст..."></textarea>
-    <div class="ba-float-row">
-        <label>Шрифт</label>
-        <select id="ba-float-font">
-            <option value="">— без —</option>
-            <option value="'Inter', system-ui, sans-serif">Inter</option>
-            <option value="'Playfair Display', Georgia, serif">Playfair</option>
-            <option value="'DM Mono', monospace">DM Mono</option>
-            <option value="'Roboto', sans-serif">Roboto</option>
-            <option value="'Montserrat', sans-serif">Montserrat</option>
-            <option value="Georgia, serif">Georgia</option>
-        </select>
-    </div>
-    <div class="ba-float-row">
-        <label>Размер</label>
-        <input type="number" id="ba-float-size" min="0.5" max="6" step="0.125" placeholder="rem">
-        <label style="width:auto;margin-left:4px;">Тежест</label>
-        <select id="ba-float-weight" style="flex:1;">
-            <option value="">—</option>
-            <option value="300">300</option>
-            <option value="400">400</option>
-            <option value="500">500</option>
-            <option value="600">600</option>
-            <option value="700">700</option>
-            <option value="800">800</option>
-        </select>
-    </div>
-    <div class="ba-float-row">
-        <label>Цвят</label>
-        <input type="color" id="ba-float-color" value="#1a1916">
-        <input type="text" id="ba-float-color-hex" placeholder="#hex" style="width:70px;flex:none;">
-        <label style="width:auto;margin-left:4px;">Наредба</label>
-        <div class="ba-float-align">
-            <button data-align="left"   title="Ляво">≡</button>
-            <button data-align="center" title="Център">☰</button>
-            <button data-align="right"  title="Дясно">≣</button>
+    
+    <!-- Rich Text Formatting Toolbar -->
+    <div class="ba-rte-toolbar">
+        <button type="button" data-cmd="bold" title="Дебел (Ctrl+B)"><b>B</b></button>
+        <button type="button" data-cmd="italic" title="Курсив (Ctrl+I)"><i>I</i></button>
+        <button type="button" data-cmd="underline" title="Подчертан (Ctrl+U)"><u>U</u></button>
+        <button type="button" data-cmd="strikeThrough" title="Зачеркнат"><s>S</s></button>
+        <div class="ba-rte-sep"></div>
+        <button type="button" data-cmd="insertUnorderedList" title="Булети">•─</button>
+        <button type="button" data-cmd="insertOrderedList" title="Номериран списък">1.</button>
+        <div class="ba-rte-sep"></div>
+        <button type="button" data-cmd="insertLineBreak" title="Нов ред (Shift+Enter)">↵</button>
+        <div class="ba-rte-sep"></div>
+        <div class="ba-rte-color-picker">
+            <input type="color" id="ba-rte-fg-color" value="#1a1916" title="Цвят на текст">
+            <span>A</span>
         </div>
+        <div class="ba-rte-color-picker">
+            <input type="color" id="ba-rte-bg-color" value="#ffff00" title="Маркер (фон)">
+            <span>🖍</span>
+        </div>
+        <select class="ba-rte-size-select" id="ba-rte-font-size" title="Размер на текст">
+            <option value="">—</option>
+            <option value="1">Малък</option>
+            <option value="2">По-малък</option>
+            <option value="3">Нормален</option>
+            <option value="4">По-голям</option>
+            <option value="5">Голям</option>
+            <option value="6">По-голям</option>
+            <option value="7">Огромен</option>
+        </select>
     </div>
-    <div class="ba-float-row">
-        <label>Междуредие</label>
-        <input type="number" id="ba-float-lh" min="1" max="3" step="0.05" placeholder="1.6">
-        <label style="width:auto;margin-left:4px;">Разтег</label>
-        <input type="text" id="ba-float-ls" placeholder="0em" style="width:54px;flex:none;">
-    </div>
+
+    <!-- WYSIWYG Content Editable Area -->
+    <div id="ba-float-rte-content" contenteditable="true" placeholder="Въведи текст..."></div>
+
+    <!-- Container Styling Options (affects entire element) -->
+    <details style="margin-top:6px;" open>
+        <summary style="font-size:10px;color:#8892A4;cursor:pointer;user-select:none;">▼ Стилове за целия блок</summary>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;">
+            <div class="ba-float-row">
+                <label>Шрифт</label>
+                <select id="ba-float-font">
+                    <option value="">— без —</option>
+                    <option value="'Inter', system-ui, sans-serif">Inter</option>
+                    <option value="'Playfair Display', Georgia, serif">Playfair</option>
+                    <option value="'DM Mono', monospace">DM Mono</option>
+                    <option value="'Roboto', sans-serif">Roboto</option>
+                    <option value="'Montserrat', sans-serif">Montserrat</option>
+                    <option value="Georgia, serif">Georgia</option>
+                </select>
+            </div>
+            <div class="ba-float-row">
+                <label>Размер</label>
+                <input type="number" id="ba-float-size" min="0.5" max="6" step="0.125" placeholder="rem">
+                <label style="width:auto;margin-left:4px;">Тежест</label>
+                <select id="ba-float-weight" style="flex:1;">
+                    <option value="">—</option>
+                    <option value="300">300</option>
+                    <option value="400">400</option>
+                    <option value="500">500</option>
+                    <option value="600">600</option>
+                    <option value="700">700</option>
+                    <option value="800">800</option>
+                </select>
+            </div>
+            <div class="ba-float-row">
+                <label>Цвят</label>
+                <input type="color" id="ba-float-color" value="#1a1916">
+                <input type="text" id="ba-float-color-hex" placeholder="#hex" style="width:70px;flex:none;">
+                <label style="width:auto;margin-left:4px;">Наредба</label>
+                <div class="ba-float-align">
+                    <button data-align="left"   title="Ляво">≡</button>
+                    <button data-align="center" title="Център">☰</button>
+                    <button data-align="right"  title="Дясно">≣</button>
+                </div>
+            </div>
+            <div class="ba-float-row">
+                <label>Междуредие</label>
+                <input type="number" id="ba-float-lh" min="1" max="3" step="0.05" placeholder="1.6">
+                <label style="width:auto;margin-left:4px;">Разтег</label>
+                <input type="text" id="ba-float-ls" placeholder="0em" style="width:54px;flex:none;">
+            </div>
+        </div>
+    </details>
+    
     <div class="ba-float-actions">
         <button class="ba-float-btn ba-float-btn-apply" id="ba-float-apply">💾 Приложи</button>
         <button class="ba-float-btn ba-float-btn-del"   id="ba-float-delete">🗑 Изтрий</button>
@@ -5054,7 +5155,21 @@
         _baFloatTarget = el;
         _baFloatSel    = sel;
         var ov = (savedData.textOverrides && savedData.textOverrides[sel]) || {};
-        document.getElementById('ba-float-content').value = ov.content !== undefined ? ov.content : el.textContent.trim();
+        
+        // Load content into the WYSIWYG editor
+        var rteContent = document.getElementById('ba-float-rte-content');
+        if (ov.htmlContent !== undefined) {
+            // Use saved HTML content (rich text)
+            rteContent.innerHTML = ov.htmlContent;
+        } else if (ov.content !== undefined) {
+            // Fallback to plain text content
+            rteContent.textContent = ov.content;
+        } else {
+            // Load from element (could be HTML or text)
+            rteContent.innerHTML = el.innerHTML;
+        }
+        
+        // Load container styling options
         document.getElementById('ba-float-font').value    = ov.fontFamily   || '';
         document.getElementById('ba-float-size').value    = ov.fontSize     || '';
         document.getElementById('ba-float-weight').value  = ov.fontWeight   || '';
@@ -5068,7 +5183,7 @@
         });
         baFloatPosition(el);
         document.getElementById('ba-float-toolbar').classList.add('visible');
-        document.getElementById('ba-float-content').focus();
+        rteContent.focus();
     }
 
     function baFloatClose() {
@@ -5080,7 +5195,11 @@
 
     function baFloatApply() {
         if (!_baFloatTarget || !_baFloatSel) return;
-        var content  = document.getElementById('ba-float-content').value;
+        
+        var rteContent = document.getElementById('ba-float-rte-content');
+        var htmlContent = rteContent.innerHTML;
+        var plainContent = rteContent.textContent || rteContent.innerText;
+        
         var fontFam  = document.getElementById('ba-float-font').value;
         var fontSize = parseFloat(document.getElementById('ba-float-size').value) || null;
         var fontW    = document.getElementById('ba-float-weight').value;
@@ -5093,12 +5212,22 @@
 
         if (!savedData.textOverrides) savedData.textOverrides = {};
         savedData.textOverrides[_baFloatSel] = {
-            content:content, fontFamily:fontFam, fontSize:fontSize,
-            fontWeight:fontW, color:color, lineHeight:lh,
-            letterSpacing:ls, textAlign:align
+            content: plainContent,      // Plain text fallback
+            htmlContent: htmlContent,   // Rich HTML content
+            fontFamily: fontFam, 
+            fontSize: fontSize,
+            fontWeight: fontW, 
+            color: color, 
+            lineHeight: lh,
+            letterSpacing: ls, 
+            textAlign: align
         };
+        
         var el = _baFloatTarget;
-        el.textContent = content;
+        // Apply rich HTML content to element
+        el.innerHTML = htmlContent;
+        
+        // Apply container styles
         if (fontFam)  el.style.fontFamily    = fontFam;
         if (fontSize) el.style.fontSize      = fontSize + 'rem';
         if (fontW)    el.style.fontWeight    = fontW;
@@ -5114,6 +5243,8 @@
     (function initFloatToolbar() {
         var tb = document.getElementById('ba-float-toolbar');
         if (!tb) return;
+        
+        var rteContent = document.getElementById('ba-float-rte-content');
 
         document.getElementById('ba-float-close').addEventListener('click', baFloatClose);
         document.getElementById('ba-float-apply').addEventListener('click', baFloatApply);
@@ -5121,14 +5252,15 @@
         document.getElementById('ba-float-delete').addEventListener('click', function() {
             if (!_baFloatTarget || !_baFloatSel) return;
             if (!confirm('Изтрий съдържанието на този елемент?')) return;
-            _baFloatTarget.textContent = '';
+            _baFloatTarget.innerHTML = '';
             if (!savedData.textOverrides) savedData.textOverrides = {};
-            savedData.textOverrides[_baFloatSel] = { content: '' };
+            savedData.textOverrides[_baFloatSel] = { content: '', htmlContent: '' };
             hasUnsaved = true;
             showToast('🗑 Изтрито.');
             baFloatClose();
         });
 
+        // Container color sync
         document.getElementById('ba-float-color').addEventListener('input', function() {
             document.getElementById('ba-float-color-hex').value = this.value;
         });
@@ -5142,6 +5274,78 @@
                 document.querySelectorAll('.ba-float-align button').forEach(function(x) { x.classList.remove('active'); });
                 b.classList.add('active');
             });
+        });
+
+        // ── Rich Text Editor Commands ──
+        document.querySelectorAll('.ba-rte-toolbar button[data-cmd]').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var cmd = this.dataset.cmd;
+                rteContent.focus();
+                
+                if (cmd === 'insertLineBreak') {
+                    // Insert a <br> at cursor position
+                    document.execCommand('insertHTML', false, '<br>');
+                } else {
+                    document.execCommand(cmd, false, null);
+                }
+                
+                // Update button active states
+                updateRteToolbarState();
+            });
+        });
+        
+        // Foreground color picker
+        document.getElementById('ba-rte-fg-color').addEventListener('input', function() {
+            rteContent.focus();
+            document.execCommand('foreColor', false, this.value);
+        });
+        
+        // Background/highlight color picker
+        document.getElementById('ba-rte-bg-color').addEventListener('input', function() {
+            rteContent.focus();
+            document.execCommand('hiliteColor', false, this.value);
+        });
+        
+        // Font size selector
+        document.getElementById('ba-rte-font-size').addEventListener('change', function() {
+            if (this.value) {
+                rteContent.focus();
+                document.execCommand('fontSize', false, this.value);
+            }
+        });
+        
+        // Update toolbar button states based on current selection
+        function updateRteToolbarState() {
+            document.querySelectorAll('.ba-rte-toolbar button[data-cmd]').forEach(function(btn) {
+                var cmd = btn.dataset.cmd;
+                if (['bold', 'italic', 'underline', 'strikeThrough'].indexOf(cmd) !== -1) {
+                    btn.classList.toggle('active', document.queryCommandState(cmd));
+                }
+            });
+        }
+        
+        // Monitor selection changes to update button states
+        rteContent.addEventListener('keyup', updateRteToolbarState);
+        rteContent.addEventListener('mouseup', updateRteToolbarState);
+        
+        // Keyboard shortcuts
+        rteContent.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'b') {
+                    e.preventDefault();
+                    document.execCommand('bold', false, null);
+                    updateRteToolbarState();
+                } else if (e.key === 'i') {
+                    e.preventDefault();
+                    document.execCommand('italic', false, null);
+                    updateRteToolbarState();
+                } else if (e.key === 'u') {
+                    e.preventDefault();
+                    document.execCommand('underline', false, null);
+                    updateRteToolbarState();
+                }
+            }
         });
 
         // Close when clicking outside toolbar
