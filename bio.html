@@ -5301,10 +5301,13 @@
             document.execCommand('foreColor', false, this.value);
         });
         
-        // Background/highlight color picker
+        // Background/highlight color picker (use backColor for Firefox compatibility)
         document.getElementById('ba-rte-bg-color').addEventListener('input', function() {
             rteContent.focus();
-            document.execCommand('hiliteColor', false, this.value);
+            // Try hiliteColor first (Chrome/Safari), fallback to backColor (Firefox)
+            if (!document.execCommand('hiliteColor', false, this.value)) {
+                document.execCommand('backColor', false, this.value);
+            }
         });
         
         // Font size selector
