@@ -208,7 +208,24 @@
 
 ---
 
-### 2026-04-01 — Автоматичен синхрон на admin промени към GitHub
+### 2026-04-01 (2) — Критична поправка: Deploy workflow commit-ва baked bio.html
+
+**Проблем:** След предишния fix, промените от admin панела все още не се виждаха публично. Deploy workflow-ът bake-ваше bio_content.json в bio.html **локално**, но НЕ commit-ваше променения файл обратно в repo. Cloudflare Assets сервира статичния bio.html от repo-то, който оставаше стар.
+
+**Решение:**
+- **deploy.yml** — Добавена стъпка за commit на обновения bio.html обратно към main branch след bake
+- Използва `[skip ci]` в commit message за избягване на безкраен цикъл от deploy-и
+- Добавени `permissions: contents: write` за позволяване на commit от GitHub Actions
+
+**Резултат:**
+- Admin промени → KV + GitHub (bio_content.json) → deploy → bake в bio.html → **commit на bio.html** → Cloudflare сервира актуалния файл
+- **Публичната страница вече показва промените от admin панела!**
+
+**Файлове:** `.github/workflows/deploy.yml`
+
+---
+
+### 2026-04-01 (1) — Автоматичен синхрон на admin промени към GitHub
 
 **Проблем:** След запис на промени в bio admin панела и повторно отваряне, се зареждаше старата версия. Причината: admin записваше само в KV, но не и в GitHub repo. Следващият deploy (от друг push) презаписваше KV с файловата версия от repo.
 
