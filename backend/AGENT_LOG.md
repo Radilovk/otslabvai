@@ -26,8 +26,8 @@
   - `POST /ai-assistant` — AI асистент
   - `GET/POST /ai-settings` — AI настройки
   - `GET /api-token` — API token
-  - `GET/POST /bio_content.json` — bio страница съдържание (KV: `bio_content`)
-  - `POST /bio_rebake` — no-op, запазен за съвместимост
+  - `GET/POST /bio_content.json` — bio страница съдържание (KV: `bio_content`); POST автоматично комитва в GitHub
+  - `POST /bio_rebake` — ръчен синхрон на bio_content от KV към GitHub (вече рядко нужен)
 
 ### KV съхранение
 - KV `PAGE_CONTENT` namespace съхранява:
@@ -205,3 +205,20 @@
 - **Admin начин**: admin панел → запис в KV → "update" → handleBioRebake комитва bio_content.json → deploy бейква в bio.html + ъплоудва в KV
 
 **Файлове:** `bio_content.json`, `.github/workflows/deploy.yml`, `worker.js`
+
+---
+
+### 2026-04-01 — Автоматичен синхрон на admin промени към GitHub
+
+**Проблем:** След запис на промени в bio admin панела и повторно отваряне, се зареждаше старата версия. Причината: admin записваше само в KV, но не и в GitHub repo. Следващият deploy (от друг push) презаписваше KV с файловата версия от repo.
+
+**Решение:**
+- **worker.js → handleSaveBioContent** — Сега записва в KV **И** комитва bio_content.json в GitHub автоматично (чрез `ctx.waitUntil()`).
+- Новата helper функция `commitBioContentToGitHub()` се използва от `handleSaveBioContent` и `handleBioRebake`.
+- Командата "update" в контактната форма вече не е задължителна — промените се синхронизират автоматично при запис.
+
+**Резултат:**
+- Admin запис → KV + GitHub → deploy → baked HTML
+- Няма нужда от ръчно въвеждане на "update" за синхронизиране
+
+**Файлове:** `worker.js`

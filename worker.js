@@ -146,7 +146,7 @@ export default {
               if (request.method === 'GET') {
                   response = await handleGetBioContent(request, env);
               } else if (request.method === 'POST') {
-                  response = await handleSaveBioContent(request, env);
+                  response = await handleSaveBioContent(request, env, ctx);
               } else {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
@@ -440,48 +440,59 @@ async function handleGetBioContent(request, env) {
 
 /**
  * Handles POST /bio_content.json
- * Saves bio page overrides to KV. bio.html fetches /bio_content.json client-side
- * on every load and applies it inline — no server-side HTML generation.
+ * Saves bio page overrides to KV AND commits bio_content.json to GitHub.
+ * This ensures both KV and repo are always in sync, and triggers deploy
+ * which bakes the content into bio.html for static serving.
  */
-async function handleSaveBioContent(request, env) {
+async function handleSaveBioContent(request, env, ctx) {
     const contentToSave = await request.text();
+    let parsed;
     try {
         // Validate that the body is valid JSON before storing
-        const parsed = JSON.parse(contentToSave);
+        parsed = JSON.parse(contentToSave);
         if (typeof parsed !== 'object' || parsed === null) {
             throw new UserFacingError('Expected a JSON object in the request body.', 400);
         }
-        await env.PAGE_CONTENT.put('bio_content', contentToSave);
-        return new Response(JSON.stringify({ success: true, message: 'Bio content saved.' }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-        });
     } catch (e) {
         if (e instanceof UserFacingError) throw e;
         throw new UserFacingError('Invalid JSON provided in the request body.', 400);
     }
+
+    // 1. Save to KV immediately (for fast reads)
+    await env.PAGE_CONTENT.put('bio_content', contentToSave);
+
+    // 2. Commit to GitHub (triggers deploy which bakes into bio.html)
+    // Use ctx.waitUntil to ensure this completes even after response is sent
+    const token = env.GITHUB_API_TOKEN || await env.PAGE_CONTENT.get('api_token');
+    let message = 'Bio content saved to KV.';
+    
+    if (token && ctx) {
+        ctx.waitUntil(
+            commitBioContentToGitHub(env, token, parsed).catch(err => {
+                console.error('Background GitHub commit failed:', err);
+            })
+        );
+        message = 'Bio content saved. Changes will be baked into site shortly.';
+    } else if (!token) {
+        message = 'Bio content saved to KV. GitHub sync not configured (no token).';
+        console.warn('handleSaveBioContent: GitHub token not configured, skipping auto-commit');
+    }
+
+    return new Response(JSON.stringify({ 
+        success: true, 
+        message 
+    }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
 }
 
 /**
- * Handles POST /bio_rebake
- * Reads bio_content from KV and commits it as bio_content.json to GitHub.
- * The deploy workflow then bakes bio_content.json into bio.html automatically
- * and syncs it back to KV — keeping repo file, KV, and deployed site in sync.
+ * Helper function to commit bio_content.json to GitHub.
+ * Used by both handleSaveBioContent (fire-and-forget) and handleBioRebake (sync).
+ * @throws {UserFacingError} when GitHub API calls fail
  */
-async function handleBioRebake(env) {
-    const token = env.GITHUB_API_TOKEN || await env.PAGE_CONTENT.get('api_token');
-    if (!token) {
-        throw new UserFacingError('GitHub token not configured.', 503);
-    }
-
-    // 1. Read latest bio_content from KV and validate
-    const bioContentRaw = await env.PAGE_CONTENT.get('bio_content');
-    if (!bioContentRaw) {
-        throw new UserFacingError('No bio content found in KV.', 404);
-    }
-    const parsed = JSON.parse(bioContentRaw); // Validate JSON
-
-    // 2. Get current sha of bio_content.json from GitHub (required for the PUT)
+async function commitBioContentToGitHub(env, token, parsed) {
     const { owner, repo, branch } = GITHUB_SYNC_CONFIG;
     const filePath = 'bio_content.json';
     const apiHeaders = {
@@ -490,6 +501,7 @@ async function handleBioRebake(env) {
         'User-Agent': 'Cloudflare-Worker'
     };
 
+    // Get current sha of bio_content.json from GitHub (required for the PUT)
     const metaResponse = await fetch(
         `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`,
         { headers: apiHeaders }
@@ -500,8 +512,7 @@ async function handleBioRebake(env) {
     const fileMeta = await metaResponse.json();
     const sha = fileMeta.sha;
 
-    // 3. Commit bio_content.json to GitHub (triggers deploy which bakes it into bio.html)
-    // Pretty-print for human readability in the repo file.
+    // Commit bio_content.json to GitHub
     const prettyJson = JSON.stringify(parsed, null, 2);
     const encodedBytes = new TextEncoder().encode(prettyJson);
     const base64Content = btoa(Array.from(encodedBytes, b => String.fromCharCode(b)).join(''));
@@ -524,12 +535,42 @@ async function handleBioRebake(env) {
 
     if (!putResponse.ok) {
         const errText = await putResponse.text();
-        console.error(`handleBioRebake GitHub commit failed: ${putResponse.status} - ${errText}`);
+        console.error(`commitBioContentToGitHub failed: ${putResponse.status} - ${errText}`);
         throw new UserFacingError('Failed to commit bio_content.json to GitHub.', 502);
     }
 
-    console.log('handleBioRebake: bio_content.json committed to GitHub — deploy will bake into bio.html');
-    return new Response(JSON.stringify({ success: true, message: 'Bio content committed as bio_content.json to GitHub — deploy workflow will bake it into bio.html automatically.' }), {
+    console.log('commitBioContentToGitHub: bio_content.json committed to GitHub — deploy will bake into bio.html');
+}
+
+/**
+ * Handles POST /bio_rebake
+ * Reads bio_content from KV and commits it as bio_content.json to GitHub.
+ * The deploy workflow then bakes bio_content.json into bio.html automatically
+ * and syncs it back to KV — keeping repo file, KV, and deployed site in sync.
+ * 
+ * Note: Since handleSaveBioContent now auto-commits to GitHub, this endpoint
+ * is mainly for manual re-sync if needed.
+ */
+async function handleBioRebake(env) {
+    const token = env.GITHUB_API_TOKEN || await env.PAGE_CONTENT.get('api_token');
+    if (!token) {
+        throw new UserFacingError('GitHub token not configured.', 503);
+    }
+
+    // 1. Read latest bio_content from KV and validate
+    const bioContentRaw = await env.PAGE_CONTENT.get('bio_content');
+    if (!bioContentRaw) {
+        throw new UserFacingError('No bio content found in KV.', 404);
+    }
+    const parsed = JSON.parse(bioContentRaw); // Validate JSON
+
+    // 2. Commit to GitHub using the helper function
+    await commitBioContentToGitHub(env, token, parsed);
+
+    return new Response(JSON.stringify({ 
+        success: true, 
+        message: 'Bio content committed as bio_content.json to GitHub — deploy workflow will bake it into bio.html automatically.' 
+    }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
     });
