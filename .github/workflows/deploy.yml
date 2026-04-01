@@ -12,11 +12,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy
+    permissions:
+      contents: write  # Required to commit baked bio.html back to repo
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # Use GitHub token for push access
 
       - name: Bake bio_content.json into bio.html
         run: |
@@ -40,6 +44,19 @@ jobs:
               f.write(html[:si] + block + html[ei:])
           print('bio_content.json baked into bio.html successfully')
           PYEOF
+
+      - name: Commit baked bio.html back to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet bio.html; then
+            echo "No changes to bio.html"
+          else
+            git add bio.html
+            git commit -m "build: bake bio_content.json into bio.html [skip ci]"
+            git push
+            echo "✅ Baked bio.html committed to repo"
+          fi
 
       - name: Sync bio_content.json to KV
         run: |
