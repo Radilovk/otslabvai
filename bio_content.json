@@ -450,23 +450,30 @@
   "testimonials": [],
   "educationItems": [
     {
-      "title": "saс",
-      "year": "",
-      "place": "sa",
+      "title": "Магистър по медицина",
+      "year": "2010 – 2016",
+      "place": "Медицински университет, София",
       "desc": "",
       "certImage": ""
     },
     {
-      "title": "",
-      "year": "",
-      "place": "",
+      "title": "Специализация по превантивна медицина",
+      "year": "2017 – 2018",
+      "place": "Национален център по обществено здраве",
       "desc": "",
       "certImage": ""
     },
     {
-      "title": "",
-      "year": "",
-      "place": "",
+      "title": "Клинична нутриция",
+      "year": "2019",
+      "place": "Международна академия по нутриция",
+      "desc": "",
+      "certImage": ""
+    },
+    {
+      "title": "Сертификат по функционална медицина",
+      "year": "2021",
+      "place": "Institute for Functional Medicine (IFM)",
       "desc": "",
       "certImage": ""
     }
