@@ -446,12 +446,8 @@
       "letterSpacing": null,
       "textAlign": null
     },
-    "[data-bio-id=\"credentials-container\"]": {
-      "content": "",
-      "htmlContent": ""
-    },
     "[data-bio-id=\"edu-col-title\"]": {
-      "content": "саа",
+      "content": "",
       "htmlContent": "",
       "fontFamily": "",
       "fontSize": null,
@@ -469,9 +465,16 @@
   "testimonials": [],
   "educationItems": [
     {
-      "title": "фдсф",
-      "year": "23",
-      "place": "дсфсд",
+      "title": "Магистър по медицина",
+      "year": "2010 – 2016",
+      "place": "Медицински университет, София",
+      "desc": "",
+      "certImage": ""
+    },
+    {
+      "title": "Специализация по превантивна медицина",
+      "year": "2017 – 2018",
+      "place": "Национален център по обществено здраве",
       "desc": "",
       "certImage": ""
     },
@@ -486,20 +489,6 @@
       "title": "Сертификат по функционална медицина",
       "year": "2021",
       "place": "Institute for Functional Medicine (IFM)",
-      "desc": "",
-      "certImage": ""
-    },
-    {
-      "title": "сааа",
-      "year": "са",
-      "place": "са",
-      "desc": "",
-      "certImage": ""
-    },
-    {
-      "title": "",
-      "year": "",
-      "place": "",
       "desc": "",
       "certImage": ""
     }
