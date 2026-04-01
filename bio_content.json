@@ -161,7 +161,15 @@
       "content": "Хранене"
     },
     "[data-bio-id=\"creds-section-title\"]": {
-      "content": "Образование & Квалификации"
+      "content": "Образование & Квалификации",
+      "htmlContent": "",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1A1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"philosophy-label\"]": {
       "content": "Принципи на работа"
@@ -441,6 +449,17 @@
     "[data-bio-id=\"credentials-container\"]": {
       "content": "",
       "htmlContent": ""
+    },
+    "[data-bio-id=\"edu-col-title\"]": {
+      "content": "саа",
+      "htmlContent": "",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1A1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
     }
   },
   "images": {},
@@ -500,7 +519,10 @@
     "testimonials",
     "contact"
   ],
-  "sectionVisibility": {},
+  "sectionVisibility": {
+    "expertise": true,
+    "credentials": true
+  },
   "sectionSpacing": {},
   "globalSettings": {},
   "contactFormSubjects": [
