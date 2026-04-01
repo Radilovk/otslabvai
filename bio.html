@@ -3629,6 +3629,41 @@
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
     }
+    
+    // Sanitize HTML - allow only safe tags and attributes
+    function sanitizeHTML(html) {
+        var allowedTags = ['b', 'i', 'u', 'strong', 'em', 'br', 'ul', 'ol', 'li', 'p', 'span', 'div'];
+        var allowedAttrs = ['style', 'class'];
+        
+        var temp = document.createElement('div');
+        temp.innerHTML = html;
+        
+        // Remove script tags and event handlers
+        var scripts = temp.querySelectorAll('script, iframe, object, embed');
+        scripts.forEach(function(el) { el.remove(); });
+        
+        // Remove event handler attributes
+        var allElements = temp.querySelectorAll('*');
+        allElements.forEach(function(el) {
+            // Remove all on* event attributes
+            Array.from(el.attributes).forEach(function(attr) {
+                if (attr.name.startsWith('on') || !allowedAttrs.includes(attr.name)) {
+                    el.removeAttribute(attr.name);
+                }
+            });
+            
+            // Remove disallowed tags
+            if (!allowedTags.includes(el.tagName.toLowerCase())) {
+                var parent = el.parentNode;
+                while (el.firstChild) {
+                    parent.insertBefore(el.firstChild, el);
+                }
+                parent.removeChild(el);
+            }
+        });
+        
+        return temp.innerHTML;
+    }
     var WORKER_ORIGIN = (window._bioWorkerOrigin || 'https://port.radilov-k.workers.dev');
     var BIO_API_URL = WORKER_ORIGIN + '/bio_content.json';
 
@@ -3638,9 +3673,31 @@
     var saveStatusEl = document.getElementById('ba-save-status');
 
     var adminActive  = false;
-    var hasUnsaved   = false;
+    var _hasUnsaved  = false;
     var selectedElIndex = -1;
     var _setupDone   = false;
+    
+    // Getter/setter for hasUnsaved to automatically update indicator
+    Object.defineProperty(window, 'hasUnsaved', {
+        get: function() { return _hasUnsaved; },
+        set: function(val) {
+            _hasUnsaved = val;
+            updateUnsavedIndicator();
+        }
+    });
+    var hasUnsaved = false; // Initialize
+    
+    // Update unsaved indicator
+    function updateUnsavedIndicator() {
+        if (editBadgeEl) {
+            if (_hasUnsaved) {
+                editBadgeEl.innerHTML = '● ✏️ Режим на редакция — <strong style="color:#FFD700;">незапазени промени</strong> — натисни Запази';
+            } else {
+                editBadgeEl.innerHTML = '✏️ Режим на редакция — направи промени и натисни Запази';
+            }
+        }
+    }
+    
     function defaultSavedData() {
         return { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], services:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{}, contactFormSubjects:['Първоначална консултация','Програма за отслабване','Спортна нутриция','Здравословен начин на живот','Медицинска консултация','Персонален треньор','Хранителен план','Интегративен пакет'] };
     }
@@ -3793,12 +3850,27 @@
 
     /* ── Save data to server ── */
     function saveData() {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData)); } catch(e) {}
+        // Show loading state
+        var saveBtn = document.getElementById('ba-btn-save');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = '⏳ Записване...';
+        }
+        saveStatusEl.textContent = '⏳ Записване...';
+        
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData)); } catch(e) {
+            console.error('LocalStorage save failed:', e);
+        }
+        
         return fetch(BIO_API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(savedData)
         }).then(function(r) {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 Запази';
+            }
             if (r.ok) {
                 saveStatusEl.textContent = '✅ Записано ' + new Date().toLocaleTimeString('bg-BG');
                 showToast('Промените са записани!');
@@ -3806,11 +3878,16 @@
                 hasUnsaved = false;
             } else {
                 saveStatusEl.textContent = '⚠️ Грешка при запис';
-                showToast('Грешка: ' + r.status, 'error');
+                showToast('Грешка: ' + r.status + ' - ' + r.statusText, 'error');
             }
-        }).catch(function() {
+        }).catch(function(err) {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 Запази';
+            }
             saveStatusEl.textContent = '⚠️ Локален запис';
             showToast('Записано локално. Сървърът е недостъпен.', 'error');
+            console.error('Save error:', err);
         });
     }
 
@@ -4095,19 +4172,60 @@
             input.addEventListener('change', function() {
                 var file = input.files[0];
                 if (!file) return;
-                if (file.size > MAX_IMAGE_BYTES) { showToast('Файлът е над 5 MB!', 'error'); return; }
+                
+                // Validate file size
+                if (file.size > MAX_IMAGE_BYTES) { 
+                    showToast('Файлът е над 5 MB!', 'error'); 
+                    return; 
+                }
+                
+                // Validate MIME type
+                var allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                if (allowedTypes.indexOf(file.type) === -1) {
+                    showToast('Разрешени формати: JPEG, PNG, WebP', 'error');
+                    return;
+                }
+                
                 var reader = new FileReader();
                 reader.onload = function(ev) {
                     var dataURL = ev.target.result;
-                    if (!savedData.images) savedData.images = {};
-                    savedData.images[cfg.key] = dataURL;
-                    var preview = document.getElementById(cfg.previewId);
-                    if (preview) { preview.src = dataURL; preview.style.display = 'block'; }
-                    var selector = '[data-bio-id="img-' + cfg.key + '"]';
-                    var el = document.querySelector(selector);
-                    if (el) el.src = dataURL;
-                    hasUnsaved = true;
-                    showToast('Снимката е качена. Натисни Запази.');
+                    
+                    // Validate image dimensions
+                    var img = new Image();
+                    img.onload = function() {
+                        // Check minimum dimensions
+                        if (img.width < 100 || img.height < 100) {
+                            showToast('Изображението е твърде малко (мин. 100x100px)', 'error');
+                            return;
+                        }
+                        // Check maximum dimensions
+                        if (img.width > 4000 || img.height > 4000) {
+                            showToast('Изображението е твърде голямо (макс. 4000x4000px)', 'error');
+                            return;
+                        }
+                        
+                        // Warn if Base64 size is large
+                        if (dataURL.length > 1000000) { // ~1MB in base64
+                            showToast('⚠ Голямо изображение - препоръчваме компресия', 'warning');
+                        }
+                        
+                        if (!savedData.images) savedData.images = {};
+                        savedData.images[cfg.key] = dataURL;
+                        var preview = document.getElementById(cfg.previewId);
+                        if (preview) { preview.src = dataURL; preview.style.display = 'block'; }
+                        var selector = '[data-bio-id="img-' + cfg.key + '"]';
+                        var el = document.querySelector(selector);
+                        if (el) el.src = dataURL;
+                        hasUnsaved = true;
+                        showToast('Снимката е качена (' + img.width + 'x' + img.height + 'px). Натисни Запази.');
+                    };
+                    img.onerror = function() {
+                        showToast('Невалиден файл с изображение', 'error');
+                    };
+                    img.src = dataURL;
+                };
+                reader.onerror = function() {
+                    showToast('Грешка при четене на файл', 'error');
                 };
                 reader.readAsDataURL(file);
             });
@@ -4240,12 +4358,46 @@
         if (!btn) return;
         btn.addEventListener('click', function() {
             if (!savedData.contact) savedData.contact = {};
-            savedData.contact.email     = (document.getElementById('ba-c-email')     || {}).value || '';
-            savedData.contact.phone     = (document.getElementById('ba-c-phone')     || {}).value || '';
-            savedData.contact.address   = (document.getElementById('ba-c-address')   || {}).value || '';
-            savedData.contact.instagram = (document.getElementById('ba-c-instagram') || {}).value || '';
-            savedData.contact.facebook  = (document.getElementById('ba-c-facebook')  || {}).value || '';
-            savedData.contact.linkedin  = (document.getElementById('ba-c-linkedin')  || {}).value || '';
+            
+            // Get values
+            var email = (document.getElementById('ba-c-email') || {}).value || '';
+            var phone = (document.getElementById('ba-c-phone') || {}).value || '';
+            var address = (document.getElementById('ba-c-address') || {}).value || '';
+            var instagram = (document.getElementById('ba-c-instagram') || {}).value || '';
+            var facebook = (document.getElementById('ba-c-facebook') || {}).value || '';
+            var linkedin = (document.getElementById('ba-c-linkedin') || {}).value || '';
+            
+            // Validate email
+            if (email && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+                showToast('Невалиден имейл адрес', 'error');
+                return;
+            }
+            
+            // Validate phone
+            if (phone && !/^\+?[0-9\s\-\(\)]{10,}$/.test(phone)) {
+                showToast('Невалиден телефонен номер (мин. 10 цифри)', 'error');
+                return;
+            }
+            
+            // Validate URLs
+            var urlFields = [
+                {value: instagram, name: 'Instagram'},
+                {value: facebook, name: 'Facebook'},
+                {value: linkedin, name: 'LinkedIn'}
+            ];
+            for (var i = 0; i < urlFields.length; i++) {
+                if (urlFields[i].value && !/^https?:\/\/.+/.test(urlFields[i].value)) {
+                    showToast(urlFields[i].name + ' URL трябва да започва с http:// или https://', 'error');
+                    return;
+                }
+            }
+            
+            savedData.contact.email = email;
+            savedData.contact.phone = phone;
+            savedData.contact.address = address;
+            savedData.contact.instagram = instagram;
+            savedData.contact.facebook = facebook;
+            savedData.contact.linkedin = linkedin;
             applyContact();
             hasUnsaved = true;
             showToast('Контактите са приложени. Натисни Запази.');
@@ -4258,10 +4410,32 @@
                 var textarea = document.getElementById('ba-contact-subjects');
                 if (!textarea) return;
                 var subjects = textarea.value.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
-                savedData.contactFormSubjects = subjects;
+                
+                // Limit to 10 subjects
+                if (subjects.length > 10) {
+                    showToast('Максимум 10 теми (намерени: ' + subjects.length + ')', 'error');
+                    return;
+                }
+                
+                // Check for duplicates
+                var uniqueSubjects = [];
+                var hasDuplicates = false;
+                for (var i = 0; i < subjects.length; i++) {
+                    if (uniqueSubjects.indexOf(subjects[i]) === -1) {
+                        uniqueSubjects.push(subjects[i]);
+                    } else {
+                        hasDuplicates = true;
+                    }
+                }
+                
+                if (hasDuplicates) {
+                    showToast('⚠ Премахнати дублирани теми', 'warning');
+                }
+                
+                savedData.contactFormSubjects = uniqueSubjects;
                 applyContactFormSubjects();
                 hasUnsaved = true;
-                showToast('Темите са приложени. Натисни Запази.');
+                showToast('Темите са приложени (' + uniqueSubjects.length + '/10). Натисни Запази.');
             });
         }
     }
@@ -4276,20 +4450,35 @@
             var div = document.createElement('div');
             div.style.cssText = 'background:#22263A;border:1px solid #2E3348;border-radius:8px;padding:.6rem;margin-bottom:.5rem;';
             div.innerHTML = '<div style="font-size:.72rem;color:#8892A4;margin-bottom:.3rem;">Отзив ' + htmlEsc(String(i + 1)) + '</div>' +
-                '<div class="ba-form-group"><label>Звезди (1-5)</label><input type="number" min="1" max="5" value="' + htmlEsc(String(t.stars || 5)) + '" data-ti="' + i + '" data-tf="stars" style="width:60px;"></div>' +
-                '<div class="ba-form-group"><label>Текст</label><textarea rows="2" data-ti="' + i + '" data-tf="text">' + htmlEsc(t.text||'') + '</textarea></div>' +
-                '<div class="ba-form-group"><label>Автор</label><input type="text" value="' + htmlEsc(t.authorName||'') + '" data-ti="' + i + '" data-tf="authorName"></div>' +
-                '<div class="ba-form-group"><label>Позиция</label><input type="text" value="' + htmlEsc(t.authorSub||'') + '" data-ti="' + i + '" data-tf="authorSub"></div>' +
+                '<div class="ba-form-group"><label>Звезди (1-5)</label><select data-ti="' + i + '" data-tf="stars" style="width:80px;">' +
+                '<option value="1"' + (t.stars === 1 ? ' selected' : '') + '>⭐</option>' +
+                '<option value="2"' + (t.stars === 2 ? ' selected' : '') + '>⭐⭐</option>' +
+                '<option value="3"' + (t.stars === 3 ? ' selected' : '') + '>⭐⭐⭐</option>' +
+                '<option value="4"' + (t.stars === 4 ? ' selected' : '') + '>⭐⭐⭐⭐</option>' +
+                '<option value="5"' + ((t.stars || 5) === 5 ? ' selected' : '') + '>⭐⭐⭐⭐⭐</option>' +
+                '</select></div>' +
+                '<div class="ba-form-group"><label>Текст <span style="font-size:.7rem;color:#8892A4;">(макс. 300 символа)</span></label><textarea rows="2" maxlength="300" data-ti="' + i + '" data-tf="text">' + htmlEsc(t.text||'') + '</textarea>' +
+                '<div style="font-size:.7rem;color:#8892A4;margin-top:.2rem;text-align:right;">' + ((t.text||'').length) + '/300</div></div>' +
+                '<div class="ba-form-group"><label>Автор</label><input type="text" maxlength="50" value="' + htmlEsc(t.authorName||'') + '" data-ti="' + i + '" data-tf="authorName"></div>' +
+                '<div class="ba-form-group"><label>Позиция</label><input type="text" maxlength="50" value="' + htmlEsc(t.authorSub||'') + '" data-ti="' + i + '" data-tf="authorSub"></div>' +
                 '<button class="ba-btn ba-btn-danger" data-remove="' + i + '" style="width:100%;margin-top:.2rem;">Премахни</button>';
             container.appendChild(div);
         });
-        container.querySelectorAll('input,textarea').forEach(function(inp) {
+        container.querySelectorAll('input,textarea,select').forEach(function(inp) {
             inp.style.cssText = 'width:100%;padding:.35rem .55rem;background:#1A1D27;border:1px solid #2E3348;border-radius:6px;color:#E2E8F0;font-size:.78rem;font-family:inherit;outline:none;resize:vertical;';
             inp.addEventListener('input', function() {
                 var idx = parseInt(inp.dataset.ti);
                 var field = inp.dataset.tf;
                 if (!savedData.testimonials[idx]) return;
                 savedData.testimonials[idx][field] = field === 'stars' ? parseInt(inp.value)||5 : inp.value;
+                
+                // Update character count for text field
+                if (field === 'text') {
+                    var charCount = inp.parentElement.querySelector('div[style*="text-align:right"]');
+                    if (charCount) {
+                        charCount.textContent = inp.value.length + '/300';
+                    }
+                }
                 hasUnsaved = true;
             });
         });
@@ -4775,13 +4964,26 @@
                 var reader = new FileReader();
                 reader.onload = function(e) {
                     var dataURL = e.target.result;
-                    // For SVG files, sanitize by stripping script tags and event handlers
+                    // For SVG files, sanitize by stripping script tags, event handlers, and iframes
                     if (file.type === 'image/svg+xml') {
                         try {
                             var svgText = atob(dataURL.split(',')[1] || '');
-                            if (/<script[\s>]/i.test(svgText) || /on\w+\s*=/i.test(svgText) || /javascript:/i.test(svgText)) {
-                                showToast('SVG файлът съдържа небезопасен код!', 'error');
-                                return;
+                            // Check for dangerous patterns in SVG
+                            var dangerousPatterns = [
+                                /<script[\s>]/i,
+                                /on\w+\s*=/i,
+                                /javascript:/i,
+                                /<iframe/i,
+                                /<embed/i,
+                                /<object/i,
+                                /xlink:href\s*=\s*["']javascript:/i,
+                                /<foreignObject/i
+                            ];
+                            for (var i = 0; i < dangerousPatterns.length; i++) {
+                                if (dangerousPatterns[i].test(svgText)) {
+                                    showToast('SVG файлът съдържа небезопасен код!', 'error');
+                                    return;
+                                }
                             }
                         } catch(err) { /* base64 decode failed, reject */ showToast('Невалиден SVG файл', 'error'); return; }
                     }
@@ -5187,14 +5389,14 @@
         // Load content into the WYSIWYG editor
         var rteContent = document.getElementById('ba-float-rte-content');
         if (ov.htmlContent !== undefined) {
-            // Use saved HTML content (rich text)
-            rteContent.innerHTML = ov.htmlContent;
+            // Use saved HTML content (rich text) - sanitize for safety
+            rteContent.innerHTML = sanitizeHTML(ov.htmlContent);
         } else if (ov.content !== undefined) {
             // Fallback to plain text content
             rteContent.textContent = ov.content;
         } else {
-            // Load from element (could be HTML or text)
-            rteContent.innerHTML = el.innerHTML;
+            // Load from element (could be HTML or text) - sanitize for safety
+            rteContent.innerHTML = sanitizeHTML(el.innerHTML);
         }
         
         // Load container styling options
@@ -5252,8 +5454,8 @@
         };
         
         var el = _baFloatTarget;
-        // Apply rich HTML content to element
-        el.innerHTML = htmlContent;
+        // Apply rich HTML content to element - sanitize for safety
+        el.innerHTML = sanitizeHTML(htmlContent);
         
         // Apply container styles
         if (fontFam)  el.style.fontFamily    = fontFam;
