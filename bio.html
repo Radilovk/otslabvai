@@ -4507,8 +4507,7 @@
     var EDU_INPUT_STYLE = 'width:100%;padding:.35rem .55rem;background:#1A1D27;border:1px solid #2E3348;border-radius:6px;color:#E2E8F0;font-size:.78rem;font-family:inherit;outline:none;resize:vertical;';
 
     function applyEduItems() {
-        var items = savedData.educationItems;
-        if (!items || !items.length) return;
+        var items = savedData.educationItems || [];
         window.__eduItems = items;
         if (typeof window.__renderEduItems === 'function') {
             window.__renderEduItems(items);
