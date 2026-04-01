@@ -2840,10 +2840,16 @@
 
             // Section reordering
             if (data.sectionOrder && data.sectionOrder.length > 0) {
+                var footer = document.querySelector('.footer');
                 var parent = document.querySelector('main') || document.body;
                 data.sectionOrder.forEach(function(id) {
                     var section = document.getElementById(id);
-                    if (section) parent.appendChild(section);
+                    // Insert sections before footer to maintain proper DOM order
+                    if (section && footer) {
+                        parent.insertBefore(section, footer);
+                    } else if (section) {
+                        parent.appendChild(section);
+                    }
                 });
             }
 
