@@ -3634,6 +3634,7 @@
     var adminActive  = false;
     var hasUnsaved   = false;
     var selectedElIndex = -1;
+    var _setupDone   = false;
     function defaultSavedData() {
         return { textOverrides:{}, images:{}, theme:{}, diplomas:[], contact:{}, testimonials:[], educationItems:[], services:[], iconOverrides:{}, sectionOrder:[], sectionVisibility:{}, sectionSpacing:{}, globalSettings:{}, contactFormSubjects:['Първоначална консултация','Програма за отслабване','Спортна нутриция','Здравословен начин на живот','Медицинска консултация','Персонален треньор','Хранителен план','Интегративен пакет'] };
     }
@@ -3649,30 +3650,30 @@
 
     /* ── Editable elements registry (mirrors bioadmin.html) ── */
     var EDITABLE_ELEMENTS = [
-        { label: 'Hero — Заглавие (h1)',           selector: '.hero__name' },
-        { label: 'Hero — Описание',                selector: '.hero__desc' },
-        { label: 'Hero — Статистика 1 (число)',    selector: '.hero__stats .stat-card:nth-child(1) .stat-card__num' },
-        { label: 'Hero — Статистика 1 (надпис)',   selector: '.hero__stats .stat-card:nth-child(1) .stat-card__label' },
-        { label: 'Hero — Статистика 2 (число)',    selector: '.hero__stats .stat-card:nth-child(2) .stat-card__num' },
-        { label: 'Hero — Статистика 2 (надпис)',   selector: '.hero__stats .stat-card:nth-child(2) .stat-card__label' },
-        { label: 'Hero — Статистика 3 (число)',    selector: '.hero__stats .stat-card:nth-child(3) .stat-card__num' },
-        { label: 'Hero — Статистика 3 (надпис)',   selector: '.hero__stats .stat-card:nth-child(3) .stat-card__label' },
-        { label: 'Hero — Бутон 1 (текст)',         selector: '.hero__actions .btn--primary' },
-        { label: 'Hero — Бутон 2 (текст)',         selector: '.hero__actions .btn--outline' },
-        { label: 'За мен — Заглавие',             selector: '.about__title' },
-        { label: 'За мен — Параграф 1',           selector: '.about__body p:nth-child(1)' },
-        { label: 'За мен — Параграф 2',           selector: '.about__body p:nth-child(2)' },
-        { label: 'За мен — Параграф 3',           selector: '.about__body p:nth-child(3)' },
-        { label: 'За мен — Бадж число',           selector: '.about__portrait-badge strong' },
-        { label: 'За мен — Бадж надпис',          selector: '.about__portrait-badge span' },
-        { label: 'Компетенции — Заглавие',        selector: '#expertise .section-title' },
-        { label: 'Компетенции — Подзаглавие',     selector: '#expertise .section-sub' },
-        { label: 'Карта 1 — Заглавие',            selector: '.exp-card:nth-child(1) .exp-card__title' },
-        { label: 'Карта 1 — Тяло',               selector: '.exp-card:nth-child(1) .exp-card__body' },
-        { label: 'Карта 2 — Заглавие',            selector: '.exp-card:nth-child(2) .exp-card__title' },
-        { label: 'Карта 2 — Тяло',               selector: '.exp-card:nth-child(2) .exp-card__body' },
-        { label: 'Карта 3 — Заглавие',            selector: '.exp-card:nth-child(3) .exp-card__title' },
-        { label: 'Карта 3 — Тяло',               selector: '.exp-card:nth-child(3) .exp-card__body' },
+        { label: 'Hero — Заглавие (h1)',           selector: '[data-bio-id="hero-name"]' },
+        { label: 'Hero — Описание',                selector: '[data-bio-id="hero-desc"]' },
+        { label: 'Hero — Статистика 1 (число)',    selector: '[data-bio-id="stat-1-num"]' },
+        { label: 'Hero — Статистика 1 (надпис)',   selector: '[data-bio-id="stat-1-label"]' },
+        { label: 'Hero — Статистика 2 (число)',    selector: '[data-bio-id="stat-2-num"]' },
+        { label: 'Hero — Статистика 2 (надпис)',   selector: '[data-bio-id="stat-2-label"]' },
+        { label: 'Hero — Статистика 3 (число)',    selector: '[data-bio-id="stat-3-num"]' },
+        { label: 'Hero — Статистика 3 (надпис)',   selector: '[data-bio-id="stat-3-label"]' },
+        { label: 'Hero — Бутон 1 (текст)',         selector: '[data-bio-id="cta-primary"]' },
+        { label: 'Hero — Бутон 2 (текст)',         selector: '[data-bio-id="cta-outline"]' },
+        { label: 'За мен — Заглавие',             selector: '[data-bio-id="about-title"]' },
+        { label: 'За мен — Параграф 1',           selector: '[data-bio-id="about-p1"]' },
+        { label: 'За мен — Параграф 2',           selector: '[data-bio-id="about-p2"]' },
+        { label: 'За мен — Параграф 3',           selector: '[data-bio-id="about-p3"]' },
+        { label: 'За мен — Бадж число',           selector: '[data-bio-id="badge-num"]' },
+        { label: 'За мен — Бадж надпис',          selector: '[data-bio-id="badge-label"]' },
+        { label: 'Компетенции — Заглавие',        selector: '[data-bio-id="expertise-title"]' },
+        { label: 'Компетенции — Подзаглавие',     selector: '[data-bio-id="expertise-sub"]' },
+        { label: 'Карта 1 — Заглавие',            selector: '[data-bio-id="expcard-1-title"]' },
+        { label: 'Карта 1 — Тяло',               selector: '[data-bio-id="expcard-1-body"]' },
+        { label: 'Карта 2 — Заглавие',            selector: '[data-bio-id="expcard-2-title"]' },
+        { label: 'Карта 2 — Тяло',               selector: '[data-bio-id="expcard-2-body"]' },
+        { label: 'Карта 3 — Заглавие',            selector: '[data-bio-id="expcard-3-title"]' },
+        { label: 'Карта 3 — Тяло',               selector: '[data-bio-id="expcard-3-body"]' },
         { label: 'Компетенции — Надпис',          selector: '[data-bio-id="expertise-label"]' },
         { label: 'Стълб 1 — Медицина',            selector: '[data-bio-id="pillar-1-title"]' },
         { label: 'Стълб 2 — Тренировки',          selector: '[data-bio-id="pillar-2-title"]' },
@@ -3680,24 +3681,24 @@
         { label: 'Образование — Заглавие секция', selector: '[data-bio-id="creds-section-title"]' },
         { label: 'Образование — Колона заглавие', selector: '[data-bio-id="edu-col-title"]' },
         { label: 'Философия — Надпис',            selector: '[data-bio-id="philosophy-label"]' },
-        { label: 'Философия — Цитат',             selector: '.philosophy__quote' },
-        { label: 'Философия — Параграф 1',        selector: '.philosophy__body p:nth-child(1)' },
-        { label: 'Философия — Параграф 2',        selector: '.philosophy__body p:nth-child(2)' },
-        { label: 'Философия — Автор',             selector: '.philosophy__author-name' },
-        { label: 'Философия — Позиция',           selector: '.philosophy__author-title' },
-        { label: 'Стъпка 1 — Заглавие',           selector: '.approach-step:nth-child(1) .approach-step__title' },
-        { label: 'Стъпка 1 — Тяло',              selector: '.approach-step:nth-child(1) .approach-step__body' },
-        { label: 'Стъпка 2 — Заглавие',           selector: '.approach-step:nth-child(2) .approach-step__title' },
-        { label: 'Стъпка 2 — Тяло',              selector: '.approach-step:nth-child(2) .approach-step__body' },
-        { label: 'Стъпка 3 — Заглавие',           selector: '.approach-step:nth-child(3) .approach-step__title' },
-        { label: 'Стъпка 3 — Тяло',              selector: '.approach-step:nth-child(3) .approach-step__body' },
-        { label: 'Стъпка 4 — Заглавие',           selector: '.approach-step:nth-child(4) .approach-step__title' },
-        { label: 'Стъпка 4 — Тяло',              selector: '.approach-step:nth-child(4) .approach-step__body' },
+        { label: 'Философия — Цитат',             selector: '[data-bio-id="philosophy-quote"]' },
+        { label: 'Философия — Параграф 1',        selector: '[data-bio-id="philosophy-p1"]' },
+        { label: 'Философия — Параграф 2',        selector: '[data-bio-id="philosophy-p2"]' },
+        { label: 'Философия — Автор',             selector: '[data-bio-id="philosophy-author"]' },
+        { label: 'Философия — Позиция',           selector: '[data-bio-id="philosophy-author-title"]' },
+        { label: 'Стъпка 1 — Заглавие',           selector: '[data-bio-id="step-1-title"]' },
+        { label: 'Стъпка 1 — Тяло',              selector: '[data-bio-id="step-1-body"]' },
+        { label: 'Стъпка 2 — Заглавие',           selector: '[data-bio-id="step-2-title"]' },
+        { label: 'Стъпка 2 — Тяло',              selector: '[data-bio-id="step-2-body"]' },
+        { label: 'Стъпка 3 — Заглавие',           selector: '[data-bio-id="step-3-title"]' },
+        { label: 'Стъпка 3 — Тяло',              selector: '[data-bio-id="step-3-body"]' },
+        { label: 'Стъпка 4 — Заглавие',           selector: '[data-bio-id="step-4-title"]' },
+        { label: 'Стъпка 4 — Тяло',              selector: '[data-bio-id="step-4-body"]' },
         { label: 'Подход — Надпис',               selector: '[data-bio-id="approach-label"]' },
         { label: 'Подход — Заглавие',             selector: '[data-bio-id="approach-title"]' },
         { label: 'Услуги — Надпис',               selector: '[data-bio-id="services-label"]' },
-        { label: 'Услуги — Заглавие',             selector: '#services .section-title' },
-        { label: 'Услуги — Подзаглавие',          selector: '#services .section-sub' },
+        { label: 'Услуги — Заглавие',             selector: '[data-bio-id="services-title"]' },
+        { label: 'Услуги — Подзаглавие',          selector: '[data-bio-id="services-sub"]' },
         { label: 'Отзиви — Надпис',               selector: '[data-bio-id="testimonials-label"]' },
         { label: 'Отзиви — Заглавие',             selector: '[data-bio-id="testimonials-title"]' },
         { label: 'Контакт — Надпис',              selector: '[data-bio-id="contact-label"]' },
@@ -3726,20 +3727,23 @@
         loadDataFromServer();
         buildElementList();
         buildThemeGrid();
-        setupTabSwitching();
-        setupTextEditor();
-        setupImageUploads();
-        setupThemePanel();
-        setupContactPanel();
-        setupTestimonialsPanel();
-        setupEduPanel();
-        setupServicesPanel();
-        setupSaveReset();
-        setupExitButton();
-        setupClickToEdit();
-        setupIconPanel();
-        setupLayoutPanel();
-        setupToolsPanel();
+        if (!_setupDone) {
+            _setupDone = true;
+            setupTabSwitching();
+            setupTextEditor();
+            setupImageUploads();
+            setupThemePanel();
+            setupContactPanel();
+            setupTestimonialsPanel();
+            setupEduPanel();
+            setupServicesPanel();
+            setupSaveReset();
+            setupExitButton();
+            setupClickToEdit();
+            setupIconPanel();
+            setupLayoutPanel();
+            setupToolsPanel();
+        }
     }
 
     /* ── Deactivate admin mode ── */
@@ -3835,9 +3839,13 @@
             var sel = entry[0], opts = entry[1];
             var el = document.querySelector(sel);
             if (!el) return;
-            if (opts.content !== undefined) el.textContent = opts.content;
+            if (opts.htmlContent !== undefined && opts.htmlContent !== '') {
+                el.innerHTML = opts.htmlContent;
+            } else if (opts.content !== undefined) {
+                el.textContent = opts.content;
+            }
             if (opts.fontFamily) el.style.fontFamily = opts.fontFamily;
-            if (opts.fontSize)   el.style.fontSize   = opts.fontSize + 'rem';
+            if (opts.fontSize)   el.style.fontSize   = (typeof opts.fontSize === 'number' ? opts.fontSize + 'rem' : opts.fontSize);
             if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
             if (opts.color)      el.style.color       = opts.color;
             if (opts.lineHeight) el.style.lineHeight  = opts.lineHeight;
@@ -3984,7 +3992,7 @@
         var domEl = document.querySelector(info.selector);
         var overrides = (savedData.textOverrides && savedData.textOverrides[info.selector]) || {};
 
-        document.getElementById('ba-el-content').value = overrides.content !== undefined ? overrides.content : (domEl ? domEl.textContent.trim() : '');
+        document.getElementById('ba-el-content').value = overrides.htmlContent ? overrides.htmlContent.replace(/<br\s*\/?>/gi, '\n') : (overrides.content !== undefined ? overrides.content : (domEl ? domEl.textContent.trim() : ''));
         document.getElementById('ba-el-font-family').value = overrides.fontFamily || '';
         document.getElementById('ba-el-font-size').value   = overrides.fontSize  || '';
         document.getElementById('ba-el-font-weight').value = overrides.fontWeight || '';
@@ -4030,7 +4038,7 @@
         document.getElementById('ba-btn-apply-text').addEventListener('click', function() {
             if (selectedElIndex < 0) return;
             var info = EDITABLE_ELEMENTS[selectedElIndex];
-            var content = document.getElementById('ba-el-content').value;
+            var rawContent = document.getElementById('ba-el-content').value;
             var fontFamily = document.getElementById('ba-el-font-family').value;
             var fontSize   = parseFloat(document.getElementById('ba-el-font-size').value) || null;
             var fontWeight = document.getElementById('ba-el-font-weight').value;
@@ -4039,16 +4047,23 @@
             var letterSpacing = document.getElementById('ba-el-letter-spacing').value.trim() || null;
             var textAlign  = document.getElementById('ba-el-text-align').value || null;
 
+            var htmlContent = rawContent.indexOf('\n') >= 0 ? rawContent.replace(/\n/g, '<br>') : '';
+            var plainContent = rawContent.replace(/\n/g, '');
+
             if (!savedData.textOverrides) savedData.textOverrides = {};
             savedData.textOverrides[info.selector] = {
-                content:content, fontFamily:fontFamily, fontSize:fontSize,
+                content:plainContent, htmlContent:htmlContent, fontFamily:fontFamily, fontSize:fontSize,
                 fontWeight:fontWeight, color:color,
                 lineHeight:lineHeight, letterSpacing:letterSpacing, textAlign:textAlign
             };
 
             var domEl = document.querySelector(info.selector);
             if (domEl) {
-                domEl.textContent = content;
+                if (htmlContent) {
+                    domEl.innerHTML = htmlContent;
+                } else {
+                    domEl.textContent = plainContent;
+                }
                 if (fontFamily) domEl.style.fontFamily = fontFamily;
                 if (fontSize)   domEl.style.fontSize   = fontSize + 'rem';
                 if (fontWeight) domEl.style.fontWeight  = fontWeight;
@@ -4640,7 +4655,7 @@
                 editorArea.style.display = 'block';
 
                 var overrides = (savedData.textOverrides && savedData.textOverrides[dynSelector]) || {};
-                document.getElementById('ba-el-content').value = overrides.content !== undefined ? overrides.content : target.textContent.trim();
+                document.getElementById('ba-el-content').value = overrides.htmlContent ? overrides.htmlContent.replace(/<br\s*\/?>/gi, '\n') : (overrides.content !== undefined ? overrides.content : target.textContent.trim());
                 document.getElementById('ba-el-font-family').value = overrides.fontFamily || '';
                 document.getElementById('ba-el-font-size').value   = overrides.fontSize  || '';
                 document.getElementById('ba-el-font-weight').value = overrides.fontWeight || '';
@@ -4665,7 +4680,7 @@
                 if (selectedElIndex >= 0 || !window.__baDynSelector) return; // handled by original
                 var sel = window.__baDynSelector;
                 var domEl = window.__baDynTarget;
-                var content = document.getElementById('ba-el-content').value;
+                var rawContent = document.getElementById('ba-el-content').value;
                 var fontFamily = document.getElementById('ba-el-font-family').value;
                 var fontSize   = parseFloat(document.getElementById('ba-el-font-size').value) || null;
                 var fontWeight = document.getElementById('ba-el-font-weight').value;
@@ -4674,15 +4689,22 @@
                 var letterSpacing = document.getElementById('ba-el-letter-spacing').value.trim() || null;
                 var textAlign  = document.getElementById('ba-el-text-align').value || null;
 
+                var htmlContent = rawContent.indexOf('\n') >= 0 ? rawContent.replace(/\n/g, '<br>') : '';
+                var plainContent = rawContent.replace(/\n/g, '');
+
                 if (!savedData.textOverrides) savedData.textOverrides = {};
                 savedData.textOverrides[sel] = {
-                    content:content, fontFamily:fontFamily, fontSize:fontSize,
+                    content:plainContent, htmlContent:htmlContent, fontFamily:fontFamily, fontSize:fontSize,
                     fontWeight:fontWeight, color:color,
                     lineHeight:lineHeight, letterSpacing:letterSpacing, textAlign:textAlign
                 };
 
                 if (domEl) {
-                    domEl.textContent = content;
+                    if (htmlContent) {
+                        domEl.innerHTML = htmlContent;
+                    } else {
+                        domEl.textContent = plainContent;
+                    }
                     if (fontFamily) domEl.style.fontFamily = fontFamily;
                     if (fontSize)   domEl.style.fontSize   = fontSize + 'rem';
                     if (fontWeight) domEl.style.fontWeight  = fontWeight;
