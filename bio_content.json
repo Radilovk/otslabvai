@@ -1,8 +1,8 @@
 {
   "textOverrides": {
     "[data-bio-id=\"hero-name\"]": {
-      "content": "МедицинаДиететикаТренировкиПсихология",
-      "htmlContent": "Медицина<br>Диететика<br>Тренировки<br>Психология",
+      "content": "Науката за тялото, здравето, храненето, емоциите ",
+      "htmlContent": "Науката за тялото, здравето, храненето, емоциите&nbsp;<br>",
       "fontFamily": "",
       "fontSize": null,
       "fontWeight": "",
