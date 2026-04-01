@@ -464,17 +464,23 @@ async function handleSaveBioContent(request, env, ctx) {
     // 2. Commit to GitHub (triggers deploy which bakes into bio.html)
     // Use ctx.waitUntil to ensure this completes even after response is sent
     const token = env.GITHUB_API_TOKEN || await env.PAGE_CONTENT.get('api_token');
+    let message = 'Bio content saved to KV.';
+    
     if (token && ctx) {
         ctx.waitUntil(
             commitBioContentToGitHub(env, token, parsed).catch(err => {
                 console.error('Background GitHub commit failed:', err);
             })
         );
+        message = 'Bio content saved. Changes will be baked into site shortly.';
+    } else if (!token) {
+        message = 'Bio content saved to KV. GitHub sync not configured (no token).';
+        console.warn('handleSaveBioContent: GitHub token not configured, skipping auto-commit');
     }
 
     return new Response(JSON.stringify({ 
         success: true, 
-        message: 'Bio content saved. Changes will be baked into site shortly.' 
+        message 
     }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
@@ -484,6 +490,7 @@ async function handleSaveBioContent(request, env, ctx) {
 /**
  * Helper function to commit bio_content.json to GitHub.
  * Used by both handleSaveBioContent (fire-and-forget) and handleBioRebake (sync).
+ * @throws {UserFacingError} when GitHub API calls fail
  */
 async function commitBioContentToGitHub(env, token, parsed) {
     const { owner, repo, branch } = GITHUB_SYNC_CONFIG;
@@ -500,7 +507,7 @@ async function commitBioContentToGitHub(env, token, parsed) {
         { headers: apiHeaders }
     );
     if (!metaResponse.ok) {
-        throw new Error('Failed to read bio_content.json metadata from GitHub.');
+        throw new UserFacingError('Failed to read bio_content.json metadata from GitHub.', 502);
     }
     const fileMeta = await metaResponse.json();
     const sha = fileMeta.sha;
@@ -528,7 +535,8 @@ async function commitBioContentToGitHub(env, token, parsed) {
 
     if (!putResponse.ok) {
         const errText = await putResponse.text();
-        throw new Error(`GitHub commit failed: ${putResponse.status} - ${errText}`);
+        console.error(`commitBioContentToGitHub failed: ${putResponse.status} - ${errText}`);
+        throw new UserFacingError('Failed to commit bio_content.json to GitHub.', 502);
     }
 
     console.log('commitBioContentToGitHub: bio_content.json committed to GitHub — deploy will bake into bio.html');
