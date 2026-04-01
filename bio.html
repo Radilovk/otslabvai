@@ -2811,15 +2811,18 @@
             // Icon overrides (replace SVG icons with uploaded images)
             if (data.iconOverrides) {
                 var ICON_TARGETS_PUBLIC = [
+                    { key: 'pillar-icon-1', selector: '.pillar:nth-child(1) .pillar__icon' },
+                    { key: 'pillar-icon-2', selector: '.pillar:nth-child(2) .pillar__icon' },
+                    { key: 'pillar-icon-3', selector: '.pillar:nth-child(3) .pillar__icon' },
                     { key: 'exp-icon-1', selector: '.exp-card:nth-child(1) .exp-card__icon' },
                     { key: 'exp-icon-2', selector: '.exp-card:nth-child(2) .exp-card__icon' },
                     { key: 'exp-icon-3', selector: '.exp-card:nth-child(3) .exp-card__icon' },
-                    { key: 'svc-icon-1', selector: '.service-card:nth-child(1) .service-card__icon' },
-                    { key: 'svc-icon-2', selector: '.service-card:nth-child(2) .service-card__icon' },
-                    { key: 'svc-icon-3', selector: '.service-card:nth-child(3) .service-card__icon' },
-                    { key: 'contact-icon-1', selector: '.contact__detail:nth-child(1) .contact__icon' },
-                    { key: 'contact-icon-2', selector: '.contact__detail:nth-child(2) .contact__icon' },
-                    { key: 'contact-icon-3', selector: '.contact__detail:nth-child(3) .contact__icon' },
+                    { key: 'contact-icon-1', selector: '.contact__links a:nth-child(1) .contact__link-icon' },
+                    { key: 'contact-icon-2', selector: '.contact__links a:nth-child(2) .contact__link-icon' },
+                    { key: 'contact-icon-3', selector: '.contact__links a:nth-child(3) .contact__link-icon' },
+                    { key: 'social-ig', selector: '[data-bio-id="social-instagram"]' },
+                    { key: 'social-fb', selector: '[data-bio-id="social-facebook"]' },
+                    { key: 'social-li', selector: '[data-bio-id="social-linkedin"]' },
                 ];
                 Object.entries(data.iconOverrides).forEach(function(entry) {
                     var key = entry[0], dataURL = entry[1];
@@ -3529,10 +3532,6 @@
         <div class="ba-rte-color-picker">
             <input type="color" id="ba-rte-fg-color" value="#1a1916" title="Цвят на текст">
             <span>A</span>
-        </div>
-        <div class="ba-rte-color-picker">
-            <input type="color" id="ba-rte-bg-color" value="#ffff00" title="Маркер (фон)">
-            <span>🖍</span>
         </div>
         <select class="ba-rte-size-select" id="ba-rte-font-size" title="Размер на текст">
             <option value="">—</option>
@@ -4916,15 +4915,18 @@
 
     /* ── SVG Icon replacement panel ── */
     var ICON_TARGETS = [
-        { label: 'Компетенция 1 — Икона', selector: '.exp-card:nth-child(1) .exp-card__icon', key: 'exp-icon-1' },
-        { label: 'Компетенция 2 — Икона', selector: '.exp-card:nth-child(2) .exp-card__icon', key: 'exp-icon-2' },
-        { label: 'Компетенция 3 — Икона', selector: '.exp-card:nth-child(3) .exp-card__icon', key: 'exp-icon-3' },
-        { label: 'Услуга 1 — Икона', selector: '.service-card:nth-child(1) .service-card__icon', key: 'svc-icon-1' },
-        { label: 'Услуга 2 — Икона', selector: '.service-card:nth-child(2) .service-card__icon', key: 'svc-icon-2' },
-        { label: 'Услуга 3 — Икона', selector: '.service-card:nth-child(3) .service-card__icon', key: 'svc-icon-3' },
-        { label: 'Контакт — Имейл икона', selector: '.contact__detail:nth-child(1) .contact__icon', key: 'contact-icon-1' },
-        { label: 'Контакт — Телефон икона', selector: '.contact__detail:nth-child(2) .contact__icon', key: 'contact-icon-2' },
-        { label: 'Контакт — Адрес икона', selector: '.contact__detail:nth-child(3) .contact__icon', key: 'contact-icon-3' },
+        { label: 'Стълб 1 — Медицина икона',    selector: '.pillar:nth-child(1) .pillar__icon',                        key: 'pillar-icon-1' },
+        { label: 'Стълб 2 — Тренировки икона',  selector: '.pillar:nth-child(2) .pillar__icon',                        key: 'pillar-icon-2' },
+        { label: 'Стълб 3 — Нутриция икона',    selector: '.pillar:nth-child(3) .pillar__icon',                        key: 'pillar-icon-3' },
+        { label: 'Компетенция 1 — Икона',        selector: '.exp-card:nth-child(1) .exp-card__icon',                   key: 'exp-icon-1' },
+        { label: 'Компетенция 2 — Икона',        selector: '.exp-card:nth-child(2) .exp-card__icon',                   key: 'exp-icon-2' },
+        { label: 'Компетенция 3 — Икона',        selector: '.exp-card:nth-child(3) .exp-card__icon',                   key: 'exp-icon-3' },
+        { label: 'Контакт — Имейл икона',        selector: '.contact__links a:nth-child(1) .contact__link-icon',       key: 'contact-icon-1' },
+        { label: 'Контакт — Телефон икона',      selector: '.contact__links a:nth-child(2) .contact__link-icon',       key: 'contact-icon-2' },
+        { label: 'Контакт — Адрес икона',        selector: '.contact__links a:nth-child(3) .contact__link-icon',       key: 'contact-icon-3' },
+        { label: 'Социални — Instagram',         selector: '[data-bio-id="social-instagram"]',                         key: 'social-ig' },
+        { label: 'Социални — Facebook',          selector: '[data-bio-id="social-facebook"]',                          key: 'social-fb' },
+        { label: 'Социални — LinkedIn',          selector: '[data-bio-id="social-linkedin"]',                          key: 'social-li' },
     ];
     var selectedIconKey = null;
 
@@ -5369,6 +5371,28 @@
     var _baFloatTarget = null;
     var _baFloatSel    = null;
 
+    function rgbToHex(rgb) {
+        var m = rgb && rgb.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*[,)]/);
+        if (!m) return DEFAULT_TEXT_COLOR;
+        return '#' + [m[1], m[2], m[3]].map(function(v) {
+            return parseInt(v, 10).toString(16).padStart(2, '0');
+        }).join('');
+    }
+
+    var _rootFontSize = 0;
+    function getComputedStyleValues(el) {
+        var cs = window.getComputedStyle(el);
+        var color = rgbToHex(cs.color);
+        if (!_rootFontSize) _rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        var fsPx = parseFloat(cs.fontSize) || 16;
+        var fsRem = Math.round((fsPx / _rootFontSize) * 1000) / 1000;
+        var fw = cs.fontWeight || '';
+        var lhPx = parseFloat(cs.lineHeight);
+        var lh = (lhPx && !isNaN(lhPx)) ? Math.round((lhPx / fsPx) * 100) / 100 : '';
+        var ls = (cs.letterSpacing && cs.letterSpacing !== 'normal') ? cs.letterSpacing : '';
+        return { color: color, fontSize: fsRem, fontWeight: fw, lineHeight: lh, letterSpacing: ls };
+    }
+
     function baFloatPosition(el) {
         var rect = el.getBoundingClientRect();
         var tb   = document.getElementById('ba-float-toolbar');
@@ -5385,6 +5409,7 @@
         _baFloatTarget = el;
         _baFloatSel    = sel;
         var ov = (savedData.textOverrides && savedData.textOverrides[sel]) || {};
+        var hasOverride = !!(savedData.textOverrides && savedData.textOverrides[sel]);
         
         // Load content into the WYSIWYG editor
         var rteContent = document.getElementById('ba-float-rte-content');
@@ -5398,16 +5423,21 @@
             // Load from element (could be HTML or text) - sanitize for safety
             rteContent.innerHTML = sanitizeHTML(el.innerHTML);
         }
-        
-        // Load container styling options
-        document.getElementById('ba-float-font').value    = ov.fontFamily   || '';
-        document.getElementById('ba-float-size').value    = ov.fontSize     || '';
-        document.getElementById('ba-float-weight').value  = ov.fontWeight   || '';
-        document.getElementById('ba-float-lh').value      = ov.lineHeight   || '';
-        document.getElementById('ba-float-ls').value      = ov.letterSpacing|| '';
-        var col = ov.color || DEFAULT_TEXT_COLOR;
-        document.getElementById('ba-float-color').value     = /^#[0-9a-fA-F]{3,6}$/.test(col) ? col : DEFAULT_TEXT_COLOR;
-        document.getElementById('ba-float-color-hex').value = col;
+
+        // Use saved overrides if present, otherwise read computed styles from element
+        var computed = getComputedStyleValues(el);
+        var col = (hasOverride && ov.color) ? ov.color : computed.color;
+        var safeCol = /^#[0-9a-fA-F]{3,6}$/.test(col) ? col : DEFAULT_TEXT_COLOR;
+
+        // Load container styling options — use saved override if present, else computed element styles
+        document.getElementById('ba-float-font').value    = (hasOverride && ov.fontFamily)         ? ov.fontFamily    : '';
+        document.getElementById('ba-float-size').value    = (hasOverride && ov.fontSize   != null) ? ov.fontSize      : (computed.fontSize   || '');
+        document.getElementById('ba-float-weight').value  = (hasOverride && ov.fontWeight)         ? ov.fontWeight    : (computed.fontWeight  || '');
+        document.getElementById('ba-float-lh').value      = (hasOverride && ov.lineHeight != null) ? ov.lineHeight    : (computed.lineHeight  || '');
+        document.getElementById('ba-float-ls').value      = (hasOverride && ov.letterSpacing)      ? ov.letterSpacing : (computed.letterSpacing || '');
+        document.getElementById('ba-float-color').value     = safeCol;
+        document.getElementById('ba-float-color-hex').value = safeCol;
+        document.getElementById('ba-rte-fg-color').value    = safeCol;
         document.querySelectorAll('.ba-float-align button').forEach(function(b) {
             b.classList.toggle('active', b.dataset.align === (ov.textAlign || ''));
         });
@@ -5529,15 +5559,6 @@
         document.getElementById('ba-rte-fg-color').addEventListener('input', function() {
             rteContent.focus();
             document.execCommand('foreColor', false, this.value);
-        });
-        
-        // Background/highlight color picker (use backColor for Firefox compatibility)
-        document.getElementById('ba-rte-bg-color').addEventListener('input', function() {
-            rteContent.focus();
-            // Try hiliteColor first (Chrome/Safari), fallback to backColor (Firefox)
-            if (!document.execCommand('hiliteColor', false, this.value)) {
-                document.execCommand('backColor', false, this.value);
-            }
         });
         
         // Font size selector
