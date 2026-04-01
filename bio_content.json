@@ -1,7 +1,8 @@
 {
   "textOverrides": {
     "[data-bio-id=\"hero-name\"]": {
-      "content": "Камен Радилов",
+      "content": "Камен Радилов кура да ми ядеш мама ти даеба",
+      "htmlContent": "Камен Радилов кура да ми ядеш мама ти даеба",
       "fontFamily": "",
       "fontSize": null,
       "fontWeight": "",
@@ -200,6 +201,18 @@
       "content": "Запазете час за консултация, за да анализираме текущото ви състояние и да структурираме план за действие."
     }
   },
+  "images": {},
+  "theme": {},
+  "diplomas": [],
+  "contact": {},
+  "testimonials": [],
+  "educationItems": [],
+  "services": [],
+  "iconOverrides": {},
+  "sectionOrder": [],
+  "sectionVisibility": {},
+  "sectionSpacing": {},
+  "globalSettings": {},
   "contactFormSubjects": [
     "Първоначална консултация",
     "Програма за отслабване",
