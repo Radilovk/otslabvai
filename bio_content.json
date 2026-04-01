@@ -1,19 +1,26 @@
 {
   "textOverrides": {
     "[data-bio-id=\"hero-name\"]": {
-      "content": "Науката за тялото, здравето, храненето, емоциите ",
-      "htmlContent": "Науката за тялото, здравето, храненето, емоциите&nbsp;<br>",
+      "content": "Медицинска наука и човешка подкрепа",
+      "htmlContent": "Медицинска наука и човешка подкрепа",
       "fontFamily": "",
-      "fontSize": null,
-      "fontWeight": "",
+      "fontSize": 4,
+      "fontWeight": "700",
       "color": "#1a1916",
-      "lineHeight": null,
-      "letterSpacing": null,
+      "lineHeight": 1.1,
+      "letterSpacing": "-1.28px",
       "textAlign": null
     },
     "[data-bio-id=\"hero-desc\"]": {
-      "content": "",
-      "htmlContent": ""
+      "content": "За вашето  тялото, храна, емоции",
+      "htmlContent": "За вашето&nbsp; тялото, храна, емоции",
+      "fontFamily": "'Inter', system-ui, sans-serif",
+      "fontSize": 1.5,
+      "fontWeight": "400",
+      "color": "#1A1916",
+      "lineHeight": 1.75,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"stat-1-label\"]": {
       "content": "Години опит",
@@ -406,43 +413,43 @@
       "content": "Stanford University - Медицински Факултет",
       "htmlContent": "Stanford University - Медицински Факултет",
       "fontFamily": "",
-      "fontSize": null,
-      "fontWeight": "",
+      "fontSize": 1,
+      "fontWeight": "600",
       "color": "#1a1916",
-      "lineHeight": null,
+      "lineHeight": 1.6,
       "letterSpacing": null,
       "textAlign": null
     },
     "[data-bio-id=\"gen-div-edu-item__place-2\"]": {
-      "content": "Наука за храненето",
-      "htmlContent": "Наука за храненето",
+      "content": "Наука за храненето / Nutrition Science",
+      "htmlContent": "Наука за храненето / Nutrition Science",
       "fontFamily": "",
-      "fontSize": null,
-      "fontWeight": "",
+      "fontSize": 0.875,
+      "fontWeight": "400",
       "color": "#1a1916",
-      "lineHeight": null,
+      "lineHeight": 1.6,
       "letterSpacing": null,
       "textAlign": null
     },
     "[data-bio-id=\"gen-div-edu-item__title-3\"]": {
       "content": "Longevity Education Hub",
-      "htmlContent": "<span class=\"Yjhzub\" jsaction=\"\" jscontroller=\"zYmgkd\" data-sfc-root=\"c\" jsuid=\"UzEgnf_r\" data-sfc-cb=\"\" data-complete=\"true\" aria-owns=\"action-menu-parent-container\" style=\"font-weight: 700; color: rgb(230, 232, 240); font-family: &quot;Google Sans&quot;, Arial, sans-serif; font-size: 16px; background-color: rgb(16, 18, 24);\">Longevity Education Hub</span>",
+      "htmlContent": "",
       "fontFamily": "",
-      "fontSize": null,
-      "fontWeight": "",
+      "fontSize": 1,
+      "fontWeight": "600",
       "color": "#1a1916",
-      "lineHeight": null,
+      "lineHeight": 1.6,
       "letterSpacing": null,
       "textAlign": null
     },
     "[data-bio-id=\"gen-span-Yjhzub-1\"]": {
-      "content": "Longevity Education Hub",
-      "htmlContent": "Longevity Education Hub",
+      "content": "\n",
+      "htmlContent": "<br>",
       "fontFamily": "",
-      "fontSize": null,
-      "fontWeight": "",
-      "color": "#f5f1e6",
-      "lineHeight": null,
+      "fontSize": 1,
+      "fontWeight": "700",
+      "color": "#252422",
+      "lineHeight": 1.6,
       "letterSpacing": null,
       "textAlign": null
     },
@@ -456,6 +463,32 @@
       "lineHeight": null,
       "letterSpacing": null,
       "textAlign": null
+    },
+    "[data-bio-id=\"gen-div-edu-item__title-4\"]": {
+      "content": "Longevity Education Hub",
+      "htmlContent": "Longevity Education Hub",
+      "fontFamily": "",
+      "fontSize": 1,
+      "fontWeight": "600",
+      "color": "#1a1916",
+      "lineHeight": 1.6,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-div-edu-item__place-3\"]": {
+      "content": "Медицина за дълголетие и антиейджинг / Longevity Medicine 101 / 201",
+      "htmlContent": "Медицина за дълголетие и антиейджинг / Longevity Medicine 101 / 201",
+      "fontFamily": "",
+      "fontSize": 0.875,
+      "fontWeight": "400",
+      "color": "#57534e",
+      "lineHeight": 1.6,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-edu-item__year-3\"]": {
+      "content": "",
+      "htmlContent": ""
     }
   },
   "images": {},
@@ -465,10 +498,10 @@
   "testimonials": [],
   "educationItems": [
     {
-      "title": "Магистър по медицина",
+      "title": "Медицински Университет  - София ",
       "year": "2010 – 2016",
-      "place": "Медицински университет, София",
-      "desc": "",
+      "place": "Медицински факултет - Физиотерапия в неврологията",
+      "desc": "Магистърската образователна степен от водещото медицинско заведение в България осигурява задълбочено познаване на човешката анатомия, патофизиология и биомеханика. Тази квалификация е фундамент за разбирането на системните процеси в организма.",
       "certImage": ""
     },
     {
