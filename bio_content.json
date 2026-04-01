@@ -1,8 +1,8 @@
 {
   "textOverrides": {
     "[data-bio-id=\"hero-name\"]": {
-      "content": "Камен Радилов кура да ми ядеш мама ти даеба",
-      "htmlContent": "Камен Радилов кура да ми ядеш мама ти даеба",
+      "content": "МедицинаДиететикаТренировкиПсихология",
+      "htmlContent": "Медицина<br>Диететика<br>Тренировки<br>Психология",
       "fontFamily": "",
       "fontSize": null,
       "fontWeight": "",
@@ -12,7 +12,8 @@
       "textAlign": null
     },
     "[data-bio-id=\"hero-desc\"]": {
-      "content": "Медицински специалист по хранене, суплементация и спорт. Практиката ми интегрира фундаментална медицина, наука за храненето и спортна биомеханика. Целта е системна оптимизация на човешкото здраве, физически капацитет и дълголетие чрез индивидуални протоколи, базирани на обективни данни."
+      "content": "",
+      "htmlContent": ""
     },
     "[data-bio-id=\"stat-1-label\"]": {
       "content": "Години опит",
@@ -48,10 +49,26 @@
       "content": "Компетенции"
     },
     "[data-bio-id=\"expertise-title\"]": {
-      "content": "Медицина, хранене и спорт."
+      "content": "Медицина, хранене, психология, движение.",
+      "htmlContent": "Медицина, хранене, психология, движение.",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"expertise-sub\"]": {
-      "content": "Обединявам медицинското познание с нутрициологията и тренировъчната методика за изграждане на устойчиви програми, базирани на биохимичен и физиологичен анализ."
+      "content": "Обединявам медицинското познание с науката за хранене, тренировъчната методика и психологията за изграждане на устойчиви протоколи, базирани на дълбок многовекторен AI анализ.",
+      "htmlContent": "<span style=\"color: rgb(26, 25, 22); font-size: 16px; text-align: center; background-color: rgb(250, 250, 249);\">Обединявам медицинското познание с науката за хранене, тренировъчната методика и психологията за изграждане на устойчиви протоколи, базирани на дълбок многовекторен AI анализ.</span>",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"expcard-1-title\"]": {
       "content": "Хранителни програми"
@@ -72,16 +89,34 @@
       "content": "Тренировъчни планове за развитие на сила, издръжливост и правилна биомеханика, периодизирани и строго съобразени с актуалното физическо състояние."
     },
     "[data-bio-id=\"about-title\"]": {
-      "content": "Научен и медицински подход към здравето"
+      "content": "Камен Радилов",
+      "htmlContent": "Камен Радилов",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"about-p1\"]": {
-      "content": "Аз съм Камен Радилов — медицински специалист, профилиран в храненето, суплементацията и спорта. Академичната ми основа е изградена в Медицинския факултет към МУ – София (магистър). Не работя в тясната сфера на конвенционалната рехабилитация, а използвам медицинското познание като фундамент за цялостен анализ на физиологията и здравето."
+      "content": "Вярвам, че пълноценната личност\nсъществува.\nТя не е далечна или абстрактна цел, а резултат от естественото взаимодействие\nмежду три основни компонента: Тяло, Емоции. Време",
+      "htmlContent": "<p class=\"MsoNormal\"><span style=\"font-size:10.0pt;line-height:107%;mso-bidi-font-family:\nCalibri;mso-bidi-theme-font:minor-latin\">Вярвам, че пълноценната личност\nсъществува.<br>\nТя не е далечна или абстрактна цел, а резултат от естественото взаимодействие\nмежду три основни компонента: Тяло, Емоции. Време<br></span><o:p></o:p></p>",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"about-p2\"]": {
-      "content": "Надграждам тази база със специализации по наука за храненето от Станфорд (Stanford University) и медицина на дълголетието към Longevity Education Hub. Познанията ми по психология на храненето (акредитация от ЕАПП) ми позволяват да адресирам поведенческите механизми зад хранителните навици."
+      "content": "",
+      "htmlContent": ""
     },
     "[data-bio-id=\"about-p3\"]": {
-      "content": "Практическият ми опит е подкрепен от сертификации като обучаващ треньор (Master Level) към Wellness Institute Technogym, Италия, и експерт по EMS тренировки към Xbody. Разработвам конкретни протоколи за редукция на тегло, антиейджинг, възстановяване след бременност и системна оптимизация на организма."
+      "content": "",
+      "htmlContent": ""
     },
     "[data-bio-id=\"mobnav-label-about\"]": {
       "content": "Начало"
@@ -132,19 +167,38 @@
       "content": "Принципи на работа"
     },
     "[data-bio-id=\"philosophy-quote\"]": {
-      "content": "„Здравето е резултат от ежедневни, биологично обосновани избори.“"
+      "content": "„Малките решения днес водят до големите резултати за цял живот.“",
+      "htmlContent": "„Малките решения днес водят до големите резултати за цял живот.“",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#d5b658",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"philosophy-p1\"]": {
-      "content": "Човешкото тяло функционира като неразривна система. Не третирам изолирани симптоми, а идентифицирам първопричината за дисбалансите. Устойчивият резултат изисква храненето, движението и възстановяването да работят в пълен синхрон."
+      "content": "Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:✓Индивидуални протоколи✓Структурирана методология✓Персонален подход\n\n",
+      "htmlContent": "<font size=\"5\"><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:<br></span><span style=\"line-height: 107%; font-family: &quot;Segoe UI Symbol&quot;, sans-serif;\"><br>✓</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">Индивидуални</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\"> </span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">протоколи<br></span><span style=\"line-height: 107%; font-family: &quot;Segoe UI Symbol&quot;, sans-serif;\">✓</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">Структурирана</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\"> </span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">методология<br></span><span style=\"line-height: 107%; font-family: &quot;Segoe UI Symbol&quot;, sans-serif;\">✓</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">Персонален</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\"> </span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">подход</span></font><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\"><font size=\"5\"><br></font>\n<!--[if !supportLineBreakNewLine]--><br>\n<!--[endif]--></span>",
+      "fontFamily": "'Inter', system-ui, sans-serif",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#bdbdbc",
+      "lineHeight": 1.25,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"philosophy-p2\"]": {
-      "content": "В практиката си разчитам изключително на обективни клинични данни. Не предлагам бързи и нереалистични илюзии, а структуриран процес, който създава реални и трайни изменения във физиологията."
+      "content": "",
+      "htmlContent": ""
     },
     "[data-bio-id=\"philosophy-author\"]": {
-      "content": "Камен Радилов"
+      "content": "",
+      "htmlContent": ""
     },
     "[data-bio-id=\"philosophy-author-title\"]": {
-      "content": "Медицински специалист по хранене и спорт"
+      "content": "",
+      "htmlContent": ""
     },
     "[data-bio-id=\"approach-label\"]": {
       "content": "Алгоритъм"
@@ -199,6 +253,204 @@
     },
     "[data-bio-id=\"contact-sub\"]": {
       "content": "Запазете час за консултация, за да анализираме текущото ви състояние и да структурираме план за действие."
+    },
+    "[data-bio-id=\"gen-span-3\"]": {
+      "content": "Вярвам, че пълноценната личност\nсъществува.\nТя не е далечна или абстрактна цел, а резултат от естественото взаимодействие\nмежду три основни компонента:Тяло, Емоции. Време",
+      "htmlContent": "<font size=\"4\">Вярвам, че пълноценната личност\nсъществува.<br>\nТя не е далечна или абстрактна цел, а резултат от естественото взаимодействие\nмежду три основни компонента:<br>Тяло, Емоции. Време</font><br>",
+      "fontFamily": "'Inter', system-ui, sans-serif",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    ".philosophy__body p:nth-child(1)": {
+      "content": "Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:\n✓Индивидуални протоколи\n✓Структурирана методология\n✓Персонален подход",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#ccc7b8",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-4\"]": {
+      "content": "Обединявам\nмедицинското познание с науката за хранене, тренировъчната методика и\nпсихологията за изграждане на устойчиви протоколи, базирани на дълбок\nмноговекторен AI анализ.",
+      "htmlContent": "<span style=\"font-size:11.0pt;line-height:107%;\nfont-family:&quot;Calibri&quot;,sans-serif;mso-ascii-theme-font:minor-latin;mso-fareast-font-family:\nCalibri;mso-fareast-theme-font:minor-latin;mso-hansi-theme-font:minor-latin;\nmso-bidi-font-family:&quot;Times New Roman&quot;;mso-bidi-theme-font:minor-bidi;\nmso-ansi-language:BG;mso-fareast-language:EN-US;mso-bidi-language:AR-SA\">Обединявам\nмедицинското познание с науката за хранене, тренировъчната методика и\nпсихологията за изграждане на устойчиви протоколи, базирани на дълбок\nмноговекторен AI анализ.</span>",
+      "fontFamily": "",
+      "fontSize": 1.5,
+      "fontWeight": "",
+      "color": "#cdc7b7",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-font-1775008651826\"]": {
+      "content": "Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:",
+      "htmlContent": "<font size=\"4\">Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:</font>",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-font-1775008660431\"]": {
+      "content": "Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:",
+      "htmlContent": "<font size=\"5\">Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:</font>",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#cfcab9",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-font-1775008688512\"]": {
+      "content": "Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:",
+      "htmlContent": "<font size=\"4\">Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:</font>",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-font-1775008700293\"]": {
+      "content": "Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:",
+      "htmlContent": "<font size=\"3\">Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:</font>",
+      "fontFamily": "'Inter', system-ui, sans-serif",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#d9d4c4",
+      "lineHeight": 1.25,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-font-1775008764283\"]": {
+      "content": "Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:",
+      "htmlContent": "Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#d1d1d1",
+      "lineHeight": 1.25,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-19\"]": {
+      "content": "Обединявам\nмедицинското познание с науката за хранене, тренировъчната методика и\nпсихологията за изграждане на устойчиви протоколи, базирани на дълбок\nмноговекторен AI анализ.",
+      "htmlContent": "<font size=\"5\">Обединявам\nмедицинското познание с науката за хранене, тренировъчната методика и\nпсихологията за изграждане на устойчиви протоколи, базирани на дълбок\nмноговекторен AI анализ.</font>",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#383733",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-font-1775009564834\"]": {
+      "content": "Обединявам\nмедицинското познание с науката за хранене, тренировъчната методика и\nпсихологията за изграждане на устойчиви протоколи, базирани на дълбок\nмноговекторен AI анализ.",
+      "htmlContent": "<font size=\"3\">Обединявам\nмедицинското познание с науката за хранене, тренировъчната методика и\nпсихологията за изграждане на устойчиви протоколи, базирани на дълбок\nмноговекторен AI анализ.</font>",
+      "fontFamily": "'Inter', system-ui, sans-serif",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": "center"
+    },
+    "[data-bio-id=\"gen-font-1775009590958\"]": {
+      "content": "Обединявам\nмедицинското познание с науката за хранене, тренировъчната методика и\nпсихологията за изграждане на устойчиви протоколи, базирани на дълбок\nмноговекторен AI анализ.",
+      "htmlContent": "Обединявам\nмедицинското познание с науката за хранене, тренировъчната методика и\nпсихологията за изграждане на устойчиви протоколи, базирани на дълбок\nмноговекторен AI анализ.",
+      "fontFamily": "'Inter', system-ui, sans-serif",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-div-edu-item__title-1\"]": {
+      "content": "Медицински Университет - София",
+      "htmlContent": "Медицински Университет - София",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-edu-item__year-1\"]": {
+      "content": "",
+      "htmlContent": ""
+    },
+    "[data-bio-id=\"gen-div-edu-item__place-1\"]": {
+      "content": "Магистърска степен по физиотерапия в неврологията",
+      "htmlContent": "Магистърска степен по физиотерапия в неврологията",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-edu-item__year-2\"]": {
+      "content": "",
+      "htmlContent": ""
+    },
+    "[data-bio-id=\"gen-div-edu-item__title-2\"]": {
+      "content": "Stanford University - Медицински Факултет",
+      "htmlContent": "Stanford University - Медицински Факултет",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-div-edu-item__place-2\"]": {
+      "content": "Наука за храненето",
+      "htmlContent": "Наука за храненето",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-div-edu-item__title-3\"]": {
+      "content": "Longevity Education Hub",
+      "htmlContent": "<span class=\"Yjhzub\" jsaction=\"\" jscontroller=\"zYmgkd\" data-sfc-root=\"c\" jsuid=\"UzEgnf_r\" data-sfc-cb=\"\" data-complete=\"true\" aria-owns=\"action-menu-parent-container\" style=\"font-weight: 700; color: rgb(230, 232, 240); font-family: &quot;Google Sans&quot;, Arial, sans-serif; font-size: 16px; background-color: rgb(16, 18, 24);\">Longevity Education Hub</span>",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1a1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-Yjhzub-1\"]": {
+      "content": "Longevity Education Hub",
+      "htmlContent": "Longevity Education Hub",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#f5f1e6",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"credentials-container\"]": {
+      "content": "",
+      "htmlContent": ""
     }
   },
   "images": {},
@@ -206,10 +458,35 @@
   "diplomas": [],
   "contact": {},
   "testimonials": [],
-  "educationItems": [],
+  "educationItems": [
+    {
+      "title": "sa",
+      "year": "",
+      "place": "sa",
+      "desc": "",
+      "certImage": ""
+    },
+    {
+      "title": "",
+      "year": "",
+      "place": "",
+      "desc": "",
+      "certImage": ""
+    }
+  ],
   "services": [],
   "iconOverrides": {},
-  "sectionOrder": [],
+  "sectionOrder": [
+    "hero",
+    "about",
+    "philosophy",
+    "expertise",
+    "credentials",
+    "approach",
+    "services",
+    "testimonials",
+    "contact"
+  ],
   "sectionVisibility": {},
   "sectionSpacing": {},
   "globalSettings": {},
