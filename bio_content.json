@@ -12,15 +12,8 @@
       "textAlign": null
     },
     "[data-bio-id=\"hero-desc\"]": {
-      "content": "За вашето  тялото, храна, емоции",
-      "htmlContent": "За вашето&nbsp; тялото, храна, емоции",
-      "fontFamily": "'Inter', system-ui, sans-serif",
-      "fontSize": 1.5,
-      "fontWeight": "400",
-      "color": "#1A1916",
-      "lineHeight": 1.75,
-      "letterSpacing": null,
-      "textAlign": null
+      "content": "",
+      "htmlContent": ""
     },
     "[data-bio-id=\"stat-1-label\"]": {
       "content": "Години опит",
