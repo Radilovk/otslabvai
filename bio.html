@@ -1714,16 +1714,16 @@
             <!-- Stat cards pinned to bottom of photo -->
             <div class="hero__stats">
                 <div class="stat-card">
-                    <div class="stat-card__num" data-count="10" data-suffix="+" data-bio-id="stat-1-num">10+</div>
+                    <div class="stat-card__num" data-count="18" data-suffix="+" data-bio-id="stat-1-num">18+</div>
                     <div class="stat-card__label" data-bio-id="stat-1-label">Години опит</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-card__num" data-count="500" data-suffix="+" data-bio-id="stat-2-num">500+</div>
-                    <div class="stat-card__label" data-bio-id="stat-2-label">Клиенти</div>
+                    <div class="stat-card__num" data-count="6" data-suffix="+" data-bio-id="stat-2-num">6+</div>
+                    <div class="stat-card__label" data-bio-id="stat-2-label">Дипломи</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-card__num" data-count="3" data-suffix="" data-bio-id="stat-3-num">3</div>
-                    <div class="stat-card__label" data-bio-id="stat-3-label">Специалности</div>
+                    <div class="stat-card__num" data-count="1300" data-suffix="+" data-bio-id="stat-3-num">1300+</div>
+                    <div class="stat-card__label" data-bio-id="stat-3-label">Клиента</div>
                 </div>
             </div>
         </div>
@@ -2645,6 +2645,11 @@
                         el.innerHTML = opts.htmlContent;
                     } else if (opts.content !== undefined) {
                         el.textContent = opts.content;
+                    }
+                    // Keep counter animation in sync with saved value
+                    if (el.hasAttribute('data-count') && opts.content) {
+                        var _cm = opts.content.match(/^(\d+)(.*)/);
+                        if (_cm) { el.dataset.count = _cm[1]; el.dataset.suffix = _cm[2]; }
                     }
                     if (opts.fontFamily) el.style.fontFamily = opts.fontFamily;
                     if (opts.fontSize)   el.style.fontSize   = (typeof opts.fontSize === 'number' ? opts.fontSize + 'rem' : opts.fontSize);
@@ -3916,6 +3921,14 @@
         }
     }
 
+    /* Sync data-count/data-suffix on counter-animated elements after content update */
+    function syncCounterAttrs(el, content) {
+        if (el.hasAttribute('data-count') && content) {
+            var _cm = content.match(/^(\d+)(.*)/);
+            if (_cm) { el.dataset.count = _cm[1]; el.dataset.suffix = _cm[2]; }
+        }
+    }
+
     function applyTextOverrides() {
         Object.entries(savedData.textOverrides || {}).forEach(function(entry) {
             var sel = entry[0], opts = entry[1];
@@ -3926,6 +3939,8 @@
             } else if (opts.content !== undefined) {
                 el.textContent = opts.content;
             }
+            // Keep counter animation in sync with saved value
+            syncCounterAttrs(el, opts.content);
             if (opts.fontFamily) el.style.fontFamily = opts.fontFamily;
             if (opts.fontSize)   el.style.fontSize   = (typeof opts.fontSize === 'number' ? opts.fontSize + 'rem' : opts.fontSize);
             if (opts.fontWeight) el.style.fontWeight  = opts.fontWeight;
@@ -4146,6 +4161,8 @@
                 } else {
                     domEl.textContent = plainContent;
                 }
+                // Keep counter animation in sync with saved value
+                syncCounterAttrs(domEl, plainContent);
                 if (fontFamily) domEl.style.fontFamily = fontFamily;
                 if (fontSize)   domEl.style.fontSize   = fontSize + 'rem';
                 if (fontWeight) domEl.style.fontWeight  = fontWeight;
@@ -4898,6 +4915,8 @@
                     } else {
                         domEl.textContent = plainContent;
                     }
+                    // Keep counter animation in sync with saved value
+                    syncCounterAttrs(domEl, plainContent);
                     if (fontFamily) domEl.style.fontFamily = fontFamily;
                     if (fontSize)   domEl.style.fontSize   = fontSize + 'rem';
                     if (fontWeight) domEl.style.fontWeight  = fontWeight;
@@ -5485,6 +5504,8 @@
         var el = _baFloatTarget;
         // Apply rich HTML content to element - sanitize for safety
         el.innerHTML = sanitizeHTML(htmlContent);
+        // Keep counter animation in sync with saved value
+        syncCounterAttrs(el, plainContent);
         
         // Apply container styles
         if (fontFam)  el.style.fontFamily    = fontFam;

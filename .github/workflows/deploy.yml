@@ -25,7 +25,7 @@ jobs:
       - name: Bake bio_content.json into bio.html
         run: |
           python3 - <<'PYEOF'
-          import json
+          import json, re
           with open('bio_content.json', encoding='utf-8') as f:
               content = json.load(f)
           with open('bio.html', encoding='utf-8') as f:
@@ -40,8 +40,34 @@ jobs:
               print('ERROR: bake markers not found in bio.html — skipping bake')
               exit(0)
           ei = ei + len(END)
+          html = html[:si] + block + html[ei:]
+          # Also sync data-count / data-suffix on stat-card__num elements so the counter
+          # animation uses the saved values even before JS runs.
+          overrides = content.get('textOverrides', {})
+          for stat_id in ['stat-1-num', 'stat-2-num', 'stat-3-num']:
+              key = f'[data-bio-id="{stat_id}"]'
+              opts = overrides.get(key, {})
+              val = opts.get('content', '')
+              m = re.match(r'^(\d+)(.*)', val)
+              if m:
+                  count, suffix = m.group(1), m.group(2)
+                  # Replace data-count and data-suffix and inner text on the matching element
+                  pattern = (
+                      r'(<div class="stat-card__num"[^>]*data-bio-id="' + stat_id + r'"[^>]*)>'
+                      r'[^<]*'
+                      r'(</div>)'
+                  )
+                  def make_replacement(c, s, txt):
+                      def repl(mo):
+                          tag = mo.group(1)
+                          tag = re.sub(r' data-count="[^"]*"', '', tag)
+                          tag = re.sub(r' data-suffix="[^"]*"', '', tag)
+                          tag += f' data-count="{c}" data-suffix="{s}"'
+                          return tag + '>' + txt + mo.group(2)
+                      return repl
+                  html = re.sub(pattern, make_replacement(count, suffix, val), html, count=1)
           with open('bio.html', 'w', encoding='utf-8') as f:
-              f.write(html[:si] + block + html[ei:])
+              f.write(html)
           print('bio_content.json baked into bio.html successfully')
           PYEOF
 
