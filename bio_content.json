@@ -33,23 +33,25 @@
       "textAlign": null
     },
     "[data-bio-id=\"stat-2-label\"]": {
-      "content": "Клиенти",
+      "content": "Дипломи",
+      "htmlContent": "Дипломи",
       "fontFamily": "",
-      "fontSize": null,
-      "fontWeight": "",
+      "fontSize": 0.813,
+      "fontWeight": "500",
       "color": "#1a1916",
-      "lineHeight": null,
-      "letterSpacing": null,
+      "lineHeight": 1.6,
+      "letterSpacing": "0.78px",
       "textAlign": null
     },
     "[data-bio-id=\"stat-3-label\"]": {
-      "content": "Квалификации",
+      "content": "Клиента",
+      "htmlContent": "Клиента",
       "fontFamily": "",
-      "fontSize": null,
-      "fontWeight": "",
+      "fontSize": 0.813,
+      "fontWeight": "500",
       "color": "#1a1916",
-      "lineHeight": null,
-      "letterSpacing": null,
+      "lineHeight": 1.6,
+      "letterSpacing": "0.78px",
       "textAlign": null
     },
     "[data-bio-id=\"expertise-label\"]": {
@@ -84,16 +86,48 @@
       "content": "Хранителни режими, конструирани спрямо метаболитния статус, хормоналния профил и конкретните нужди на организма. Фокус върху реалната физиологична адаптация, без универсални шаблони."
     },
     "[data-bio-id=\"expcard-2-title\"]": {
-      "content": "Суплементация"
+      "content": "Тренировъчни програми",
+      "htmlContent": "Тренировъчни програми",
+      "fontFamily": "",
+      "fontSize": 1.25,
+      "fontWeight": "600",
+      "color": "#1a1916",
+      "lineHeight": 1.6,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"expcard-2-body\"]": {
-      "content": "Клинично обоснован подбор на хранителни добавки за компенсиране на клетъчни дефицити, ускоряване на възстановяването и подобряване на биологичните показатели."
+      "content": "Тренировъчни планове за развитие на сила, издръжливост и правилна биомеханика, периодизирани и строго съобразени с актуалното физическо състояние.",
+      "htmlContent": "Тренировъчни планове за развитие на сила, издръжливост и правилна биомеханика, периодизирани и строго съобразени с актуалното физическо състояние.",
+      "fontFamily": "",
+      "fontSize": 1,
+      "fontWeight": "400",
+      "color": "#57534e",
+      "lineHeight": 1.75,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"expcard-3-title\"]": {
-      "content": "Спорт и тренировки"
+      "content": "Суплементация",
+      "htmlContent": "Суплементация",
+      "fontFamily": "",
+      "fontSize": 1.25,
+      "fontWeight": "600",
+      "color": "#1a1916",
+      "lineHeight": 1.6,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"expcard-3-body\"]": {
-      "content": "Тренировъчни планове за развитие на сила, издръжливост и правилна биомеханика, периодизирани и строго съобразени с актуалното физическо състояние."
+      "content": "Клинично обоснован подбор на хранителни добавки за компенсиране на клетъчни дефицити, ускоряване на възстановяването и подобряване на биологичните показатели.",
+      "htmlContent": "Клинично обоснован подбор на хранителни добавки за компенсиране на клетъчни дефицити, ускоряване на възстановяването и подобряване на биологичните показатели.",
+      "fontFamily": "",
+      "fontSize": 1,
+      "fontWeight": "400",
+      "color": "#57534e",
+      "lineHeight": 1.75,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"about-title\"]": {
       "content": "Камен Радилов",
@@ -107,15 +141,15 @@
       "textAlign": null
     },
     "[data-bio-id=\"about-p1\"]": {
-      "content": "Вярвам, че пълноценната личност\nсъществува.\nТя не е далечна или абстрактна цел, а резултат от естественото взаимодействие\nмежду три основни компонента: Тяло, Емоции. Време",
-      "htmlContent": "<p class=\"MsoNormal\"><span style=\"font-size:10.0pt;line-height:107%;mso-bidi-font-family:\nCalibri;mso-bidi-theme-font:minor-latin\">Вярвам, че пълноценната личност\nсъществува.<br>\nТя не е далечна или абстрактна цел, а резултат от естественото взаимодействие\nмежду три основни компонента: Тяло, Емоции. Време<br></span><o:p></o:p></p>",
-      "fontFamily": "",
-      "fontSize": null,
-      "fontWeight": "",
+      "content": "Вярвам, че пълноценната личност съществува.Тя не е далечна или абстрактна цел, а резултат от естественото взаимодействие между три основни компонента: ",
+      "htmlContent": "Вярвам, че пълноценната личност съществува.<br>Тя не е далечна или абстрактна цел, а резултат от естественото взаимодействие между три основни компонента:&nbsp;",
+      "fontFamily": "'Inter', system-ui, sans-serif",
+      "fontSize": 1.25,
+      "fontWeight": "400",
       "color": "#1a1916",
-      "lineHeight": null,
+      "lineHeight": 1.5,
       "letterSpacing": null,
-      "textAlign": null
+      "textAlign": "left"
     },
     "[data-bio-id=\"about-p2\"]": {
       "content": "",
@@ -138,13 +172,37 @@
       "content": "Контакт"
     },
     "[data-bio-id=\"stat-1-num\"]": {
-      "content": "10+"
+      "content": "18+",
+      "htmlContent": "18+",
+      "fontFamily": "",
+      "fontSize": 1.5,
+      "fontWeight": "700",
+      "color": "#1a1916",
+      "lineHeight": 1,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"stat-2-num\"]": {
-      "content": "500+"
+      "content": "6+",
+      "htmlContent": "6+",
+      "fontFamily": "",
+      "fontSize": 1.5,
+      "fontWeight": "700",
+      "color": "#1a1916",
+      "lineHeight": 1,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"stat-3-num\"]": {
-      "content": "6+"
+      "content": "1300+",
+      "htmlContent": "1300+",
+      "fontFamily": "",
+      "fontSize": 1.5,
+      "fontWeight": "700",
+      "color": "#1a1916",
+      "lineHeight": 1,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"cta-primary\"]": {
       "content": "Запази консултация"
@@ -489,6 +547,105 @@
     "[data-bio-id=\"gen-span-edu-item__year-3\"]": {
       "content": "",
       "htmlContent": ""
+    },
+    "[data-bio-id=\"gen-span-tag-1\"]": {
+      "content": "Отслабване ",
+      "htmlContent": "Отслабване&nbsp;",
+      "fontFamily": "",
+      "fontSize": 0.813,
+      "fontWeight": "500",
+      "color": "#57534e",
+      "lineHeight": 1.6,
+      "letterSpacing": "1.56px",
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-tag-2\"]": {
+      "content": "Антиейджинг",
+      "htmlContent": "Антиейджинг",
+      "fontFamily": "",
+      "fontSize": 0.813,
+      "fontWeight": "500",
+      "color": "#57534e",
+      "lineHeight": 1.6,
+      "letterSpacing": "1.56px",
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-tag-3\"]": {
+      "content": "Здраве     ",
+      "htmlContent": "Здраве&nbsp; &nbsp; &nbsp;",
+      "fontFamily": "",
+      "fontSize": 0.813,
+      "fontWeight": "500",
+      "color": "#57534e",
+      "lineHeight": 1.6,
+      "letterSpacing": "1.56px",
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-tag-4\"]": {
+      "content": "Изчистване",
+      "htmlContent": "Изчистване",
+      "fontFamily": "",
+      "fontSize": 0.813,
+      "fontWeight": "500",
+      "color": "#57534e",
+      "lineHeight": 1.6,
+      "letterSpacing": "1.56px",
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-tag-5\"]": {
+      "content": "Стягане   ",
+      "htmlContent": "Стягане&nbsp; &nbsp;",
+      "fontFamily": "",
+      "fontSize": 0.813,
+      "fontWeight": "500",
+      "color": "#57534e",
+      "lineHeight": 1.6,
+      "letterSpacing": "1.56px",
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-tag-6\"]": {
+      "content": "Оформяне  ",
+      "htmlContent": "Оформяне&nbsp;&nbsp;",
+      "fontFamily": "",
+      "fontSize": 0.813,
+      "fontWeight": "500",
+      "color": "#57534e",
+      "lineHeight": 1.6,
+      "letterSpacing": "1.56px",
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-tag-7\"]": {
+      "content": "Подкрепа  ",
+      "htmlContent": "Подкрепа&nbsp;&nbsp;",
+      "fontFamily": "",
+      "fontSize": 0.813,
+      "fontWeight": "500",
+      "color": "#57534e",
+      "lineHeight": 1.6,
+      "letterSpacing": "1.56px",
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-tag-8\"]": {
+      "content": "Защита    ",
+      "htmlContent": "Защита&nbsp; &nbsp;&nbsp;",
+      "fontFamily": "",
+      "fontSize": 0.813,
+      "fontWeight": "500",
+      "color": "#57534e",
+      "lineHeight": 1.6,
+      "letterSpacing": "1.56px",
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-tag-9\"]": {
+      "content": "Адаптация ",
+      "htmlContent": "Адаптация&nbsp;",
+      "fontFamily": "",
+      "fontSize": 0.813,
+      "fontWeight": "500",
+      "color": "#57534e",
+      "lineHeight": 1.6,
+      "letterSpacing": "1.56px",
+      "textAlign": null
     }
   },
   "images": {},
