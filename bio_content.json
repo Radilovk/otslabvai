@@ -3,7 +3,7 @@
     "[data-bio-id=\"hero-name\"]": {
       "content": "Научен подход и лична подкрепа към твоето тяло и здраве",
       "htmlContent": "Научен подход и лична подкрепа към твоето тяло и здраве",
-      "fontFamily": "'Inter', system-ui, sans-serif",
+      "fontFamily": "'Playfair Display', Georgia, serif",
       "fontSize": 2,
       "fontWeight": "700",
       "color": "#1a1916",
