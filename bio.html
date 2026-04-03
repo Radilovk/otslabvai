@@ -285,28 +285,7 @@
             margin-top: .3rem;
         }
 
-        /* Scroll indicator — pinned to left-column bottom so it never overlaps stats */
-        .scroll-hint {
-            grid-column: 1; grid-row: 4; /* sits in the bottom spacer row */
-            position: relative;
-            align-self: end; justify-self: start;
-            display: flex; flex-direction: column; align-items: center; gap: .5rem;
-            font-size: var(--fs-xs); font-weight: 500;
-            letter-spacing: .1em; text-transform: uppercase;
-            color: var(--c-text-3); z-index: 3;
-            padding: 0 clamp(1.5rem, 5vw, 5rem) 2rem;
-        }
-        .scroll-hint__line {
-            width: 1px; height: 40px;
-            background: linear-gradient(to bottom, var(--c-text-3), transparent);
-            animation: scrollLine 1.5s ease infinite;
-        }
-        @keyframes scrollLine {
-            0%   { transform: scaleY(0); transform-origin: top; }
-            50%  { transform: scaleY(1); transform-origin: top; }
-            51%  { transform: scaleY(1); transform-origin: bottom; }
-            100% { transform: scaleY(0); transform-origin: bottom; }
-        }
+        /* (Scroll indicator removed — was considered unnecessary) */
 
         /* ─── ABOUT ─────────────────────────────────────────────────── */
         .about__grid {
@@ -883,7 +862,6 @@
             /* Body: description + buttons below the photo */
             .hero__body { padding: 1.75rem 1.5rem 2.5rem; }
             .hero__desc { max-width: 100%; margin-bottom: 1.75rem; }
-            .scroll-hint { display: none; }
 
             .about__grid { grid-template-columns: 1fr; }
             .about__portrait { padding-bottom: 0; }
@@ -1741,12 +1719,6 @@
                 <a href="#about"   class="btn btn--outline" data-bio-id="cta-outline">Научи повече</a>
             </div>
         </div>
-
-        <!-- Scroll hint: grid-column 1 / row 4 on desktop, hidden on mobile -->
-        <div class="scroll-hint" aria-hidden="true">
-            <span>Scroll</span>
-            <div class="scroll-hint__line"></div>
-        </div>
     </section>
 
     <!-- ── ABOUT ──────────────────────────────────────────────────── -->
@@ -2592,10 +2564,11 @@
         };
 
         var DEFAULT_SERVICES_DATA = [
-            { badge:'Стартова точка', featured:false, title:'Първоначална консултация', body:'Задълбочена оценка на здравния статус, хранителните навици, телесния състав и лабораторните показатели. Завършва с изготвяне на вашия индивидуален хранителен план.', listItems:['Хранителен и метаболитен анализ','Анализ на телесния състав','Персонализиран хранителен план','Суплементационна схема'], price:'', duration:'' },
-            { badge:'Най-търсено', featured:true, title:'Програма за отслабване', body:'Медицински обоснована програма за устойчива загуба на тегло — без глад, без стрес. Диетата е адаптирана към вашия метаболизъм, хормонален профил и начин на живот.', listItems:['Метаболитна оценка и калориен дефицит','Хранителен план без глад','Тренировъчен протокол','Месечен мониторинг и корекции'], price:'', duration:'' },
-            { badge:'За спортисти', featured:false, title:'Спортна нутриция', body:'Оптимизирана диета за атлетична производителност, мускулен растеж и по-бързо възстановяване. Планирана в синхрон с тренировъчния ви цикъл.', listItems:['Периодизация на храненето','Протоколи за мускулен растеж','Суплементация за спортисти','Анализ на ефективността'], price:'', duration:'' },
-            { badge:'Цялостен подход', featured:false, title:'Здравословен начин на живот', body:'Интегрална стратегия за превантивно здраве — хранене, движение, сън и управление на стреса в един съгласуван план за дългосрочни резултати.', listItems:['Антиинфламаторна и балансирана диета','Хигиена на съня и биоритъм','Управление на стреса','Дългосрочен мониторинг'], price:'', duration:'' }
+            { badge:'Най-търсено', featured:true, title:'Отслабване', body:'Персонализирана програма за устойчива загуба на тегло, базирана на индивидуална консултация и анализ на вашите навици, метаболизъм и начин на живот — без диети на сляпо.', listItems:['Индивидуална консултация','Въпросник за хранителни навици','Анализ на предоставени изследвания','Персонализиран хранителен режим'], price:'', duration:'' },
+            { badge:'Дълголетие', featured:false, title:'Антиейджинг', body:'Научнообоснован протокол за забавяне на стареенето чрез оптимизиране на храненето, начина на живот и персонализирани препоръки на база вашия здравен профил.', listItems:['Консултация и оценка на рискови фактори','Въпросник за начин на живот','Анализ на кръвни показатели','Протокол за дълголетие'], price:'', duration:'' },
+            { badge:'След бременност', featured:false, title:'Възстановяване след бременност', body:'Специализирана програма за възстановяване на тялото и енергията след раждане — съобразена с вашите индивидуални нужди и темпо на възстановяване.', listItems:['Консултация за следродилен период','Въпросник за състояние и цели','Хранителен режим за кърмачки','Постепенно връщане към форма'], price:'', duration:'' },
+            { badge:'Естетика', featured:false, title:'Стягане и оформяне на тялото', body:'Целенасочен протокол за редуциране на телесни мазнини и оформяне на силуета — чрез персонализирано хранене и препоръки, базирани на вашите изследвания.', listItems:['Индивидуална консултация','Анализ на телесен състав','Хранителен план за рекомпозиция','Мониторинг и корекции'], price:'', duration:'' },
+            { badge:'Цялостен подход', featured:false, title:'Здраве', body:'Интегрална стратегия за управление на метаболитни, автоимунни и ендокринни състояния — изцяло базирана на консултация, въпросници и анализ на вашите медицински резултати.', listItems:['Задълбочена консултация','Въпросник и психотест','Анализ на предоставени изследвания','Персонализиран здравен план'], price:'', duration:'' }
         ];
         window.__defaultServices = DEFAULT_SERVICES_DATA;
 
