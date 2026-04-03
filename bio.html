@@ -2814,6 +2814,7 @@
                     var img = document.createElement('img');
                     img.src = dataURL;
                     img.alt = 'Icon';
+                    img.className = 'ba-icon-replacement';
                     img.style.cssText = 'width:100%;height:100%;object-fit:contain;';
                     container.appendChild(img);
                 });
@@ -5002,8 +5003,8 @@
                 if (target) {
                     var el = document.querySelector(target.selector);
                     if (el) {
-                        var img = el.querySelector('img.ba-icon-replacement');
-                        if (img) { img.remove(); }
+                        var imgs = el.querySelectorAll('img');
+                        imgs.forEach(function(img) { img.remove(); });
                         var svg = el.querySelector('svg');
                         if (svg) svg.style.display = '';
                     }
@@ -5049,7 +5050,7 @@
         var svg = container.querySelector('svg');
         if (svg) svg.style.display = 'none';
         // Add/update replacement image
-        var existing = container.querySelector('img.ba-icon-replacement');
+        var existing = container.querySelector('img');
         if (!existing) {
             existing = document.createElement('img');
             existing.className = 'ba-icon-replacement';
