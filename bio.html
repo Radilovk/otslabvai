@@ -866,7 +866,7 @@
             .about__grid { grid-template-columns: 1fr; }
             .about__portrait { padding-bottom: 0; }
             .about__portrait-badge { right: 1rem; bottom: 1rem; }
-            .about__pillars { grid-template-columns: 1fr 1fr; }
+            .about__pillars { grid-template-columns: repeat(3, 1fr); }
             .pillar { padding: 1.5rem 1rem 1.3rem; }
             .pillar__icon { width: 56px; height: 56px; }
             .pillar__icon .icon-svg { width: 1.75rem; height: 1.75rem; }
@@ -909,7 +909,9 @@
         }
 
         @media (max-width: 480px) {
-            .about__pillars { grid-template-columns: 1fr 1fr; }
+            .about__pillars { grid-template-columns: repeat(3, 1fr); }
+            .pillar { padding: 1rem .5rem 1rem; }
+            .pillar__title { font-size: var(--fs-sm); white-space: nowrap; }
             .approach__grid { grid-template-columns: 1fr; }
             .hero__actions { flex-direction: column; }
             .section-label   { font-size: var(--fs-sm); }
