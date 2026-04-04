@@ -745,7 +745,8 @@
   ],
   "sectionVisibility": {
     "expertise": true,
-    "credentials": true
+    "credentials": true,
+    "testimonials": false
   },
   "sectionSpacing": {},
   "globalSettings": {},
