@@ -212,10 +212,19 @@
       "content": "Научи повече"
     },
     "[data-bio-id=\"badge-num\"]": {
-      "content": "10+"
+      "content": "",
+      "htmlContent": ""
     },
     "[data-bio-id=\"badge-label\"]": {
-      "content": "Години практика"
+      "content": "",
+      "htmlContent": "",
+      "fontFamily": "",
+      "fontSize": null,
+      "fontWeight": "",
+      "color": "#1A1916",
+      "lineHeight": null,
+      "letterSpacing": null,
+      "textAlign": null
     },
     "[data-bio-id=\"pillar-1-title\"]": {
       "content": "Тяло",
@@ -670,6 +679,17 @@
       "color": "#57534e",
       "lineHeight": 1.6,
       "letterSpacing": "1.56px",
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-16\"]": {
+      "content": "Обединявам медицинското познание с науката за хранене, тренировъчната методика и психологията за изграждане на устойчиви протоколи, базирани на дълбок многовекторен AI анализ.",
+      "htmlContent": "Обединявам медицинското познание с науката за хранене, тренировъчната методика и психологията за изграждане на устойчиви протоколи, базирани на дълбок многовекторен AI анализ.",
+      "fontFamily": "",
+      "fontSize": 1,
+      "fontWeight": "400",
+      "color": "#1a1916",
+      "lineHeight": 1.7,
+      "letterSpacing": null,
       "textAlign": null
     }
   },
