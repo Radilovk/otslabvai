@@ -740,10 +740,8 @@
 
         /* ─── CONTACT ───────────────────────────────────────────────── */
         .contact__inner {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(2rem, 6vw, 6rem);
-            align-items: start;
+            display: flex;
+            justify-content: center;
         }
         .contact__title {
             font-family: var(--font-serif);
@@ -783,6 +781,8 @@
             border-radius: var(--radius-lg);
             padding: 2rem;
             box-shadow: var(--shadow-sm);
+            width: 100%;
+            max-width: 560px;
         }
         .form-group { margin-bottom: 1.2rem; }
         .form-group label {
@@ -2151,28 +2151,6 @@
     <section class="section" id="contact">
         <div class="container">
             <div class="contact__inner">
-                <div class="reveal">
-                    <div class="section-label" data-bio-id="contact-label">Свържете се</div>
-                    <h2 class="contact__title" data-bio-id="contact-title">Готови за&nbsp;промяна?</h2>
-                    <p class="contact__sub" data-bio-id="contact-sub">
-                        Запишете консултация и заедно ще изградим вашата персонализирана
-                        стратегия за здраве, движение и хранене.
-                    </p>
-                    <div class="contact__links">
-                        <a href="mailto:contact@drradilov.bg" class="contact__link" data-bio-id="contact-email">
-                            <span class="contact__link-icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="emailGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#B59A6A"/><stop offset="100%" stop-color="#7C8FA6"/></linearGradient></defs><rect x="2" y="4" width="20" height="16" rx="3" stroke="url(#emailGrad)" stroke-width="1.8" fill="none"/><path d="M2 7l10 6 10-6" stroke="url(#emailGrad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                            <span data-bio-id="contact-email-text">contact@drradilov.bg</span>
-                        </a>
-                        <a href="tel:+35988XXXXXXX" class="contact__link" data-bio-id="contact-phone">
-                            <span class="contact__link-icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="phoneGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#B59A6A"/><stop offset="100%" stop-color="#7C8FA6"/></linearGradient></defs><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6.5-6.83 19.79 19.79 0 01-3.07-8.67A2 2 0 013.62 1h3a2 2 0 012 1.72c.1.65.26 1.29.48 1.91a2 2 0 01-.45 2.11L7.09 8.3a16 16 0 009.6 9.6l1.56-1.56a2 2 0 012.11-.45c.62.22 1.26.38 1.91.48a2 2 0 011.72 2z" stroke="url(#phoneGrad)" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                            <span data-bio-id="contact-phone-text">+359 88 XXX XXXX</span>
-                        </a>
-                        <a href="#" class="contact__link" data-contact-type="address" data-bio-id="contact-address">
-                            <span class="contact__link-icon"><svg class="icon-svg" aria-hidden="true" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="locGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#B59A6A"/><stop offset="100%" stop-color="#7C8FA6"/></linearGradient></defs><path d="M12 22s-8-4.5-8-11.8A8 8 0 0120 10.2c0 7.3-8 11.8-8 11.8z" stroke="url(#locGrad)" stroke-width="1.8" fill="none"/><circle cx="12" cy="10" r="3" stroke="url(#locGrad)" stroke-width="1.8" fill="none"/></svg></span>
-                            <span data-bio-id="contact-address-text">София, България</span>
-                        </a>
-                    </div>
-                </div>
 
                 <div class="contact__form reveal reveal-delay-1">
                     <form id="contactForm" onsubmit="handleContact(event)" novalidate>
