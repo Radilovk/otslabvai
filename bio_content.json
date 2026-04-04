@@ -676,7 +676,14 @@
   "images": {},
   "theme": {},
   "diplomas": [],
-  "contact": {},
+  "contact": {
+    "email": "",
+    "phone": "",
+    "address": "",
+    "instagram": "",
+    "facebook": "",
+    "linkedin": ""
+  },
   "testimonials": [],
   "educationItems": [
     {
