@@ -285,13 +285,13 @@
       "textAlign": null
     },
     "[data-bio-id=\"philosophy-p1\"]": {
-      "content": "Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:✓Индивидуални протоколи✓Структурирана методология✓Персонален подход\n\n",
-      "htmlContent": "<font size=\"5\"><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">Благодарение на дългогодишния ми опит и постоянно\nусъвършенстване в областите на медицината, храненето, движението и\nпсихологията, тази вяра се превърна в знание. Днес това знание е реализирано\nчрез:<br></span><span style=\"line-height: 107%; font-family: &quot;Segoe UI Symbol&quot;, sans-serif;\"><br>✓</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">Индивидуални</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\"> </span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">протоколи<br></span><span style=\"line-height: 107%; font-family: &quot;Segoe UI Symbol&quot;, sans-serif;\">✓</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">Структурирана</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\"> </span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">методология<br></span><span style=\"line-height: 107%; font-family: &quot;Segoe UI Symbol&quot;, sans-serif;\">✓</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">Персонален</span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\"> </span><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\">подход</span></font><span style=\"line-height: 107%; font-family: Calibri, sans-serif;\"><font size=\"5\"><br></font>\n<!--[if !supportLineBreakNewLine]--><br>\n<!--[endif]--></span>",
+      "content": "Благодарение на дългогодишния ми опит и постоянноусъвършенстване в областите на медицината, храненето, движението ипсихологията, тази вяра се превърна в знание. Днес това знание е реализираночрез:✓Индивидуални протоколи✓Структурирана методология✓Персонален подход",
+      "htmlContent": "Благодарение на дългогодишния ми опит и постоянно<br>усъвършенстване в областите на медицината, храненето, движението и<br>психологията, тази вяра се превърна в знание. Днес това знание е реализирано<br>чрез:<div><br>✓Индивидуални протоколи</div><div><br>✓Структурирана методология</div><div><br>✓Персонален подход</div>",
       "fontFamily": "'Inter', system-ui, sans-serif",
-      "fontSize": null,
-      "fontWeight": "",
+      "fontSize": 1.25,
+      "fontWeight": "400",
       "color": "#bdbdbc",
-      "lineHeight": 1.25,
+      "lineHeight": 1.5,
       "letterSpacing": null,
       "textAlign": null
     },
@@ -689,6 +689,17 @@
       "fontWeight": "400",
       "color": "#1a1916",
       "lineHeight": 1.7,
+      "letterSpacing": null,
+      "textAlign": null
+    },
+    "[data-bio-id=\"gen-span-15\"]": {
+      "content": "",
+      "htmlContent": "",
+      "fontFamily": "",
+      "fontSize": 1,
+      "fontWeight": "400",
+      "color": "#1a1916",
+      "lineHeight": 1.25,
       "letterSpacing": null,
       "textAlign": null
     }
