@@ -3046,7 +3046,6 @@
             <button class="ba-tab-btn" data-ba-panel="ba-panel-edu" role="tab">🎓 Образование</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-theme" role="tab">🎨 Тема</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-contact" role="tab">📞 Контакти</button>
-            <button class="ba-tab-btn" data-ba-panel="ba-panel-inquiries" role="tab">📨 Запитвания</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-testimonials" role="tab">💬 Отзиви</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-services" role="tab">💼 Услуги</button>
             <button class="ba-tab-btn" data-ba-panel="ba-panel-icons" role="tab">🎯 Икони</button>
@@ -3301,31 +3300,6 @@
                     <textarea id="ba-contact-subjects" rows="8" placeholder="Въведете теми (по една на ред)"></textarea>
                 </div>
                 <button class="ba-btn ba-btn-success" id="ba-btn-apply-subjects" style="width:100%;margin-top:.25rem;">Приложи темите</button>
-            </div>
-        </div>
-
-        <!-- PANEL: Inquiries -->
-        <div id="ba-panel-inquiries" class="ba-panel">
-            <div class="ba-section">
-                <div class="ba-section-title">📨 Запитвания от клиенти</div>
-                <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin-bottom:.6rem;">
-                    <label style="font-size:.74rem;color:#a0abbe;">Сортирай по:</label>
-                    <select id="ba-inq-sort" class="ba-inq-sort-select" style="font-size:.74rem;padding:.2rem .4rem;background:#2a3142;color:#e8edf5;border:1px solid #3d4a60;border-radius:4px;">
-                        <option value="date-desc">Дата (нови първо)</option>
-                        <option value="date-asc">Дата (стари първо)</option>
-                        <option value="subject">Тема (А-Я)</option>
-                        <option value="name">Азбучен ред (А-Я)</option>
-                    </select>
-                    <button class="ba-btn" id="ba-inq-refresh" style="font-size:.72rem;padding:.2rem .55rem;">⟳ Обнови</button>
-                </div>
-                <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.7rem;font-size:.7rem;">
-                    <span style="background:#1a3a2a;color:#4ade80;border:1px solid #166534;border-radius:12px;padding:.15rem .5rem;">● Нов</span>
-                    <span style="background:#3a2a0a;color:#fb923c;border:1px solid #92400e;border-radius:12px;padding:.15rem .5rem;">● Непрочетено</span>
-                    <span style="background:#1e2a40;color:#60a5fa;border:1px solid #1d4ed8;border-radius:12px;padding:.15rem .5rem;">● Отговорено</span>
-                </div>
-                <div id="ba-inq-list" style="display:flex;flex-direction:column;gap:.5rem;"></div>
-                <p id="ba-inq-empty" style="font-size:.78rem;color:#8892A4;display:none;">Няма запитвания.</p>
-                <p id="ba-inq-loading" style="font-size:.78rem;color:#8892A4;display:none;">Зареждане...</p>
             </div>
         </div>
 
@@ -3772,7 +3746,6 @@
             setupIconPanel();
             setupLayoutPanel();
             setupToolsPanel();
-            setupInquiriesPanel();
         }
     }
 
@@ -5210,135 +5183,9 @@
         }
     }
 
-    /* ── Inquiries panel ── */
-    function setupInquiriesPanel() {
-        var workerOrigin = window._bioWorkerOrigin || 'https://port.radilov-k.workers.dev';
-        var listEl = document.getElementById('ba-inq-list');
-        var emptyEl = document.getElementById('ba-inq-empty');
-        var loadingEl = document.getElementById('ba-inq-loading');
-        var sortEl = document.getElementById('ba-inq-sort');
-        var refreshBtn = document.getElementById('ba-inq-refresh');
-        if (!listEl) return;
-
-        var _inquiries = [];
-
-        function escapeHtml(str) {
-            return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        }
-            if (status === 'Нов') return 'background:#1a3a2a;color:#4ade80;border:1px solid #166534;';
-            if (status === 'Непрочетено') return 'background:#3a2a0a;color:#fb923c;border:1px solid #92400e;';
-            if (status === 'Отговорено') return 'background:#1e2a40;color:#60a5fa;border:1px solid #1d4ed8;';
-            return 'background:#2a3142;color:#a0abbe;border:1px solid #3d4a60;';
-        }
-
-        function sortInquiries(arr, sortVal) {
-            var sorted = arr.slice();
-            if (sortVal === 'date-desc') {
-                sorted.sort(function(a, b) { return new Date(b.timestamp) - new Date(a.timestamp); });
-            } else if (sortVal === 'date-asc') {
-                sorted.sort(function(a, b) { return new Date(a.timestamp) - new Date(b.timestamp); });
-            } else if (sortVal === 'subject') {
-                sorted.sort(function(a, b) { return (a.subject || '').localeCompare(b.subject || '', 'bg'); });
-            } else if (sortVal === 'name') {
-                sorted.sort(function(a, b) { return (a.name || '').localeCompare(b.name || '', 'bg'); });
-            }
-            return sorted;
-        }
-
-        function renderInquiries() {
-            var sortVal = sortEl ? sortEl.value : 'date-desc';
-            var sorted = sortInquiries(_inquiries, sortVal);
-            listEl.innerHTML = '';
-            if (sorted.length === 0) {
-                if (emptyEl) emptyEl.style.display = 'block';
-                return;
-            }
-            if (emptyEl) emptyEl.style.display = 'none';
-            sorted.forEach(function(inq) {
-                var card = document.createElement('div');
-                card.style.cssText = 'background:#1c2233;border-radius:6px;padding:.6rem .75rem;font-size:.77rem;border-left:3px solid;position:relative;';
-                var borderColor = inq.status === 'Нов' ? '#4ade80' : inq.status === 'Непрочетено' ? '#fb923c' : inq.status === 'Отговорено' ? '#60a5fa' : '#3d4a60';
-                card.style.borderLeftColor = borderColor;
-
-                var dateStr = inq.timestamp ? new Date(inq.timestamp).toLocaleString('bg-BG', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
-                var subjectStr = inq.subject ? '<span style="font-weight:600;color:#e8edf5;">' + escapeHtml(inq.subject) + '</span> · ' : '';
-
-                card.innerHTML =
-                    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.4rem;flex-wrap:wrap;">' +
-                      '<div>' +
-                        '<span style="' + statusStyle(inq.status) + 'border-radius:10px;padding:.1rem .45rem;font-size:.68rem;font-weight:700;margin-right:.4rem;">' + escapeHtml(inq.status || 'Нов') + '</span>' +
-                        subjectStr +
-                        '<span style="color:#a0abbe;">' + escapeHtml(dateStr) + '</span>' +
-                      '</div>' +
-                      '<select data-inq-id="' + escapeHtml(inq.id) + '" class="ba-inq-status-select" style="font-size:.68rem;padding:.1rem .3rem;background:#2a3142;color:#e8edf5;border:1px solid #3d4a60;border-radius:4px;cursor:pointer;">' +
-                        '<option value="Нов"' + (inq.status === 'Нов' ? ' selected' : '') + '>Нов</option>' +
-                        '<option value="Непрочетено"' + (inq.status === 'Непрочетено' ? ' selected' : '') + '>Непрочетено</option>' +
-                        '<option value="Отговорено"' + (inq.status === 'Отговорено' ? ' selected' : '') + '>Отговорено</option>' +
-                      '</select>' +
-                    '</div>' +
-                    '<div style="margin-top:.3rem;color:#c4cad8;"><strong>' + escapeHtml(inq.name) + '</strong>' + (inq.email ? ' &lt;' + escapeHtml(inq.email) + '&gt;' : '') + '</div>' +
-                    '<div style="margin-top:.25rem;color:#a0abbe;white-space:pre-wrap;word-break:break-word;">' + escapeHtml(inq.message) + '</div>';
-
-                card.querySelectorAll('.ba-inq-status-select').forEach(function(sel) {
-                    sel.addEventListener('change', function() {
-                        var id = sel.dataset.inqId;
-                        var newStatus = sel.value;
-                        fetch(workerOrigin + '/contacts', {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: id, status: newStatus })
-                        })
-                        .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
-                        .then(function() {
-                            var item = _inquiries.find(function(x) { return x.id === id; });
-                            if (item) item.status = newStatus;
-                            renderInquiries();
-                            showToast('Статусът е обновен.');
-                        })
-                        .catch(function(err) {
-                            showToast('Грешка при обновяване на статуса.', 'error');
-                            console.warn('Update contact status error:', err);
-                        });
-                    });
-                });
-
-                listEl.appendChild(card);
-            });
-        }
-
-        function loadInquiries() {
-            if (loadingEl) loadingEl.style.display = 'block';
-            if (emptyEl) emptyEl.style.display = 'none';
-            listEl.innerHTML = '';
-            fetch(workerOrigin + '/contacts', { headers: { 'Cache-Control': 'no-cache' } })
-            .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
-            .then(function(data) {
-                _inquiries = Array.isArray(data) ? data : [];
-                if (loadingEl) loadingEl.style.display = 'none';
-                renderInquiries();
-            })
-            .catch(function(err) {
-                if (loadingEl) loadingEl.textContent = 'Грешка при зареждане.';
-                console.warn('Load inquiries error:', err);
-            });
-        }
-
-        if (sortEl) sortEl.addEventListener('change', renderInquiries);
-        if (refreshBtn) refreshBtn.addEventListener('click', loadInquiries);
-
-        // Load when tab is clicked
-        var tabBtn = document.querySelector('[data-ba-panel="ba-panel-inquiries"]');
-        if (tabBtn) {
-            tabBtn.addEventListener('click', function() {
-                if (_inquiries.length === 0 && loadingEl && loadingEl.textContent !== 'Грешка при зареждане.') {
-                    loadInquiries();
-                }
-            });
-        }
-    }
-
     /* ── Tools panel (Export/Import, Global settings, Preview) ── */
     function setupToolsPanel() {
+        // Export
         var exportBtn = document.getElementById('ba-btn-export');
         if (exportBtn) {
             exportBtn.addEventListener('click', function() {
