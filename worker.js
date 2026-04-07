@@ -89,6 +89,8 @@ export default {
                   response = await handleGetContacts(request, env);
               } else if (request.method === 'POST') {
                   response = await handleCreateContact(request, env);
+              } else if (request.method === 'PUT') {
+                  response = await handleUpdateContactStatus(request, env);
               } else {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
@@ -720,6 +722,44 @@ async function handleCreateContact(request, env) {
     
     return new Response(JSON.stringify({ success: true, contact: newContact }), {
         status: 201,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * Handles PUT /contacts (промяна на статус на запитване)
+ */
+async function handleUpdateContactStatus(request, env) {
+    let updateData;
+    try {
+        updateData = await request.json();
+    } catch (e) {
+        throw new UserFacingError("Невалиден JSON формат на заявката.", 400);
+    }
+
+    if (!updateData || !updateData.id || !updateData.status) {
+        throw new UserFacingError("Липсват ID на запитване или нов статус.", 400);
+    }
+
+    const allowed = ['Нов', 'Непрочетено', 'Отговорено'];
+    if (!allowed.includes(updateData.status)) {
+        throw new UserFacingError(`Невалиден статус. Допустими: ${allowed.join(', ')}.`, 400);
+    }
+
+    const contactsJson = await env.PAGE_CONTENT.get('contacts');
+    let contacts = contactsJson ? JSON.parse(contactsJson) : [];
+
+    const idx = contacts.findIndex(c => c.id === updateData.id);
+    if (idx === -1) {
+        throw new UserFacingError(`Запитване с ID ${updateData.id} не е намерено.`, 404);
+    }
+
+    contacts[idx].status = updateData.status;
+
+    await env.PAGE_CONTENT.put('contacts', JSON.stringify(contacts, null, 2));
+
+    return new Response(JSON.stringify({ success: true, contact: contacts[idx] }), {
+        status: 200,
         headers: { 'Content-Type': 'application/json' }
     });
 }
