@@ -94,6 +94,8 @@ let filteredOrdersData = [];
 let contactsData = [];
 let filteredContactsData = [];
 let activeContactSourceFilter = '';
+let contactSortField = 'timestamp';
+let contactSortDir = 'desc';
 let promoCodesData = [];
 let filteredPromoCodesData = [];
 let unsavedChanges = false;
@@ -423,6 +425,20 @@ function escAdminHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
+function applyContactRowColor(row, status) {
+    row.classList.remove('contact-row-new', 'contact-row-viewed', 'contact-row-answered');
+    if (status === 'Нов') row.classList.add('contact-row-new');
+    else if (status === 'Прегледан') row.classList.add('contact-row-viewed');
+    else if (status === 'Отговорен') row.classList.add('contact-row-answered');
+}
+
+function applyContactStatusSelectColor(select, status) {
+    select.classList.remove('status-new', 'status-viewed', 'status-answered');
+    if (status === 'Нов') select.classList.add('status-new');
+    else if (status === 'Прегледан') select.classList.add('status-viewed');
+    else if (status === 'Отговорен') select.classList.add('status-answered');
+}
+
 function renderContacts() {
     DOM.contactsTableBody.innerHTML = '';
     filteredContactsData.forEach((contact) => {
@@ -451,8 +467,11 @@ function renderContacts() {
         });
         rowTemplate.querySelector('.contact-date').textContent = formattedDate;
         
+        const status = contact.status || 'Нов';
         const statusSelect = rowTemplate.querySelector('.contact-status');
-        statusSelect.value = contact.status || 'Нов';
+        statusSelect.value = status;
+        applyContactRowColor(row, status);
+        applyContactStatusSelectColor(statusSelect, status);
         
         DOM.contactsTableBody.appendChild(rowTemplate);
     });
@@ -1278,6 +1297,8 @@ function setupEventListeners() {
         const index = Number(row.dataset.index);
         const newStatus = e.target.value;
         contactsData[index].status = newStatus;
+        applyContactRowColor(row, newStatus);
+        applyContactStatusSelectColor(e.target, newStatus);
         // Note: We're updating status locally, but there's no PUT endpoint for contacts
         // If needed, you could add one similar to orders
         showNotification('Статусът е обновен локално.', 'success');
@@ -1288,6 +1309,19 @@ function setupEventListeners() {
         showNotification('Опресняване на контактите...', 'info');
         await fetchContacts(true); // force fetch – bypass the 24-hour cache
         filterContacts();
+    });
+
+    document.querySelectorAll('.contacts-sort-th').forEach(th => {
+        th.addEventListener('click', () => {
+            const field = th.dataset.sort;
+            if (contactSortField === field) {
+                contactSortDir = contactSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                contactSortField = field;
+                contactSortDir = field === 'timestamp' ? 'desc' : 'asc';
+            }
+            filterContacts();
+        });
     });
 
     document.querySelectorAll('.contact-source-btn').forEach(btn => {
@@ -1831,15 +1865,40 @@ function filterOrders() {
     renderOrders();
 }
 
+function sortContacts(data) {
+    const field = contactSortField;
+    const dir = contactSortDir === 'asc' ? 1 : -1;
+    return [...data].sort((a, b) => {
+        let aVal = a[field] || '';
+        let bVal = b[field] || '';
+        if (field === 'timestamp') {
+            aVal = new Date(aVal).getTime() || 0;
+            bVal = new Date(bVal).getTime() || 0;
+            return dir * (aVal - bVal);
+        }
+        return dir * aVal.toString().localeCompare(bVal.toString(), 'bg');
+    });
+}
+
+function updateContactSortHeaders() {
+    document.querySelectorAll('.contacts-sort-th').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        const icon = th.querySelector('.sort-icon');
+        if (icon) icon.textContent = '⇅';
+        if (th.dataset.sort === contactSortField) {
+            th.classList.add(contactSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+            if (icon) icon.textContent = contactSortDir === 'asc' ? '↑' : '↓';
+        }
+    });
+}
+
 function filterContacts() {
     const searchTerm = DOM.contactSearchInput.value.toLowerCase().trim();
     let base = activeContactSourceFilter
         ? contactsData.filter(c => (c.source || '') === activeContactSourceFilter)
         : [...contactsData];
-    if (!searchTerm) {
-        filteredContactsData = base;
-    } else {
-        filteredContactsData = base.filter(contact => {
+    if (searchTerm) {
+        base = base.filter(contact => {
             const name = (contact.name || '').toLowerCase();
             const email = (contact.email || '').toLowerCase();
             const subject = (contact.subject || '').toLowerCase();
@@ -1848,6 +1907,8 @@ function filterContacts() {
                    subject.includes(searchTerm) || message.includes(searchTerm);
         });
     }
+    filteredContactsData = sortContacts(base);
+    updateContactSortHeaders();
     renderContacts();
 }
 
