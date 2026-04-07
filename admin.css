@@ -328,6 +328,56 @@ h2 {
     border: 1px solid var(--border-color);
 }
 
+/* Contact status row colors */
+.orders-table tr.contact-row-new {
+    border-left: 4px solid #dc3545;
+    background-color: rgba(220, 53, 69, 0.07) !important;
+}
+.orders-table tr.contact-row-viewed {
+    border-left: 4px solid #ffc107;
+    background-color: rgba(255, 193, 7, 0.07) !important;
+}
+.orders-table tr.contact-row-answered {
+    border-left: 4px solid #00A99D;
+    background-color: rgba(0, 169, 157, 0.07) !important;
+}
+.orders-table select.contact-status {
+    padding: 0.35rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    font-weight: 600;
+    cursor: pointer;
+}
+.orders-table select.contact-status.status-new {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #c82333;
+    border-color: #dc3545;
+}
+.orders-table select.contact-status.status-viewed {
+    background-color: rgba(255, 193, 7, 0.18);
+    color: #856404;
+    border-color: #ffc107;
+}
+.orders-table select.contact-status.status-answered {
+    background-color: rgba(0, 169, 157, 0.15);
+    color: #007068;
+    border-color: #00A99D;
+}
+[data-theme="dark"] .orders-table select.contact-status.status-new { color: #ff6b7a; }
+[data-theme="dark"] .orders-table select.contact-status.status-viewed { color: #ffd54f; }
+[data-theme="dark"] .orders-table select.contact-status.status-answered { color: #4dd0c8; }
+
+/* Sortable column headers for contacts */
+.contacts-sort-th {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+.contacts-sort-th:hover { background-color: var(--bg-accent); }
+.contacts-sort-th .sort-icon { margin-left: 4px; font-size: 0.8em; opacity: 0.5; }
+.contacts-sort-th.sort-asc .sort-icon,
+.contacts-sort-th.sort-desc .sort-icon { opacity: 1; color: var(--primary-color); }
+
 /* ======================================================= */
 /*          7. МОДАЛЕН ПРОЗОРЕЦ                             */
 /* ======================================================= */
