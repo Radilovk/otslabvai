@@ -1068,14 +1068,14 @@ function showOrderDetailModal(order, originalIndex) {
     }) : '—';
 
     const productsRows = (order.products || []).map(p =>
-        `<tr><td style="padding:0.3rem 0.5rem 0.3rem 0">${escAdminHtml(p.name)}</td><td style="padding:0.3rem 0.5rem;text-align:right;font-weight:600">x${escAdminHtml(p.quantity)}</td></tr>`
+        `<tr><td class="detail-product-name">${escAdminHtml(p.name)}</td><td class="detail-product-qty">x${escAdminHtml(p.quantity)}</td></tr>`
     ).join('');
 
     let deliveryHTML = '';
     if (customer.deliveryMethod === 'courier') {
         deliveryHTML = `<strong>${escAdminHtml(customer.courierCompany || 'Куриер')}</strong>`;
         if (customer.courierOfficeName) deliveryHTML += `<br>${escAdminHtml(customer.courierOfficeName)}`;
-        if (customer.courierOfficeAddress) deliveryHTML += `<br><small style="color:var(--text-secondary)">${escAdminHtml(customer.courierOfficeAddress)}</small>`;
+        if (customer.courierOfficeAddress) deliveryHTML += `<br><small class="detail-secondary-text">${escAdminHtml(customer.courierOfficeAddress)}</small>`;
     } else {
         deliveryHTML = 'До адрес';
         if (customer.address) deliveryHTML += `<br>${escAdminHtml(customer.address)}`;
@@ -1095,17 +1095,17 @@ function showOrderDetailModal(order, originalIndex) {
         </div>
         <div class="detail-modal-section">
             <h4>📦 Продукти</h4>
-            <table style="width:100%;font-size:0.9rem;border-collapse:collapse">${productsRows}</table>
+            <table class="detail-products-table">${productsRows}</table>
         </div>
         <div class="detail-modal-section">
             <h4>🚚 Доставка</h4>
-            <p style="margin:0;font-size:0.9rem">${deliveryHTML}</p>
+            <p class="detail-modal-text">${deliveryHTML}</p>
         </div>
         <div class="detail-modal-section">
             <h4>📋 Статус</h4>
             <div class="detail-modal-status-row">
                 <label for="detail-order-status">Статус:</label>
-                <select id="detail-order-status" style="padding:0.5rem 0.75rem;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:0.9rem;flex:1">
+                <select id="detail-order-status" class="detail-modal-select">
                     <option value="Нова"${status === 'Нова' ? ' selected' : ''}>Нова</option>
                     <option value="Обработва се"${status === 'Обработва се' ? ' selected' : ''}>Обработва се</option>
                     <option value="Изпратена"${status === 'Изпратена' ? ' selected' : ''}>Изпратена</option>
@@ -1150,7 +1150,7 @@ function showContactDetailModal(contact, originalIndex) {
         </div>
         <div class="detail-modal-section">
             <h4>💬 Тема</h4>
-            <p style="margin:0;font-size:0.95rem;font-weight:600">${escAdminHtml(contact.subject || '(няма тема)')}</p>
+            <p class="detail-modal-subject">${escAdminHtml(contact.subject || '(няма тема)')}</p>
         </div>
         <div class="detail-modal-section">
             <h4>📝 Съобщение</h4>
@@ -1160,7 +1160,7 @@ function showContactDetailModal(contact, originalIndex) {
             <h4>📋 Статус</h4>
             <div class="detail-modal-status-row">
                 <label for="detail-contact-status">Статус:</label>
-                <select id="detail-contact-status" style="padding:0.5rem 0.75rem;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:0.9rem;flex:1">
+                <select id="detail-contact-status" class="detail-modal-select">
                     <option value="Нов"${status === 'Нов' ? ' selected' : ''}>Нов</option>
                     <option value="Прегледан"${status === 'Прегледан' ? ' selected' : ''}>Прегледан</option>
                     <option value="Отговорен"${status === 'Отговорен' ? ' selected' : ''}>Отговорен</option>

@@ -677,6 +677,40 @@ h2 {
     font-size: 0.88rem;
     white-space: nowrap;
 }
+.detail-modal-select {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+.detail-products-table {
+    width: 100%;
+    font-size: 0.9rem;
+    border-collapse: collapse;
+}
+.detail-product-name {
+    padding: 0.3rem 0.5rem 0.3rem 0;
+}
+.detail-product-qty {
+    padding: 0.3rem 0.5rem;
+    text-align: right;
+    font-weight: 600;
+}
+.detail-modal-text {
+    margin: 0;
+    font-size: 0.9rem;
+}
+.detail-secondary-text {
+    color: var(--text-secondary);
+}
+.detail-modal-subject {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
 
 /* ======================================================= */
 /*          7. МОДАЛЕН ПРОЗОРЕЦ                             */
