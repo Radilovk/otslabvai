@@ -338,55 +338,210 @@ h2 {
     padding: 0 0.5rem;
 }
 .orders-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-.orders-table thead { display: none; } /* Скриваме хедъра на мобилни */
-.orders-table tr { display: block; margin-bottom: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-secondary); padding: 0.75rem; }
-.orders-table td {
+
+/* ======================================================= */
+/*       МОБИЛНА ЛЕНТА ЗА СОРТИРАНЕ (< 768px)             */
+/* ======================================================= */
+.mobile-sort-bar {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 0.4rem 0;
-    text-align: right;
-    border-bottom: 1px solid var(--bg-light);
-    word-break: break-word;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
 }
-.orders-table td:last-child { border-bottom: none; }
-.orders-table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    text-align: left;
-    margin-right: 0.5rem;
-    color: var(--text-secondary);
-    flex-shrink: 0;
+.mobile-sort-label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
     font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    white-space: nowrap;
 }
-.orders-table .order-products,
-.orders-table .contact-message { word-break: break-word; max-width: 60%; }
-.orders-table select.order-status,
-.orders-table select.contact-status {
-    padding: 0.4rem 0.5rem;
+.mobile-sort-bar select {
+    flex: 1 1 120px;
+    min-width: 0;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 0.82rem;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+.mobile-sort-dir-btn {
+    padding: 0.35rem 0.65rem !important;
+    font-size: 1rem !important;
+    min-height: 36px;
+    min-width: 36px;
+}
+
+/* ======================================================= */
+/*       МОБИЛНА ТАБЛИЦА – КОМПАКТНИ КАРТИ (< 768px)       */
+/* ======================================================= */
+
+/* Скриваме хедъра на мобилни */
+.orders-table thead { display: none; }
+
+/* Таблото tbody → grid с 2 колони */
+.orders-table tbody {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+/* Всеки <tr> е компактна карта */
+.orders-table tr {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    padding: 0.65rem 0.75rem;
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+}
+.orders-table tr:active { transform: scale(0.98); }
+.orders-table tr:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+
+/* Всички <td> скрити по подразбиране на мобилни */
+.orders-table td {
+    display: none;
+    padding: 0.15rem 0;
+    word-break: break-word;
+    font-size: 0.82rem;
+}
+.orders-table td::before { display: none; }
+
+/* Показваме само ключовите клетки в картичките */
+.orders-table td.mobile-key {
+    display: block;
+}
+
+/* Клиент / Контакт – заглавие на картата */
+.orders-table td.order-customer,
+.orders-table td.contact-name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 0.3rem;
+}
+.orders-table td.order-customer::before,
+.orders-table td.contact-name::before {
+    content: attr(data-icon);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Продукти / Тема – вторичен текст */
+.orders-table td.order-products,
+.orders-table td.contact-subject {
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Дата – малко и в горен десен ъгъл */
+.orders-table td.order-date,
+.orders-table td.contact-date {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    margin-top: auto;
+    padding-top: 0.3rem;
+}
+
+/* Скрити на мобилна версия */
+.orders-table td.mobile-hidden { display: none !important; }
+
+/* Статус клетка – само бейджа се вижда */
+.orders-table td.order-status-cell,
+.orders-table td.contact-status-cell {
+    display: block;
+    padding: 0;
+}
+.orders-table td.order-status-cell select,
+.orders-table td.contact-status-cell select {
+    display: none; /* скриваме select-а; видим е само бейджа */
+}
+
+/* Мобилен статус бейдж */
+.mobile-status-badge {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-top: 0.4rem;
+}
+
+/* ======================================================= */
+/*   ЦВЕТОВЕ ПО СТАТУС – ПОРЪЧКИ И КОНТАКТИ (мобил+десктоп) */
+/* ======================================================= */
+
+/* Поръчки – ред/карта */
+.orders-table tr.order-row-new {
+    border-left: 4px solid #3b82f6;
+    background-color: rgba(59, 130, 246, 0.07) !important;
+}
+.orders-table tr.order-row-processing {
+    border-left: 4px solid #f59e0b;
+    background-color: rgba(245, 158, 11, 0.07) !important;
+}
+.orders-table tr.order-row-shipped {
+    border-left: 4px solid #10b981;
+    background-color: rgba(16, 185, 129, 0.07) !important;
+}
+
+/* Поръчки – бейдж */
+.mobile-status-badge.order-badge-new { background: rgba(59,130,246,0.15); color: #1d4ed8; }
+.mobile-status-badge.order-badge-processing { background: rgba(245,158,11,0.15); color: #b45309; }
+.mobile-status-badge.order-badge-shipped { background: rgba(16,185,129,0.15); color: #065f46; }
+
+[data-theme="dark"] .mobile-status-badge.order-badge-new { color: #93c5fd; }
+[data-theme="dark"] .mobile-status-badge.order-badge-processing { color: #fcd34d; }
+[data-theme="dark"] .mobile-status-badge.order-badge-shipped { color: #6ee7b7; }
+
+/* Поръчки – статус select (десктоп) */
+.orders-table select.order-status {
+    padding: 0.35rem 0.5rem;
     border-radius: 4px;
     border: 1px solid var(--border-color);
+    font-weight: 600;
+    cursor: pointer;
     font-size: 0.85rem;
     min-height: 44px;
 }
-
-/* Contact source filter buttons */
-.contacts-source-filter {
-    display: flex;
-    gap: 0.4rem;
-    margin-bottom: 0.75rem;
-    flex-wrap: wrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 0.25rem;
+.orders-table select.order-status.status-new {
+    background-color: rgba(59,130,246,0.15);
+    color: #1d4ed8;
+    border-color: #3b82f6;
 }
-.contacts-source-filter .btn {
-    font-size: 0.75rem;
-    padding: 0.4rem 0.6rem;
-    white-space: nowrap;
+.orders-table select.order-status.status-processing {
+    background-color: rgba(245,158,11,0.15);
+    color: #b45309;
+    border-color: #f59e0b;
 }
+.orders-table select.order-status.status-shipped {
+    background-color: rgba(16,185,129,0.15);
+    color: #065f46;
+    border-color: #10b981;
+}
+[data-theme="dark"] .orders-table select.order-status.status-new { color: #93c5fd; }
+[data-theme="dark"] .orders-table select.order-status.status-processing { color: #fcd34d; }
+[data-theme="dark"] .orders-table select.order-status.status-shipped { color: #6ee7b7; }
 
-/* Contact status row colors */
+/* Контакти – ред/карта */
 .orders-table tr.contact-row-new {
     border-left: 4px solid #dc3545;
     background-color: rgba(220, 53, 69, 0.07) !important;
@@ -399,12 +554,25 @@ h2 {
     border-left: 4px solid #00A99D;
     background-color: rgba(0, 169, 157, 0.07) !important;
 }
+
+/* Контакти – бейдж */
+.mobile-status-badge.contact-badge-new { background: rgba(220,53,69,0.15); color: #c82333; }
+.mobile-status-badge.contact-badge-viewed { background: rgba(255,193,7,0.18); color: #856404; }
+.mobile-status-badge.contact-badge-answered { background: rgba(0,169,157,0.15); color: #007068; }
+
+[data-theme="dark"] .mobile-status-badge.contact-badge-new { color: #ff6b7a; }
+[data-theme="dark"] .mobile-status-badge.contact-badge-viewed { color: #ffd54f; }
+[data-theme="dark"] .mobile-status-badge.contact-badge-answered { color: #4dd0c8; }
+
+/* Контакти – статус select */
 .orders-table select.contact-status {
     padding: 0.35rem 0.5rem;
     border-radius: 4px;
     border: 1px solid var(--border-color);
     font-weight: 600;
     cursor: pointer;
+    font-size: 0.85rem;
+    min-height: 44px;
 }
 .orders-table select.contact-status.status-new {
     background-color: rgba(220, 53, 69, 0.15);
@@ -425,6 +593,22 @@ h2 {
 [data-theme="dark"] .orders-table select.contact-status.status-viewed { color: #ffd54f; }
 [data-theme="dark"] .orders-table select.contact-status.status-answered { color: #4dd0c8; }
 
+/* Contact source filter buttons */
+.contacts-source-filter {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.25rem;
+}
+.contacts-source-filter .btn {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+    white-space: nowrap;
+}
+
 /* Sortable column headers for contacts and orders */
 .contacts-sort-th,
 .orders-sort-th {
@@ -440,6 +624,93 @@ h2 {
 .contacts-sort-th.sort-desc .sort-icon,
 .orders-sort-th.sort-asc .sort-icon,
 .orders-sort-th.sort-desc .sort-icon { opacity: 1; color: var(--primary-color); }
+
+/* ======================================================= */
+/*   ДЕТАЙЛЕН МОДАЛ ЗА ПОРЪЧКИ / КОНТАКТИ                 */
+/* ======================================================= */
+.detail-modal-section {
+    margin-bottom: 1.2rem;
+}
+.detail-modal-section h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin: 0 0 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.detail-modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+.detail-modal-grid dt {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+}
+.detail-modal-grid dd {
+    margin: 0;
+    color: var(--text-primary);
+    word-break: break-word;
+}
+.detail-modal-message {
+    background: var(--bg-main);
+    border-radius: 6px;
+    padding: 0.75rem;
+    font-size: 0.88rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border: 1px solid var(--border-color);
+}
+.detail-modal-status-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+.detail-modal-status-row label {
+    font-weight: 600;
+    font-size: 0.88rem;
+    white-space: nowrap;
+}
+.detail-modal-select {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+.detail-products-table {
+    width: 100%;
+    font-size: 0.9rem;
+    border-collapse: collapse;
+}
+.detail-product-name {
+    padding: 0.3rem 0.5rem 0.3rem 0;
+}
+.detail-product-qty {
+    padding: 0.3rem 0.5rem;
+    text-align: right;
+    font-weight: 600;
+}
+.detail-modal-text {
+    margin: 0;
+    font-size: 0.9rem;
+}
+.detail-secondary-text {
+    color: var(--text-secondary);
+}
+.detail-modal-subject {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
 
 /* ======================================================= */
 /*          7. МОДАЛЕН ПРОЗОРЕЦ                             */
@@ -694,13 +965,35 @@ h2 {
     #order-search-input,
     #contact-search-input { min-width: 250px; flex: 0 1 auto; }
     .table-wrapper { margin: 0; padding: 0; }
+    /* Скриваме мобилната лента за сортиране */
+    .mobile-sort-bar { display: none; }
     .orders-table { border: 1px solid var(--border-color); font-size: 0.9rem; }
     .orders-table thead { display: table-header-group; }
     .orders-table th { background: var(--bg-light); padding: 0.75rem 1rem; text-align: left; border-bottom: 2px solid var(--border-color); font-size: 0.85rem; }
-    .orders-table tr { display: table-row; margin-bottom: 0; border: none; background: none; padding: 0; }
-    .orders-table tbody tr:nth-child(even) { background-color: var(--bg-main); }
-    .orders-table td { display: table-cell; text-align: left; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
-    .orders-table td::before { display: none; } /* Скриваме data-label-ите */
+    /* Нулираме мобилния grid и flex за tbody/tr */
+    .orders-table tbody { display: table-row-group; grid-template-columns: none; gap: 0; }
+    .orders-table tr { display: table-row; margin-bottom: 0; border: none; background: none !important; padding: 0; cursor: default; transform: none; box-shadow: none; }
+    .orders-table tr:active { transform: none; }
+    .orders-table tbody tr:nth-child(even) { background-color: var(--bg-main) !important; }
+    /* Цветовете на редовете по статус остават, само нулираме изключванията */
+    .orders-table tr.order-row-new { background-color: rgba(59,130,246,0.07) !important; }
+    .orders-table tr.order-row-processing { background-color: rgba(245,158,11,0.07) !important; }
+    .orders-table tr.order-row-shipped { background-color: rgba(16,185,129,0.07) !important; }
+    .orders-table tr.contact-row-new { background-color: rgba(220, 53, 69, 0.07) !important; }
+    .orders-table tr.contact-row-viewed { background-color: rgba(255, 193, 7, 0.07) !important; }
+    .orders-table tr.contact-row-answered { background-color: rgba(0, 169, 157, 0.07) !important; }
+    /* Нулираме мобилните td стилове */
+    .orders-table td { display: table-cell; text-align: left; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; word-break: normal; font-size: 0.9rem; }
+    .orders-table td::before { display: none; }
+    /* Показваме всички клетки на десктоп */
+    .orders-table td.mobile-key,
+    .orders-table td.mobile-hidden,
+    .orders-table td.order-status-cell,
+    .orders-table td.contact-status-cell { display: table-cell; }
+    /* Скриваме мобилния бейдж, показваме select-а */
+    .orders-table td.order-status-cell select,
+    .orders-table td.contact-status-cell select { display: inline-block; }
+    .mobile-status-badge { display: none; }
     .orders-table tbody tr:last-child td { border-bottom: none; }
     .orders-table .order-products,
     .orders-table .contact-message { max-width: none; }
