@@ -1889,8 +1889,8 @@ function sortOrders(data) {
     return [...data].sort((a, b) => {
         let aVal, bVal;
         if (field === 'timestamp') {
-            aVal = new Date(a.timestamp || 0).getTime() || 0;
-            bVal = new Date(b.timestamp || 0).getTime() || 0;
+            aVal = new Date(a.timestamp || 0).getTime();
+            bVal = new Date(b.timestamp || 0).getTime();
             return dir * (aVal - bVal);
         } else if (field === 'customer') {
             const customerA = a.customer || {};
