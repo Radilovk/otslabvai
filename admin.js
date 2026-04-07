@@ -91,6 +91,8 @@ const DOM = {
 let appData = {};
 let ordersData = [];
 let filteredOrdersData = [];
+let orderSortField = 'timestamp';
+let orderSortDir = 'desc';
 let contactsData = [];
 let filteredContactsData = [];
 let activeContactSourceFilter = '';
@@ -178,6 +180,13 @@ async function fetchContacts(forceRefresh = false) {
         contactsData = [];
         filteredContactsData = [];
     }
+}
+
+// Update localStorage cache when contact statuses change
+function updateContactsCache() {
+    try {
+        localStorage.setItem(CONTACTS_CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: contactsData }));
+    } catch (e) { /* quota exceeded – ignore */ }
 }
 
 async function fetchPromoCodes() {
@@ -409,6 +418,17 @@ function renderOrders() {
             if (customer.postcode) deliveryInfo += `, ${escAdminHtml(customer.postcode)}`;
         }
         rowTemplate.querySelector('.order-delivery').innerHTML = deliveryInfo;
+        
+        // Format date
+        const date = new Date(order.timestamp);
+        const formattedDate = date.toLocaleString('bg-BG', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        rowTemplate.querySelector('.order-date').textContent = order.timestamp ? formattedDate : '—';
         
         const statusSelect = rowTemplate.querySelector('.order-status');
         statusSelect.value = order.status || 'Нова';
@@ -1291,6 +1311,20 @@ function setupEventListeners() {
         filterOrders();
     });
     
+    // Orders sort headers click handler
+    document.querySelectorAll('.orders-sort-th').forEach(th => {
+        th.addEventListener('click', () => {
+            const field = th.dataset.sort;
+            if (orderSortField === field) {
+                orderSortDir = orderSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                orderSortField = field;
+                orderSortDir = field === 'timestamp' ? 'desc' : 'asc';
+            }
+            filterOrders();
+        });
+    });
+    
     DOM.contactsTableBody.addEventListener('change', async e => {
         if (!e.target.classList.contains('contact-status')) return;
         const row = e.target.closest('tr');
@@ -1299,9 +1333,9 @@ function setupEventListeners() {
         contactsData[index].status = newStatus;
         applyContactRowColor(row, newStatus);
         applyContactStatusSelectColor(e.target, newStatus);
-        // Note: We're updating status locally, but there's no PUT endpoint for contacts
-        // If needed, you could add one similar to orders
-        showNotification('Статусът е обновен локално.', 'success');
+        // Persist the updated status to localStorage cache
+        updateContactsCache();
+        showNotification('Статусът е обновен.', 'success');
     });
     
     DOM.contactSearchInput.addEventListener('input', () => filterContacts());
@@ -1849,12 +1883,50 @@ function deleteItemWithUndo(itemType, id, renderFunc) {
     }, 5000);
 }
 
+function sortOrders(data) {
+    const field = orderSortField;
+    const dir = orderSortDir === 'asc' ? 1 : -1;
+    return [...data].sort((a, b) => {
+        let aVal, bVal;
+        if (field === 'timestamp') {
+            aVal = new Date(a.timestamp || 0).getTime() || 0;
+            bVal = new Date(b.timestamp || 0).getTime() || 0;
+            return dir * (aVal - bVal);
+        } else if (field === 'customer') {
+            const customerA = a.customer || {};
+            const customerB = b.customer || {};
+            aVal = `${customerA.firstName || ''} ${customerA.lastName || ''}`.trim();
+            bVal = `${customerB.firstName || ''} ${customerB.lastName || ''}`.trim();
+        } else if (field === 'status') {
+            aVal = a.status || 'Нова';
+            bVal = b.status || 'Нова';
+        } else {
+            aVal = a[field] || '';
+            bVal = b[field] || '';
+        }
+        return dir * aVal.toString().localeCompare(bVal.toString(), 'bg');
+    });
+}
+
+function updateOrderSortHeaders() {
+    document.querySelectorAll('.orders-sort-th').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        const icon = th.querySelector('.sort-icon');
+        if (icon) icon.textContent = '⇅';
+        if (th.dataset.sort === orderSortField) {
+            th.classList.add(orderSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+            if (icon) icon.textContent = orderSortDir === 'asc' ? '↑' : '↓';
+        }
+    });
+}
+
 function filterOrders() {
     const searchTerm = DOM.orderSearchInput.value.toLowerCase().trim();
+    let base;
     if (!searchTerm) {
-        filteredOrdersData = [...ordersData];
+        base = [...ordersData];
     } else {
-        filteredOrdersData = ordersData.filter(order => {
+        base = ordersData.filter(order => {
             const customer = order.customer || {};
             const fullName = `${customer.firstName || ''} ${customer.lastName || ''}`.toLowerCase();
             const phone = (customer.phone || '').toLowerCase();
@@ -1862,6 +1934,8 @@ function filterOrders() {
             return fullName.includes(searchTerm) || phone.includes(searchTerm) || email.includes(searchTerm);
         });
     }
+    filteredOrdersData = sortOrders(base);
+    updateOrderSortHeaders();
     renderOrders();
 }
 
