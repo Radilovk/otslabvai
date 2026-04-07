@@ -386,19 +386,52 @@ function renderFooter() {
     DOM.footerSettingsContainer.appendChild(socialCard);
 }
 
+function applyOrderRowColor(row, status) {
+    row.classList.remove('order-row-new', 'order-row-processing', 'order-row-shipped');
+    if (status === 'Нова') row.classList.add('order-row-new');
+    else if (status === 'Обработва се') row.classList.add('order-row-processing');
+    else if (status === 'Изпратена') row.classList.add('order-row-shipped');
+}
+
+function applyOrderStatusSelectColor(select, status) {
+    select.classList.remove('status-new', 'status-processing', 'status-shipped');
+    if (status === 'Нова') select.classList.add('status-new');
+    else if (status === 'Обработва се') select.classList.add('status-processing');
+    else if (status === 'Изпратена') select.classList.add('status-shipped');
+}
+
+function applyOrderStatusBadge(badge, status) {
+    badge.classList.remove('order-badge-new', 'order-badge-processing', 'order-badge-shipped');
+    if (status === 'Нова') { badge.textContent = '🔵 Нова'; badge.classList.add('order-badge-new'); }
+    else if (status === 'Обработва се') { badge.textContent = '🟡 Обработва се'; badge.classList.add('order-badge-processing'); }
+    else if (status === 'Изпратена') { badge.textContent = '✅ Изпратена'; badge.classList.add('order-badge-shipped'); }
+    else { badge.textContent = status || '—'; }
+}
+
 function renderOrders() {
     DOM.ordersTableBody.innerHTML = '';
     filteredOrdersData.forEach((order) => {
         const rowTemplate = DOM.templates.orderRow.content.cloneNode(true);
         const customer = order.customer || {};
         const products = (order.products || []).map(p => `${escAdminHtml(p.name)} x${escAdminHtml(p.quantity)}`).join('<br>');
+        const productsSummary = (order.products || []).map(p => `${escAdminHtml(p.name)} x${escAdminHtml(p.quantity)}`).join(', ');
         const originalIndex = ordersData.findIndex(o => o.id === order.id);
         const row = rowTemplate.querySelector('tr');
         row.dataset.index = originalIndex;
-        rowTemplate.querySelector('.order-customer').textContent = `${customer.firstName || ''} ${customer.lastName || ''}`;
+        row.dataset.orderId = order.id;
+
+        const customerCell = rowTemplate.querySelector('.order-customer');
+        customerCell.textContent = `${customer.firstName || ''} ${customer.lastName || ''}`.trim();
+        customerCell.dataset.icon = '📦';
+        customerCell.classList.add('mobile-key');
+
         rowTemplate.querySelector('.order-phone').textContent = customer.phone || '';
         rowTemplate.querySelector('.order-email').textContent = customer.email || '';
-        rowTemplate.querySelector('.order-products').innerHTML = products;
+
+        const productsCell = rowTemplate.querySelector('.order-products');
+        productsCell.innerHTML = products;
+        productsCell.dataset.summary = productsSummary;
+        productsCell.classList.add('mobile-key');
         
         // Format delivery information
         let deliveryInfo = '';
@@ -428,10 +461,18 @@ function renderOrders() {
             hour: '2-digit',
             minute: '2-digit'
         });
-        rowTemplate.querySelector('.order-date').textContent = order.timestamp ? formattedDate : '—';
+        const dateCell = rowTemplate.querySelector('.order-date');
+        dateCell.textContent = order.timestamp ? formattedDate : '—';
+        dateCell.classList.add('mobile-key');
         
+        const status = order.status || 'Нова';
         const statusSelect = rowTemplate.querySelector('.order-status');
-        statusSelect.value = order.status || 'Нова';
+        statusSelect.value = status;
+        applyOrderRowColor(row, status);
+        applyOrderStatusSelectColor(statusSelect, status);
+        const badge = rowTemplate.querySelector('.mobile-status-badge');
+        if (badge) applyOrderStatusBadge(badge, status);
+
         DOM.ordersTableBody.appendChild(rowTemplate);
     });
 }
@@ -459,6 +500,14 @@ function applyContactStatusSelectColor(select, status) {
     else if (status === 'Отговорен') select.classList.add('status-answered');
 }
 
+function applyContactStatusBadge(badge, status) {
+    badge.classList.remove('contact-badge-new', 'contact-badge-viewed', 'contact-badge-answered');
+    if (status === 'Нов') { badge.textContent = '🔴 Нов'; badge.classList.add('contact-badge-new'); }
+    else if (status === 'Прегледан') { badge.textContent = '🟡 Прегледан'; badge.classList.add('contact-badge-viewed'); }
+    else if (status === 'Отговорен') { badge.textContent = '✅ Отговорен'; badge.classList.add('contact-badge-answered'); }
+    else { badge.textContent = status || '—'; }
+}
+
 function renderContacts() {
     DOM.contactsTableBody.innerHTML = '';
     filteredContactsData.forEach((contact) => {
@@ -466,11 +515,20 @@ function renderContacts() {
         const originalIndex = contactsData.findIndex(c => c.id === contact.id);
         const row = rowTemplate.querySelector('tr');
         row.dataset.index = originalIndex;
+        row.dataset.contactId = contact.id;
 
         rowTemplate.querySelector('.contact-source').textContent = contact.source || '—';
-        rowTemplate.querySelector('.contact-name').textContent = contact.name || '';
+
+        const nameCell = rowTemplate.querySelector('.contact-name');
+        nameCell.textContent = contact.name || '';
+        nameCell.dataset.icon = '✉️';
+        nameCell.classList.add('mobile-key');
+
         rowTemplate.querySelector('.contact-email').textContent = contact.email || '';
-        rowTemplate.querySelector('.contact-subject').textContent = contact.subject || '(няма тема)';
+
+        const subjectCell = rowTemplate.querySelector('.contact-subject');
+        subjectCell.textContent = contact.subject || '(няма тема)';
+        subjectCell.classList.add('mobile-key');
         
         // Truncate long messages
         const message = contact.message || '';
@@ -485,13 +543,17 @@ function renderContacts() {
             hour: '2-digit',
             minute: '2-digit'
         });
-        rowTemplate.querySelector('.contact-date').textContent = formattedDate;
+        const dateCell = rowTemplate.querySelector('.contact-date');
+        dateCell.textContent = formattedDate;
+        dateCell.classList.add('mobile-key');
         
         const status = contact.status || 'Нов';
         const statusSelect = rowTemplate.querySelector('.contact-status');
         statusSelect.value = status;
         applyContactRowColor(row, status);
         applyContactStatusSelectColor(statusSelect, status);
+        const badge = rowTemplate.querySelector('.mobile-status-badge');
+        if (badge) applyContactStatusBadge(badge, status);
         
         DOM.contactsTableBody.appendChild(rowTemplate);
     });
@@ -986,6 +1048,137 @@ function closeModal() {
     DOM.modal.body.innerHTML = '';
 }
 
+// =======================================================
+//   ДЕТАЙЛНИ МОДАЛИ ЗА ПОРЪЧКИ И КОНТАКТИ
+// =======================================================
+
+function openDetailModal(title, bodyHTML, onSave) {
+    DOM.modal.title.textContent = title;
+    DOM.modal.body.innerHTML = bodyHTML;
+    currentModalSaveCallback = onSave;
+    DOM.modal.container.classList.add('show');
+    DOM.modal.backdrop.classList.add('show');
+}
+
+function showOrderDetailModal(order, originalIndex) {
+    const customer = order.customer || {};
+    const status = order.status || 'Нова';
+    const date = order.timestamp ? new Date(order.timestamp).toLocaleString('bg-BG', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) : '—';
+
+    const productsRows = (order.products || []).map(p =>
+        `<tr><td style="padding:0.3rem 0.5rem 0.3rem 0">${escAdminHtml(p.name)}</td><td style="padding:0.3rem 0.5rem;text-align:right;font-weight:600">x${escAdminHtml(p.quantity)}</td></tr>`
+    ).join('');
+
+    let deliveryHTML = '';
+    if (customer.deliveryMethod === 'courier') {
+        deliveryHTML = `<strong>${escAdminHtml(customer.courierCompany || 'Куриер')}</strong>`;
+        if (customer.courierOfficeName) deliveryHTML += `<br>${escAdminHtml(customer.courierOfficeName)}`;
+        if (customer.courierOfficeAddress) deliveryHTML += `<br><small style="color:var(--text-secondary)">${escAdminHtml(customer.courierOfficeAddress)}</small>`;
+    } else {
+        deliveryHTML = 'До адрес';
+        if (customer.address) deliveryHTML += `<br>${escAdminHtml(customer.address)}`;
+        if (customer.city) deliveryHTML += `<br>${escAdminHtml(customer.city)}`;
+        if (customer.postcode) deliveryHTML += `, ${escAdminHtml(customer.postcode)}`;
+    }
+
+    const html = `
+        <div class="detail-modal-section">
+            <h4>👤 Клиент</h4>
+            <dl class="detail-modal-grid">
+                <dt>Имена</dt><dd>${escAdminHtml((customer.firstName || '') + ' ' + (customer.lastName || ''))}</dd>
+                <dt>Телефон</dt><dd>${escAdminHtml(customer.phone || '—')}</dd>
+                <dt>Email</dt><dd>${escAdminHtml(customer.email || '—')}</dd>
+                <dt>Дата</dt><dd>${escAdminHtml(date)}</dd>
+            </dl>
+        </div>
+        <div class="detail-modal-section">
+            <h4>📦 Продукти</h4>
+            <table style="width:100%;font-size:0.9rem;border-collapse:collapse">${productsRows}</table>
+        </div>
+        <div class="detail-modal-section">
+            <h4>🚚 Доставка</h4>
+            <p style="margin:0;font-size:0.9rem">${deliveryHTML}</p>
+        </div>
+        <div class="detail-modal-section">
+            <h4>📋 Статус</h4>
+            <div class="detail-modal-status-row">
+                <label for="detail-order-status">Статус:</label>
+                <select id="detail-order-status" style="padding:0.5rem 0.75rem;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:0.9rem;flex:1">
+                    <option value="Нова"${status === 'Нова' ? ' selected' : ''}>Нова</option>
+                    <option value="Обработва се"${status === 'Обработва се' ? ' selected' : ''}>Обработва се</option>
+                    <option value="Изпратена"${status === 'Изпратена' ? ' selected' : ''}>Изпратена</option>
+                </select>
+            </div>
+        </div>`;
+
+    openDetailModal(`Поръчка на ${escAdminHtml((customer.firstName || '') + ' ' + (customer.lastName || ''))}`, html, async () => {
+        const newStatus = DOM.modal.body.querySelector('#detail-order-status').value;
+        ordersData[originalIndex].status = newStatus;
+        try {
+            await fetch(`${API_URL}/orders`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: ordersData[originalIndex].id, status: newStatus })
+            });
+            filterOrders();
+            showNotification('Статусът е обновен.', 'success');
+        } catch (err) {
+            showNotification('Грешка при запис на статуса.', 'error');
+            console.error('Update order status error:', err);
+        }
+        closeModal();
+    });
+}
+
+function showContactDetailModal(contact, originalIndex) {
+    const status = contact.status || 'Нов';
+    const date = contact.timestamp ? new Date(contact.timestamp).toLocaleString('bg-BG', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) : '—';
+
+    const html = `
+        <div class="detail-modal-section">
+            <h4>👤 Подател</h4>
+            <dl class="detail-modal-grid">
+                <dt>Имена</dt><dd>${escAdminHtml(contact.name || '—')}</dd>
+                <dt>Email</dt><dd>${escAdminHtml(contact.email || '—')}</dd>
+                <dt>Страница</dt><dd>${escAdminHtml(contact.source || '—')}</dd>
+                <dt>Дата</dt><dd>${escAdminHtml(date)}</dd>
+            </dl>
+        </div>
+        <div class="detail-modal-section">
+            <h4>💬 Тема</h4>
+            <p style="margin:0;font-size:0.95rem;font-weight:600">${escAdminHtml(contact.subject || '(няма тема)')}</p>
+        </div>
+        <div class="detail-modal-section">
+            <h4>📝 Съобщение</h4>
+            <div class="detail-modal-message">${escAdminHtml(contact.message || '—')}</div>
+        </div>
+        <div class="detail-modal-section">
+            <h4>📋 Статус</h4>
+            <div class="detail-modal-status-row">
+                <label for="detail-contact-status">Статус:</label>
+                <select id="detail-contact-status" style="padding:0.5rem 0.75rem;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:0.9rem;flex:1">
+                    <option value="Нов"${status === 'Нов' ? ' selected' : ''}>Нов</option>
+                    <option value="Прегледан"${status === 'Прегледан' ? ' selected' : ''}>Прегледан</option>
+                    <option value="Отговорен"${status === 'Отговорен' ? ' selected' : ''}>Отговорен</option>
+                </select>
+            </div>
+        </div>`;
+
+    openDetailModal(`Съобщение от ${escAdminHtml(contact.name || '—')}`, html, async () => {
+        const newStatus = DOM.modal.body.querySelector('#detail-contact-status').value;
+        contactsData[originalIndex].status = newStatus;
+        updateContactsCache();
+        filterContacts();
+        showNotification('Статусът е обновен.', 'success');
+        closeModal();
+    });
+}
+
+
 function populateForm(form, data) {
     form.querySelectorAll('[data-field]').forEach(input => {
         const path = input.dataset.field;
@@ -1264,6 +1457,10 @@ function setupEventListeners() {
                     renderAll();
                     await saveData();
                 }
+            } else {
+                // Detail modals (orders/contacts) — no form, just invoke callback
+                const result = currentModalSaveCallback();
+                if (result instanceof Promise) await result;
             }
         }
     });
@@ -1291,6 +1488,10 @@ function setupEventListeners() {
         const index = Number(row.dataset.index);
         const newStatus = e.target.value;
         ordersData[index].status = newStatus;
+        applyOrderRowColor(row, e.target.value);
+        applyOrderStatusSelectColor(e.target, newStatus);
+        const badge = row.querySelector('.mobile-status-badge');
+        if (badge) applyOrderStatusBadge(badge, newStatus);
         try {
             await fetch(`${API_URL}/orders`, {
                 method: 'PUT',
@@ -1303,6 +1504,16 @@ function setupEventListeners() {
             console.error('Update status error:', err);
         }
     });
+
+    // Click on order row → detail modal (only when on mobile, i.e. clicking the card itself not the select)
+    DOM.ordersTableBody.addEventListener('click', e => {
+        if (e.target.tagName === 'SELECT') return;
+        const row = e.target.closest('tr');
+        if (!row) return;
+        const index = Number(row.dataset.index);
+        if (isNaN(index) || index < 0) return;
+        showOrderDetailModal(ordersData[index], index);
+    });
     
     DOM.orderSearchInput.addEventListener('input', () => filterOrders());
     DOM.refreshOrdersBtn.addEventListener('click', async () => {
@@ -1311,7 +1522,7 @@ function setupEventListeners() {
         filterOrders();
     });
     
-    // Orders sort headers click handler
+    // Orders sort headers click handler (desktop)
     document.querySelectorAll('.orders-sort-th').forEach(th => {
         th.addEventListener('click', () => {
             const field = th.dataset.sort;
@@ -1324,6 +1535,24 @@ function setupEventListeners() {
             filterOrders();
         });
     });
+
+    // Mobile sort controls for orders
+    const ordersMobileSortField = document.getElementById('orders-mobile-sort-field');
+    const ordersMobileSortDir = document.getElementById('orders-mobile-sort-dir');
+    if (ordersMobileSortField) {
+        ordersMobileSortField.value = orderSortField;
+        ordersMobileSortField.addEventListener('change', () => {
+            orderSortField = ordersMobileSortField.value;
+            filterOrders();
+        });
+    }
+    if (ordersMobileSortDir) {
+        ordersMobileSortDir.addEventListener('click', () => {
+            orderSortDir = orderSortDir === 'asc' ? 'desc' : 'asc';
+            ordersMobileSortDir.textContent = orderSortDir === 'asc' ? '↑' : '↓';
+            filterOrders();
+        });
+    }
     
     DOM.contactsTableBody.addEventListener('change', async e => {
         if (!e.target.classList.contains('contact-status')) return;
@@ -1333,9 +1562,21 @@ function setupEventListeners() {
         contactsData[index].status = newStatus;
         applyContactRowColor(row, newStatus);
         applyContactStatusSelectColor(e.target, newStatus);
+        const badge = row.querySelector('.mobile-status-badge');
+        if (badge) applyContactStatusBadge(badge, newStatus);
         // Persist the updated status to localStorage cache
         updateContactsCache();
         showNotification('Статусът е обновен.', 'success');
+    });
+
+    // Click on contact row → detail modal
+    DOM.contactsTableBody.addEventListener('click', e => {
+        if (e.target.tagName === 'SELECT') return;
+        const row = e.target.closest('tr');
+        if (!row) return;
+        const index = Number(row.dataset.index);
+        if (isNaN(index) || index < 0) return;
+        showContactDetailModal(contactsData[index], index);
     });
     
     DOM.contactSearchInput.addEventListener('input', () => filterContacts());
@@ -1357,6 +1598,25 @@ function setupEventListeners() {
             filterContacts();
         });
     });
+
+    // Mobile sort controls for contacts
+    const contactsMobileSortField = document.getElementById('contacts-mobile-sort-field');
+    const contactsMobileSortDir = document.getElementById('contacts-mobile-sort-dir');
+    if (contactsMobileSortField) {
+        contactsMobileSortField.value = contactSortField;
+        contactsMobileSortField.addEventListener('change', () => {
+            contactSortField = contactsMobileSortField.value;
+            filterContacts();
+        });
+    }
+    if (contactsMobileSortDir) {
+        contactsMobileSortDir.addEventListener('click', () => {
+            contactSortDir = contactSortDir === 'asc' ? 'desc' : 'asc';
+            contactsMobileSortDir.textContent = contactSortDir === 'asc' ? '↑' : '↓';
+            filterContacts();
+        });
+    }
+
 
     document.querySelectorAll('.contact-source-btn').forEach(btn => {
         btn.addEventListener('click', () => {

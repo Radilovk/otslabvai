@@ -130,9 +130,22 @@
                 <div class="orders-header">
                     <h2>Поръчки</h2>
                     <div class="orders-controls">
-                        <input type="text" id="order-search-input" placeholder="Търси по име, телефон...">
+                        <input type="text" id="order-search-input" placeholder="Търси по ime, телефон...">
                         <button id="refresh-orders-btn" class="btn btn-secondary">Опресни</button>
                     </div>
+                </div>
+                <!-- Мобилна лента за сортиране – скрита на таблети/десктоп -->
+                <div class="mobile-sort-bar" id="orders-mobile-sort-bar">
+                    <label class="mobile-sort-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                        Сортирай:
+                    </label>
+                    <select id="orders-mobile-sort-field">
+                        <option value="timestamp">Дата</option>
+                        <option value="customer">Клиент</option>
+                        <option value="status">Статус</option>
+                    </select>
+                    <button id="orders-mobile-sort-dir" class="btn btn-sm btn-secondary mobile-sort-dir-btn" title="Посока на сортиране">↓</button>
                 </div>
                 <div class="table-wrapper">
                     <table id="orders-table" class="orders-table">
@@ -168,6 +181,21 @@
                     <button class="btn btn-secondary contact-source-btn" data-source="index.html">index.html</button>
                     <button class="btn btn-secondary contact-source-btn" data-source="life.html">life.html</button>
                     <button class="btn btn-secondary contact-source-btn" data-source="bio.html">bio.html</button>
+                </div>
+                <!-- Мобилна лента за сортиране – скрита на таблети/десктоп -->
+                <div class="mobile-sort-bar" id="contacts-mobile-sort-bar">
+                    <label class="mobile-sort-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                        Сортирай:
+                    </label>
+                    <select id="contacts-mobile-sort-field">
+                        <option value="timestamp">Дата</option>
+                        <option value="name">Име</option>
+                        <option value="subject">Тема</option>
+                        <option value="status">Статус</option>
+                        <option value="source">Страница</option>
+                    </select>
+                    <button id="contacts-mobile-sort-dir" class="btn btn-sm btn-secondary mobile-sort-dir-btn" title="Посока на сортиране">↓</button>
                 </div>
                 <div class="table-wrapper">
                     <table id="contacts-table" class="orders-table">
@@ -397,12 +425,13 @@
             <td data-label="Продукти" class="order-products"></td>
             <td data-label="Доставка" class="order-delivery"></td>
             <td data-label="Дата" class="order-date"></td>
-            <td data-label="Статус">
+            <td data-label="Статус" class="order-status-cell">
                 <select class="order-status">
                     <option value="Нова">Нова</option>
                     <option value="Обработва се">Обработва се</option>
                     <option value="Изпратена">Изпратена</option>
                 </select>
+                <span class="mobile-status-badge"></span>
             </td>
         </tr>
     </template>
@@ -416,12 +445,13 @@
             <td data-label="Тема" class="contact-subject"></td>
             <td data-label="Съобщение" class="contact-message"></td>
             <td data-label="Дата" class="contact-date"></td>
-            <td data-label="Статус">
+            <td data-label="Статус" class="contact-status-cell">
                 <select class="contact-status">
                     <option value="Нов">Нов</option>
                     <option value="Прегледан">Прегледан</option>
                     <option value="Отговорен">Отговорен</option>
                 </select>
+                <span class="mobile-status-badge"></span>
             </td>
         </tr>
     </template>
