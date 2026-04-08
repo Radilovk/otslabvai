@@ -109,6 +109,10 @@ let currentProject = localStorage.getItem('adminProject') || 'main';
 const CONTACTS_CACHE_KEY = 'adminContactsCache';
 const CONTACTS_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+// localStorage keys for persisting status overrides across refreshes
+const ORDERS_STATUS_CACHE_KEY = 'adminOrdersStatusCache';
+const CONTACTS_STATUS_CACHE_KEY = 'adminContactsStatusCache';
+
 // =======================================================
 //          2. API КОМУНИКАЦИЯ
 // =======================================================
@@ -141,6 +145,7 @@ async function fetchOrders() {
         if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
         const rawOrders = await response.json();
         ordersData = rawOrders.map((order, index) => ({ ...order, id: order.id || `order_${index}_${Date.now()}` }));
+        applyOrderStatusOverrides();
         filteredOrdersData = [...ordersData];
     } catch (error) {
         showNotification('Грешка при зареждане на поръчките.', 'error');
@@ -158,6 +163,7 @@ async function fetchContacts(forceRefresh = false) {
                 const cached = JSON.parse(localStorage.getItem(CONTACTS_CACHE_KEY) || 'null');
                 if (cached && (Date.now() - cached.timestamp) < CONTACTS_CACHE_TTL_MS) {
                     contactsData = cached.data;
+                    applyContactStatusOverrides();
                     filteredContactsData = [...contactsData];
                     return;
                 }
@@ -169,6 +175,8 @@ async function fetchContacts(forceRefresh = false) {
         if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
         const rawContacts = await response.json();
         contactsData = rawContacts.map((contact, index) => ({ ...contact, id: contact.id || `contact_${index}_${Date.now()}` }));
+        // Re-apply any status overrides saved locally before persisting the cache
+        applyContactStatusOverrides();
         filteredContactsData = [...contactsData];
         // Persist to localStorage so we skip the backend for the next 24 hours.
         try {
@@ -187,6 +195,48 @@ function updateContactsCache() {
     try {
         localStorage.setItem(CONTACTS_CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: contactsData }));
     } catch (e) { /* quota exceeded – ignore */ }
+}
+
+// Save a single order status override so it survives page refresh / backend re-fetch
+function saveOrderStatusOverride(orderId, status) {
+    try {
+        const overrides = JSON.parse(localStorage.getItem(ORDERS_STATUS_CACHE_KEY) || '{}');
+        overrides[orderId] = status;
+        localStorage.setItem(ORDERS_STATUS_CACHE_KEY, JSON.stringify(overrides));
+    } catch (e) { /* quota exceeded – ignore */ }
+}
+
+// Apply cached order status overrides on top of freshly fetched data
+function applyOrderStatusOverrides() {
+    try {
+        const overrides = JSON.parse(localStorage.getItem(ORDERS_STATUS_CACHE_KEY) || '{}');
+        ordersData.forEach(order => {
+            if (overrides[order.id] !== undefined) {
+                order.status = overrides[order.id];
+            }
+        });
+    } catch (e) { /* ignore corrupt cache */ }
+}
+
+// Save a single contact status override so it survives force-refresh / cache expiry
+function saveContactStatusOverride(contactId, status) {
+    try {
+        const overrides = JSON.parse(localStorage.getItem(CONTACTS_STATUS_CACHE_KEY) || '{}');
+        overrides[contactId] = status;
+        localStorage.setItem(CONTACTS_STATUS_CACHE_KEY, JSON.stringify(overrides));
+    } catch (e) { /* quota exceeded – ignore */ }
+}
+
+// Apply cached contact status overrides on top of freshly fetched / cached data
+function applyContactStatusOverrides() {
+    try {
+        const overrides = JSON.parse(localStorage.getItem(CONTACTS_STATUS_CACHE_KEY) || '{}');
+        contactsData.forEach(contact => {
+            if (overrides[contact.id] !== undefined) {
+                contact.status = overrides[contact.id];
+            }
+        });
+    } catch (e) { /* ignore corrupt cache */ }
 }
 
 async function fetchPromoCodes() {
@@ -1116,6 +1166,7 @@ function showOrderDetailModal(order, originalIndex) {
     openDetailModal(`Поръчка на ${escAdminHtml((customer.firstName || '') + ' ' + (customer.lastName || ''))}`, html, async () => {
         const newStatus = DOM.modal.body.querySelector('#detail-order-status').value;
         ordersData[originalIndex].status = newStatus;
+        saveOrderStatusOverride(ordersData[originalIndex].id, newStatus);
         try {
             await fetch(`${API_URL}/orders`, {
                 method: 'PUT',
@@ -1171,6 +1222,7 @@ function showContactDetailModal(contact, originalIndex) {
     openDetailModal(`Съобщение от ${escAdminHtml(contact.name || '—')}`, html, async () => {
         const newStatus = DOM.modal.body.querySelector('#detail-contact-status').value;
         contactsData[originalIndex].status = newStatus;
+        saveContactStatusOverride(contactsData[originalIndex].id, newStatus);
         updateContactsCache();
         filterContacts();
         showNotification('Статусът е обновен.', 'success');
@@ -1488,6 +1540,7 @@ function setupEventListeners() {
         const index = Number(row.dataset.index);
         const newStatus = e.target.value;
         ordersData[index].status = newStatus;
+        saveOrderStatusOverride(ordersData[index].id, newStatus);
         applyOrderRowColor(row, e.target.value);
         applyOrderStatusSelectColor(e.target, newStatus);
         const badge = row.querySelector('.mobile-status-badge');
@@ -1560,6 +1613,7 @@ function setupEventListeners() {
         const index = Number(row.dataset.index);
         const newStatus = e.target.value;
         contactsData[index].status = newStatus;
+        saveContactStatusOverride(contactsData[index].id, newStatus);
         applyContactRowColor(row, newStatus);
         applyContactStatusSelectColor(e.target, newStatus);
         const badge = row.querySelector('.mobile-status-badge');
