@@ -534,6 +534,52 @@
         border-color: var(--accent);
       }
 
+      /* --- "Друго" текстово поле --- */
+      .other-text-input {
+        margin-top: 0.75rem;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-primary);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+      .other-text-input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      /* --- AI Follow-up --- */
+      .ai-followup-intro {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+      .ai-followup-loading {
+        text-align: center;
+        padding: 2rem 0;
+      }
+      .ai-followup-loading p {
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+      }
+      #ai-followup-questions .form-group label {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+      #ai-followup-questions .form-group textarea {
+        min-height: 80px;
+      }
+      /* --- choice-group section sublabel --- */
+      .choice-group + .choice-group {
+        margin-top: 0;
+      }
+
       body.nav-open {
         overflow: hidden;
       }
