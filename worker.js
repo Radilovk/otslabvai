@@ -51,6 +51,14 @@ export default {
           case '/quest-submit':
             response = await handleQuestSubmit(request, env, ctx);
             break;
+
+          case '/quest-ai-followup':
+            if (request.method === 'POST') {
+              response = await handleQuestAIFollowup(request, env);
+            } else {
+              response = methodNotAllowed();
+            }
+            break;
           
           case '/page_content.json':
             if (request.method === 'GET') {
@@ -1442,11 +1450,92 @@ async function callGoogleAI(settings, messages) {
 }
 
 /**
+ * Handles POST /quest-ai-followup
+ * Receives all questionnaire data and generates 2-3 clarifying AI questions
+ */
+async function handleQuestAIFollowup(request, env) {
+  const formData = await request.json();
+  if (!formData) {
+    throw new UserFacingError("Липсват данни от въпросника.", 400);
+  }
+
+  if (!env.ACCOUNT_ID || !env.AI_TOKEN) {
+    throw new Error("Cloudflare Account/AI credentials are not configured.");
+  }
+
+  const model = '@cf/meta/llama-3.1-70b-instruct';
+  const cfEndpoint = `https://api.cloudflare.com/client/v4/accounts/${env.ACCOUNT_ID}/ai/run/${model}`;
+
+  const systemPrompt = `Ти си експерт-нутриционист и здравен консултант. Получаваш попълнен въпросник от клиент, който иска персонализирана програма включваща: хранителен план, протокол за прием на хранителни добавки, психологическа подкрепа, общи здравни съвети и начин на живот.
+
+Твоята задача е да зададеш 2-3 допълнителни уточняващи въпроса, които ще ти помогнат да изготвиш по-точна и персонализирана програма. 
+
+ПРАВИЛА:
+- НЕ повтаряй въпроси, на които клиентът вече е отговорил
+- Въпросите трябва да са конкретни и релевантни на базата на дадените отговори
+- Фокусирай се върху неясноти или области, които изискват повече детайли
+- Въпросите трябва да са на български език
+- Бъди учтив и професионален
+
+Отговори САМО с валиден JSON в следния формат:
+{"questions": ["Въпрос 1?", "Въпрос 2?", "Въпрос 3?"]}`;
+
+  const payload = {
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: `Ето данните от въпросника на клиента:\n${JSON.stringify(formData, null, 2)}` }
+    ],
+    max_tokens: 512,
+    temperature: 0.4,
+    response_format: { type: 'json_object' }
+  };
+
+  const response = await fetch(cfEndpoint, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${env.AI_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  const resultText = await response.text();
+  if (!response.ok) {
+    console.error("AI followup request failed. Status:", response.status, "Body:", resultText);
+    throw new UserFacingError("AI сървърът върна грешка при генериране на допълнителни въпроси.");
+  }
+
+  try {
+    const aiEnvelope = JSON.parse(resultText);
+    if (!aiEnvelope.result || !aiEnvelope.result.response) {
+      throw new Error("AI response missing 'result.response'.");
+    }
+    let data = aiEnvelope.result.response;
+    if (typeof data === 'string') {
+      const jsonMatch = data.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No JSON found in AI response string.");
+      data = JSON.parse(jsonMatch[0]);
+    }
+    if (!data.questions || !Array.isArray(data.questions)) {
+      data = { questions: [] };
+    }
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (e) {
+    console.error("Failed to parse AI followup response:", resultText, e);
+    // Return empty questions on parse failure so user can still proceed
+    return new Response(JSON.stringify({ questions: [] }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+/**
  * Handles POST /quest-submit
  */
 async function handleQuestSubmit(request, env, ctx) {
   const formData = await request.json();
-  if (!formData || !formData.goals || !formData.age || !formData.name) {
+  if (!formData || !formData.name || !formData.age) {
     throw new UserFacingError("Липсват задължителни данни.", 400);
   }
 

@@ -19,42 +19,75 @@
         // --- Конфигурация ---
         const BASE_URL = "https://port.radilov-k.workers.dev";
         const WORKER_SUBMIT_URL = `${BASE_URL}/quest-submit`;
+        const WORKER_AI_FOLLOWUP_URL = `${BASE_URL}/quest-ai-followup`;
         const PAGE_CONTENT_URL = `${BASE_URL}/page_content.json`;
 
         // --- Глобално състояние ---
         let currentStepIndex = 0;
         const totalSteps = steps.length;
-        let allProductsData = []; // Тук ще пазим данните за всички продукти
+        let allProductsData = [];
+        let aiFollowupLoaded = false;
+        // Index of the AI follow-up step (last step)
+        const AI_FOLLOWUP_STEP_INDEX = totalSteps - 1;
+        // Index of the contact step (second to last)
+        const CONTACT_STEP_INDEX = totalSteps - 2;
 
-        // --- НОВА ЛОГИКА: Извличане на данните за продуктите при зареждане ---
+        // --- Извличане на данните за продуктите при зареждане ---
         async function fetchAndProcessProductData() {
           try {
             const response = await fetch(PAGE_CONTENT_URL);
             if (!response.ok)
               throw new Error(`HTTP error! status: ${response.status}`);
             const pageContent = await response.json();
-
-            // Извличаме и "сплескваме" продуктите от всички категории в един масив
             allProductsData = pageContent.page_content
               .filter(
                 (component) =>
                   component.type === "product_category" && component.products,
               )
               .flatMap((category) => category.products);
-
             console.log("Product data loaded successfully:", allProductsData);
-            nextBtn.disabled = false; // Активираме бутона след успешно зареждане
+            nextBtn.disabled = false;
           } catch (error) {
             console.error("Failed to load product data:", error);
             formErrorText.textContent =
               "Неуспешно зареждане на продуктовата информация. Моля, презаредете страницата.";
             formErrorContainer.classList.remove("hidden");
-            nextBtn.disabled = true; // Деактивираме бутоните, ако данните не са заредени
+            nextBtn.disabled = true;
             backBtn.disabled = true;
           }
         }
 
+        // --- "Друго" поле toggle логика ---
+        function setupOtherToggles() {
+          form.querySelectorAll('[data-other-toggle]').forEach((input) => {
+            const targetId = input.getAttribute('data-other-toggle');
+            const targetField = document.getElementById(targetId);
+            if (!targetField) return;
 
+            input.addEventListener('change', () => {
+              if (input.checked) {
+                targetField.classList.remove('hidden');
+                targetField.focus();
+              } else {
+                targetField.classList.add('hidden');
+                targetField.value = '';
+              }
+            });
+
+            // For radio buttons: hide on sibling change
+            if (input.type === 'radio') {
+              const siblings = form.querySelectorAll(`input[name="${input.name}"]`);
+              siblings.forEach((sibling) => {
+                if (sibling !== input) {
+                  sibling.addEventListener('change', () => {
+                    targetField.classList.add('hidden');
+                    targetField.value = '';
+                  });
+                }
+              });
+            }
+          });
+        }
 
         // --- Мобилно меню ---
         const menuToggle = document.querySelector(".menu-toggle");
@@ -84,7 +117,8 @@
             }
           });
         }
-        // --- Навигация и Валидация на Формата (остава почти непроменена) ---
+
+        // --- Навигация и Валидация ---
         function updateForm() {
           steps.forEach((step, index) =>
             step.classList.toggle("active", index === currentStepIndex),
@@ -117,6 +151,31 @@
           }
         }
 
+        // Определя кои radio/checkbox групи са задължителни на всяка стъпка
+        const requiredRadioGroups = {
+          0: ['gender'],
+          2: ['goals'],
+          4: ['meals_per_day', 'skip_breakfast', 'water_intake', 'sugary_drinks', 'special_diet'],
+          6: ['activity', 'work_type', 'daily_steps'],
+          7: ['sleep_quality'],
+          8: ['smoking', 'alcohol', 'caffeine'],
+          9: ['previous_diets', 'support'],
+          10: ['duration', 'consent'],
+        };
+
+        // Имена, които не се третират като задължителни текстови полета
+        const optionalFieldNames = [
+          'gender', 'goals', 'health_conditions', 'activity', 'duration',
+          'consent', 'main_goal', 'conditions_detail', 'medications',
+          'allergies', 'typical_diet', 'additional_info',
+          'meals_per_day', 'skip_breakfast', 'water_intake', 'sugary_drinks',
+          'special_diet', 'cellulite', 'problem_zones', 'exercise_types',
+          'work_type', 'daily_steps', 'sleep_quality', 'stress_coping',
+          'smoking', 'alcohol', 'caffeine', 'previous_diets', 'support',
+          'health_conditions_other_text', 'goals_other_text',
+          'special_diet_other_text', 'waist',
+        ];
+
         function validateCurrentStep() {
           const currentStep = steps[currentStepIndex];
           currentStep
@@ -127,52 +186,58 @@
             el.style.display = "none";
           });
           let isValid = true;
+
+          // Skip validation for AI follow-up step (dynamic content)
+          if (currentStepIndex === AI_FOLLOWUP_STEP_INDEX) {
+            return true;
+          }
+
           const inputs = currentStep.querySelectorAll("input, textarea");
           for (const input of inputs) {
             const name = input.name;
             const value = input.value.trim();
-            if (
-              input.hasAttribute("id") &&
-              ![
-                "gender",
-                "goals",
-                "activity",
-                "duration",
-                "consent",
-                "main_goal",
-                "conditions",
-                "medications",
-                "allergies",
-              ].includes(name) &&
-              value === ""
-            ) {
+
+            // Skip hidden "other" fields, checkboxes, radios
+            if (input.classList.contains('other-text-input') && input.classList.contains('hidden')) continue;
+            if (input.type === 'radio' || input.type === 'checkbox') continue;
+
+            // Determine required text inputs
+            if (input.hasAttribute("id") && !optionalFieldNames.includes(name) && value === "") {
               isValid = false;
               showError(input, "Това поле е задължително.");
               continue;
             }
+
+            // Specific validation
             switch (input.id) {
               case "age":
-                if (isNaN(value) || +value < 18 || +value > 100) {
+                if (value !== "" && (isNaN(value) || +value < 18 || +value > 100)) {
                   isValid = false;
                   showError(input, "Моля, въведете валидна възраст (18-100).");
                 }
                 break;
               case "height":
-                if (isNaN(value) || +value < 100 || +value > 250) {
+                if (value !== "" && (isNaN(value) || +value < 100 || +value > 250)) {
                   isValid = false;
-                  showError(
-                    input,
-                    "Моля, въведете валиден ръст в см (100-250).",
-                  );
+                  showError(input, "Моля, въведете валиден ръст в см (100-250).");
                 }
                 break;
               case "weight":
-                if (isNaN(value) || +value < 30 || +value > 300) {
+                if (value !== "" && (isNaN(value) || +value < 30 || +value > 300)) {
                   isValid = false;
-                  showError(
-                    input,
-                    "Моля, въведете валидно тегло в кг (30-300).",
-                  );
+                  showError(input, "Моля, въведете валидно тегло в кг (30-300).");
+                }
+                break;
+              case "target_weight":
+                if (value !== "" && (isNaN(value) || +value < 30 || +value > 200)) {
+                  isValid = false;
+                  showError(input, "Моля, въведете валидно целево тегло (30-200).");
+                }
+                break;
+              case "waist":
+                if (value !== "" && (isNaN(value) || +value < 40 || +value > 200)) {
+                  isValid = false;
+                  showError(input, "Моля, въведете валидна стойност (40-200).");
                 }
                 break;
               case "main-goal":
@@ -181,71 +246,84 @@
                   showError(input, "Моля, опишете целта си с поне 10 символа.");
                 }
                 break;
-              case "conditions":
+              case "conditions_detail":
               case "medications":
               case "allergies":
                 if (value.length > 0 && value.length < 3) {
                   isValid = false;
-                  showError(
-                    input,
-                    "Моля, опишете по-подробно или въведете 'Нямам'/'Не'.",
-                  );
+                  showError(input, "Моля, опишете по-подробно или въведете 'Нямам'/'Не'.");
                 }
                 break;
               case "sleep":
-                if (isNaN(value) || +value < 1 || +value > 16) {
+                if (value !== "" && (isNaN(value) || +value < 1 || +value > 16)) {
                   isValid = false;
-                  showError(
-                    input,
-                    "Моля, въведете валиден брой часове (1-16).",
-                  );
+                  showError(input, "Моля, въведете валиден брой часове (1-16).");
                 }
                 break;
               case "stress":
-                if (isNaN(value) || +value < 1 || +value > 10) {
+              case "motivation":
+                if (value !== "" && (isNaN(value) || +value < 1 || +value > 10)) {
                   isValid = false;
                   showError(input, "Моля, въведете число от 1 до 10.");
                 }
                 break;
               case "email":
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(value)) {
-                  isValid = false;
-                  showError(input, "Моля, въведете валиден имейл адрес.");
+                if (value !== "") {
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                  if (!emailRegex.test(value)) {
+                    isValid = false;
+                    showError(input, "Моля, въведете валиден имейл адрес.");
+                  }
                 }
                 break;
               case "phone":
-                const phoneRegex = /^[0-9\s+()-]{9,}$/;
-                if (!phoneRegex.test(value)) {
-                  isValid = false;
-                  showError(input, "Моля, въведете валиден телефонен номер.");
+                if (value !== "") {
+                  const phoneRegex = /^[0-9\s+()-]{9,}$/;
+                  if (!phoneRegex.test(value)) {
+                    isValid = false;
+                    showError(input, "Моля, въведете валиден телефонен номер.");
+                  }
                 }
                 break;
             }
           }
-          const checkGroups = (name, message) => {
-            const group = currentStep.querySelector(`input[name="${name}"]`);
-            if (group && !form.querySelector(`input[name="${name}"]:checked`)) {
+
+          // Validate required radio/checkbox groups for this step
+          const groups = requiredRadioGroups[currentStepIndex] || [];
+          groups.forEach((groupName) => {
+            const group = currentStep.querySelector(`input[name="${groupName}"]`);
+            if (group && !form.querySelector(`input[name="${groupName}"]:checked`)) {
               isValid = false;
               const errorContainer = group
                 .closest(".form-group")
                 .querySelector(".error-message");
               if (errorContainer) {
-                errorContainer.textContent = message;
+                const messages = {
+                  'gender': 'Моля, изберете пол.',
+                  'goals': 'Моля, изберете поне една цел.',
+                  'activity': 'Моля, изберете ниво на активност.',
+                  'duration': 'Моля, изберете период.',
+                  'consent': 'Трябва да се съгласите с условието.',
+                  'meals_per_day': 'Моля, изберете отговор.',
+                  'skip_breakfast': 'Моля, изберете отговор.',
+                  'water_intake': 'Моля, изберете отговор.',
+                  'sugary_drinks': 'Моля, изберете отговор.',
+                  'special_diet': 'Моля, изберете отговор.',
+                  'work_type': 'Моля, изберете отговор.',
+                  'daily_steps': 'Моля, изберете отговор.',
+                  'sleep_quality': 'Моля, изберете отговор.',
+                  'smoking': 'Моля, изберете отговор.',
+                  'alcohol': 'Моля, изберете отговор.',
+                  'caffeine': 'Моля, изберете отговор.',
+                  'previous_diets': 'Моля, изберете отговор.',
+                  'support': 'Моля, изберете отговор.',
+                };
+                errorContainer.textContent = messages[groupName] || 'Моля, изберете отговор.';
                 errorContainer.style.display = "block";
               }
             }
-          };
-          if (currentStepIndex === 0)
-            checkGroups("gender", "Моля, изберете пол.");
-          if (currentStepIndex === 1)
-            checkGroups("goals", "Моля, изберете поне една цел.");
-          if (currentStepIndex === 3)
-            checkGroups("activity", "Моля, изберете ниво на активност.");
-          if (currentStepIndex === 4) {
-            checkGroups("duration", "Моля, изберете период на прием.");
-            checkGroups("consent", "Трябва да се съгласите с условието.");
-          }
+          });
+
           return isValid;
         }
 
@@ -268,8 +346,125 @@
             });
           });
 
-        nextBtn.addEventListener("click", () => {
+        // --- Събиране на данни от формата ---
+        function collectFormData() {
+          const formDataObj = new FormData(form);
+          const data = {};
+
+          // Multi-value checkbox groups
+          const multiGroups = ['goals', 'health_conditions', 'problem_zones', 'exercise_types', 'stress_coping'];
+
+          for (const [key, value] of formDataObj.entries()) {
+            if (multiGroups.includes(key)) continue;
+            data[key] = value;
+          }
+
+          multiGroups.forEach((group) => {
+            data[group] = formDataObj.getAll(group);
+          });
+
+          // Sanitize text fields
+          const fieldsToSanitize = [
+            'name', 'main_goal', 'conditions_detail', 'medications',
+            'allergies', 'typical_diet', 'additional_info',
+            'health_conditions_other_text', 'goals_other_text',
+            'special_diet_other_text',
+          ];
+          fieldsToSanitize.forEach((fieldName) => {
+            if (data[fieldName]) {
+              data[fieldName] = data[fieldName]
+                .replace(/"/g, "'")
+                .replace(/\\/g, "");
+            }
+          });
+
+          // Collect AI follow-up answers
+          const aiAnswers = [];
+          document.querySelectorAll('.ai-followup-answer').forEach((textarea) => {
+            const question = textarea.getAttribute('data-question');
+            const answer = textarea.value.trim();
+            if (question && answer) {
+              aiAnswers.push({ question, answer });
+            }
+          });
+          if (aiAnswers.length > 0) {
+            data.ai_followup_answers = aiAnswers;
+          }
+
+          return data;
+        }
+
+        // --- AI Follow-up: зареждане на допълнителни въпроси ---
+        async function loadAIFollowupQuestions() {
+          if (aiFollowupLoaded) return;
+
+          const loadingEl = document.getElementById('ai-followup-loading');
+          const questionsEl = document.getElementById('ai-followup-questions');
+          const errorEl = document.getElementById('ai-followup-error');
+
+          loadingEl.classList.remove('hidden');
+          questionsEl.classList.add('hidden');
+          errorEl.classList.add('hidden');
+
+          const data = collectFormData();
+
+          try {
+            const response = await fetch(WORKER_AI_FOLLOWUP_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data),
+            });
+            const result = await response.json();
+
+            if (!response.ok || result.error) {
+              throw new Error(result.error || 'Грешка при генериране на въпросите.');
+            }
+
+            const questions = result.questions || [];
+            questionsEl.innerHTML = '';
+
+            if (questions.length === 0) {
+              questionsEl.innerHTML = '<p>Няма допълнителни въпроси. Можете да продължите.</p>';
+            } else {
+              questions.forEach((q, i) => {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+                div.innerHTML = `
+                  <label for="ai-q-${i}">${q}</label>
+                  <textarea id="ai-q-${i}" class="ai-followup-answer" data-question="${q.replace(/"/g, '&quot;')}" placeholder="Вашият отговор..."></textarea>
+                  <div class="error-message"></div>
+                `;
+                questionsEl.appendChild(div);
+              });
+            }
+
+            loadingEl.classList.add('hidden');
+            questionsEl.classList.remove('hidden');
+            aiFollowupLoaded = true;
+          } catch (error) {
+            console.error('AI followup error:', error);
+            loadingEl.classList.add('hidden');
+            errorEl.textContent = `Не успяхме да генерираме допълнителни въпроси: ${error.message}. Можете да продължите без тях.`;
+            errorEl.classList.remove('hidden');
+            questionsEl.innerHTML = '';
+            questionsEl.classList.remove('hidden');
+            aiFollowupLoaded = true; // Allow proceeding even on error
+          }
+        }
+
+        // --- Навигация ---
+        nextBtn.addEventListener("click", async () => {
           if (!validateCurrentStep()) return;
+
+          // When leaving the contact step, load AI follow-up questions
+          if (currentStepIndex === CONTACT_STEP_INDEX) {
+            currentStepIndex++;
+            updateForm();
+            window.scrollTo(0, 0);
+            await loadAIFollowupQuestions();
+            return;
+          }
+
           if (currentStepIndex < totalSteps - 1) {
             currentStepIndex++;
             updateForm();
@@ -300,34 +495,14 @@
           }
         });
 
-        // --- Изпращане на данните (остава почти непроменено) ---
+        // --- Изпращане на данните ---
         async function submitForm() {
           nextBtn.disabled = true;
           backBtn.disabled = true;
           nextBtn.textContent = "Анализираме...";
           formErrorContainer.classList.add("hidden");
 
-          const formData = new FormData(form);
-          const data = {};
-          for (const [key, value] of formData.entries()) {
-            if (key === "goals") continue;
-            data[key] = value;
-          }
-          data.goals = formData.getAll("goals");
-          const fieldsToSanitize = [
-            "name",
-            "main_goal",
-            "conditions",
-            "medications",
-            "allergies",
-          ];
-          fieldsToSanitize.forEach((fieldName) => {
-            if (data[fieldName]) {
-              data[fieldName] = data[fieldName]
-                .replace(/"/g, "'")
-                .replace(/\\/g, "");
-            }
-          });
+          const data = collectFormData();
 
           questionnaireContainer.classList.add("hidden");
           loadingContainer.classList.remove("hidden");
@@ -358,7 +533,7 @@
           }
         }
 
-        // --- НОВА ЛОГИКА: Показване на по-богати резултати ---
+        // --- Показване на резултати ---
         function displayResults(results, name) {
           document.getElementById("results-name").textContent = name;
           document.getElementById("analysis-text").textContent =
@@ -369,10 +544,9 @@
             results.disclaimer;
 
           const productsList = document.getElementById("products-list");
-          productsList.innerHTML = ""; // Изчистваме старите резултати
+          productsList.innerHTML = "";
 
           results.recommended_products.forEach((rec) => {
-            // Намираме пълната информация за продукта по ID
             const productDetails = allProductsData.find(
               (p) => p.product_id === rec.product_id,
             );
@@ -380,10 +554,9 @@
               console.warn(
                 `Product with ID ${rec.product_id} not found in local data.`,
               );
-              return; // Пропускаме, ако продуктът не е намерен
+              return;
             }
 
-            // Генерираме HTML за ефектите
             const effectsHtml = productDetails.public_data.effects
               .map(
                 (effect) => `
@@ -397,7 +570,6 @@
               )
               .join("");
 
-            // Генерираме HTML за вариантите
             const variantsHtml = productDetails.public_data.variants
               .map(
                 (variant) => `
@@ -410,7 +582,6 @@
               )
               .join("");
 
-            // Сглобяваме цялата карта на продукта
             const productCardHtml = `
                     <div class="product-result-card">
                         <div class="product-header">
@@ -471,8 +642,9 @@
 
         // --- Инициализация ---
         async function initialize() {
-          nextBtn.disabled = true; // Деактивираме бутона, докато данните се зареждат
+          nextBtn.disabled = true;
           nextBtn.textContent = "Зареждане...";
+          setupOtherToggles();
           await fetchAndProcessProductData();
           updateForm();
         }
