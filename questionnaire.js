@@ -429,11 +429,23 @@
               questions.forEach((q, i) => {
                 const div = document.createElement('div');
                 div.className = 'form-group';
-                div.innerHTML = `
-                  <label for="ai-q-${i}">${q}</label>
-                  <textarea id="ai-q-${i}" class="ai-followup-answer" data-question="${q.replace(/"/g, '&quot;')}" placeholder="Вашият отговор..."></textarea>
-                  <div class="error-message"></div>
-                `;
+
+                const label = document.createElement('label');
+                label.setAttribute('for', `ai-q-${i}`);
+                label.textContent = q;
+
+                const textarea = document.createElement('textarea');
+                textarea.id = `ai-q-${i}`;
+                textarea.className = 'ai-followup-answer';
+                textarea.setAttribute('data-question', q);
+                textarea.placeholder = 'Вашият отговор...';
+
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+
+                div.appendChild(label);
+                div.appendChild(textarea);
+                div.appendChild(errorDiv);
                 questionsEl.appendChild(div);
               });
             }

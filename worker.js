@@ -1535,7 +1535,7 @@ async function handleQuestAIFollowup(request, env) {
  */
 async function handleQuestSubmit(request, env, ctx) {
   const formData = await request.json();
-  if (!formData || !formData.name || !formData.age) {
+  if (!formData || !formData.name || !formData.age || !Array.isArray(formData.goals) || formData.goals.length === 0) {
     throw new UserFacingError("Липсват задължителни данни.", 400);
   }
 
