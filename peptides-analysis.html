@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пептиди, Глутатион и NAD+ — Клиничен Анализ 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #05091a;
+            --bg-card: rgba(8, 18, 40, 0.85);
+            --accent-cyan: #00c4c8;
+            --accent-gold: #d4a843;
+            --text-primary: #e8f2f8;
+            --text-secondary: #7b98b5;
+            --border-glow: rgba(0, 196, 200, 0.25);
+            --border-radius: 14px;
+            --shadow-glow: 0 0 30px rgba(0, 196, 200, 0.08);
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(0,196,200,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(212,168,67,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(0,100,150,0.04) 0%, transparent 60%);
+            animation: bgShift 25s ease-in-out infinite alternate;
+        }
+        @keyframes bgShift {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.05) translate(2%, 2%); }
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 50px 20px 40px;
+        }
+        .hero h1 {
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            background: linear-gradient(90deg, #00c4c8, #d4a843);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 14px;
+        }
+        .hero .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* TOC */
+        .toc {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-radius: var(--border-radius);
+            padding: 24px 28px;
+            margin-bottom: 50px;
+            backdrop-filter: blur(10px);
+        }
+        .toc h2 {
+            font-size: 1.1rem;
+            color: var(--accent-cyan);
+            margin-bottom: 14px;
+            font-weight: 700;
+        }
+        .toc ol {
+            list-style: none;
+            counter-reset: toc;
+            padding: 0;
+        }
+        .toc ol li {
+            counter-increment: toc;
+            margin-bottom: 8px;
+        }
+        .toc ol li a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.92rem;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toc ol li a::before {
+            content: counter(toc, upper-roman) ".";
+            color: var(--accent-gold);
+            font-weight: 700;
+            min-width: 32px;
+        }
+        .toc ol li a:hover { color: var(--accent-cyan); }
+
+        /* Category sections */
+        .category-section {
+            margin-bottom: 60px;
+            scroll-margin-top: 20px;
+        }
+        .category-section > h2 {
+            color: var(--text-primary);
+            border-left: 3px solid var(--accent-cyan);
+            border-bottom: 1px solid var(--border-glow);
+            padding: 10px 0 12px 18px;
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: -3px 0 20px rgba(0,196,200,0.15);
+        }
+        .category-intro {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            margin-bottom: 28px;
+            padding-left: 22px;
+            border-left: 2px solid rgba(0,196,200,0.12);
+            line-height: 1.7;
+        }
+
+        /* Product cards */
+        .product {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-radius: var(--border-radius);
+            padding: 28px;
+            margin-bottom: 28px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.35s ease;
+        }
+        .product::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0,196,200,0.5), transparent);
+        }
+        .product:hover {
+            border-color: rgba(0,196,200,0.4);
+            box-shadow: 0 8px 30px rgba(0,196,200,0.1);
+        }
+        .product h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            background: linear-gradient(90deg, #d4a843, #e8c878);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Info blocks inside product */
+        .info-block {
+            margin-bottom: 18px;
+        }
+        .info-block:last-child { margin-bottom: 0; }
+        .info-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .info-label.effects { color: var(--accent-cyan); }
+        .info-label.strength { color: var(--accent-gold); }
+        .info-label.mechanism { color: #818cf8; }
+        .info-label.side-effects { color: var(--warning); }
+        .info-label.hidden-risks { color: var(--danger); }
+        .info-label.longevity { color: var(--success); }
+
+        .info-content {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.75;
+            padding-left: 4px;
+        }
+        .info-content strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Risk badge */
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .risk-low {
+            background: rgba(16,185,129,0.12);
+            color: #10b981;
+            border: 1px solid rgba(16,185,129,0.3);
+        }
+        .risk-moderate {
+            background: rgba(245,158,11,0.12);
+            color: #f59e0b;
+            border: 1px solid rgba(245,158,11,0.3);
+        }
+        .risk-high {
+            background: rgba(239,68,68,0.12);
+            color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+        .risk-experimental {
+            background: rgba(168,85,247,0.12);
+            color: #a855f7;
+            border: 1px solid rgba(168,85,247,0.3);
+        }
+
+        /* Separator inside product */
+        .info-sep {
+            border: none;
+            border-top: 1px solid var(--border-glow);
+            margin: 16px 0;
+        }
+
+        /* Subgroup heading */
+        .subgroup {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin: 32px 0 16px;
+            padding: 8px 14px;
+            background: rgba(0,196,200,0.06);
+            border-left: 3px solid var(--accent-cyan);
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* GH table */
+        .gh-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.82rem;
+        }
+        .gh-table th {
+            background: rgba(0,196,200,0.1);
+            color: var(--accent-cyan);
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-glow);
+        }
+        .gh-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(0,196,200,0.08);
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+        .gh-table tr:hover td {
+            background: rgba(0,196,200,0.04);
+        }
+        .gh-table td strong {
+            color: var(--text-primary);
+        }
+
+        /* Warning box */
+        .warning-box {
+            background: rgba(239,68,68,0.06);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 18px 0;
+            font-size: 0.88rem;
+            color: #fca5a5;
+            line-height: 1.7;
+        }
+        .warning-box .wb-title {
+            color: var(--danger);
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Synergy / info box */
+        .synergy-box {
+            background: rgba(0,196,200,0.05);
+            border: 1px solid rgba(0,196,200,0.2);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 18px 0;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        .synergy-box .sb-title {
+            color: var(--accent-cyan);
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        /* Footer */
+        .page-footer {
+            text-align: center;
+            padding: 40px 20px 30px;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            border-top: 1px solid var(--border-glow);
+            margin-top: 40px;
+        }
+        .page-footer a { color: var(--accent-cyan); text-decoration: none; }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container { padding: 12px; }
+            .product { padding: 18px; }
+            .toc { padding: 16px 18px; }
+            .gh-table { font-size: 0.75rem; }
+            .gh-table th, .gh-table td { padding: 7px 8px; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="container">
+
+<div class="hero">
+    <h1>Инжекционни пептиди и клетъчни терапии:<br>Изчерпателен клиничен анализ към 2026 г.</h1>
+    <p class="subtitle">Задълбочен, критичен анализ на всяка фармакологична молекула — основни ефекти, клинична сила, прецизни биохимични механизми на действие, странични ефекти и <strong style="color:#ef4444">скрити рискове</strong>, които рядко се споменават.</p>
+</div>
+
+<!-- TOC -->
+<nav class="toc">
+    <h2>📋 Съдържание</h2>
+    <ol>
+        <li><a href="#cat1">Отслабване и метаболизъм (Липолиза и апетит)</a></li>
+        <li><a href="#cat2">Бодибилдинг и мускулен растеж (Анаболни пептиди)</a></li>
+        <li><a href="#cat3">Възстановяване, стави и регенерация</a></li>
+        <li><a href="#cat4">Красота, кожа и сексуално здраве</a></li>
+        <li><a href="#cat5">Антиейджинг, дълголетие и имунитет</a></li>
+        <li><a href="#cat6">Мозък и когнитивни функции (Ноотропи)</a></li>
+        <li><a href="#cat7">NAD+ и Глутатион — Скрити рискове</a></li>
+    </ol>
+</nav>
+
+<!-- ═══════════════════ I. ОТСЛАБВАНЕ И МЕТАБОЛИЗЪМ ═══════════════════ -->
+<section class="category-section" id="cat1">
+<h2>🔥 I. Отслабване и метаболизъм (Липолиза и апетит)</h2>
+<p class="category-intro">Агенти, които системно модулират енергийния баланс чрез централни механизми (контрол на апетита в хипоталамуса) и периферни пътища (липолиза в адипоцитите, митохондриална функция).</p>
+
+<div class="subgroup">Инкретинови миметици и мултирецепторни агонисти</div>
+
+<!-- 1. Retatrutide -->
+<article class="product">
+<h3>1. Retatrutide (Троен агонист) <span class="risk-badge risk-moderate">⚠ Умерен риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Най-мощният фармакологичен агент за редукция на телесното тегло в клинични изпитвания. Намалява общата телесна мастна маса с <strong>23.2% – 26.1%</strong> за 36 седмици (измерено чрез DXA). Елиминира чернодробна стеатоза, намалява висцералната мазнина и сърдечно-съдовия риск. Запазва здравословна пропорция на чистата мускулна маса.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label strength">💪 Сила на действие</div>
+    <div class="info-content"><strong>Изключителна.</strong> Превъзхожда Semaglutide и Tirzepatide по всички метрики. При доза 8–12 mg демонстрира ненадмината клинична ефективност (фаза 3, проучване TRIUMPH).</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Единична молекула, агонизираща <strong>три различни рецептора</strong> едновременно:
+    <br>• <strong>GLP-1</strong> (глюкагоноподобен пептид-1) — забавя стомашното изпразване, изпраща мощни сигнали за ситост към хипоталамуса.
+    <br>• <strong>GIP</strong> (глюкозо-зависим инсулинотропен полипептид) — синергично усилва потискането на апетита и подобрява инсулиновата чувствителност.
+    <br>• <strong>GCGR</strong> (глюкагонов рецептор) — директно повишава базалния метаболизъм, ускорява чернодробния липиден клирънс. Принуждава тялото да изгаря калории и мастни киселини дори в покой.
+    <br><br>Тройната синергия създава качествено различен метаболитен профил — не само потиска апетита, но и активно ускорява горенето на мазнини.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label side-effects">⚠️ Странични ефекти</div>
+    <div class="info-content">• Гадене (38–43% от случаите), диария, запек, повръщане — най-интензивни при ескалация на дозата.
+    <br>• Специфична дозозависима кожна свръхчувствителност — <strong>хиперестезия и дизестезия</strong>, засягаща до 20% от пациентите.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове и критичен анализ</div>
+    <div class="info-content">• <strong>Загуба на мускулна маса:</strong> Въпреки че пропорцията остава в „здравословни граници", всяка драстична загуба на тегло неизбежно води до загуба и на мускулна тъкан, което при по-възрастни пациенти може да ускори саркопения.
+    <br>• <strong>Зависимост от терапията:</strong> При спиране на пептида, апетитът и метаболизмът се връщат към изходни стойности, което води до бърз повторен набор на тегло (ефект „йо-йо").
+    <br>• <strong>Панкреатична безопасност:</strong> Дългосрочните данни за троен агонизъм са все още ограничени. Инкретиновите терапии са свързани с повишен (макар и рядък) риск от панкреатит.
+    <br>• <strong>Кожните реакции</strong> (20%) не трябва да се подценяват — хиперестезията може да е знак за невротоксичност на глюкагоновия компонент.</div>
+</div>
+</article>
+
+<!-- 2-3. Tirzepatide & Semaglutide -->
+<article class="product">
+<h3>2–3. Tirzepatide &amp; Semaglutide <span class="risk-badge risk-moderate">⚠ Умерен риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content"><strong>Semaglutide</strong> — класическият стандарт за лечение на затлъстяване. Мощно потискане на апетита, забавяне на стомашната перисталтика. Доказано намалява миокарден инфаркт, инсулт и системно възпаление.
+    <br><strong>Tirzepatide</strong> — надгражда с добавяне на GIP активност. По-силно подобрява инсулиновата чувствителност. Кардиопротективен ефект.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content"><strong>Semaglutide:</strong> Моноагонист на GLP-1 рецептора. Имитира хормона за ситост, забавя стомашното изпразване, изпраща сигнали за засищане чрез хипоталамуса.
+    <br><strong>Tirzepatide:</strong> Двоен агонист (GLP-1 + GIP). Синергията между двата пътя не само усилва потискането на апетита, но и подобрява инсулиновата чувствителност в периферните тъкани по-ефективно от Semaglutide.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label side-effects">⚠️ Странични ефекти</div>
+    <div class="info-content">Стомашно-чревни (гадене, запек, диария). По-нисък риск от кожни реакции спрямо Retatrutide. По-слабо изразен ефект върху базовия метаболизъм (липса на глюкагонов компонент).</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Рецепторна десенситизация:</strong> Продължителна GLP-1 стимулация може да доведе до намален отговор при дългогодишна употреба.
+    <br>• <strong>Загуба на мускулна маса:</strong> Остава проблем при всички инкретинови терапии, особено без съпътстващи тренировки.
+    <br>• <strong>Психологическа зависимост:</strong> Пациентите свикват с ниския апетит и при спиране изпитват екстремен глад.</div>
+</div>
+</article>
+
+<!-- 4. Cagrilintide -->
+<article class="product">
+<h3>4. Cagrilintide <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Дългодействащ аналог на амилина. Създава дълбоко и устойчиво чувство на ситост. Комбинираният препарат <strong>CagriSema</strong> (Cagrilintide + Semaglutide) постига <strong>7.6 kg допълнителна загуба</strong> спрямо самостоятелния Semaglutide, с по-добър гликемичен контрол.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Амилинът се ко-секретира с инсулина от бета-клетките на панкреаса при хранене. Cagrilintide преминава <strong>кръвно-мозъчната бариера</strong> и действа директно върху <strong>area postrema</strong> в задния мозък, създавайки централно чувство на ситост. За разлика от GLP-1 агонистите, <strong>не разчита на механично забавяне на стомаха</strong>. Предлага алтернативен път без изчерпване на рецепторната чувствителност на инкретиновата система.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label side-effects">⚠️ Странични ефекти</div>
+    <div class="info-content">Повишен риск от гадене и повръщане при комбинираната терапия CagriSema. Налага внимателно титриране на дозата.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Амилоидоза:</strong> Амилинът е молекула, която може да формира амилоидни агрегати в панкреаса при хронична свръхстимулация — потенциален дългосрочен риск, недостатъчно проучен при аналози.
+    <br>• <strong>Централна нервна система:</strong> Прякото действие върху area postrema повдига въпроси за дългосрочни невроендокринни ефекти.</div>
+</div>
+</article>
+
+<div class="subgroup">Директни липолитици и митохондриални регулатори</div>
+
+<!-- 5-6. HGH Frag & AOD9604 -->
+<article class="product">
+<h3>5–6. HGH Frag 176-191 &amp; AOD9604 <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Директно освобождаване на свободни мастни киселини от мастните депа. Оптимизиране на телесния състав и подобряване на липидния профил. Не стимулират IGF-1 — без инсулинова резистентност, хиперплазия или водна задръжка.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label strength">💪 Сила на действие</div>
+    <div class="info-content"><strong>Умерена</strong> спрямо инкретините. Блестят със своя изключителен профил на безопасност. Идеални за дългосрочна употреба.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Изолирана е специфичната липолитична последователност от молекулата на човешкия растежен хормон (аминокиселини 176–191). <strong>AOD9604</strong> е усъвършенстван еквивалент — добавен тирозин на N-терминала за молекулярна стабилност.
+    <br><br>Взаимодействие с <strong>бета-адренергичните рецептори</strong> на адипоцитите → вътреклетъчна каскада → активиране на <strong>хормон-чувствителната липаза (HSL)</strong> → директно освобождаване на мастни киселини за изгаряне.
+    <br><br>Ключово: <strong>липсва домейнът за свързване с GH рецепторите</strong> — не стимулират IGF-1, не причиняват акромегалия.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Ограничена ефективност:</strong> При тежко затлъстяване ефектът е минимален без съпътстващ калориен дефицит и упражнения.
+    <br>• <strong>Качество на продукта:</strong> Тъй като не са фармацевтично одобрени, качеството на пептида от различни доставчици варира драстично — замърсители и грешна дозировка са реален проблем.</div>
+</div>
+</article>
+
+<!-- 7. MOTS-c -->
+<article class="product">
+<h3>7. MOTS-c (Митохондриален пептид) <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Системен метаболитен регулатор и „миметик на упражненията". Мощно противодействие на инсулинова резистентност и диетично затлъстяване. Потиска хронично възпаление, предпазва ендотелна функция. При столетници се наблюдават високи циркулиращи нива.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">16-аминокиселинен пептид, кодиран от <strong>митохондриалната 12S рибозомна РНК</strong> (не от ядрената ДНК). Преминава в ядрото и:
+    <br>• Активира <strong>AMPK</strong> (главният енергиен сензор на клетката).
+    <br>• Стимулира <strong>сиртуиновите пътища (SIRT1)</strong>.
+    <br>• Пренасочва метаболизма към усилено окисление на мастни киселини.
+    <br>• Повишава глюкозното усвояване в скелетната мускулатура.
+    <br>• Инхибира липогенезата.
+    <br><br>Симулира метаболитните ползи от <strong>калорийна рестрикция и аеробни упражнения</strong>.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• Локални реакции на мястото на инжектиране.
+    <br>• <strong>Дългосрочният профил на безопасност при здрави индивиди все още се документира.</strong>
+    <br>• Теоретичен риск: хроничната AMPK активация може да наруши анаболни процеси (мускулен растеж) при интензивно тренирани атлети.</div>
+</div>
+</article>
+
+<!-- 8. Adipotide -->
+<article class="product">
+<h3>8. Adipotide (FTPP) <span class="risk-badge risk-high">🔴 Висок риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Масивна загуба на тегло (до 30%) при примати в предклинични модели, придружена от мощно потискане на апетита.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Проапоптотичен пептидомиметик, базиран на <strong>ангиогенезна блокада</strong>. Свързва се високоселективно с протеина <strong>прохибитин</strong> върху ендотелните клетки на кръвоносните съдове, захранващи бялата мастна тъкан. Инициира <strong>апоптоза</strong> в тези съдове. Лишени от кислород и хранителни вещества, адипоцитите умират и се резорбират.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="warning-box">
+    <div class="wb-title">🚨 Критични рискове</div>
+    <strong>Бъбречна токсичност е основен риск:</strong> Разграждането на огромни количества мастна тъкан създава екстремно натоварване върху бъбреците — тубуларна некроза, лезии, микроалбуминурия, протеинурия и глюкозурия.
+    <br><br>• <strong>Неселективност:</strong> Теоретично може да засегне и кръвоносни съдове извън мастната тъкан.
+    <br>• <strong>Несъвместим с философията за дълголетие</strong> — остава рисков експериментален инструмент.
+    <br>• <strong>Необратимост:</strong> Апоптозата на съдовете е необратим процес — грешка в дозирането може да причини постоянни увреждания.
+</div>
+</article>
+
+<!-- 9-10. GW501516 & SR9009 -->
+<article class="product">
+<h3>9–10. GW501516 (Cardarine) &amp; SR9009 (Stenabolic) <span class="risk-badge risk-experimental">🔬 Експериментални</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Драстично повишаване на мускулната издръжливост и мастно изгаряне. Подобряване на липидния профил. Имитират физическо натоварване, повишавайки базалния метаболизъм.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content"><strong>GW501516:</strong> Мощен агонист на <strong>PPARδ</strong> (пероксизом пролифератор-активиран рецептор делта). Пренаписва генната експресия, превключвайки предпочитания енергиен източник от глюкоза към липиди.
+    <br><br><strong>SR9009:</strong> Агонист на <strong>Rev-ErbA</strong> — протеин, регулиращ циркадните ритми и митохондриалната биогенеза. Активира механизми, имитиращи физическо натоварване. Пероралната бионаличност е изключително ниска — прилага се инжекционно.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="warning-box">
+    <div class="wb-title">🚨 Критични рискове</div>
+    <strong>GW501516:</strong> Противоречиви данни за <strong>онкогенеза при гризачи</strong> — причина за спиране на клиничните изпитвания. PPARδ активацията може да стимулира клетъчна пролиферация в определени тъкани.
+    <br><br><strong>SR9009:</strong> Липсва достатъчна документация за дългосрочна безопасност при хора. Нарушаването на циркадните ритми при неправилно приложение може да има каскаден ефект върху метаболизма.
+    <br><br>И двете молекули са <strong>рискови за продължителна употреба</strong> в контекста на дълголетието.
+</div>
+</article>
+
+</section>
+
+<!-- ═══════════════════ II. БОДИБИЛДИНГ И МУСКУЛЕН РАСТЕЖ ═══════════════════ -->
+<section class="category-section" id="cat2">
+<h2>💪 II. Бодибилдинг и мускулен растеж (Анаболни пептиди)</h2>
+<p class="category-intro">Анаболните пептиди модулират соматотропната ос (Хипоталамус → Хипофиза → Черен дроб → Тъкани) или инхибират негативните регулатори на мускулния растеж, за да стимулират хипертрофията и хиперплазията.</p>
+
+<div class="subgroup">Инсулиноподобен растежен фактор (IGF-1)</div>
+
+<!-- IGF-1 LR3 & IGF-1 DES -->
+<article class="product">
+<h3>1–2. IGF-1 LR3 &amp; IGF-1 DES <span class="risk-badge risk-high">🔴 Висок риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content"><strong>IGF-1 LR3</strong> — системна, дълготрайна мускулна хиперплазия. Полуживот 20–30 часа (срещу 20 минути за естествения IGF-1). Циркулира системно.
+    <br><strong>IGF-1 DES</strong> — 10 пъти по-анаболен от нормалния IGF-1, но с много кратък полуживот. За локално инжектиране в целеви мускул за незабавен локален растеж.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content"><strong>IGF-1 LR3:</strong> 13 допълнителни аминокиселини на N-терминала + замяна на Аргинин на 3-та позиция. Тази модификация пречи на свързването с IGF-свързващите протеини (IGFBPs), удължавайки полуживота. Активира <strong>PI3K/AKT сигналния път</strong> — главният драйвер за протеинов синтез и блокиране на мускулен разпад.
+    <br><br><strong>IGF-1 DES:</strong> Съкратена версия (липсват първите 3 аминокиселини) — изключително потентен, за локална употреба преди механично натоварване.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="warning-box">
+    <div class="wb-title">🚨 Критични рискове за дълголетието</div>
+    • <strong>Митогенен потенциал:</strong> IGF-1 не причинява рак, но мощно <strong>ускорява растежа на вече съществуващи неопластични клетки</strong>.
+    <br>• <strong>Хипогликемия</strong> — реален и опасен риск при предозиране.
+    <br>• <strong>Инсулинова резистентност</strong> при продължителна употреба.
+    <br>• <strong>Интестинална хипертрофия</strong> и водна задръжка.
+    <br>• <strong>Геронтологична контраиндикация:</strong> Високите нива на IGF-1 категорично корелират с по-бързо биологично стареене. Контраиндицирани в протоколи за дълголетие.
+</div>
+</article>
+
+<div class="subgroup">Стимулатори на растежния хормон (GH Secretagogues)</div>
+
+<!-- GH Secretagogues Table -->
+<article class="product">
+<h3>3–10. GH секретагози — GHRH аналози и GHRP пептиди <span class="risk-badge risk-low">✓ Нисък – умерен риск</span></h3>
+
+<table class="gh-table">
+<thead>
+<tr>
+    <th>Пептид</th>
+    <th>Клас / Механизъм</th>
+    <th>Полуживот</th>
+    <th>Странични ефекти</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+    <td><strong>CJC-1295 + DAC</strong></td>
+    <td>GHRH аналог. DAC се свързва ковалентно с албумина в кръвта.</td>
+    <td>Дни. Непрекъснато, непулсиращо изтичане на GH ("GH bleed").</td>
+    <td>Минимален ефект върху апетита. <strong>Може да причини хипофизарна умора.</strong></td>
+</tr>
+<tr>
+    <td><strong>Mod GRF 1-29</strong></td>
+    <td>GHRH аналог без DAC. Имитира естествения физиологичен пулс.</td>
+    <td>~30 мин. Остър, физиологичен пик.</td>
+    <td>Зачервяване при инжектиране, лек спад на кръвното.</td>
+</tr>
+<tr>
+    <td><strong>Ipamorelin</strong></td>
+    <td>Селективен GHRP (грелинов агонист). Заобикаля соматостатина.</td>
+    <td>~2–3 часа. Дълъг, плавен пик.</td>
+    <td>Най-чистият GHRP. <strong>Не повишава кортизол, пролактин или апетит.</strong></td>
+</tr>
+<tr>
+    <td><strong>GHRP-2 &amp; GHRP-6</strong></td>
+    <td>Неселективни грелинови агонисти. Мощна стимулация на хипофизата.</td>
+    <td>Кратки. Рязък пик на GH.</td>
+    <td><strong>Екстремен глад</strong> (особено GHRP-6). Повишават пролактин и кортизол.</td>
+</tr>
+<tr>
+    <td><strong>Hexarelin</strong></td>
+    <td>Най-мощният синтетичен GHRP.</td>
+    <td>Краток.</td>
+    <td><strong>Бърза десенситизация на рецепторите.</strong> Силно повишава кортизола.</td>
+</tr>
+<tr>
+    <td><strong>Tesamorelin</strong></td>
+    <td>GHRH аналог с транс-3-хексенова киселина. <strong>Одобрен от FDA.</strong></td>
+    <td>26–38 мин.</td>
+    <td>Локални реакции. Най-добър за редукция на висцерална мазнина (>20%).</td>
+</tr>
+<tr>
+    <td><strong>Sermorelin</strong></td>
+    <td>Биоидентичен фрагмент на естествения GHRH (първите 29 АК).</td>
+    <td>Изключително кратък.</td>
+    <td>Много мек. Идеален за дълбока фаза на съня и възстановяване.</td>
+</tr>
+</tbody>
+</table>
+
+<div class="synergy-box">
+    <div class="sb-title">🔗 Механизъм и синергия</div>
+    <strong>GHRH аналозите</strong> (Tesamorelin, Sermorelin, Mod GRF 1-29) се свързват с рецепторите в хипофизата, давайки директна команда за синтез и освобождаване на GH, спазвайки естествените циркадни ритми.
+    <br><br><strong>GHRP пептидите</strong> (Ipamorelin, GHRP-6) действат чрез различен път — агонизират грелиновите рецептори, инхибират соматостатина и усилват отговора на хипофизата.
+    <br><br><strong>Комбинацията</strong> (напр. Ipamorelin + Mod GRF 1-29) създава <strong>експоненциално по-голям GH пулс</strong> отколкото всеки поотделно.
+</div>
+
+<div class="info-block">
+    <div class="info-label longevity">🟢 Отношение към дълголетието</div>
+    <div class="info-content">За разлика от екзогенния HGH, секретагозите (особено <strong>Sermorelin и Ipamorelin</strong>) поддържат хипофизата активна. Подобряват архитектурата на съня, тъканната регенерация и когнитивното здраве — основен стълб в антиейджинг медицината. <strong>Tesamorelin</strong> е терапия на избор при метаболитна дисфункция.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>CJC-1295 + DAC:</strong> Непулсиращото GH изтичане е нефизиологично. Може да доведе до хипофизарна умора и тахифилаксия.
+    <br>• <strong>Hexarelin:</strong> Бързата десенситизация го прави неподходящ за продължителна употреба.
+    <br>• <strong>GHRP-6:</strong> Екстремният глад може да доведе до преяждане и обезсмисляне на метаболитните ползи.
+    <br>• <strong>Общо:</strong> Всички GH секретагози повишават IGF-1 (макар и по-физиологично от екзогенния HGH), което при хронична употреба запазва опасенията за клетъчна пролиферация.</div>
+</div>
+</article>
+
+<!-- PEG-MGF -->
+<article class="product">
+<h3>11. PEG-MGF (Pegylated Mechano-Growth Factor) <span class="risk-badge risk-moderate">⚠ Умерен риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Активация на мускулните стволови клетки (сателитни клетки), инициирайки хипертрофия и възстановяване. Значителна сила за локално възстановяване на изоставащи мускулни групи.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">MGF е сплайс-вариант на IGF-1, произвеждан в мускула след механично натоварване. Естественият полуживот е минути. <strong>Пегилираната форма (PEG-MGF)</strong> добавя полиетилен гликол, предпазващ от ензимно разграждане и удължаващ системното действие до <strong>няколко дни</strong>.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• Като производно на IGF-1, споделя митогенните опасения.
+    <br>• PEG компонентът може да предизвика алергични реакции (анти-PEG антитела) при продължителна употреба.</div>
+</div>
+</article>
+
+<div class="subgroup">Инхибитори на миостатина</div>
+
+<!-- Follistatin 344 -->
+<article class="product">
+<h3>12. Follistatin 344 <span class="risk-badge risk-moderate">⚠ Умерен риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Масивна мускулна хипертрофия чрез заобикаляне на генетичния лимит. Неутрализира миостатина и активините.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Естествено срещащ се гликопротеин, който се свързва директно с <strong>миостатина</strong> (TGF-β семейство — „спирачката" на мускулния растеж) и <strong>активините</strong> в кръвообращението, неутрализирайки способността им да се свързват с клетъчните рецептори. Follistatin 344 е изоформата, доставяна чрез генна терапия (AAV вектори) или директно инжектиране.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Дисбаланс сухожилия/мускули:</strong> Новата мускулна сила може да надхвърли здравината на сухожилията, повишавайки риска от руптури.
+    <br>• <strong>Репродуктивен дисбаланс:</strong> Инхибирането на активините засяга репродуктивното здраве и възпалителните процеси.
+    <br>• <strong>Необратимост при генна терапия:</strong> При AAV-базирана доставка, ефектът е дълготраен и труден за обръщане при нежелани реакции.</div>
+</div>
+</article>
+
+<!-- ACE-031 -->
+<article class="product">
+<h3>13. ACE-031 <span class="risk-badge risk-high">🔴 Висок риск — Спрени изпитвания</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Повишаване на чистата телесна маса чрез инхибиране на миостатина.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Инженерен разтворим рецептор (сливане на екстрацелуларния домейн на <strong>ACVR2B</strong> с Fc частта на IgG). Действа като „примамка" — миостатинът се свързва с ACE-031 в кръвта, вместо с истинските рецептори върху мускулните клетки.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="warning-box">
+    <div class="wb-title">🚨 Причина за провал</div>
+    <strong>Липса на специфичност:</strong> ACE-031 инхибира не само миостатина, но и <strong>BMP9 и BMP10</strong> (костни морфогенетични протеини), критични за здравината на кръвоносните съдове. Резултат: <strong>кръвотечение от носа и венците, еритема, телангиектазия</strong> (дилатация на съдовете). Клиничните изпитвания са спрени.
+</div>
+</article>
+
+</section>
+
+<!-- ═══════════════════ III. ВЪЗСТАНОВЯВАНЕ, СТАВИ И РЕГЕНЕРАЦИЯ ═══════════════════ -->
+<section class="category-section" id="cat3">
+<h2>🩹 III. Възстановяване, стави и регенерация</h2>
+<p class="category-intro">Молекули, които пренаписват правилата за тъканно заздравяване чрез модулация на ангиогенезата, клетъчната миграция и имунния отговор.</p>
+
+<!-- BPC-157 -->
+<article class="product">
+<h3>1. BPC-157 (Body Protection Compound) <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">„Златният стандарт" в ортопедичното и гастроентерологичното възстановяване. Ускорява заздравяването на сухожилия, връзки, мускули и чревната лигавица. Ефективен при язви и IBD (възпалителни чревни заболявания).</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Синтетичен пентадекапептид (15 АК), изолиран от защитен протеин в човешкия стомашен сок.
+    <br><br>• <strong>Ангиогенеза:</strong> Ъпрегулира експресията на <strong>VEGFR2</strong> (рецептор за съдов ендотелен растежен фактор), стимулирайки създаването на нови кръвоносни съдове в увредените зони — критично за слабо кръвоснабдени тъкани (сухожилия, връзки).
+    <br>• <strong>Клетъчна миграция:</strong> Активира пътя на <strong>фокалната адхезионна киназа (FAK)</strong>, ускорявайки миграцията и оцеляването на фибробластите за изграждане на колаген.
+    <br>• <strong>Съдова перфузия:</strong> Модулира системата на <strong>азотния оксид (NO)</strong>.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label side-effects">⚠️ Странични ефекти</div>
+    <div class="info-content">Лека летаргия, стомашен дискомфорт при орален прием. Обикновено се понася много добре.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Ангиогенен потенциал = онкогенен потенциал:</strong> Способността да създава нови кръвоносни съдове може хипотетично да подхрани съществуващи онкогенни образувания (тумори се нуждаят от нови съдове за растеж).
+    <br>• <strong>Липса на дългосрочни клинични данни при хора</strong> — повечето изследвания са предклинични.
+    <br>• При наличие на недиагностициран тумор, употребата може да бъде контрапродуктивна.</div>
+</div>
+</article>
+
+<!-- TB-500 -->
+<article class="product">
+<h3>2. TB-500 (Thymosin Beta-4) <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Мускулна регенерация, предпазване от фиброза (белези), подобряване на гъвкавостта. Фундаментален за тъканно възстановяване.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Пептид, присъстващ в почти всички клетки (особено кръвните плочки). За разлика от BPC-157 (съдово сигнализиране), TB-500 има <strong>физически ефект върху клетъчната архитектура</strong>:
+    <br><br>Свързва се с <strong>актина</strong> — протеинът, формиращ цитоскелета. Регулира динамиката на полимеризация на актина, позволявайки на клетките (миобласти, кератиноцити) да <strong>променят формата си и мигрират бързо</strong> в увредените тъкани.</div>
+</div>
+
+<div class="synergy-box">
+    <div class="sb-title">🔗 Синергия BPC-157 + TB-500</div>
+    Логиката е неоспорима: BPC-157 осигурява кръвоснабдяването и сигнализацията за растеж, TB-500 осигурява физическата мобилност на клетките да стигнат до травмата и да я реконструират. Двата механизма са допълващи се.
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• Споделя същите теоретични опасения за стимулиране на туморна миграция като BPC-157 (чрез повишена клетъчна подвижност).
+    <br>• Lipsa на одобрение от регулаторни агенции за употреба при хора.</div>
+</div>
+</article>
+
+<!-- ARA-290 -->
+<article class="product">
+<h3>3. ARA-290 (Cibinetide) <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Регенерация на периферните нерви. Изключително мощен при невропатична болка, диабетна невропатия и саркоидоза. Физически увеличава плътността на малките нервни влакна (SFN) в роговицата и кожата.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Дериват на еритропоетина (EPO), но <strong>лишен от хематопоетичния домейн</strong> (без риск от тромбози и високо кръвно). Свързва се ексклузивно с <strong>Innate Repair Receptor (IRR)</strong> — защитен рецепторен комплекс (включващ CD131), експресиран <strong>само при възпаление, хипоксия или травма</strong>.
+    <br><br>Активацията на IRR: изключва провъзпалителните цитокини → инициира неврогенни пътища за поправка → радикално препрограмира тъканната среда.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label side-effects">⚠️ Странични ефекти</div>
+    <div class="info-content"><strong>Няма значими странични ефекти.</strong> Изключителен профил на безопасност.</div>
+</div>
+</article>
+
+<!-- KPV -->
+<article class="product">
+<h3>4. KPV (Lys-Pro-Val) <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Мощни противовъзпалителни и антимикробни свойства. Широко приложение при чревни възпаления, кандидоза, екземи и псориазис.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Трипептид от C-терминалната част на <strong>α-MSH</strong> (алфа-меланоцит-стимулиращ хормон). Преминава вътре в клетката и инхибира <strong>NF-κB</strong> — главният транскрипционен фактор за възпалителни гени. Директно потиска възпалителната каскада на молекулярно ниво.</div>
+</div>
+</article>
+
+<!-- Larazotide -->
+<article class="product">
+<h3>5. Larazotide (Larazotide Acetate) <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Лечение на първопричината за автоимунни заболявания — <strong>чревната пропускливост („leaky gut")</strong>. Възстановява целостта на чревната бариера, намалява системното възпаление.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Чревната бариера е изградена от клетки, свързани чрез <strong>„плътни връзки" (tight junctions)</strong>. Протеинът <strong>зонулин</strong> ги регулира. При цьолиакия или стрес, глиадинът (от глутена) предизвиква свръхпроизводство на зонулин → разхлабване на връзките → антигени и бактерии преминават в кръвта → системно възпаление.
+    <br><br><strong>Larazotide е антагонист на зонулина.</strong> Блокира процеса, възстановява структурния интегритет на плътните връзки, намалява фосфорилирането на MLC-2 и спира възпалителната каскада.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label longevity">🟢 Отношение към дълголетието</div>
+    <div class="info-content">Дълбоко положително — минимизира хроничното системно възпаление (inflammaging), което е основен двигател на биологичното стареене. Безопасен профил.</div>
+</div>
+</article>
+
+</section>
+
+<!-- ═══════════════════ IV. КРАСОТА, КОЖА И СЕКСУАЛНО ЗДРАВЕ ═══════════════════ -->
+<section class="category-section" id="cat4">
+<h2>✨ IV. Красота, кожа и сексуално здраве</h2>
+
+<!-- GHK-Cu -->
+<article class="product">
+<h3>1. GHK-Cu (Меден пептид) <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Удебеляване на кожата, изглаждане на фини линии, ускорено заздравяване на рани. Системен регулатор и <strong>епигенетичен модулатор</strong> — пренастройва генната експресия на над <strong>4000 гени</strong> обратно към тяхното по-младо състояние.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content"><strong>GHK</strong> (Glycyl-L-Histidyl-L-Lysine) е естествен пептид с висок афинитет към медните йони.
+    <br><br>• Транспортира <strong>медни йони</strong> до фибробластите — критични кофактори за ензимите, синтезиращи <strong>колаген, еластин и гликозаминогликани</strong>.
+    <br>• Активира <strong>протеазомната система</strong> (изчистване на повредени вътреклетъчни протеини).
+    <br>• Инхибира <strong>NF-κB</strong> (потиска възпалението).</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Болка при инжектиране</strong> — характерна и неприятна.
+    <br>• <strong>Медна токсичност:</strong> При неразумно високи дози медните йони могат да натоварят черния дроб. Хроничната свръхдоза с мед е свързана с оксидативни увреждания — парадоксално за антиейджинг молекула.
+    <br>• <strong>Про-ангиогенен потенциал:</strong> Подобно на BPC-157, стимулирането на съдообразуване повдига въпроси при недиагностицирани неоплазми.</div>
+</div>
+</article>
+
+<!-- Melanotan II, Melanotan I & PT-141 -->
+<article class="product">
+<h3>2–4. Melanotan II, Melanotan I &amp; PT-141 (Bremelanotide) <span class="risk-badge risk-moderate">⚠ Умерен риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content"><strong>Melanotan I/II:</strong> Тен без силно UV излагане. Melanotan II — допълнително масивно повишаване на либидото и спонтанни ерекции.
+    <br><strong>PT-141 (Bremelanotide):</strong> Създава автентично <strong>желание (либидо)</strong> на неврологично ниво (не съдова дилатация като Виагра). Одобрен от FDA (Vyleesi). Ефективен за мъже с ЕД и жени с хипоактивно сексуално разстройство.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Синтетични аналози на <strong>α-MSH</strong>, агонизиращи меланокортиновите рецептори (MC):
+    <br><br>• <strong>MC1</strong> (кожа) — стимулира меланоцитите да произвеждат меланин (пигментация).
+    <br>• <strong>MC3/MC4</strong> (хипоталамус) — Melanotan II преминава кръвно-мозъчната бариера и активира централната нервна система → повишаване на либидото.
+    <br>• <strong>PT-141:</strong> Метаболит на Melanotan II, изолиран специално за MC3R/MC4R в мозъка, без ефект на пигментацията.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label side-effects">⚠️ Странични ефекти</div>
+    <div class="info-content">Често гадене в първите часове, зачервяване, повишаване на кръвното налягане.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Melanotan II и меланом:</strong> Стимулирането на меланоцитите повдига сериозни опасения за ускоряване на меланомен процес при генетична предразположеност. Има документирани случаи на промяна в съществуващи бенки.
+    <br>• <strong>Неселективност на Melanotan II:</strong> Действа на множество MC рецептори — непредвидими ефекти върху апетита, настроението и кръвното налягане.
+    <br>• <strong>Кардиоваскуларен риск:</strong> Повишаването на кръвното при PT-141 е проблематично за хипертоници.
+    <br>• <strong>Хиперпигментация:</strong> Неравномерни тъмни петна, особено в областта на гениталиите и лицето.</div>
+</div>
+</article>
+
+<!-- Kisspeptin-10 -->
+<article class="product">
+<h3>5. Kisspeptin-10 <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Главен превключвател на репродуктивната система. Засилва естествената HPG ос, повишава тестостерон, запазва фертилитет и тестикуларен обем. Стимулира психосексуалната възбуда.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Невропептид на върха на <strong>HPG оста</strong> (хипоталамо-хипофизарно-гонадна):
+    <br><br>Kisspeptin-10 → <strong>KISS1 рецептори</strong> (хипоталамус) → мощна секреция на <strong>GnRH</strong> → хипофиза → <strong>LH + FSH</strong> → тестиси → <strong>тестостерон + сперматогенеза</strong>.
+    <br><br>За разлика от TRT (тестостерон заместваща терапия), която спира ендогенното производство, Kisspeptin-10 <strong>засилва естествената комуникация</strong> на HPG оста.</div>
+</div>
+
+<div class="synergy-box">
+    <div class="sb-title">🔗 Сравнение с TRT</div>
+    <strong>TRT:</strong> Екзогенен тестостерон → отрицателна обратна връзка → спиране на LH/FSH → тестикуларна атрофия → безплодие.
+    <br><strong>Kisspeptin-10:</strong> Засилва естествената HPG ос → високи нива на тестостерон + запазен фертилитет и тестикуларен обем. Повишава невронната активност в лимбичната система.
+</div>
+</article>
+
+</section>
+
+<!-- ═══════════════════ V. АНТИЕЙДЖИНГ, ДЪЛГОЛЕТИЕ И ИМУНИТЕТ ═══════════════════ -->
+<section class="category-section" id="cat5">
+<h2>🧬 V. Антиейджинг, дълголетие и имунитет</h2>
+<p class="category-intro">Биорегулаторите оперират на най-дълбокото молекулярно ниво, модулирайки ДНК транскрипцията, предпазвайки митохондриите и възстановявайки атрофирали жлези.</p>
+
+<!-- Epitalon & Vilon -->
+<article class="product">
+<h3>1 &amp; 6. Epitalon (AEDG) &amp; Vilon (Lys-Glu) <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content"><strong>Epitalon:</strong> Реактивира ензима теломераза, удължава теломерите, възстановява циркадните ритми, стимулира синтеза на мелатонин.
+    <br><strong>Vilon:</strong> Дехетерохроматинизация — физическо „размотаване" на заглушени секции от ДНК. Модулира тимусната функция, потиска TNF-алфа. Удължава живота при животински модели.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content"><strong>Epitalon (тетрапептид AEDG):</strong> Създаден от проф. Хавинсон (Санкт Петербург) на базата на екстракт от епифизната жлеза. Ъпрегулира <strong>hTERT mRNA експресията</strong> в соматични клетки → реактивация на <strong>теломеразата</strong>. Теломерите (защитните „капачки" на хромозомите) се скъсяват при всяко делене. Epitalon позволява на клетките да надхвърлят <strong>лимита на Хейфлик</strong>, възстановявайки младежкия репликативен потенциал. Защитава структурата на епифизата и дълбокия синтез на мелатонин.
+    <br><br><strong>Vilon (дипептид Lys-Glu):</strong> С възрастта, части от хроматина се компресират (хетерохроматин), заглушавайки важни гени. Vilon предизвиква <strong>дехетерохроматинизация</strong> — физическо размотаване, позволявайки възобновяване на транскрипцията.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове (критичен анализ)</div>
+    <div class="info-content">• <strong>Теломераза и рак:</strong> Реактивирането на теломеразата е <strong>двуостър меч</strong>. Раковите клетки също разчитат на теломераза за безсмъртие. Ако в тялото има предракови клетки, удължаването на техните теломери може да ги „спаси" от естествената смърт.
+    <br>• <strong>Научна база:</strong> Повечето изследвания на Хавинсон са публикувани в ограничен кръг журнали. Липсват мащабни, западни рандомизирани контролирани проучвания (RCT).
+    <br>• <strong>Vilon:</strong> Дехетерохроматинизацията може теоретично да „отключи" и нежелани гени, не само полезни.</div>
+</div>
+</article>
+
+<!-- Thymalin & Thymosin Alpha-1 -->
+<article class="product">
+<h3>2–3. Thymalin &amp; Thymosin Alpha-1 <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content"><strong>Thymalin:</strong> Регенерация на тимусната жлеза, възстановяване на имунния баланс (T-хелпери/T-супресори).
+    <br><strong>Thymosin Alpha-1:</strong> Мощен имуномодулатор. Засилва отговора на дендритни клетки и T-лимфоцити срещу вирусни инфекции, патогени и неопластични клетки. Одобрен клинично в някои държави (Zadaxin).</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Тимусната жлеза — центърът за „обучение" на T-клетките — атрофира драстично след пубертета (инволюция).
+    <br><br><strong>Thymalin:</strong> Пептиден комплекс, който физически регенерира тимусната жлеза, възстановявайки производството на нови имунни клетки.
+    <br><br><strong>Thymosin Alpha-1:</strong> 28-аминокиселинен единичен пептид. Директно засилва отговора на дендритните клетки и T-лимфоцитите. Безценен при имунодефицит или хронични инфекции (хепатит B/C, HIV).</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Автоимунна стимулация:</strong> При хора с предразположеност към автоимунни заболявания, засиленият имунен отговор може да обостри атаката срещу собствените тъкани.
+    <br>• <strong>Thymalin:</strong> Като пептиден комплекс (не единична молекула), съставът му може да варира между партидите.</div>
+</div>
+</article>
+
+<!-- Humanin -->
+<article class="product">
+<h3>4. Humanin <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Върховен цитопротективен агент. Блокира клетъчна смърт при хипоксия или оксидативно увреждане. Инхибира агрегацията на Амилоид-бета (защита от Алцхаймер). При видове с пренебрежимо стареене (голи къртичести плъхове) нивата остават високи цял живот.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Първият открит <strong>митохондриално-кодиран пептид</strong> (21–24 АК). При клетъчен стрес, митохондриите секретират Humanin, който:
+    <br><br>• Свързва се с <strong>Bax</strong> (проапоптотичен протеин) на клетъчната мембрана → блокира проапоптотичните сигнали → спасява клетката от смърт.
+    <br>• В мозъка — физически инхибира агрегацията на токсични <strong>Амилоид-бета фибрили</strong>, предпазвайки холинергичните неврони.
+    <br>• Нивата спадат рязко с възрастта — ключова цел за антиейджинг интервенции.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Блокиране на апоптозата:</strong> Апоптозата е и защитен механизъм срещу увредени/мутирали клетки. Блокирането и може да „спаси" и клетки, които е по-добре да бъдат елиминирани.
+    <br>• Дългосрочни данни при хора все още са ограничени.</div>
+</div>
+</article>
+
+<!-- SS-31 -->
+<article class="product">
+<h3>5. SS-31 (Elamipretide) <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Квантов скок в митохондриалната медицина. Възстановява производството на АТФ, спира генерирането на реактивни кислородни видове (ROS) при източника. Възстановява физическата работоспособност, предпазва сърдечния мускул, забавя невродегенерацията.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">За разлика от традиционните антиоксиданти (Витамин С), които се опитват да неутрализират вече формираните свободни радикали, SS-31 действа <strong>при източника</strong>:
+    <br><br>• Прониква в клетките и се концентрира във <strong>вътрешната митохондриална мембрана</strong>.
+    <br>• Свързва се селективно с <strong>кардиолипина</strong> — специфичен фосфолипид, поддържащ архитектурата на митохондрията и закотвящ протеиновите комплекси от електрон-транспортната верига.
+    <br>• При стареене, кардиолипинът се окислява → веригата се дестабилизира → електрони „изтичат" (ROS) → спад на АТФ.
+    <br>• <strong>SS-31 стабилизира мембраната</strong> → предотвратява изтичането на протони → възстановява ефективността на електронния транспорт → спира ROS + драстично увеличава АТФ.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Митохондриална свръхзащита:</strong> ROS имат и сигнална роля (митохормезис). Пълното им потискане може да намали адаптивния отговор на клетките към стрес.
+    <br>• Все още в клинични изпитвания — дългосрочният профил не е напълно установен.</div>
+</div>
+</article>
+
+</section>
+
+<!-- ═══════════════════ VI. МОЗЪК И КОГНИТИВНИ ФУНКЦИИ ═══════════════════ -->
+<section class="category-section" id="cat6">
+<h2>🧠 VI. Мозък и когнитивни функции (Ноотропи)</h2>
+<p class="category-intro">Невропептиди, способни да преминават кръвно-мозъчната бариера и да променят структурната пластичност, невронната преживяемост и неврохимичния баланс.</p>
+
+<!-- Semax & Selank -->
+<article class="product">
+<h3>1–2. Semax &amp; Selank <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content"><strong>Semax:</strong> Изострен фокус, мотивация, подобрена памет. Мощна невропротекция при исхемичен инсулт. Повишава BDNF и NGF до 2–3 пъти.
+    <br><strong>Selank:</strong> Изчистване на тревожността, стабилизация на емоционалния фон, подобрено учене при стрес. Действа подобно на бензодиазепините, но без седация, мускулна релаксация или когнитивно потискане.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Разработени в Института по молекулярна генетика (Руска академия на науките). Прилагат се <strong>интраназално</strong> за директен достъп до мозъка.
+    <br><br><strong>Semax:</strong> Базиран на фрагмент от <strong>ACTH</strong> (адренокортикотропен хормон). Модулира генната транскрипция → драстично повишаване на <strong>BDNF</strong> (мозъчен невротрофичен фактор) и <strong>NGF</strong> (нервен растежен фактор) в хипокампуса и мозъчната кора. Ускорява оцеляването на невроните и синаптичната пластичност.
+    <br><br><strong>Selank:</strong> Базиран на имуномодулиращия пептид <strong>туфтсин</strong>. Действа като <strong>алостеричен модулатор на GABA-A рецепторите</strong> — увеличава естествения афинитет на рецепторите към GABA, без класическите бензодиазепинови странични ефекти.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Semax и кортизол:</strong> Като ACTH-дериват, при високи дози или продължителна употреба, теоретично може да повлияе на оста хипоталамус-хипофиза-надбъбречни жлези (HPA).
+    <br>• <strong>Selank:</strong> Въпреки по-безопасния профил от бензодиазепини, хроничната GABA модулация може да доведе до толеранс.
+    <br>• <strong>Регулаторен статус:</strong> Одобрени в Русия, но не преминали FDA/EMA — липсва стандартизирано западно потвърждение за ефикасност.</div>
+</div>
+</article>
+
+<!-- Cerebrolysin -->
+<article class="product">
+<h3>3. Cerebrolysin <span class="risk-badge risk-low">✓ Нисък риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Клинично утвърден <strong>златен стандарт</strong> за лечение на исхемичен инсулт, черепно-мозъчни травми и съдова деменция. Стимулира мозъка да създава нови невронни мрежи около увредените зони.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Сложна, мултимодална терапия — пептиден препарат, извлечен от пречистен свински мозък, съдържащ аминокиселини и нискомолекулни невропептиди. Имитира действието на ендогенните невротрофични фактори (<strong>CNTF, GDNF, BDNF</strong>).
+    <br><br>Преминава кръвно-мозъчната бариера и действа <strong>плейотропно</strong>:
+    <br>• Спира апоптотичните каскади след травма.
+    <br>• Намалява микроглиалното възпаление.
+    <br>• Стимулира <strong>неврогенезата и ангиогенезата</strong> в мозъка.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• <strong>Прионен риск:</strong> Като продукт от животински мозък, теоретично съществува (макар и изключително нисък) риск от прионна контаминация при неадекватен контрол на качеството.
+    <br>• <strong>Алергични реакции:</strong> Като сложна смес от пептиди, при чувствителни лица може да предизвика имунологичен отговор.
+    <br>• Инжектира се венозно — изисква медицински контрол.</div>
+</div>
+</article>
+
+<!-- Dihexa -->
+<article class="product">
+<h3>4. Dihexa <span class="risk-badge risk-experimental">🔬 Експериментален</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Експлозивна синаптогенеза — физическото създаване на нови дендритни шипчета и синаптични връзки между невроните. Превъзхожда BDNF по синаптогенен капацитет с порядъци.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Производен на ангиотензин IV (създаден в Държавния университет на Вашингтон). Свързва се с изключително висок афинитет с <strong>хепатоцитния растежен фактор (HGF)</strong> и индуцира мощна активация на <strong>c-Met рецепторния сигнален път</strong>. Този път е фундаментален за ембрионалното развитие. В мозъка — води до създаване на нови синапси.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="warning-box">
+    <div class="wb-title">🚨 Критичен онкогенен риск</div>
+    <strong>HGF/c-Met пътят е често свръхактивен при тумори.</strong> Съществува сериозна теоретична загриженост, че Dihexa може да бъде онкогенен или да ускори развитието на съществуващ рак. Употребата му изисква строг медицински контрол. Няма завършени клинични изпитвания при хора.
+</div>
+</article>
+
+<!-- P-21 -->
+<article class="product">
+<h3>5. P-21 <span class="risk-badge risk-moderate">⚠ Умерен риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Мощно подобряване на паметта с <strong>по-нисък онкогенен риск от Dihexa</strong>. Възстановява неврогенезата. Намалява натрупването на Амилоид-бета плаки и патологичното фосфорилиране на Тау-протеина (ключови фактори при Алцхаймер).</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Инженерен тетрапептид (Ac-DGGL-NH2) с адамантилова група за преминаване на кръвно-мозъчната бариера.
+    <br><br>Пептидомиметик на <strong>CNTF</strong> (цилиарен невротрофичен фактор):
+    <br>• Конкурентно инхибира <strong>LIF</strong> (левкемия-инхибиращ фактор) → премахва спирачките пред транскрипцията на BDNF.
+    <br>• Възстановява неврогенезата в <strong>субгрануларната зона на зъбчатата фасция</strong> (формиране на нови спомени).
+    <br>• Повишава неактивната форма на <strong>GSK3-бета</strong> (чрез фосфорилиране на Ser9) → спира патологичното фосфорилиране на Тау-протеина → намалява Амилоид-бета плаки.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label hidden-risks">🔴 Скрити рискове</div>
+    <div class="info-content">• Все още експериментален — липсват клинични данни при хора.
+    <br>• По-нисък, но не елиминиран онкогенен потенциал спрямо Dihexa.
+    <br>• Ефектите върху GSK3-бета могат да засегнат и други сигнални каскади (Wnt, инсулин).</div>
+</div>
+</article>
+
+</section>
+
+<!-- ═══════════════════ VII. NAD+ И ГЛУТАТИОН ═══════════════════ -->
+<section class="category-section" id="cat7">
+<h2>⚗️ VII. Синергия на дълголетието: NAD+ и Глутатион — Скрити рискове</h2>
+<p class="category-intro">Интравенозните (IV) терапии с NAD+ и Глутатион често се рекламират като универсално решение за антиейджинг. Въпреки че техните ползи върху клетъчното дълголетие са безспорни, физиологичната логика диктува, че <strong>всяко екзогенно пренасищане на системата има скрита цена</strong>. Когато изолираме търговския хайп, изникват сериозни дългосрочни рискове.</p>
+
+<!-- Glutathione -->
+<article class="product">
+<h3>1. Глутатион (Glutathione) — IV вливания <span class="risk-badge risk-moderate">⚠ Умерен риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Главният вътреклетъчен антиоксидант (трипептид). Мигновено неутрализиране на оксидативния стрес, запазване целостта на ДНК, предпазване на клетката от преждевременно стареене. Пречистване на черния дроб от токсини. IV вливането заобикаля слабото стомашно усвояване.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label strength">💪 Сила на действие</div>
+    <div class="info-content"><strong>Висока</strong> — директно повишаване на нивата, заобикаляйки ограниченията на пероралната абсорбция.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">Трипептид (глутамат-цистеин-глицин), който неутрализира реактивните кислородни видове (ROS). Работи в цикъл: окислената форма (GSSG) се рециклира обратно в активна (GSH) с помощта на <strong>NADPH</strong> (фосфорилирана форма на NAD+).</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="warning-box">
+    <div class="wb-title">🚨 Скрити рискове — Критичен анализ</div>
+
+    <strong style="color:#fbbf24">1. Редуктивен стрес и потискане на имунитета:</strong>
+    <br>Рекламите описват оксидативния стрес само като вредител. Но свободните радикали (ROS) са <strong>критични сигнални молекули</strong>. T-клетките на имунната система се нуждаят от локални пикове на ROS, за да унищожават патогени. Екзогенното наводняване с глутатион води до „редуктивен стрес" (пълна липса на оксиданти), който <strong>притъпява имунния отговор</strong>.
+
+    <br><br><strong style="color:#fbbf24">2. Потискане на ендогенното производство (Зависимост):</strong>
+    <br>Клетката регистрира огромните нива от вливането и задейства отрицателна обратна връзка. Екзогенният глутатион потиска ензима <strong>гама-глутамилцистеин синтетаза (GCL)</strong> — главният мотор за собствено производство. Когато вливанията спрат, тялото остава с „мързелив" GCL ензим и е <strong>по-беззащитно</strong> към стрес от всякога. Създава се метаболитна зависимост.
+
+    <br><br><strong style="color:#ef4444">3. Онкогенен щит (Антиоксидантният парадокс) — НАЙ-СЕРИОЗНИЯТ РИСК:</strong>
+    <br>Раковите клетки имат бърз метаболизъм, генериращ токсични нива на ROS. За да оцелеят, туморните клетки са <strong>пристрастени към антиоксидантни щитове</strong> и често свръхекспресират Nrf2 (генът, регулиращ глутатиона). Ако в тялото има <strong>недиагностицирани микро-тумори</strong>, вливането на мега-дози глутатион де факто им доставя перфектния щит, <strong>предпазвайки ги от апоптоза</strong>.
+</div>
+</article>
+
+<!-- NAD+ -->
+<article class="product">
+<h3>2. NAD+ (Никотинамид Аденин Динуклеотид) — IV вливания <span class="risk-badge risk-moderate">⚠ Умерен риск</span></h3>
+
+<div class="info-block">
+    <div class="info-label effects">⚡ Главни ефекти</div>
+    <div class="info-content">Коензимът, който пренася електрони в митохондриите (за производство на АТФ) и е основно гориво за <strong>сиртуините (SIRT1-7)</strong> — ензимите, поправящи увредената ДНК и регулиращи епигенетичното стареене. Нивата спадат с <strong>50% до 50-годишна възраст</strong>. Вливанията възстановяват енергийния баланс.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label strength">💪 Сила на действие</div>
+    <div class="info-content"><strong>Висока</strong> — позволява на сиртуините и PARP ензимите да работят на пълни обороти, ремонтирайки генетични щети и удължавайки здравословния живот на клетките.</div>
+</div>
+
+<div class="info-block">
+    <div class="info-label mechanism">🧬 Механизъм на действие</div>
+    <div class="info-content">NAD+ е коензим, участващ в стотици метаболитни реакции:
+    <br>• <strong>Митохондрии:</strong> Пренася електрони в електрон-транспортната верига → производство на АТФ (клетъчна енергия).
+    <br>• <strong>Сиртуини (SIRT1-7):</strong> NAD+-зависими деацетилази, които поправят увредена ДНК, регулират възпалението и контролират епигенетичните маркери.
+    <br>• <strong>PARP ензими:</strong> Участват в поправката на ДНК при увреждане, консумирайки NAD+ в процеса.</div>
+</div>
+
+<hr class="info-sep">
+
+<div class="warning-box">
+    <div class="wb-title">🚨 Скрити рискове — Критичен анализ</div>
+
+    <strong style="color:#ef4444">1. Гориво за неоплазии (Онкогенен потенциал) — НАЙ-СЕРИОЗНИЯТ РИСК:</strong>
+    <br>Раковите клетки разчитат на анаеробна гликолиза (<strong>Ефект на Варбург</strong>), за да се делят бързо. Този процес изисква огромни количества NAD+. Чрез IV вливане ние доставяме перфектното метаболитно гориво <strong>не само на здравите, но и на евентуално мутирали, малигнени клетки</strong>. Неслучайно съвременната онкология разработва <strong>инхибитори на NAD+ синтеза</strong> (като FK866) за лечение на рак. <strong>Вливането на NAD+ при скрит онкологичен процес е равносилно на наливане на масло в огън.</strong>
+
+    <br><br><strong style="color:#fbbf24">2. Дисбаланс на сиртуините и PARP изтощение:</strong>
+    <br>Свръхактивацията на сиртуини при високи нефизиологични нива на NAD+ може да доведе до нежелан <strong>епигенетичен сайлънисинг (заглушаване) на важни тумор-супресорни гени</strong>. Постоянният излишък може да доведе до неконтролирана работа на PARP ензимите, изтощавайки други метаболитни ресурси.
+
+    <br><br><strong style="color:#fbbf24">3. Потискане на „Salvage Pathway":</strong>
+    <br>Клетките рециклират своя NAD+ чрез ензима <strong>NAMPT</strong>. Хроничните вливания намаляват стреса върху този път. Когато външният внос спре, клетката има <strong>намалена способност да рециклира собствен NAD+</strong>, водейки до внезапен енергиен срив (crash).
+</div>
+</article>
+
+<!-- Synergy NAD+ + Glutathione -->
+<article class="product">
+<h3>3. Биохимичната синергия: Връзката NADPH <span class="risk-badge risk-moderate">⚠ Изисква прецизно титриране</span></h3>
+
+<div class="synergy-box">
+    <div class="sb-title">🔗 Защо ги комбинират?</div>
+    Логиката зад комбинирането се крие в молекулата <strong>NADPH</strong>:
+    <br><br>• За да се рециклира окисленият глутатион (GSSG) обратно в активен (GSH), на клетката са необходими електрони. Тези електрони идват ексклузивно от <strong>NADPH</strong> (фосфорилирана форма на NAD+).
+    <br><br>• Следователно: <strong>вливането само на глутатион, без достатъчно NAD+</strong>, води до натрупване на неактивен глутатион.
+    <br><br>• Обратно: <strong>глутатионът предпазва ДНК от увреждане</strong>, което спира PARP ензимите да изразходват целия наличен NAD+ в панически опити за поправка.
+</div>
+
+<div class="warning-box">
+    <div class="wb-title">⚖️ Критично заключение</div>
+    Тази двупосочна зависимост прави комбинацията ефективна, но изисква <strong>изключително прецизно титриране</strong>. Рисковете от <strong>редуктивен стрес</strong> (глутатион) и <strong>подхранване на мутирали клетки</strong> (NAD+) се мултиплицират при комбинирано вливане. Без предварителен онкологичен скрининг, комбинираната терапия може да бъде контрапродуктивна за дълголетието.
+</div>
+</article>
+
+</section>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+    <p>Данните са базирани на документа „Пептиди, Глутатион и NAD+ Анализ" (април 2026 г.).</p>
+    <p style="margin-top:8px">Цитирани творби: <a href="https://www.noom.com/blog/weight-management/retatrutide-side-effects/" target="_blank" rel="noopener">Noom — Retatrutide</a> · <a href="https://pubmed.ncbi.nlm.nih.gov/15105581/" target="_blank" rel="noopener">PubMed — Vilon</a> · <a href="https://www.mdpi.com/2073-4409/9/12/2657" target="_blank" rel="noopener">MDPI — Myostatin Inhibitors</a> · <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9898824/" target="_blank" rel="noopener">PMC — Kisspeptin</a></p>
+    <p style="margin-top:12px;color:var(--danger);font-weight:600;">⚠️ Този анализ е с информативна цел и не замества медицинска консултация. Консултирайте се с квалифициран специалист преди употреба на каквито и да е пептиди или терапии.</p>
+</footer>
+
+</div><!-- .container -->
+</body>
+</html>
