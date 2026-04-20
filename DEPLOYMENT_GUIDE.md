@@ -4,6 +4,11 @@
 
 ### 1. Подготовка
 
+Инсталирайте зависимостите на проекта:
+```bash
+npm install
+```
+
 Уверете се, че имате инсталиран `wrangler`:
 ```bash
 npm install -g wrangler
@@ -139,6 +144,7 @@ wrangler tail
 
 1. **Първоначален setup:**
    ```bash
+   npm install
    npm install -g wrangler
    wrangler login
    npm run upload-static
