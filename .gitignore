@@ -11,11 +11,16 @@ yarn-error.log*
 # Environment files
 .env
 .env.*
+.dev.vars
 
 # OS files
 .DS_Store
 
 # Cloudflare
+.wrangler/
+
+# Generated portfolio catalog (run: node portfolio-sync.mjs)
+backend/portfolio/
 
 # Local data
 page_content_mock.json

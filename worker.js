@@ -1,5 +1,7 @@
 // ==== ВЕРСИЯ 4.0: ФУНКЦИОНАЛЕН АДМИН ПАНЕЛ ====
 
+import { handlePortfolioRoute } from './portfolio-api.js';
+
 // Cache configuration constants
 const CACHE_CONFIG = {
     PAGE_CONTENT_MAX_AGE: 300,        // 5 minutes
@@ -171,7 +173,12 @@ export default {
               break;
 
           default:
-            throw new UserFacingError('Not Found', 404);
+            if (url.pathname.startsWith('/portfolio/')) {
+                response = await handlePortfolioRoute(request, env, url);
+            } else {
+                throw new UserFacingError('Not Found', 404);
+            }
+            break;
         }
 
       // Добавяме CORS хедъри към всеки успешен отговор
