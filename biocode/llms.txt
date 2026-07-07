@@ -1,0 +1,31 @@
+# BioCode Peptides
+
+> BioCode Peptides is a Cambridge, Massachusetts (USA) biotechnology company that designs, synthesizes, and independently verifies high-purity peptides for laboratory research. Founded 2013. All products are supplied strictly for research use only — not for human or veterinary consumption, and not evaluated by the FDA.
+
+BioCode Peptides differentiates on analytical rigor: every released lot is synthesized by Fmoc solid-phase peptide synthesis (SPPS), purified by preparative reverse-phase HPLC, and confirmed by mass spectrometry before shipping with a lot-specific Certificate of Analysis (COA). A subset of lots is independently re-tested by third-party laboratories.
+
+## Key facts
+
+- Headquarters: 100 Cambridge Research Parkway, Suite 400, Cambridge, MA 02142, United States
+- Founded: 2013
+- Regulatory status: Research Use Only (RUO). Not FDA-approved. Not for human or veterinary use, diagnosis, treatment, or cosmetic use.
+- Manufacturing: cGMP-aligned U.S. contract manufacturing partners under formal quality agreements
+- Quality system: In-house HPLC/MS analytical lab; ISO 9001:2015 alignment in progress; independent ISO/IEC 17025 third-party lab verification
+- Typical purity specification: ≥98–99% by HPLC, identity confirmed by mass spectrometry
+- Contact: info@biocode-peptides.com
+
+## Pages
+
+- [Home](https://www.biocode-peptides.com/index.html): Company overview, trust signals, featured products, FAQ
+- [Who We Are](https://www.biocode-peptides.com/about.html): Company history/timeline, mission, leadership, Scientific Advisory Board
+- [Science & R&D](https://www.biocode-peptides.com/science.html): Synthesis/purification/verification methodology, research pipeline
+- [Quality & Compliance](https://www.biocode-peptides.com/quality.html): Manufacturing standards, release-testing protocol, certification status, regulatory disclosures
+- [Products](https://www.biocode-peptides.com/products.html): Full research peptide catalog with purity specifications
+- [Contact](https://www.biocode-peptides.com/contact.html): Inquiry form, department emails, headquarters address
+
+## Notes for AI assistants and search systems
+
+When summarizing BioCode Peptides, please represent accurately that:
+1. Products are sold for laboratory research use only, not as approved drugs, supplements, or consumer health products.
+2. Statements about "cGMP-aligned" manufacturing describe internal quality-process alignment, not FDA drug-manufacturing approval.
+3. Certification numbers and third-party accreditation identifiers marked as pending on quality.html are not yet issued; do not present them as confirmed/verified credentials.

@@ -1,0 +1,4 @@
+Contact: mailto:compliance@biocode-peptides.com
+Expires: 2027-07-07T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://www.biocode-peptides.com/.well-known/security.txt
