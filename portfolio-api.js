@@ -4,6 +4,7 @@
  */
 
 import { filterIndex } from './portfolio-filter.js';
+import { enrichIndexEntry } from './portfolio-search.js';
 
 export { filterIndex };
 
@@ -158,20 +159,21 @@ export function buildCatalogMeta(groups) {
     const maxPrice = prices.length ? Math.max(...prices) : 0;
     const packs = [...new Set(g.variants.map((v) => v.pack).filter(Boolean))];
 
-    index.push({
+    index.push(enrichIndexEntry({
       group_id: g.group_id,
       name: g.name,
       brand: g.brand,
       brand_id: g.brand_id,
       category: g.category,
       category_top: g.category_path[0] || '',
+      category_path: g.category_path,
       min_price: minPrice,
       max_price: maxPrice,
       variant_count: g.variants.length,
       available: availableVariants.length > 0,
       image: g.image,
       packs
-    });
+    }, g));
 
     const bCount = brandMap.get(g.brand_id) || { id: g.brand_id, name: g.brand, count: 0 };
     bCount.count++;
@@ -328,7 +330,7 @@ async function handleGetCatalog(request, env) {
     sort: url.searchParams.get('sort') || 'name'
   };
 
-  const filtered = filterIndex(meta.index, params);
+  const filtered = filterIndex(meta.index, params, meta);
   const total = filtered.length;
   const start = (page - 1) * limit;
   const items = filtered.slice(start, start + limit);

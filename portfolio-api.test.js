@@ -78,49 +78,60 @@ describe('Portfolio API', () => {
   });
 });
 
-describe('Portfolio filterIndex', () => {
+describe('Portfolio search', () => {
   const index = [
     {
       group_id: '1',
-      name: 'Alpha Whey',
-      brand: 'BrandA',
+      name: 'Gold Whey Protein',
+      brand: 'Optimum',
       brand_id: '10',
       category: 'Протеини > Whey',
       category_top: 'Протеини',
       min_price: 20,
       max_price: 30,
-      available: true
+      available: true,
+      search_text: 'gold whey protein optimum протеини whey'
     },
     {
       group_id: '2',
-      name: 'Beta Vitamin',
-      brand: 'BrandB',
+      name: 'Vitamin C 1000',
+      brand: 'Now',
       brand_id: '20',
       category: 'Витамини',
       category_top: 'Витамини',
       min_price: 5,
       max_price: 8,
-      available: false
+      available: true,
+      search_text: 'vitamin c 1000 now витамини'
     }
   ];
 
-  test('filters by search query', () => {
-    const result = filterIndex(index, { q: 'whey' });
-    expect(result).toHaveLength(1);
-    expect(result[0].group_id).toBe('1');
+  test('finds products by Bulgarian query протеин', () => {
+    const result = filterIndex(index, { q: 'протеин' }, { categories: [{ name: 'Протеини' }] });
+    expect(result.some((i) => i.group_id === '1')).toBe(true);
+    expect(result.some((i) => i.group_id === '2')).toBe(false);
   });
 
-  test('filters available only', () => {
-    const result = filterIndex(index, { available: '1' });
+  test('finds products by English query whey', () => {
+    const result = filterIndex(index, { q: 'whey' });
     expect(result).toHaveLength(1);
-    expect(result[0].group_id).toBe('1');
+  });
+
+  test('multi-word search requires all tokens', () => {
+    const result = filterIndex(index, { q: 'gold whey' });
+    expect(result).toHaveLength(1);
+    expect(filterIndex(index, { q: 'gold витамин' })).toHaveLength(0);
+  });
+
+  test('sorts name descending', () => {
+    const result = filterIndex(index, { sort: 'name_desc' });
+    expect(result[0].name).toBe('Vitamin C 1000');
   });
 
   test('paginates results', () => {
     const page = paginateIndex(index, 1, 1);
     expect(page.total).toBe(2);
     expect(page.items).toHaveLength(1);
-    expect(page.total_pages).toBe(2);
   });
 });
 

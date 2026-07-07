@@ -117,7 +117,7 @@ export function getFiltersFromCache() {
 export function queryCatalogFromCache(params, page = 1, limit = 24) {
   const meta = getCachedMeta();
   if (!meta?.index) return null;
-  const filtered = filterIndex(meta.index, params);
+  const filtered = filterIndex(meta.index, params, meta);
   return {
     ...paginateIndex(filtered, page, limit),
     synced_at: meta.synced_at
