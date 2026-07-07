@@ -2,14 +2,17 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
-    "lib": [
-      "es2020",
-      "webworker"
-    ],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2020",
+    "lib": ["ES2020", "WebWorker"],
     "noEmit": true,
     "skipLibCheck": true
   },
   "include": [
-    "worker.js"
+    "worker.js",
+    "portfolio-api.js",
+    "portfolio-filter.js",
+    "portfolio-search.js"
   ]
 }

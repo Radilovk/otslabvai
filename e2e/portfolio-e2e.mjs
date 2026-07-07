@@ -111,13 +111,20 @@ async function runTests() {
   await page.click('#sidebar-close');
   await sleep(200);
 
-  // Search
-  await page.fill('#search-input', 'whey');
+  // Search – Bulgarian + English synonyms
+  await page.fill('#search-input', 'протеин');
   await sleep(400);
-  const searchMeta = await page.locator('#results-meta').textContent();
-  const searchCount = parseInt((searchMeta || '').replace(/\D/g, ''), 10) || 0;
-  if (searchCount > 50) logPass(`search whey: ${searchCount} products`);
-  else logIssue(`search whey returned only ${searchCount} products`);
+  let searchCount = parseInt((await page.locator('#results-meta').textContent() || '').replace(/\D/g, ''), 10) || 0;
+  if (searchCount > 100) logPass(`search протеин: ${searchCount} products`);
+  else logIssue(`search протеин returned only ${searchCount} products`);
+
+  await page.fill('#search-input', '');
+  await sleep(200);
+  await page.fill('#search-input', 'whey gold');
+  await sleep(400);
+  searchCount = parseInt((await page.locator('#results-meta').textContent() || '').replace(/\D/g, ''), 10) || 0;
+  if (searchCount > 5) logPass(`multi-word search: ${searchCount} products`);
+  else logIssue(`multi-word search returned only ${searchCount}`);
 
   // Product page
   await page.locator('.pf-card-link').first().click();
