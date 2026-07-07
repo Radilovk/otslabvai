@@ -1,6 +1,13 @@
-# Worker and test files (not web assets)
+# Worker-only modules (bundled by wrangler, not static assets)
 worker.js
 worker.test.js
+portfolio-api.js
+portfolio-filter.js
+portfolio-search.js
+portfolio-api.test.js
+portfolio-sync.mjs
+upload-portfolio-catalog.mjs
+e2e/
 upload-static-files.js
 jest.config.js
 

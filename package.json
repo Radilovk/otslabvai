@@ -13,6 +13,7 @@
     "test:portfolio": "node --experimental-vm-modules node_modules/.bin/jest portfolio-api.test.js",
     "test:portfolio-e2e": "node e2e/portfolio-e2e.mjs",
     "dev:portfolio": "node e2e/portfolio-dev-server.mjs",
+    "typecheck": "tsc --noEmit",
     "sync-portfolio": "node portfolio-sync.mjs",
     "upload-portfolio": "node upload-portfolio-catalog.mjs",
     "validate-backend": "node backend/validate.mjs"
@@ -23,6 +24,7 @@
   "type": "module",
   "devDependencies": {
     "jest": "^29.7.0",
-    "playwright": "^1.61.1"
+    "playwright": "^1.61.1",
+    "typescript": "^5.9.3"
   }
 }
