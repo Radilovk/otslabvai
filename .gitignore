@@ -17,6 +17,10 @@ yarn-error.log*
 .DS_Store
 
 # Cloudflare
+.wrangler/
+
+# Generated portfolio catalog (run: node portfolio-sync.mjs)
+backend/portfolio/
 
 # Local data
 page_content_mock.json

@@ -1775,7 +1775,7 @@ function setupEventListeners() {
     });
     
     DOM.addPromoBtn.addEventListener('click', () => {
-        openPromoCodeModal('add');
+        openPromoCodeModal('add', null, 'main');
     });
     
     DOM.promoSearchInput.addEventListener('input', filterPromoCodes);

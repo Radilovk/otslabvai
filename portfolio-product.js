@@ -42,7 +42,7 @@ function render() {
     <a href="portfolio.html" class="pf-back-link">← Назад към каталога</a>
     <div class="pf-product-grid">
       <div class="pf-gallery">
-        <img id="product-image" src="${escapeHtml(img)}" alt="${escapeHtml(product.name)}">
+        <img id="product-image" src="${escapeHtml(img)}" alt="${escapeHtml(product.name)}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27300%27%3E%3Crect fill=%27%23eef2f0%27 width=%27300%27 height=%27300%27/%3E%3C/svg%3E'">
         ${product.label ? `<p class="pf-label-link"><a href="${escapeHtml(product.label)}" target="_blank" rel="noopener noreferrer" class="pf-btn pf-btn-outline">Етикет / състав</a></p>` : ''}
       </div>
       <div class="pf-product-info">

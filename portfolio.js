@@ -21,6 +21,7 @@ const DOM = {
   filtersToggle: document.getElementById('filters-toggle'),
   sidebar: document.getElementById('sidebar'),
   sidebarOverlay: document.getElementById('sidebar-overlay'),
+  sidebarClose: document.getElementById('sidebar-close'),
   heroStats: document.getElementById('hero-stats'),
   statProducts: document.getElementById('stat-products'),
   statBrands: document.getElementById('stat-brands')
@@ -45,13 +46,16 @@ function formatPrice(item) {
   return `<span class="from">от</span> ${item.min_price.toFixed(2)} €`;
 }
 
+const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect fill='%23eef2f0' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.35em' fill='%235f6f66' font-family='sans-serif' font-size='14'%3EНяма снимка%3C/text%3E%3C/svg%3E";
+
 function renderCard(item) {
   const variantBadge = item.variant_count > 1 ? `<span class="pf-badge">${item.variant_count} варианта</span>` : '';
   const stockBadge = !item.available ? '<span class="pf-badge out">Изчерпан</span>' : '';
+  const img = item.image || PLACEHOLDER_IMG;
   return `
     <a href="portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}" class="pf-card-link">
       <div class="pf-card-image">${variantBadge}${stockBadge}
-        <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" width="300" height="300">
+        <img src="${escapeHtml(img)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
       </div>
       <div class="pf-card-body">
         <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
@@ -91,6 +95,23 @@ function renderPagination() {
   });
 }
 
+function countActiveFilters() {
+  let n = 0;
+  if (DOM.searchInput.value.trim()) n++;
+  if (DOM.filterCategory.value) n++;
+  if (DOM.filterBrand.value) n++;
+  if (DOM.filterMinPrice.value || DOM.filterMaxPrice.value) n++;
+  if (!DOM.filterAvailable.checked) n++;
+  if (DOM.sortSelect.value !== 'name') n++;
+  return n;
+}
+
+function updateFiltersToggleLabel() {
+  if (!DOM.filtersToggle) return;
+  const n = countActiveFilters();
+  DOM.filtersToggle.textContent = n > 0 ? `☰ Филтри (${n})` : '☰ Филтри';
+}
+
 function loadCatalog() {
   if (!state.cacheReady) return;
   const data = queryCatalogFromCache(getFilterParams(), state.page, LIMIT);
@@ -101,11 +122,17 @@ function loadCatalog() {
   state.total = data.total;
   state.totalPages = data.total_pages;
   state.page = data.page;
-  DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
+  DOM.resultsMeta.textContent = DOM.filterAvailable.checked
+    ? `${data.total.toLocaleString('bg-BG')} налични продукта`
+    : `${data.total.toLocaleString('bg-BG')} продукта`;
   DOM.grid.innerHTML = data.items.length
     ? data.items.map(renderCard).join('')
-    : '<div class="pf-empty">Няма продукти с тези филтри. Опитайте да промените критериите.</div>';
+    : `<div class="pf-empty">Няма продукти с тези филтри.<br><button type="button" class="pf-btn pf-btn-outline pf-empty-clear" id="empty-clear-filters">Изчисти филтрите</button></div>`;
+  document.getElementById('empty-clear-filters')?.addEventListener('click', () => {
+    DOM.clearFilters.click();
+  });
   renderPagination();
+  updateFiltersToggleLabel();
 }
 
 function populateFilters(filters) {
@@ -165,6 +192,7 @@ function bindEvents() {
     else openFilters();
   });
   DOM.sidebarOverlay?.addEventListener('click', closeFilters);
+  DOM.sidebarClose?.addEventListener('click', closeFilters);
   const params = new URLSearchParams(location.search);
   if (params.get('q')) DOM.searchInput.value = params.get('q');
   if (params.get('category')) DOM.filterCategory.value = params.get('category');
