@@ -76,6 +76,7 @@
             <button class="tab-btn" data-tab="tab-footer">Футър</button>
             <button class="tab-btn" data-tab="tab-orders">Поръчки</button>
             <button class="tab-btn" data-tab="tab-contacts">Контакти</button>
+            <button class="tab-btn" data-tab="tab-biocode-inquiries">BioCode Запитвания</button>
             <button class="tab-btn" data-tab="tab-promo-codes">Промо Кодове</button>
             <button class="tab-btn" data-tab="tab-pages">Страници</button>
             <button class="tab-btn" data-tab="tab-ai-settings">AI Настройки</button>
@@ -216,7 +217,50 @@
                     </table>
                 </div>
             </section>
-            
+
+            <!-- Секция: BioCode Запитвания -->
+            <section id="tab-biocode-inquiries" class="tab-pane">
+                <div class="orders-header">
+                    <h2>BioCode Запитвания</h2>
+                    <div class="orders-controls">
+                        <input type="text" id="biocode-inquiry-search-input" placeholder="Търси по име, email...">
+                        <button id="refresh-biocode-inquiries-btn" class="btn btn-secondary">Опресни</button>
+                    </div>
+                </div>
+                <!-- Мобилна лента за сортиране – скрита на таблети/десктоп -->
+                <div class="mobile-sort-bar" id="biocode-inquiries-mobile-sort-bar">
+                    <label class="mobile-sort-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                        Сортирай:
+                    </label>
+                    <select id="biocode-inquiries-mobile-sort-field">
+                        <option value="timestamp">Дата</option>
+                        <option value="name">Име</option>
+                        <option value="topic">Тема</option>
+                        <option value="status">Статус</option>
+                    </select>
+                    <button id="biocode-inquiries-mobile-sort-dir" class="btn btn-sm btn-secondary mobile-sort-dir-btn" title="Посока на сортиране">↓</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="biocode-inquiries-table" class="orders-table">
+                        <thead>
+                            <tr>
+                                <th class="biocode-inquiries-sort-th" data-sort="name">Име <span class="sort-icon">⇅</span></th>
+                                <th>Организация</th>
+                                <th>Email</th>
+                                <th class="biocode-inquiries-sort-th" data-sort="topic">Тема <span class="sort-icon">⇅</span></th>
+                                <th>Съобщение</th>
+                                <th class="biocode-inquiries-sort-th" data-sort="timestamp">Дата <span class="sort-icon">⇅</span></th>
+                                <th class="biocode-inquiries-sort-th" data-sort="status">Статус <span class="sort-icon">⇅</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="biocode-inquiries-table-body">
+                            <!-- Редовете ще се генерират от JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
             <!-- Секция: Промо Кодове -->
             <section id="tab-promo-codes" class="tab-pane">
                 <div class="orders-header">
@@ -446,6 +490,26 @@
             <td data-label="Съобщение" class="contact-message"></td>
             <td data-label="Дата" class="contact-date"></td>
             <td data-label="Статус" class="contact-status-cell">
+                <select class="contact-status">
+                    <option value="Нов">Нов</option>
+                    <option value="Прегледан">Прегледан</option>
+                    <option value="Отговорен">Отговорен</option>
+                </select>
+                <span class="mobile-status-badge"></span>
+            </td>
+        </tr>
+    </template>
+
+    <!-- Шаблон за ред от таблицата с BioCode запитвания -->
+    <template id="biocode-inquiry-row-template">
+        <tr>
+            <td data-label="Име" class="biocode-inquiry-name"></td>
+            <td data-label="Организация" class="biocode-inquiry-org"></td>
+            <td data-label="Email" class="biocode-inquiry-email"></td>
+            <td data-label="Тема" class="biocode-inquiry-topic"></td>
+            <td data-label="Съобщение" class="biocode-inquiry-message"></td>
+            <td data-label="Дата" class="biocode-inquiry-date"></td>
+            <td data-label="Статус" class="biocode-inquiry-status-cell">
                 <select class="contact-status">
                     <option value="Нов">Нов</option>
                     <option value="Прегледан">Прегледан</option>

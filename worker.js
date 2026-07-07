@@ -93,7 +93,17 @@ export default {
                   throw new UserFacingError('Method Not Allowed.', 405);
               }
               break;
-          
+
+          case '/api/biocode-inquiries':
+              if (request.method === 'GET') {
+                  response = await handleGetBiocodeInquiries(request, env);
+              } else if (request.method === 'POST') {
+                  response = await handleCreateBiocodeInquiry(request, env);
+              } else {
+                  throw new UserFacingError('Method Not Allowed.', 405);
+              }
+              break;
+
           case '/promo-codes':
               if (request.method === 'GET') {
                   response = await handleGetPromoCodes(request, env);
@@ -719,6 +729,63 @@ async function handleCreateContact(request, env) {
     await env.PAGE_CONTENT.put('contacts', JSON.stringify(contacts, null, 2));
     
     return new Response(JSON.stringify({ success: true, contact: newContact }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles GET /api/biocode-inquiries (запитвания от biocode/contact.html)
+ */
+async function handleGetBiocodeInquiries(request, env) {
+    const inquiriesJson = await env.PAGE_CONTENT.get('biocode_inquiries');
+    const inquiries = inquiriesJson ? JSON.parse(inquiriesJson) : [];
+    return new Response(JSON.stringify(inquiries), {
+        status: 200,
+        headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+        }
+    });
+}
+
+/**
+ * --- НОВА ФУНКЦИЯ ---
+ * Handles POST /api/biocode-inquiries (създаване на ново запитване от BioCode Peptides сайта)
+ */
+async function handleCreateBiocodeInquiry(request, env) {
+    let inquiryData;
+    try {
+        inquiryData = await request.json();
+    } catch (e) {
+        throw new UserFacingError("Невалиден JSON формат на заявката.", 400);
+    }
+
+    if (!inquiryData || !inquiryData.name || !inquiryData.email || !inquiryData.message) {
+        throw new UserFacingError("Липсват задължителни данни за запитването.", 400);
+    }
+
+    const newInquiry = {
+        id: `biocode-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+        timestamp: new Date().toISOString(),
+        name: inquiryData.name,
+        organization: inquiryData.organization || '',
+        email: inquiryData.email,
+        topic: inquiryData.topic || 'General Question',
+        message: inquiryData.message,
+        source: inquiryData.source || 'biocode/contact.html',
+        status: 'Нов'
+    };
+
+    const inquiriesJson = await env.PAGE_CONTENT.get('biocode_inquiries');
+    let inquiries = inquiriesJson ? JSON.parse(inquiriesJson) : [];
+
+    inquiries.push(newInquiry);
+
+    await env.PAGE_CONTENT.put('biocode_inquiries', JSON.stringify(inquiries, null, 2));
+
+    return new Response(JSON.stringify({ success: true, inquiry: newInquiry }), {
         status: 201,
         headers: { 'Content-Type': 'application/json' }
     });

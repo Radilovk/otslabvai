@@ -56,6 +56,10 @@ const DOM = {
     contactsTableBody: document.getElementById('contacts-table-body'),
     contactSearchInput: document.getElementById('contact-search-input'),
     refreshContactsBtn: document.getElementById('refresh-contacts-btn'),
+    // BioCode Запитвания
+    biocodeInquiriesTableBody: document.getElementById('biocode-inquiries-table-body'),
+    biocodeInquirySearchInput: document.getElementById('biocode-inquiry-search-input'),
+    refreshBiocodeInquiriesBtn: document.getElementById('refresh-biocode-inquiries-btn'),
     // Промо Кодове
     promoCodesTableBody: document.getElementById('promo-codes-table-body'),
     promoSearchInput: document.getElementById('promo-search-input'),
@@ -83,6 +87,7 @@ const DOM = {
         listItem: document.getElementById('list-item-template'),
         orderRow: document.getElementById('order-row-template'),
         contactRow: document.getElementById('contact-row-template'),
+        biocodeInquiryRow: document.getElementById('biocode-inquiry-row-template'),
         promoCodeRow: document.getElementById('promo-code-row-template'),
     }
 };
@@ -98,6 +103,10 @@ let filteredContactsData = [];
 let activeContactSourceFilter = '';
 let contactSortField = 'timestamp';
 let contactSortDir = 'desc';
+let biocodeInquiriesData = [];
+let filteredBiocodeInquiriesData = [];
+let biocodeInquirySortField = 'timestamp';
+let biocodeInquirySortDir = 'desc';
 let promoCodesData = [];
 let filteredPromoCodesData = [];
 let unsavedChanges = false;
@@ -109,9 +118,14 @@ let currentProject = localStorage.getItem('adminProject') || 'main';
 const CONTACTS_CACHE_KEY = 'adminContactsCache';
 const CONTACTS_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+// localStorage cache key and TTL for BioCode inquiries (24 hours is enough)
+const BIOCODE_INQUIRIES_CACHE_KEY = 'adminBiocodeInquiriesCache';
+const BIOCODE_INQUIRIES_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 // localStorage keys for persisting status overrides across refreshes
 const ORDERS_STATUS_CACHE_KEY = 'adminOrdersStatusCache';
 const CONTACTS_STATUS_CACHE_KEY = 'adminContactsStatusCache';
+const BIOCODE_INQUIRIES_STATUS_CACHE_KEY = 'adminBiocodeInquiriesStatusCache';
 
 // =======================================================
 //          2. API КОМУНИКАЦИЯ
@@ -239,6 +253,69 @@ function applyContactStatusOverrides() {
     } catch (e) { /* ignore corrupt cache */ }
 }
 
+async function fetchBiocodeInquiries(forceRefresh = false) {
+    try {
+        // Use localStorage cache – inquiries need only one backend fetch per 24 hours.
+        if (!forceRefresh) {
+            try {
+                const cached = JSON.parse(localStorage.getItem(BIOCODE_INQUIRIES_CACHE_KEY) || 'null');
+                if (cached && (Date.now() - cached.timestamp) < BIOCODE_INQUIRIES_CACHE_TTL_MS) {
+                    biocodeInquiriesData = cached.data;
+                    applyBiocodeInquiryStatusOverrides();
+                    filteredBiocodeInquiriesData = [...biocodeInquiriesData];
+                    return;
+                }
+            } catch (e) { /* ignore corrupt cache entry */ }
+        }
+        const response = await fetch(`${API_URL}/api/biocode-inquiries`, {
+            cache: 'no-cache'
+        });
+        if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
+        const rawInquiries = await response.json();
+        biocodeInquiriesData = rawInquiries.map((inquiry, index) => ({ ...inquiry, id: inquiry.id || `biocode_${index}_${Date.now()}` }));
+        // Re-apply any status overrides saved locally before persisting the cache
+        applyBiocodeInquiryStatusOverrides();
+        filteredBiocodeInquiriesData = [...biocodeInquiriesData];
+        // Persist to localStorage so we skip the backend for the next 24 hours.
+        try {
+            localStorage.setItem(BIOCODE_INQUIRIES_CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: biocodeInquiriesData }));
+        } catch (e) { /* quota exceeded – ignore */ }
+    } catch (error) {
+        showNotification('Грешка при зареждане на BioCode запитванията.', 'error');
+        console.error("Грешка при зареждане на BioCode запитвания:", error);
+        biocodeInquiriesData = [];
+        filteredBiocodeInquiriesData = [];
+    }
+}
+
+// Update localStorage cache when BioCode inquiry statuses change
+function updateBiocodeInquiriesCache() {
+    try {
+        localStorage.setItem(BIOCODE_INQUIRIES_CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: biocodeInquiriesData }));
+    } catch (e) { /* quota exceeded – ignore */ }
+}
+
+// Save a single BioCode inquiry status override so it survives force-refresh / cache expiry
+function saveBiocodeInquiryStatusOverride(inquiryId, status) {
+    try {
+        const overrides = JSON.parse(localStorage.getItem(BIOCODE_INQUIRIES_STATUS_CACHE_KEY) || '{}');
+        overrides[inquiryId] = status;
+        localStorage.setItem(BIOCODE_INQUIRIES_STATUS_CACHE_KEY, JSON.stringify(overrides));
+    } catch (e) { /* quota exceeded – ignore */ }
+}
+
+// Apply cached BioCode inquiry status overrides on top of freshly fetched / cached data
+function applyBiocodeInquiryStatusOverrides() {
+    try {
+        const overrides = JSON.parse(localStorage.getItem(BIOCODE_INQUIRIES_STATUS_CACHE_KEY) || '{}');
+        biocodeInquiriesData.forEach(inquiry => {
+            if (overrides[inquiry.id] !== undefined) {
+                inquiry.status = overrides[inquiry.id];
+            }
+        });
+    } catch (e) { /* ignore corrupt cache */ }
+}
+
 async function fetchPromoCodes() {
     try {
         // For dynamic data like promo codes, use no-cache to always get fresh data
@@ -318,6 +395,7 @@ function renderAll() {
     renderFooter();
     filterOrders(); // This will call renderOrders
     filterContacts(); // This will call renderContacts
+    filterBiocodeInquiries(); // This will call renderBiocodeInquiries
 }
 
 function renderGlobalSettings() {
@@ -606,6 +684,56 @@ function renderContacts() {
         if (badge) applyContactStatusBadge(badge, status);
         
         DOM.contactsTableBody.appendChild(rowTemplate);
+    });
+}
+
+function renderBiocodeInquiries() {
+    DOM.biocodeInquiriesTableBody.innerHTML = '';
+    filteredBiocodeInquiriesData.forEach((inquiry) => {
+        const rowTemplate = DOM.templates.biocodeInquiryRow.content.cloneNode(true);
+        const originalIndex = biocodeInquiriesData.findIndex(i => i.id === inquiry.id);
+        const row = rowTemplate.querySelector('tr');
+        row.dataset.index = originalIndex;
+        row.dataset.inquiryId = inquiry.id;
+
+        const nameCell = rowTemplate.querySelector('.biocode-inquiry-name');
+        nameCell.textContent = inquiry.name || '';
+        nameCell.dataset.icon = '🧪';
+        nameCell.classList.add('mobile-key');
+
+        rowTemplate.querySelector('.biocode-inquiry-org').textContent = inquiry.organization || '—';
+        rowTemplate.querySelector('.biocode-inquiry-email').textContent = inquiry.email || '';
+
+        const topicCell = rowTemplate.querySelector('.biocode-inquiry-topic');
+        topicCell.textContent = inquiry.topic || 'General Question';
+        topicCell.classList.add('mobile-key');
+
+        // Truncate long messages
+        const message = inquiry.message || '';
+        rowTemplate.querySelector('.biocode-inquiry-message').textContent = message.length > 100 ? message.substring(0, 100) + '...' : message;
+
+        // Format date
+        const date = new Date(inquiry.timestamp);
+        const formattedDate = date.toLocaleString('bg-BG', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        const dateCell = rowTemplate.querySelector('.biocode-inquiry-date');
+        dateCell.textContent = formattedDate;
+        dateCell.classList.add('mobile-key');
+
+        const status = inquiry.status || 'Нов';
+        const statusSelect = rowTemplate.querySelector('.contact-status');
+        statusSelect.value = status;
+        applyContactRowColor(row, status);
+        applyContactStatusSelectColor(statusSelect, status);
+        const badge = rowTemplate.querySelector('.mobile-status-badge');
+        if (badge) applyContactStatusBadge(badge, status);
+
+        DOM.biocodeInquiriesTableBody.appendChild(rowTemplate);
     });
 }
 
@@ -1231,6 +1359,54 @@ function showContactDetailModal(contact, originalIndex) {
 }
 
 
+function showBiocodeInquiryDetailModal(inquiry, originalIndex) {
+    const status = inquiry.status || 'Нов';
+    const date = inquiry.timestamp ? new Date(inquiry.timestamp).toLocaleString('bg-BG', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) : '—';
+
+    const html = `
+        <div class="detail-modal-section">
+            <h4>🧪 Подател</h4>
+            <dl class="detail-modal-grid">
+                <dt>Имена</dt><dd>${escAdminHtml(inquiry.name || '—')}</dd>
+                <dt>Организация</dt><dd>${escAdminHtml(inquiry.organization || '—')}</dd>
+                <dt>Email</dt><dd>${escAdminHtml(inquiry.email || '—')}</dd>
+                <dt>Дата</dt><dd>${escAdminHtml(date)}</dd>
+            </dl>
+        </div>
+        <div class="detail-modal-section">
+            <h4>💬 Тема</h4>
+            <p class="detail-modal-subject">${escAdminHtml(inquiry.topic || 'General Question')}</p>
+        </div>
+        <div class="detail-modal-section">
+            <h4>📝 Съобщение</h4>
+            <div class="detail-modal-message">${escAdminHtml(inquiry.message || '—')}</div>
+        </div>
+        <div class="detail-modal-section">
+            <h4>📋 Статус</h4>
+            <div class="detail-modal-status-row">
+                <label for="detail-biocode-inquiry-status">Статус:</label>
+                <select id="detail-biocode-inquiry-status" class="detail-modal-select">
+                    <option value="Нов"${status === 'Нов' ? ' selected' : ''}>Нов</option>
+                    <option value="Прегледан"${status === 'Прегледан' ? ' selected' : ''}>Прегледан</option>
+                    <option value="Отговорен"${status === 'Отговорен' ? ' selected' : ''}>Отговорен</option>
+                </select>
+            </div>
+        </div>`;
+
+    openDetailModal(`Запитване от ${escAdminHtml(inquiry.name || '—')}`, html, async () => {
+        const newStatus = DOM.modal.body.querySelector('#detail-biocode-inquiry-status').value;
+        biocodeInquiriesData[originalIndex].status = newStatus;
+        saveBiocodeInquiryStatusOverride(biocodeInquiriesData[originalIndex].id, newStatus);
+        updateBiocodeInquiriesCache();
+        filterBiocodeInquiries();
+        showNotification('Статусът е обновен.', 'success');
+        closeModal();
+    });
+}
+
+
 function populateForm(form, data) {
     form.querySelectorAll('[data-field]').forEach(input => {
         const path = input.dataset.field;
@@ -1680,7 +1856,71 @@ function setupEventListeners() {
             filterContacts();
         });
     });
-    
+
+    // BioCode Inquiries event listeners
+    DOM.biocodeInquiriesTableBody.addEventListener('change', async e => {
+        if (!e.target.classList.contains('contact-status')) return;
+        const row = e.target.closest('tr');
+        const index = Number(row.dataset.index);
+        const newStatus = e.target.value;
+        biocodeInquiriesData[index].status = newStatus;
+        saveBiocodeInquiryStatusOverride(biocodeInquiriesData[index].id, newStatus);
+        applyContactRowColor(row, newStatus);
+        applyContactStatusSelectColor(e.target, newStatus);
+        const badge = row.querySelector('.mobile-status-badge');
+        if (badge) applyContactStatusBadge(badge, newStatus);
+        updateBiocodeInquiriesCache();
+        showNotification('Статусът е обновен.', 'success');
+    });
+
+    // Click on BioCode inquiry row → detail modal
+    DOM.biocodeInquiriesTableBody.addEventListener('click', e => {
+        if (e.target.tagName === 'SELECT') return;
+        const row = e.target.closest('tr');
+        if (!row) return;
+        const index = Number(row.dataset.index);
+        if (isNaN(index) || index < 0) return;
+        showBiocodeInquiryDetailModal(biocodeInquiriesData[index], index);
+    });
+
+    DOM.biocodeInquirySearchInput.addEventListener('input', () => filterBiocodeInquiries());
+    DOM.refreshBiocodeInquiriesBtn.addEventListener('click', async () => {
+        showNotification('Опресняване на BioCode запитванията...', 'info');
+        await fetchBiocodeInquiries(true); // force fetch – bypass the 24-hour cache
+        filterBiocodeInquiries();
+    });
+
+    document.querySelectorAll('.biocode-inquiries-sort-th').forEach(th => {
+        th.addEventListener('click', () => {
+            const field = th.dataset.sort;
+            if (biocodeInquirySortField === field) {
+                biocodeInquirySortDir = biocodeInquirySortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                biocodeInquirySortField = field;
+                biocodeInquirySortDir = field === 'timestamp' ? 'desc' : 'asc';
+            }
+            filterBiocodeInquiries();
+        });
+    });
+
+    // Mobile sort controls for BioCode inquiries
+    const biocodeInquiriesMobileSortField = document.getElementById('biocode-inquiries-mobile-sort-field');
+    const biocodeInquiriesMobileSortDir = document.getElementById('biocode-inquiries-mobile-sort-dir');
+    if (biocodeInquiriesMobileSortField) {
+        biocodeInquiriesMobileSortField.value = biocodeInquirySortField;
+        biocodeInquiriesMobileSortField.addEventListener('change', () => {
+            biocodeInquirySortField = biocodeInquiriesMobileSortField.value;
+            filterBiocodeInquiries();
+        });
+    }
+    if (biocodeInquiriesMobileSortDir) {
+        biocodeInquiriesMobileSortDir.addEventListener('click', () => {
+            biocodeInquirySortDir = biocodeInquirySortDir === 'asc' ? 'desc' : 'asc';
+            biocodeInquiriesMobileSortDir.textContent = biocodeInquirySortDir === 'asc' ? '↑' : '↓';
+            filterBiocodeInquiries();
+        });
+    }
+
     // Promo Codes event listeners
     DOM.refreshPromoBtn.addEventListener('click', async () => {
         showNotification('Опресняване на промо кодовете...', 'info');
@@ -2298,6 +2538,52 @@ function filterContacts() {
     filteredContactsData = sortContacts(base);
     updateContactSortHeaders();
     renderContacts();
+}
+
+function sortBiocodeInquiries(data) {
+    const field = biocodeInquirySortField;
+    const dir = biocodeInquirySortDir === 'asc' ? 1 : -1;
+    return [...data].sort((a, b) => {
+        let aVal = a[field] || '';
+        let bVal = b[field] || '';
+        if (field === 'timestamp') {
+            aVal = new Date(aVal).getTime() || 0;
+            bVal = new Date(bVal).getTime() || 0;
+            return dir * (aVal - bVal);
+        }
+        return dir * aVal.toString().localeCompare(bVal.toString(), 'bg');
+    });
+}
+
+function updateBiocodeInquirySortHeaders() {
+    document.querySelectorAll('.biocode-inquiries-sort-th').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        const icon = th.querySelector('.sort-icon');
+        if (icon) icon.textContent = '⇅';
+        if (th.dataset.sort === biocodeInquirySortField) {
+            th.classList.add(biocodeInquirySortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+            if (icon) icon.textContent = biocodeInquirySortDir === 'asc' ? '↑' : '↓';
+        }
+    });
+}
+
+function filterBiocodeInquiries() {
+    const searchTerm = DOM.biocodeInquirySearchInput.value.toLowerCase().trim();
+    let base = [...biocodeInquiriesData];
+    if (searchTerm) {
+        base = base.filter(inquiry => {
+            const name = (inquiry.name || '').toLowerCase();
+            const org = (inquiry.organization || '').toLowerCase();
+            const email = (inquiry.email || '').toLowerCase();
+            const topic = (inquiry.topic || '').toLowerCase();
+            const message = (inquiry.message || '').toLowerCase();
+            return name.includes(searchTerm) || org.includes(searchTerm) || email.includes(searchTerm) ||
+                   topic.includes(searchTerm) || message.includes(searchTerm);
+        });
+    }
+    filteredBiocodeInquiriesData = sortBiocodeInquiries(base);
+    updateBiocodeInquirySortHeaders();
+    renderBiocodeInquiries();
 }
 
 function filterPromoCodes() {
@@ -3900,6 +4186,7 @@ async function init() {
     appData = await fetchData();
     await fetchOrders();
     await fetchContacts();
+    await fetchBiocodeInquiries();
     await fetchPromoCodes();
     await loadAISettings();
     if (appData) {

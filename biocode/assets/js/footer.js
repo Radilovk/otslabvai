@@ -24,7 +24,7 @@
     '    </ul></div>',
     '    <div><h4>Contact</h4><ul>',
     '      <li>100 Cambridge Research Parkway<br>Suite 400<br>Cambridge, MA 02142</li>',
-    '      <li><a href="mailto:info@biocodepeptides.com">info@biocodepeptides.com</a></li>',
+    '      <li><a href="mailto:info@biocode-peptides.com">info@biocode-peptides.com</a></li>',
     '      <li><span class="fillin" title="Insert live phone number">+1 (617) 555-0142</span></li>',
     '    </ul></div>',
     '  </div>',
