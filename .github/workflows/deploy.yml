@@ -146,13 +146,27 @@ jobs:
         run: |
           echo "Waiting for Worker propagation..."
           sleep 8
-          for path in /portfolio/settings /portfolio/bootstrap /portfolio/meta-version; do
-            code=$(curl -s -o /tmp/pf.json -w "%{http_code}" "https://port.radilov-k.workers.dev${path}")
+          BASE="https://port.radilov-k.workers.dev"
+          fail=0
+          code=$(curl -s -o /tmp/pf-settings.json -w "%{http_code}" "${BASE}/portfolio/settings")
+          body=$(head -c 120 /tmp/pf-settings.json)
+          echo "/portfolio/settings → HTTP ${code}: ${body}"
+          if [ "$code" != "200" ]; then
+            echo "ERROR: settings must return 200"
+            fail=1
+          fi
+          for path in /portfolio/bootstrap /portfolio/meta-version; do
+            code=$(curl -s -o /tmp/pf.json -w "%{http_code}" "${BASE}${path}")
             body=$(head -c 120 /tmp/pf.json)
             echo "${path} → HTTP ${code}: ${body}"
             if [ "$code" = "404" ] && echo "$body" | grep -q '"Not Found"'; then
-              echo "ERROR: Worker route missing for ${path}"
-              exit 1
+              echo "ERROR: Worker route missing for ${path} (deployed to wrong worker?)"
+              fail=1
+            fi
+            if [ "$code" = "500" ] && echo "$body" | grep -q 'unexpected internal error'; then
+              echo "ERROR: unhandled Portfolio API error on ${path}"
+              fail=1
             fi
           done
-          echo "Portfolio API routes are live"
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "Portfolio API routes are live on ${BASE}"
