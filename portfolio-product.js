@@ -1,7 +1,7 @@
-import { API_URL } from './config.js';
 import {
   escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage
 } from './portfolio-shared.js';
+import { ensureBootstrap, getProductFromCache, getDescriptionFromCache } from './portfolio-cache.js';
 
 const DOM = {
   root: document.getElementById('product-root'),
@@ -43,7 +43,7 @@ function render() {
     <div class="pf-product-grid">
       <div class="pf-gallery">
         <img id="product-image" src="${escapeHtml(img)}" alt="${escapeHtml(product.name)}">
-        ${product.label ? `<p style="margin-top:1rem;"><a href="${escapeHtml(product.label)}" target="_blank" rel="noopener noreferrer" class="pf-btn pf-btn-outline" style="font-size:0.85rem;">Етикет / състав</a></p>` : ''}
+        ${product.label ? `<p class="pf-label-link"><a href="${escapeHtml(product.label)}" target="_blank" rel="noopener noreferrer" class="pf-btn pf-btn-outline">Етикет / състав</a></p>` : ''}
       </div>
       <div class="pf-product-info">
         <div class="pf-product-brand">${escapeHtml(product.brand)}</div>
@@ -71,7 +71,7 @@ function render() {
           ${selectedVariant?.available ? 'Добави в количката' : 'Изчерпан'}
         </button>
 
-        <div class="pf-description" id="description-block">${product.description || '<p style="color:var(--pf-muted)">Зареждане на описание...</p>'}</div>
+        <div class="pf-description" id="description-block">${product.description || '<p class="pf-muted-text">Зареждане на описание...</p>'}</div>
       </div>
     </div>`;
 
@@ -100,11 +100,10 @@ function bindVariantEvents() {
 
 async function loadDescription() {
   try {
-    const res = await fetch(`${API_URL}/portfolio/product/description?group_id=${encodeURIComponent(product.group_id)}`);
-    const data = await res.json();
+    const data = await getDescriptionFromCache(product.group_id);
     const block = document.getElementById('description-block');
     if (block && data.description) block.innerHTML = data.description;
-    else if (block) block.innerHTML = '<p style="color:var(--pf-muted)">Няма налично описание.</p>';
+    else if (block) block.innerHTML = '<p class="pf-muted-text">Няма налично описание.</p>';
   } catch {
     const block = document.getElementById('description-block');
     if (block) block.innerHTML = '';
@@ -147,13 +146,12 @@ async function loadProduct() {
     return;
   }
   try {
-    const res = await fetch(`${API_URL}/portfolio/product?group_id=${encodeURIComponent(groupId)}`);
-    const data = await res.json();
-    if (!res.ok) {
-      DOM.root.innerHTML = `<div class="pf-error">${escapeHtml(data.error || 'Продуктът не е намерен')}</div>`;
+    await ensureBootstrap();
+    product = await getProductFromCache(groupId);
+    if (!product) {
+      DOM.root.innerHTML = '<div class="pf-error">Продуктът не е намерен.</div>';
       return;
     }
-    product = data;
     pickDefaultVariant();
     render();
   } catch {
@@ -162,7 +160,7 @@ async function loadProduct() {
 }
 
 async function init() {
-  await initPortfolioPage();
+  await initPortfolioPage({ showMobileBar: true });
   updateCartBadges();
   await loadProduct();
 }

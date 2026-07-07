@@ -1,7 +1,7 @@
-import { API_URL } from './config.js';
 import {
-  escapeHtml, debounce, updateCartBadges, initPortfolioPage, loadSiteSettings, applySiteSettings
+  escapeHtml, debounce, updateCartBadges, initPortfolioPage, applySiteSettings
 } from './portfolio-shared.js';
+import { ensureBootstrap, getFiltersFromCache, queryCatalogFromCache } from './portfolio-cache.js';
 
 const LIMIT = 24;
 
@@ -20,26 +20,24 @@ const DOM = {
   syncBanner: document.getElementById('sync-banner'),
   filtersToggle: document.getElementById('filters-toggle'),
   sidebar: document.getElementById('sidebar'),
+  sidebarOverlay: document.getElementById('sidebar-overlay'),
   heroStats: document.getElementById('hero-stats'),
   statProducts: document.getElementById('stat-products'),
   statBrands: document.getElementById('stat-brands')
 };
 
-let state = { page: 1, total: 0, totalPages: 0, loading: false };
+let state = { page: 1, total: 0, totalPages: 0, loading: false, cacheReady: false };
 
-function getFiltersFromUI() {
-  const params = new URLSearchParams();
-  params.set('page', String(state.page));
-  params.set('limit', String(LIMIT));
-  params.set('sort', DOM.sortSelect.value);
-  const q = DOM.searchInput.value.trim();
-  if (q) params.set('q', q);
-  if (DOM.filterCategory.value) params.set('category', DOM.filterCategory.value);
-  if (DOM.filterBrand.value) params.set('brand', DOM.filterBrand.value);
-  if (DOM.filterMinPrice.value) params.set('min_price', DOM.filterMinPrice.value);
-  if (DOM.filterMaxPrice.value) params.set('max_price', DOM.filterMaxPrice.value);
-  if (DOM.filterAvailable.checked) params.set('available', '1');
-  return params;
+function getFilterParams() {
+  return {
+    sort: DOM.sortSelect.value,
+    q: DOM.searchInput.value.trim(),
+    category: DOM.filterCategory.value,
+    brand: DOM.filterBrand.value,
+    min_price: DOM.filterMinPrice.value,
+    max_price: DOM.filterMaxPrice.value,
+    available: DOM.filterAvailable.checked ? '1' : ''
+  };
 }
 
 function formatPrice(item) {
@@ -64,7 +62,7 @@ function renderCard(item) {
 }
 
 function showSkeletons() {
-  DOM.grid.innerHTML = Array(8).fill('<div class="pf-skeleton"></div>').join('');
+  DOM.grid.innerHTML = Array(6).fill('<div class="pf-skeleton"></div>').join('');
 }
 
 function renderPagination() {
@@ -78,9 +76,9 @@ function renderPagination() {
     pages += `<button type="button" data-page="${p}" class="${p === state.page ? 'current' : ''}">${p}</button>`;
   }
   DOM.pagination.innerHTML = `
-    <button type="button" data-page="${state.page - 1}" ${prevDisabled}>←</button>
+    <button type="button" data-page="${state.page - 1}" ${prevDisabled} aria-label="Предишна">←</button>
     ${pages}
-    <button type="button" data-page="${state.page + 1}" ${nextDisabled}>→</button>`;
+    <button type="button" data-page="${state.page + 1}" ${nextDisabled} aria-label="Следваща">→</button>`;
   DOM.pagination.querySelectorAll('button[data-page]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const p = parseInt(btn.dataset.page, 10);
@@ -93,75 +91,64 @@ function renderPagination() {
   });
 }
 
-async function loadCatalog() {
-  if (state.loading) return;
-  state.loading = true;
-  showSkeletons();
-  try {
-    const res = await fetch(`${API_URL}/portfolio/catalog?${getFiltersFromUI()}`);
-    const data = await res.json();
-    if (!res.ok) {
-      DOM.grid.innerHTML = `<div class="pf-error">${escapeHtml(data.error || 'Грешка при зареждане')}</div>`;
-      DOM.resultsMeta.textContent = '';
-      return;
-    }
-    state.total = data.total;
-    state.totalPages = data.total_pages;
-    state.page = data.page;
-    DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
-    DOM.grid.innerHTML = data.items.length
-      ? data.items.map(renderCard).join('')
-      : '<div class="pf-empty">Няма продукти с тези филтри. Опитайте да промените критериите.</div>';
-    renderPagination();
-  } catch {
-    DOM.grid.innerHTML = '<div class="pf-error">Неуспешна връзка със сървъра. Моля, опитайте по-късно.</div>';
-  } finally {
-    state.loading = false;
+function loadCatalog() {
+  if (!state.cacheReady) return;
+  const data = queryCatalogFromCache(getFilterParams(), state.page, LIMIT);
+  if (!data) {
+    DOM.grid.innerHTML = '<div class="pf-error">Каталогът не е наличен офлайн.</div>';
+    return;
+  }
+  state.total = data.total;
+  state.totalPages = data.total_pages;
+  state.page = data.page;
+  DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
+  DOM.grid.innerHTML = data.items.length
+    ? data.items.map(renderCard).join('')
+    : '<div class="pf-empty">Няма продукти с тези филтри. Опитайте да промените критериите.</div>';
+  renderPagination();
+}
+
+function populateFilters(filters) {
+  DOM.filterCategory.innerHTML = '<option value="">Всички категории</option>';
+  DOM.filterBrand.innerHTML = '<option value="">Всички марки</option>';
+  filters.categories.forEach((c) => {
+    const opt = document.createElement('option');
+    opt.value = c.name;
+    opt.textContent = `${c.name} (${c.count})`;
+    DOM.filterCategory.appendChild(opt);
+  });
+  filters.brands.forEach((b) => {
+    const opt = document.createElement('option');
+    opt.value = b.id;
+    opt.textContent = `${b.name} (${b.count})`;
+    DOM.filterBrand.appendChild(opt);
+  });
+  if (DOM.heroStats) {
+    DOM.heroStats.style.display = 'flex';
+    DOM.statProducts.textContent = filters.total_groups.toLocaleString('bg-BG');
+    DOM.statBrands.textContent = filters.brands.length.toLocaleString('bg-BG');
   }
 }
 
-async function loadFilters() {
-  try {
-    const filtersRes = await fetch(`${API_URL}/portfolio/filters`);
-    if (!filtersRes.ok) {
-      const err = await filtersRes.json().catch(() => ({}));
-      if (DOM.syncBanner) {
-        DOM.syncBanner.style.display = 'block';
-        DOM.syncBanner.textContent = err.error || 'Каталогът не е синхронизиран. Стартирайте sync от Admin → Portfolio.';
-      }
-      return;
-    }
-    const filters = await filtersRes.json();
-    filters.categories.forEach((c) => {
-      const opt = document.createElement('option');
-      opt.value = c.name;
-      opt.textContent = `${c.name} (${c.count})`;
-      DOM.filterCategory.appendChild(opt);
-    });
-    filters.brands.forEach((b) => {
-      const opt = document.createElement('option');
-      opt.value = b.id;
-      opt.textContent = `${b.name} (${b.count})`;
-      DOM.filterBrand.appendChild(opt);
-    });
-    if (DOM.heroStats) {
-      DOM.heroStats.style.display = 'flex';
-      DOM.statProducts.textContent = filters.total_groups.toLocaleString('bg-BG');
-      DOM.statBrands.textContent = filters.brands.length.toLocaleString('bg-BG');
-    }
-  } catch {
-    if (DOM.syncBanner) {
-      DOM.syncBanner.style.display = 'block';
-      DOM.syncBanner.textContent = 'Неуспешна връзка с API.';
-    }
-  }
+function openFilters() {
+  DOM.sidebar?.classList.add('pf-sidebar--open');
+  DOM.sidebarOverlay?.classList.add('pf-visible');
+  DOM.filtersToggle?.setAttribute('aria-expanded', 'true');
+  document.body.classList.add('pf-no-scroll');
+}
+
+function closeFilters() {
+  DOM.sidebar?.classList.remove('pf-sidebar--open');
+  DOM.sidebarOverlay?.classList.remove('pf-visible');
+  DOM.filtersToggle?.setAttribute('aria-expanded', 'false');
+  document.body.classList.remove('pf-no-scroll');
 }
 
 function bindEvents() {
-  const reload = debounce(() => { state.page = 1; loadCatalog(); }, 280);
+  const reload = debounce(() => { state.page = 1; loadCatalog(); }, 200);
   DOM.searchInput.addEventListener('input', reload);
   [DOM.filterCategory, DOM.filterBrand, DOM.filterMinPrice, DOM.filterMaxPrice, DOM.filterAvailable, DOM.sortSelect]
-    .forEach((el) => el.addEventListener('change', () => { state.page = 1; loadCatalog(); }));
+    .forEach((el) => el.addEventListener('change', () => { state.page = 1; loadCatalog(); closeFilters(); }));
   DOM.clearFilters.addEventListener('click', () => {
     DOM.searchInput.value = '';
     DOM.filterCategory.value = '';
@@ -174,9 +161,10 @@ function bindEvents() {
     loadCatalog();
   });
   DOM.filtersToggle?.addEventListener('click', () => {
-    const collapsed = DOM.sidebar.classList.toggle('pf-sidebar--collapsed');
-    DOM.filtersToggle.setAttribute('aria-expanded', String(!collapsed));
+    if (DOM.sidebar?.classList.contains('pf-sidebar--open')) closeFilters();
+    else openFilters();
   });
+  DOM.sidebarOverlay?.addEventListener('click', closeFilters);
   const params = new URLSearchParams(location.search);
   if (params.get('q')) DOM.searchInput.value = params.get('q');
   if (params.get('category')) DOM.filterCategory.value = params.get('category');
@@ -184,17 +172,31 @@ function bindEvents() {
 }
 
 async function init() {
-  await initPortfolioPage({ active: 'catalog' });
-  const settings = await loadSiteSettings();
-  applySiteSettings(settings);
-  if (settings?.site_slogan) {
-    const sub = document.getElementById('hero-subtitle');
-    if (sub) sub.textContent = settings.site_slogan;
+  await initPortfolioPage({ active: 'catalog', showMobileBar: true });
+  showSkeletons();
+
+  try {
+    const bootstrap = await ensureBootstrap();
+    applySiteSettings(bootstrap.settings);
+    if (bootstrap.settings?.site_slogan) {
+      const sub = document.getElementById('hero-subtitle');
+      if (sub) sub.textContent = bootstrap.settings.site_slogan;
+    }
+    const filters = getFiltersFromCache();
+    if (filters) populateFilters(filters);
+    state.cacheReady = true;
+    bindEvents();
+    loadCatalog();
+  } catch (err) {
+    if (DOM.syncBanner) {
+      DOM.syncBanner.style.display = 'block';
+      DOM.syncBanner.textContent = err.message || 'Каталогът не е синхронизиран. Стартирайте sync от Admin → Portfolio.';
+    }
+    DOM.grid.innerHTML = `<div class="pf-error">${escapeHtml(err.message || 'Грешка при зареждане')}</div>`;
+    DOM.resultsMeta.textContent = '';
   }
+
   updateCartBadges();
-  bindEvents();
-  await loadFilters();
-  await loadCatalog();
 }
 
 init();

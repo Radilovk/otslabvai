@@ -3,10 +3,15 @@
  * Used by worker.js for /portfolio/* routes.
  */
 
+import { filterIndex } from './portfolio-filter.js';
+
+export { filterIndex };
+
 const CHUNK_SIZE = 150;
 const KV_SETTINGS = 'portfolio_settings';
 const KV_META = 'portfolio_meta';
 const KV_ORDERS = 'portfolio_orders';
+const KV_PROMO = 'portfolio_promo_codes';
 const chunkKey = (n) => `portfolio_chunk_${n}`;
 const KV_FITNESS1_KEY = 'fitness1_api_key';
 
@@ -39,6 +44,12 @@ function jsonResponse(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { 'Content-Type': 'application/json', ...extraHeaders }
+  });
+}
+
+function cachedResponse(data, maxAge = 3600) {
+  return jsonResponse(data, 200, {
+    'Cache-Control': `public, max-age=${maxAge}, stale-while-revalidate=86400`
   });
 }
 
@@ -208,50 +219,6 @@ async function getGroupFromChunks(env, meta, groupId) {
   return chunk.find((g) => g.group_id === groupId) || null;
 }
 
-function filterIndex(index, params) {
-  let results = index;
-
-  if (params.brand) {
-    results = results.filter((i) => i.brand_id === params.brand);
-  }
-  if (params.category) {
-    results = results.filter((i) => i.category_top === params.category || i.category.startsWith(params.category));
-  }
-  if (params.available === '1' || params.available === 'true') {
-    results = results.filter((i) => i.available);
-  }
-  if (params.q) {
-    const q = params.q.toLowerCase();
-    results = results.filter(
-      (i) =>
-        i.name.toLowerCase().includes(q) ||
-        i.brand.toLowerCase().includes(q) ||
-        i.category.toLowerCase().includes(q)
-    );
-  }
-  if (params.min_price) {
-    const min = parseFloat(params.min_price);
-    if (!Number.isNaN(min)) results = results.filter((i) => i.max_price >= min);
-  }
-  if (params.max_price) {
-    const max = parseFloat(params.max_price);
-    if (!Number.isNaN(max)) results = results.filter((i) => i.min_price <= max);
-  }
-
-  const sort = params.sort || 'name';
-  if (sort === 'price_asc') {
-    results = [...results].sort((a, b) => a.min_price - b.min_price);
-  } else if (sort === 'price_desc') {
-    results = [...results].sort((a, b) => b.max_price - a.max_price);
-  } else if (sort === 'brand') {
-    results = [...results].sort((a, b) => a.brand.localeCompare(b.brand, 'bg'));
-  } else {
-    results = [...results].sort((a, b) => a.name.localeCompare(b.name, 'bg'));
-  }
-
-  return results;
-}
-
 export async function syncPortfolioCatalog(env) {
   const apiKey = await getFitness1ApiKey(env);
   if (!apiKey) {
@@ -310,7 +277,7 @@ export async function syncPortfolioCatalog(env) {
 
 async function handleGetSettings(env) {
   const settings = await getSettings(env);
-  return jsonResponse(settings);
+  return cachedResponse(settings, 300);
 }
 
 async function handleSaveSettings(request, env) {
@@ -334,7 +301,7 @@ async function handleGetFilters(env) {
   if (!meta) {
     throw new PortfolioError('Каталогът не е синхронизиран. Стартирайте sync от админ панела.', 404);
   }
-  return jsonResponse({
+  return cachedResponse({
     brands: meta.brands,
     categories: meta.categories,
     total_groups: meta.total_groups,
@@ -366,7 +333,7 @@ async function handleGetCatalog(request, env) {
   const start = (page - 1) * limit;
   const items = filtered.slice(start, start + limit);
 
-  return jsonResponse({
+  return cachedResponse({
     page,
     limit,
     total,
@@ -387,7 +354,7 @@ async function handleGetProduct(request, env) {
   const group = await getGroupFromChunks(env, meta, groupId);
   if (!group) throw new PortfolioError('Продуктът не е намерен.', 404);
 
-  return jsonResponse(group);
+  return cachedResponse(group, 1800);
 }
 
 async function findVariantInCatalog(env, skuId) {
@@ -492,6 +459,181 @@ async function handleGetProductDescription(request, env) {
   return jsonResponse({ description });
 }
 
+async function handleMetaVersion(env) {
+  const meta = await getMeta(env);
+  if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+  return cachedResponse({
+    synced_at: meta.synced_at,
+    total_groups: meta.total_groups
+  }, 60);
+}
+
+/** Single bootstrap: settings + catalog meta (1 KV read batch for client cache) */
+async function handleBootstrap(env) {
+  const settings = await getSettings(env);
+  const meta = await getMeta(env);
+  if (!meta) {
+    throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+  }
+  return cachedResponse({
+    settings,
+    meta: {
+      version: meta.version,
+      synced_at: meta.synced_at,
+      total_groups: meta.total_groups,
+      chunk_size: meta.chunk_size,
+      chunk_count: meta.chunk_count,
+      brands: meta.brands,
+      categories: meta.categories,
+      lookup: meta.lookup,
+      index: meta.index
+    }
+  }, 3600);
+}
+
+async function handleGetChunk(request, env) {
+  const url = new URL(request.url);
+  const index = parseInt(url.searchParams.get('index'), 10);
+  if (Number.isNaN(index) || index < 0) {
+    throw new PortfolioError('Невалиден chunk index.', 400);
+  }
+
+  const meta = await getMeta(env);
+  if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+  if (index >= meta.chunk_count) throw new PortfolioError('Chunk не е намерен.', 404);
+
+  const chunkRaw = await env.PAGE_CONTENT.get(chunkKey(index));
+  if (!chunkRaw) throw new PortfolioError('Chunk не е намерен.', 404);
+
+  return cachedResponse({ index, groups: JSON.parse(chunkRaw), synced_at: meta.synced_at }, 86400);
+}
+
+// --- Portfolio promo codes ---
+
+async function getPromoCodes(env) {
+  const raw = await env.PAGE_CONTENT.get(KV_PROMO);
+  return raw ? JSON.parse(raw) : [];
+}
+
+async function savePromoCodes(env, codes) {
+  await env.PAGE_CONTENT.put(KV_PROMO, JSON.stringify(codes, null, 2));
+}
+
+function validatePromoRecord(promo, { increment = false } = {}) {
+  if (!promo) return { valid: false, error: 'Невалиден промо код.' };
+  if (!promo.active) return { valid: false, error: 'Промо кодът не е активен.' };
+  const now = new Date();
+  if (promo.validFrom && new Date(promo.validFrom) > now) {
+    return { valid: false, error: 'Промо кодът все още не е валиден.' };
+  }
+  if (promo.validUntil && new Date(promo.validUntil) < now) {
+    return { valid: false, error: 'Промо кодът е изтекъл.' };
+  }
+  if (promo.maxUses && promo.usedCount >= promo.maxUses) {
+    return { valid: false, error: 'Промо кодът е изчерпан.' };
+  }
+  if (increment) promo.usedCount = (promo.usedCount || 0) + 1;
+  return {
+    valid: true,
+    promoCode: {
+      id: promo.id,
+      code: promo.code,
+      discount: promo.discount,
+      discountType: promo.discountType || 'percentage',
+      description: promo.description || ''
+    }
+  };
+}
+
+async function handleGetPromoCodes(env) {
+  return jsonResponse(await getPromoCodes(env));
+}
+
+async function handleCreatePromoCode(request, env) {
+  const data = await request.json();
+  if (!data?.code || data.discount === undefined) {
+    throw new PortfolioError('Липсват код или отстъпка.', 400);
+  }
+  const codes = await getPromoCodes(env);
+  const code = data.code.toUpperCase().trim();
+  if (codes.some((p) => p.code === code)) {
+    throw new PortfolioError('Промо кодът вече съществува.', 409);
+  }
+  const newPromo = {
+    id: `pf-promo-${Date.now()}`,
+    code,
+    discount: parseFloat(data.discount),
+    discountType: data.discountType || 'percentage',
+    description: data.description || '',
+    validFrom: data.validFrom || new Date().toISOString(),
+    validUntil: data.validUntil || null,
+    maxUses: data.maxUses ? parseInt(data.maxUses, 10) : null,
+    usedCount: 0,
+    active: data.active !== false,
+    createdAt: new Date().toISOString()
+  };
+  codes.push(newPromo);
+  await savePromoCodes(env, codes);
+  return jsonResponse({ success: true, promoCode: newPromo }, 201);
+}
+
+async function handleUpdatePromoCode(request, env) {
+  const data = await request.json();
+  if (!data?.id) throw new PortfolioError('Липсва ID.', 400);
+  const codes = await getPromoCodes(env);
+  const idx = codes.findIndex((p) => p.id === data.id);
+  if (idx === -1) throw new PortfolioError('Промо кодът не е намерен.', 404);
+  Object.assign(codes[idx], {
+    code: data.code ? data.code.toUpperCase().trim() : codes[idx].code,
+    discount: data.discount !== undefined ? parseFloat(data.discount) : codes[idx].discount,
+    discountType: data.discountType || codes[idx].discountType,
+    description: data.description ?? codes[idx].description,
+    validFrom: data.validFrom ?? codes[idx].validFrom,
+    validUntil: data.validUntil ?? codes[idx].validUntil,
+    maxUses: data.maxUses !== undefined ? (data.maxUses ? parseInt(data.maxUses, 10) : null) : codes[idx].maxUses,
+    active: data.active !== undefined ? data.active : codes[idx].active
+  });
+  await savePromoCodes(env, codes);
+  return jsonResponse({ success: true, promoCode: codes[idx] });
+}
+
+async function handleDeletePromoCode(request, env) {
+  const id = new URL(request.url).searchParams.get('id');
+  if (!id) throw new PortfolioError('Липсва ID.', 400);
+  let codes = await getPromoCodes(env);
+  const before = codes.length;
+  codes = codes.filter((p) => p.id !== id);
+  if (codes.length === before) throw new PortfolioError('Промо кодът не е намерен.', 404);
+  await savePromoCodes(env, codes);
+  return jsonResponse({ success: true });
+}
+
+async function handleValidatePromo(request, env) {
+  const body = await request.json();
+  if (!body?.code) throw new PortfolioError('Липсва промо код.', 400);
+  const code = body.code.toUpperCase().trim();
+  const codes = await getPromoCodes(env);
+  const promo = codes.find((p) => p.code === code);
+  const result = validatePromoRecord(promo);
+  if (!result.valid) return jsonResponse(result);
+
+  if (body.incrementUsage) {
+    const idx = codes.findIndex((p) => p.id === promo.id);
+    const fresh = validatePromoRecord(codes[idx], { increment: true });
+    if (!fresh.valid) return jsonResponse(fresh);
+    await savePromoCodes(env, codes);
+  }
+  return jsonResponse(result);
+}
+
+function applyPromoDiscount(subtotal, promo) {
+  if (!promo) return 0;
+  if (promo.discountType === 'percentage') {
+    return roundPrice(subtotal * (promo.discount / 100));
+  }
+  return roundPrice(Math.min(promo.discount, subtotal));
+}
+
 async function handleCreateOrder(request, env) {
   let body;
   try {
@@ -525,6 +667,18 @@ async function handleCreateOrder(request, env) {
     retailTotal += item.retail_price * item.quantity;
   }
 
+  let promoDiscount = 0;
+  let appliedPromo = null;
+  if (body.promoCode) {
+    const codes = await getPromoCodes(env);
+    const promo = codes.find((p) => p.code === String(body.promoCode).toUpperCase().trim());
+    const check = validatePromoRecord(promo, { increment: true });
+    if (!check.valid) throw new PortfolioError(check.error, 400);
+    promoDiscount = applyPromoDiscount(retailTotal, check.promoCode);
+    appliedPromo = check.promoCode;
+    await savePromoCodes(env, codes);
+  }
+
   const newOrder = {
     id: `pf-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     project: 'portfolio',
@@ -532,12 +686,14 @@ async function handleCreateOrder(request, env) {
     status: 'Чака одобрение',
     customer: body.customer,
     products: items,
+    promo: appliedPromo,
     summary: {
       retail_total: roundPrice(retailTotal),
       b2b_total: roundPrice(b2bTotal),
       margin: roundPrice(retailTotal - b2bTotal),
+      promo_discount: promoDiscount,
       shipping: body.summary?.shipping ?? null,
-      total: body.summary?.total ?? `${roundPrice(retailTotal)} €`
+      total: body.summary?.total ?? `${roundPrice(retailTotal - promoDiscount)} €`
     },
     fitness1_order: null,
     admin_note: ''
@@ -668,9 +824,27 @@ export async function handlePortfolioRoute(request, env, url) {
     if (path === '/portfolio/validate-cart' && method === 'POST') {
       return handleValidateCart(request, env);
     }
+    if (path === '/portfolio/bootstrap' && method === 'GET') {
+      return handleBootstrap(env);
+    }
+    if (path === '/portfolio/meta-version' && method === 'GET') {
+      return handleMetaVersion(env);
+    }
+    if (path === '/portfolio/promo-codes') {
+      if (method === 'GET') return handleGetPromoCodes(env);
+      if (method === 'POST') return handleCreatePromoCode(request, env);
+      if (method === 'PUT') return handleUpdatePromoCode(request, env);
+      if (method === 'DELETE') return handleDeletePromoCode(request, env);
+    }
+    if (path === '/portfolio/validate-promo' && method === 'POST') {
+      return handleValidatePromo(request, env);
+    }
     if (path === '/portfolio/sync' && method === 'POST') {
       const result = await syncPortfolioCatalog(env);
       return jsonResponse(result);
+    }
+    if (path === '/portfolio/chunk' && method === 'GET') {
+      return handleGetChunk(request, env);
     }
     if (path === '/portfolio/orders') {
       if (method === 'GET') return handleGetOrders(env);

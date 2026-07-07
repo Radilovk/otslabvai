@@ -82,6 +82,7 @@
             <button class="tab-btn tab-main-life" data-tab="tab-ai-settings">AI Настройки</button>
             <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-settings" style="display:none;">Настройки</button>
             <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-orders" style="display:none;">Поръчки</button>
+            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-promo-codes" style="display:none;">Промо Кодове</button>
         </nav>
 
         <!-- КОНТЕЙНЕР ЗА СЪДЪРЖАНИЕТО НА ТАБОВЕТЕ -->
@@ -408,6 +409,34 @@
                             </tr>
                         </thead>
                         <tbody id="portfolio-orders-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Portfolio: Промо кодове -->
+            <section id="tab-portfolio-promo-codes" class="tab-pane tab-portfolio-only">
+                <div class="orders-header">
+                    <h2>Portfolio – Промо Кодове</h2>
+                    <div class="orders-controls">
+                        <input type="text" id="portfolio-promo-search-input" placeholder="Търси по код...">
+                        <button id="add-portfolio-promo-btn" class="btn btn-primary">+ Нов Промо Код</button>
+                        <button id="refresh-portfolio-promo-btn" class="btn btn-secondary">Опресни</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="portfolio-promo-codes-table" class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Код</th>
+                                <th>Отстъпка</th>
+                                <th>Описание</th>
+                                <th>Валидност</th>
+                                <th>Използвания</th>
+                                <th>Активен</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-promo-codes-table-body"></tbody>
                     </table>
                 </div>
             </section>

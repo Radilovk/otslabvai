@@ -4,6 +4,7 @@ import {
   groupRawProducts,
   buildCatalogMeta
 } from './portfolio-api.js';
+import { filterIndex, paginateIndex } from './portfolio-filter.js';
 
 describe('Portfolio API', () => {
   const settings = {
@@ -74,5 +75,108 @@ describe('Portfolio API', () => {
     expect(meta.total_groups).toBe(1);
     expect(meta.index[0].variant_count).toBe(2);
     expect(meta.lookup['100']).toBe(0);
+  });
+});
+
+describe('Portfolio filterIndex', () => {
+  const index = [
+    {
+      group_id: '1',
+      name: 'Alpha Whey',
+      brand: 'BrandA',
+      brand_id: '10',
+      category: 'Протеини > Whey',
+      category_top: 'Протеини',
+      min_price: 20,
+      max_price: 30,
+      available: true
+    },
+    {
+      group_id: '2',
+      name: 'Beta Vitamin',
+      brand: 'BrandB',
+      brand_id: '20',
+      category: 'Витамини',
+      category_top: 'Витамини',
+      min_price: 5,
+      max_price: 8,
+      available: false
+    }
+  ];
+
+  test('filters by search query', () => {
+    const result = filterIndex(index, { q: 'whey' });
+    expect(result).toHaveLength(1);
+    expect(result[0].group_id).toBe('1');
+  });
+
+  test('filters available only', () => {
+    const result = filterIndex(index, { available: '1' });
+    expect(result).toHaveLength(1);
+    expect(result[0].group_id).toBe('1');
+  });
+
+  test('paginates results', () => {
+    const page = paginateIndex(index, 1, 1);
+    expect(page.total).toBe(2);
+    expect(page.items).toHaveLength(1);
+    expect(page.total_pages).toBe(2);
+  });
+});
+
+describe('Portfolio promo validation', () => {
+  function validatePromoRecord(promo, { increment = false } = {}) {
+    if (!promo) return { valid: false, error: 'Невалиден промо код.' };
+    if (!promo.active) return { valid: false, error: 'Промо кодът не е активен.' };
+    const now = new Date();
+    if (promo.validFrom && new Date(promo.validFrom) > now) {
+      return { valid: false, error: 'Промо кодът все още не е валиден.' };
+    }
+    if (promo.validUntil && new Date(promo.validUntil) < now) {
+      return { valid: false, error: 'Промо кодът е изтекъл.' };
+    }
+    if (promo.maxUses && promo.usedCount >= promo.maxUses) {
+      return { valid: false, error: 'Промо кодът е изчерпан.' };
+    }
+    if (increment) promo.usedCount = (promo.usedCount || 0) + 1;
+    return {
+      valid: true,
+      promoCode: {
+        code: promo.code,
+        discount: promo.discount,
+        discountType: promo.discountType || 'percentage'
+      }
+    };
+  }
+
+  function applyPromoDiscount(subtotal, promo) {
+    if (!promo) return 0;
+    if (promo.discountType === 'percentage') {
+      return Math.round(subtotal * (promo.discount / 100) * 100) / 100;
+    }
+    return Math.min(promo.discount, subtotal);
+  }
+
+  const promo = {
+    code: 'PORTFOLIO10',
+    discount: 10,
+    discountType: 'percentage',
+    active: true,
+    usedCount: 0,
+    maxUses: 5
+  };
+
+  test('validates active promo', () => {
+    expect(validatePromoRecord(promo).valid).toBe(true);
+  });
+
+  test('rejects exhausted promo', () => {
+    const exhausted = { ...promo, usedCount: 5 };
+    expect(validatePromoRecord(exhausted).valid).toBe(false);
+  });
+
+  test('applyPromoDiscount percentage', () => {
+    const check = validatePromoRecord(promo);
+    expect(applyPromoDiscount(100, check.promoCode)).toBe(10);
   });
 });

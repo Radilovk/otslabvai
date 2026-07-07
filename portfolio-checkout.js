@@ -8,7 +8,6 @@ const SPEEDY_WIDGET_URL =
 
 let cart = getCart();
 let activePromoCode = null;
-let activeDiscount = 0;
 
 const els = {};
 
@@ -37,15 +36,18 @@ function getSubtotal() {
   return cart.reduce((s, p) => s + p.price * p.quantity, 0);
 }
 
+function getPromoDiscount(subtotal) {
+  if (!activePromoCode) return 0;
+  if (activePromoCode.discountType === 'percentage') {
+    return subtotal * (activePromoCode.discount / 100);
+  }
+  return Math.min(activePromoCode.discount, subtotal);
+}
+
 function updateSummary() {
   const subtotal = getSubtotal();
   const shipping = subtotal > 0 ? calculateShipping(subtotal) : 0;
-  let discountAmount = 0;
-  if (activePromoCode) {
-    discountAmount = activePromoCode.discountType === 'percentage'
-      ? subtotal * activeDiscount
-      : Math.min(activeDiscount, subtotal);
-  }
+  const discountAmount = getPromoDiscount(subtotal);
   const total = Math.max(0, subtotal - discountAmount + shipping);
 
   $('summary-subtotal').textContent = formatPrice(subtotal);
@@ -56,6 +58,8 @@ function updateSummary() {
   if (discountRow) {
     discountRow.style.display = discountAmount > 0 ? 'flex' : 'none';
     $('summary-discount').textContent = `-${formatPrice(discountAmount)}`;
+    const label = activePromoCode?.code ? ` (${activePromoCode.code})` : '';
+    discountRow.querySelector('span:first-child').textContent = `Отстъпка${label}`;
   }
 }
 
@@ -255,7 +259,7 @@ async function submitOrder(e) {
   formData.firstName = formData.firstName || $('first-name').value;
   formData.lastName = formData.lastName || $('last-name').value;
 
-  const total = subtotal - (activePromoCode ? (activePromoCode.discountType === 'percentage' ? subtotal * activeDiscount : activeDiscount) : 0) + shipping;
+  const total = subtotal - getPromoDiscount(subtotal) + shipping;
 
   try {
     const res = await fetch(`${API_URL}/portfolio/orders`, {
@@ -264,6 +268,7 @@ async function submitOrder(e) {
       body: JSON.stringify({
         customer: formData,
         products: cart,
+        promoCode: activePromoCode?.code || undefined,
         summary: {
           subtotal: formatPrice(subtotal),
           shipping: shipping === 0 ? 'Безплатна' : formatPrice(shipping),
@@ -281,6 +286,60 @@ async function submitOrder(e) {
     showToast(err.message || 'Грешка при изпращане.', 'error');
     btn.disabled = false;
     btn.textContent = 'Поръчай с наложен платеж';
+  }
+}
+
+function setPromoMessage(text, type = '') {
+  ['promo-message', 'promo-message-summary'].forEach((id) => {
+    const el = $(id);
+    if (!el) return;
+    if (!text) {
+      el.hidden = true;
+      el.textContent = '';
+      el.className = 'pf-promo-msg';
+      return;
+    }
+    el.hidden = false;
+    el.textContent = text;
+    el.className = `pf-promo-msg ${type}`;
+  });
+}
+
+async function applyPromoCode() {
+  const code = ($('promo-code-input')?.value || $('promo-code-input-summary')?.value || '').trim();
+  if (!code) {
+    setPromoMessage('Въведете промо код.', 'error');
+    return;
+  }
+
+  const btn = $('apply-promo-btn') || $('apply-promo-btn-summary');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_URL}/portfolio/validate-promo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    const data = await res.json();
+    if (!data.valid) {
+      activePromoCode = null;
+      setPromoMessage(data.error || 'Невалиден промо код.', 'error');
+      updateSummary();
+      return;
+    }
+    activePromoCode = data.promoCode;
+    const discountLabel = data.promoCode.discountType === 'percentage'
+      ? `${data.promoCode.discount}%`
+      : formatPrice(data.promoCode.discount);
+    setPromoMessage(`Промо кодът е приложен: −${discountLabel}`, 'success');
+    if ($('promo-code-input')) $('promo-code-input').value = data.promoCode.code;
+    if ($('promo-code-input-summary')) $('promo-code-input-summary').value = data.promoCode.code;
+    updateSummary();
+  } catch {
+    setPromoMessage('Грешка при проверка на промо кода.', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -306,6 +365,15 @@ async function init() {
   await initPortfolioPage({ active: 'checkout' });
   cart = getCart();
   renderCart();
+
+  $('apply-promo-btn')?.addEventListener('click', applyPromoCode);
+  $('apply-promo-btn-summary')?.addEventListener('click', applyPromoCode);
+  $('promo-code-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); applyPromoCode(); }
+  });
+  $('promo-code-input-summary')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); applyPromoCode(); }
+  });
 
   $('delivery-address')?.addEventListener('change', toggleDeliveryFields);
   $('delivery-courier')?.addEventListener('change', toggleDeliveryFields);
