@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bg" data-theme="light">
+<html lang="bg">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,31 +7,15 @@
     <meta name="robots" content="index, follow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="portfolio.css">
 </head>
 <body class="pf-body">
-    <header class="pf-header">
-        <div class="pf-header-inner">
-            <a href="portfolio.html" class="pf-logo">
-                <div class="pf-logo-icon">P</div>
-                <div>
-                    <span class="pf-logo-text">Portfolio</span>
-                    <span class="pf-logo-slogan">Каталог</span>
-                </div>
-            </a>
-            <div class="pf-header-actions">
-                <a href="portfolio-checkout.html" class="pf-cart-btn">
-                    Количка <span class="pf-cart-badge" id="cart-count">0</span>
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <div id="product-root">
-        <div class="pf-loading" style="padding:4rem;">Зареждане на продукта...</div>
+    <div id="pf-header-slot"></div>
+    <div id="product-root" class="pf-product-page">
+        <div class="pf-loading" style="padding:4rem;text-align:center;">Зареждане...</div>
     </div>
-
+    <div id="pf-footer-slot"></div>
     <div class="pf-toast-container" id="toast-container"></div>
     <script type="module" src="portfolio-product.js"></script>
 </body>

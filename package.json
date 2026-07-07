@@ -12,6 +12,7 @@
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "test:portfolio": "node --experimental-vm-modules node_modules/.bin/jest portfolio-api.test.js",
     "sync-portfolio": "node portfolio-sync.mjs",
+    "upload-portfolio": "node upload-portfolio-catalog.mjs",
     "validate-backend": "node backend/validate.mjs"
   },
   "dependencies": {

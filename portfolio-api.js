@@ -8,6 +8,13 @@ const KV_SETTINGS = 'portfolio_settings';
 const KV_META = 'portfolio_meta';
 const KV_ORDERS = 'portfolio_orders';
 const chunkKey = (n) => `portfolio_chunk_${n}`;
+const KV_FITNESS1_KEY = 'fitness1_api_key';
+
+export async function getFitness1ApiKey(env) {
+  if (env.FITNESS1_API_KEY) return env.FITNESS1_API_KEY;
+  const kvKey = await env.PAGE_CONTENT.get(KV_FITNESS1_KEY);
+  return kvKey || null;
+}
 
 export const DEFAULT_SETTINGS = {
   site_name: 'Portfolio',
@@ -246,9 +253,9 @@ function filterIndex(index, params) {
 }
 
 export async function syncPortfolioCatalog(env) {
-  const apiKey = env.FITNESS1_API_KEY;
+  const apiKey = await getFitness1ApiKey(env);
   if (!apiKey) {
-    throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран в Worker secrets.', 500);
+    throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран (Worker secret или KV fitness1_api_key).', 500);
   }
 
   const settings = await getSettings(env);
@@ -383,6 +390,108 @@ async function handleGetProduct(request, env) {
   return jsonResponse(group);
 }
 
+async function findVariantInCatalog(env, skuId) {
+  const meta = await getMeta(env);
+  if (!meta) return null;
+  for (let i = 0; i < meta.chunk_count; i++) {
+    const chunkRaw = await env.PAGE_CONTENT.get(chunkKey(i));
+    if (!chunkRaw) continue;
+    const chunk = JSON.parse(chunkRaw);
+    for (const group of chunk) {
+      const variant = group.variants.find((v) => v.sku_id === String(skuId));
+      if (variant) {
+        return {
+          group_id: group.group_id,
+          group_name: group.name,
+          brand: group.brand,
+          image: variant.image || group.image,
+          variant
+        };
+      }
+    }
+  }
+  return null;
+}
+
+async function validateAndNormalizeCartItems(env, products) {
+  const normalized = [];
+  const errors = [];
+
+  for (const p of products) {
+    const skuId = String(p.sku_id || p.id || '');
+    const qty = Math.max(1, Math.min(99, Number(p.quantity) || 1));
+    if (!skuId) {
+      errors.push('Липсва SKU на продукт.');
+      continue;
+    }
+
+    const found = await findVariantInCatalog(env, skuId);
+    if (!found) {
+      errors.push(`Продукт ${skuId} не е намерен в каталога.`);
+      continue;
+    }
+    if (!found.variant.available) {
+      errors.push(`${found.group_name} (${found.variant.option || found.variant.pack}) не е наличен.`);
+      continue;
+    }
+
+    const label = [found.group_name, found.variant.pack, found.variant.option].filter(Boolean).join(' – ');
+    normalized.push({
+      sku_id: found.variant.sku_id,
+      barcode: found.variant.barcode,
+      name: label,
+      pack: found.variant.pack,
+      option: found.variant.option,
+      quantity: qty,
+      b2b_price: found.variant.b2b_price,
+      retail_price: found.variant.retail_price,
+      image: found.image
+    });
+  }
+
+  if (errors.length) throw new PortfolioError(errors.join(' '), 400);
+  if (!normalized.length) throw new PortfolioError('Количката е празна.', 400);
+  return normalized;
+}
+
+async function handleValidateCart(request, env) {
+  const body = await request.json();
+  if (!Array.isArray(body.products) || !body.products.length) {
+    throw new PortfolioError('Липсват продукти.', 400);
+  }
+  const items = await validateAndNormalizeCartItems(env, body.products);
+  const retailTotal = items.reduce((s, i) => s + i.retail_price * i.quantity, 0);
+  return jsonResponse({ valid: true, products: items, retail_total: roundPrice(retailTotal) });
+}
+
+async function handleGetProductDescription(request, env) {
+  const apiKey = await getFitness1ApiKey(env);
+  if (!apiKey) throw new PortfolioError('API ключ не е конфигуриран.', 500);
+
+  const groupId = new URL(request.url).searchParams.get('group_id');
+  if (!groupId) throw new PortfolioError('Липсва group_id.', 400);
+
+  const meta = await getMeta(env);
+  if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+
+  const group = await getGroupFromChunks(env, meta, groupId);
+  if (!group) throw new PortfolioError('Продуктът не е намерен.', 404);
+
+  if (group.description) {
+    return jsonResponse({ description: group.description });
+  }
+
+  const response = await fetch(
+    `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(apiKey)}&format=json&description=1`
+  );
+  if (!response.ok) throw new PortfolioError('Грешка при зареждане на описание.', 502);
+
+  const data = await response.json();
+  const match = (data.products || []).find((p) => String(p.group_id) === String(groupId) && p.description);
+  const description = match ? decodeDescription(match.description) : '';
+  return jsonResponse({ description });
+}
+
 async function handleCreateOrder(request, env) {
   let body;
   try {
@@ -396,33 +505,25 @@ async function handleCreateOrder(request, env) {
   }
 
   const customer = body.customer;
-  if (!customer.firstName || !customer.phone) {
-    throw new PortfolioError('Моля, попълнете име и телефон.', 400);
+  if (!customer.firstName?.trim() || !customer.lastName?.trim() || !customer.phone?.trim()) {
+    throw new PortfolioError('Моля, попълнете име, фамилия и телефон.', 400);
   }
 
-  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
+  if (customer.deliveryMethod === 'courier') {
+    const hasOffice = customer.courierOfficeId || customer.speedy_office_id;
+    if (!hasOffice) throw new PortfolioError('Моля, изберете офис на куриер.', 400);
+  } else if (!customer.address?.trim() || !customer.city?.trim()) {
+    throw new PortfolioError('Моля, попълнете адрес и град.', 400);
+  }
+
+  const items = await validateAndNormalizeCartItems(env, body.products);
 
   let b2bTotal = 0;
   let retailTotal = 0;
-  const items = body.products.map((p) => {
-    const b2b = Number(p.b2b_price) || 0;
-    const retail = Number(p.price ?? p.retail_price) || 0;
-    const qty = Number(p.quantity) || 1;
-    b2bTotal += b2b * qty;
-    retailTotal += retail * qty;
-    return {
-      sku_id: p.sku_id || p.id,
-      barcode: p.barcode || '',
-      name: p.name,
-      pack: p.pack || '',
-      option: p.option || '',
-      quantity: qty,
-      b2b_price: b2b,
-      retail_price: retail,
-      image: p.image || ''
-    };
-  });
+  for (const item of items) {
+    b2bTotal += item.b2b_price * item.quantity;
+    retailTotal += item.retail_price * item.quantity;
+  }
 
   const newOrder = {
     id: `pf-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -435,12 +536,15 @@ async function handleCreateOrder(request, env) {
       retail_total: roundPrice(retailTotal),
       b2b_total: roundPrice(b2bTotal),
       margin: roundPrice(retailTotal - b2bTotal),
-      ...(body.summary || {})
+      shipping: body.summary?.shipping ?? null,
+      total: body.summary?.total ?? `${roundPrice(retailTotal)} €`
     },
     fitness1_order: null,
     admin_note: ''
   };
 
+  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
+  const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
   orders.unshift(newOrder);
   await env.PAGE_CONTENT.put(KV_ORDERS, JSON.stringify(orders, null, 2));
 
@@ -473,7 +577,7 @@ async function handleApproveOrder(request, env) {
   const body = await request.json();
   if (!body?.id) throw new PortfolioError('Липсва ID на поръчка.', 400);
 
-  const apiKey = env.FITNESS1_API_KEY;
+  const apiKey = await getFitness1ApiKey(env);
   if (!apiKey) throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран.', 500);
 
   const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
@@ -482,6 +586,19 @@ async function handleApproveOrder(request, env) {
   if (idx === -1) throw new PortfolioError('Поръчката не е намерена.', 404);
 
   const order = orders[idx];
+
+  // Re-validate availability before submitting to Fitness1
+  for (const p of order.products) {
+    const found = await findVariantInCatalog(env, p.sku_id);
+    if (!found?.variant.available) {
+      throw new PortfolioError(`„${p.name}" вече не е наличен. Актуализирайте поръчката.`, 400);
+    }
+    if (!p.barcode && !found.variant.barcode) {
+      throw new PortfolioError(`Липсва баркод за „${p.name}".`, 400);
+    }
+    if (!p.barcode) p.barcode = found.variant.barcode;
+  }
+
   if (order.fitness1_order?.id) {
     throw new PortfolioError(`Поръчката вече е изпратена (F1 #${order.fitness1_order.id}).`, 409);
   }
@@ -544,6 +661,12 @@ export async function handlePortfolioRoute(request, env, url) {
     }
     if (path === '/portfolio/product' && method === 'GET') {
       return handleGetProduct(request, env);
+    }
+    if (path === '/portfolio/product/description' && method === 'GET') {
+      return handleGetProductDescription(request, env);
+    }
+    if (path === '/portfolio/validate-cart' && method === 'POST') {
+      return handleValidateCart(request, env);
     }
     if (path === '/portfolio/sync' && method === 'POST') {
       const result = await syncPortfolioCatalog(env);
