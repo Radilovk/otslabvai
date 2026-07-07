@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поръчка – Portfolio</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="portfolio.css">
+</head>
+<body class="pf-body">
+    <div id="pf-header-slot"></div>
+
+    <main class="pf-checkout-page">
+        <div class="pf-checkout-grid">
+            <form id="checkout-form" class="pf-card pf-checkout-form" novalidate>
+                <div class="pf-step-badge">Стъпка 1 от 2</div>
+                <h1>Данни за доставка</h1>
+                <p class="pf-lead">Попълнете информацията си. Поръчката ще бъде прегледана преди изпращане към доставчик.</p>
+
+                <section class="pf-form-section">
+                    <h2>Лични данни</h2>
+                    <div class="pf-form-row">
+                        <div class="pf-field">
+                            <label for="first-name">Име *</label>
+                            <input type="text" id="first-name" name="firstName" required autocomplete="given-name">
+                        </div>
+                        <div class="pf-field">
+                            <label for="last-name">Фамилия *</label>
+                            <input type="text" id="last-name" name="lastName" required autocomplete="family-name">
+                        </div>
+                    </div>
+                    <div class="pf-form-row">
+                        <div class="pf-field">
+                            <label for="phone">Телефон *</label>
+                            <input type="tel" id="phone" name="phone" required autocomplete="tel" placeholder="+359...">
+                        </div>
+                        <div class="pf-field">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" autocomplete="email">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="pf-form-section">
+                    <h2>Метод на доставка</h2>
+                    <label class="pf-radio-card">
+                        <input type="radio" id="delivery-courier" name="deliveryMethod" value="courier" checked>
+                        <span><strong>До офис на куриер</strong><small>Speedy или Econt – препоръчително</small></span>
+                    </label>
+                    <label class="pf-radio-card">
+                        <input type="radio" id="delivery-address" name="deliveryMethod" value="address">
+                        <span><strong>До личен адрес</strong><small>Доставка до врата</small></span>
+                    </label>
+
+                    <div id="courier-fields" class="pf-collapsible pf-visible">
+                        <div class="pf-courier-tabs">
+                            <label class="pf-courier-tab"><input type="radio" id="courier-speedy" name="courierCompany" value="speedy" checked> Speedy</label>
+                            <label class="pf-courier-tab"><input type="radio" id="courier-ekont" name="courierCompany" value="ekont"> Econt</label>
+                        </div>
+                        <div id="speedy-widget" class="pf-courier-widget">
+                            <button type="button" class="pf-btn pf-btn-outline" id="open-speedy-map-btn">📍 Избери офис от картата</button>
+                            <input type="hidden" id="final-speedy-id" name="speedy_office_id">
+                            <div id="speedy-selected-info" class="pf-selected-office" style="display:none">
+                                <strong>Избран офис:</strong>
+                                <span id="speedy-selected-name"></span><br>
+                                <small id="speedy-selected-addr"></small>
+                            </div>
+                        </div>
+                        <div id="ekont-widget" class="pf-courier-widget" style="display:none">
+                            <div class="pf-field">
+                                <label for="ekont-office-search">Търсене на офис Econt</label>
+                                <input type="text" id="ekont-office-search" placeholder="Град или име на офис..." autocomplete="off">
+                                <div id="econt-offices-dropdown" class="pf-dropdown"></div>
+                                <input type="hidden" id="final-office-id" name="office_id">
+                                <small id="ekont-status-text" class="pf-hint">Зареждане...</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="address-fields" class="pf-collapsible">
+                        <div class="pf-field">
+                            <label for="address">Адрес *</label>
+                            <input type="text" id="address" name="address" placeholder="Улица, номер, блок...">
+                        </div>
+                        <div class="pf-form-row">
+                            <div class="pf-field">
+                                <label for="city">Град *</label>
+                                <input type="text" id="city" name="city">
+                            </div>
+                            <div class="pf-field">
+                                <label for="postcode">Пощенски код *</label>
+                                <input type="text" id="postcode" name="postcode">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="pf-form-section">
+                    <h2>Промо код</h2>
+                    <div class="pf-promo-row">
+                        <input type="text" id="promo-code-input" placeholder="Въведете промо код" autocomplete="off" autocapitalize="characters">
+                        <button type="button" class="pf-btn pf-btn-outline" id="apply-promo-btn">Приложи</button>
+                    </div>
+                    <p class="pf-promo-msg" id="promo-message" hidden></p>
+                </section>
+
+                <section class="pf-form-section">
+                    <h2>Плащане</h2>
+                    <label class="pf-radio-card">
+                        <input type="radio" id="cod" name="paymentMethod" value="cod" checked>
+                        <span><strong>Наложен платеж</strong><small>Плащате при получаване</small></span>
+                    </label>
+                </section>
+
+                <section class="pf-form-section">
+                    <label class="pf-check">
+                        <input type="checkbox" id="policy-consent" name="policyConsent" required>
+                        <span>Съгласен съм с <a href="policy.html" target="_blank">политиката за поверителност</a> и <a href="shipping.html" target="_blank">доставката</a></span>
+                    </label>
+                    <label class="pf-check">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <span>Приемам <a href="terms.html" target="_blank">общите условия</a></span>
+                    </label>
+                </section>
+            </form>
+
+            <aside class="pf-card pf-checkout-summary">
+                <div class="pf-step-badge">Резюме</div>
+                <h2>Вашата поръчка</h2>
+                <ul id="product-list" class="pf-summary-list"></ul>
+                <div class="pf-promo-row pf-promo-row--summary">
+                    <input type="text" id="promo-code-input-summary" placeholder="Промо код" autocomplete="off" autocapitalize="characters">
+                    <button type="button" class="pf-btn pf-btn-outline" id="apply-promo-btn-summary">Приложи</button>
+                </div>
+                <p class="pf-promo-msg" id="promo-message-summary" hidden></p>
+                <div class="pf-summary-rows">
+                    <div class="pf-summary-row"><span>Междинна сума</span><span id="summary-subtotal">0.00 €</span></div>
+                    <div class="pf-summary-row"><span>Доставка</span><span id="summary-shipping">—</span></div>
+                    <div class="pf-summary-row pf-summary-discount" id="discount-row" style="display:none"><span>Отстъпка</span><span id="summary-discount"></span></div>
+                    <div class="pf-summary-row pf-summary-total"><span>Общо</span><span id="summary-total">0.00 €</span></div>
+                </div>
+                <button type="submit" form="checkout-form" class="pf-btn pf-btn-primary pf-btn-block" id="submit-btn" disabled>
+                    Поръчай с наложен платеж
+                </button>
+                <p class="pf-trust">🔒 Сигурна поръчка · 📦 Преглед преди изпращане</p>
+            </aside>
+        </div>
+    </main>
+
+    <div id="pf-footer-slot"></div>
+    <div id="pf-mobile-cart-slot"></div>
+    <div class="pf-toast-container" id="toast-container"></div>
+
+    <div id="speedy-map-modal" class="pf-modal" role="dialog" aria-modal="true" aria-label="Избор на офис Speedy">
+        <div class="pf-modal-overlay" id="speedy-map-overlay"></div>
+        <div class="pf-modal-content pf-modal-map">
+            <div class="pf-modal-header">
+                <h3>Избери офис на Speedy</h3>
+                <button type="button" class="pf-modal-close" id="close-speedy-map-btn" aria-label="Затвори">×</button>
+            </div>
+            <iframe id="speedy-map-iframe" title="Карта Speedy" src=""></iframe>
+        </div>
+    </div>
+
+    <script type="module" src="portfolio-checkout.js"></script>
+</body>
+</html>

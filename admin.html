@@ -46,6 +46,7 @@
                 <select id="project-selector" class="project-selector" title="Избери проект">
                     <option value="main">🛒 ДА ОТСЛАБНА</option>
                     <option value="life">🧬 LIFE BioHack</option>
+                    <option value="portfolio">📦 Portfolio B2B</option>
                 </select>
                 <button id="theme-toggle" class="theme-toggle-btn" aria-label="Превключи тема" style="width: auto; height: auto; margin-right: 1rem;">
                     <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -70,15 +71,18 @@
 
         <!-- ТАБОВЕ ЗА НАВИГАЦИЯ -->
         <nav class="tab-nav">
-            <button class="tab-btn active" data-tab="tab-global">Глобални</button>
-            <button class="tab-btn" data-tab="tab-navigation">Навигация</button>
-            <button class="tab-btn" data-tab="tab-content">Съдържание</button>
-            <button class="tab-btn" data-tab="tab-footer">Футър</button>
-            <button class="tab-btn" data-tab="tab-orders">Поръчки</button>
-            <button class="tab-btn" data-tab="tab-contacts">Контакти</button>
-            <button class="tab-btn" data-tab="tab-promo-codes">Промо Кодове</button>
-            <button class="tab-btn" data-tab="tab-pages">Страници</button>
-            <button class="tab-btn" data-tab="tab-ai-settings">AI Настройки</button>
+            <button class="tab-btn active tab-main-life" data-tab="tab-global">Глобални</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-navigation">Навигация</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-content">Съдържание</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-footer">Футър</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-orders">Поръчки</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-contacts">Контакти</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-promo-codes">Промо Кодове</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-pages">Страници</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-ai-settings">AI Настройки</button>
+            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-settings" style="display:none;">Настройки</button>
+            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-orders" style="display:none;">Поръчки</button>
+            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-promo-codes" style="display:none;">Промо Кодове</button>
         </nav>
 
         <!-- КОНТЕЙНЕР ЗА СЪДЪРЖАНИЕТО НА ТАБОВЕТЕ -->
@@ -285,7 +289,7 @@
             </section>
             
             <!-- Секция: AI Настройки -->
-            <section id="tab-ai-settings" class="tab-pane">
+            <section id="tab-ai-settings" class="tab-pane tab-main-life">
                 <h2>AI Асистент - Настройки</h2>
                 <p class="instructions">Конфигурирайте AI модела, промпта и API ключовете за асистента при попълване на продукти.</p>
                 
@@ -370,6 +374,70 @@
                             <li>Промптът определя как AI генерира информация за продукти</li>
                         </ul>
                     </div>
+                </div>
+            </section>
+
+            <!-- Portfolio: Настройки и синхронизация -->
+            <section id="tab-portfolio-settings" class="tab-pane tab-portfolio-only">
+                <h2>Portfolio – Настройки</h2>
+                <p class="instructions">Глобална надценка, синхронизация с Fitness1 B2B API и статус на каталога.</p>
+                <div id="portfolio-settings-container" class="item-list"></div>
+            </section>
+
+            <!-- Portfolio: Поръчки -->
+            <section id="tab-portfolio-orders" class="tab-pane tab-portfolio-only">
+                <div class="orders-header">
+                    <h2>Portfolio – Поръчки</h2>
+                    <div class="orders-controls">
+                        <input type="text" id="portfolio-order-search" placeholder="Търси по име, телефон...">
+                        <button id="refresh-portfolio-orders-btn" class="btn btn-secondary">Опресни</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="portfolio-orders-table" class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Клиент</th>
+                                <th>Телефон</th>
+                                <th>Продукти</th>
+                                <th>Продажна</th>
+                                <th>B2B</th>
+                                <th>Марж</th>
+                                <th>Дата</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-orders-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Portfolio: Промо кодове -->
+            <section id="tab-portfolio-promo-codes" class="tab-pane tab-portfolio-only">
+                <div class="orders-header">
+                    <h2>Portfolio – Промо Кодове</h2>
+                    <div class="orders-controls">
+                        <input type="text" id="portfolio-promo-search-input" placeholder="Търси по код...">
+                        <button id="add-portfolio-promo-btn" class="btn btn-primary">+ Нов Промо Код</button>
+                        <button id="refresh-portfolio-promo-btn" class="btn btn-secondary">Опресни</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="portfolio-promo-codes-table" class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Код</th>
+                                <th>Отстъпка</th>
+                                <th>Описание</th>
+                                <th>Валидност</th>
+                                <th>Използвания</th>
+                                <th>Активен</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-promo-codes-table-body"></tbody>
+                    </table>
                 </div>
             </section>
         </main>

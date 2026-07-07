@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поръчката е приета – Portfolio</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="portfolio.css">
+</head>
+<body class="pf-body">
+    <div id="pf-header-slot"></div>
+    <main class="pf-success-page">
+        <div class="pf-success-card pf-card">
+            <div class="pf-success-icon" aria-hidden="true">✓</div>
+            <h1>Поръчката е приета!</h1>
+            <p class="pf-lead" id="success-message">Благодарим ви. Ще се свържем с вас за потвърждение.</p>
+            <div class="pf-order-id-box">
+                <span>Номер на поръчка</span>
+                <strong id="order-id">—</strong>
+            </div>
+            <ul class="pf-success-steps">
+                <li>📋 Поръчката се преглежда от екипа</li>
+                <li>✅ Получавате потвърждение по телефон</li>
+                <li>📦 Изпращане след одобрение</li>
+            </ul>
+            <a href="portfolio.html" class="pf-btn pf-btn-primary">Продължи пазаруването</a>
+        </div>
+    </main>
+    <div id="pf-footer-slot"></div>
+    <script type="module">
+        import { initPortfolioPage } from './portfolio-shared.js';
+
+        await initPortfolioPage();
+        const params = new URLSearchParams(location.search);
+        const id = params.get('id');
+        let order = null;
+        try {
+            order = JSON.parse(sessionStorage.getItem('pf_last_order') || 'null');
+        } catch {}
+
+        if (id) document.getElementById('order-id').textContent = id;
+        else if (order?.id) document.getElementById('order-id').textContent = order.id;
+
+        if (order?.customer?.firstName) {
+            document.getElementById('success-message').textContent =
+                `${order.customer.firstName}, благодарим! Ще се обадим на ${order.customer.phone || 'посочения телефон'} за потвърждение.`;
+        }
+    </script>
+</body>
+</html>
