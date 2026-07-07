@@ -283,7 +283,6 @@ img { max-width: 100%; display: block; }
   width: 78%;
   filter: drop-shadow(0 0 40px rgba(45,212,191,0.35));
 }
-.hero-art svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.5; }
 
 /* ---------- Trust bar ---------- */
 .trustbar {
