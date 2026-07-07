@@ -100,6 +100,9 @@ let contactSortField = 'timestamp';
 let contactSortDir = 'desc';
 let promoCodesData = [];
 let filteredPromoCodesData = [];
+let portfolioSettingsData = {};
+let portfolioOrdersData = [];
+let filteredPortfolioOrdersData = [];
 let unsavedChanges = false;
 let activeUndoAction = null;
 let currentModalSaveCallback = null;
@@ -118,13 +121,59 @@ const CONTACTS_STATUS_CACHE_KEY = 'adminContactsStatusCache';
 // =======================================================
 
 function getPageContentEndpoint() {
-    return currentProject === 'life' ? 'life_page_content.json' : 'page_content.json';
+    if (currentProject === 'life') return 'life_page_content.json';
+    if (currentProject === 'portfolio') return null;
+    return 'page_content.json';
+}
+
+function isPortfolioProject() {
+    return currentProject === 'portfolio';
+}
+
+function updateProjectUI() {
+    const mainLifeTabs = document.querySelectorAll('.tab-main-life');
+    const portfolioTabs = document.querySelectorAll('.tab-portfolio-only');
+    const saveBtn = DOM.saveBtn;
+    const saveStatus = DOM.saveStatus;
+
+    if (isPortfolioProject()) {
+        mainLifeTabs.forEach((el) => {
+            if (el.classList.contains('tab-btn')) el.style.display = 'none';
+            else el.classList.remove('active');
+        });
+        portfolioTabs.forEach((el) => {
+            if (el.classList.contains('tab-btn')) el.style.display = '';
+            else el.classList.remove('active');
+        });
+        const firstPfTab = document.querySelector('.tab-portfolio-only.tab-btn');
+        const firstPfPane = document.getElementById('tab-portfolio-settings');
+        if (firstPfTab && firstPfPane) {
+            DOM.tabNav.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+            firstPfTab.classList.add('active');
+            DOM.tabPanes.forEach((p) => p.classList.remove('active'));
+            firstPfPane.classList.add('active');
+        }
+        if (saveBtn) saveBtn.style.display = 'none';
+        if (saveStatus) saveStatus.style.display = 'none';
+    } else {
+        mainLifeTabs.forEach((el) => {
+            if (el.classList.contains('tab-btn')) el.style.display = '';
+        });
+        portfolioTabs.forEach((el) => {
+            if (el.classList.contains('tab-btn')) el.style.display = 'none';
+            else el.classList.remove('active');
+        });
+        if (saveBtn) saveBtn.style.display = '';
+        if (saveStatus) saveStatus.style.display = '';
+    }
+    updateAdminHeaderTitle();
 }
 
 async function fetchData() {
+    if (isPortfolioProject()) return {};
     try {
-        // For admin panel, use no-cache to ensure fresh data when explicitly refreshing
-        const response = await fetch(`${API_URL}/${getPageContentEndpoint()}`, {
+        const endpoint = getPageContentEndpoint();
+        const response = await fetch(`${API_URL}/${endpoint}`, {
             cache: 'no-cache'
         });
         if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
@@ -133,6 +182,34 @@ async function fetchData() {
         showNotification('Критична грешка при зареждане на данните.', 'error');
         console.error("Грешка при зареждане на page_content:", error);
         return null;
+    }
+}
+
+async function fetchPortfolioSettings() {
+    try {
+        const response = await fetch(`${API_URL}/portfolio/settings`, { cache: 'no-cache' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        portfolioSettingsData = await response.json();
+        return portfolioSettingsData;
+    } catch (error) {
+        console.error('Portfolio settings error:', error);
+        portfolioSettingsData = {};
+        return null;
+    }
+}
+
+async function fetchPortfolioOrders() {
+    try {
+        const response = await fetch(`${API_URL}/portfolio/orders`, { cache: 'no-cache' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        portfolioOrdersData = await response.json();
+        filteredPortfolioOrdersData = [...portfolioOrdersData];
+        return portfolioOrdersData;
+    } catch (error) {
+        console.error('Portfolio orders error:', error);
+        portfolioOrdersData = [];
+        filteredPortfolioOrdersData = [];
+        return [];
     }
 }
 
@@ -312,12 +389,17 @@ function setUnsavedChanges(isDirty) {
 // =======================================================
 
 function renderAll() {
+    if (isPortfolioProject()) {
+        renderPortfolioSettings();
+        filterPortfolioOrders();
+        return;
+    }
     renderGlobalSettings();
     renderNavigation();
     renderPageContent();
     renderFooter();
-    filterOrders(); // This will call renderOrders
-    filterContacts(); // This will call renderContacts
+    filterOrders();
+    filterContacts();
 }
 
 function renderGlobalSettings() {
@@ -1761,12 +1843,30 @@ function setupEventListeners() {
             }
             currentProject = e.target.value;
             localStorage.setItem('adminProject', currentProject);
-            updateAdminHeaderTitle();
-            appData = await fetchData();
-            if (appData) {
+            updateProjectUI();
+            if (isPortfolioProject()) {
+                await fetchPortfolioSettings();
+                await fetchPortfolioOrders();
                 setUnsavedChanges(false);
                 renderAll();
-                showNotification(`Превключено към проект: ${currentProject === 'life' ? 'LIFE BioHack' : 'ДА ОТСЛАБНА'}`, 'success');
+                showNotification('Превключено към проект: Portfolio B2B', 'success');
+            } else {
+                updateProjectUI();
+                const globalTab = document.querySelector('[data-tab="tab-global"]');
+                const globalPane = document.getElementById('tab-global');
+                if (globalTab && globalPane) {
+                    DOM.tabNav.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+                    globalTab.classList.add('active');
+                    DOM.tabPanes.forEach((p) => p.classList.remove('active'));
+                    globalPane.classList.add('active');
+                }
+                appData = await fetchData();
+                if (appData) {
+                    setUnsavedChanges(false);
+                    renderAll();
+                    const names = { main: 'ДА ОТСЛАБНА', life: 'LIFE BioHack' };
+                    showNotification(`Превключено към проект: ${names[currentProject] || currentProject}`, 'success');
+                }
             }
         });
         updateAdminHeaderTitle();
@@ -1774,8 +1874,12 @@ function setupEventListeners() {
 }
 
 function updateAdminHeaderTitle() {
-    document.querySelector('.admin-header h1').textContent = 
-        currentProject === 'life' ? 'Админ Панел — LIFE BioHack' : 'Админ Панел — ДА ОТСЛАБНА';
+    const titles = {
+        main: 'Админ Панел — ДА ОТСЛАБНА',
+        life: 'Админ Панел — LIFE BioHack',
+        portfolio: 'Админ Панел — Portfolio B2B'
+    };
+    document.querySelector('.admin-header h1').textContent = titles[currentProject] || titles.main;
 }
 
 function handleAction(action, target, id) {
@@ -3893,10 +3997,199 @@ async function updatePromoCodeStatus(promoId, isActive) {
 //          9. ИНИЦИАЛИЗАЦИЯ НА ПРИЛОЖЕНИЕТО
 // =======================================================
 
+// =======================================================
+//          PORTFOLIO ADMIN
+// =======================================================
+
+function renderPortfolioSettings() {
+    const container = document.getElementById('portfolio-settings-container');
+    if (!container) return;
+
+    const s = portfolioSettingsData || {};
+    const lastSync = s.last_sync
+        ? new Date(s.last_sync).toLocaleString('bg-BG')
+        : 'Никога';
+    const count = s.last_sync_count ? s.last_sync_count.toLocaleString('bg-BG') : '—';
+
+    container.innerHTML = `
+        <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
+            <h3 style="margin-top:0;">Каталог Fitness1</h3>
+            <p><strong>Последна синхронизация:</strong> ${escAdminHtml(lastSync)}</p>
+            <p><strong>Брой продуктови групи:</strong> ${escAdminHtml(count)}</p>
+            <button type="button" class="btn btn-primary" id="portfolio-sync-btn" style="margin-top:1rem;">🔄 Синхронизирай каталога</button>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.75rem;">
+                Изисква <code>FITNESS1_API_KEY</code> в Worker secrets. Синхронизацията отнема 1–2 минути.
+            </p>
+        </div>
+        <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;">
+            <h3 style="margin-top:0;">Надценка</h3>
+            <div class="form-group">
+                <label for="pf-global-markup">Глобална надценка (%)</label>
+                <input type="number" id="pf-global-markup" min="0" max="200" step="1" value="${Number(s.global_markup_percent) || 30}" style="width:120px;padding:0.5rem;">
+            </div>
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="pf-site-name">Име на сайта</label>
+                <input type="text" id="pf-site-name" value="${escAdminHtml(s.site_name || 'Portfolio')}" style="width:100%;max-width:400px;padding:0.5rem;">
+            </div>
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="pf-site-slogan">Слоган</label>
+                <input type="text" id="pf-site-slogan" value="${escAdminHtml(s.site_slogan || '')}" style="width:100%;max-width:400px;padding:0.5rem;">
+            </div>
+            <button type="button" class="btn btn-success" id="portfolio-save-settings-btn" style="margin-top:1rem;">💾 Запази настройките</button>
+        </div>`;
+
+    document.getElementById('portfolio-sync-btn')?.addEventListener('click', syncPortfolioCatalog);
+    document.getElementById('portfolio-save-settings-btn')?.addEventListener('click', savePortfolioSettings);
+}
+
+async function syncPortfolioCatalog() {
+    const btn = document.getElementById('portfolio-sync-btn');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.textContent = 'Синхронизиране...';
+    try {
+        const res = await fetch(`${API_URL}/portfolio/sync`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Грешка');
+        showNotification(`Синхронизирани ${data.total_groups} групи (${data.total_skus} SKU)`, 'success');
+        await fetchPortfolioSettings();
+        renderPortfolioSettings();
+    } catch (e) {
+        showNotification(e.message || 'Грешка при синхронизация', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🔄 Синхронизирай каталога';
+    }
+}
+
+async function savePortfolioSettings() {
+    const payload = {
+        global_markup_percent: Number(document.getElementById('pf-global-markup')?.value) || 30,
+        site_name: document.getElementById('pf-site-name')?.value || 'Portfolio',
+        site_slogan: document.getElementById('pf-site-slogan')?.value || ''
+    };
+    try {
+        const res = await fetch(`${API_URL}/portfolio/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Грешка');
+        portfolioSettingsData = data.settings;
+        showNotification('Настройките са запазени. Препоръчително: resync на каталога за нови цени.', 'success');
+    } catch (e) {
+        showNotification(e.message || 'Грешка при запис', 'error');
+    }
+}
+
+function filterPortfolioOrders() {
+    const q = (document.getElementById('portfolio-order-search')?.value || '').toLowerCase();
+    filteredPortfolioOrdersData = portfolioOrdersData.filter((o) => {
+        const c = o.customer || {};
+        const hay = `${c.firstName || ''} ${c.lastName || ''} ${c.phone || ''} ${o.id}`.toLowerCase();
+        return !q || hay.includes(q);
+    });
+    renderPortfolioOrders();
+}
+
+function renderPortfolioOrders() {
+    const tbody = document.getElementById('portfolio-orders-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    filteredPortfolioOrdersData.forEach((order) => {
+        const c = order.customer || {};
+        const products = (order.products || []).map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join('<br>');
+        const summary = order.summary || {};
+        const canApprove = !order.fitness1_order?.id && order.status !== 'Изпратена към Fitness1';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td data-label="Клиент">${escAdminHtml(`${c.firstName || ''} ${c.lastName || ''}`.trim())}</td>
+            <td data-label="Телефон">${escAdminHtml(c.phone || '')}</td>
+            <td data-label="Продукти">${products}</td>
+            <td data-label="Продажна">${Number(summary.retail_total || 0).toFixed(2)} €</td>
+            <td data-label="B2B">${Number(summary.b2b_total || 0).toFixed(2)} €</td>
+            <td data-label="Марж">${Number(summary.margin || 0).toFixed(2)} €</td>
+            <td data-label="Дата">${order.timestamp ? new Date(order.timestamp).toLocaleString('bg-BG') : '—'}</td>
+            <td data-label="Статус">
+                <select class="portfolio-order-status" data-id="${escAdminHtml(order.id)}">
+                    <option value="Чака одобрение" ${order.status === 'Чака одобрение' ? 'selected' : ''}>Чака одобрение</option>
+                    <option value="Обработва се" ${order.status === 'Обработва се' ? 'selected' : ''}>Обработва се</option>
+                    <option value="Изпратена към Fitness1" ${order.status === 'Изпратена към Fitness1' ? 'selected' : ''}>Изпратена към Fitness1</option>
+                    <option value="Отказана" ${order.status === 'Отказана' ? 'selected' : ''}>Отказана</option>
+                </select>
+                ${order.fitness1_order?.id ? `<br><small>F1 #${escAdminHtml(order.fitness1_order.id)}</small>` : ''}
+            </td>
+            <td data-label="Действия">
+                ${canApprove ? `<button type="button" class="btn btn-sm btn-success portfolio-approve-btn" data-id="${escAdminHtml(order.id)}">Одобри → F1</button>` : '—'}
+            </td>`;
+        tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll('.portfolio-order-status').forEach((sel) => {
+        sel.addEventListener('change', async () => {
+            try {
+                const res = await fetch(`${API_URL}/portfolio/orders`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: sel.dataset.id, status: sel.value })
+                });
+                if (!res.ok) throw new Error('Грешка');
+                showNotification('Статусът е обновен.', 'success');
+            } catch {
+                showNotification('Грешка при обновяване на статус.', 'error');
+            }
+        });
+    });
+
+    tbody.querySelectorAll('.portfolio-approve-btn').forEach((btn) => {
+        btn.addEventListener('click', () => approvePortfolioOrder(btn.dataset.id));
+    });
+}
+
+async function approvePortfolioOrder(orderId) {
+    if (!confirm('Изпращане на поръчката към Fitness1 B2B? Това създава реална поръчка.')) return;
+    try {
+        const res = await fetch(`${API_URL}/portfolio/orders/approve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: orderId })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Грешка');
+        showNotification(`Поръчката е изпратена! Fitness1 #${data.order?.fitness1_order?.id}`, 'success');
+        await fetchPortfolioOrders();
+        filterPortfolioOrders();
+    } catch (e) {
+        showNotification(e.message || 'Грешка при одобрение', 'error');
+    }
+}
+
+function setupPortfolioEventListeners() {
+    document.getElementById('refresh-portfolio-orders-btn')?.addEventListener('click', async () => {
+        await fetchPortfolioOrders();
+        filterPortfolioOrders();
+        showNotification('Поръчките са опреснени.', 'success');
+    });
+    document.getElementById('portfolio-order-search')?.addEventListener('input', filterPortfolioOrders);
+}
+
 async function init() {
     initThemeToggle();
     setupEventListeners();
+    setupPortfolioEventListeners();
     populateAddComponentMenu();
+    updateProjectUI();
+
+    if (isPortfolioProject()) {
+        await fetchPortfolioSettings();
+        await fetchPortfolioOrders();
+        renderAll();
+        return;
+    }
+
     appData = await fetchData();
     await fetchOrders();
     await fetchContacts();

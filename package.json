@@ -10,6 +10,8 @@
     "upload-static": "./upload-static-to-kv.sh",
     "upload-static-node": "node upload-static-files.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:portfolio": "node --experimental-vm-modules node_modules/.bin/jest portfolio-api.test.js",
+    "sync-portfolio": "node portfolio-sync.mjs",
     "validate-backend": "node backend/validate.mjs"
   },
   "dependencies": {
