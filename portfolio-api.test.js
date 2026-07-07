@@ -2,7 +2,8 @@ import {
   calculateMarkupPercent,
   calculateRetailPrice,
   groupRawProducts,
-  buildCatalogMeta
+  buildCatalogMeta,
+  handlePortfolioRoute
 } from './portfolio-api.js';
 import { filterIndex, paginateIndex } from './portfolio-filter.js';
 
@@ -75,6 +76,20 @@ describe('Portfolio API', () => {
     expect(meta.total_groups).toBe(1);
     expect(meta.index[0].variant_count).toBe(2);
     expect(meta.lookup['100']).toBe(0);
+  });
+
+  test('handlePortfolioRoute returns 404 when catalog is not synced', async () => {
+    const env = {
+      PAGE_CONTENT: {
+        get: async (key) => (key === 'portfolio_settings' ? JSON.stringify(settings) : null)
+      }
+    };
+    const request = new Request('https://example.com/portfolio/bootstrap');
+    const url = new URL(request.url);
+    const res = await handlePortfolioRoute(request, env, url);
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.error).toMatch(/синхронизиран/i);
   });
 });
 

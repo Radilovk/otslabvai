@@ -808,53 +808,53 @@ export async function handlePortfolioRoute(request, env, url) {
 
   try {
     if (path === '/portfolio/settings') {
-      if (method === 'GET') return handleGetSettings(env);
-      if (method === 'POST') return handleSaveSettings(request, env);
+      if (method === 'GET') return await handleGetSettings(env);
+      if (method === 'POST') return await handleSaveSettings(request, env);
     }
     if (path === '/portfolio/filters' && method === 'GET') {
-      return handleGetFilters(env);
+      return await handleGetFilters(env);
     }
     if (path === '/portfolio/catalog' && method === 'GET') {
-      return handleGetCatalog(request, env);
+      return await handleGetCatalog(request, env);
     }
     if (path === '/portfolio/product' && method === 'GET') {
-      return handleGetProduct(request, env);
+      return await handleGetProduct(request, env);
     }
     if (path === '/portfolio/product/description' && method === 'GET') {
-      return handleGetProductDescription(request, env);
+      return await handleGetProductDescription(request, env);
     }
     if (path === '/portfolio/validate-cart' && method === 'POST') {
-      return handleValidateCart(request, env);
+      return await handleValidateCart(request, env);
     }
     if (path === '/portfolio/bootstrap' && method === 'GET') {
-      return handleBootstrap(env);
+      return await handleBootstrap(env);
     }
     if (path === '/portfolio/meta-version' && method === 'GET') {
-      return handleMetaVersion(env);
+      return await handleMetaVersion(env);
     }
     if (path === '/portfolio/promo-codes') {
-      if (method === 'GET') return handleGetPromoCodes(env);
-      if (method === 'POST') return handleCreatePromoCode(request, env);
-      if (method === 'PUT') return handleUpdatePromoCode(request, env);
-      if (method === 'DELETE') return handleDeletePromoCode(request, env);
+      if (method === 'GET') return await handleGetPromoCodes(env);
+      if (method === 'POST') return await handleCreatePromoCode(request, env);
+      if (method === 'PUT') return await handleUpdatePromoCode(request, env);
+      if (method === 'DELETE') return await handleDeletePromoCode(request, env);
     }
     if (path === '/portfolio/validate-promo' && method === 'POST') {
-      return handleValidatePromo(request, env);
+      return await handleValidatePromo(request, env);
     }
     if (path === '/portfolio/sync' && method === 'POST') {
       const result = await syncPortfolioCatalog(env);
       return jsonResponse(result);
     }
     if (path === '/portfolio/chunk' && method === 'GET') {
-      return handleGetChunk(request, env);
+      return await handleGetChunk(request, env);
     }
     if (path === '/portfolio/orders') {
-      if (method === 'GET') return handleGetOrders(env);
-      if (method === 'POST') return handleCreateOrder(request, env);
-      if (method === 'PUT') return handleUpdateOrder(request, env);
+      if (method === 'GET') return await handleGetOrders(env);
+      if (method === 'POST') return await handleCreateOrder(request, env);
+      if (method === 'PUT') return await handleUpdateOrder(request, env);
     }
     if (path === '/portfolio/orders/approve' && method === 'POST') {
-      return handleApproveOrder(request, env);
+      return await handleApproveOrder(request, env);
     }
 
     throw new PortfolioError('Not Found', 404);

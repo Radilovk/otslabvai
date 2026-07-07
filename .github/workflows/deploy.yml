@@ -111,24 +111,62 @@ jobs:
             --data-binary "@bio_content.json" | python3 -c "import sys,json; r=json.load(sys.stdin); print('KV sync:', 'OK' if r.get('success') else r)"
 
       - name: Set Fitness1 API key in KV
-        if: ${{ secrets.FITNESS1_API_KEY != '' }}
+        env:
+          FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
         run: |
+          if [ -z "$FITNESS1_API_KEY" ]; then
+            echo "Skipping Fitness1 API key – secret not configured"
+            exit 0
+          fi
           curl -s -X PUT \
             "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/d220db696e414b7cb3da2b19abd53d0f/values/fitness1_api_key" \
             -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
             -H "Content-Type: text/plain" \
-            --data-binary "${{ secrets.FITNESS1_API_KEY }}"
+            --data-binary "$FITNESS1_API_KEY"
 
       - name: Sync Portfolio catalog to KV
-        if: ${{ secrets.FITNESS1_API_KEY != '' }}
         env:
           FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: node upload-portfolio-catalog.mjs
+        run: |
+          if [ -z "$FITNESS1_API_KEY" ]; then
+            echo "Skipping Portfolio catalog sync – FITNESS1_API_KEY not configured"
+            exit 0
+          fi
+          node upload-portfolio-catalog.mjs
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke test Portfolio API (production)
+        run: |
+          echo "Waiting for Worker propagation..."
+          sleep 8
+          BASE="https://port.radilov-k.workers.dev"
+          fail=0
+          code=$(curl -s -o /tmp/pf-settings.json -w "%{http_code}" "${BASE}/portfolio/settings")
+          body=$(head -c 120 /tmp/pf-settings.json)
+          echo "/portfolio/settings → HTTP ${code}: ${body}"
+          if [ "$code" != "200" ]; then
+            echo "ERROR: settings must return 200"
+            fail=1
+          fi
+          for path in /portfolio/bootstrap /portfolio/meta-version; do
+            code=$(curl -s -o /tmp/pf.json -w "%{http_code}" "${BASE}${path}")
+            body=$(head -c 120 /tmp/pf.json)
+            echo "${path} → HTTP ${code}: ${body}"
+            if [ "$code" = "404" ] && echo "$body" | grep -q '"Not Found"'; then
+              echo "ERROR: Worker route missing for ${path} (deployed to wrong worker?)"
+              fail=1
+            fi
+            if [ "$code" = "500" ] && echo "$body" | grep -q 'unexpected internal error'; then
+              echo "ERROR: unhandled Portfolio API error on ${path}"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "Portfolio API routes are live on ${BASE}"
