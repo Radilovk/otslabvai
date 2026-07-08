@@ -1,9 +1,11 @@
 import {
-  escapeHtml, debounce, updateCartBadges, initPortfolioPage, applySiteSettings
+  escapeHtml, debounce, updateCartBadges, initPortfolioPage, applySiteSettings,
+  isWishlisted, toggleWishlist, showToast
 } from './portfolio-shared.js';
-import { ensureBootstrap, getFiltersFromCache, queryCatalogFromCache } from './portfolio-cache.js';
+import { ensureBootstrap, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache } from './portfolio-cache.js';
 
 const LIMIT = 24;
+const MAX_CHIPS = 9;
 
 const DOM = {
   grid: document.getElementById('catalog-grid'),
@@ -24,10 +26,13 @@ const DOM = {
   sidebarClose: document.getElementById('sidebar-close'),
   heroStats: document.getElementById('hero-stats'),
   statProducts: document.getElementById('stat-products'),
-  statBrands: document.getElementById('stat-brands')
+  statBrands: document.getElementById('stat-brands'),
+  categoryChips: document.getElementById('category-chips'),
+  activeFilters: document.getElementById('active-filters')
 };
 
 let state = { page: 1, total: 0, totalPages: 0, loading: false, cacheReady: false };
+let topCategories = [];
 
 function getFilterParams() {
   return {
@@ -52,21 +57,33 @@ function renderCard(item) {
   const variantBadge = item.variant_count > 1 ? `<span class="pf-badge">${item.variant_count} варианта</span>` : '';
   const stockBadge = !item.available ? '<span class="pf-badge out">Изчерпан</span>' : '';
   const img = item.image || PLACEHOLDER_IMG;
+  const wished = isWishlisted(item.group_id);
   return `
-    <a href="portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}" class="pf-card-link">
-      <div class="pf-card-image">${variantBadge}${stockBadge}
-        <img src="${escapeHtml(img)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
-      </div>
-      <div class="pf-card-body">
-        <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
-        <h2 class="pf-card-title">${escapeHtml(item.name)}</h2>
-        <div class="pf-card-price">${formatPrice(item)}</div>
-      </div>
-    </a>`;
+    <div class="pf-product-card">
+      <button type="button" class="pf-wish-btn ${wished ? 'active' : ''}" data-wish="${escapeHtml(item.group_id)}" aria-label="Любими" aria-pressed="${wished}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="${wished ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      </button>
+      <a href="portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}" class="pf-card-link">
+        <div class="pf-card-image">${variantBadge}${stockBadge}
+          <img src="${escapeHtml(img)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+        </div>
+        <div class="pf-card-body">
+          <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
+          <h2 class="pf-card-title">${escapeHtml(item.name)}</h2>
+          <div class="pf-card-price">${formatPrice(item)}</div>
+        </div>
+      </a>
+    </div>`;
 }
 
 function showSkeletons() {
-  DOM.grid.innerHTML = Array(6).fill('<div class="pf-skeleton"></div>').join('');
+  DOM.grid.innerHTML = Array(8).fill(`
+    <div class="pf-skeleton-card">
+      <div class="pf-skeleton pf-skeleton-img"></div>
+      <div class="pf-skeleton pf-skeleton-line" style="width:60%"></div>
+      <div class="pf-skeleton pf-skeleton-line" style="width:90%"></div>
+      <div class="pf-skeleton pf-skeleton-line" style="width:40%"></div>
+    </div>`).join('');
 }
 
 function renderPagination() {
@@ -112,6 +129,73 @@ function updateFiltersToggleLabel() {
   DOM.filtersToggle.textContent = n > 0 ? `☰ Филтри (${n})` : '☰ Филтри';
 }
 
+function renderActiveFilterChips() {
+  if (!DOM.activeFilters) return;
+  const chips = [];
+  const params = getFilterParams();
+  if (params.q) chips.push({ key: 'q', label: `„${params.q}"` });
+  if (params.category) chips.push({ key: 'category', label: params.category });
+  if (params.brand) {
+    const opt = [...DOM.filterBrand.options].find((o) => o.value === params.brand);
+    chips.push({ key: 'brand', label: opt ? opt.textContent.replace(/\s*\(\d+\)$/, '') : params.brand });
+  }
+  if (params.min_price || params.max_price) {
+    const from = params.min_price || '0';
+    const to = params.max_price || '∞';
+    chips.push({ key: 'price', label: `${from}–${to} €` });
+  }
+  if (!DOM.filterAvailable.checked) chips.push({ key: 'available', label: 'Вкл. изчерпани' });
+
+  if (!chips.length) { DOM.activeFilters.innerHTML = ''; return; }
+
+  DOM.activeFilters.innerHTML = chips.map((c) => `
+    <button type="button" class="pf-active-chip" data-clear="${c.key}">
+      ${escapeHtml(c.label)}
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>`).join('')
+    + `<button type="button" class="pf-active-chip pf-active-chip--clear" data-clear="all">Изчисти всички</button>`;
+
+  DOM.activeFilters.querySelectorAll('[data-clear]').forEach((btn) => {
+    btn.addEventListener('click', () => clearOneFilter(btn.dataset.clear));
+  });
+}
+
+function clearOneFilter(key) {
+  if (key === 'all') { DOM.clearFilters.click(); return; }
+  if (key === 'q') DOM.searchInput.value = '';
+  if (key === 'category') DOM.filterCategory.value = '';
+  if (key === 'brand') DOM.filterBrand.value = '';
+  if (key === 'price') { DOM.filterMinPrice.value = ''; DOM.filterMaxPrice.value = ''; }
+  if (key === 'available') DOM.filterAvailable.checked = true;
+  state.page = 1;
+  reconcileFacets();
+  loadCatalog();
+}
+
+function renderCategoryChips() {
+  if (!DOM.categoryChips || !topCategories.length) return;
+  const activeCategory = DOM.filterCategory.value;
+  const facets = getFacetsFromCache(getFilterParams());
+  const visibleNames = new Set((facets?.categories || topCategories).map((c) => c.name));
+
+  DOM.categoryChips.innerHTML = topCategories.map((c) => {
+    const active = c.name === activeCategory;
+    const disabled = !active && !visibleNames.has(c.name);
+    return `<button type="button" class="pf-chip ${active ? 'active' : ''} ${disabled ? 'pf-chip--disabled' : ''}" data-chip-category="${escapeHtml(c.name)}" ${disabled ? 'disabled' : ''}>${escapeHtml(c.name)}</button>`;
+  }).join('');
+
+  DOM.categoryChips.querySelectorAll('[data-chip-category]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.chipCategory;
+      DOM.filterCategory.value = DOM.filterCategory.value === name ? '' : name;
+      state.page = 1;
+      reconcileFacets();
+      loadCatalog();
+      closeFilters();
+    });
+  });
+}
+
 function loadCatalog() {
   if (!state.cacheReady) return;
   const data = queryCatalogFromCache(getFilterParams(), state.page, LIMIT);
@@ -127,12 +211,29 @@ function loadCatalog() {
     : `${data.total.toLocaleString('bg-BG')} продукта`;
   DOM.grid.innerHTML = data.items.length
     ? data.items.map(renderCard).join('')
-    : `<div class="pf-empty">Няма продукти с тези филтри.<br><button type="button" class="pf-btn pf-btn-outline pf-empty-clear" id="empty-clear-filters">Изчисти филтрите</button></div>`;
+    : `<div class="pf-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <p>Няма продукти с тези филтри.</p>
+        <button type="button" class="pf-btn pf-btn-outline pf-empty-clear" id="empty-clear-filters">Изчисти филтрите</button>
+      </div>`;
   document.getElementById('empty-clear-filters')?.addEventListener('click', () => {
     DOM.clearFilters.click();
   });
+  DOM.grid.querySelectorAll('[data-wish]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const active = toggleWishlist(btn.dataset.wish);
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', String(active));
+      btn.querySelector('svg').setAttribute('fill', active ? 'currentColor' : 'none');
+      showToast(active ? 'Добавено в любими' : 'Премахнато от любими', 'success');
+    });
+  });
   renderPagination();
   updateFiltersToggleLabel();
+  renderActiveFilterChips();
+  renderCategoryChips();
 }
 
 function populateFilters(filters) {
@@ -155,6 +256,41 @@ function populateFilters(filters) {
     DOM.statProducts.textContent = filters.total_groups.toLocaleString('bg-BG');
     DOM.statBrands.textContent = filters.brands.length.toLocaleString('bg-BG');
   }
+  topCategories = [...filters.categories].sort((a, b) => b.count - a.count).slice(0, MAX_CHIPS);
+}
+
+/** Rebuild category/brand <select> options scoped to the other active filters
+ *  (hides brands with nothing in the chosen category and vice versa), and
+ *  resets a selection that's no longer valid. Pure client-side, 0 requests. */
+function reconcileFacets() {
+  let params = getFilterParams();
+  let facets = getFacetsFromCache(params);
+  if (!facets) return;
+
+  let changed = false;
+  if (params.category && !facets.categories.some((c) => c.name === params.category)) {
+    DOM.filterCategory.value = '';
+    changed = true;
+  }
+  if (params.brand && !facets.brands.some((b) => b.id === params.brand)) {
+    DOM.filterBrand.value = '';
+    changed = true;
+  }
+  if (changed) {
+    params = getFilterParams();
+    facets = getFacetsFromCache(params);
+  }
+
+  const prevCategory = DOM.filterCategory.value;
+  const prevBrand = DOM.filterBrand.value;
+
+  DOM.filterCategory.innerHTML = '<option value="">Всички категории</option>'
+    + facets.categories.map((c) => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${c.count})</option>`).join('');
+  DOM.filterBrand.innerHTML = '<option value="">Всички марки</option>'
+    + facets.brands.map((b) => `<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)} (${b.count})</option>`).join('');
+
+  DOM.filterCategory.value = prevCategory;
+  DOM.filterBrand.value = prevBrand;
 }
 
 function openFilters() {
@@ -172,10 +308,13 @@ function closeFilters() {
 }
 
 function bindEvents() {
-  const reload = debounce(() => { state.page = 1; loadCatalog(); }, 200);
+  const reload = debounce(() => { state.page = 1; reconcileFacets(); loadCatalog(); }, 200);
   DOM.searchInput.addEventListener('input', reload);
-  [DOM.filterCategory, DOM.filterBrand, DOM.filterMinPrice, DOM.filterMaxPrice, DOM.filterAvailable, DOM.sortSelect]
-    .forEach((el) => el.addEventListener('change', () => { state.page = 1; loadCatalog(); closeFilters(); }));
+  [DOM.filterMinPrice, DOM.filterMaxPrice, DOM.filterAvailable]
+    .forEach((el) => el.addEventListener('change', () => { state.page = 1; reconcileFacets(); loadCatalog(); }));
+  [DOM.filterCategory, DOM.filterBrand]
+    .forEach((el) => el.addEventListener('change', () => { state.page = 1; reconcileFacets(); loadCatalog(); closeFilters(); }));
+  DOM.sortSelect.addEventListener('change', () => { state.page = 1; loadCatalog(); closeFilters(); });
   DOM.clearFilters.addEventListener('click', () => {
     DOM.searchInput.value = '';
     DOM.filterCategory.value = '';
@@ -185,6 +324,7 @@ function bindEvents() {
     DOM.filterAvailable.checked = true;
     DOM.sortSelect.value = 'name';
     state.page = 1;
+    reconcileFacets();
     loadCatalog();
   });
   DOM.filtersToggle?.addEventListener('click', () => {
@@ -214,6 +354,7 @@ async function init() {
     if (filters) populateFilters(filters);
     state.cacheReady = true;
     bindEvents();
+    reconcileFacets();
     loadCatalog();
   } catch (err) {
     if (DOM.syncBanner) {

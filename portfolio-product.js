@@ -1,16 +1,22 @@
 import {
-  escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage
+  escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage,
+  isWishlisted, toggleWishlist
 } from './portfolio-shared.js';
-import { ensureBootstrap, getProductFromCache, getDescriptionFromCache } from './portfolio-cache.js';
+import { ensureBootstrap, getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
 
 const DOM = {
   root: document.getElementById('product-root'),
   toastContainer: document.getElementById('toast-container')
 };
 
+const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23eef2f0' width='300' height='300'/%3E%3C/svg%3E";
+
 let product = null;
 let selectedPack = '';
 let selectedVariant = null;
+let selectedImage = '';
+let quantity = 1;
+let activeTab = 'description';
 
 function getPacks() {
   return [...new Set(product.variants.map((v) => v.pack).filter(Boolean))];
@@ -25,6 +31,93 @@ function pickDefaultVariant() {
   selectedPack = packs[0] || '';
   const options = getOptionsForPack(selectedPack);
   selectedVariant = options.find((v) => v.available) || options[0] || null;
+  selectedImage = selectedVariant?.image || product.image;
+}
+
+function getGalleryImages() {
+  const images = [product.image, ...product.variants.map((v) => v.image)]
+    .filter(Boolean)
+    .filter((img, idx, arr) => arr.indexOf(img) === idx);
+  return images.length ? images : [PLACEHOLDER_IMG];
+}
+
+function renderBreadcrumb() {
+  const topCat = product.category_path?.[0] || '';
+  const restCat = (product.category_path || []).slice(1);
+  return `
+    <nav class="pf-breadcrumb" aria-label="Път в каталога">
+      <a href="portfolio.html">Начало</a>
+      ${topCat ? `<span>/</span><a href="portfolio.html?category=${encodeURIComponent(topCat)}">${escapeHtml(topCat)}</a>` : ''}
+      ${restCat.map((c) => `<span>/</span><span>${escapeHtml(c)}</span>`).join('')}
+      <span>/</span><span class="pf-breadcrumb-current">${escapeHtml(product.name)}</span>
+    </nav>`;
+}
+
+function renderGallery() {
+  const images = getGalleryImages();
+  const wished = isWishlisted(product.group_id);
+  return `
+    <div class="pf-gallery">
+      <button type="button" class="pf-wish-btn pf-wish-btn--gallery ${wished ? 'active' : ''}" id="wish-toggle" aria-label="Любими" aria-pressed="${wished}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${wished ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      </button>
+      <img id="product-image" src="${escapeHtml(selectedImage)}" alt="${escapeHtml(product.name)}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+      ${images.length > 1 ? `
+      <div class="pf-gallery-thumbs">
+        ${images.map((img) => `<button type="button" class="pf-gallery-thumb ${img === selectedImage ? 'active' : ''}" data-img="${escapeHtml(img)}"><img src="${escapeHtml(img)}" alt="" referrerpolicy="no-referrer"></button>`).join('')}
+      </div>` : ''}
+      ${product.label ? `<p class="pf-label-link"><a href="${escapeHtml(product.label)}" target="_blank" rel="noopener noreferrer" class="pf-btn pf-btn-outline">Етикет / състав</a></p>` : ''}
+    </div>`;
+}
+
+function renderTabs() {
+  const hasDescription = !!product.description;
+  return `
+    <div class="pf-tabs">
+      <div class="pf-tab-list" role="tablist">
+        <button type="button" class="pf-tab-btn ${activeTab === 'description' ? 'active' : ''}" data-tab="description" role="tab">Описание</button>
+        <button type="button" class="pf-tab-btn ${activeTab === 'shipping' ? 'active' : ''}" data-tab="shipping" role="tab">Доставка и плащане</button>
+      </div>
+      <div class="pf-tab-panel ${activeTab === 'description' ? 'active' : ''}" data-panel="description" id="description-block">
+        ${hasDescription ? product.description : '<p class="pf-muted-text">Зареждане на описание...</p>'}
+      </div>
+      <div class="pf-tab-panel ${activeTab === 'shipping' ? 'active' : ''}" data-panel="shipping">
+        <ul class="pf-shipping-info">
+          <li>🚚 Доставка до офис на Speedy или Econt, или до личен адрес</li>
+          <li>💳 Плащане с наложен платеж – плащате при получаване</li>
+          <li>📦 Поръчката се преглежда преди изпращане към доставчик</li>
+          <li>↩️ Право на връщане в срок съгласно политиката ни</li>
+        </ul>
+      </div>
+    </div>`;
+}
+
+function renderRelated() {
+  const meta = getCachedMeta();
+  const topCat = product.category_path?.[0];
+  if (!meta?.index || !topCat) return '';
+  const related = meta.index
+    .filter((i) => i.category_top === topCat && i.group_id !== product.group_id)
+    .sort((a, b) => Number(b.available) - Number(a.available))
+    .slice(0, 4);
+  if (!related.length) return '';
+  return `
+    <section class="pf-related">
+      <h2>Още от „${escapeHtml(topCat)}"</h2>
+      <div class="pf-grid pf-related-grid">
+        ${related.map((item) => `
+          <a href="portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}" class="pf-card-link">
+            <div class="pf-card-image">
+              <img src="${escapeHtml(item.image || PLACEHOLDER_IMG)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+            </div>
+            <div class="pf-card-body">
+              <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
+              <h3 class="pf-card-title">${escapeHtml(item.name)}</h3>
+              <div class="pf-card-price">${item.min_price.toFixed(2)} €</div>
+            </div>
+          </a>`).join('')}
+      </div>
+    </section>`;
 }
 
 function render() {
@@ -34,17 +127,14 @@ function render() {
   const options = getOptionsForPack(selectedPack);
   const hasOptions = options.some((o) => o.option);
   const price = selectedVariant ? selectedVariant.retail_price.toFixed(2) : '—';
-  const img = selectedVariant?.image || product.image;
+  const maxQty = selectedVariant?.available ? 99 : 1;
 
   document.title = `${product.name} – Portfolio`;
 
   DOM.root.innerHTML = `
-    <a href="portfolio.html" class="pf-back-link">← Назад към каталога</a>
+    ${renderBreadcrumb()}
     <div class="pf-product-grid">
-      <div class="pf-gallery">
-        <img id="product-image" src="${escapeHtml(img)}" alt="${escapeHtml(product.name)}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27300%27%3E%3Crect fill=%27%23eef2f0%27 width=%27300%27 height=%27300%27/%3E%3C/svg%3E'">
-        ${product.label ? `<p class="pf-label-link"><a href="${escapeHtml(product.label)}" target="_blank" rel="noopener noreferrer" class="pf-btn pf-btn-outline">Етикет / състав</a></p>` : ''}
-      </div>
+      ${renderGallery()}
       <div class="pf-product-info">
         <div class="pf-product-brand">${escapeHtml(product.brand)}</div>
         <h1>${escapeHtml(product.name)}</h1>
@@ -67,24 +157,40 @@ function render() {
           </div>
         </div>` : ''}
 
-        <button type="button" class="pf-btn pf-btn-primary pf-btn-block" id="add-to-cart" ${!selectedVariant?.available ? 'disabled' : ''}>
-          ${selectedVariant?.available ? 'Добави в количката' : 'Изчерпан'}
-        </button>
+        <div class="pf-buy-row">
+          <div class="pf-qty-stepper" role="group" aria-label="Количество">
+            <button type="button" id="qty-minus" aria-label="Намали">−</button>
+            <input type="number" id="qty-input" value="${quantity}" min="1" max="${maxQty}" inputmode="numeric">
+            <button type="button" id="qty-plus" aria-label="Увеличи">+</button>
+          </div>
+          <button type="button" class="pf-btn pf-btn-primary pf-btn-block" id="add-to-cart" ${!selectedVariant?.available ? 'disabled' : ''}>
+            ${selectedVariant?.available ? 'Добави в количката' : 'Изчерпан'}
+          </button>
+        </div>
 
-        <div class="pf-description" id="description-block">${product.description || '<p class="pf-muted-text">Зареждане на описание...</p>'}</div>
+        <ul class="pf-trust-list">
+          <li>💳 Наложен платеж</li>
+          <li>🚚 До офис или адрес</li>
+          <li>✅ Оригинален продукт</li>
+        </ul>
+
+        ${renderTabs()}
       </div>
-    </div>`;
+    </div>
+    ${renderRelated()}`;
 
-  bindVariantEvents();
+  bindPageEvents();
   if (!product.description) loadDescription();
 }
 
-function bindVariantEvents() {
+function bindPageEvents() {
   document.querySelectorAll('#pack-options .pf-variant-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       selectedPack = btn.dataset.pack;
       const opts = getOptionsForPack(selectedPack);
       selectedVariant = opts.find((v) => v.available) || opts[0];
+      selectedImage = selectedVariant?.image || product.image;
+      quantity = 1;
       render();
     });
   });
@@ -92,9 +198,49 @@ function bindVariantEvents() {
     btn.addEventListener('click', () => {
       if (btn.disabled) return;
       selectedVariant = product.variants.find((v) => v.sku_id === btn.dataset.sku);
+      selectedImage = selectedVariant?.image || product.image;
+      quantity = 1;
       render();
     });
   });
+  document.querySelectorAll('.pf-gallery-thumb').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      selectedImage = btn.dataset.img;
+      const img = document.getElementById('product-image');
+      if (img) img.src = selectedImage;
+      document.querySelectorAll('.pf-gallery-thumb').forEach((t) => t.classList.toggle('active', t === btn));
+    });
+  });
+  document.querySelectorAll('.pf-tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.tab;
+      document.querySelectorAll('.pf-tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.pf-tab-panel').forEach((p) => p.classList.toggle('active', p.dataset.panel === activeTab));
+    });
+  });
+  document.getElementById('wish-toggle')?.addEventListener('click', (e) => {
+    const active = toggleWishlist(product.group_id);
+    e.currentTarget.classList.toggle('active', active);
+    e.currentTarget.setAttribute('aria-pressed', String(active));
+    e.currentTarget.querySelector('svg').setAttribute('fill', active ? 'currentColor' : 'none');
+    showToast(active ? 'Добавено в любими' : 'Премахнато от любими', 'success');
+  });
+
+  const qtyInput = document.getElementById('qty-input');
+  const maxQty = selectedVariant?.available ? 99 : 1;
+  document.getElementById('qty-minus')?.addEventListener('click', () => {
+    quantity = Math.max(1, quantity - 1);
+    if (qtyInput) qtyInput.value = quantity;
+  });
+  document.getElementById('qty-plus')?.addEventListener('click', () => {
+    quantity = Math.min(maxQty, quantity + 1);
+    if (qtyInput) qtyInput.value = quantity;
+  });
+  qtyInput?.addEventListener('change', () => {
+    quantity = Math.min(maxQty, Math.max(1, parseInt(qtyInput.value, 10) || 1));
+    qtyInput.value = quantity;
+  });
+
   document.getElementById('add-to-cart')?.addEventListener('click', addToCart);
 }
 
@@ -102,11 +248,15 @@ async function loadDescription() {
   try {
     const data = await getDescriptionFromCache(product.group_id);
     const block = document.getElementById('description-block');
-    if (block && data.description) block.innerHTML = data.description;
-    else if (block) block.innerHTML = '<p class="pf-muted-text">Няма налично описание.</p>';
+    if (block && data.description) {
+      product.description = data.description;
+      block.innerHTML = data.description;
+    } else if (block) {
+      block.innerHTML = '<p class="pf-muted-text">Няма налично описание.</p>';
+    }
   } catch {
     const block = document.getElementById('description-block');
-    if (block) block.innerHTML = '';
+    if (block) block.innerHTML = '<p class="pf-muted-text">Няма налично описание.</p>';
   }
 }
 
@@ -119,7 +269,7 @@ function addToCart() {
   const label = [product.name, v.pack, v.option].filter(Boolean).join(' – ');
   const cart = getCart();
   const idx = cart.findIndex((i) => i.sku_id === v.sku_id);
-  if (idx > -1) cart[idx].quantity++;
+  if (idx > -1) cart[idx].quantity += quantity;
   else {
     cart.push({
       sku_id: v.sku_id,
@@ -130,13 +280,14 @@ function addToCart() {
       option: v.option,
       price: v.retail_price,
       b2b_price: v.b2b_price,
-      quantity: 1,
+      quantity,
       image: v.image || product.image
     });
   }
   saveCart(cart);
   updateCartBadges();
-  showToast('Добавено в количката!', 'success');
+  showToast(`Добавено в количката (${quantity} бр.)!`, 'success');
+  quantity = 1;
 }
 
 async function loadProduct() {

@@ -93,7 +93,7 @@ export function calculateRetailPrice(b2bPrice, markupPercent, override) {
   return roundPrice(b2bPrice * (1 + markupPercent / 100));
 }
 
-export function groupRawProducts(rawProducts, settings) {
+export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
   const groups = new Map();
   const overrides = settings.product_overrides || {};
 
@@ -110,14 +110,15 @@ export function groupRawProducts(rawProducts, settings) {
         category_path: (p.category || '').split(' > ').filter(Boolean),
         image: p.image || '',
         label: p.label || '',
-        description: decodeDescription(p.description || ''),
+        description: decodeDescription(p.description || descriptionMap?.get(gid) || ''),
         variants: []
       });
     }
 
     const g = groups.get(gid);
-    if (p.description && !g.description) {
-      g.description = decodeDescription(p.description);
+    if (!g.description) {
+      const desc = p.description || descriptionMap?.get(gid);
+      if (desc) g.description = decodeDescription(desc);
     }
     if (p.label && !g.label) g.label = p.label;
 
@@ -221,6 +222,28 @@ async function getGroupFromChunks(env, meta, groupId) {
   return chunk.find((g) => g.group_id === groupId) || null;
 }
 
+export async function fetchDescriptionMap(apiKey) {
+  try {
+    const response = await fetch(
+      `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(apiKey)}&format=json&description=1`
+    );
+    if (!response.ok) return new Map();
+    const data = await response.json();
+    if (data.status !== 'ok' || !Array.isArray(data.products)) return new Map();
+
+    const map = new Map();
+    for (const p of data.products) {
+      const gid = String(p.group_id);
+      if (p.description && !map.has(gid)) map.set(gid, p.description);
+    }
+    return map;
+  } catch {
+    // Descriptions are non-critical — sync still succeeds with prices/stock,
+    // individual product pages fall back to the on-demand fetch.
+    return new Map();
+  }
+}
+
 export async function syncPortfolioCatalog(env) {
   const apiKey = await getFitness1ApiKey(env);
   if (!apiKey) {
@@ -241,7 +264,12 @@ export async function syncPortfolioCatalog(env) {
     throw new PortfolioError('Невалиден отговор от Fitness1 API.', 502);
   }
 
-  const groups = groupRawProducts(data.products, settings);
+  // Fetch full descriptions once here (sync is admin-triggered, not per-visitor)
+  // so product pages never have to hit Fitness1 on-demand — that was the cause
+  // of the very slow pf-description load.
+  const descriptionMap = await fetchDescriptionMap(apiKey);
+
+  const groups = groupRawProducts(data.products, settings, descriptionMap);
   const meta = buildCatalogMeta(groups);
   meta.synced_at = new Date().toISOString();
 

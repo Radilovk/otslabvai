@@ -3,7 +3,8 @@ import { matchesSearchQuery, tokenizeQuery } from './portfolio-search.js';
 
 export { matchesSearchQuery, tokenizeQuery, buildSearchText, enrichIndexEntry } from './portfolio-search.js';
 
-export function filterIndex(index, params, meta = {}) {
+/** Filters the index without sorting – reused by filterIndex and by facet counting. */
+export function applyFilters(index, params, meta = {}) {
   let results = index;
   const categories = meta.categories || [];
 
@@ -31,26 +32,34 @@ export function filterIndex(index, params, meta = {}) {
     if (!Number.isNaN(max)) results = results.filter((i) => i.min_price <= max);
   }
 
-  const sort = params.sort || 'name';
+  return results;
+}
+
+export function sortResults(results, sort = 'name') {
   if (sort === 'price_asc') {
-    results = [...results].sort((a, b) => a.min_price - b.min_price || a.name.localeCompare(b.name, 'bg'));
-  } else if (sort === 'price_desc') {
-    results = [...results].sort((a, b) => b.max_price - a.max_price || a.name.localeCompare(b.name, 'bg'));
-  } else if (sort === 'name_desc') {
-    results = [...results].sort((a, b) => b.name.localeCompare(a.name, 'bg'));
-  } else if (sort === 'brand') {
-    results = [...results].sort(
+    return [...results].sort((a, b) => a.min_price - b.min_price || a.name.localeCompare(b.name, 'bg'));
+  }
+  if (sort === 'price_desc') {
+    return [...results].sort((a, b) => b.max_price - a.max_price || a.name.localeCompare(b.name, 'bg'));
+  }
+  if (sort === 'name_desc') {
+    return [...results].sort((a, b) => b.name.localeCompare(a.name, 'bg'));
+  }
+  if (sort === 'brand') {
+    return [...results].sort(
       (a, b) => a.brand.localeCompare(b.brand, 'bg') || a.name.localeCompare(b.name, 'bg')
     );
-  } else if (sort === 'available') {
-    results = [...results].sort(
+  }
+  if (sort === 'available') {
+    return [...results].sort(
       (a, b) => Number(b.available) - Number(a.available) || a.name.localeCompare(b.name, 'bg')
     );
-  } else {
-    results = [...results].sort((a, b) => a.name.localeCompare(b.name, 'bg'));
   }
+  return [...results].sort((a, b) => a.name.localeCompare(b.name, 'bg'));
+}
 
-  return results;
+export function filterIndex(index, params, meta = {}) {
+  return sortResults(applyFilters(index, params, meta), params.sort || 'name');
 }
 
 export function paginateIndex(filtered, page = 1, limit = 24) {
@@ -63,4 +72,36 @@ export function paginateIndex(filtered, page = 1, limit = 24) {
     total_pages: Math.ceil(total / limit) || 0,
     items: filtered.slice(start, start + limit)
   };
+}
+
+/**
+ * Faceted category/brand options scoped to the *other* active filters
+ * (search, price, availability, and the opposite dimension) — so picking a
+ * category hides brands with nothing in it (and shows counts for just that
+ * category), and picking a brand hides categories it doesn't carry.
+ */
+export function computeFacets(index, params, meta = {}) {
+  const categoriesMeta = meta.categories || [];
+  const brandsMeta = meta.brands || [];
+
+  const forCategoryFacet = applyFilters(index, { ...params, category: '' }, meta);
+  const categoryCounts = new Map();
+  for (const item of forCategoryFacet) {
+    const top = item.category_top || 'Други';
+    categoryCounts.set(top, (categoryCounts.get(top) || 0) + 1);
+  }
+  const categories = categoriesMeta
+    .filter((c) => categoryCounts.has(c.name))
+    .map((c) => ({ name: c.name, count: categoryCounts.get(c.name) }));
+
+  const forBrandFacet = applyFilters(index, { ...params, brand: '' }, meta);
+  const brandCounts = new Map();
+  for (const item of forBrandFacet) {
+    brandCounts.set(item.brand_id, (brandCounts.get(item.brand_id) || 0) + 1);
+  }
+  const brands = brandsMeta
+    .filter((b) => brandCounts.has(b.id))
+    .map((b) => ({ id: b.id, name: b.name, count: brandCounts.get(b.id) }));
+
+  return { categories, brands };
 }
