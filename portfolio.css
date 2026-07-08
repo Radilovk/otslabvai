@@ -69,6 +69,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
 }
 
 body.pf-body {
@@ -79,11 +80,14 @@ body.pf-body {
   flex-direction: column;
   font-family: var(--pf-font);
   background: var(--pf-bg-mesh);
-  background-attachment: fixed;
+  background-attachment: scroll;
   color: var(--pf-text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+  width: 100%;
+  max-width: 100vw;
 }
 
 img, svg { display: block; max-width: 100%; height: auto; }
@@ -125,8 +129,8 @@ img, svg { display: block; max-width: 100%; height: auto; }
 }
 
 .pf-card-image img {
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
@@ -152,10 +156,10 @@ img, svg { display: block; max-width: 100%; height: auto; }
 }
 
 .pf-header-inner {
-  width: var(--pf-container);
+  width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0.65rem 1rem;
+  padding: 0.65rem max(1rem, env(safe-area-inset-right, 0px)) 0.65rem max(1rem, env(safe-area-inset-left, 0px));
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -290,7 +294,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
   overflow: hidden;
   background: linear-gradient(155deg, var(--pf-ink) 0%, #151820 45%, #0a0c10 100%);
   color: #fff;
-  padding: clamp(2rem, 6vw, 3.5rem) clamp(1rem, 4vw, 2rem);
+  padding: clamp(2rem, 6vw, 3.5rem) max(1rem, env(safe-area-inset-right, 0px)) clamp(2rem, 6vw, 3.5rem) max(1rem, env(safe-area-inset-left, 0px));
 }
 
 .pf-hero::before {
@@ -317,6 +321,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
   position: relative;
   max-width: 1280px;
   margin: 0 auto;
+  min-width: 0;
 }
 
 .pf-hero-badges {
@@ -385,13 +390,21 @@ img, svg { display: block; max-width: 100%; height: auto; }
 .pf-layout {
   width: 100%;
   max-width: 1280px;
+  min-width: 0;
   margin: 0 auto;
-  padding: clamp(0.85rem, 3vw, 1.75rem) clamp(0.85rem, 3vw, 1.25rem) calc(var(--pf-mobile-bar-h) + 1.5rem);
+  padding: clamp(0.85rem, 3vw, 1.75rem) max(0.85rem, env(safe-area-inset-right, 0px)) calc(var(--pf-mobile-bar-h) + 1.5rem) max(0.85rem, env(safe-area-inset-left, 0px));
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(0.85rem, 2vw, 1.75rem);
   align-items: start;
   flex: 1;
+  overflow-x: clip;
+}
+
+.pf-layout > main {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 /* ─── Sidebar / Filters ─── */
@@ -401,6 +414,8 @@ img, svg { display: block; max-width: 100%; height: auto; }
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: var(--pf-touch);
   padding: 0.75rem 1rem;
   background: var(--pf-surface);
@@ -560,6 +575,18 @@ img, svg { display: block; max-width: 100%; height: auto; }
   flex-wrap: wrap;
   gap: 0.85rem;
   margin-bottom: 1rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pf-toolbar > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.pf-sort {
+  flex: 1 1 100%;
+  min-width: 0;
 }
 
 .pf-toolbar h2 {
@@ -573,6 +600,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
 .pf-results-meta { color: var(--pf-muted); font-size: 0.875rem; margin: 0.2rem 0 0; }
 
 .pf-sort select {
+  width: 100%;
   min-height: var(--pf-touch);
   padding: 0.55rem 2rem 0.55rem 0.85rem;
   border: 1.5px solid var(--pf-border);
@@ -597,9 +625,14 @@ img, svg { display: block; max-width: 100%; height: auto; }
 /* ─── Search ─── */
 .pf-search-wrap {
   flex: 1;
-  max-width: 480px;
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
   position: relative;
+  margin-bottom: 1rem;
 }
+
+.pf-search-wrap--full { max-width: 100%; }
 
 .pf-search-wrap input {
   width: 100%;
@@ -633,8 +666,10 @@ img, svg { display: block; max-width: 100%; height: auto; }
 /* ─── Product Grid ─── */
 .pf-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.85rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .pf-product-card {
@@ -643,6 +678,8 @@ img, svg { display: block; max-width: 100%; height: auto; }
   border: 1px solid var(--pf-border);
   border-radius: var(--pf-radius);
   overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
   transition: transform 0.3s var(--pf-ease), box-shadow 0.3s var(--pf-ease), border-color 0.3s;
   box-shadow: var(--pf-shadow);
   animation: pf-fade-up 0.4s var(--pf-ease) both;
@@ -665,6 +702,8 @@ img, svg { display: block; max-width: 100%; height: auto; }
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pf-wish-btn {
@@ -718,6 +757,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .pf-card-brand {
@@ -842,12 +882,16 @@ img, svg { display: block; max-width: 100%; height: auto; }
 .pf-chips {
   display: flex;
   gap: 0.45rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 0.35rem;
   margin-bottom: 0.75rem;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  mask-image: linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 24px), transparent);
+  overscroll-behavior-x: contain;
 }
 
 .pf-chips::-webkit-scrollbar { display: none; }
@@ -888,6 +932,8 @@ img, svg { display: block; max-width: 100%; height: auto; }
   flex-wrap: wrap;
   gap: 0.45rem;
   margin-bottom: 0.85rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pf-active-filters:empty { display: none; margin: 0; }
@@ -1044,16 +1090,25 @@ img, svg { display: block; max-width: 100%; height: auto; }
 .pf-product-page {
   width: 100%;
   max-width: 1100px;
+  min-width: 0;
   margin: 0 auto;
-  padding: clamp(0.85rem, 3vw, 1.5rem) clamp(0.85rem, 3vw, 1.25rem) calc(var(--pf-mobile-bar-h) + 1.5rem);
+  padding: clamp(0.85rem, 3vw, 1.5rem) max(0.85rem, env(safe-area-inset-right, 0px)) calc(var(--pf-mobile-bar-h) + 1.5rem) max(0.85rem, env(safe-area-inset-left, 0px));
   flex: 1;
+  overflow-x: clip;
+  box-sizing: border-box;
 }
 
 .pf-product-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
   align-items: start;
+  min-width: 0;
+}
+
+.pf-product-info {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pf-gallery {
@@ -1061,9 +1116,12 @@ img, svg { display: block; max-width: 100%; height: auto; }
   background: linear-gradient(180deg, #fafbfa 0%, #fff 100%);
   border-radius: var(--pf-radius);
   border: 1px solid var(--pf-border);
-  padding: clamp(1rem, 3vw, 1.75rem);
+  padding: clamp(0.75rem, 3vw, 1.75rem);
   text-align: center;
   box-shadow: var(--pf-shadow-md);
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .pf-gallery > img {
@@ -1291,17 +1349,19 @@ img, svg { display: block; max-width: 100%; height: auto; }
   border-bottom: 1.5px solid var(--pf-border);
   overflow-x: auto;
   scrollbar-width: none;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pf-tab-list::-webkit-scrollbar { display: none; }
 
 .pf-tab-btn {
   min-height: var(--pf-touch);
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem 0.85rem;
   border: none;
   background: none;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   font-weight: 700;
   color: var(--pf-muted);
   cursor: pointer;
@@ -1309,7 +1369,9 @@ img, svg { display: block; max-width: 100%; height: auto; }
   margin-bottom: -1.5px;
   transition: color 0.2s, border-color 0.2s;
   white-space: nowrap;
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
 }
 
 .pf-tab-btn:hover { color: var(--pf-text); }
@@ -1337,7 +1399,9 @@ img, svg { display: block; max-width: 100%; height: auto; }
 .pf-related {
   max-width: 1100px;
   margin: 2.5rem auto 0;
-  padding: 0 clamp(0.85rem, 3vw, 1.25rem);
+  padding: 0 max(0.85rem, env(safe-area-inset-right, 0px)) 0 max(0.85rem, env(safe-area-inset-left, 0px));
+  min-width: 0;
+  overflow-x: clip;
 }
 
 .pf-related h2 {
@@ -1352,6 +1416,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
+  min-width: 0;
 }
 
 .pf-related .pf-card-link {
@@ -1423,16 +1488,21 @@ img, svg { display: block; max-width: 100%; height: auto; }
 /* ─── Checkout ─── */
 .pf-checkout-page {
   flex: 1;
-  padding: clamp(0.85rem, 3vw, 1.5rem) clamp(0.85rem, 3vw, 1.25rem) calc(var(--pf-mobile-bar-h) + 1.5rem);
+  width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+  padding: clamp(0.85rem, 3vw, 1.5rem) max(0.85rem, env(safe-area-inset-right, 0px)) calc(var(--pf-mobile-bar-h) + 1.5rem) max(0.85rem, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
 }
 
 .pf-checkout-grid {
   max-width: 1100px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   align-items: start;
+  min-width: 0;
 }
 
 .pf-checkout-summary { order: -1; }
@@ -1951,6 +2021,22 @@ img, svg { display: block; max-width: 100%; height: auto; }
    RESPONSIVE BREAKPOINTS
    ═══════════════════════════════════════════ */
 
+/* Mobile toolbar – stack sort below title */
+@media (max-width: 639px) {
+  .pf-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pf-sort {
+    flex: 1 1 auto;
+  }
+
+  .pf-sort select {
+    width: 100%;
+  }
+}
+
 /* Small phones → 2-col grid */
 @media (min-width: 400px) {
   .pf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
@@ -1958,6 +2044,15 @@ img, svg { display: block; max-width: 100%; height: auto; }
 
 /* Tablets */
 @media (min-width: 640px) {
+  .pf-sort {
+    flex: 0 1 auto;
+  }
+
+  .pf-sort select {
+    width: auto;
+    min-width: 180px;
+  }
+
   .pf-grid {
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     gap: 1rem;
@@ -2000,7 +2095,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
 /* Desktop */
 @media (min-width: 900px) {
   .pf-layout {
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 280px minmax(0, 1fr);
     gap: 2rem;
     padding: 1.75rem 1.25rem 3rem;
   }
@@ -2032,7 +2127,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
   }
 
   .pf-checkout-grid {
-    grid-template-columns: 1fr 400px;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 400px);
     gap: 1.75rem;
   }
 
@@ -2043,7 +2138,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
   }
 
   .pf-product-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 2.5rem;
   }
 
