@@ -1,6 +1,6 @@
 import {
   escapeHtml, debounce, updateCartBadges, initPortfolioPage, applySiteSettings,
-  isWishlisted, toggleWishlist, showToast
+  isWishlisted, toggleWishlist, showToast, icon
 } from './portfolio-shared.js';
 import { ensureBootstrap, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache } from './portfolio-cache.js';
 
@@ -97,9 +97,9 @@ function renderPagination() {
     pages += `<button type="button" data-page="${p}" class="${p === state.page ? 'current' : ''}">${p}</button>`;
   }
   DOM.pagination.innerHTML = `
-    <button type="button" data-page="${state.page - 1}" ${prevDisabled} aria-label="Предишна">←</button>
+    <button type="button" data-page="${state.page - 1}" ${prevDisabled} aria-label="Предишна">${icon('chevronLeft', { size: 16 })}</button>
     ${pages}
-    <button type="button" data-page="${state.page + 1}" ${nextDisabled} aria-label="Следваща">→</button>`;
+    <button type="button" data-page="${state.page + 1}" ${nextDisabled} aria-label="Следваща">${icon('chevronRight', { size: 16 })}</button>`;
   DOM.pagination.querySelectorAll('button[data-page]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const p = parseInt(btn.dataset.page, 10);
@@ -124,9 +124,10 @@ function countActiveFilters() {
 }
 
 function updateFiltersToggleLabel() {
-  if (!DOM.filtersToggle) return;
+  const label = document.getElementById('filters-toggle-label');
+  if (!label) return;
   const n = countActiveFilters();
-  DOM.filtersToggle.textContent = n > 0 ? `☰ Филтри (${n})` : '☰ Филтри';
+  label.textContent = n > 0 ? `Филтри (${n})` : 'Филтри';
 }
 
 function renderActiveFilterChips() {

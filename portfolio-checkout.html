@@ -61,7 +61,7 @@
                             <label class="pf-courier-tab"><input type="radio" id="courier-ekont" name="courierCompany" value="ekont"> Econt</label>
                         </div>
                         <div id="speedy-widget" class="pf-courier-widget">
-                            <button type="button" class="pf-btn pf-btn-outline" id="open-speedy-map-btn">📍 Избери офис от картата</button>
+                            <button type="button" class="pf-btn pf-btn-outline" id="open-speedy-map-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.5S5 14.8 5 9.8a7 7 0 0 1 14 0c0 5-7 11.7-7 11.7z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Избери офис от картата</button>
                             <input type="hidden" id="final-speedy-id" name="speedy_office_id">
                             <div id="speedy-selected-info" class="pf-selected-office" style="display:none">
                                 <strong>Избран офис:</strong>
@@ -145,7 +145,10 @@
                 <button type="submit" form="checkout-form" class="pf-btn pf-btn-primary pf-btn-block" id="submit-btn" disabled>
                     Поръчай с наложен платеж
                 </button>
-                <p class="pf-trust">🔒 Сигурна поръчка · 📦 Преглед преди изпращане</p>
+                <p class="pf-trust">
+                    <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"/></svg>Сигурна поръчка</span>
+                    <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 22 8v8l-10 5.5L2 16V8z"/><path d="M2 8l10 5.5L22 8"/><path d="M12 13.5V22"/></svg>Преглед преди изпращане</span>
+                </p>
             </aside>
         </div>
     </main>
@@ -159,7 +162,7 @@
         <div class="pf-modal-content pf-modal-map">
             <div class="pf-modal-header">
                 <h3>Избери офис на Speedy</h3>
-                <button type="button" class="pf-modal-close" id="close-speedy-map-btn" aria-label="Затвори">×</button>
+                <button type="button" class="pf-modal-close" id="close-speedy-map-btn" aria-label="Затвори"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
             </div>
             <iframe id="speedy-map-iframe" title="Карта Speedy" src=""></iframe>
         </div>

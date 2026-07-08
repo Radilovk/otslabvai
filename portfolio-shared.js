@@ -3,6 +3,33 @@ import { API_URL } from './config.js';
 export const CART_KEY = 'portfolioCart';
 export const WISHLIST_KEY = 'portfolioWishlist';
 
+/** Stroke-based icon set (24x24, currentColor) — used instead of emoji everywhere. */
+const ICON_PATHS = {
+  card: '<rect x="1.5" y="4.5" width="21" height="15" rx="2.5"/><path d="M1.5 9.5h21"/><path d="M5 15h4"/>',
+  truck: '<path d="M1.5 6.5h11v10h-11z"/><path d="M12.5 10h4.5l4 3.5v3h-8.5z"/><circle cx="6" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/>',
+  shieldCheck: '<path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5z"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  box: '<path d="M12 2.5 22 8v8l-10 5.5L2 16V8z"/><path d="M2 8l10 5.5L22 8"/><path d="M12 13.5V22"/>',
+  undo: '<path d="M4 8h10.5a5.5 5.5 0 0 1 0 11H10"/><path d="M8 4 4 8l4 4"/>',
+  lock: '<rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"/>',
+  pin: '<path d="M12 21.5S5 14.8 5 9.8a7 7 0 0 1 14 0c0 5-7 11.7-7 11.7z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  check: '<path d="M4 12.5 9.5 18 20 6"/>',
+  checkCircle: '<circle cx="12" cy="12" r="9.5"/><path d="m7.5 12.5 3 3 6-6.5"/>',
+  clipboard: '<rect x="5" y="4" width="14" height="17" rx="2"/><rect x="8.5" y="2" width="7" height="4" rx="1.2"/><path d="M8.5 11h7M8.5 15h7"/>',
+  menu: '<path d="M3.5 6.5h17M3.5 12h17M3.5 17.5h17"/>',
+  chevronLeft: '<path d="m15 5-7 7 7 7"/>',
+  chevronRight: '<path d="m9 5 7 7-7 7"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  arrowRight: '<path d="M4 12h16"/><path d="m13 5 7 7-7 7"/>',
+  map: '<path d="M9 3 3 5.5v15L9 18l6 2.5 6-2.5v-15L15 5.5 9 3z"/><path d="M9 3v15M15 5.5v15"/>'
+};
+
+export function icon(name, { size = 18, className = '', strokeWidth = 2 } = {}) {
+  const paths = ICON_PATHS[name];
+  if (!paths) return '';
+  const cls = className ? ` ${className}` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="pf-icon${cls}" aria-hidden="true">${paths}</svg>`;
+}
+
 export function escapeHtml(str) {
   if (str == null) return '';
   return String(str)
