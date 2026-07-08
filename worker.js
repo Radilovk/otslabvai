@@ -58,7 +58,7 @@ export default {
             if (request.method === 'POST') {
               response = await handleQuestAIFollowup(request, env);
             } else {
-              response = methodNotAllowed();
+              throw new UserFacingError('Method Not Allowed.', 405);
             }
             break;
           

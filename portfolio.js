@@ -65,7 +65,7 @@ function renderCard(item) {
       </button>
       <a href="portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}" class="pf-card-link">
         <div class="pf-card-image">${variantBadge}${stockBadge}
-          <img src="${escapeHtml(img)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" width="300" height="300" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+          <img src="${escapeHtml(img)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" sizes="(max-width: 640px) 45vw, 210px" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
         </div>
         <div class="pf-card-body">
           <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
