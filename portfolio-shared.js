@@ -149,11 +149,13 @@ export function renderHeader(active = 'catalog') {
         <nav class="pf-nav" aria-label="Основна навигация">
           <a href="portfolio.html" class="pf-nav-link ${active === 'catalog' ? 'active' : ''}">Каталог</a>
         </nav>
-        <a href="portfolio-checkout.html" class="pf-cart-btn" aria-label="Количка">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-          <span class="pf-cart-btn-label">Количка</span>
-          <span class="pf-cart-badge" data-pf-cart-count ${count === 0 ? 'style="display:none"' : ''}>${count}</span>
-        </a>
+        <div class="pf-header-actions">
+          <a href="portfolio-checkout.html" class="pf-cart-btn" aria-label="Количка${count > 0 ? `, ${count} артикула` : ''}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <span class="pf-cart-btn-label">Количка</span>
+            <span class="pf-cart-badge" data-pf-cart-count ${count === 0 ? 'style="display:none"' : ''}>${count}</span>
+          </a>
+        </div>
       </div>
     </header>`;
 }
@@ -174,15 +176,20 @@ export function renderMobileCartBar() {
 }
 
 export function renderFooter() {
+  const year = new Date().getFullYear();
   return `
     <footer class="pf-footer">
       <div class="pf-footer-inner">
-        <p>© ${new Date().getFullYear()} Portfolio · Хранителни добавки</p>
-        <div class="pf-footer-links">
-          <a href="policy.html" target="_blank">Поверителност</a>
-          <a href="shipping.html" target="_blank">Доставка</a>
-          <a href="terms.html" target="_blank">Условия</a>
+        <div class="pf-footer-brand">
+          <strong>Portfolio</strong>
+          <span>Хранителни добавки с доставка до офис</span>
         </div>
+        <div class="pf-footer-links">
+          <a href="policy.html" target="_blank" rel="noopener">Поверителност</a>
+          <a href="shipping.html" target="_blank" rel="noopener">Доставка</a>
+          <a href="terms.html" target="_blank" rel="noopener">Условия</a>
+        </div>
+        <p class="pf-footer-copy">© ${year} Portfolio · Всички права запазени</p>
       </div>
     </footer>`;
 }
