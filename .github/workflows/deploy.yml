@@ -131,7 +131,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$FITNESS1_API_KEY" ]; then
-            echo "Skipping Portfolio catalog sync – FITNESS1_API_KEY not configured"
+            echo "::warning::FITNESS1_API_KEY not in GitHub secrets – pre-deploy KV upload skipped."
+            echo "Catalog can still sync post-deploy if the key is set as a Worker secret (wrangler secret put FITNESS1_API_KEY)."
             exit 0
           fi
           node upload-portfolio-catalog.mjs
@@ -141,6 +142,25 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Sync Portfolio catalog (post-deploy fallback)
+        run: |
+          BASE="https://port.radilov-k.workers.dev"
+          sleep 5
+          code=$(curl -s -o /tmp/boot.json -w "%{http_code}" "${BASE}/portfolio/bootstrap")
+          if [ "$code" = "200" ]; then
+            echo "Portfolio catalog already in KV"
+            exit 0
+          fi
+          echo "Bootstrap HTTP ${code} – calling POST ${BASE}/portfolio/sync ..."
+          sync=$(curl -s -X POST "${BASE}/portfolio/sync")
+          echo "Sync response: $(echo "$sync" | head -c 300)"
+          sleep 8
+          code2=$(curl -s -o /tmp/boot2.json -w "%{http_code}" "${BASE}/portfolio/bootstrap")
+          echo "Bootstrap after sync: HTTP ${code2}"
+          if [ "$code2" != "200" ]; then
+            echo "::warning::Portfolio catalog still not synced. Add FITNESS1_API_KEY to GitHub repo secrets (Settings → Secrets → Actions) or run: npx wrangler secret put FITNESS1_API_KEY"
+          fi
 
       - name: Smoke test Portfolio API (production)
         run: |
