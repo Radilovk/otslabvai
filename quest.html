@@ -54,342 +54,387 @@
           <div class="progress-bar-fill" id="progress-bar"></div>
         </div>
         <form id="questionnaire-form" novalidate>
-          <!-- СЪДЪРЖАНИЕТО НА ФОРМАТА Е НЕПРОМЕНЕНО -->
+
+          <!-- СТЪПКА 1: Лични данни -->
           <div class="form-step active" data-step="1">
-            <h2 class="step-title">Стъпка 1: За Вас</h2>
+            <h2 class="step-title">Стъпка 1: Лични данни</h2>
             <div class="form-group">
               <label>Пол</label>
               <div class="choice-group">
-                <label class="choice-item" for="male"
-                  ><input
-                    type="radio"
-                    id="male"
-                    name="gender"
-                    value="male"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label">Мъж</span></label
-                >
-                <label class="choice-item" for="female"
-                  ><input
-                    type="radio"
-                    id="female"
-                    name="gender"
-                    value="female"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label">Жена</span></label
-                >
+                <label class="choice-item" for="male"><input type="radio" id="male" name="gender" value="male" /><span class="checkmark"></span><span class="choice-label">Мъж</span></label>
+                <label class="choice-item" for="female"><input type="radio" id="female" name="gender" value="female" /><span class="checkmark"></span><span class="choice-label">Жена</span></label>
               </div>
               <div class="error-message"></div>
             </div>
             <div class="form-group">
               <label for="age">Възраст</label>
-              <input
-                type="number"
-                id="age"
-                name="age"
-                placeholder="Години"
-                min="18"
-                max="100"
-              />
+              <input type="number" id="age" name="age" placeholder="Години" min="18" max="100" />
               <div class="error-message"></div>
             </div>
             <div class="form-group">
               <label for="height">Ръст (в см)</label>
-              <input
-                type="number"
-                id="height"
-                name="height"
-                placeholder="180"
-                min="100"
-                max="250"
-              />
+              <input type="number" id="height" name="height" placeholder="170" min="100" max="250" />
               <div class="error-message"></div>
             </div>
             <div class="form-group">
               <label for="weight">Тегло (в кг)</label>
-              <input
-                type="number"
-                id="weight"
-                name="weight"
-                placeholder="80"
-                min="30"
-                max="300"
-              />
+              <input type="number" id="weight" name="weight" placeholder="75" min="30" max="300" />
               <div class="error-message"></div>
             </div>
           </div>
+
+          <!-- СТЪПКА 2: Здравословно състояние (обединен въпрос) -->
           <div class="form-step" data-step="2">
-            <h2 class="step-title">Стъпка 2: Вашите Цели</h2>
+            <h2 class="step-title">Стъпка 2: Здравословно състояние</h2>
             <div class="form-group">
-              <label
-                >Моля, отбележете всички цели, които са важни за Вас:</label
-              >
+              <label>Имате ли някое от следните заболявания или състояния? <em>(може да изберете повече от едно)</em></label>
               <div class="choice-group">
-                <label class="choice-item" for="goal1"
-                  ><input
-                    type="checkbox"
-                    id="goal1"
-                    name="goals"
-                    value="anti-aging"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label"
-                    >Анти-ейджинг и виталност</span
-                  ></label
-                >
-                <label class="choice-item" for="goal2"
-                  ><input
-                    type="checkbox"
-                    id="goal2"
-                    name="goals"
-                    value="skin-health"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label"
-                    >Подобряване на кожата</span
-                  ></label
-                >
-                <label class="choice-item" for="goal3"
-                  ><input
-                    type="checkbox"
-                    id="goal3"
-                    name="goals"
-                    value="cognitive"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label"
-                    >Фокус, памет и настроение</span
-                  ></label
-                >
-                <label class="choice-item" for="goal4"
-                  ><input
-                    type="checkbox"
-                    id="goal4"
-                    name="goals"
-                    value="sleep"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label">Подобряване на съня</span></label
-                >
-                <label class="choice-item" for="goal5"
-                  ><input
-                    type="checkbox"
-                    id="goal5"
-                    name="goals"
-                    value="muscle-gain"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label"
-                    >Покачване на мускулна маса</span
-                  ></label
-                >
-                <label class="choice-item" for="goal6"
-                  ><input
-                    type="checkbox"
-                    id="goal6"
-                    name="goals"
-                    value="fat-loss"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label">Изгаряне на мазнини</span></label
-                >
-                <label class="choice-item" for="goal7"
-                  ><input
-                    type="checkbox"
-                    id="goal7"
-                    name="goals"
-                    value="recovery"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label"
-                    >Възстановяване (тренировки/травми)</span
-                  ></label
-                >
-                <label class="choice-item" for="goal8"
-                  ><input
-                    type="checkbox"
-                    id="goal8"
-                    name="goals"
-                    value="libido"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label"
-                    >Повишаване на либидото</span
-                  ></label
-                >
+                <label class="choice-item" for="hc1"><input type="checkbox" id="hc1" name="health_conditions" value="diabetes" /><span class="checkmark"></span><span class="choice-label">Диабет / Инсулинова резистентност</span></label>
+                <label class="choice-item" for="hc2"><input type="checkbox" id="hc2" name="health_conditions" value="autoimmune" /><span class="checkmark"></span><span class="choice-label">Автоимунни заболявания</span></label>
+                <label class="choice-item" for="hc3"><input type="checkbox" id="hc3" name="health_conditions" value="digestive" /><span class="checkmark"></span><span class="choice-label">Храносмилателни проблеми (СРЧ, рефлукс, гастрит)</span></label>
+                <label class="choice-item" for="hc4"><input type="checkbox" id="hc4" name="health_conditions" value="cardiovascular" /><span class="checkmark"></span><span class="choice-label">Сърдечно-съдови заболявания</span></label>
+                <label class="choice-item" for="hc5"><input type="checkbox" id="hc5" name="health_conditions" value="endocrine" /><span class="checkmark"></span><span class="choice-label">Ендокринни нарушения (щитовидна жлеза и др.)</span></label>
+                <label class="choice-item" for="hc6"><input type="checkbox" id="hc6" name="health_conditions" value="hypertension" /><span class="checkmark"></span><span class="choice-label">Хипертония (високо кръвно)</span></label>
+                <label class="choice-item" for="hc7"><input type="checkbox" id="hc7" name="health_conditions" value="cholesterol" /><span class="checkmark"></span><span class="choice-label">Висок холестерол / Дислипидемия</span></label>
+                <label class="choice-item" for="hc8"><input type="checkbox" id="hc8" name="health_conditions" value="joint" /><span class="checkmark"></span><span class="choice-label">Ставни / Мускулно-скелетни проблеми</span></label>
+                <label class="choice-item" for="hc9"><input type="checkbox" id="hc9" name="health_conditions" value="respiratory" /><span class="checkmark"></span><span class="choice-label">Астма / Респираторни заболявания</span></label>
+                <label class="choice-item" for="hc10"><input type="checkbox" id="hc10" name="health_conditions" value="metabolic" /><span class="checkmark"></span><span class="choice-label">Затлъстяване / Метаболитен синдром</span></label>
               </div>
-              <div class="error-message"></div>
-            </div>
-            <div class="form-group">
-              <label for="main-goal"
-                >Опишете с 1-2 изречения най-важната си цел</label
-              >
-              <textarea
-                id="main-goal"
-                name="main_goal"
-                placeholder="Пример: Искам да повиша енергията си през деня и да подобря възстановяването си след фитнес."
-              ></textarea>
+              <div class="choice-group" style="margin-top: 1rem;">
+                <label style="display:block; font-weight:600; color:var(--text-secondary); font-size:0.9rem; margin-bottom:0.5rem;">Състояния:</label>
+                <label class="choice-item" for="hc11"><input type="checkbox" id="hc11" name="health_conditions" value="post-pregnancy" /><span class="checkmark"></span><span class="choice-label">След бременност</span></label>
+                <label class="choice-item" for="hc12"><input type="checkbox" id="hc12" name="health_conditions" value="emotional-eating" /><span class="checkmark"></span><span class="choice-label">Емоционално хранене</span></label>
+                <label class="choice-item" for="hc13"><input type="checkbox" id="hc13" name="health_conditions" value="anxiety" /><span class="checkmark"></span><span class="choice-label">Тревожност</span></label>
+                <label class="choice-item" for="hc14"><input type="checkbox" id="hc14" name="health_conditions" value="menopause" /><span class="checkmark"></span><span class="choice-label">Менопауза</span></label>
+                <label class="choice-item" for="hc15"><input type="checkbox" id="hc15" name="health_conditions" value="other" data-other-toggle="health_conditions_other_text" /><span class="checkmark"></span><span class="choice-label">Друго</span></label>
+              </div>
+              <input type="text" id="health_conditions_other_text" name="health_conditions_other_text" class="other-text-input hidden" placeholder="Моля, опишете..." />
               <div class="error-message"></div>
             </div>
           </div>
+
+          <!-- СТЪПКА 3: Вашата цел (обединен въпрос) -->
           <div class="form-step" data-step="3">
-            <h2 class="step-title">Стъпка 3: Здраве</h2>
+            <h2 class="step-title">Стъпка 3: Вашата цел</h2>
             <div class="form-group">
-              <label for="conditions"
-                >Имате ли диагностицирани заболявания или състояния?</label
-              >
-              <textarea
-                id="conditions"
-                name="conditions"
-                placeholder="Пример: Високо кръвно, диабет... Ако нямате, напишете 'Нямам'."
-              ></textarea>
+              <label>Коя е основната Ви цел? <em>(може да изберете повече от една)</em></label>
+              <div class="choice-group">
+                <label class="choice-item" for="goal1"><input type="checkbox" id="goal1" name="goals" value="weight-loss" /><span class="checkmark"></span><span class="choice-label">Отслабване</span></label>
+                <label class="choice-item" for="goal2"><input type="checkbox" id="goal2" name="goals" value="health-improvement" /><span class="checkmark"></span><span class="choice-label">Подобряване на здравето</span></label>
+                <label class="choice-item" for="goal3"><input type="checkbox" id="goal3" name="goals" value="anti-aging" /><span class="checkmark"></span><span class="choice-label">Антиейджинг</span></label>
+                <label class="choice-item" for="goal4"><input type="checkbox" id="goal4" name="goals" value="body-toning" /><span class="checkmark"></span><span class="choice-label">Стягане и оформяне на тялото</span></label>
+                <label class="choice-item" for="goal5"><input type="checkbox" id="goal5" name="goals" value="detox" /><span class="checkmark"></span><span class="choice-label">Детокс и прочистване</span></label>
+                <label class="choice-item" for="goal6"><input type="checkbox" id="goal6" name="goals" value="belly-fat" /><span class="checkmark"></span><span class="choice-label">Изчистване на коремните мазнини</span></label>
+                <label class="choice-item" for="goal7"><input type="checkbox" id="goal7" name="goals" value="anti-cellulite" /><span class="checkmark"></span><span class="choice-label">Антицелулитна програма</span></label>
+                <label class="choice-item" for="goal8"><input type="checkbox" id="goal8" name="goals" value="post-pregnancy-recovery" /><span class="checkmark"></span><span class="choice-label">Възстановяване на тялото след бременност</span></label>
+                <label class="choice-item" for="goal9"><input type="checkbox" id="goal9" name="goals" value="other" data-other-toggle="goals_other_text" /><span class="checkmark"></span><span class="choice-label">Друго</span></label>
+              </div>
+              <input type="text" id="goals_other_text" name="goals_other_text" class="other-text-input hidden" placeholder="Опишете вашата цел..." />
               <div class="error-message"></div>
             </div>
             <div class="form-group">
-              <label for="medications"
-                >Приемате ли лекарства или други добавки?</label
-              >
-              <textarea
-                id="medications"
-                name="medications"
-                placeholder="Избройте всичко. Ако не, напишете 'Не приемам'."
-              ></textarea>
-              <div class="error-message"></div>
-            </div>
-            <div class="form-group">
-              <label for="allergies">Имате ли известни алергии?</label>
-              <textarea
-                id="allergies"
-                name="allergies"
-                placeholder="Ако нямате, напишете 'Нямам'."
-              ></textarea>
+              <label for="main-goal">Опишете с 1-2 изречения най-важната си цел</label>
+              <textarea id="main-goal" name="main_goal" placeholder="Пример: Искам да отслабна 10 кг и да подобря храносмилането си."></textarea>
               <div class="error-message"></div>
             </div>
           </div>
+
+          <!-- СТЪПКА 4: Медицинска информация -->
           <div class="form-step" data-step="4">
-            <h2 class="step-title">Стъпка 4: Начин на живот</h2>
+            <h2 class="step-title">Стъпка 4: Медицинска информация</h2>
             <div class="form-group">
-              <label>Физическа активност (тренировки на седмица)</label>
+              <label for="conditions_detail">Ако имате заболявания, моля опишете ги по-подробно</label>
+              <textarea id="conditions_detail" name="conditions_detail" placeholder="Пример: Диагностициран с диабет тип 2 преди 3 години. Ако нямате — напишете 'Нямам'."></textarea>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="medications">Приемате ли лекарства или хранителни добавки?</label>
+              <textarea id="medications" name="medications" placeholder="Избройте всичко. Ако не — напишете 'Не приемам'."></textarea>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="allergies">Имате ли алергии или хранителни непоносимости?</label>
+              <textarea id="allergies" name="allergies" placeholder="Ако нямате — напишете 'Нямам'."></textarea>
+              <div class="error-message"></div>
+            </div>
+          </div>
+
+          <!-- СТЪПКА 5: Хранителни навици -->
+          <div class="form-step" data-step="5">
+            <h2 class="step-title">Стъпка 5: Хранителни навици</h2>
+            <div class="form-group">
+              <label>Колко хранения на ден имате?</label>
               <div class="choice-group">
-                <label class="choice-item" for="activity1"
-                  ><input
-                    type="radio"
-                    id="activity1"
-                    name="activity"
-                    value="0"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label">0 (заседнал)</span></label
-                >
-                <label class="choice-item" for="activity2"
-                  ><input
-                    type="radio"
-                    id="activity2"
-                    name="activity"
-                    value="1-2"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label">1-2 пъти</span></label
-                >
-                <label class="choice-item" for="activity3"
-                  ><input
-                    type="radio"
-                    id="activity3"
-                    name="activity"
-                    value="3-4"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label">3-4 пъти</span></label
-                >
-                <label class="choice-item" for="activity4"
-                  ><input
-                    type="radio"
-                    id="activity4"
-                    name="activity"
-                    value="5+"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label">5+ пъти</span></label
-                >
+                <label class="choice-item" for="meals1"><input type="radio" id="meals1" name="meals_per_day" value="1-2" /><span class="checkmark"></span><span class="choice-label">1-2</span></label>
+                <label class="choice-item" for="meals2"><input type="radio" id="meals2" name="meals_per_day" value="3" /><span class="checkmark"></span><span class="choice-label">3</span></label>
+                <label class="choice-item" for="meals3"><input type="radio" id="meals3" name="meals_per_day" value="4-5" /><span class="checkmark"></span><span class="choice-label">4-5</span></label>
+                <label class="choice-item" for="meals4"><input type="radio" id="meals4" name="meals_per_day" value="6+" /><span class="checkmark"></span><span class="choice-label">6 или повече</span></label>
               </div>
               <div class="error-message"></div>
             </div>
+            <div class="form-group">
+              <label>Пропускате ли закуска?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="breakfast1"><input type="radio" id="breakfast1" name="skip_breakfast" value="always" /><span class="checkmark"></span><span class="choice-label">Да, винаги</span></label>
+                <label class="choice-item" for="breakfast2"><input type="radio" id="breakfast2" name="skip_breakfast" value="sometimes" /><span class="checkmark"></span><span class="choice-label">Понякога</span></label>
+                <label class="choice-item" for="breakfast3"><input type="radio" id="breakfast3" name="skip_breakfast" value="never" /><span class="checkmark"></span><span class="choice-label">Не, закусвам всеки ден</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Колко вода пиете дневно?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="water1"><input type="radio" id="water1" name="water_intake" value="<1L" /><span class="checkmark"></span><span class="choice-label">Под 1 литър</span></label>
+                <label class="choice-item" for="water2"><input type="radio" id="water2" name="water_intake" value="1-1.5L" /><span class="checkmark"></span><span class="choice-label">1 – 1.5 литра</span></label>
+                <label class="choice-item" for="water3"><input type="radio" id="water3" name="water_intake" value="1.5-2.5L" /><span class="checkmark"></span><span class="choice-label">1.5 – 2.5 литра</span></label>
+                <label class="choice-item" for="water4"><input type="radio" id="water4" name="water_intake" value="2.5L+" /><span class="checkmark"></span><span class="choice-label">Над 2.5 литра</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Консумирате ли захарни или газирани напитки?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="sugar1"><input type="radio" id="sugar1" name="sugary_drinks" value="never" /><span class="checkmark"></span><span class="choice-label">Не</span></label>
+                <label class="choice-item" for="sugar2"><input type="radio" id="sugar2" name="sugary_drinks" value="rarely" /><span class="checkmark"></span><span class="choice-label">Рядко</span></label>
+                <label class="choice-item" for="sugar3"><input type="radio" id="sugar3" name="sugary_drinks" value="sometimes" /><span class="checkmark"></span><span class="choice-label">Понякога</span></label>
+                <label class="choice-item" for="sugar4"><input type="radio" id="sugar4" name="sugary_drinks" value="daily" /><span class="checkmark"></span><span class="choice-label">Ежедневно</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="typical_diet">Опишете какво обикновено ядете в един типичен ден</label>
+              <textarea id="typical_diet" name="typical_diet" placeholder="Закуска: ..., Обяд: ..., Вечеря: ..., Междинни хранения: ..."></textarea>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Спазвате ли специален хранителен режим?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="diet1"><input type="radio" id="diet1" name="special_diet" value="none" /><span class="checkmark"></span><span class="choice-label">Не, нямам специален режим</span></label>
+                <label class="choice-item" for="diet2"><input type="radio" id="diet2" name="special_diet" value="vegetarian" /><span class="checkmark"></span><span class="choice-label">Вегетарианец</span></label>
+                <label class="choice-item" for="diet3"><input type="radio" id="diet3" name="special_diet" value="vegan" /><span class="checkmark"></span><span class="choice-label">Веган</span></label>
+                <label class="choice-item" for="diet4"><input type="radio" id="diet4" name="special_diet" value="gluten-free" /><span class="checkmark"></span><span class="choice-label">Безглутенов</span></label>
+                <label class="choice-item" for="diet5"><input type="radio" id="diet5" name="special_diet" value="keto" /><span class="checkmark"></span><span class="choice-label">Кето / Нисковъглехидратен</span></label>
+                <label class="choice-item" for="diet6"><input type="radio" id="diet6" name="special_diet" value="other" data-other-toggle="special_diet_other_text" /><span class="checkmark"></span><span class="choice-label">Друго</span></label>
+              </div>
+              <input type="text" id="special_diet_other_text" name="special_diet_other_text" class="other-text-input hidden" placeholder="Опишете вашия режим..." />
+              <div class="error-message"></div>
+            </div>
+          </div>
+
+          <!-- СТЪПКА 6: Тяло и измервания -->
+          <div class="form-step" data-step="6">
+            <h2 class="step-title">Стъпка 6: Тяло и измервания</h2>
+            <div class="form-group">
+              <label for="target_weight">Желано тегло (в кг)</label>
+              <input type="number" id="target_weight" name="target_weight" placeholder="65" min="30" max="200" />
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="waist">Обиколка на талията (в см, по избор)</label>
+              <input type="number" id="waist" name="waist" placeholder="80" min="40" max="200" />
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Имате ли видим целулит?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="cellulite1"><input type="radio" id="cellulite1" name="cellulite" value="none" /><span class="checkmark"></span><span class="choice-label">Не</span></label>
+                <label class="choice-item" for="cellulite2"><input type="radio" id="cellulite2" name="cellulite" value="mild" /><span class="checkmark"></span><span class="choice-label">Лек</span></label>
+                <label class="choice-item" for="cellulite3"><input type="radio" id="cellulite3" name="cellulite" value="moderate" /><span class="checkmark"></span><span class="choice-label">Умерен</span></label>
+                <label class="choice-item" for="cellulite4"><input type="radio" id="cellulite4" name="cellulite" value="severe" /><span class="checkmark"></span><span class="choice-label">Силно изразен</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Кои зони на тялото са проблемни за Вас?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="zone1"><input type="checkbox" id="zone1" name="problem_zones" value="belly" /><span class="checkmark"></span><span class="choice-label">Корем</span></label>
+                <label class="choice-item" for="zone2"><input type="checkbox" id="zone2" name="problem_zones" value="thighs" /><span class="checkmark"></span><span class="choice-label">Бедра</span></label>
+                <label class="choice-item" for="zone3"><input type="checkbox" id="zone3" name="problem_zones" value="arms" /><span class="checkmark"></span><span class="choice-label">Ръце</span></label>
+                <label class="choice-item" for="zone4"><input type="checkbox" id="zone4" name="problem_zones" value="hips" /><span class="checkmark"></span><span class="choice-label">Ханш</span></label>
+                <label class="choice-item" for="zone5"><input type="checkbox" id="zone5" name="problem_zones" value="back" /><span class="checkmark"></span><span class="choice-label">Гръб</span></label>
+                <label class="choice-item" for="zone6"><input type="checkbox" id="zone6" name="problem_zones" value="all" /><span class="checkmark"></span><span class="choice-label">Цялото тяло</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+          </div>
+
+          <!-- СТЪПКА 7: Физическа активност -->
+          <div class="form-step" data-step="7">
+            <h2 class="step-title">Стъпка 7: Физическа активност</h2>
+            <div class="form-group">
+              <label>Колко пъти седмично тренирате?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="activity1"><input type="radio" id="activity1" name="activity" value="0" /><span class="checkmark"></span><span class="choice-label">0 (заседнал начин на живот)</span></label>
+                <label class="choice-item" for="activity2"><input type="radio" id="activity2" name="activity" value="1-2" /><span class="checkmark"></span><span class="choice-label">1-2 пъти</span></label>
+                <label class="choice-item" for="activity3"><input type="radio" id="activity3" name="activity" value="3-4" /><span class="checkmark"></span><span class="choice-label">3-4 пъти</span></label>
+                <label class="choice-item" for="activity4"><input type="radio" id="activity4" name="activity" value="5+" /><span class="checkmark"></span><span class="choice-label">5+ пъти</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Какъв тип тренировки правите? <em>(може повече от един)</em></label>
+              <div class="choice-group">
+                <label class="choice-item" for="extype1"><input type="checkbox" id="extype1" name="exercise_types" value="cardio" /><span class="checkmark"></span><span class="choice-label">Кардио (бягане, колоездене)</span></label>
+                <label class="choice-item" for="extype2"><input type="checkbox" id="extype2" name="exercise_types" value="strength" /><span class="checkmark"></span><span class="choice-label">Силови тренировки</span></label>
+                <label class="choice-item" for="extype3"><input type="checkbox" id="extype3" name="exercise_types" value="yoga" /><span class="checkmark"></span><span class="choice-label">Йога / Пилатес</span></label>
+                <label class="choice-item" for="extype4"><input type="checkbox" id="extype4" name="exercise_types" value="walking" /><span class="checkmark"></span><span class="choice-label">Ходене</span></label>
+                <label class="choice-item" for="extype5"><input type="checkbox" id="extype5" name="exercise_types" value="swimming" /><span class="checkmark"></span><span class="choice-label">Плуване</span></label>
+                <label class="choice-item" for="extype6"><input type="checkbox" id="extype6" name="exercise_types" value="none" /><span class="checkmark"></span><span class="choice-label">Не тренирам</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Какъв е характерът на работата Ви?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="work1"><input type="radio" id="work1" name="work_type" value="sedentary" /><span class="checkmark"></span><span class="choice-label">Заседнал (офис/бюро)</span></label>
+                <label class="choice-item" for="work2"><input type="radio" id="work2" name="work_type" value="semi-active" /><span class="checkmark"></span><span class="choice-label">Полуактивен</span></label>
+                <label class="choice-item" for="work3"><input type="radio" id="work3" name="work_type" value="active" /><span class="checkmark"></span><span class="choice-label">Физически активен</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Средно колко стъпки правите на ден?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="steps1"><input type="radio" id="steps1" name="daily_steps" value="<3000" /><span class="checkmark"></span><span class="choice-label">Под 3 000</span></label>
+                <label class="choice-item" for="steps2"><input type="radio" id="steps2" name="daily_steps" value="3000-6000" /><span class="checkmark"></span><span class="choice-label">3 000 – 6 000</span></label>
+                <label class="choice-item" for="steps3"><input type="radio" id="steps3" name="daily_steps" value="6000-10000" /><span class="checkmark"></span><span class="choice-label">6 000 – 10 000</span></label>
+                <label class="choice-item" for="steps4"><input type="radio" id="steps4" name="daily_steps" value="10000+" /><span class="checkmark"></span><span class="choice-label">Над 10 000</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+          </div>
+
+          <!-- СТЪПКА 8: Сън и стрес -->
+          <div class="form-step" data-step="8">
+            <h2 class="step-title">Стъпка 8: Сън и стрес</h2>
             <div class="form-group">
               <label for="sleep">Средно часове сън на нощ?</label>
-              <input
-                type="number"
-                id="sleep"
-                name="sleep"
-                placeholder="8"
-                min="1"
-                max="12"
-              />
+              <input type="number" id="sleep" name="sleep" placeholder="7" min="1" max="16" />
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Как бихте оценили качеството на съня си?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="squality1"><input type="radio" id="squality1" name="sleep_quality" value="excellent" /><span class="checkmark"></span><span class="choice-label">Отлично</span></label>
+                <label class="choice-item" for="squality2"><input type="radio" id="squality2" name="sleep_quality" value="good" /><span class="checkmark"></span><span class="choice-label">Добро</span></label>
+                <label class="choice-item" for="squality3"><input type="radio" id="squality3" name="sleep_quality" value="average" /><span class="checkmark"></span><span class="choice-label">Средно</span></label>
+                <label class="choice-item" for="squality4"><input type="radio" id="squality4" name="sleep_quality" value="poor" /><span class="checkmark"></span><span class="choice-label">Лошо</span></label>
+              </div>
               <div class="error-message"></div>
             </div>
             <div class="form-group">
               <label for="stress">Ниво на ежедневен стрес (от 1 до 10)</label>
-              <input
-                type="number"
-                id="stress"
-                name="stress"
-                placeholder="7"
-                min="1"
-                max="10"
-              />
+              <input type="number" id="stress" name="stress" placeholder="5" min="1" max="10" />
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Как се справяте със стреса? <em>(може повече от един)</em></label>
+              <div class="choice-group">
+                <label class="choice-item" for="stress_cope1"><input type="checkbox" id="stress_cope1" name="stress_coping" value="sport" /><span class="checkmark"></span><span class="choice-label">Спорт / Физическа активност</span></label>
+                <label class="choice-item" for="stress_cope2"><input type="checkbox" id="stress_cope2" name="stress_coping" value="meditation" /><span class="checkmark"></span><span class="choice-label">Медитация / Дихателни упражнения</span></label>
+                <label class="choice-item" for="stress_cope3"><input type="checkbox" id="stress_cope3" name="stress_coping" value="eating" /><span class="checkmark"></span><span class="choice-label">Ядене</span></label>
+                <label class="choice-item" for="stress_cope4"><input type="checkbox" id="stress_cope4" name="stress_coping" value="alcohol" /><span class="checkmark"></span><span class="choice-label">Алкохол</span></label>
+                <label class="choice-item" for="stress_cope5"><input type="checkbox" id="stress_cope5" name="stress_coping" value="socializing" /><span class="checkmark"></span><span class="choice-label">Социализиране с близки</span></label>
+                <label class="choice-item" for="stress_cope6"><input type="checkbox" id="stress_cope6" name="stress_coping" value="nothing" /><span class="checkmark"></span><span class="choice-label">Нищо конкретно</span></label>
+              </div>
               <div class="error-message"></div>
             </div>
           </div>
-          <div class="form-step" data-step="5">
-            <h2 class="step-title">Стъпка 5: Контакт и Финализиране</h2>
+
+          <!-- СТЪПКА 9: Навици -->
+          <div class="form-step" data-step="9">
+            <h2 class="step-title">Стъпка 9: Навици</h2>
             <div class="form-group">
-              <label>За какъв период планирате приема?</label>
+              <label>Пушите ли?</label>
               <div class="choice-group">
-                <label class="choice-item" for="duration1"
-                  ><input
-                    type="radio"
-                    id="duration1"
-                    name="duration"
-                    value="1-2m"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label">1-2 месеца</span></label
-                >
-                <label class="choice-item" for="duration2"
-                  ><input
-                    type="radio"
-                    id="duration2"
-                    name="duration"
-                    value="3-4m"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label">3-4 месеца</span></label
-                >
-                <label class="choice-item" for="duration3"
-                  ><input
-                    type="radio"
-                    id="duration3"
-                    name="duration"
-                    value="6m+"
-                  /><span class="checkmark"></span
-                  ><span class="choice-label">6+ месеца</span></label
-                >
+                <label class="choice-item" for="smoke1"><input type="radio" id="smoke1" name="smoking" value="no" /><span class="checkmark"></span><span class="choice-label">Не</span></label>
+                <label class="choice-item" for="smoke2"><input type="radio" id="smoke2" name="smoking" value="yes-light" /><span class="checkmark"></span><span class="choice-label">Да, до 10 цигари на ден</span></label>
+                <label class="choice-item" for="smoke3"><input type="radio" id="smoke3" name="smoking" value="yes-heavy" /><span class="checkmark"></span><span class="choice-label">Да, повече от 10 на ден</span></label>
+                <label class="choice-item" for="smoke4"><input type="radio" id="smoke4" name="smoking" value="former" /><span class="checkmark"></span><span class="choice-label">Бивш пушач</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Консумирате ли алкохол?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="alc1"><input type="radio" id="alc1" name="alcohol" value="never" /><span class="checkmark"></span><span class="choice-label">Не</span></label>
+                <label class="choice-item" for="alc2"><input type="radio" id="alc2" name="alcohol" value="rarely" /><span class="checkmark"></span><span class="choice-label">Рядко (1-2 пъти месечно)</span></label>
+                <label class="choice-item" for="alc3"><input type="radio" id="alc3" name="alcohol" value="moderate" /><span class="checkmark"></span><span class="choice-label">Умерено (1-2 пъти седмично)</span></label>
+                <label class="choice-item" for="alc4"><input type="radio" id="alc4" name="alcohol" value="frequent" /><span class="checkmark"></span><span class="choice-label">Редовно (почти ежедневно)</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Колко кафе/чай с кофеин пиете на ден?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="coffee1"><input type="radio" id="coffee1" name="caffeine" value="0" /><span class="checkmark"></span><span class="choice-label">Не пия</span></label>
+                <label class="choice-item" for="coffee2"><input type="radio" id="coffee2" name="caffeine" value="1" /><span class="checkmark"></span><span class="choice-label">1 чаша</span></label>
+                <label class="choice-item" for="coffee3"><input type="radio" id="coffee3" name="caffeine" value="2-3" /><span class="checkmark"></span><span class="choice-label">2-3 чаши</span></label>
+                <label class="choice-item" for="coffee4"><input type="radio" id="coffee4" name="caffeine" value="4+" /><span class="checkmark"></span><span class="choice-label">4 или повече</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+          </div>
+
+          <!-- СТЪПКА 10: Психологически аспекти -->
+          <div class="form-step" data-step="10">
+            <h2 class="step-title">Стъпка 10: Психологически аспекти</h2>
+            <div class="form-group">
+              <label>Спазвали ли сте диета или програма за отслабване преди?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="prevdiet1"><input type="radio" id="prevdiet1" name="previous_diets" value="no" /><span class="checkmark"></span><span class="choice-label">Не, никога</span></label>
+                <label class="choice-item" for="prevdiet2"><input type="radio" id="prevdiet2" name="previous_diets" value="yes-fail" /><span class="checkmark"></span><span class="choice-label">Да, но без успех</span></label>
+                <label class="choice-item" for="prevdiet3"><input type="radio" id="prevdiet3" name="previous_diets" value="yes-temporary" /><span class="checkmark"></span><span class="choice-label">Да, с временен резултат</span></label>
+                <label class="choice-item" for="prevdiet4"><input type="radio" id="prevdiet4" name="previous_diets" value="yes-success" /><span class="checkmark"></span><span class="choice-label">Да, успешно</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="motivation">Какво е нивото ви на мотивация? (от 1 до 10)</label>
+              <input type="number" id="motivation" name="motivation" placeholder="8" min="1" max="10" />
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label>Имате ли подкрепа от близки за постигане на целите ви?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="support1"><input type="radio" id="support1" name="support" value="yes" /><span class="checkmark"></span><span class="choice-label">Да</span></label>
+                <label class="choice-item" for="support2"><input type="radio" id="support2" name="support" value="partial" /><span class="checkmark"></span><span class="choice-label">Частично</span></label>
+                <label class="choice-item" for="support3"><input type="radio" id="support3" name="support" value="no" /><span class="checkmark"></span><span class="choice-label">Не</span></label>
+              </div>
+              <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+              <label for="additional_info">Допълнителна информация или коментар</label>
+              <textarea id="additional_info" name="additional_info" placeholder="Има ли нещо друго, което бихте искали да споделите?"></textarea>
+              <div class="error-message"></div>
+            </div>
+          </div>
+
+          <!-- СТЪПКА 11: Контакт и Финализиране -->
+          <div class="form-step" data-step="11">
+            <h2 class="step-title">Стъпка 11: Контакт и Финализиране</h2>
+            <div class="form-group">
+              <label>За какъв период планирате програмата?</label>
+              <div class="choice-group">
+                <label class="choice-item" for="duration1"><input type="radio" id="duration1" name="duration" value="1-2m" /><span class="checkmark"></span><span class="choice-label">1-2 месеца</span></label>
+                <label class="choice-item" for="duration2"><input type="radio" id="duration2" name="duration" value="3-4m" /><span class="checkmark"></span><span class="choice-label">3-4 месеца</span></label>
+                <label class="choice-item" for="duration3"><input type="radio" id="duration3" name="duration" value="6m+" /><span class="checkmark"></span><span class="choice-label">6+ месеца</span></label>
               </div>
               <div class="error-message"></div>
             </div>
             <div class="form-group">
               <label for="name">Име</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                placeholder="Вашето име"
-              />
+              <input type="text" id="name" name="name" placeholder="Вашето име" />
               <div class="error-message"></div>
             </div>
             <div class="form-group">
               <label for="email">Имейл</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="primer@email.com"
-              />
+              <input type="email" id="email" name="email" placeholder="primer@email.com" />
               <div class="error-message"></div>
             </div>
             <div class="form-group">
               <label for="phone">Телефон</label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                placeholder="0888123456"
-              />
+              <input type="tel" id="phone" name="phone" placeholder="0888123456" />
               <div class="error-message"></div>
             </div>
             <div class="form-group">
@@ -398,14 +443,27 @@
                 <label class="choice-item" for="consent">
                   <input type="checkbox" id="consent" name="consent" />
                   <span class="checkmark"></span>
-                  <span class="choice-label"
-                    >Потвърждавам, че предоставената информация е точна.</span
-                  >
+                  <span class="choice-label">Потвърждавам, че предоставената информация е точна.</span>
                 </label>
               </div>
               <div class="error-message"></div>
             </div>
           </div>
+
+          <!-- СТЪПКА 12: AI Допълнителни въпроси -->
+          <div class="form-step" data-step="12" id="ai-followup-step">
+            <h2 class="step-title">Стъпка 12: Допълнителни уточняващи въпроси</h2>
+            <p class="ai-followup-intro">На база Вашите отговори, имаме няколко допълнителни въпроса, за да изготвим максимално точна програма за Вас.</p>
+            <div id="ai-followup-loading" class="ai-followup-loading">
+              <div class="loading-animation" style="width:50px;height:50px;margin:1rem auto;"></div>
+              <p>Генерираме уточняващи въпроси...</p>
+            </div>
+            <div id="ai-followup-questions" class="hidden">
+              <!-- AI-генерирани въпроси ще се добавят тук динамично -->
+            </div>
+            <div id="ai-followup-error" class="hidden" style="color:var(--error-color); margin-top:1rem;"></div>
+          </div>
+
           <div class="navigation-buttons">
             <button type="button" class="nav-btn" id="back-btn">Назад</button>
             <button type="button" class="nav-btn" id="next-btn">Напред</button>
