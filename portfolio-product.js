@@ -1,6 +1,6 @@
 import {
   escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage,
-  isWishlisted, toggleWishlist
+  isWishlisted, toggleWishlist, icon
 } from './portfolio-shared.js';
 import { ensureBootstrap, getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
 
@@ -83,10 +83,10 @@ function renderTabs() {
       </div>
       <div class="pf-tab-panel ${activeTab === 'shipping' ? 'active' : ''}" data-panel="shipping">
         <ul class="pf-shipping-info">
-          <li>🚚 Доставка до офис на Speedy или Econt, или до личен адрес</li>
-          <li>💳 Плащане с наложен платеж – плащате при получаване</li>
-          <li>📦 Поръчката се преглежда преди изпращане към доставчик</li>
-          <li>↩️ Право на връщане в срок съгласно политиката ни</li>
+          <li>${icon('truck')}<span>Доставка до офис на Speedy или Econt, или до личен адрес</span></li>
+          <li>${icon('card')}<span>Плащане с наложен платеж – плащате при получаване</span></li>
+          <li>${icon('box')}<span>Поръчката се преглежда преди изпращане към доставчик</span></li>
+          <li>${icon('undo')}<span>Право на връщане в срок съгласно политиката ни</span></li>
         </ul>
       </div>
     </div>`;
@@ -169,9 +169,9 @@ function render() {
         </div>
 
         <ul class="pf-trust-list">
-          <li>💳 Наложен платеж</li>
-          <li>🚚 До офис или адрес</li>
-          <li>✅ Оригинален продукт</li>
+          <li>${icon('card', { size: 16 })}<span>Наложен платеж</span></li>
+          <li>${icon('truck', { size: 16 })}<span>До офис или адрес</span></li>
+          <li>${icon('shieldCheck', { size: 16 })}<span>Оригинален продукт</span></li>
         </ul>
 
         ${renderTabs()}

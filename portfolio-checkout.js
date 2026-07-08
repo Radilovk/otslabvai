@@ -1,6 +1,6 @@
 import { API_URL } from './config.js';
 import {
-  CART_KEY, getCart, saveCart, updateCartBadges, showToast, formatPrice, initPortfolioPage
+  CART_KEY, getCart, saveCart, updateCartBadges, showToast, formatPrice, initPortfolioPage, icon, escapeHtml
 } from './portfolio-shared.js';
 
 const SPEEDY_WIDGET_URL =
@@ -85,7 +85,7 @@ function renderCart() {
         </div>
       </div>
       <div class="pf-summary-price">${formatPrice(item.price * item.quantity)}</div>
-      <button type="button" class="pf-remove-btn" data-action="remove" data-idx="${idx}" aria-label="Премахни">×</button>
+      <button type="button" class="pf-remove-btn" data-action="remove" data-idx="${idx}" aria-label="Премахни">${icon('x', { size: 16 })}</button>
     </li>`).join('');
 
   submitBtn.disabled = false;
@@ -128,7 +128,10 @@ function toggleCourierWidgets() {
 function openSpeedyMap() {
   const modal = $('speedy-map-modal');
   const iframe = $('speedy-map-iframe');
-  if (!iframe.src) iframe.src = SPEEDY_WIDGET_URL;
+  // Must check the raw attribute, not the .src IDL property: an empty
+  // src="" attribute resolves through the DOM property to the page's own
+  // URL (truthy), so `!iframe.src` never fires and the widget never loads.
+  if (!iframe.getAttribute('src')) iframe.src = SPEEDY_WIDGET_URL;
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -153,13 +156,14 @@ function loadEcontOffices() {
       if (data?.offices) {
         allEcontOffices = data.offices;
         window._ekontLoaded = true;
-        status.textContent = '✓ Готово за търсене';
-        status.style.color = 'var(--pf-primary)';
+        status.innerHTML = `${icon('check', { size: 14 })}<span>Готово за търсене</span>`;
+        status.classList.add('pf-hint--ok');
       }
     })
     .catch(() => {
       status.textContent = 'Грешка при зареждане. Опитайте отново.';
-      status.style.color = '#c0392b';
+      status.classList.remove('pf-hint--ok');
+      status.classList.add('pf-hint--error');
     });
 }
 
@@ -187,7 +191,9 @@ function setupEcontSearch() {
     selectedEcontOffice = office;
     $('final-office-id').value = office.code;
     input.value = office.name;
-    $('ekont-status-text').textContent = `✓ ${office.name}`;
+    const status = $('ekont-status-text');
+    status.innerHTML = `${icon('check', { size: 14 })}<span>${escapeHtml(office.name)}</span>`;
+    status.classList.add('pf-hint--ok');
     dropdown.style.display = 'none';
   });
 }
