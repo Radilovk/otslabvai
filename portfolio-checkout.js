@@ -75,7 +75,7 @@ function renderCart() {
 
   list.innerHTML = cart.map((item, idx) => `
     <li class="pf-summary-item" data-idx="${idx}">
-      ${item.image ? `<img src="${item.image}" alt="" class="pf-summary-img">` : '<div class="pf-summary-img pf-summary-img--empty"></div>'}
+      ${item.image ? `<img src="${item.image}" alt="" class="pf-summary-img" loading="lazy" decoding="async">` : '<div class="pf-summary-img pf-summary-img--empty"></div>'}
       <div class="pf-summary-info">
         <strong>${item.name}</strong>
         <div class="pf-qty-row">

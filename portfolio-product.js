@@ -61,10 +61,10 @@ function renderGallery() {
       <button type="button" class="pf-wish-btn pf-wish-btn--gallery ${wished ? 'active' : ''}" id="wish-toggle" aria-label="Любими" aria-pressed="${wished}">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${wished ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
       </button>
-      <img id="product-image" src="${escapeHtml(selectedImage)}" alt="${escapeHtml(product.name)}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+      <img id="product-image" src="${escapeHtml(selectedImage)}" alt="${escapeHtml(product.name)}" sizes="(max-width: 900px) 100vw, 50vw" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
       ${images.length > 1 ? `
       <div class="pf-gallery-thumbs">
-        ${images.map((img) => `<button type="button" class="pf-gallery-thumb ${img === selectedImage ? 'active' : ''}" data-img="${escapeHtml(img)}"><img src="${escapeHtml(img)}" alt="" referrerpolicy="no-referrer"></button>`).join('')}
+        ${images.map((img) => `<button type="button" class="pf-gallery-thumb ${img === selectedImage ? 'active' : ''}" data-img="${escapeHtml(img)}"><img src="${escapeHtml(img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"></button>`).join('')}
       </div>` : ''}
       ${product.label ? `<p class="pf-label-link"><a href="${escapeHtml(product.label)}" target="_blank" rel="noopener noreferrer" class="pf-btn pf-btn-outline">Етикет / състав</a></p>` : ''}
     </div>`;
@@ -108,7 +108,7 @@ function renderRelated() {
         ${related.map((item) => `
           <a href="portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}" class="pf-card-link">
             <div class="pf-card-image">
-              <img src="${escapeHtml(item.image || PLACEHOLDER_IMG)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+              <img src="${escapeHtml(item.image || PLACEHOLDER_IMG)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" sizes="(max-width: 640px) 45vw, 160px" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
             </div>
             <div class="pf-card-body">
               <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
@@ -251,6 +251,7 @@ async function loadDescription() {
     if (block && data.description) {
       product.description = data.description;
       block.innerHTML = data.description;
+      fixDescriptionImages(block);
     } else if (block) {
       block.innerHTML = '<p class="pf-muted-text">Няма налично описание.</p>';
     }
@@ -258,6 +259,23 @@ async function loadDescription() {
     const block = document.getElementById('description-block');
     if (block) block.innerHTML = '<p class="pf-muted-text">Няма налично описание.</p>';
   }
+}
+
+/** Strip fixed widths from API HTML so images scale on mobile */
+function fixDescriptionImages(container) {
+  container.querySelectorAll('img').forEach((img) => {
+    img.removeAttribute('width');
+    img.removeAttribute('height');
+    img.style.maxWidth = '100%';
+    img.style.height = 'auto';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+  });
+  container.querySelectorAll('table').forEach((table) => {
+    table.style.maxWidth = '100%';
+    table.style.display = 'block';
+    table.style.overflowX = 'auto';
+  });
 }
 
 function addToCart() {
