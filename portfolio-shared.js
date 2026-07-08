@@ -1,6 +1,7 @@
 import { API_URL } from './config.js';
 
 export const CART_KEY = 'portfolioCart';
+export const WISHLIST_KEY = 'portfolioWishlist';
 
 export function escapeHtml(str) {
   if (str == null) return '';
@@ -38,6 +39,30 @@ export function updateCartBadges() {
     el.textContent = `${subtotal.toFixed(2)} €`;
     el.closest('.pf-mobile-cart-bar')?.classList.toggle('pf-visible', count > 0);
   });
+}
+
+export function getWishlist() {
+  try {
+    return JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+export function isWishlisted(groupId) {
+  return getWishlist().includes(String(groupId));
+}
+
+export function toggleWishlist(groupId) {
+  const id = String(groupId);
+  const list = getWishlist();
+  const idx = list.indexOf(id);
+  if (idx > -1) list.splice(idx, 1);
+  else list.push(id);
+  try {
+    localStorage.setItem(WISHLIST_KEY, JSON.stringify(list));
+  } catch { /* quota */ }
+  return list.includes(id);
 }
 
 export function showToast(message, type = 'info', containerId = 'toast-container') {
@@ -135,6 +160,32 @@ export function renderFooter() {
     </footer>`;
 }
 
+function initScrollEffects() {
+  const header = document.querySelector('.pf-header');
+  const scrollTopBtn = document.createElement('button');
+  scrollTopBtn.type = 'button';
+  scrollTopBtn.className = 'pf-scroll-top';
+  scrollTopBtn.id = 'pf-scroll-top';
+  scrollTopBtn.setAttribute('aria-label', 'Нагоре');
+  scrollTopBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+  scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  document.body.appendChild(scrollTopBtn);
+
+  let ticking = false;
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+      header?.classList.toggle('pf-header--scrolled', y > 8);
+      scrollTopBtn.classList.toggle('pf-visible', y > 500);
+      ticking = false;
+    });
+  };
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+}
+
 export async function initPortfolioPage({ active = 'catalog', showMobileBar = false } = {}) {
   const headerSlot = document.getElementById('pf-header-slot');
   const footerSlot = document.getElementById('pf-footer-slot');
@@ -145,6 +196,7 @@ export async function initPortfolioPage({ active = 'catalog', showMobileBar = fa
   const settings = await loadSiteSettings();
   applySiteSettings(settings);
   updateCartBadges();
+  initScrollEffects();
 }
 
 export function debounce(fn, ms) {

@@ -5,7 +5,7 @@ import {
   buildCatalogMeta,
   handlePortfolioRoute
 } from './portfolio-api.js';
-import { filterIndex, paginateIndex } from './portfolio-filter.js';
+import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
 
 describe('Portfolio API', () => {
   const settings = {
@@ -147,6 +147,34 @@ describe('Portfolio search', () => {
     const page = paginateIndex(index, 1, 1);
     expect(page.total).toBe(2);
     expect(page.items).toHaveLength(1);
+  });
+});
+
+describe('Portfolio faceted filters', () => {
+  const meta = {
+    categories: [{ name: 'Протеини', count: 2 }, { name: 'Витамини', count: 1 }],
+    brands: [{ id: '10', name: 'Optimum', count: 2 }, { id: '20', name: 'Now', count: 1 }]
+  };
+  const index = [
+    { group_id: '1', name: 'Whey', brand: 'Optimum', brand_id: '10', category: 'Протеини > Whey', category_top: 'Протеини', min_price: 20, max_price: 30, available: true, search_text: 'whey optimum протеини' },
+    { group_id: '2', name: 'Creatine', brand: 'Optimum', brand_id: '10', category: 'Протеини > Creatine', category_top: 'Протеини', min_price: 10, max_price: 10, available: true, search_text: 'creatine optimum протеини' },
+    { group_id: '3', name: 'Vitamin C', brand: 'Now', brand_id: '20', category: 'Витамини', category_top: 'Витамини', min_price: 5, max_price: 8, available: true, search_text: 'vitamin c now витамини' }
+  ];
+
+  test('selecting a category hides brands with nothing in it and scopes their counts', () => {
+    const { brands } = computeFacets(index, { category: 'Витамини' }, meta);
+    expect(brands).toEqual([{ id: '20', name: 'Now', count: 1 }]);
+  });
+
+  test('selecting a brand hides categories it does not carry', () => {
+    const { categories } = computeFacets(index, { brand: '20' }, meta);
+    expect(categories).toEqual([{ name: 'Витамини', count: 1 }]);
+  });
+
+  test('with no filters, both facets list everything with full counts', () => {
+    const { categories, brands } = computeFacets(index, {}, meta);
+    expect(categories).toEqual([{ name: 'Протеини', count: 2 }, { name: 'Витамини', count: 1 }]);
+    expect(brands).toEqual([{ id: '10', name: 'Optimum', count: 2 }, { id: '20', name: 'Now', count: 1 }]);
   });
 });
 

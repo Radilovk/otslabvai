@@ -3,7 +3,7 @@
  * Requires: FITNESS1_API_KEY, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
  */
 import { readFileSync, readdirSync, existsSync } from 'fs';
-import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS } from './portfolio-api.js';
+import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS, fetchDescriptionMap } from './portfolio-api.js';
 
 const KV_NS = process.env.CLOUDFLARE_KV_NAMESPACE_ID || 'd220db696e414b7cb3da2b19abd53d0f';
 const ACCOUNT = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -38,8 +38,11 @@ async function main() {
   const products = await fetchProducts();
   console.log(`Got ${products.length} SKUs`);
 
+  console.log('Fetching descriptions from Fitness1...');
+  const descriptionMap = await fetchDescriptionMap(API_KEY);
+
   const settings = { ...DEFAULT_SETTINGS, global_markup_percent: 30 };
-  const groups = groupRawProducts(products, settings);
+  const groups = groupRawProducts(products, settings, descriptionMap);
   const meta = buildCatalogMeta(groups);
   meta.synced_at = new Date().toISOString();
   settings.last_sync = meta.synced_at;

@@ -3,7 +3,7 @@
  * then zero backend calls for browse/filter/search.
  */
 import { API_URL } from './config.js';
-import { filterIndex, paginateIndex } from './portfolio-filter.js';
+import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
 
 const BOOTSTRAP_KEY = 'portfolio_bootstrap_v1';
 const TTL_MS = 24 * 60 * 60 * 1000;
@@ -122,6 +122,13 @@ export function queryCatalogFromCache(params, page = 1, limit = 24) {
     ...paginateIndex(filtered, page, limit),
     synced_at: meta.synced_at
   };
+}
+
+/** Category/brand option lists scoped to the currently active filters (0 backend calls). */
+export function getFacetsFromCache(params) {
+  const meta = getCachedMeta();
+  if (!meta?.index) return null;
+  return computeFacets(meta.index, params, meta);
 }
 
 async function loadChunk(chunkIndex) {

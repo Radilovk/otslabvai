@@ -5,7 +5,7 @@
  */
 
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS } from './portfolio-api.js';
+import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS, fetchDescriptionMap } from './portfolio-api.js';
 
 const API_KEY = process.env.FITNESS1_API_KEY;
 const OUT_DIR = 'backend/portfolio';
@@ -29,8 +29,11 @@ async function main() {
   const products = await fetchProducts();
   console.log(`Received ${products.length} SKUs`);
 
+  console.log('Fetching descriptions from Fitness1...');
+  const descriptionMap = await fetchDescriptionMap(API_KEY);
+
   const settings = { ...DEFAULT_SETTINGS, global_markup_percent: 30 };
-  const groups = groupRawProducts(products, settings);
+  const groups = groupRawProducts(products, settings, descriptionMap);
   const meta = buildCatalogMeta(groups);
   meta.synced_at = new Date().toISOString();
 
