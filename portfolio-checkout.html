@@ -8,7 +8,7 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="portfolio.css">
 </head>
 <body class="pf-body">
@@ -62,17 +62,17 @@
                             <label class="pf-courier-tab"><input type="radio" id="courier-ekont" name="courierCompany" value="ekont"> Econt</label>
                         </div>
                         <div id="speedy-widget" class="pf-courier-widget">
-                            <button type="button" class="pf-btn pf-btn-outline" id="open-speedy-map-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.5S5 14.8 5 9.8a7 7 0 0 1 14 0c0 5-7 11.7-7 11.7z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Избери офис от картата</button>
+                            <label><strong>Избери офис на Спиди:</strong></label>
+                            <button type="button" class="pf-btn pf-btn-outline" id="open-speedy-map-btn">Избери от картата</button>
                             <input type="hidden" id="final-speedy-id" name="speedy_office_id">
-                            <div id="speedy-selected-info" class="pf-selected-office" style="display:none">
-                                <strong>Избран офис:</strong>
-                                <span id="speedy-selected-name"></span><br>
-                                <small id="speedy-selected-addr"></small>
+                            <div id="speedy-selected-info" class="pf-selected-office">
+                                <strong>Избран офис:</strong> <span id="speedy-selected-name"></span><br>
+                                <span id="speedy-selected-addr" style="font-size:13px;"></span>
                             </div>
                         </div>
                         <div id="ekont-widget" class="pf-courier-widget" style="display:none">
                             <div class="pf-field">
-                                <label for="ekont-office-search">Търсене на офис Econt</label>
+                                <label for="ekont-office-search"><strong>Избери офис на Еконт:</strong></label>
                                 <input type="text" id="ekont-office-search" placeholder="Град или име на офис..." autocomplete="off">
                                 <div id="econt-offices-dropdown" class="pf-dropdown"></div>
                                 <input type="hidden" id="final-office-id" name="office_id">
@@ -119,11 +119,11 @@
                 <section class="pf-form-section">
                     <label class="pf-check">
                         <input type="checkbox" id="policy-consent" name="policyConsent" required>
-                        <span>Съгласен съм с <a href="policy.html" target="_blank">политиката за поверителност</a> и <a href="shipping.html" target="_blank">доставката</a></span>
+                        <span>Съгласен съм с <a href="portfolio-policy.html" target="_blank">политиката за поверителност</a> и <a href="portfolio-shipping.html" target="_blank">доставката</a></span>
                     </label>
                     <label class="pf-check">
                         <input type="checkbox" id="terms" name="terms" required>
-                        <span>Приемам <a href="terms.html" target="_blank">общите условия</a></span>
+                        <span>Приемам <a href="portfolio-terms.html" target="_blank">общите условия</a></span>
                     </label>
                 </section>
             </form>
@@ -158,14 +158,20 @@
     <div id="pf-mobile-cart-slot"></div>
     <div class="pf-toast-container" id="toast-container"></div>
 
-    <div id="speedy-map-modal" class="pf-modal" role="dialog" aria-modal="true" aria-label="Избор на офис Speedy">
-        <div class="pf-modal-overlay" id="speedy-map-overlay"></div>
+    <div id="speedy-map-modal" class="pf-modal" role="dialog" aria-modal="true" aria-label="Избор на офис на Спиди">
+        <div class="pf-modal-overlay" id="speedy-map-overlay" aria-hidden="true"></div>
         <div class="pf-modal-content pf-modal-map">
             <div class="pf-modal-header">
-                <h3>Избери офис на Speedy</h3>
-                <button type="button" class="pf-modal-close" id="close-speedy-map-btn" aria-label="Затвори"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+                <h3>Избери офис на Спиди</h3>
+                <button type="button" class="pf-modal-close" id="close-speedy-map-btn" aria-label="Затвори">&times;</button>
             </div>
-            <iframe id="speedy-map-iframe" title="Карта Speedy" src=""></iframe>
+            <iframe id="frameOfficeLocator"
+                    name="frameOfficeLocator"
+                    src="https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=1&selectOfficeButtonCaption=Избиране на офис/автомат"
+                    title="Карта на офисите на Спиди"
+                    width="100%"
+                    height="100%">
+            </iframe>
         </div>
     </div>
 

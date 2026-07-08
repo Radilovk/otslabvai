@@ -185,9 +185,9 @@ export function renderFooter() {
           <span>Хранителни добавки с доставка до офис</span>
         </div>
         <div class="pf-footer-links">
-          <a href="policy.html" target="_blank" rel="noopener">Поверителност</a>
-          <a href="shipping.html" target="_blank" rel="noopener">Доставка</a>
-          <a href="terms.html" target="_blank" rel="noopener">Условия</a>
+          <a href="portfolio-policy.html">Поверителност</a>
+          <a href="portfolio-shipping.html">Доставка</a>
+          <a href="portfolio-terms.html">Условия</a>
         </div>
         <p class="pf-footer-copy">© ${year} Portfolio · Всички права запазени</p>
       </div>

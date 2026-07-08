@@ -234,3 +234,73 @@ describe('Portfolio promo validation', () => {
     expect(applyPromoDiscount(100, check.promoCode)).toBe(10);
   });
 });
+
+describe('Portfolio Fitness1 order approval', () => {
+  const catalogChunk = [{
+    group_id: '100',
+    name: 'Test Protein',
+    brand: 'TestBrand',
+    image: '',
+    variants: [{
+      sku_id: '1',
+      barcode: '1234567890',
+      pack: '1 кг',
+      option: 'Шоколад',
+      available: true,
+      b2b_price: 10,
+      retail_price: 13
+    }]
+  }];
+
+  const pendingOrder = {
+    id: 'pf-test-1',
+    status: 'Чака одобрение',
+    products: [{ sku_id: '1', barcode: '1234567890', name: 'Test Protein', quantity: 2 }],
+    fitness1_order: null
+  };
+
+  test('POST /portfolio/orders/approve submits to Fitness1 and updates order', async () => {
+    const store = new Map([
+      ['portfolio_orders', JSON.stringify([pendingOrder])],
+      ['portfolio_meta', JSON.stringify({ chunk_count: 1, total_groups: 1, index: [], lookup: {} })],
+      ['portfolio_chunk_0', JSON.stringify(catalogChunk)]
+    ]);
+
+    const env = {
+      FITNESS1_API_KEY: 'test-key',
+      PAGE_CONTENT: {
+        get: async (key) => store.get(key) ?? null,
+        put: async (key, value) => { store.set(key, value); }
+      }
+    };
+
+    const originalFetch = global.fetch;
+    let fetchCalled = false;
+    global.fetch = async (url, opts) => {
+      fetchCalled = true;
+      expect(url).toBe('https://fitness1.bg/b2b/api/orders/create');
+      expect(opts.headers['X-Api-Key']).toBe('test-key');
+      const body = JSON.parse(opts.body);
+      expect(body.products).toEqual([{ barcode: '1234567890', quantity: 2 }]);
+      return {
+        ok: true,
+        json: async () => ({ status: 'ok', order: { id: 99999, price: '20.00' } })
+      };
+    };
+
+    const request = new Request('https://example.com/portfolio/orders/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: 'pf-test-1' })
+    });
+    const res = await handlePortfolioRoute(request, env, new URL(request.url));
+    global.fetch = originalFetch;
+
+    expect(fetchCalled).toBe(true);
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.order.status).toBe('Изпратена към Fitness1');
+    expect(data.order.fitness1_order.id).toBe(99999);
+  });
+});

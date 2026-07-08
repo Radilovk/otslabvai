@@ -47,10 +47,10 @@
   --pf-shadow-lg: 0 8px 32px rgba(var(--pf-ink-rgb), 0.1), 0 32px 64px rgba(var(--pf-ink-rgb), 0.12);
   --pf-shadow-glow: 0 0 0 1px rgba(var(--pf-primary-rgb), 0.12), 0 8px 32px rgba(var(--pf-primary-rgb), 0.15);
 
-  /* Typography */
-  --pf-font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --pf-display: 'Syne', system-ui, sans-serif;
-  --pf-numeric: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  /* Typography – Manrope (body) + Outfit (headings): modern, highly readable Cyrillic */
+  --pf-font: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --pf-display: 'Outfit', system-ui, sans-serif;
+  --pf-numeric: 'Manrope', system-ui, sans-serif;
 
   --pf-error: #dc3545;
   --pf-success: #0a8f5c;
@@ -78,6 +78,10 @@ body.pf-body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   font-family: var(--pf-font);
   background: var(--pf-bg-mesh);
   background-attachment: scroll;
@@ -2185,3 +2189,53 @@ img, svg { display: block; max-width: 100%; height: auto; }
   }
   html { scroll-behavior: auto; }
 }
+
+/* Legal / info pages */
+.pf-legal {
+  width: var(--pf-container);
+  margin: 0 auto;
+  padding: calc(var(--pf-header-h) + var(--pf-space-xl)) var(--pf-space-md) var(--pf-space-2xl);
+  max-width: 760px;
+}
+
+.pf-legal h1 {
+  font-family: var(--pf-display);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  margin: 0 0 var(--pf-space-md);
+  line-height: 1.25;
+}
+
+.pf-legal h2 {
+  font-family: var(--pf-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: var(--pf-space-xl) 0 var(--pf-space-sm);
+}
+
+.pf-legal p,
+.pf-legal li {
+  color: var(--pf-text);
+  margin: 0 0 var(--pf-space-md);
+}
+
+.pf-legal a {
+  color: var(--pf-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.pf-legal a:hover { color: var(--pf-primary-hover); }
+
+.pf-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: var(--pf-space-lg);
+  color: var(--pf-muted);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.pf-back-link:hover { color: var(--pf-primary); }

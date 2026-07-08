@@ -3,9 +3,6 @@ import {
   CART_KEY, getCart, saveCart, updateCartBadges, showToast, formatPrice, initPortfolioPage, icon, escapeHtml
 } from './portfolio-shared.js';
 
-const SPEEDY_WIDGET_URL =
-  'https://services.speedy.bg/office_locator_widget_v3/office_locator.php?lang=bg&showOfficesList=0&pickUp=1&officeType=ALL&officesFilterOnTheMap=0&selectOfficeButtonCaption=%D0%98%D0%B7%D0%B1%D0%BE%D1%80';
-
 let cart = getCart();
 let activePromoCode = null;
 
@@ -119,20 +116,23 @@ function toggleDeliveryFields() {
 
 function toggleCourierWidgets() {
   const speedy = $('courier-speedy')?.checked;
-  $('speedy-widget').style.display = speedy ? 'block' : 'none';
-  $('ekont-widget').style.display = speedy ? 'none' : 'block';
-  if (!speedy && !window._ekontLoaded) loadEcontOffices();
+  const ekont = $('courier-ekont')?.checked;
+  if (speedy) {
+    $('speedy-widget').style.display = 'block';
+    $('ekont-widget').style.display = 'none';
+  } else if (ekont) {
+    $('speedy-widget').style.display = 'none';
+    $('ekont-widget').style.display = 'block';
+    if (!ekontOfficesLoaded) loadEcontOffices();
+  } else {
+    $('speedy-widget').style.display = 'none';
+    $('ekont-widget').style.display = 'none';
+  }
   updateSummary();
 }
 
 function openSpeedyMap() {
-  const modal = $('speedy-map-modal');
-  const iframe = $('speedy-map-iframe');
-  // Must check the raw attribute, not the .src IDL property: an empty
-  // src="" attribute resolves through the DOM property to the page's own
-  // URL (truthy), so `!iframe.src` never fires and the widget never loads.
-  if (!iframe.getAttribute('src')) iframe.src = SPEEDY_WIDGET_URL;
-  modal.classList.add('active');
+  $('speedy-map-modal').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
@@ -141,11 +141,24 @@ function closeSpeedyMap() {
   document.body.style.overflow = '';
 }
 
+let ekontOfficesLoaded = false;
 let allEcontOffices = [];
 let selectedEcontOffice = null;
+let ekontChangeHandlerAttached = false;
+
+function econtOfficeLabel(office) {
+  let name = office.name;
+  if (office.isAPS === true) name += ' (ЕКОНТОМАТ)';
+  else if (office.isMPS === true) name += ' (МОБИЛЕН)';
+  return name;
+}
 
 function loadEcontOffices() {
   const status = $('ekont-status-text');
+  const ekontInput = $('ekont-office-search');
+  const ekontDropdown = $('econt-offices-dropdown');
+  const hiddenInput = $('final-office-id');
+
   fetch('https://ee.econt.com/services/Nomenclatures/NomenclaturesService.getOffices.json', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -155,9 +168,9 @@ function loadEcontOffices() {
     .then((data) => {
       if (data?.offices) {
         allEcontOffices = data.offices;
-        window._ekontLoaded = true;
-        status.innerHTML = `${icon('check', { size: 14 })}<span>Готово за търсене</span>`;
+        status.textContent = '✓ Готово';
         status.classList.add('pf-hint--ok');
+        ekontOfficesLoaded = true;
       }
     })
     .catch(() => {
@@ -165,37 +178,64 @@ function loadEcontOffices() {
       status.classList.remove('pf-hint--ok');
       status.classList.add('pf-hint--error');
     });
-}
 
-function setupEcontSearch() {
-  const input = $('ekont-office-search');
-  const dropdown = $('econt-offices-dropdown');
-  input?.addEventListener('input', () => {
-    const q = input.value.toLowerCase().trim();
-    if (q.length < 2) { dropdown.style.display = 'none'; return; }
-    const filtered = allEcontOffices.filter((o) => {
-      const name = o.name + (o.isAPS ? ' (ЕКОНТОМАТ)' : '');
-      const addr = o.address?.fullAddress || '';
-      return name.toLowerCase().includes(q) || addr.toLowerCase().includes(q);
-    }).slice(0, 20);
-    dropdown.innerHTML = filtered.length
-      ? filtered.map((o) => `<div class="pf-dropdown-item" data-code="${o.code}"><strong>${o.name}</strong><span>${o.address?.fullAddress || ''}</span></div>`).join('')
-      : '<div class="pf-dropdown-item pf-dropdown-empty">Няма резултати</div>';
-    dropdown.style.display = 'block';
-  });
-  dropdown?.addEventListener('click', (e) => {
-    const item = e.target.closest('[data-code]');
-    if (!item) return;
-    const office = allEcontOffices.find((o) => o.code === item.dataset.code);
-    if (!office) return;
-    selectedEcontOffice = office;
-    $('final-office-id').value = office.code;
-    input.value = office.name;
-    const status = $('ekont-status-text');
-    status.innerHTML = `${icon('check', { size: 14 })}<span>${escapeHtml(office.name)}</span>`;
-    status.classList.add('pf-hint--ok');
-    dropdown.style.display = 'none';
-  });
+  if (!ekontChangeHandlerAttached) {
+    ekontInput?.addEventListener('input', () => {
+      const searchValue = ekontInput.value.toLowerCase().trim();
+      if (searchValue.length < 2) {
+        ekontDropdown.style.display = 'none';
+        return;
+      }
+
+      const filteredOffices = allEcontOffices.filter((office) => {
+        const cleanName = econtOfficeLabel(office);
+        const fullAddr = office.address?.fullAddress || '';
+        return cleanName.toLowerCase().includes(searchValue) || fullAddr.toLowerCase().includes(searchValue);
+      });
+
+      if (filteredOffices.length > 0) {
+        ekontDropdown.innerHTML = filteredOffices.map((office) => {
+          const cleanName = econtOfficeLabel(office);
+          const fullAddr = office.address?.fullAddress || '';
+          return `<div class="pf-dropdown-item" data-office-code="${escapeHtml(office.code)}"><strong>${escapeHtml(cleanName)}</strong><span>${escapeHtml(fullAddr)}</span></div>`;
+        }).join('');
+        ekontDropdown.style.display = 'block';
+      } else {
+        ekontDropdown.innerHTML = '<div class="pf-dropdown-item pf-dropdown-empty">Няма намерени офиси</div>';
+        ekontDropdown.style.display = 'block';
+      }
+    });
+
+    ekontDropdown?.addEventListener('click', (e) => {
+      const item = e.target.closest('[data-office-code]');
+      if (!item?.dataset.officeCode) return;
+      const office = allEcontOffices.find((o) => o.code === item.dataset.officeCode);
+      if (!office) return;
+
+      const cleanName = econtOfficeLabel(office);
+      const fullAddr = office.address?.fullAddress || '';
+      ekontInput.value = cleanName;
+      hiddenInput.value = office.code;
+      selectedEcontOffice = office;
+      status.textContent = `✓ Избран: ${cleanName}${fullAddr ? ` - ${fullAddr}` : ''}`;
+      status.classList.add('pf-hint--ok');
+      ekontDropdown.style.display = 'none';
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!ekontInput?.contains(e.target) && !ekontDropdown?.contains(e.target)) {
+        ekontDropdown.style.display = 'none';
+      }
+    });
+
+    ekontInput?.addEventListener('focus', () => {
+      if (ekontInput.value.length >= 2) {
+        ekontInput.dispatchEvent(new Event('input'));
+      }
+    });
+
+    ekontChangeHandlerAttached = true;
+  }
 }
 
 function validateForm() {
@@ -254,7 +294,7 @@ async function submitOrder(e) {
       formData.courierCompany = 'Econt';
       formData.courierOfficeId = $('final-office-id').value;
       if (selectedEcontOffice) {
-        formData.courierOfficeName = selectedEcontOffice.name;
+        formData.courierOfficeName = econtOfficeLabel(selectedEcontOffice);
         formData.courierOfficeAddress = selectedEcontOffice.address?.fullAddress || '';
       }
     }
@@ -353,15 +393,24 @@ function setupSpeedy() {
   $('open-speedy-map-btn')?.addEventListener('click', openSpeedyMap);
   $('close-speedy-map-btn')?.addEventListener('click', closeSpeedyMap);
   $('speedy-map-overlay')?.addEventListener('click', closeSpeedyMap);
+
   window.addEventListener('message', (event) => {
     if (event.origin.indexOf('speedy.bg') === -1) return;
     const data = event.data;
     if (data?.id) {
       $('final-speedy-id').value = data.id;
       $('speedy-selected-name').textContent = data.name || '';
-      $('speedy-selected-addr').textContent = data.address?.fullAddressString || '';
+      const addr = data.address?.fullAddressString || '';
+      $('speedy-selected-addr').textContent = addr;
       $('speedy-selected-info').style.display = 'block';
-      $('open-speedy-map-btn').textContent = 'Смени офиса';
+      const openBtn = $('open-speedy-map-btn');
+      if (openBtn) openBtn.textContent = 'Смени офиса';
+      closeSpeedyMap();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $('speedy-map-modal')?.classList.contains('active')) {
       closeSpeedyMap();
     }
   });
@@ -388,7 +437,6 @@ async function init() {
   $('checkout-form')?.addEventListener('submit', submitOrder);
 
   setupSpeedy();
-  setupEcontSearch();
   toggleDeliveryFields();
   toggleCourierWidgets();
 }
