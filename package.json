@@ -10,7 +10,7 @@
     "upload-static": "./upload-static-to-kv.sh",
     "upload-static-node": "node upload-static-files.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "test:portfolio": "node --experimental-vm-modules node_modules/.bin/jest portfolio-api.test.js",
+    "test:portfolio": "node --experimental-vm-modules node_modules/.bin/jest portfolio-api.test.js portfolio-catalog-ui.test.js",
     "test:portfolio-e2e": "node e2e/portfolio-e2e.mjs",
     "test:portfolio-full": "node e2e/portfolio-full-e2e.mjs",
     "dev:portfolio": "node e2e/portfolio-dev-server.mjs",

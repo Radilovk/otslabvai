@@ -3,6 +3,12 @@ import {
   isWishlisted, toggleWishlist, showToast, icon
 } from './portfolio-shared.js';
 import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache } from './portfolio-cache.js';
+import {
+  countActiveFilters as countFilters,
+  getRemovableFilterChips,
+  shouldShowActiveFilterRow,
+  formatFiltersToggleLabel
+} from './portfolio-catalog-ui.js';
 
 const LIMIT = 24;
 const MAX_CHIPS = 9;
@@ -24,6 +30,7 @@ const DOM = {
   sidebar: document.getElementById('sidebar'),
   sidebarOverlay: document.getElementById('sidebar-overlay'),
   sidebarClose: document.getElementById('sidebar-close'),
+  sidebarApply: document.getElementById('sidebar-apply'),
   heroStats: document.getElementById('hero-stats'),
   statProducts: document.getElementById('stat-products'),
   statBrands: document.getElementById('stat-brands'),
@@ -112,42 +119,49 @@ function renderPagination() {
   });
 }
 
+function getFilterState() {
+  const params = getFilterParams();
+  return {
+    q: params.q,
+    category: params.category,
+    brand: params.brand,
+    min_price: params.min_price,
+    max_price: params.max_price,
+    availableOnly: DOM.filterAvailable.checked
+  };
+}
+
 function countActiveFilters() {
-  let n = 0;
-  if (DOM.searchInput.value.trim()) n++;
-  if (DOM.filterCategory.value) n++;
-  if (DOM.filterBrand.value) n++;
-  if (DOM.filterMinPrice.value || DOM.filterMaxPrice.value) n++;
-  if (!DOM.filterAvailable.checked) n++;
-  if (DOM.sortSelect.value !== 'name') n++;
-  return n;
+  return countFilters(getFilterState());
 }
 
 function updateFiltersToggleLabel() {
   const label = document.getElementById('filters-toggle-label');
   if (!label) return;
-  const n = countActiveFilters();
-  label.textContent = n > 0 ? `Филтри (${n})` : 'Филтри';
+  label.textContent = formatFiltersToggleLabel(countActiveFilters());
 }
 
 function renderActiveFilterChips() {
   if (!DOM.activeFilters) return;
-  const chips = [];
-  const params = getFilterParams();
-  if (params.q) chips.push({ key: 'q', label: `„${params.q}"` });
-  if (params.category) chips.push({ key: 'category', label: params.category });
-  if (params.brand) {
-    const opt = [...DOM.filterBrand.options].find((o) => o.value === params.brand);
-    chips.push({ key: 'brand', label: opt ? opt.textContent.replace(/\s*\(\d+\)$/, '') : params.brand });
-  }
-  if (params.min_price || params.max_price) {
-    const from = params.min_price || '0';
-    const to = params.max_price || '∞';
-    chips.push({ key: 'price', label: `${from}–${to} €` });
-  }
-  if (!DOM.filterAvailable.checked) chips.push({ key: 'available', label: 'Вкл. изчерпани' });
+  const totalActive = countActiveFilters();
 
-  if (!chips.length) { DOM.activeFilters.innerHTML = ''; return; }
+  if (!shouldShowActiveFilterRow(totalActive)) {
+    DOM.activeFilters.innerHTML = '';
+    return;
+  }
+
+  const params = getFilterParams();
+  const brandOpt = params.brand
+    ? [...DOM.filterBrand.options].find((o) => o.value === params.brand)
+    : null;
+  const chips = getRemovableFilterChips({
+    q: params.q,
+    brand: params.brand,
+    brandLabel: brandOpt ? brandOpt.textContent.replace(/\s*\(\d+\)$/, '') : '',
+    min_price: params.min_price,
+    max_price: params.max_price,
+    availableOnly: DOM.filterAvailable.checked
+  });
 
   DOM.activeFilters.innerHTML = chips.map((c) => `
     <button type="button" class="pf-active-chip" data-clear="${c.key}">
@@ -179,10 +193,14 @@ function renderCategoryChips() {
   const facets = getFacetsFromCache(getFilterParams());
   const visibleNames = new Set((facets?.categories || topCategories).map((c) => c.name));
 
-  DOM.categoryChips.innerHTML = topCategories.map((c) => {
+  DOM.categoryChips.innerHTML = topCategories
+    .filter((c) => {
+      const active = c.name === activeCategory;
+      return active || visibleNames.has(c.name);
+    })
+    .map((c) => {
     const active = c.name === activeCategory;
-    const disabled = !active && !visibleNames.has(c.name);
-    return `<button type="button" class="pf-chip ${active ? 'active' : ''} ${disabled ? 'pf-chip--disabled' : ''}" data-chip-category="${escapeHtml(c.name)}" ${disabled ? 'disabled' : ''}>${escapeHtml(c.name)}</button>`;
+    return `<button type="button" class="pf-chip ${active ? 'active' : ''}" data-chip-category="${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>`;
   }).join('');
 
   DOM.categoryChips.querySelectorAll('[data-chip-category]').forEach((btn) => {
@@ -235,6 +253,7 @@ function loadCatalog() {
   updateFiltersToggleLabel();
   renderActiveFilterChips();
   renderCategoryChips();
+  updateSidebarApplyLabel();
 }
 
 function populateFilters(filters) {
@@ -298,24 +317,37 @@ function openFilters() {
   DOM.sidebar?.classList.add('pf-sidebar--open');
   DOM.sidebarOverlay?.classList.add('pf-visible');
   DOM.filtersToggle?.setAttribute('aria-expanded', 'true');
+  DOM.filtersToggle?.classList.add('pf-filters-toggle--hidden');
   document.body.classList.add('pf-no-scroll');
+  updateSidebarApplyLabel();
 }
 
 function closeFilters() {
   DOM.sidebar?.classList.remove('pf-sidebar--open');
   DOM.sidebarOverlay?.classList.remove('pf-visible');
   DOM.filtersToggle?.setAttribute('aria-expanded', 'false');
+  DOM.filtersToggle?.classList.remove('pf-filters-toggle--hidden');
   document.body.classList.remove('pf-no-scroll');
+}
+
+function updateSidebarApplyLabel() {
+  if (!DOM.sidebarApply) return;
+  const n = state.total;
+  DOM.sidebarApply.textContent = n > 0
+    ? `Покажи ${n.toLocaleString('bg-BG')} резултата`
+    : 'Покажи резултатите';
 }
 
 function bindEvents() {
   const reload = debounce(() => { state.page = 1; reconcileFacets(); loadCatalog(); }, 200);
   DOM.searchInput.addEventListener('input', reload);
+  [DOM.filterMinPrice, DOM.filterMaxPrice]
+    .forEach((el) => el.addEventListener('input', reload));
   [DOM.filterMinPrice, DOM.filterMaxPrice, DOM.filterAvailable]
     .forEach((el) => el.addEventListener('change', () => { state.page = 1; reconcileFacets(); loadCatalog(); }));
   [DOM.filterCategory, DOM.filterBrand]
     .forEach((el) => el.addEventListener('change', () => { state.page = 1; reconcileFacets(); loadCatalog(); closeFilters(); }));
-  DOM.sortSelect.addEventListener('change', () => { state.page = 1; loadCatalog(); closeFilters(); });
+  DOM.sortSelect.addEventListener('change', () => { state.page = 1; loadCatalog(); });
   DOM.clearFilters.addEventListener('click', () => {
     DOM.searchInput.value = '';
     DOM.filterCategory.value = '';
@@ -327,6 +359,7 @@ function bindEvents() {
     state.page = 1;
     reconcileFacets();
     loadCatalog();
+    closeFilters();
   });
   DOM.filtersToggle?.addEventListener('click', () => {
     if (DOM.sidebar?.classList.contains('pf-sidebar--open')) closeFilters();
@@ -334,6 +367,10 @@ function bindEvents() {
   });
   DOM.sidebarOverlay?.addEventListener('click', closeFilters);
   DOM.sidebarClose?.addEventListener('click', closeFilters);
+  DOM.sidebarApply?.addEventListener('click', closeFilters);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && DOM.sidebar?.classList.contains('pf-sidebar--open')) closeFilters();
+  });
   const params = new URLSearchParams(location.search);
   if (params.get('q')) DOM.searchInput.value = params.get('q');
   if (params.get('category')) DOM.filterCategory.value = params.get('category');

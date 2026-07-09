@@ -6,6 +6,7 @@ import { spawn } from 'child_process';
 import { chromium, devices } from 'playwright';
 import { setTimeout as sleep } from 'timers/promises';
 import { mkdirSync } from 'fs';
+import { seedPortfolioFixture } from './seed-portfolio-fixture.mjs';
 
 const PORT = Number(process.env.PORT || 8790);
 const BASE = process.env.PORTFOLIO_URL || `http://127.0.0.1:${PORT}`;
@@ -18,6 +19,18 @@ const issues = [];
 
 function ok(msg) { passes.push(msg); console.log(`  ✓ ${msg}`); }
 function fail(msg) { issues.push(msg); console.log(`  ✗ ${msg}`); }
+
+async function clickAddToCart(page) {
+  const stickyBtn = page.locator('#add-to-cart-sticky');
+  if (await stickyBtn.isVisible()) await stickyBtn.click();
+  else await page.locator('#add-to-cart').click();
+}
+
+async function clickSubmit(page) {
+  const mobileBtn = page.locator('#submit-btn-mobile');
+  if (await mobileBtn.isVisible()) await mobileBtn.click();
+  else await page.click('#submit-btn');
+}
 
 async function waitForServer(maxMs = 30000) {
   const start = Date.now();
@@ -60,11 +73,12 @@ async function runFlow(browser, deviceName, viewport) {
   else fail(`[${tag}] only ${cards} cards`);
 
   await page.locator('.pf-card-link').first().click();
-  await page.waitForSelector('#add-to-cart', { timeout: 15000 });
+  await page.waitForSelector('#add-to-cart, #add-to-cart-sticky', { timeout: 15000 });
   await checkLayout(page, `[${tag}] product`);
 
-  if (await page.locator('#add-to-cart').isEnabled()) {
-    await page.locator('#add-to-cart').click();
+  const addTarget = page.locator('#add-to-cart-sticky, #add-to-cart').first();
+  if (await addTarget.isEnabled()) {
+    await clickAddToCart(page);
     await page.waitForSelector('.pf-toast', { timeout: 5000 });
     ok(`[${tag}] add to cart`);
   } else {
@@ -91,7 +105,7 @@ async function runFlow(browser, deviceName, viewport) {
 
   const [orderRes] = await Promise.all([
     page.waitForResponse((r) => r.url().includes('/portfolio/orders') && r.request().method() === 'POST'),
-    page.click('#submit-btn'),
+    clickSubmit(page),
   ]);
 
   await page.waitForURL(/portfolio-order-success/, { timeout: 15000 }).catch(() => {});
@@ -121,6 +135,7 @@ async function runFlow(browser, deviceName, viewport) {
 
 let server;
 if (LOCAL) {
+  seedPortfolioFixture();
   server = spawn('node', ['e2e/portfolio-dev-server.mjs'], {
     cwd: process.cwd(),
     env: { ...process.env, PORT: String(PORT) },

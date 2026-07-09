@@ -55,6 +55,8 @@ function updateSummary() {
   $('summary-subtotal').textContent = formatPrice(subtotal);
   $('summary-shipping').textContent = shipping === 0 && subtotal > 0 ? 'Безплатна' : formatPrice(shipping);
   $('summary-total').textContent = formatPrice(total);
+  const actionTotal = $('checkout-action-total');
+  if (actionTotal) actionTotal.textContent = formatPrice(total);
 
   const discountRow = $('discount-row');
   if (discountRow) {
@@ -65,12 +67,30 @@ function updateSummary() {
   }
 }
 
+const SUBMIT_LABEL = 'Поръчай с наложен платеж';
+
+function syncSubmitButtons({ disabled, label = SUBMIT_LABEL } = {}) {
+  ['submit-btn', 'submit-btn-mobile'].forEach((id) => {
+    const btn = $(id);
+    if (!btn) return;
+    btn.disabled = disabled;
+    btn.textContent = label;
+  });
+}
+
+function syncCheckoutActionBar(hasItems) {
+  const bar = $('checkout-action-bar');
+  if (!bar) return;
+  bar.hidden = !hasItems;
+  document.body.classList.toggle('pf-checkout-has-bar', hasItems);
+}
+
 function renderCart() {
   const list = $('product-list');
-  const submitBtn = $('submit-btn');
   if (!cart.length) {
     list.innerHTML = '<li class="pf-empty-cart"><p>Количката е празна.</p><a href="portfolio.html" class="pf-btn pf-btn-outline">Към каталога</a></li>';
-    submitBtn.disabled = true;
+    syncSubmitButtons({ disabled: true });
+    syncCheckoutActionBar(false);
     updateSummary();
     return;
   }
@@ -90,7 +110,8 @@ function renderCart() {
       <button type="button" class="pf-remove-btn" data-action="remove" data-idx="${idx}" aria-label="Премахни">${icon('x', { size: 16 })}</button>
     </li>`).join('');
 
-  submitBtn.disabled = false;
+  syncSubmitButtons({ disabled: false });
+  syncCheckoutActionBar(true);
   updateSummary();
   updateCartBadges();
 
@@ -311,6 +332,22 @@ function validateForm() {
     return false;
   }
 
+  if (!$('policy-consent')?.checked || !$('terms')?.checked) {
+    $('policy-consent')?.classList.toggle('is-invalid', !$('policy-consent')?.checked);
+    $('terms')?.classList.toggle('is-invalid', !$('terms')?.checked);
+    showToast('Моля, приемете условията.', 'error');
+    ok = false;
+  }
+
+  if (!ok) {
+    const firstInvalid = document.querySelector('.is-invalid, .pf-field input:invalid');
+    firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (typeof firstInvalid?.focus === 'function') {
+      try { firstInvalid.focus({ preventScroll: true }); } catch { firstInvalid.focus(); }
+    }
+  }
+
+  return ok;
   if ($('delivery-courier')?.checked && $('courier-ekont')?.checked && !selectedEcontOffice) {
     showToast('Изберете офис на Econt от списъка.', 'error');
     return false;
@@ -323,6 +360,7 @@ async function submitOrder(e) {
   e.preventDefault();
   if (!cart.length || !validateForm()) return;
 
+  syncSubmitButtons({ disabled: true, label: 'Изпращане...' });
   const btn = $('submit-btn');
   btn.disabled = true;
   btn.textContent = 'Проверка...';
@@ -369,8 +407,7 @@ async function submitOrder(e) {
     window.location.href = `portfolio-order-success.html?id=${encodeURIComponent(data.order.id)}`;
   } catch (err) {
     showToast(err.message || 'Грешка при изпращане.', 'error');
-    btn.disabled = false;
-    btn.textContent = 'Поръчай с наложен платеж';
+    syncSubmitButtons({ disabled: false });
   }
 }
 
@@ -457,6 +494,7 @@ function setupSpeedy() {
 
 async function init() {
   await initPortfolioPage({ active: 'checkout', settingsOnly: true });
+  document.body.classList.add('pf-body--checkout');
   cart = getCart();
   renderCart();
 
