@@ -5,6 +5,11 @@
 
 import { filterIndex } from './portfolio-filter.js';
 import { enrichIndexEntry } from './portfolio-search.js';
+import {
+  validatePortfolioCustomer,
+  sanitizePortfolioCustomer,
+  validateCartHasSku
+} from './portfolio-order-validation.js';
 
 export { filterIndex };
 
@@ -684,18 +689,22 @@ async function handleCreateOrder(request, env) {
     throw new PortfolioError('Липсват данни за клиент или продукти.', 400);
   }
 
-  const customer = body.customer;
-  if (!customer.firstName?.trim() || !customer.lastName?.trim() || !customer.phone?.trim()) {
-    throw new PortfolioError('Моля, попълнете име, фамилия и телефон.', 400);
+  const meta = await getMeta(env);
+  if (!meta) {
+    throw new PortfolioError('Каталогът не е синхронизиран. Поръчката не може да бъде приета.', 503);
   }
 
-  if (customer.deliveryMethod === 'courier') {
-    const hasOffice = customer.courierOfficeId || customer.speedy_office_id;
-    if (!hasOffice) throw new PortfolioError('Моля, изберете офис на куриер.', 400);
-  } else if (!customer.address?.trim() || !customer.city?.trim()) {
-    throw new PortfolioError('Моля, попълнете адрес и град.', 400);
+  const cartCheck = validateCartHasSku(body.products);
+  if (!cartCheck.valid) {
+    throw new PortfolioError(cartCheck.errors.join(' '), 400);
   }
 
+  const customerCheck = validatePortfolioCustomer(body.customer);
+  if (!customerCheck.valid) {
+    throw new PortfolioError(customerCheck.errors.join(' '), 400);
+  }
+
+  const customer = sanitizePortfolioCustomer(body.customer);
   const items = await validateAndNormalizeCartItems(env, body.products);
 
   let b2bTotal = 0;
@@ -722,7 +731,7 @@ async function handleCreateOrder(request, env) {
     project: 'portfolio',
     timestamp: new Date().toISOString(),
     status: 'Чака одобрение',
-    customer: body.customer,
+    customer,
     products: items,
     promo: appliedPromo,
     summary: {
@@ -758,6 +767,27 @@ async function handleGetOrdersSummary(env) {
     (o) => o.status === 'Чака одобрение' && !o.fitness1_order?.id
   ).length;
   return jsonResponse({ pending, total: orders.length });
+}
+
+async function handleGetOrder(request, env) {
+  const id = new URL(request.url).searchParams.get('id')?.trim();
+  if (!id) throw new PortfolioError('Липсва ID на поръчка.', 400);
+
+  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
+  const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
+  const order = orders.find((o) => o.id === id);
+  if (!order) throw new PortfolioError('Поръчката не е намерена.', 404);
+
+  return jsonResponse({
+    id: order.id,
+    status: order.status,
+    timestamp: order.timestamp,
+    customer: {
+      firstName: order.customer?.firstName || '',
+      lastName: order.customer?.lastName || '',
+      phone: order.customer?.phone || ''
+    }
+  });
 }
 
 async function validateOrderProductsForF1(env, order) {
@@ -985,6 +1015,9 @@ export async function handlePortfolioRoute(request, env, url) {
     }
     if (path === '/portfolio/orders/summary' && method === 'GET') {
       return await handleGetOrdersSummary(env);
+    }
+    if (path === '/portfolio/order' && method === 'GET') {
+      return await handleGetOrder(request, env);
     }
 
     throw new PortfolioError('Not Found', 404);
