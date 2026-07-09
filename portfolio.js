@@ -1,8 +1,8 @@
 import {
-  escapeHtml, debounce, updateCartBadges, initPortfolioPage, applySiteSettings,
+  escapeHtml, debounce, updateCartBadges, initPortfolioPage,
   isWishlisted, toggleWishlist, showToast, icon
 } from './portfolio-shared.js';
-import { ensureBootstrap, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache } from './portfolio-cache.js';
+import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache } from './portfolio-cache.js';
 
 const LIMIT = 24;
 const MAX_CHIPS = 9;
@@ -345,11 +345,10 @@ async function init() {
   showSkeletons();
 
   try {
-    const bootstrap = await ensureBootstrap();
-    applySiteSettings(bootstrap.settings);
-    if (bootstrap.settings?.site_slogan) {
+    const settings = getCachedSettings();
+    if (settings?.site_slogan) {
       const sub = document.getElementById('hero-subtitle');
-      if (sub) sub.textContent = bootstrap.settings.site_slogan;
+      if (sub) sub.textContent = settings.site_slogan;
     }
     const filters = getFiltersFromCache();
     if (filters) populateFilters(filters);

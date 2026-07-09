@@ -2,7 +2,7 @@ import {
   escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage,
   isWishlisted, toggleWishlist, icon
 } from './portfolio-shared.js';
-import { ensureBootstrap, getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
+import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
 
 const DOM = {
   root: document.getElementById('product-root'),
@@ -129,7 +129,7 @@ function render() {
   const price = selectedVariant ? selectedVariant.retail_price.toFixed(2) : '—';
   const maxQty = selectedVariant?.available ? 99 : 1;
 
-  document.title = `${product.name} – Portfolio`;
+  document.title = `${product.name} – BIOCODE`;
 
   DOM.root.innerHTML = `
     ${renderBreadcrumb()}
@@ -315,7 +315,6 @@ async function loadProduct() {
     return;
   }
   try {
-    await ensureBootstrap();
     product = await getProductFromCache(groupId);
     if (!product) {
       DOM.root.innerHTML = '<div class="pf-error">Продуктът не е намерен.</div>';
@@ -329,7 +328,7 @@ async function loadProduct() {
 }
 
 async function init() {
-  await initPortfolioPage({ showMobileBar: true });
+  await initPortfolioPage({ showMobileBar: true, settingsOnly: false });
   updateCartBadges();
   await loadProduct();
 }
