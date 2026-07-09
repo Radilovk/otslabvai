@@ -1907,6 +1907,10 @@ function setupEventListeners() {
         document.getElementById(target.dataset.tab).classList.add('active');
         
         try { localStorage.setItem('adminActiveTab', target.dataset.tab); } catch (e) {}
+
+        if (target.dataset.tab === 'tab-portfolio-orders') {
+            fetchPortfolioOrders().then(() => filterPortfolioOrders());
+        }
     });
 
     DOM.saveBtn.addEventListener('click', saveData);
@@ -4571,6 +4575,14 @@ function renderPortfolioOrders() {
     const selectAll = document.getElementById('portfolio-select-all');
     if (selectAll) selectAll.checked = false;
 
+    if (!filteredPortfolioOrdersData.length) {
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--text-secondary);">
+            Няма portfolio поръчки. След успешно изпращане от checkout те се появяват тук автоматично.
+        </td></tr>`;
+        updatePortfolioBatchApproveButton();
+        return;
+    }
+
     filteredPortfolioOrdersData.forEach((order) => {
         const c = order.customer || {};
         const products = (order.products || []).map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join('<br>');
@@ -4597,7 +4609,7 @@ function renderPortfolioOrders() {
                 <select class="portfolio-order-status" data-id="${escAdminHtml(order.id)}">
                     <option value="Чака одобрение" ${order.status === 'Чака одобрение' ? 'selected' : ''}>Чака одобрение</option>
                     <option value="Обработва се" ${order.status === 'Обработва се' ? 'selected' : ''}>Обработва се</option>
-                    <option value="Изпратена към Fitness1" ${order.status === 'Изпратена към Fitness1' ? 'selected' : ''}>Изпратена към Fitness1</option>
+                    <option value="Изпратена към Fitness1" ${order.status === 'Изпратена към Fitness1' ? 'selected' : ''} ${order.fitness1_order?.id ? '' : 'disabled'}>Изпратена към Fitness1</option>
                     <option value="Отказана" ${order.status === 'Отказана' ? 'selected' : ''}>Отказана</option>
                 </select>
                 ${order.fitness1_order?.id ? `<br><small>F1 #${escAdminHtml(order.fitness1_order.id)}${order.fitness1_order.batch ? ' (обобщена)' : ''}</small>` : ''}
@@ -4669,9 +4681,21 @@ function showPortfolioOrderDetailModal(order) {
         </tr>`
     ).join('');
 
+    const promoLine = order.promo?.code
+        ? `<p><strong>Промо код:</strong> ${escAdminHtml(order.promo.code)} (−${Number(summary.promo_discount || 0).toFixed(2)} €)</p>`
+        : '';
+    const shippingLine = summary.shipping
+        ? `<p><strong>Доставка:</strong> ${escAdminHtml(String(summary.shipping))}</p>`
+        : '';
+    const totalLine = summary.total
+        ? `<p><strong>Общо за клиента:</strong> ${escAdminHtml(String(summary.total))}</p>`
+        : '';
+
     const f1Info = order.fitness1_order?.id
         ? `<p><strong>Fitness1 поръчка:</strong> #${escAdminHtml(order.fitness1_order.id)}${order.fitness1_order.batch ? ' (обобщена от няколко клиентски поръчки)' : ''}</p>`
-        : '<p><strong>Fitness1:</strong> още не е изпратена</p>';
+        : '<p><strong>Fitness1:</strong> още не е изпратена — използвайте „Одобри → F1“</p>';
+
+    const canApprove = !order.fitness1_order?.id && order.status !== 'Изпратена към Fitness1';
 
     const html = `
         <div class="detail-modal-section">
@@ -4682,6 +4706,7 @@ function showPortfolioOrderDetailModal(order) {
                 <dt>Email</dt><dd>${escAdminHtml(customer.email || '—')}</dd>
                 <dt>Дата</dt><dd>${escAdminHtml(date)}</dd>
                 <dt>ID</dt><dd><code>${escAdminHtml(order.id)}</code></dd>
+                <dt>Статус</dt><dd>${escAdminHtml(order.status || '—')}</dd>
             </dl>
         </div>
         <div class="detail-modal-section">
@@ -4692,20 +4717,56 @@ function showPortfolioOrderDetailModal(order) {
             </p>
         </div>
         <div class="detail-modal-section">
-            <h4>🛒 Продукти</h4>
+            <h4>🛒 Продукти и суми</h4>
             <table class="detail-products-table">
                 <thead><tr><th>Продукт</th><th>Кол.</th><th>Продажна</th><th>B2B</th></tr></thead>
                 <tbody>${productsRows}</tbody>
             </table>
             <p style="margin-top:0.75rem;">
-                <strong>Общо:</strong> ${Number(summary.retail_total || 0).toFixed(2)} € продажна /
-                ${Number(summary.b2b_total || 0).toFixed(2)} € B2B /
-                марж ${Number(summary.margin || 0).toFixed(2)} €
+                <strong>Междинна (продажна):</strong> ${Number(summary.retail_total || 0).toFixed(2)} € /
+                <strong>B2B:</strong> ${Number(summary.b2b_total || 0).toFixed(2)} € /
+                <strong>марж:</strong> ${Number(summary.margin || 0).toFixed(2)} €
             </p>
+            ${promoLine}
+            ${shippingLine}
+            ${totalLine}
             ${f1Info}
+        </div>
+        <div class="detail-modal-section">
+            <h4>📝 Бележка (админ)</h4>
+            <textarea id="portfolio-order-admin-note" rows="3" style="width:100%;padding:0.65rem;border:1px solid var(--border-color);border-radius:6px;font:inherit;">${escAdminHtml(order.admin_note || '')}</textarea>
+            <div style="margin-top:0.65rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <button type="button" class="btn btn-secondary" id="portfolio-save-note-btn" data-id="${escAdminHtml(order.id)}">Запази бележка</button>
+                ${canApprove ? `<button type="button" class="btn btn-success" id="portfolio-modal-approve-btn" data-id="${escAdminHtml(order.id)}">Одобри → Fitness1</button>` : ''}
+            </div>
         </div>`;
 
     openDetailModal(`Portfolio поръчка ${order.id}`, html, null);
+
+    document.getElementById('portfolio-save-note-btn')?.addEventListener('click', () => {
+        savePortfolioOrderNote(order.id, document.getElementById('portfolio-order-admin-note')?.value || '');
+    });
+    document.getElementById('portfolio-modal-approve-btn')?.addEventListener('click', async () => {
+        closeModal();
+        await approvePortfolioOrder(order.id);
+    });
+}
+
+async function savePortfolioOrderNote(orderId, note) {
+    try {
+        const res = await fetch(`${API_URL}/portfolio/orders`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: orderId, admin_note: note })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Грешка');
+        const idx = portfolioOrdersData.findIndex((o) => o.id === orderId);
+        if (idx >= 0) portfolioOrdersData[idx].admin_note = note;
+        showNotification('Бележката е запазена.', 'success');
+    } catch (e) {
+        showNotification(e.message || 'Грешка при запис на бележка.', 'error');
+    }
 }
 
 async function approvePortfolioOrder(orderId) {

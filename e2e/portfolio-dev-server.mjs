@@ -37,7 +37,8 @@ function loadKvFromDisk() {
 
 function createEnv() {
   return {
-    FITNESS1_API_KEY: process.env.FITNESS1_API_KEY || null,
+    FITNESS1_API_KEY: process.env.FITNESS1_API_KEY || 'mock-dev-key',
+    MOCK_FITNESS1: process.env.MOCK_FITNESS1 !== '0' ? '1' : null,
     PAGE_CONTENT: {
       get: async (key) => kvStore.get(key) ?? null,
       put: async (key, val) => { kvStore.set(key, val); },
@@ -85,6 +86,9 @@ app.use(express.static(ROOT));
 
 app.listen(PORT, '0.0.0.0', () => {
   loadKvFromDisk();
+  if (!kvStore.has('portfolio_orders')) {
+    kvStore.set('portfolio_orders', '[]');
+  }
   kvStore.set('portfolio_promo_codes', JSON.stringify([
     {
       id: 'pf-promo-test',

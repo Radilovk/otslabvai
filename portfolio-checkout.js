@@ -327,6 +327,14 @@ function markInvalidFields(customerCheck) {
   setInvalid('postcode', (customerCheck.errors || []).some((e) => e.includes('пощенски')));
 }
 
+function scrollToFirstInvalid() {
+  const firstInvalid = document.querySelector('.is-invalid, .pf-field input:invalid, .pf-check input.is-invalid');
+  firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (typeof firstInvalid?.focus === 'function') {
+    try { firstInvalid.focus({ preventScroll: true }); } catch { firstInvalid.focus(); }
+  }
+}
+
 function validateForm() {
   const customer = buildCustomerPayload();
   const customerCheck = validatePortfolioCustomer(customer);
@@ -340,27 +348,7 @@ function validateForm() {
 
   if (!customerCheck.valid) {
     showToast(customerCheck.errors[0], 'error');
-    return false;
-  }
-
-  if (!$('policy-consent')?.checked || !$('terms')?.checked) {
-    $('policy-consent')?.classList.toggle('is-invalid', !$('policy-consent')?.checked);
-    $('terms')?.classList.toggle('is-invalid', !$('terms')?.checked);
-    showToast('Моля, приемете условията.', 'error');
-    ok = false;
-  }
-
-  if (!ok) {
-    const firstInvalid = document.querySelector('.is-invalid, .pf-field input:invalid');
-    firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    if (typeof firstInvalid?.focus === 'function') {
-      try { firstInvalid.focus({ preventScroll: true }); } catch { firstInvalid.focus(); }
-    }
-  }
-
-  return ok;
-  if ($('delivery-courier')?.checked && $('courier-ekont')?.checked && !selectedEcontOffice) {
-    showToast('Изберете офис на Econt от списъка.', 'error');
+    scrollToFirstInvalid();
     return false;
   }
 
@@ -371,10 +359,7 @@ async function submitOrder(e) {
   e.preventDefault();
   if (!cart.length || !validateForm()) return;
 
-  syncSubmitButtons({ disabled: true, label: 'Изпращане...' });
-  const btn = $('submit-btn');
-  btn.disabled = true;
-  btn.textContent = 'Проверка...';
+  syncSubmitButtons({ disabled: true, label: 'Проверка...' });
 
   const customer = buildCustomerPayload();
   const subtotal = getSubtotal();
@@ -392,7 +377,7 @@ async function submitOrder(e) {
       throw new Error(cartData.error || 'Продуктите в количката не са валидни. Презаредете страницата.');
     }
 
-    btn.textContent = 'Изпращане...';
+    syncSubmitButtons({ disabled: true, label: 'Изпращане...' });
 
     const res = await fetch(`${API_URL}/portfolio/orders`, {
       method: 'POST',
