@@ -827,6 +827,16 @@ function aggregateProductLines(productLists) {
 }
 
 async function submitProductsToFitness1(env, products) {
+  if (env.MOCK_FITNESS1 === '1' || env.MOCK_FITNESS1 === true) {
+    return {
+      status: 'ok',
+      order: {
+        id: 900000 + Math.floor(Math.random() * 99999),
+        price: '0.00'
+      }
+    };
+  }
+
   const apiKey = await getFitness1ApiKey(env);
   if (!apiKey) throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран.', 500);
 
