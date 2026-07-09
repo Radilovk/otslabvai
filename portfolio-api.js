@@ -764,7 +764,7 @@ async function handleGetOrdersSummary(env) {
   const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
   const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
   const pending = orders.filter(
-    (o) => o.status === 'Чака одобрение' && !o.fitness1_order?.id
+    (o) => !o.fitness1_order?.id && o.status !== 'Отказана'
   ).length;
   return jsonResponse({ pending, total: orders.length });
 }
