@@ -359,7 +359,7 @@ async function submitOrder(e) {
   e.preventDefault();
   if (!cart.length || !validateForm()) return;
 
-  syncSubmitButtons({ disabled: true, label: 'Проверка...' });
+  syncSubmitButtons({ disabled: true, label: 'Изпращане...' });
 
   const customer = buildCustomerPayload();
   const subtotal = getSubtotal();
@@ -367,18 +367,6 @@ async function submitOrder(e) {
   const total = subtotal - getPromoDiscount(subtotal) + shipping;
 
   try {
-    const cartRes = await fetch(`${API_URL}/portfolio/validate-cart`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ products: cart })
-    });
-    const cartData = await cartRes.json();
-    if (!cartRes.ok || !cartData.valid) {
-      throw new Error(cartData.error || 'Продуктите в количката не са валидни. Презаредете страницата.');
-    }
-
-    syncSubmitButtons({ disabled: true, label: 'Изпращане...' });
-
     const res = await fetch(`${API_URL}/portfolio/orders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
