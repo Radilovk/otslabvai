@@ -144,7 +144,7 @@
                     <div class="pf-summary-row pf-summary-discount" id="discount-row" style="display:none"><span>Отстъпка</span><span id="summary-discount"></span></div>
                     <div class="pf-summary-row pf-summary-total"><span>Общо</span><span id="summary-total">0.00 €</span></div>
                 </div>
-                <button type="submit" form="checkout-form" class="pf-btn pf-btn-primary pf-btn-block pf-checkout-submit--desktop" id="submit-btn" disabled>
+                <button type="button" class="pf-btn pf-btn-primary pf-btn-block pf-checkout-submit--desktop" id="submit-btn" disabled>
                     Поръчай с наложен платеж
                 </button>
                 <p class="pf-trust pf-checkout-trust--desktop">
@@ -158,17 +158,9 @@
     <div id="pf-footer-slot"></div>
     <div id="pf-mobile-cart-slot"></div>
 
-    <div class="pf-checkout-action-bar" id="checkout-action-bar" hidden>
-        <div class="pf-checkout-action-bar-inner">
-            <div class="pf-checkout-action-total">
-                <span>Общо</span>
-                <strong id="checkout-action-total">0.00 €</strong>
-            </div>
-            <button type="submit" form="checkout-form" class="pf-btn pf-btn-primary" id="submit-btn-mobile" disabled>
-                Поръчай с наложен платеж
-            </button>
-        </div>
-    </div>
+    <button type="button" class="pf-floating-btn pf-fab-action" id="submit-btn-mobile" disabled aria-label="Поръчай с наложен платеж">
+        Поръчай
+    </button>
     <div class="pf-toast-container" id="toast-container"></div>
 
     <div id="speedy-map-modal" class="pf-modal" role="dialog" aria-modal="true" aria-label="Избор на офис на Спиди">

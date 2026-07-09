@@ -99,8 +99,8 @@ async function runViewport(browser, name, width, height) {
     await page.waitForTimeout(500);
     const toast = await page.locator('.pf-toast').count();
     log(`[${name}] Add to cart shows toast`, toast > 0);
-    const buyBar = await page.locator('#product-buy-bar.pf-visible').isVisible();
-    if (width < 900) log(`[${name}] Product buy bar visible`, buyBar);
+    const buyBar = await page.locator('#add-to-cart-sticky.pf-visible').isVisible();
+    if (width < 900) log(`[${name}] Product floating add button visible`, buyBar);
   }
 
   // 6. Checkout
@@ -111,7 +111,7 @@ async function runViewport(browser, name, width, height) {
   log(`[${name}] Checkout form visible`, formVisible);
 
   if (width < 900) {
-    const floatingSubmit = await page.locator('#submit-btn-mobile').isVisible();
+    const floatingSubmit = await page.locator('#submit-btn-mobile.pf-visible').isVisible();
     log(`[${name}] Floating checkout submit visible`, floatingSubmit);
   }
 

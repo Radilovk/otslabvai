@@ -1,6 +1,5 @@
 import {
-  escapeHtml, debounce, updateCartBadges, initPortfolioPage,
-  isWishlisted, toggleWishlist, showToast, icon
+  escapeHtml, debounce, updateCartBadges, initPortfolioPage, icon
 } from './portfolio-shared.js';
 import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache } from './portfolio-cache.js';
 import {
@@ -64,12 +63,8 @@ function renderCard(item) {
   const variantBadge = item.variant_count > 1 ? `<span class="pf-badge">${item.variant_count} варианта</span>` : '';
   const stockBadge = !item.available ? '<span class="pf-badge out">Изчерпан</span>' : '';
   const img = item.image || PLACEHOLDER_IMG;
-  const wished = isWishlisted(item.group_id);
   return `
     <div class="pf-product-card">
-      <button type="button" class="pf-wish-btn ${wished ? 'active' : ''}" data-wish="${escapeHtml(item.group_id)}" aria-label="Любими" aria-pressed="${wished}">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="${wished ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-      </button>
       <a href="portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}" class="pf-card-link">
         <div class="pf-card-image">${variantBadge}${stockBadge}
           <img src="${escapeHtml(img)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" sizes="(max-width: 640px) 45vw, 210px" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
@@ -237,17 +232,6 @@ function loadCatalog() {
       </div>`;
   document.getElementById('empty-clear-filters')?.addEventListener('click', () => {
     DOM.clearFilters.click();
-  });
-  DOM.grid.querySelectorAll('[data-wish]').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const active = toggleWishlist(btn.dataset.wish);
-      btn.classList.toggle('active', active);
-      btn.setAttribute('aria-pressed', String(active));
-      btn.querySelector('svg').setAttribute('fill', active ? 'currentColor' : 'none');
-      showToast(active ? 'Добавено в любими' : 'Премахнато от любими', 'success');
-    });
   });
   renderPagination();
   updateFiltersToggleLabel();
