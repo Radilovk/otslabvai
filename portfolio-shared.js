@@ -3,6 +3,11 @@ import { API_URL } from './config.js';
 export const CART_KEY = 'portfolioCart';
 export const WISHLIST_KEY = 'portfolioWishlist';
 
+export const BRAND_NAME = 'BIOCODE';
+export const BRAND_FULL = 'BIOCODE - Nutrition Science';
+export const BRAND_SLOGAN = 'Научно обосновани хранителни добавки';
+export const BRAND_LOGO = 'images/biocode-logo.png';
+
 /** Stroke-based icon set (24x24, currentColor) — used instead of emoji everywhere. */
 const ICON_PATHS = {
   card: '<rect x="1.5" y="4.5" width="21" height="15" rx="2.5"/><path d="M1.5 9.5h21"/><path d="M5 15h4"/>',
@@ -109,11 +114,14 @@ export function formatPrice(amount) {
   return `${Number(amount).toFixed(2)} €`;
 }
 
-export async function loadSiteSettings() {
+export async function loadSiteSettings({ settingsOnly = false } = {}) {
   try {
-    const { ensureBootstrap, getCachedSettings } = await import('./portfolio-cache.js');
-    await ensureBootstrap();
-    return getCachedSettings();
+    const cache = await import('./portfolio-cache.js');
+    if (settingsOnly) {
+      return await cache.ensureSettings();
+    }
+    await cache.ensureBootstrap();
+    return cache.getCachedSettings();
   } catch {
     try {
       const res = await fetch(`${API_URL}/portfolio/settings`);
@@ -131,19 +139,24 @@ export function applySiteSettings(settings) {
   const sloganEl = document.getElementById('site-slogan');
   if (nameEl && settings.site_name) nameEl.textContent = settings.site_name;
   if (sloganEl && settings.site_slogan) sloganEl.textContent = settings.site_slogan;
-  if (settings.site_name) document.title = document.title.replace(/^Portfolio/, settings.site_name);
+  if (settings.site_name) {
+    document.title = document.title
+      .replace(/^Portfolio/, settings.site_name)
+      .replace(/^BIOCODE/, settings.site_name.split(' - ')[0] || settings.site_name);
+  }
 }
 
 export function renderHeader(active = 'catalog') {
   const count = getCartCount();
   return `
+    <div class="pf-scroll-progress" id="pf-scroll-progress" aria-hidden="true"></div>
     <header class="pf-header">
       <div class="pf-header-inner">
-        <a href="portfolio.html" class="pf-logo" aria-label="Начало">
-          <div class="pf-logo-icon" aria-hidden="true">P</div>
+        <a href="portfolio.html" class="pf-logo" aria-label="${BRAND_FULL} – начало">
+          <img src="${BRAND_LOGO}" alt="" class="pf-logo-img" width="44" height="44" decoding="async">
           <div class="pf-logo-text-wrap">
-            <span class="pf-logo-text" id="site-name">Portfolio</span>
-            <span class="pf-logo-slogan" id="site-slogan">Хранителни добавки</span>
+            <span class="pf-logo-text" id="site-name">${BRAND_FULL}</span>
+            <span class="pf-logo-slogan" id="site-slogan">${BRAND_SLOGAN}</span>
           </div>
         </a>
         <nav class="pf-nav" aria-label="Основна навигация">
@@ -181,21 +194,25 @@ export function renderFooter() {
     <footer class="pf-footer">
       <div class="pf-footer-inner">
         <div class="pf-footer-brand">
-          <strong>Portfolio</strong>
-          <span>Хранителни добавки с доставка до офис</span>
+          <img src="${BRAND_LOGO}" alt="" class="pf-footer-logo" width="36" height="36" loading="lazy" decoding="async">
+          <div>
+            <strong id="footer-brand-name">${BRAND_NAME}</strong>
+            <span>Nutrition Science · доставка до офис</span>
+          </div>
         </div>
         <div class="pf-footer-links">
           <a href="portfolio-policy.html">Поверителност</a>
           <a href="portfolio-shipping.html">Доставка</a>
           <a href="portfolio-terms.html">Условия</a>
         </div>
-        <p class="pf-footer-copy">© ${year} Portfolio · Всички права запазени</p>
+        <p class="pf-footer-copy">© ${year} ${BRAND_NAME} · Всички права запазени</p>
       </div>
     </footer>`;
 }
 
 function initScrollEffects() {
   const header = document.querySelector('.pf-header');
+  const progressBar = document.getElementById('pf-scroll-progress');
   const scrollTopBtn = document.createElement('button');
   scrollTopBtn.type = 'button';
   scrollTopBtn.className = 'pf-scroll-top';
@@ -211,6 +228,10 @@ function initScrollEffects() {
     ticking = true;
     requestAnimationFrame(() => {
       const y = window.scrollY;
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      if (progressBar && docH > 0) {
+        progressBar.style.transform = `scaleX(${Math.min(1, y / docH)})`;
+      }
       header?.classList.toggle('pf-header--scrolled', y > 8);
       scrollTopBtn.classList.toggle('pf-visible', y > 500);
       ticking = false;
@@ -220,17 +241,22 @@ function initScrollEffects() {
   onScroll();
 }
 
-export async function initPortfolioPage({ active = 'catalog', showMobileBar = false } = {}) {
+export async function initPortfolioPage({
+  active = 'catalog',
+  showMobileBar = false,
+  settingsOnly = false
+} = {}) {
   const headerSlot = document.getElementById('pf-header-slot');
   const footerSlot = document.getElementById('pf-footer-slot');
   const mobileBarSlot = document.getElementById('pf-mobile-cart-slot');
   if (headerSlot) headerSlot.innerHTML = renderHeader(active);
   if (footerSlot) footerSlot.innerHTML = renderFooter();
   if (showMobileBar && mobileBarSlot) mobileBarSlot.innerHTML = renderMobileCartBar();
-  const settings = await loadSiteSettings();
+  const settings = await loadSiteSettings({ settingsOnly });
   applySiteSettings(settings);
   updateCartBadges();
   initScrollEffects();
+  return { settings };
 }
 
 export function debounce(fn, ms) {

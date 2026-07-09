@@ -417,7 +417,7 @@ function setupSpeedy() {
 }
 
 async function init() {
-  await initPortfolioPage({ active: 'checkout' });
+  await initPortfolioPage({ active: 'checkout', settingsOnly: true });
   cart = getCart();
   renderCart();
 

@@ -6,12 +6,22 @@ import { API_URL } from './config.js';
 import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
 
 const BOOTSTRAP_KEY = 'portfolio_bootstrap_v1';
+const SETTINGS_KEY = 'portfolio_settings_v1';
 const TTL_MS = 24 * 60 * 60 * 1000;
+const SETTINGS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+/** Avoid hammering meta-version on every navigation within a session. */
+const REVALIDATE_COOLDOWN_MS = 10 * 60 * 1000;
 
 const memory = {
   bootstrap: null,
+  settings: null,
   chunks: new Map()
 };
+
+let bootstrapPromise = null;
+let settingsPromise = null;
+let revalidatePromise = null;
+let lastRevalidateAt = 0;
 
 function readBootstrapStorage() {
   try {
@@ -29,6 +39,29 @@ function readBootstrapStorage() {
 function writeBootstrapStorage(data) {
   try {
     localStorage.setItem(BOOTSTRAP_KEY, JSON.stringify(data));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function readSettingsStorage() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data?.settings || !data.fetchedAt) return null;
+    if (Date.now() - data.fetchedAt > SETTINGS_TTL_MS) return null;
+    return data.settings;
+  } catch {
+    return null;
+  }
+}
+
+function writeSettingsStorage(settings) {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ fetchedAt: Date.now(), settings }));
+    memory.settings = settings;
     return true;
   } catch {
     return false;
@@ -58,22 +91,71 @@ async function fetchBootstrap() {
     meta: data.meta
   };
   writeBootstrapStorage(cached);
+  writeSettingsStorage(data.settings);
   memory.bootstrap = cached;
   memory.chunks.clear();
   return cached;
 }
 
+async function fetchSettings() {
+  const res = await fetch(`${API_URL}/portfolio/settings`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Грешка при зареждане на настройки');
+  writeSettingsStorage(data);
+  return data;
+}
+
 async function revalidateBootstrapIfStale() {
   const current = memory.bootstrap;
   if (!current?.synced_at) return;
-  try {
-    const res = await fetch(`${API_URL}/portfolio/meta-version`);
-    if (!res.ok) return;
-    const version = await res.json();
-    if (version.synced_at && version.synced_at !== current.synced_at) {
-      await fetchBootstrap();
+
+  const now = Date.now();
+  if (now - lastRevalidateAt < REVALIDATE_COOLDOWN_MS) return;
+  if (revalidatePromise) return revalidatePromise;
+
+  revalidatePromise = (async () => {
+    try {
+      const res = await fetch(`${API_URL}/portfolio/meta-version`);
+      if (!res.ok) return;
+      const version = await res.json();
+      lastRevalidateAt = Date.now();
+      if (version.synced_at && version.synced_at !== current.synced_at) {
+        bootstrapPromise = null;
+        await fetchBootstrap();
+      }
+    } catch { /* offline – keep cache */ }
+    finally {
+      revalidatePromise = null;
     }
-  } catch { /* offline – keep cache */ }
+  })();
+
+  return revalidatePromise;
+}
+
+/** Lightweight settings load – no full catalog index (checkout, legal pages). */
+export async function ensureSettings({ force = false } = {}) {
+  if (!force && memory.settings) return memory.settings;
+
+  if (!force) {
+    const stored = readSettingsStorage();
+    if (stored) {
+      memory.settings = stored;
+      return stored;
+    }
+    const bootstrapStored = readBootstrapStorage();
+    if (bootstrapStored?.settings) {
+      memory.settings = bootstrapStored.settings;
+      writeSettingsStorage(bootstrapStored.settings);
+      return bootstrapStored.settings;
+    }
+  }
+
+  if (settingsPromise && !force) return settingsPromise;
+
+  settingsPromise = fetchSettings().finally(() => {
+    settingsPromise = null;
+  });
+  return settingsPromise;
 }
 
 /** Load settings + catalog index (1 API call, then cached 24h). */
@@ -87,16 +169,22 @@ export async function ensureBootstrap({ force = false } = {}) {
     const stored = readBootstrapStorage();
     if (stored) {
       memory.bootstrap = stored;
+      memory.settings = stored.settings;
       revalidateBootstrapIfStale();
       return stored;
     }
   }
 
-  return fetchBootstrap();
+  if (bootstrapPromise && !force) return bootstrapPromise;
+
+  bootstrapPromise = fetchBootstrap().finally(() => {
+    bootstrapPromise = null;
+  });
+  return bootstrapPromise;
 }
 
 export function getCachedSettings() {
-  return memory.bootstrap?.settings || null;
+  return memory.bootstrap?.settings || memory.settings || null;
 }
 
 export function getCachedMeta() {
@@ -214,9 +302,14 @@ export async function getDescriptionFromCache(groupId) {
 /** Invalidate client cache after admin sync (call from admin). */
 export function invalidatePortfolioCache() {
   memory.bootstrap = null;
+  memory.settings = null;
   memory.chunks.clear();
+  bootstrapPromise = null;
+  settingsPromise = null;
+  lastRevalidateAt = 0;
   try {
     localStorage.removeItem(BOOTSTRAP_KEY);
+    localStorage.removeItem(SETTINGS_KEY);
     const keys = [];
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
