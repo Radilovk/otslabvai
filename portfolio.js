@@ -24,6 +24,7 @@ const DOM = {
   sidebar: document.getElementById('sidebar'),
   sidebarOverlay: document.getElementById('sidebar-overlay'),
   sidebarClose: document.getElementById('sidebar-close'),
+  sidebarApply: document.getElementById('sidebar-apply'),
   heroStats: document.getElementById('hero-stats'),
   statProducts: document.getElementById('stat-products'),
   statBrands: document.getElementById('stat-brands'),
@@ -119,8 +120,25 @@ function countActiveFilters() {
   if (DOM.filterBrand.value) n++;
   if (DOM.filterMinPrice.value || DOM.filterMaxPrice.value) n++;
   if (!DOM.filterAvailable.checked) n++;
-  if (DOM.sortSelect.value !== 'name') n++;
   return n;
+}
+
+/** Filters shown as removable chips (category is handled by quick chips row). */
+function getRemovableFilterChips() {
+  const chips = [];
+  const params = getFilterParams();
+  if (params.q) chips.push({ key: 'q', label: `„${params.q}"` });
+  if (params.brand) {
+    const opt = [...DOM.filterBrand.options].find((o) => o.value === params.brand);
+    chips.push({ key: 'brand', label: opt ? opt.textContent.replace(/\s*\(\d+\)$/, '') : params.brand });
+  }
+  if (params.min_price || params.max_price) {
+    const from = params.min_price || '0';
+    const to = params.max_price || '∞';
+    chips.push({ key: 'price', label: `${from}–${to} €` });
+  }
+  if (!DOM.filterAvailable.checked) chips.push({ key: 'available', label: 'Вкл. изчерпани' });
+  return chips;
 }
 
 function updateFiltersToggleLabel() {
@@ -132,22 +150,14 @@ function updateFiltersToggleLabel() {
 
 function renderActiveFilterChips() {
   if (!DOM.activeFilters) return;
-  const chips = [];
-  const params = getFilterParams();
-  if (params.q) chips.push({ key: 'q', label: `„${params.q}"` });
-  if (params.category) chips.push({ key: 'category', label: params.category });
-  if (params.brand) {
-    const opt = [...DOM.filterBrand.options].find((o) => o.value === params.brand);
-    chips.push({ key: 'brand', label: opt ? opt.textContent.replace(/\s*\(\d+\)$/, '') : params.brand });
-  }
-  if (params.min_price || params.max_price) {
-    const from = params.min_price || '0';
-    const to = params.max_price || '∞';
-    chips.push({ key: 'price', label: `${from}–${to} €` });
-  }
-  if (!DOM.filterAvailable.checked) chips.push({ key: 'available', label: 'Вкл. изчерпани' });
+  const chips = getRemovableFilterChips();
+  const totalActive = countActiveFilters();
 
-  if (!chips.length) { DOM.activeFilters.innerHTML = ''; return; }
+  // Hide when only one criterion is active — category chips / filter panel cover that case.
+  if (totalActive <= 1) {
+    DOM.activeFilters.innerHTML = '';
+    return;
+  }
 
   DOM.activeFilters.innerHTML = chips.map((c) => `
     <button type="button" class="pf-active-chip" data-clear="${c.key}">
@@ -235,6 +245,7 @@ function loadCatalog() {
   updateFiltersToggleLabel();
   renderActiveFilterChips();
   renderCategoryChips();
+  updateSidebarApplyLabel();
 }
 
 function populateFilters(filters) {
@@ -298,24 +309,37 @@ function openFilters() {
   DOM.sidebar?.classList.add('pf-sidebar--open');
   DOM.sidebarOverlay?.classList.add('pf-visible');
   DOM.filtersToggle?.setAttribute('aria-expanded', 'true');
+  DOM.filtersToggle?.classList.add('pf-filters-toggle--hidden');
   document.body.classList.add('pf-no-scroll');
+  updateSidebarApplyLabel();
 }
 
 function closeFilters() {
   DOM.sidebar?.classList.remove('pf-sidebar--open');
   DOM.sidebarOverlay?.classList.remove('pf-visible');
   DOM.filtersToggle?.setAttribute('aria-expanded', 'false');
+  DOM.filtersToggle?.classList.remove('pf-filters-toggle--hidden');
   document.body.classList.remove('pf-no-scroll');
+}
+
+function updateSidebarApplyLabel() {
+  if (!DOM.sidebarApply) return;
+  const n = state.total;
+  DOM.sidebarApply.textContent = n > 0
+    ? `Покажи ${n.toLocaleString('bg-BG')} резултата`
+    : 'Покажи резултатите';
 }
 
 function bindEvents() {
   const reload = debounce(() => { state.page = 1; reconcileFacets(); loadCatalog(); }, 200);
   DOM.searchInput.addEventListener('input', reload);
+  [DOM.filterMinPrice, DOM.filterMaxPrice]
+    .forEach((el) => el.addEventListener('input', reload));
   [DOM.filterMinPrice, DOM.filterMaxPrice, DOM.filterAvailable]
     .forEach((el) => el.addEventListener('change', () => { state.page = 1; reconcileFacets(); loadCatalog(); }));
   [DOM.filterCategory, DOM.filterBrand]
     .forEach((el) => el.addEventListener('change', () => { state.page = 1; reconcileFacets(); loadCatalog(); closeFilters(); }));
-  DOM.sortSelect.addEventListener('change', () => { state.page = 1; loadCatalog(); closeFilters(); });
+  DOM.sortSelect.addEventListener('change', () => { state.page = 1; loadCatalog(); });
   DOM.clearFilters.addEventListener('click', () => {
     DOM.searchInput.value = '';
     DOM.filterCategory.value = '';
@@ -327,6 +351,7 @@ function bindEvents() {
     state.page = 1;
     reconcileFacets();
     loadCatalog();
+    closeFilters();
   });
   DOM.filtersToggle?.addEventListener('click', () => {
     if (DOM.sidebar?.classList.contains('pf-sidebar--open')) closeFilters();
@@ -334,6 +359,10 @@ function bindEvents() {
   });
   DOM.sidebarOverlay?.addEventListener('click', closeFilters);
   DOM.sidebarClose?.addEventListener('click', closeFilters);
+  DOM.sidebarApply?.addEventListener('click', closeFilters);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && DOM.sidebar?.classList.contains('pf-sidebar--open')) closeFilters();
+  });
   const params = new URLSearchParams(location.search);
   if (params.get('q')) DOM.searchInput.value = params.get('q');
   if (params.get('category')) DOM.filterCategory.value = params.get('category');

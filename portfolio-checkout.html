@@ -144,10 +144,10 @@
                     <div class="pf-summary-row pf-summary-discount" id="discount-row" style="display:none"><span>Отстъпка</span><span id="summary-discount"></span></div>
                     <div class="pf-summary-row pf-summary-total"><span>Общо</span><span id="summary-total">0.00 €</span></div>
                 </div>
-                <button type="submit" form="checkout-form" class="pf-btn pf-btn-primary pf-btn-block" id="submit-btn" disabled>
+                <button type="submit" form="checkout-form" class="pf-btn pf-btn-primary pf-btn-block pf-checkout-submit--desktop" id="submit-btn" disabled>
                     Поръчай с наложен платеж
                 </button>
-                <p class="pf-trust">
+                <p class="pf-trust pf-checkout-trust--desktop">
                     <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"/></svg>Сигурна поръчка</span>
                     <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 22 8v8l-10 5.5L2 16V8z"/><path d="M2 8l10 5.5L22 8"/><path d="M12 13.5V22"/></svg>Преглед преди изпращане</span>
                 </p>
@@ -157,6 +157,18 @@
 
     <div id="pf-footer-slot"></div>
     <div id="pf-mobile-cart-slot"></div>
+
+    <div class="pf-checkout-action-bar" id="checkout-action-bar" hidden>
+        <div class="pf-checkout-action-bar-inner">
+            <div class="pf-checkout-action-total">
+                <span>Общо</span>
+                <strong id="checkout-action-total">0.00 €</strong>
+            </div>
+            <button type="submit" form="checkout-form" class="pf-btn pf-btn-primary" id="submit-btn-mobile" disabled>
+                Поръчай с наложен платеж
+            </button>
+        </div>
+    </div>
     <div class="pf-toast-container" id="toast-container"></div>
 
     <div id="speedy-map-modal" class="pf-modal" role="dialog" aria-modal="true" aria-label="Избор на офис на Спиди">

@@ -64,7 +64,7 @@
             </div>
             <div class="pf-filter-group">
                 <h3>Цена (€)</h3>
-                <div style="display:flex;gap:0.5rem;">
+                <div class="pf-filter-price-row">
                     <input type="number" id="filter-min-price" placeholder="От" min="0" step="0.01" aria-label="Минимална цена">
                     <input type="number" id="filter-max-price" placeholder="До" min="0" step="0.01" aria-label="Максимална цена">
                 </div>
@@ -76,6 +76,7 @@
                 </label>
             </div>
             <button type="button" class="pf-btn-clear" id="clear-filters">Изчисти филтрите</button>
+            <button type="button" class="pf-sidebar-apply" id="sidebar-apply">Покажи резултатите</button>
         </aside>
 
         <main>

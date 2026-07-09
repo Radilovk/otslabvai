@@ -26,6 +26,12 @@ async function waitForServer(maxMs = 30000) {
   return false;
 }
 
+async function clickSubmit(page) {
+  const mobileBtn = page.locator('#submit-btn-mobile');
+  if (await mobileBtn.isVisible()) await mobileBtn.click();
+  else await page.click('#submit-btn');
+}
+
 async function runTests() {
   console.log('\n=== Portfolio E2E ===\n');
 
@@ -159,7 +165,7 @@ async function runTests() {
   else logIssue('promo discount row not visible');
 
   // Form validation
-  await page.click('#submit-btn');
+  await clickSubmit(page);
   await sleep(500);
   const invalidFields = await page.locator('.is-invalid').count();
   if (invalidFields >= 2) logPass('checkout validates required fields');
@@ -181,7 +187,7 @@ async function runTests() {
 
   const [orderRes] = await Promise.all([
     page.waitForResponse((r) => r.url().includes('/portfolio/orders') && r.request().method() === 'POST'),
-    page.click('#submit-btn')
+    clickSubmit(page)
   ]);
   let orderData = {};
   try {

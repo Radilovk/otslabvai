@@ -19,6 +19,12 @@ const issues = [];
 function ok(msg) { passes.push(msg); console.log(`  ✓ ${msg}`); }
 function fail(msg) { issues.push(msg); console.log(`  ✗ ${msg}`); }
 
+async function clickSubmit(page) {
+  const mobileBtn = page.locator('#submit-btn-mobile');
+  if (await mobileBtn.isVisible()) await mobileBtn.click();
+  else await page.click('#submit-btn');
+}
+
 async function waitForServer(maxMs = 30000) {
   const start = Date.now();
   while (Date.now() - start < maxMs) {
@@ -91,7 +97,7 @@ async function runFlow(browser, deviceName, viewport) {
 
   const [orderRes] = await Promise.all([
     page.waitForResponse((r) => r.url().includes('/portfolio/orders') && r.request().method() === 'POST'),
-    page.click('#submit-btn'),
+    clickSubmit(page),
   ]);
 
   await page.waitForURL(/portfolio-order-success/, { timeout: 15000 }).catch(() => {});
