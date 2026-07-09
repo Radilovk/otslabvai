@@ -1,6 +1,5 @@
 import {
-  escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage,
-  isWishlisted, toggleWishlist, icon
+  escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage, icon
 } from './portfolio-shared.js';
 import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
 
@@ -55,12 +54,8 @@ function renderBreadcrumb() {
 
 function renderGallery() {
   const images = getGalleryImages();
-  const wished = isWishlisted(product.group_id);
   return `
     <div class="pf-gallery">
-      <button type="button" class="pf-wish-btn pf-wish-btn--gallery ${wished ? 'active' : ''}" id="wish-toggle" aria-label="Любими" aria-pressed="${wished}">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="${wished ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-      </button>
       <img id="product-image" src="${escapeHtml(selectedImage)}" alt="${escapeHtml(product.name)}" sizes="(max-width: 900px) 100vw, 50vw" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
       ${images.length > 1 ? `
       <div class="pf-gallery-thumbs">
@@ -180,37 +175,27 @@ function render() {
     ${renderRelated()}`;
 
   bindPageEvents();
-  syncProductBuyBar();
+  syncProductFab();
   if (!product.description) loadDescription();
 }
 
-function syncProductBuyBar() {
+function syncProductFab() {
   const slot = document.getElementById('pf-product-buy-slot');
   if (!slot || !product) return;
 
   const available = !!selectedVariant?.available;
-  const price = selectedVariant ? `${selectedVariant.retail_price.toFixed(2)} €` : '—';
-
   if (!available) {
     slot.innerHTML = '';
-    document.body.classList.remove('pf-product-has-buy-bar');
+    document.body.classList.remove('pf-product-has-fab');
     return;
   }
 
   slot.innerHTML = `
-    <div class="pf-product-buy-bar pf-visible" id="product-buy-bar">
-      <div class="pf-product-buy-bar-inner">
-        <div class="pf-product-buy-price">
-          <span>Цена</span>
-          <strong id="buy-bar-price">${escapeHtml(price)}</strong>
-        </div>
-        <button type="button" class="pf-btn pf-btn-primary" id="add-to-cart-sticky">
-          Добави в количката
-        </button>
-      </div>
-    </div>`;
+    <button type="button" class="pf-floating-btn pf-fab-action pf-fab-add pf-visible" id="add-to-cart-sticky">
+      Добави в количката
+    </button>`;
 
-  document.body.classList.add('pf-product-has-buy-bar');
+  document.body.classList.add('pf-product-has-fab');
   document.getElementById('add-to-cart-sticky')?.addEventListener('click', addToCart);
 }
 
@@ -249,13 +234,7 @@ function bindPageEvents() {
       document.querySelectorAll('.pf-tab-panel').forEach((p) => p.classList.toggle('active', p.dataset.panel === activeTab));
     });
   });
-  document.getElementById('wish-toggle')?.addEventListener('click', (e) => {
-    const active = toggleWishlist(product.group_id);
-    e.currentTarget.classList.toggle('active', active);
-    e.currentTarget.setAttribute('aria-pressed', String(active));
-    e.currentTarget.querySelector('svg').setAttribute('fill', active ? 'currentColor' : 'none');
-    showToast(active ? 'Добавено в любими' : 'Премахнато от любими', 'success');
-  });
+  document.getElementById('add-to-cart')?.addEventListener('click', addToCart);
 
   const qtyInput = document.getElementById('qty-input');
   const maxQty = selectedVariant?.available ? 99 : 1;
@@ -271,8 +250,6 @@ function bindPageEvents() {
     quantity = Math.min(maxQty, Math.max(1, parseInt(qtyInput.value, 10) || 1));
     qtyInput.value = quantity;
   });
-
-  document.getElementById('add-to-cart')?.addEventListener('click', addToCart);
 }
 
 async function loadDescription() {

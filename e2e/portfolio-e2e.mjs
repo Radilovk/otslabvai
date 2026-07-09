@@ -168,9 +168,9 @@ async function runTests() {
     logIssue('add to cart disabled – no available variant');
   }
 
-  const productBuyBar = page.locator('#product-buy-bar.pf-visible');
-  if (await productBuyBar.isVisible()) logPass('product sticky buy bar visible on mobile');
-  else logIssue('product sticky buy bar missing on mobile');
+  const productFab = page.locator('#add-to-cart-sticky.pf-visible');
+  if (await productFab.isVisible()) logPass('product floating add button visible on mobile');
+  else logIssue('product floating add button missing on mobile');
 
   const cartCount = parseInt(await page.locator('[data-pf-cart-count]').textContent() || '0', 10);
   if (cartCount > 0) logPass(`header cart badge shows ${cartCount} items`);
@@ -178,16 +178,16 @@ async function runTests() {
 
   await page.goto(`${BASE}/portfolio.html`, { waitUntil: 'networkidle' });
   await page.waitForSelector('.pf-card-link', { timeout: 15000 });
-  const mobileBar = page.locator('.pf-mobile-cart-bar.pf-visible');
-  if (await mobileBar.isVisible()) logPass('mobile cart bar visible on catalog after add');
-  else logIssue('mobile cart bar not visible on catalog');
+  const mobileBar = page.locator('#pf-fab-cart.pf-visible');
+  if (await mobileBar.isVisible()) logPass('floating cart button visible on catalog after add');
+  else logIssue('floating cart button not visible on catalog');
 
   // Checkout + promo
   await page.goto(`${BASE}/portfolio-checkout.html`, { waitUntil: 'networkidle' });
   await page.waitForSelector('.pf-summary-item', { timeout: 10000 });
   logPass('checkout shows cart items');
 
-  const floatingSubmit = page.locator('#submit-btn-mobile');
+  const floatingSubmit = page.locator('#submit-btn-mobile.pf-visible');
   if (await floatingSubmit.isVisible()) logPass('floating checkout submit visible on mobile');
   else logIssue('floating checkout submit not visible on mobile');
 

@@ -1,7 +1,6 @@
 import { API_URL } from './config.js';
 
 export const CART_KEY = 'portfolioCart';
-export const WISHLIST_KEY = 'portfolioWishlist';
 
 export const BRAND_NAME = 'BIOCODE';
 export const BRAND_FULL = 'BIOCODE - Nutrition Science';
@@ -68,35 +67,7 @@ export function updateCartBadges() {
     el.textContent = count;
     el.style.display = count > 0 ? '' : 'none';
   });
-  document.querySelectorAll('[data-pf-cart-subtotal]').forEach((el) => {
-    const subtotal = getCartSubtotal();
-    el.textContent = `${subtotal.toFixed(2)} €`;
-    el.closest('.pf-mobile-cart-bar')?.classList.toggle('pf-visible', count > 0);
-  });
-}
-
-export function getWishlist() {
-  try {
-    return JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-export function isWishlisted(groupId) {
-  return getWishlist().includes(String(groupId));
-}
-
-export function toggleWishlist(groupId) {
-  const id = String(groupId);
-  const list = getWishlist();
-  const idx = list.indexOf(id);
-  if (idx > -1) list.splice(idx, 1);
-  else list.push(id);
-  try {
-    localStorage.setItem(WISHLIST_KEY, JSON.stringify(list));
-  } catch { /* quota */ }
-  return list.includes(id);
+  document.getElementById('pf-fab-cart')?.classList.toggle('pf-visible', count > 0);
 }
 
 export function showToast(message, type = 'info', containerId = 'toast-container') {
@@ -176,19 +147,13 @@ export function renderHeader(active = 'catalog') {
     </header>`;
 }
 
-export function renderMobileCartBar() {
+export function renderFloatingCartFab() {
   const count = getCartCount();
-  const subtotal = getCartSubtotal();
   return `
-    <div class="pf-mobile-cart-bar ${count > 0 ? 'pf-visible' : ''}" id="pf-mobile-cart-bar">
-      <div class="pf-mobile-cart-bar-inner">
-        <div class="pf-mobile-cart-info">
-          <span class="pf-mobile-cart-count">${count} арт.</span>
-          <strong data-pf-cart-subtotal>${subtotal.toFixed(2)} €</strong>
-        </div>
-        <a href="portfolio-checkout.html" class="pf-btn pf-btn-primary">Към количката</a>
-      </div>
-    </div>`;
+    <a href="portfolio-checkout.html" class="pf-floating-btn pf-fab-cart ${count > 0 ? 'pf-visible' : ''}" id="pf-fab-cart" aria-label="Количка${count > 0 ? `, ${count} артикула` : ''}">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="pf-fab-badge" data-pf-cart-count ${count === 0 ? 'style="display:none"' : ''}>${count}</span>
+    </a>`;
 }
 
 export function renderFooter() {
@@ -254,7 +219,7 @@ export async function initPortfolioPage({
   const mobileBarSlot = document.getElementById('pf-mobile-cart-slot');
   if (headerSlot) headerSlot.innerHTML = renderHeader(active);
   if (footerSlot) footerSlot.innerHTML = renderFooter();
-  if (showMobileBar && mobileBarSlot) mobileBarSlot.innerHTML = renderMobileCartBar();
+  if (showMobileBar && mobileBarSlot) mobileBarSlot.innerHTML = renderFloatingCartFab();
   const settings = await loadSiteSettings({ settingsOnly });
   applySiteSettings(settings);
   updateCartBadges();

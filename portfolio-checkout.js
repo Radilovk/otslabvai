@@ -55,8 +55,6 @@ function updateSummary() {
   $('summary-subtotal').textContent = formatPrice(subtotal);
   $('summary-shipping').textContent = shipping === 0 && subtotal > 0 ? 'Безплатна' : formatPrice(shipping);
   $('summary-total').textContent = formatPrice(total);
-  const actionTotal = $('checkout-action-total');
-  if (actionTotal) actionTotal.textContent = formatPrice(total);
 
   const discountRow = $('discount-row');
   if (discountRow) {
@@ -78,11 +76,24 @@ function syncSubmitButtons({ disabled, label = SUBMIT_LABEL } = {}) {
   });
 }
 
-function syncCheckoutActionBar(hasItems) {
-  const bar = $('checkout-action-bar');
-  if (!bar) return;
-  bar.hidden = !hasItems;
-  document.body.classList.toggle('pf-checkout-has-bar', hasItems);
+function syncFloatingSubmit(hasItems) {
+  const btn = $('submit-btn-mobile');
+  if (!btn) return;
+  btn.classList.toggle('pf-visible', hasItems);
+  document.body.classList.toggle('pf-checkout-has-fab', hasItems);
+}
+
+function bindSubmitButtons() {
+  ['submit-btn', 'submit-btn-mobile'].forEach((id) => {
+    $(id)?.addEventListener('click', (e) => {
+      e.preventDefault();
+      submitOrder(e);
+    });
+  });
+  $('checkout-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    submitOrder(e);
+  });
 }
 
 function renderCart() {
@@ -90,7 +101,7 @@ function renderCart() {
   if (!cart.length) {
     list.innerHTML = '<li class="pf-empty-cart"><p>Количката е празна.</p><a href="portfolio.html" class="pf-btn pf-btn-outline">Към каталога</a></li>';
     syncSubmitButtons({ disabled: true });
-    syncCheckoutActionBar(false);
+    syncFloatingSubmit(false);
     updateSummary();
     return;
   }
@@ -111,7 +122,7 @@ function renderCart() {
     </li>`).join('');
 
   syncSubmitButtons({ disabled: false });
-  syncCheckoutActionBar(true);
+  syncFloatingSubmit(true);
   updateSummary();
   updateCartBadges();
 
@@ -511,7 +522,7 @@ async function init() {
   $('delivery-courier')?.addEventListener('change', toggleDeliveryFields);
   $('courier-speedy')?.addEventListener('change', toggleCourierWidgets);
   $('courier-ekont')?.addEventListener('change', toggleCourierWidgets);
-  $('checkout-form')?.addEventListener('submit', submitOrder);
+  bindSubmitButtons();
 
   ['first-name', 'last-name', 'phone', 'email', 'address', 'city', 'postcode'].forEach((id) => {
     $(id)?.addEventListener('input', () => $(id)?.classList.remove('is-invalid'));
