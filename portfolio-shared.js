@@ -5,8 +5,10 @@ export const WISHLIST_KEY = 'portfolioWishlist';
 
 export const BRAND_NAME = 'BIOCODE';
 export const BRAND_FULL = 'BIOCODE - Nutrition Science';
-export const BRAND_SLOGAN = 'Научно обосновани хранителни добавки';
+export const BRAND_SLOGAN = 'Протеини, витамини, аминокиселини';
 export const BRAND_LOGO = 'images/biocode-logo.png';
+export const BRAND_FAVICON = 'images/biocode-favicon.png';
+export const BRAND_HERO_IMAGE = 'images/portfolio-hero.jpg';
 
 /** Stroke-based icon set (24x24, currentColor) — used instead of emoji everywhere. */
 const ICON_PATHS = {
@@ -136,14 +138,14 @@ export async function loadSiteSettings({ settingsOnly = false } = {}) {
 export function applySiteSettings(settings) {
   if (!settings) return;
   const nameEl = document.getElementById('site-name');
+  const taglineEl = document.getElementById('site-tagline');
   const sloganEl = document.getElementById('site-slogan');
-  if (nameEl && settings.site_name) nameEl.textContent = settings.site_name;
-  if (sloganEl && settings.site_slogan) sloganEl.textContent = settings.site_slogan;
-  if (settings.site_name) {
-    document.title = document.title
-      .replace(/^Portfolio/, settings.site_name)
-      .replace(/^BIOCODE/, settings.site_name.split(' - ')[0] || settings.site_name);
+  if (nameEl && settings.site_name) {
+    const parts = String(settings.site_name).split(' - ');
+    nameEl.textContent = parts[0] || settings.site_name;
+    if (taglineEl && parts[1]) taglineEl.textContent = parts[1];
   }
+  if (sloganEl && settings.site_slogan) sloganEl.textContent = settings.site_slogan;
 }
 
 export function renderHeader(active = 'catalog') {
@@ -153,9 +155,10 @@ export function renderHeader(active = 'catalog') {
     <header class="pf-header">
       <div class="pf-header-inner">
         <a href="portfolio.html" class="pf-logo" aria-label="${BRAND_FULL} – начало">
-          <img src="${BRAND_LOGO}" alt="" class="pf-logo-img" width="44" height="44" decoding="async">
+          <img src="${BRAND_LOGO}" alt="" class="pf-logo-img" width="40" height="40" decoding="async">
           <div class="pf-logo-text-wrap">
-            <span class="pf-logo-text" id="site-name">${BRAND_FULL}</span>
+            <span class="pf-logo-text" id="site-name">${BRAND_NAME}</span>
+            <span class="pf-logo-tagline" id="site-tagline">Nutrition Science</span>
             <span class="pf-logo-slogan" id="site-slogan">${BRAND_SLOGAN}</span>
           </div>
         </a>
