@@ -734,8 +734,8 @@ img, svg { display: block; max-width: 100%; height: auto; }
 
 .pf-product-card:hover {
   transform: translateY(-6px);
-  box-shadow: var(--pf-shadow-lg);
-  border-color: rgba(var(--pf-primary-rgb), 0.25);
+  box-shadow: var(--pf-shadow-glow);
+  border-color: var(--pf-border-strong);
 }
 
 .pf-card-link {
