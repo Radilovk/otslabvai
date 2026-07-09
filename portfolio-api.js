@@ -24,7 +24,7 @@ export async function getFitness1ApiKey(env) {
 
 export const DEFAULT_SETTINGS = {
   site_name: 'BIOCODE - Nutrition Science',
-  site_slogan: 'Научно обосновани хранителни добавки',
+  site_slogan: 'Протеини, витамини, аминокиселини',
   global_markup_percent: 30,
   brand_markups: {},
   category_markups: {},
