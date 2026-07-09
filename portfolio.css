@@ -332,60 +332,57 @@ img, svg { display: block; max-width: 100%; height: auto; }
   padding: 0 0.3rem;
 }
 
-/* ─── Hero: split copy + full-bleed science visual ─── */
+/* ─── Hero with photo background ─── */
 .pf-hero {
   position: relative;
   overflow: hidden;
-  color: var(--pf-text);
-  background:
-    radial-gradient(ellipse 90% 80% at 0% 50%, rgba(var(--pf-primary-rgb), 0.06), transparent 55%),
-    linear-gradient(180deg, #ffffff 0%, #f4f9fc 100%);
-  border-bottom: 1px solid rgba(var(--pf-primary-rgb), 0.1);
+  color: #fff;
+  min-height: clamp(220px, 42vw, 340px);
+  padding: clamp(1.5rem, 4vw, 2.5rem) max(1rem, env(safe-area-inset-right, 0px)) clamp(1.5rem, 4vw, 2.5rem) max(1rem, env(safe-area-inset-left, 0px));
+  display: flex;
+  align-items: flex-end;
 }
 
-.pf-hero-shell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+.pf-hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.pf-hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+}
+
+.pf-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(15, 37, 64, 0.35) 0%, rgba(15, 37, 64, 0.82) 55%, rgba(15, 37, 64, 0.95) 100%),
+    linear-gradient(135deg, rgba(0, 196, 200, 0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.pf-hero::before,
+.pf-hero::after { display: none; }
+
+.pf-hero-inner {
+  position: relative;
+  z-index: 2;
   max-width: 1280px;
   margin: 0 auto;
   min-width: 0;
   width: 100%;
 }
 
-.pf-hero-inner {
-  position: relative;
-  z-index: 2;
-  min-width: 0;
-  padding:
-    clamp(1.35rem, 4vw, 2.5rem)
-    max(1rem, env(safe-area-inset-right, 0px))
-    clamp(1rem, 2.5vw, 1.5rem)
-    max(1rem, env(safe-area-inset-left, 0px));
-}
-
-.pf-hero-visual {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 max(0.5rem, env(safe-area-inset-right, 0px)) clamp(0.75rem, 2vw, 1.25rem) max(0.5rem, env(safe-area-inset-left, 0px));
-  min-width: 0;
-}
-
-.pf-hero-visual img {
-  width: 100%;
-  height: auto;
-  max-height: none;
-  object-fit: contain;
-  object-position: center center;
-}
-
 .pf-hero-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-  margin-bottom: 1.1rem;
+  margin-bottom: 1.25rem;
 }
 
 .pf-hero-badge {
@@ -396,40 +393,37 @@ img, svg { display: block; max-width: 100%; height: auto; }
   font-weight: 600;
   padding: 0.35rem 0.7rem;
   border-radius: var(--pf-radius-pill);
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(var(--pf-primary-rgb), 0.22);
-  box-shadow: 0 2px 10px rgba(var(--pf-ink-rgb), 0.04);
-  color: var(--pf-ink-soft);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(8px);
+  color: #fff;
 }
 
-.pf-hero-badge svg {
-  flex-shrink: 0;
-  color: var(--pf-primary-dark);
-}
+.pf-hero-badge svg { flex-shrink: 0; opacity: 0.9; }
 
 .pf-hero h1 {
   font-family: var(--pf-display);
-  font-size: clamp(1.55rem, 5.5vw, 2.65rem);
-  margin: 0 0 0.55rem;
+  font-size: clamp(1.5rem, 5.5vw, 2.5rem);
+  margin: 0 0 0.5rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1.12;
-  color: var(--pf-ink);
-  max-width: 16ch;
+  line-height: 1.15;
+  color: #fff;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.25);
 }
 
 .pf-hero p {
   margin: 0;
-  color: var(--pf-muted);
-  max-width: 34ch;
-  font-size: clamp(0.9rem, 2.8vw, 1.06rem);
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 520px;
+  font-size: clamp(0.88rem, 2.8vw, 1.05rem);
   line-height: 1.55;
 }
 
 .pf-hero-stats {
   display: flex;
-  gap: clamp(1.25rem, 4vw, 2.25rem);
-  margin-top: 1.5rem;
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+  margin-top: 1.75rem;
   flex-wrap: wrap;
 }
 
@@ -437,52 +431,10 @@ img, svg { display: block; max-width: 100%; height: auto; }
   display: block;
   font-size: clamp(1.25rem, 3vw, 1.65rem);
   font-weight: 800;
-  color: var(--pf-primary-dark);
+  color: var(--pf-primary);
 }
 
-.pf-hero-stat span {
-  font-size: 0.78rem;
-  color: var(--pf-muted);
-}
-
-@media (min-width: 768px) {
-  .pf-hero-shell {
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-    align-items: center;
-    gap: clamp(0.5rem, 2vw, 1.25rem);
-  }
-
-  .pf-hero-inner {
-    padding:
-      clamp(1.75rem, 3.5vw, 2.75rem)
-      clamp(0.75rem, 2vw, 1.25rem)
-      clamp(1.75rem, 3.5vw, 2.75rem)
-      max(1.25rem, env(safe-area-inset-left, 0px));
-  }
-
-  .pf-hero-visual {
-    padding:
-      clamp(0.75rem, 2vw, 1.25rem)
-      max(1rem, env(safe-area-inset-right, 0px))
-      clamp(0.75rem, 2vw, 1.25rem)
-      0;
-    justify-content: flex-end;
-  }
-
-  .pf-hero-visual img {
-    width: 100%;
-    max-width: 100%;
-    object-position: right center;
-  }
-
-  .pf-hero h1 { max-width: 14ch; }
-}
-
-@media (min-width: 1024px) {
-  .pf-hero-shell {
-    grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
-  }
-}
+.pf-hero-stat span { font-size: 0.78rem; color: rgba(255, 255, 255, 0.75); }
 
 /* ─── Layout ─── */
 .pf-layout {
@@ -2150,13 +2102,9 @@ img, svg { display: block; max-width: 100%; height: auto; }
     padding: 0.4rem 0.55rem;
   }
 
-  .pf-hero-inner {
-    padding:
-      1.15rem max(0.75rem, env(safe-area-inset-right, 0px)) 0.85rem max(0.75rem, env(safe-area-inset-left, 0px));
-  }
-
-  .pf-hero-visual {
-    padding: 0 max(0.35rem, env(safe-area-inset-right, 0px)) 0.65rem max(0.35rem, env(safe-area-inset-left, 0px));
+  .pf-hero {
+    min-height: 200px;
+    padding: 1.25rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.25rem max(0.75rem, env(safe-area-inset-left, 0px));
   }
 
   .pf-hero-badges {
