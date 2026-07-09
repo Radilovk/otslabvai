@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0f2540">
-    <title>Поръчката е приета – BIOCODE</title>
+    <title>Поръчка – BIOCODE</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +15,7 @@
 <body class="pf-body">
     <div id="pf-header-slot"></div>
     <main class="pf-success-page">
-        <div class="pf-success-card pf-card">
+        <div class="pf-success-card pf-card" id="success-card" style="display:none">
             <div class="pf-success-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg></div>
             <h1>Поръчката е приета!</h1>
             <p class="pf-lead" id="success-message">Благодарим ви. Ще се свържем с вас за потвърждение.</p>
@@ -30,25 +30,65 @@
             </ul>
             <a href="portfolio.html" class="pf-btn pf-btn-primary">Продължи пазаруването</a>
         </div>
+
+        <div class="pf-success-card pf-card" id="error-card" style="display:none">
+            <div class="pf-success-icon" style="color:#c0392b" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 8.5 15.5 15.5M15.5 8.5 8.5 15.5"/></svg></div>
+            <h1>Поръчката не е потвърдена</h1>
+            <p class="pf-lead" id="error-message">Не намерихме записана поръчка. Моля, опитайте отново от checkout.</p>
+            <a href="portfolio-checkout.html" class="pf-btn pf-btn-primary">Към поръчката</a>
+        </div>
+
+        <div class="pf-success-card pf-card" id="loading-card">
+            <p class="pf-lead">Проверяваме поръчката...</p>
+        </div>
     </main>
     <div id="pf-footer-slot"></div>
     <script type="module">
         import { initPortfolioPage } from './portfolio-shared.js';
+        import { API_URL } from './config.js';
 
         await initPortfolioPage({ settingsOnly: true });
+
         const params = new URLSearchParams(location.search);
-        const id = params.get('id');
-        let order = null;
-        try {
-            order = JSON.parse(sessionStorage.getItem('pf_last_order') || 'null');
-        } catch {}
+        const id = params.get('id')?.trim();
+        const successCard = document.getElementById('success-card');
+        const errorCard = document.getElementById('error-card');
+        const loadingCard = document.getElementById('loading-card');
 
-        if (id) document.getElementById('order-id').textContent = id;
-        else if (order?.id) document.getElementById('order-id').textContent = order.id;
+        function showError(message) {
+            loadingCard.style.display = 'none';
+            successCard.style.display = 'none';
+            errorCard.style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+            document.title = 'Поръчката не е потвърдена – BIOCODE';
+        }
 
-        if (order?.customer?.firstName) {
-            document.getElementById('success-message').textContent =
-                `${order.customer.firstName}, благодарим! Ще се обадим на ${order.customer.phone || 'посочения телефон'} за потвърждение.`;
+        function showSuccess(order) {
+            loadingCard.style.display = 'none';
+            errorCard.style.display = 'none';
+            successCard.style.display = 'block';
+            document.getElementById('order-id').textContent = order.id;
+            if (order.customer?.firstName) {
+                document.getElementById('success-message').textContent =
+                    `${order.customer.firstName}, благодарим! Ще се обадим на ${order.customer.phone || 'посочения телефон'} за потвърждение.`;
+            }
+            document.title = 'Поръчката е приета – BIOCODE';
+        }
+
+        if (!id) {
+            showError('Липсва номер на поръчка. Ако сте изпратили формата, проверете дали сте получили съобщение за грешка.');
+        } else {
+            try {
+                const res = await fetch(`${API_URL}/portfolio/order?id=${encodeURIComponent(id)}`, { cache: 'no-cache' });
+                const data = await res.json();
+                if (!res.ok || !data.id) {
+                    showError(data.error || 'Поръчката не е намерена в системата. Тя не е приета — опитайте отново.');
+                } else {
+                    showSuccess(data);
+                }
+            } catch {
+                showError('Не успяхме да потвърдим поръчката. Проверете връзката и опитайте отново.');
+            }
         }
     </script>
 </body>

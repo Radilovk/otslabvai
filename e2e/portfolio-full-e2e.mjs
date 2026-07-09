@@ -99,7 +99,7 @@ async function runFlow(browser, deviceName, viewport) {
   await page.evaluate(() => {
     document.getElementById('final-speedy-id').value = '99999';
     document.getElementById('speedy-selected-name').textContent = 'E2E офис';
-    document.getElementById('speedy-selected-addr').textContent = 'София';
+    document.getElementById('speedy-selected-addr').textContent = 'София, ул. Тест 1';
     document.getElementById('speedy-selected-info').style.display = 'block';
   });
 

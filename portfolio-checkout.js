@@ -2,6 +2,11 @@ import { API_URL } from './config.js';
 import {
   CART_KEY, getCart, saveCart, updateCartBadges, showToast, formatPrice, initPortfolioPage, icon, escapeHtml
 } from './portfolio-shared.js';
+import {
+  validatePortfolioCustomer,
+  validateCartHasSku,
+  isValidBgPhone
+} from './portfolio-order-validation.js';
 
 let cart = getCart();
 let activePromoCode = null;
@@ -259,29 +264,72 @@ function loadEcontOffices() {
   }
 }
 
-function validateForm() {
-  let ok = true;
-  ['first-name', 'last-name', 'phone'].forEach((id) => {
-    const el = $(id);
-    const invalid = !el?.value.trim();
-    el?.classList.toggle('is-invalid', invalid);
-    if (invalid) ok = false;
-  });
+function buildCustomerPayload() {
+  const payload = {
+    firstName: $('first-name')?.value?.trim() || '',
+    lastName: $('last-name')?.value?.trim() || '',
+    phone: $('phone')?.value?.trim() || '',
+    email: $('email')?.value?.trim() || '',
+    paymentMethod: 'cod',
+    policyConsent: $('policy-consent')?.checked === true,
+    terms: $('terms')?.checked === true
+  };
 
-  if ($('delivery-address')?.checked) {
-    ['address', 'city', 'postcode'].forEach((id) => {
-      const el = $(id);
-      const invalid = !el?.value.trim();
-      el?.classList.toggle('is-invalid', invalid);
-      if (invalid) ok = false;
-    });
-  } else {
-    const speedy = $('courier-speedy')?.checked;
-    const officeId = speedy ? $('final-speedy-id')?.value : $('final-office-id')?.value;
-    if (!officeId) {
-      showToast(speedy ? 'Изберете офис на Speedy.' : 'Изберете офис на Econt.', 'error');
-      ok = false;
+  if ($('delivery-courier')?.checked) {
+    payload.deliveryMethod = 'courier';
+    if ($('courier-speedy')?.checked) {
+      payload.courierCompany = 'Speedy';
+      payload.courierOfficeId = $('final-speedy-id')?.value?.trim() || '';
+      payload.courierOfficeName = $('speedy-selected-name')?.textContent?.trim() || '';
+      payload.courierOfficeAddress = $('speedy-selected-addr')?.textContent?.trim() || '';
+      payload.speedy_office_id = payload.courierOfficeId;
+    } else {
+      payload.courierCompany = 'Econt';
+      payload.courierOfficeId = $('final-office-id')?.value?.trim() || '';
+      if (selectedEcontOffice) {
+        payload.courierOfficeName = econtOfficeLabel(selectedEcontOffice);
+        payload.courierOfficeAddress = selectedEcontOffice.address?.fullAddress || '';
+      } else {
+        payload.courierOfficeName = '';
+        payload.courierOfficeAddress = '';
+      }
     }
+  } else {
+    payload.deliveryMethod = 'address';
+    payload.address = $('address')?.value?.trim() || '';
+    payload.city = $('city')?.value?.trim() || '';
+    payload.postcode = $('postcode')?.value?.trim() || '';
+  }
+
+  return payload;
+}
+
+function markInvalidFields(customerCheck) {
+  const setInvalid = (id, invalid) => $(id)?.classList.toggle('is-invalid', invalid);
+
+  setInvalid('first-name', (customerCheck.errors || []).some((e) => e.includes('Името')));
+  setInvalid('last-name', (customerCheck.errors || []).some((e) => e.includes('Фамилия')));
+  setInvalid('phone', (customerCheck.errors || []).some((e) => e.includes('телефон')));
+  setInvalid('email', (customerCheck.errors || []).some((e) => e.includes('email')));
+  setInvalid('address', (customerCheck.errors || []).some((e) => e.includes('адрес')));
+  setInvalid('city', (customerCheck.errors || []).some((e) => e.includes('град')));
+  setInvalid('postcode', (customerCheck.errors || []).some((e) => e.includes('пощенски')));
+}
+
+function validateForm() {
+  const customer = buildCustomerPayload();
+  const customerCheck = validatePortfolioCustomer(customer);
+  markInvalidFields(customerCheck);
+
+  const cartCheck = validateCartHasSku(cart);
+  if (!cartCheck.valid) {
+    showToast(cartCheck.errors[0], 'error');
+    return false;
+  }
+
+  if (!customerCheck.valid) {
+    showToast(customerCheck.errors[0], 'error');
+    return false;
   }
 
   if (!$('policy-consent')?.checked || !$('terms')?.checked) {
@@ -300,6 +348,12 @@ function validateForm() {
   }
 
   return ok;
+  if ($('delivery-courier')?.checked && $('courier-ekont')?.checked && !selectedEcontOffice) {
+    showToast('Изберете офис на Econt от списъка.', 'error');
+    return false;
+  }
+
+  return true;
 }
 
 async function submitOrder(e) {
@@ -307,42 +361,33 @@ async function submitOrder(e) {
   if (!cart.length || !validateForm()) return;
 
   syncSubmitButtons({ disabled: true, label: 'Изпращане...' });
+  const btn = $('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Проверка...';
 
-  const formData = Object.fromEntries(new FormData($('checkout-form')));
+  const customer = buildCustomerPayload();
   const subtotal = getSubtotal();
   const shipping = calculateShipping(subtotal);
-
-  if ($('delivery-courier')?.checked) {
-    formData.deliveryMethod = 'courier';
-    if ($('courier-speedy')?.checked) {
-      formData.courierCompany = 'Speedy';
-      formData.courierOfficeId = $('final-speedy-id').value;
-      formData.courierOfficeName = $('speedy-selected-name')?.textContent || '';
-      formData.courierOfficeAddress = $('speedy-selected-addr')?.textContent || '';
-      formData.speedy_office_id = formData.courierOfficeId;
-    } else {
-      formData.courierCompany = 'Econt';
-      formData.courierOfficeId = $('final-office-id').value;
-      if (selectedEcontOffice) {
-        formData.courierOfficeName = econtOfficeLabel(selectedEcontOffice);
-        formData.courierOfficeAddress = selectedEcontOffice.address?.fullAddress || '';
-      }
-    }
-  } else {
-    formData.deliveryMethod = 'address';
-  }
-
-  formData.firstName = formData.firstName || $('first-name').value;
-  formData.lastName = formData.lastName || $('last-name').value;
-
   const total = subtotal - getPromoDiscount(subtotal) + shipping;
 
   try {
+    const cartRes = await fetch(`${API_URL}/portfolio/validate-cart`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ products: cart })
+    });
+    const cartData = await cartRes.json();
+    if (!cartRes.ok || !cartData.valid) {
+      throw new Error(cartData.error || 'Продуктите в количката не са валидни. Презаредете страницата.');
+    }
+
+    btn.textContent = 'Изпращане...';
+
     const res = await fetch(`${API_URL}/portfolio/orders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        customer: formData,
+        customer,
         products: cart,
         promoCode: activePromoCode?.code || undefined,
         summary: {
@@ -353,7 +398,9 @@ async function submitOrder(e) {
       })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Грешка при поръчка');
+    if (res.status !== 201 || !data.success || !data.order?.id) {
+      throw new Error(data.error || 'Поръчката не беше приета. Проверете данните и опитайте отново.');
+    }
 
     localStorage.removeItem(CART_KEY);
     sessionStorage.setItem('pf_last_order', JSON.stringify(data.order));
@@ -465,6 +512,16 @@ async function init() {
   $('courier-speedy')?.addEventListener('change', toggleCourierWidgets);
   $('courier-ekont')?.addEventListener('change', toggleCourierWidgets);
   $('checkout-form')?.addEventListener('submit', submitOrder);
+
+  ['first-name', 'last-name', 'phone', 'email', 'address', 'city', 'postcode'].forEach((id) => {
+    $(id)?.addEventListener('input', () => $(id)?.classList.remove('is-invalid'));
+  });
+  $('phone')?.addEventListener('blur', () => {
+    const phone = $('phone')?.value?.trim();
+    if (phone && !isValidBgPhone(phone)) {
+      $('phone')?.classList.add('is-invalid');
+    }
+  });
 
   setupSpeedy();
   toggleDeliveryFields();
