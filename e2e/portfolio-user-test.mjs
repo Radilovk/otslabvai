@@ -75,6 +75,10 @@ async function runViewport(browser, name, width, height) {
   if (width < 900) {
     await page.click('#filters-toggle');
     await page.waitForSelector('.pf-sidebar.pf-sidebar--open');
+    const toggleHidden = await page.evaluate(() =>
+      document.getElementById('filters-toggle')?.classList.contains('pf-filters-toggle--hidden')
+    );
+    log(`[${name}] Filter toggle hidden when open`, toggleHidden);
     await page.screenshot({ path: `${dir}-filters.png` });
     log(`[${name}] Filter drawer opens`, true);
     await page.click('#sidebar-close');
@@ -89,12 +93,14 @@ async function runViewport(browser, name, width, height) {
   await checkNumberFont(page, '.pf-product-price', `[${name}] Product price font`);
 
   // 5. Add to cart
-  const addBtn = page.locator('#add-to-cart');
+  const addBtn = page.locator('#add-to-cart-sticky, #add-to-cart').first();
   if (await addBtn.isEnabled()) {
     await addBtn.click();
     await page.waitForTimeout(500);
     const toast = await page.locator('.pf-toast').count();
     log(`[${name}] Add to cart shows toast`, toast > 0);
+    const buyBar = await page.locator('#product-buy-bar.pf-visible').isVisible();
+    if (width < 900) log(`[${name}] Product buy bar visible`, buyBar);
   }
 
   // 6. Checkout
@@ -103,6 +109,11 @@ async function runViewport(browser, name, width, height) {
 
   const formVisible = await page.locator('#checkout-form').isVisible();
   log(`[${name}] Checkout form visible`, formVisible);
+
+  if (width < 900) {
+    const floatingSubmit = await page.locator('#submit-btn-mobile').isVisible();
+    log(`[${name}] Floating checkout submit visible`, floatingSubmit);
+  }
 
   await page.close();
 }

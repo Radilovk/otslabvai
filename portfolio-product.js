@@ -163,7 +163,7 @@ function render() {
             <input type="number" id="qty-input" value="${quantity}" min="1" max="${maxQty}" inputmode="numeric">
             <button type="button" id="qty-plus" aria-label="Увеличи">+</button>
           </div>
-          <button type="button" class="pf-btn pf-btn-primary pf-btn-block" id="add-to-cart" ${!selectedVariant?.available ? 'disabled' : ''}>
+          <button type="button" class="pf-btn pf-btn-primary pf-btn-block pf-add-to-cart--inline" id="add-to-cart" ${!selectedVariant?.available ? 'disabled' : ''}>
             ${selectedVariant?.available ? 'Добави в количката' : 'Изчерпан'}
           </button>
         </div>
@@ -180,7 +180,38 @@ function render() {
     ${renderRelated()}`;
 
   bindPageEvents();
+  syncProductBuyBar();
   if (!product.description) loadDescription();
+}
+
+function syncProductBuyBar() {
+  const slot = document.getElementById('pf-product-buy-slot');
+  if (!slot || !product) return;
+
+  const available = !!selectedVariant?.available;
+  const price = selectedVariant ? `${selectedVariant.retail_price.toFixed(2)} €` : '—';
+
+  if (!available) {
+    slot.innerHTML = '';
+    document.body.classList.remove('pf-product-has-buy-bar');
+    return;
+  }
+
+  slot.innerHTML = `
+    <div class="pf-product-buy-bar pf-visible" id="product-buy-bar">
+      <div class="pf-product-buy-bar-inner">
+        <div class="pf-product-buy-price">
+          <span>Цена</span>
+          <strong id="buy-bar-price">${escapeHtml(price)}</strong>
+        </div>
+        <button type="button" class="pf-btn pf-btn-primary" id="add-to-cart-sticky">
+          Добави в количката
+        </button>
+      </div>
+    </div>`;
+
+  document.body.classList.add('pf-product-has-buy-bar');
+  document.getElementById('add-to-cart-sticky')?.addEventListener('click', addToCart);
 }
 
 function bindPageEvents() {
@@ -328,7 +359,8 @@ async function loadProduct() {
 }
 
 async function init() {
-  await initPortfolioPage({ showMobileBar: true, settingsOnly: false });
+  await initPortfolioPage({ showMobileBar: false, settingsOnly: false });
+  document.body.classList.add('pf-body--product');
   updateCartBadges();
   await loadProduct();
 }

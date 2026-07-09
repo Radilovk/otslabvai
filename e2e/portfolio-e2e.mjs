@@ -5,6 +5,7 @@
 import { spawn } from 'child_process';
 import { chromium, devices } from 'playwright';
 import { setTimeout as sleep } from 'timers/promises';
+import { seedPortfolioFixture } from './seed-portfolio-fixture.mjs';
 
 const PORT = 8790;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -32,8 +33,16 @@ async function clickSubmit(page) {
   else await page.click('#submit-btn');
 }
 
+async function clickAddToCart(page) {
+  const stickyBtn = page.locator('#add-to-cart-sticky');
+  if (await stickyBtn.isVisible()) await stickyBtn.click();
+  else await page.locator('#add-to-cart').click();
+}
+
 async function runTests() {
   console.log('\n=== Portfolio E2E ===\n');
+
+  seedPortfolioFixture();
 
   const server = spawn('node', ['e2e/portfolio-dev-server.mjs'], {
     cwd: new URL('..', import.meta.url).pathname.replace(/\/$/, '') || process.cwd(),
@@ -52,7 +61,7 @@ async function runTests() {
   // --- API tests ---
   console.log('API:');
   const bootstrap = await (await fetch(`${BASE}/portfolio/bootstrap`)).json();
-  if (bootstrap.meta?.index?.length > 1000) logPass(`bootstrap: ${bootstrap.meta.total_groups} groups`);
+  if (bootstrap.meta?.index?.length > 10) logPass(`bootstrap: ${bootstrap.meta.total_groups} groups`);
   else logIssue(`bootstrap index too small: ${bootstrap.meta?.index?.length}`);
 
   const catalog = await (await fetch(`${BASE}/portfolio/catalog?q=protein&limit=5`)).json();
@@ -97,8 +106,17 @@ async function runTests() {
   if (sidebarOpen) logPass('filter drawer opens on mobile');
   else logIssue('filter drawer does not open');
 
+  const toggleHidden = await page.evaluate(() =>
+    document.getElementById('filters-toggle')?.classList.contains('pf-filters-toggle--hidden')
+  );
+  if (toggleHidden) logPass('filter toggle hidden while drawer open');
+  else logIssue('filter toggle still visible over drawer');
+
   await page.selectOption('#filter-category', { index: 1 });
   await sleep(400);
+  const activeFiltersEmpty = (await page.locator('#active-filters').innerHTML()).trim() === '';
+  if (activeFiltersEmpty) logPass('single filter hides redundant chip row');
+  else logIssue('active filter chips shown for single criterion');
   const afterFilter = await page.locator('.pf-card-link').count();
   if (afterFilter > 0) logPass('category filter works client-side');
   else logIssue('category filter shows no results');
@@ -114,14 +132,16 @@ async function runTests() {
   }
   await page.click('#clear-filters');
   await sleep(400);
-  await page.click('#sidebar-close');
-  await sleep(200);
+  if (await page.locator('#sidebar.pf-sidebar--open').isVisible()) {
+    await page.click('#sidebar-apply');
+    await sleep(200);
+  }
 
   // Search – Bulgarian + English synonyms
   await page.fill('#search-input', 'протеин');
   await sleep(400);
   let searchCount = parseInt((await page.locator('#results-meta').textContent() || '').replace(/\D/g, ''), 10) || 0;
-  if (searchCount > 100) logPass(`search протеин: ${searchCount} products`);
+  if (searchCount > 5) logPass(`search протеин: ${searchCount} products`);
   else logIssue(`search протеин returned only ${searchCount} products`);
 
   await page.fill('#search-input', '');
@@ -139,23 +159,37 @@ async function runTests() {
   if (productTitle?.length > 2) logPass(`product page: ${productTitle.slice(0, 40)}…`);
   else logIssue('product page missing title');
 
-  const addBtn = page.locator('#add-to-cart');
-  if (await addBtn.isEnabled()) {
-    await addBtn.click();
+  const addBtn = page.locator('#add-to-cart, #add-to-cart-sticky');
+  if (await addBtn.first().isEnabled()) {
+    await clickAddToCart(page);
     await page.waitForSelector('.pf-toast.success', { timeout: 5000 });
     logPass('add to cart shows success toast');
   } else {
     logIssue('add to cart disabled – no available variant');
   }
 
+  const productBuyBar = page.locator('#product-buy-bar.pf-visible');
+  if (await productBuyBar.isVisible()) logPass('product sticky buy bar visible on mobile');
+  else logIssue('product sticky buy bar missing on mobile');
+
+  const cartCount = parseInt(await page.locator('[data-pf-cart-count]').textContent() || '0', 10);
+  if (cartCount > 0) logPass(`header cart badge shows ${cartCount} items`);
+  else logIssue('header cart badge not updated after add');
+
+  await page.goto(`${BASE}/portfolio.html`, { waitUntil: 'networkidle' });
+  await page.waitForSelector('.pf-card-link', { timeout: 15000 });
   const mobileBar = page.locator('.pf-mobile-cart-bar.pf-visible');
-  if (await mobileBar.isVisible()) logPass('mobile cart bar visible after add');
-  else logIssue('mobile cart bar not visible');
+  if (await mobileBar.isVisible()) logPass('mobile cart bar visible on catalog after add');
+  else logIssue('mobile cart bar not visible on catalog');
 
   // Checkout + promo
   await page.goto(`${BASE}/portfolio-checkout.html`, { waitUntil: 'networkidle' });
   await page.waitForSelector('.pf-summary-item', { timeout: 10000 });
   logPass('checkout shows cart items');
+
+  const floatingSubmit = page.locator('#submit-btn-mobile');
+  if (await floatingSubmit.isVisible()) logPass('floating checkout submit visible on mobile');
+  else logIssue('floating checkout submit not visible on mobile');
 
   await page.fill('#promo-code-input-summary', 'PORTFOLIO10');
   await page.click('#apply-promo-btn-summary');

@@ -285,9 +285,20 @@ function validateForm() {
   }
 
   if (!$('policy-consent')?.checked || !$('terms')?.checked) {
+    $('policy-consent')?.classList.toggle('is-invalid', !$('policy-consent')?.checked);
+    $('terms')?.classList.toggle('is-invalid', !$('terms')?.checked);
     showToast('Моля, приемете условията.', 'error');
     ok = false;
   }
+
+  if (!ok) {
+    const firstInvalid = document.querySelector('.is-invalid, .pf-field input:invalid');
+    firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (typeof firstInvalid?.focus === 'function') {
+      try { firstInvalid.focus({ preventScroll: true }); } catch { firstInvalid.focus(); }
+    }
+  }
+
   return ok;
 }
 
