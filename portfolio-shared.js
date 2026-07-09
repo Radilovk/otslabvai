@@ -8,7 +8,7 @@ export const BRAND_FULL = 'BIOCODE - Nutrition Science';
 export const BRAND_SLOGAN = 'Протеини, витамини, аминокиселини';
 export const BRAND_LOGO = 'images/biocode-logo.png';
 export const BRAND_FAVICON = 'images/biocode-favicon.png';
-export const BRAND_HERO_IMAGE = 'images/portfolio-hero.png';
+export const BRAND_HERO_IMAGE = 'images/portfolio-hero.jpg';
 
 /** Stroke-based icon set (24x24, currentColor) — used instead of emoji everywhere. */
 const ICON_PATHS = {
