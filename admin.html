@@ -148,6 +148,10 @@
                         <button id="refresh-orders-btn" class="btn btn-secondary">Опресни</button>
                     </div>
                 </div>
+                <div id="main-portfolio-orders-alert" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:#cfe2ff;border:1px solid #9ec5fe;border-radius:8px;color:#084298;">
+                    <span id="main-portfolio-orders-alert-text"></span>
+                    <button type="button" id="go-to-portfolio-orders-btn" class="btn btn-sm btn-primary" style="margin-left:0.75rem;">Отвори Portfolio B2B → Поръчки</button>
+                </div>
                 <!-- Мобилна лента за сортиране – скрита на таблети/десктоп -->
                 <div class="mobile-sort-bar" id="orders-mobile-sort-bar">
                     <label class="mobile-sort-label">
@@ -443,15 +447,24 @@
                     <h2>Portfolio – Поръчки</h2>
                     <div class="orders-controls">
                         <input type="text" id="portfolio-order-search" placeholder="Търси по име, телефон...">
+                        <button type="button" id="portfolio-batch-approve-btn" class="btn btn-success" style="display:none;">Обобщи и изпрати към F1</button>
                         <button id="refresh-portfolio-orders-btn" class="btn btn-secondary">Опресни</button>
                     </div>
                 </div>
+                <div id="portfolio-orders-workflow-hint" class="instructions" style="margin-bottom:1rem;padding:1rem;background:var(--bg-secondary);border-radius:8px;">
+                    <strong>Как работи:</strong> Клиентите поръчват от portfolio сайта → поръчките се записват тук с данни за доставка до клиента →
+                    вие ги преглеждате и одобрявате → продуктите се обобщават и изпращат към Fitness1 B2B от вашия профил →
+                    вие разпределяте пратките към клиентите според адреса/офиса във всяка поръчка.
+                </div>
+                <div id="portfolio-pending-banner" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;color:#664d03;"></div>
                 <div class="table-wrapper">
                     <table id="portfolio-orders-table" class="orders-table">
                         <thead>
                             <tr>
+                                <th style="width:2rem;"><input type="checkbox" id="portfolio-select-all" title="Избери всички чакащи"></th>
                                 <th>Клиент</th>
                                 <th>Телефон</th>
+                                <th>Доставка</th>
                                 <th>Продукти</th>
                                 <th>Продажна</th>
                                 <th>B2B</th>

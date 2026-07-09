@@ -5,6 +5,11 @@
 
 import { filterIndex } from './portfolio-filter.js';
 import { enrichIndexEntry } from './portfolio-search.js';
+import {
+  validatePortfolioCustomer,
+  sanitizePortfolioCustomer,
+  validateCartHasSku
+} from './portfolio-order-validation.js';
 
 export { filterIndex };
 
@@ -30,7 +35,11 @@ export const DEFAULT_SETTINGS = {
   category_markups: {},
   product_overrides: {},
   last_sync: null,
-  last_sync_count: 0
+  last_sync_count: 0,
+  reseller_name: '',
+  reseller_phone: '',
+  reseller_address: '',
+  reseller_delivery_note: 'Доставка до дистрибутор — разпределяне към клиенти от админ панела.'
 };
 
 export class PortfolioError extends Error {
@@ -320,7 +329,11 @@ async function handleSaveSettings(request, env) {
     global_markup_percent: Number(incoming.global_markup_percent ?? current.global_markup_percent),
     brand_markups: incoming.brand_markups ?? current.brand_markups,
     category_markups: incoming.category_markups ?? current.category_markups,
-    product_overrides: incoming.product_overrides ?? current.product_overrides
+    product_overrides: incoming.product_overrides ?? current.product_overrides,
+    reseller_name: incoming.reseller_name ?? current.reseller_name,
+    reseller_phone: incoming.reseller_phone ?? current.reseller_phone,
+    reseller_address: incoming.reseller_address ?? current.reseller_address,
+    reseller_delivery_note: incoming.reseller_delivery_note ?? current.reseller_delivery_note
   };
   await saveSettings(env, merged);
   return jsonResponse({ success: true, settings: merged });
@@ -676,18 +689,22 @@ async function handleCreateOrder(request, env) {
     throw new PortfolioError('Липсват данни за клиент или продукти.', 400);
   }
 
-  const customer = body.customer;
-  if (!customer.firstName?.trim() || !customer.lastName?.trim() || !customer.phone?.trim()) {
-    throw new PortfolioError('Моля, попълнете име, фамилия и телефон.', 400);
+  const meta = await getMeta(env);
+  if (!meta) {
+    throw new PortfolioError('Каталогът не е синхронизиран. Поръчката не може да бъде приета.', 503);
   }
 
-  if (customer.deliveryMethod === 'courier') {
-    const hasOffice = customer.courierOfficeId || customer.speedy_office_id;
-    if (!hasOffice) throw new PortfolioError('Моля, изберете офис на куриер.', 400);
-  } else if (!customer.address?.trim() || !customer.city?.trim()) {
-    throw new PortfolioError('Моля, попълнете адрес и град.', 400);
+  const cartCheck = validateCartHasSku(body.products);
+  if (!cartCheck.valid) {
+    throw new PortfolioError(cartCheck.errors.join(' '), 400);
   }
 
+  const customerCheck = validatePortfolioCustomer(body.customer);
+  if (!customerCheck.valid) {
+    throw new PortfolioError(customerCheck.errors.join(' '), 400);
+  }
+
+  const customer = sanitizePortfolioCustomer(body.customer);
   const items = await validateAndNormalizeCartItems(env, body.products);
 
   let b2bTotal = 0;
@@ -714,7 +731,7 @@ async function handleCreateOrder(request, env) {
     project: 'portfolio',
     timestamp: new Date().toISOString(),
     status: 'Чака одобрение',
-    customer: body.customer,
+    customer,
     products: items,
     promo: appliedPromo,
     summary: {
@@ -743,37 +760,37 @@ async function handleGetOrders(env) {
   return jsonResponse(orders);
 }
 
-async function handleUpdateOrder(request, env) {
-  const update = await request.json();
-  if (!update?.id) throw new PortfolioError('Липсва ID на поръчка.', 400);
-
+async function handleGetOrdersSummary(env) {
   const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
-  const idx = orders.findIndex((o) => o.id === update.id);
-  if (idx === -1) throw new PortfolioError('Поръчката не е намерена.', 404);
-
-  if (update.status) orders[idx].status = update.status;
-  if (update.admin_note != null) orders[idx].admin_note = update.admin_note;
-
-  await env.PAGE_CONTENT.put(KV_ORDERS, JSON.stringify(orders, null, 2));
-  return jsonResponse({ success: true, order: orders[idx] });
+  const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
+  const pending = orders.filter(
+    (o) => o.status === 'Чака одобрение' && !o.fitness1_order?.id
+  ).length;
+  return jsonResponse({ pending, total: orders.length });
 }
 
-async function handleApproveOrder(request, env) {
-  const body = await request.json();
-  if (!body?.id) throw new PortfolioError('Липсва ID на поръчка.', 400);
-
-  const apiKey = await getFitness1ApiKey(env);
-  if (!apiKey) throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран.', 500);
+async function handleGetOrder(request, env) {
+  const id = new URL(request.url).searchParams.get('id')?.trim();
+  if (!id) throw new PortfolioError('Липсва ID на поръчка.', 400);
 
   const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
-  const idx = orders.findIndex((o) => o.id === body.id);
-  if (idx === -1) throw new PortfolioError('Поръчката не е намерена.', 404);
+  const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
+  const order = orders.find((o) => o.id === id);
+  if (!order) throw new PortfolioError('Поръчката не е намерена.', 404);
 
-  const order = orders[idx];
+  return jsonResponse({
+    id: order.id,
+    status: order.status,
+    timestamp: order.timestamp,
+    customer: {
+      firstName: order.customer?.firstName || '',
+      lastName: order.customer?.lastName || '',
+      phone: order.customer?.phone || ''
+    }
+  });
+}
 
-  // Re-validate availability before submitting to Fitness1
+async function validateOrderProductsForF1(env, order) {
   for (const p of order.products) {
     const found = await findVariantInCatalog(env, p.sku_id);
     if (!found?.variant.available) {
@@ -784,15 +801,34 @@ async function handleApproveOrder(request, env) {
     }
     if (!p.barcode) p.barcode = found.variant.barcode;
   }
+}
 
-  if (order.fitness1_order?.id) {
-    throw new PortfolioError(`Поръчката вече е изпратена (F1 #${order.fitness1_order.id}).`, 409);
-  }
-
-  const products = order.products.map((p) => {
+function productsToF1Payload(products) {
+  return products.map((p) => {
     if (p.barcode) return { barcode: p.barcode, quantity: p.quantity };
     return { id: String(p.sku_id), quantity: p.quantity };
   });
+}
+
+function aggregateProductLines(productLists) {
+  const map = new Map();
+  for (const products of productLists) {
+    for (const p of products) {
+      const key = p.barcode || String(p.sku_id);
+      const existing = map.get(key);
+      if (existing) {
+        existing.quantity += p.quantity;
+      } else {
+        map.set(key, { ...p });
+      }
+    }
+  }
+  return productsToF1Payload(Array.from(map.values()));
+}
+
+async function submitProductsToFitness1(env, products) {
+  const apiKey = await getFitness1ApiKey(env);
+  if (!apiKey) throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран.', 500);
 
   const f1Response = await fetch('https://fitness1.bg/b2b/api/orders/create', {
     method: 'POST',
@@ -815,16 +851,106 @@ async function handleApproveOrder(request, env) {
     throw new PortfolioError(`Fitness1 отказа поръчката: ${errMsg}`, 400);
   }
 
+  return f1Data;
+}
+
+async function handleUpdateOrder(request, env) {
+  const update = await request.json();
+  if (!update?.id) throw new PortfolioError('Липсва ID на поръчка.', 400);
+
+  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
+  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
+  const idx = orders.findIndex((o) => o.id === update.id);
+  if (idx === -1) throw new PortfolioError('Поръчката не е намерена.', 404);
+
+  if (update.status) orders[idx].status = update.status;
+  if (update.admin_note != null) orders[idx].admin_note = update.admin_note;
+
+  await env.PAGE_CONTENT.put(KV_ORDERS, JSON.stringify(orders, null, 2));
+  return jsonResponse({ success: true, order: orders[idx] });
+}
+
+async function handleApproveOrder(request, env) {
+  const body = await request.json();
+  if (!body?.id) throw new PortfolioError('Липсва ID на поръчка.', 400);
+
+  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
+  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
+  const idx = orders.findIndex((o) => o.id === body.id);
+  if (idx === -1) throw new PortfolioError('Поръчката не е намерена.', 404);
+
+  const order = orders[idx];
+
+  if (order.fitness1_order?.id) {
+    throw new PortfolioError(`Поръчката вече е изпратена (F1 #${order.fitness1_order.id}).`, 409);
+  }
+
+  await validateOrderProductsForF1(env, order);
+  const products = productsToF1Payload(order.products);
+  const f1Data = await submitProductsToFitness1(env, products);
+
   orders[idx].status = 'Изпратена към Fitness1';
   orders[idx].fitness1_order = {
     id: f1Data.order?.id,
     price: f1Data.order?.price,
-    submitted_at: new Date().toISOString()
+    submitted_at: new Date().toISOString(),
+    batch: false,
+    source_order_ids: [order.id]
   };
   if (body.admin_note) orders[idx].admin_note = body.admin_note;
 
   await env.PAGE_CONTENT.put(KV_ORDERS, JSON.stringify(orders, null, 2));
   return jsonResponse({ success: true, order: orders[idx], fitness1: f1Data });
+}
+
+async function handleApproveBatchOrder(request, env) {
+  const body = await request.json();
+  const ids = body?.ids;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    throw new PortfolioError('Липсват ID-та на поръчки за обобщаване.', 400);
+  }
+
+  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
+  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
+  const selected = [];
+
+  for (const id of ids) {
+    const idx = orders.findIndex((o) => o.id === id);
+    if (idx === -1) throw new PortfolioError(`Поръчка ${id} не е намерена.`, 404);
+    const order = orders[idx];
+    if (order.fitness1_order?.id) {
+      throw new PortfolioError(`Поръчка ${id} вече е изпратена (F1 #${order.fitness1_order.id}).`, 409);
+    }
+    selected.push({ idx, order });
+  }
+
+  for (const { order } of selected) {
+    await validateOrderProductsForF1(env, order);
+  }
+
+  const aggregated = aggregateProductLines(selected.map((s) => s.order.products));
+  const f1Data = await submitProductsToFitness1(env, aggregated);
+  const f1OrderMeta = {
+    id: f1Data.order?.id,
+    price: f1Data.order?.price,
+    submitted_at: new Date().toISOString(),
+    batch: true,
+    source_order_ids: ids
+  };
+
+  for (const { idx } of selected) {
+    orders[idx].status = 'Изпратена към Fitness1';
+    orders[idx].fitness1_order = { ...f1OrderMeta };
+    if (body.admin_note) orders[idx].admin_note = body.admin_note;
+  }
+
+  await env.PAGE_CONTENT.put(KV_ORDERS, JSON.stringify(orders, null, 2));
+  return jsonResponse({
+    success: true,
+    orders: selected.map((s) => orders[s.idx]),
+    fitness1: f1Data,
+    aggregated_products: aggregated
+  });
 }
 
 /**
@@ -883,6 +1009,15 @@ export async function handlePortfolioRoute(request, env, url) {
     }
     if (path === '/portfolio/orders/approve' && method === 'POST') {
       return await handleApproveOrder(request, env);
+    }
+    if (path === '/portfolio/orders/approve-batch' && method === 'POST') {
+      return await handleApproveBatchOrder(request, env);
+    }
+    if (path === '/portfolio/orders/summary' && method === 'GET') {
+      return await handleGetOrdersSummary(env);
+    }
+    if (path === '/portfolio/order' && method === 'GET') {
+      return await handleGetOrder(request, env);
     }
 
     throw new PortfolioError('Not Found', 404);

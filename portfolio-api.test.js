@@ -303,4 +303,83 @@ describe('Portfolio Fitness1 order approval', () => {
     expect(data.order.status).toBe('Изпратена към Fitness1');
     expect(data.order.fitness1_order.id).toBe(99999);
   });
+
+  test('POST /portfolio/orders/approve-batch aggregates products', async () => {
+    const orderA = {
+      id: 'pf-a',
+      status: 'Чака одобрение',
+      products: [{ sku_id: '1', barcode: '1234567890', name: 'Test Protein', quantity: 2 }],
+      fitness1_order: null
+    };
+    const orderB = {
+      id: 'pf-b',
+      status: 'Чака одобрение',
+      products: [{ sku_id: '1', barcode: '1234567890', name: 'Test Protein', quantity: 3 }],
+      fitness1_order: null
+    };
+
+    const store = new Map([
+      ['portfolio_orders', JSON.stringify([orderA, orderB])],
+      ['portfolio_meta', JSON.stringify({ chunk_count: 1, total_groups: 1, index: [], lookup: {} })],
+      ['portfolio_chunk_0', JSON.stringify(catalogChunk)]
+    ]);
+
+    const env = {
+      FITNESS1_API_KEY: 'test-key',
+      PAGE_CONTENT: {
+        get: async (key) => store.get(key) ?? null,
+        put: async (key, value) => { store.set(key, value); }
+      }
+    };
+
+    const originalFetch = global.fetch;
+    let sentProducts = null;
+    global.fetch = async (url, opts) => {
+      sentProducts = JSON.parse(opts.body).products;
+      return {
+        ok: true,
+        json: async () => ({ status: 'ok', order: { id: 88888, price: '50.00' } })
+      };
+    };
+
+    const request = new Request('https://example.com/portfolio/orders/approve-batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: ['pf-a', 'pf-b'] })
+    });
+    const res = await handlePortfolioRoute(request, env, new URL(request.url));
+    global.fetch = originalFetch;
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(sentProducts).toEqual([{ barcode: '1234567890', quantity: 5 }]);
+    expect(data.orders).toHaveLength(2);
+    expect(data.orders[0].fitness1_order.batch).toBe(true);
+    expect(data.orders[0].fitness1_order.id).toBe(88888);
+  });
+
+  test('GET /portfolio/orders/summary returns pending count', async () => {
+    const store = new Map([
+      ['portfolio_orders', JSON.stringify([
+        { id: '1', status: 'Чака одобрение', fitness1_order: null },
+        { id: '2', status: 'Изпратена към Fitness1', fitness1_order: { id: 1 } },
+        { id: '3', status: 'Чака одобрение', fitness1_order: null }
+      ])]
+    ]);
+
+    const env = {
+      PAGE_CONTENT: {
+        get: async (key) => store.get(key) ?? null,
+        put: async () => {}
+      }
+    };
+
+    const request = new Request('https://example.com/portfolio/orders/summary', { method: 'GET' });
+    const res = await handlePortfolioRoute(request, env, new URL(request.url));
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.pending).toBe(2);
+    expect(data.total).toBe(3);
+  });
 });
