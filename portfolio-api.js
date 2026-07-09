@@ -157,11 +157,16 @@ export function buildCatalogMeta(groups) {
   const brandMap = new Map();
   const categoryMap = new Map();
   const lookup = {};
+  const sku_lookup = {};
   const index = [];
 
   groups.forEach((g, idx) => {
     const chunkIndex = Math.floor(idx / CHUNK_SIZE);
     lookup[g.group_id] = chunkIndex;
+
+    for (const v of g.variants) {
+      if (v.sku_id) sku_lookup[String(v.sku_id)] = g.group_id;
+    }
 
     const availableVariants = g.variants.filter((v) => v.available);
     const prices = g.variants.map((v) => v.retail_price).filter((n) => n > 0);
@@ -203,6 +208,7 @@ export function buildCatalogMeta(groups) {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name, 'bg')),
     lookup,
+    sku_lookup,
     index
   };
 }
@@ -403,12 +409,30 @@ async function handleGetProduct(request, env) {
 async function findVariantInCatalog(env, skuId) {
   const meta = await getMeta(env);
   if (!meta) return null;
+
+  const sku = String(skuId);
+  const groupId = meta.sku_lookup?.[sku];
+  if (groupId) {
+    const group = await getGroupFromChunks(env, meta, groupId);
+    const variant = group?.variants.find((v) => v.sku_id === sku);
+    if (variant) {
+      return {
+        group_id: group.group_id,
+        group_name: group.name,
+        brand: group.brand,
+        image: variant.image || group.image,
+        variant
+      };
+    }
+  }
+
+  // Fallback for catalogs synced before sku_lookup existed
   for (let i = 0; i < meta.chunk_count; i++) {
     const chunkRaw = await env.PAGE_CONTENT.get(chunkKey(i));
     if (!chunkRaw) continue;
     const chunk = JSON.parse(chunkRaw);
     for (const group of chunk) {
-      const variant = group.variants.find((v) => v.sku_id === String(skuId));
+      const variant = group.variants.find((v) => v.sku_id === sku);
       if (variant) {
         return {
           group_id: group.group_id,
@@ -764,7 +788,7 @@ async function handleGetOrdersSummary(env) {
   const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
   const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
   const pending = orders.filter(
-    (o) => o.status === 'Чака одобрение' && !o.fitness1_order?.id
+    (o) => !o.fitness1_order?.id && o.status !== 'Отказана'
   ).length;
   return jsonResponse({ pending, total: orders.length });
 }

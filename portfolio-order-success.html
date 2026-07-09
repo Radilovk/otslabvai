@@ -75,19 +75,35 @@
             document.title = 'Поръчката е приета – BIOCODE';
         }
 
+        function readStoredOrder(orderId) {
+            try {
+                const raw = sessionStorage.getItem('pf_last_order');
+                if (!raw) return null;
+                const order = JSON.parse(raw);
+                return order?.id === orderId ? order : null;
+            } catch {
+                return null;
+            }
+        }
+
         if (!id) {
             showError('Липсва номер на поръчка. Ако сте изпратили формата, проверете дали сте получили съобщение за грешка.');
         } else {
-            try {
-                const res = await fetch(`${API_URL}/portfolio/order?id=${encodeURIComponent(id)}`, { cache: 'no-cache' });
-                const data = await res.json();
-                if (!res.ok || !data.id) {
-                    showError(data.error || 'Поръчката не е намерена в системата. Тя не е приета — опитайте отново.');
-                } else {
-                    showSuccess(data);
+            const stored = readStoredOrder(id);
+            if (stored) {
+                showSuccess(stored);
+            } else {
+                try {
+                    const res = await fetch(`${API_URL}/portfolio/order?id=${encodeURIComponent(id)}`, { cache: 'no-cache' });
+                    const data = await res.json();
+                    if (!res.ok || !data.id) {
+                        showError(data.error || 'Поръчката не е намерена в системата. Тя не е приета — опитайте отново.');
+                    } else {
+                        showSuccess(data);
+                    }
+                } catch {
+                    showError('Не успяхме да потвърдим поръчката. Проверете връзката и опитайте отново.');
                 }
-            } catch {
-                showError('Не успяхме да потвърдим поръчката. Проверете връзката и опитайте отново.');
             }
         }
     </script>

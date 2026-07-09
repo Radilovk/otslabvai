@@ -76,6 +76,8 @@ describe('Portfolio API', () => {
     expect(meta.total_groups).toBe(1);
     expect(meta.index[0].variant_count).toBe(2);
     expect(meta.lookup['100']).toBe(0);
+    expect(meta.sku_lookup['1']).toBe('100');
+    expect(meta.sku_lookup['2']).toBe('100');
   });
 
   test('handlePortfolioRoute returns 404 when catalog is not synced', async () => {
