@@ -69,30 +69,30 @@
             </div>
         </header>
 
-        <!-- ТАБОВЕ ЗА НАВИГАЦИЯ -->
+        <!-- ТАБОВЕ ЗА НАВИГАЦИЯ (групирани: сайт · продажби · комуникация · система) -->
         <nav class="tab-nav">
-            <button class="tab-btn active" data-tab="tab-global">Глобални</button>
-            <button class="tab-btn" data-tab="tab-navigation">Навигация</button>
-            <button class="tab-btn" data-tab="tab-content">Съдържание</button>
-            <button class="tab-btn" data-tab="tab-footer">Футър</button>
-            <button class="tab-btn" data-tab="tab-orders">Поръчки</button>
-            <button class="tab-btn" data-tab="tab-contacts">Контакти</button>
-            <button class="tab-btn" data-tab="tab-biocode-inquiries">BioCode Запитвания</button>
-            <button class="tab-btn" data-tab="tab-promo-codes">Промо Кодове</button>
-            <button class="tab-btn" data-tab="tab-pages">Страници</button>
-            <button class="tab-btn" data-tab="tab-ai-settings">AI Настройки</button>
-            <button class="tab-btn active tab-main-life" data-tab="tab-global">Глобални</button>
-            <button class="tab-btn tab-main-life" data-tab="tab-navigation">Навигация</button>
-            <button class="tab-btn tab-main-life" data-tab="tab-content">Съдържание</button>
-            <button class="tab-btn tab-main-life" data-tab="tab-footer">Футър</button>
-            <button class="tab-btn tab-main-life" data-tab="tab-orders">Поръчки</button>
-            <button class="tab-btn tab-main-life" data-tab="tab-contacts">Контакти</button>
-            <button class="tab-btn tab-main-life" data-tab="tab-promo-codes">Промо Кодове</button>
-            <button class="tab-btn tab-main-life" data-tab="tab-pages">Страници</button>
-            <button class="tab-btn tab-main-life" data-tab="tab-ai-settings">AI Настройки</button>
-            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-settings" style="display:none;">Настройки</button>
-            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-orders" style="display:none;">Поръчки</button>
-            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-promo-codes" style="display:none;">Промо Кодове</button>
+            <!-- Проекти „Да Отслабна" / Life: съдържание на сайта -->
+            <button class="tab-btn active tab-main-life" data-tab="tab-global">⚙️ Глобални</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-content">🧱 Съдържание</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-navigation">🧭 Навигация</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-footer">🔻 Футър</button>
+            <button class="tab-btn tab-main-life" data-tab="tab-pages">📄 Страници</button>
+            <span class="tab-nav-divider" aria-hidden="true"></span>
+            <!-- Продажби -->
+            <button class="tab-btn tab-main-life" data-tab="tab-orders">🛒 Поръчки<span id="orders-tab-badge" class="tab-badge" hidden></span></button>
+            <button class="tab-btn tab-main-life" data-tab="tab-promo-codes">🏷️ Промо Кодове</button>
+            <span class="tab-nav-divider" aria-hidden="true"></span>
+            <!-- Комуникация -->
+            <button class="tab-btn tab-main-life" data-tab="tab-contacts">✉️ Контакти</button>
+            <span class="tab-nav-divider" aria-hidden="true"></span>
+            <!-- Система -->
+            <button class="tab-btn tab-main-life" data-tab="tab-ai-settings">🤖 AI Настройки</button>
+            <!-- Проект Portfolio B2B -->
+            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-settings" style="display:none;">⚙️ Настройки</button>
+            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-orders" style="display:none;">🛒 Поръчки<span id="portfolio-orders-tab-badge" class="tab-badge" hidden></span></button>
+            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-promo-codes" style="display:none;">🏷️ Промо Кодове</button>
+            <!-- BioCode запитвания — общи за всички проекти -->
+            <button class="tab-btn" data-tab="tab-biocode-inquiries">🧪 BioCode Запитвания</button>
         </nav>
 
         <!-- КОНТЕЙНЕР ЗА СЪДЪРЖАНИЕТО НА ТАБОВЕТЕ -->

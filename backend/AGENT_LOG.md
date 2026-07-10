@@ -255,3 +255,18 @@
 **ВАЖНО за бъдещи агенти:** Продукти с `system_data.source === 'portfolio'` са свързани с B2B каталога — при `/portfolio/sync` търговските им полета се презаписват автоматично. Не премахвайте `system_data.portfolio` при трансформации на page content.
 
 **Файлове:** `portfolio-import.js`, `portfolio-import.test.js`, `portfolio-api.js`, `worker.js`, `admin.html`, `admin.js`, `admin.css`, `PORTFOLIO_TO_PROJECTS_IMPORT.md`, `PROJECTS.md`
+
+---
+
+### 2026-07-10 (2) — Реорганизация на админ панела: навигация, баджове, sticky хедър
+
+**Проблем:** Merge `7710333` беше дублирал целия набор от табове в `admin.html` (стар сет без клас + нов сет с `tab-main-life`). Резултат: 19 бутона в main/life, нерелевантни табове в portfolio режим и „забит" активен таб (превключването махаше само първия `.active`).
+
+**Решение:**
+- **admin.html** — една навигация, групирана логически с разделители: Сайт (Глобални, Съдържание, Навигация, Футър, Страници) · Продажби (Поръчки, Промо Кодове) · Комуникация (Контакти) · Система (AI Настройки); portfolio сетът и общият таб „BioCode Запитвания" в края. Икони на всички табове.
+- **admin.js** — `updateProjectUI()` скрива разделителите в portfolio режим; tab click маха всички `.active` (fix на забития таб); брояч на нови поръчки върху таб „Поръчки" (`updateOrdersTabBadge()`, вика се от `renderOrders` и при смяна на статус); брояч на чакащите portfolio поръчки върху portfolio таба „Поръчки" (в `updatePortfolioPendingUI`).
+- **admin.css** — `.tab-nav-divider`, `.tab-badge`; `.admin-header` е sticky (бутонът „Запиши промените" винаги видим при дълги страници).
+
+**Проверка:** Playwright smoke test със стъбнати API отговори — една навигация, точно 1 активен таб, баджове и в двата режима, скрити разделители в portfolio.
+
+**Файлове:** `admin.html`, `admin.js`, `admin.css`

@@ -156,6 +156,11 @@ function updateProjectUI() {
     const saveBtn = DOM.saveBtn;
     const saveStatus = DOM.saveStatus;
 
+    // Групиращите разделители са само за main/life навигацията
+    document.querySelectorAll('.tab-nav-divider').forEach((d) => {
+        d.style.display = isPortfolioProject() ? 'none' : '';
+    });
+
     if (isPortfolioProject()) {
         mainLifeTabs.forEach((el) => {
             if (el.classList.contains('tab-btn')) el.style.display = 'none';
@@ -280,6 +285,13 @@ function updatePortfolioPendingUI() {
         }
     } else if (mainAlert) {
         mainAlert.style.display = 'none';
+    }
+
+    // Брояч върху таба „Поръчки" в portfolio режим
+    const pfTabBadge = document.getElementById('portfolio-orders-tab-badge');
+    if (pfTabBadge) {
+        pfTabBadge.hidden = portfolioPendingCount === 0;
+        pfTabBadge.textContent = String(portfolioPendingCount);
     }
 
     const pfBanner = document.getElementById('portfolio-pending-banner');
@@ -748,7 +760,17 @@ function applyOrderStatusBadge(badge, status) {
     else { badge.textContent = status || '—'; }
 }
 
+/** Брояч на новите поръчки върху таба „Поръчки" (main/life). */
+function updateOrdersTabBadge() {
+    const badge = document.getElementById('orders-tab-badge');
+    if (!badge) return;
+    const newCount = ordersData.filter(o => (o.status || 'Нова') === 'Нова').length;
+    badge.hidden = newCount === 0;
+    badge.textContent = String(newCount);
+}
+
 function renderOrders() {
+    updateOrdersTabBadge();
     DOM.ordersTableBody.innerHTML = '';
     filteredOrdersData.forEach((order) => {
         const rowTemplate = DOM.templates.orderRow.content.cloneNode(true);
@@ -1932,8 +1954,8 @@ function setupEventListeners() {
     DOM.tabNav.addEventListener('click', e => {
         const target = e.target.closest('.tab-btn');
         if (!target || target.classList.contains('active')) return;
-        
-        DOM.tabNav.querySelector('.active').classList.remove('active');
+
+        DOM.tabNav.querySelectorAll('.active').forEach(b => b.classList.remove('active'));
         target.classList.add('active');
         
         DOM.tabPanes.forEach(pane => pane.classList.remove('active'));
@@ -1959,6 +1981,7 @@ function setupEventListeners() {
         applyOrderStatusSelectColor(e.target, newStatus);
         const badge = row.querySelector('.mobile-status-badge');
         if (badge) applyOrderStatusBadge(badge, newStatus);
+        updateOrdersTabBadge();
         try {
             await fetch(`${API_URL}/orders`, {
                 method: 'PUT',
