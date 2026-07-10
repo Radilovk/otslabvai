@@ -542,14 +542,14 @@
                 </select>
                 <button type="button" class="btn btn-secondary" data-action="pf-import-load">Търси</button>
             </div>
+            <div id="pf-import-chat" class="pf-import-chat" aria-live="polite"></div>
             <div class="pf-import-ai-bar">
-                <input type="text" id="pf-import-ai-prompt" class="pf-import-input" placeholder="Писмена команда: „изведи продукти от марки 1,2,3“, „колко продукта съдържат цинк“, „покажи марките“, „помощ“…">
-                <label class="pf-import-ai-limit-label">Брой:
-                    <input type="number" id="pf-import-ai-limit" value="12" min="1" max="100">
+                <input type="text" id="pf-import-ai-prompt" class="pf-import-input" placeholder="Пишете на AI асистента… (напр. „продукти с цинк от марка Now“, „най-добрите за отслабване“)">
+                <label class="pf-import-ai-limit-label">Макс.:
+                    <input type="number" id="pf-import-ai-limit" value="12" min="1" max="40">
                 </label>
-                <button type="button" class="btn btn-primary" data-action="pf-import-ai-select" title="Изпълни писмена команда върху каталога">▶ Изпълни</button>
+                <button type="button" class="btn btn-primary" data-action="pf-import-ai-select" title="AI асистент с достъп до каталога">🤖 Изпрати</button>
             </div>
-            <div id="pf-import-answer" class="pf-import-answer" hidden></div>
             <div id="pf-import-status" class="pf-import-status" hidden></div>
             <div id="pf-import-list" class="pf-import-list" aria-live="polite"></div>
             <div class="pf-import-pagination">

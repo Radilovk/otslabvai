@@ -1429,18 +1429,20 @@ input:checked + .slider:before {
     background: var(--bg-accent); border-bottom: 1px solid var(--border-color);
     flex-wrap: wrap;
 }
-.pf-import-answer {
-    padding: 0.75rem 1.25rem;
-    font-size: 0.88rem;
-    line-height: 1.45;
-    white-space: pre-wrap;
+.pf-import-chat {
+    max-height: 140px;
+    overflow-y: auto;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
     background: var(--bg-light);
     border-bottom: 1px solid var(--border-color);
-    color: var(--text-primary);
 }
-.pf-import-answer[hidden] { display: none; }
-.pf-import-answer.is-info { border-left: 3px solid var(--primary-color); }
-.pf-import-answer.is-empty { color: var(--text-secondary); font-style: italic; }
+.pf-import-chat:empty { display: none; }
+.pf-import-chat-msg { margin: 0.35rem 0; }
+.pf-import-chat-msg.user { color: var(--text-primary); }
+.pf-import-chat-msg.assistant { color: var(--text-secondary); }
+.pf-import-chat-msg strong { color: var(--primary-color); font-weight: 600; }
 .pf-import-input {
     padding: 0.5rem 0.75rem; border: 1px solid var(--border-color);
     border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary);

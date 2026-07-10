@@ -2649,7 +2649,7 @@ function handleAction(action, target, id) {
             break;
         }
         case 'pf-import-ai-select': {
-            pfImportRunCommand(target);
+            pfImportAiChat(target);
             break;
         }
         case 'pf-import-confirm': {
@@ -3441,11 +3441,12 @@ function handleProductXLSXImport(event, triggerButton) {
 // =======================================================
 
 const pfImportState = {
-    targetContainer: null,   // #products-editor на отворената категория
+    targetContainer: null,
     page: 1,
     totalPages: 1,
-    pageItems: new Map(),    // group_id → каталожен запис от текущата страница
-    selection: new Map(),    // group_id → { name, brand, min_price, image, ai? }
+    pageItems: new Map(),
+    selection: new Map(),
+    chatHistory: [],
     initialized: false,
     filtersLoaded: false
 };
@@ -3466,6 +3467,7 @@ function openPortfolioImportModal(productsContainer) {
     }
     pfImportState.targetContainer = productsContainer;
     pfImportState.selection.clear();
+    pfImportState.chatHistory = [];
     pfImportInitOnce();
     pfImportUpdateCount();
     document.getElementById('pf-import-overlay').hidden = false;
@@ -3509,7 +3511,7 @@ function pfImportInitOnce() {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 const btn = document.querySelector('[data-action="pf-import-ai-select"]');
-                if (btn) pfImportRunCommand(btn);
+                if (btn) pfImportAiChat(btn);
             }
         });
     }
@@ -3614,39 +3616,50 @@ function pfImportRenderList(items) {
     }).join('');
 }
 
-function pfImportShowAnswer(text, { empty = false } = {}) {
-    const el = document.getElementById('pf-import-answer');
+function pfImportRenderChat() {
+    const el = document.getElementById('pf-import-chat');
     if (!el) return;
-    const hasText = Boolean(String(text || '').trim());
-    el.hidden = !hasText;
-    el.textContent = text || '';
-    el.classList.toggle('is-info', hasText && !empty);
-    el.classList.toggle('is-empty', empty);
+    el.innerHTML = pfImportState.chatHistory.map((m) =>
+        `<p class="pf-import-chat-msg ${m.role}"><strong>${m.role === 'user' ? 'Вие' : 'AI'}:</strong> ${pfEscapeHtml(m.content)}</p>`
+    ).join('');
+    el.scrollTop = el.scrollHeight;
 }
 
-/**
- * Изпълнява писмена команда: филтри, справки, статистика или AI подбор.
- * Показва текстов отговор и при нужда попълва списъка с продукти.
- */
-async function pfImportRunCommand(btn) {
+async function pfImportAiChat(btn) {
+    const input = document.getElementById('pf-import-ai-prompt');
+    const prompt = input.value.trim();
+    if (!prompt) return;
+
     const originalText = btn.textContent;
     btn.disabled = true;
     btn.textContent = '⏳...';
+    input.value = '';
+
+    pfImportState.chatHistory.push({ role: 'user', content: prompt });
+    pfImportRenderChat();
+
     try {
         const project = currentProject === 'life' ? 'life' : 'main';
         const limit = parseInt(document.getElementById('pf-import-ai-limit').value, 10) || 12;
-        const command = document.getElementById('pf-import-ai-prompt').value.trim();
         const { q, category, brand } = pfImportCurrentFilters();
 
-        const res = await fetch(`${API_URL}/portfolio/import/command`, {
+        const res = await fetch(`${API_URL}/portfolio/import/ai-select`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project, command, limit, filters: { q, category, brand } })
+            body: JSON.stringify({
+                project,
+                prompt,
+                limit,
+                history: pfImportState.chatHistory.slice(0, -1),
+                filters: { q, category, brand }
+            })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Командата се провали');
+        if (!res.ok) throw new Error(data.error || 'AI заявката се провали');
 
-        pfImportShowAnswer(data.answer || '', { empty: !data.selected?.length && data.action !== 'help' });
+        const reply = data.reply || (data.selected?.length ? `Подбрах ${data.selected.length} продукта.` : 'Готово.');
+        pfImportState.chatHistory.push({ role: 'assistant', content: reply });
+        pfImportRenderChat();
 
         if (data.selected?.length) {
             data.selected.forEach(item => {
@@ -3668,20 +3681,10 @@ async function pfImportRunCommand(btn) {
                 min_price: item.min_price,
                 image: item.image
             })));
-            const actionLabels = { list: 'Списък', select: 'AI подбор', count: 'Брой', stats: 'Статистика', brands: 'Марки', categories: 'Категории', help: 'Помощ' };
-            const label = actionLabels[data.action] || 'Резултат';
-            document.getElementById('pf-import-page-info').textContent = `${label}: ${data.selected.length} продукта`;
-        } else if (data.action === 'help') {
-            document.getElementById('pf-import-page-info').textContent = 'Помощ';
-        } else if (data.catalog_size != null) {
-            document.getElementById('pf-import-page-info').textContent = `Каталог: ${data.catalog_size} продукта`;
+            document.getElementById('pf-import-page-info').textContent = `🤖 AI: ${data.selected.length} продукта`;
         }
-
-        pfImportStatus('');
-        if (data.answer) showNotification(data.answer.split('\n')[0], data.selected?.length ? 'success' : 'info', 5000);
     } catch (e) {
-        pfImportShowAnswer('');
-        showNotification(`Команда: ${e.message}`, 'error');
+        showNotification(`AI: ${e.message}`, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
