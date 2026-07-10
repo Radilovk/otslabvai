@@ -124,6 +124,26 @@ jobs:
             -H "Content-Type: text/plain" \
             --data-binary "$FITNESS1_API_KEY"
 
+      - name: Set AI API keys in KV
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
+        run: |
+          KV="https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/d220db696e414b7cb3da2b19abd53d0f/values"
+          AUTH="Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}"
+          if [ -n "$OPENAI_API_KEY" ]; then
+            curl -s -X PUT "${KV}/ai_openai_api_key" -H "$AUTH" -H "Content-Type: text/plain" --data-binary "$OPENAI_API_KEY"
+            echo "OPENAI_API_KEY synced to KV"
+          else
+            echo "Skipping OPENAI_API_KEY – GitHub secret not set"
+          fi
+          if [ -n "$GOOGLE_AI_API_KEY" ]; then
+            curl -s -X PUT "${KV}/ai_google_api_key" -H "$AUTH" -H "Content-Type: text/plain" --data-binary "$GOOGLE_AI_API_KEY"
+            echo "GOOGLE_AI_API_KEY synced to KV"
+          else
+            echo "Skipping GOOGLE_AI_API_KEY – GitHub secret not set"
+          fi
+
       - name: Sync Portfolio catalog to KV
         env:
           FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}

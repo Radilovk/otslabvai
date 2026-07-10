@@ -4348,19 +4348,24 @@ function handleMoveProduct(productEditor) {
 
 let aiSettings = null;
 
-/** Настройки за AI заявки — включва API ключа от localStorage (не се пази в KV). */
+/** Настройки за AI заявки — форма, localStorage или сървър (KV). */
 function getAISettingsForRequest() {
-    const apiKey = localStorage.getItem('ai_api_key') || '';
+    const apiKeyInput = document.getElementById('ai-api-key');
+    const formApiKey = apiKeyInput?.value?.trim() || '';
+    const storedApiKey = localStorage.getItem('ai_api_key') || '';
+    const apiKey = formApiKey || storedApiKey || aiSettings?.apiKey || '';
     if (aiSettings) {
-        return { ...aiSettings, apiKey: aiSettings.apiKey || apiKey };
+        return { ...aiSettings, apiKey };
     }
+    const providerEl = document.getElementById('ai-provider');
+    const modelEl = document.getElementById('ai-model');
     return {
-        provider: 'cloudflare',
-        model: '@cf/meta/llama-3.1-70b-instruct',
+        provider: providerEl?.value || 'cloudflare',
+        model: modelEl?.value || '@cf/meta/llama-3.1-70b-instruct',
         apiKey,
-        temperature: 0.3,
-        maxTokens: 8192,
-        promptTemplate: getDefaultPromptTemplate()
+        temperature: parseFloat(document.getElementById('ai-temperature')?.value) || 0.3,
+        maxTokens: parseInt(document.getElementById('ai-max-tokens')?.value, 10) || 8192,
+        promptTemplate: document.getElementById('ai-prompt-template')?.value || getDefaultPromptTemplate()
     };
 }
 
@@ -4375,10 +4380,12 @@ async function loadAISettings() {
             const serverSettings = await response.json();
             aiSettings = serverSettings;
             
-            // Load API key from localStorage (not stored on server for security)
-            const storedApiKey = localStorage.getItem('ai_api_key');
-            if (storedApiKey) {
-                aiSettings.apiKey = storedApiKey;
+            // localStorage като резерв, ако сървърът няма ключ
+            if (!aiSettings.apiKey) {
+                const storedApiKey = localStorage.getItem('ai_api_key');
+                if (storedApiKey) aiSettings.apiKey = storedApiKey;
+            } else {
+                localStorage.setItem('ai_api_key', aiSettings.apiKey);
             }
         }
     } catch (error) {
@@ -4413,24 +4420,17 @@ async function saveAISettings() {
             temperature: parseFloat(document.getElementById('ai-temperature').value),
             maxTokens: parseInt(document.getElementById('ai-max-tokens').value),
             promptTemplate: document.getElementById('ai-prompt-template').value,
-            apiKey: '' // Don't send to server
+            apiKey: document.getElementById('ai-api-key').value || localStorage.getItem('ai_api_key') || ''
         };
         
-        // Save API key to localStorage only
-        const apiKey = document.getElementById('ai-api-key').value;
-        if (apiKey) {
-            localStorage.setItem('ai_api_key', apiKey);
-            settings.apiKey = apiKey;
+        if (settings.apiKey) {
+            localStorage.setItem('ai_api_key', settings.apiKey);
         }
-        
-        // Save to server (without API key)
-        const serverSettings = { ...settings };
-        delete serverSettings.apiKey;
         
         const response = await fetch(`${API_URL}/ai-settings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(serverSettings)
+            body: JSON.stringify(settings)
         });
         
         if (!response.ok) {
