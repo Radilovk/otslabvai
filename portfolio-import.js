@@ -530,7 +530,7 @@ export async function handlePortfolioImportRoute(request, env, url, deps) {
 
       let aiResult;
       try {
-        aiResult = await deps.callAI(env, messages);
+        aiResult = await deps.callAI(env, messages, body.settings || null);
       } catch (e) {
         const status = e?.status || (e?.name === 'UserFacingError' ? 400 : 502);
         throw new PortfolioImportError(e?.message || 'AI заявката се провали.', status);
