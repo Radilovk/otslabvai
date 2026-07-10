@@ -45,7 +45,7 @@ Portfolio проектът синхронизира B2B каталога на Fi
 | Метод | Маршрут | Описание |
 |-------|---------|----------|
 | GET | `/portfolio/import/preview?ids=1,2,3` | Връща каталожни групи, конвертирани в хомогенната продуктова схема (до 100 на заявка) |
-| POST | `/portfolio/import/ai-select` | AI подбор: `{ project: "main"\|"life", prompt?, limit?, filters? }` → `{ selected: [{ group_id, reason, goals, tagline, ... }] }` |
+| POST | `/portfolio/import/ai-select` | Подбор: `{ project: "main"\|"life", prompt?, limit?, mode?: "auto"\|"filter"\|"ai", filters? }` → `{ selected: [...], mode: "filter"\|"ai", applied_filters? }`. Prompt-ът поддържа естествен език: марки, марж %, съставки (напр. „изведи продукти от марки 1,2,3“, „съдържащи цинк“, „марж над 30%“). При филтър-критерии не изисква AI. |
 | POST | `/portfolio/import/apply` | Директен сървърен импорт: `{ project, category_id? \| category_title?, group_ids, overrides? }` — слива продуктите в page content на проекта и записва в KV + GitHub |
 | POST | `/portfolio/import/refresh` | Опреснява цени/наличности на всички импортирани продукти: `{ projects?: ["main","life"] }` |
 

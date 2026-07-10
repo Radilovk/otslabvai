@@ -107,10 +107,21 @@ export function matchesSearchQuery(item, rawQuery, categories = []) {
   });
 }
 
+function stripHtmlForSearch(html) {
+  return String(html || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function enrichIndexEntry(entry, group) {
   const options = group
     ? [...new Set(group.variants.map((v) => v.option).filter(Boolean))]
     : (entry.options || []);
+  const descriptionSnippet = group?.description
+    ? stripHtmlForSearch(group.description).slice(0, 600)
+    : '';
   const search_text = normalizeText(
     [
       entry.name,
@@ -118,7 +129,8 @@ export function enrichIndexEntry(entry, group) {
       entry.category,
       entry.category_top,
       ...(entry.packs || []),
-      ...options
+      ...options,
+      descriptionSnippet
     ].filter(Boolean).join(' ')
   );
   return { ...entry, options, search_text };

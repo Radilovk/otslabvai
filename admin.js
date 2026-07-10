@@ -2652,6 +2652,10 @@ function handleAction(action, target, id) {
             pfImportAiSelect(target);
             break;
         }
+        case 'pf-import-voice': {
+            pfImportToggleVoice(target);
+            break;
+        }
         case 'pf-import-confirm': {
             pfImportConfirm(target);
             break;
@@ -3502,6 +3506,69 @@ function pfImportInitOnce() {
             pfImportLoadPage(1);
         }
     });
+
+    pfImportInitVoice();
+}
+
+let pfImportVoiceRecognition = null;
+
+function pfImportInitVoice() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    pfImportVoiceRecognition = new SpeechRecognition();
+    pfImportVoiceRecognition.lang = 'bg-BG';
+    pfImportVoiceRecognition.interimResults = false;
+    pfImportVoiceRecognition.maxAlternatives = 1;
+
+    pfImportVoiceRecognition.onresult = (e) => {
+        const transcript = e.results?.[0]?.[0]?.transcript?.trim();
+        if (transcript) {
+            const input = document.getElementById('pf-import-ai-prompt');
+            const existing = input.value.trim();
+            input.value = existing ? `${existing} ${transcript}` : transcript;
+        }
+    };
+
+    pfImportVoiceRecognition.onerror = (e) => {
+        const messages = {
+            'not-allowed': 'Достъпът до микрофона е отказан.',
+            'no-speech': 'Не беше чут глас. Опитайте отново.',
+            'network': 'Речевото разпознаване изисква интернет връзка.'
+        };
+        showNotification(messages[e.error] || `Реч: ${e.error}`, 'error');
+        pfImportSetVoiceListening(false);
+    };
+
+    pfImportVoiceRecognition.onend = () => pfImportSetVoiceListening(false);
+}
+
+function pfImportSetVoiceListening(listening) {
+    const btn = document.querySelector('[data-action="pf-import-voice"]');
+    if (!btn) return;
+    btn.classList.toggle('listening', listening);
+    btn.textContent = listening ? '⏹' : '🎤';
+    btn.title = listening ? 'Спри записа' : 'Речева команда (микрофон)';
+}
+
+function pfImportToggleVoice(btn) {
+    if (!pfImportVoiceRecognition) {
+        showNotification('Браузърът не поддържа речево разпознаване. Използвайте Chrome или Edge.', 'error');
+        return;
+    }
+    if (btn.classList.contains('listening')) {
+        pfImportVoiceRecognition.stop();
+        pfImportSetVoiceListening(false);
+        return;
+    }
+    try {
+        pfImportSetVoiceListening(true);
+        pfImportVoiceRecognition.start();
+        showNotification('Слушам… кажете критериите за подбор.', 'info', 2500);
+    } catch (e) {
+        pfImportSetVoiceListening(false);
+        showNotification(`Микрофон: ${e.message}`, 'error');
+    }
 }
 
 function pfImportStatus(message) {
@@ -3604,14 +3671,13 @@ function pfImportRenderList(items) {
 }
 
 /**
- * AI подбор: изпраща каталога (с текущите филтри) към конфигурирания AI
- * доставчик, който избира най-подходящите продукти за текущия проект
- * (main → отслабване, life → антиейджинг) и предлага слоган и цели.
+ * AI/филтър подбор: парсира естествен език (текст или глас) в критерии,
+ * филтрира каталога и при нужда използва AI за тематичен избор за проекта.
  */
 async function pfImportAiSelect(btn) {
     const originalText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '⏳ AI избира...';
+    btn.textContent = '⏳ Подбира...';
     try {
         const project = currentProject === 'life' ? 'life' : 'main';
         const limit = parseInt(document.getElementById('pf-import-ai-limit').value, 10) || 12;
@@ -3621,13 +3687,14 @@ async function pfImportAiSelect(btn) {
         const res = await fetch(`${API_URL}/portfolio/import/ai-select`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project, prompt, limit, filters: { q, category, brand } })
+            body: JSON.stringify({ project, prompt, limit, mode: 'auto', filters: { q, category, brand } })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'AI подборът се провали');
+        if (!res.ok) throw new Error(data.error || 'Подборът се провали');
 
         if (!data.selected?.length) {
-            showNotification('AI не намери подходящи продукти по зададените критерии.', 'info');
+            const hint = data.message || 'Няма продукти по зададените критерии.';
+            showNotification(hint, 'info');
             return;
         }
 
@@ -3643,7 +3710,6 @@ async function pfImportAiSelect(btn) {
         });
         pfImportUpdateCount();
 
-        // Показваме AI подбора като списък с причините за избора
         pfImportRenderList(data.selected.map(item => ({
             group_id: item.group_id,
             name: item.name,
@@ -3652,11 +3718,16 @@ async function pfImportAiSelect(btn) {
             min_price: item.min_price,
             image: item.image
         })));
-        document.getElementById('pf-import-page-info').textContent = `🤖 AI подбор: ${data.selected.length} продукта`;
-        pfImportStatus('');
-        showNotification(`AI подбра ${data.selected.length} продукта — прегледайте списъка и импортирайте.`, 'success');
+
+        const modeLabel = data.mode === 'filter' ? '🔎 Филтър' : '🤖 AI подбор';
+        document.getElementById('pf-import-page-info').textContent = `${modeLabel}: ${data.selected.length} продукта`;
+        pfImportStatus(data.applied_filters?.q || data.applied_filters?.brands?.length
+            ? `Приложени критерии: ${[data.applied_filters.brands?.length ? `марки ${data.applied_filters.brands.join(',')}` : '', data.applied_filters.q, data.applied_filters.min_markup_percent != null ? `марж ≥${data.applied_filters.min_markup_percent}%` : ''].filter(Boolean).join(' · ')}`
+            : '');
+        const suffix = data.message ? ` ${data.message}` : '';
+        showNotification(`${modeLabel}: ${data.selected.length} продукта.${suffix}`, 'success');
     } catch (e) {
-        showNotification(`AI подбор: ${e.message}`, 'error');
+        showNotification(`Подбор: ${e.message}`, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;

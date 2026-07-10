@@ -1427,6 +1427,30 @@ input:checked + .slider:before {
 .pf-import-toolbar { border-bottom: 1px dashed var(--border-color); }
 .pf-import-ai-bar {
     background: var(--bg-accent); border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+.pf-import-ai-prompt-wrap {
+    display: flex;
+    flex: 1 1 280px;
+    gap: 0.35rem;
+    align-items: stretch;
+    min-width: 220px;
+}
+.pf-import-ai-prompt-wrap .pf-import-input { flex: 1; min-width: 0; }
+.pf-import-voice-btn {
+    flex: 0 0 auto;
+    min-width: 2.5rem;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+}
+.pf-import-voice-btn.listening {
+    background: var(--danger-color, #dc3545);
+    color: #fff;
+    animation: pf-voice-pulse 1.2s ease-in-out infinite;
+}
+@keyframes pf-voice-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.65; }
 }
 .pf-import-input {
     padding: 0.5rem 0.75rem; border: 1px solid var(--border-color);

@@ -10,6 +10,13 @@
  */
 
 import { filterIndex } from './portfolio-filter.js';
+import {
+  parseAiSelectPrompt,
+  hasStructuredFilters,
+  buildFilterReason,
+  mergeImportFilters,
+  shouldUseFilterOnly
+} from './portfolio-import-prompt.js';
 
 export class PortfolioImportError extends Error {
   constructor(message, status = 500) {
@@ -445,6 +452,30 @@ export function normalizeAiSelection(raw, validIds) {
   return result;
 }
 
+/** Обогатява index запис с UI полета за подбор. */
+function enrichSelectionEntry(item, entry) {
+  if (!entry) return item;
+  return {
+    ...item,
+    name: entry.name,
+    brand: entry.brand,
+    category: entry.category,
+    min_price: entry.min_price,
+    image: entry.image
+  };
+}
+
+/** Връща продукти от филтриран индекс без AI (бърз подбор по критерии). */
+export function selectionFromFilteredIndex(indexSubset, filters, limit) {
+  const reason = buildFilterReason(filters);
+  return indexSubset.slice(0, limit).map((entry) => enrichSelectionEntry({
+    group_id: String(entry.group_id),
+    reason,
+    goals: [],
+    tagline: ''
+  }, entry));
+}
+
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -503,48 +534,78 @@ export async function handlePortfolioImportRoute(request, env, url, deps) {
       const meta = await deps.getCatalogMeta(env);
       if (!meta) throw new PortfolioImportError('Каталогът не е синхронизиран. Стартирайте sync от админ панела.', 404);
 
-      // Опционално стесняване на каталога преди AI подбора (category/brand/q)
-      const filters = body.filters || {};
-      const indexSubset = filterIndex(meta.index, {
-        brand: filters.brand || '',
-        category: filters.category || '',
-        q: filters.q || '',
-        available: '1',
-        sort: 'name'
-      }, meta);
+      const promptText = typeof body.prompt === 'string' ? body.prompt.slice(0, 2000) : '';
+      const parsed = parseAiSelectPrompt(promptText, meta);
+      const filters = mergeImportFilters({
+        ui: body.filters || {},
+        parsed: parsed.filters
+      });
+
+      const indexSubset = filterIndex(meta.index, filters, meta);
 
       if (!indexSubset.length) {
-        return jsonResponse({ selected: [], message: 'Няма налични продукти по зададените филтри.' });
+        return jsonResponse({
+          selected: [],
+          mode: 'filter',
+          applied_filters: filters,
+          message: 'Няма налични продукти по зададените филтри.'
+        });
       }
 
-      const limit = Math.max(1, Math.min(40, Number(body.limit) || 12));
+      const limit = Math.max(1, Math.min(100, Number(body.limit) || 12));
+      const requestMode = body.mode === 'filter' || body.mode === 'ai' ? body.mode : 'auto';
+      const useFilterOnly = shouldUseFilterOnly(parsed, requestMode);
+
+      if (useFilterOnly) {
+        const selected = selectionFromFilteredIndex(indexSubset, filters, limit);
+        return jsonResponse({
+          selected,
+          catalog_size: indexSubset.length,
+          mode: 'filter',
+          applied_filters: filters
+        });
+      }
+
       const messages = buildAiSelectionMessages({
         project: body.project,
-        prompt: typeof body.prompt === 'string' ? body.prompt.slice(0, 2000) : '',
+        prompt: parsed.aiInstructions || promptText,
         index: indexSubset,
-        limit
+        limit: Math.min(limit, 40)
       });
 
-      const aiResult = await deps.callAI(env, messages);
+      let aiResult;
+      try {
+        aiResult = await deps.callAI(env, messages);
+      } catch (e) {
+        const status = e?.status || (e?.name === 'UserFacingError' ? 400 : 502);
+        const message = e?.message || 'AI заявката се провали. Проверете AI настройките в админ панела.';
+        throw new PortfolioImportError(message, status);
+      }
+
       const validIds = new Set(indexSubset.map((e) => String(e.group_id)));
-      const selected = normalizeAiSelection(aiResult, validIds).slice(0, limit);
+      let selected = normalizeAiSelection(aiResult, validIds).slice(0, Math.min(limit, 40));
 
-      // Обогатяваме отговора с каталожни данни за UI-то
+      // Ако AI не върне нищо, но имаме филтриран каталог — връщаме директно филтрираните
+      if (!selected.length && hasStructuredFilters(filters)) {
+        selected = selectionFromFilteredIndex(indexSubset, filters, limit);
+        return jsonResponse({
+          selected,
+          catalog_size: indexSubset.length,
+          mode: 'filter',
+          applied_filters: filters,
+          message: 'AI не върна подбор; показани са продуктите по зададените критерии.'
+        });
+      }
+
       const indexById = new Map(indexSubset.map((e) => [String(e.group_id), e]));
-      const enriched = selected.map((item) => {
-        const entry = indexById.get(item.group_id);
-        if (!entry) return item;
-        return {
-          ...item,
-          name: entry.name,
-          brand: entry.brand,
-          category: entry.category,
-          min_price: entry.min_price,
-          image: entry.image
-        };
-      });
+      const enriched = selected.map((item) => enrichSelectionEntry(item, indexById.get(item.group_id)));
 
-      return jsonResponse({ selected: enriched, catalog_size: indexSubset.length });
+      return jsonResponse({
+        selected: enriched,
+        catalog_size: indexSubset.length,
+        mode: 'ai',
+        applied_filters: filters
+      });
     }
 
     // POST /portfolio/import/apply — директен сървърен импорт в page content на проект
@@ -602,8 +663,11 @@ export async function handlePortfolioImportRoute(request, env, url, deps) {
     if (e instanceof PortfolioImportError) {
       return jsonResponse({ error: e.message }, e.status);
     }
+    if (e?.name === 'UserFacingError') {
+      return jsonResponse({ error: e.message }, e.status || 500);
+    }
     console.error('Portfolio import error:', e);
-    return jsonResponse({ error: 'Вътрешна грешка в Portfolio import API.' }, 500);
+    return jsonResponse({ error: e?.message || 'Вътрешна грешка в Portfolio import API.' }, 500);
   }
 }
 

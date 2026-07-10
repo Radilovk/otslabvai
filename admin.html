@@ -543,11 +543,14 @@
                 <button type="button" class="btn btn-secondary" data-action="pf-import-load">Търси</button>
             </div>
             <div class="pf-import-ai-bar">
-                <input type="text" id="pf-import-ai-prompt" class="pf-import-input" placeholder="Допълнителни AI инструкции (незадължително, напр. „фокус върху колаген и NAD+“)">
+                <div class="pf-import-ai-prompt-wrap">
+                    <input type="text" id="pf-import-ai-prompt" class="pf-import-input" placeholder="Глас или текст: „изведи продукти от марки 1,2,3“, „съдържащи цинк“, „марж над 30%“, „фокус върху колаген“…">
+                    <button type="button" class="btn btn-secondary btn-sm pf-import-voice-btn" data-action="pf-import-voice" title="Речева команда (микрофон)">🎤</button>
+                </div>
                 <label class="pf-import-ai-limit-label">Брой:
-                    <input type="number" id="pf-import-ai-limit" value="12" min="1" max="40">
+                    <input type="number" id="pf-import-ai-limit" value="12" min="1" max="100">
                 </label>
-                <button type="button" class="btn btn-primary" data-action="pf-import-ai-select" title="AI избира най-подходящите продукти за текущия проект от каталога">🤖 AI подбор</button>
+                <button type="button" class="btn btn-primary" data-action="pf-import-ai-select" title="Подбор по критерии (филтър) или AI за тематичен избор за проекта">🤖 Подбор</button>
             </div>
             <div id="pf-import-status" class="pf-import-status" hidden></div>
             <div id="pf-import-list" class="pf-import-list" aria-live="polite"></div>
