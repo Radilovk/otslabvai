@@ -455,18 +455,20 @@ export async function handlePortfolioImportRoute(request, env, url, deps) {
 
       // Обогатяваме отговора с каталожни данни за UI-то
       const indexById = new Map(indexSubset.map((e) => [String(e.group_id), e]));
-      for (const item of selected) {
+      const enriched = selected.map((item) => {
         const entry = indexById.get(item.group_id);
-        if (entry) {
-          item.name = entry.name;
-          item.brand = entry.brand;
-          item.category = entry.category;
-          item.min_price = entry.min_price;
-          item.image = entry.image;
-        }
-      }
+        if (!entry) return item;
+        return {
+          ...item,
+          name: entry.name,
+          brand: entry.brand,
+          category: entry.category,
+          min_price: entry.min_price,
+          image: entry.image
+        };
+      });
 
-      return jsonResponse({ selected, catalog_size: indexSubset.length });
+      return jsonResponse({ selected: enriched, catalog_size: indexSubset.length });
     }
 
     // POST /portfolio/import/apply — директен сървърен импорт в page content на проект
