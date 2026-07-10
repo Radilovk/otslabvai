@@ -4502,6 +4502,45 @@ function renderPortfolioSettings() {
                 <input type="text" id="pf-reseller-note" value="${escAdminHtml(s.reseller_delivery_note || '')}" style="width:100%;max-width:500px;padding:0.5rem;">
             </div>
         </div>
+        <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
+            <h3 style="margin-top:0;">Hero секция (каталог)</h3>
+            <p style="font-size:0.9rem;color:var(--text-secondary);">Снимката и заглавието на началната hero секция в portfolio каталога.</p>
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="pf-hero-title">Заглавие</label>
+                <input type="text" id="pf-hero-title" value="${escAdminHtml(s.hero_title || 'Каталог добавки')}" style="width:100%;max-width:400px;padding:0.5rem;">
+            </div>
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="pf-hero-image">Hero изображение (URL)</label>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;max-width:560px;">
+                    <input type="url" id="pf-hero-image" data-field="hero_image" value="${escAdminHtml(s.hero_image || 'images/portfolio-hero.jpg')}" style="flex:1;min-width:200px;padding:0.5rem;">
+                    <button type="button" class="btn btn-secondary" data-action="upload-simple-image" data-target-field="hero_image">📤 Качи снимка</button>
+                </div>
+                <img id="pf-hero-preview" src="${escAdminHtml(s.hero_image || 'images/portfolio-hero.jpg')}" alt="Hero preview" style="display:block;max-width:min(100%,420px);margin-top:0.75rem;border-radius:10px;border:1px solid var(--border-color);">
+            </div>
+        </div>
+        <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
+            <h3 style="margin-top:0;">Футър</h3>
+            <div class="form-group">
+                <label for="pf-footer-email">Имейл за контакт</label>
+                <input type="email" id="pf-footer-email" value="${escAdminHtml(s.footer?.contact_email || 'office@biocode.com')}" style="width:100%;max-width:400px;padding:0.5rem;">
+            </div>
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="pf-footer-phone">Телефон</label>
+                <input type="text" id="pf-footer-phone" value="${escAdminHtml(s.footer?.contact_phone || '')}" style="width:100%;max-width:400px;padding:0.5rem;">
+            </div>
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="pf-social-facebook">Facebook URL</label>
+                <input type="url" id="pf-social-facebook" value="${escAdminHtml(s.footer?.social_facebook || '')}" style="width:100%;max-width:400px;padding:0.5rem;">
+            </div>
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="pf-social-instagram">Instagram URL</label>
+                <input type="url" id="pf-social-instagram" value="${escAdminHtml(s.footer?.social_instagram || '')}" style="width:100%;max-width:400px;padding:0.5rem;">
+            </div>
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="pf-social-youtube">YouTube URL</label>
+                <input type="url" id="pf-social-youtube" value="${escAdminHtml(s.footer?.social_youtube || '')}" style="width:100%;max-width:400px;padding:0.5rem;">
+            </div>
+        </div>
         <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;">
             <h3 style="margin-top:0;">Надценка</h3>
             <div class="form-group">
@@ -4521,6 +4560,10 @@ function renderPortfolioSettings() {
 
     document.getElementById('portfolio-sync-btn')?.addEventListener('click', syncPortfolioCatalog);
     document.getElementById('portfolio-save-settings-btn')?.addEventListener('click', savePortfolioSettings);
+    document.getElementById('pf-hero-image')?.addEventListener('input', (e) => {
+        const preview = document.getElementById('pf-hero-preview');
+        if (preview && e.target.value) preview.src = e.target.value;
+    });
 }
 
 async function syncPortfolioCatalog() {
@@ -4545,14 +4588,25 @@ async function syncPortfolioCatalog() {
 }
 
 async function savePortfolioSettings() {
+    const current = portfolioSettingsData || {};
     const payload = {
         global_markup_percent: Number(document.getElementById('pf-global-markup')?.value) || 30,
         site_name: document.getElementById('pf-site-name')?.value || 'Portfolio',
         site_slogan: document.getElementById('pf-site-slogan')?.value || '',
+        hero_image: document.getElementById('pf-hero-image')?.value || 'images/portfolio-hero.jpg',
+        hero_title: document.getElementById('pf-hero-title')?.value || 'Каталог добавки',
         reseller_name: document.getElementById('pf-reseller-name')?.value || '',
         reseller_phone: document.getElementById('pf-reseller-phone')?.value || '',
         reseller_address: document.getElementById('pf-reseller-address')?.value || '',
-        reseller_delivery_note: document.getElementById('pf-reseller-note')?.value || ''
+        reseller_delivery_note: document.getElementById('pf-reseller-note')?.value || '',
+        footer: {
+            ...(current.footer || {}),
+            contact_email: document.getElementById('pf-footer-email')?.value || 'office@biocode.com',
+            contact_phone: document.getElementById('pf-footer-phone')?.value || '',
+            social_facebook: document.getElementById('pf-social-facebook')?.value || '',
+            social_instagram: document.getElementById('pf-social-instagram')?.value || '',
+            social_youtube: document.getElementById('pf-social-youtube')?.value || ''
+        }
     };
     try {
         const res = await fetch(`${API_URL}/portfolio/settings`, {

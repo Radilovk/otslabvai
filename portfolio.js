@@ -1,5 +1,5 @@
 import {
-  escapeHtml, debounce, updateCartBadges, initPortfolioPage, icon
+  escapeHtml, debounce, updateCartBadges, initPortfolioPage, applyHeroSettings, icon
 } from './portfolio-shared.js';
 import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache } from './portfolio-cache.js';
 import {
@@ -367,10 +367,7 @@ async function init() {
 
   try {
     const settings = getCachedSettings();
-    if (settings?.site_slogan) {
-      const sub = document.getElementById('hero-subtitle');
-      if (sub) sub.textContent = settings.site_slogan;
-    }
+    applyHeroSettings(settings);
     const filters = getFiltersFromCache();
     if (filters) populateFilters(filters);
     state.cacheReady = true;
