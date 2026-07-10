@@ -1,6 +1,8 @@
 import {
   calculateMarkupPercent,
   calculateRetailPrice,
+  charmRoundRetailPrice,
+  charmEndingSeed,
   groupRawProducts,
   buildCatalogMeta,
   handlePortfolioRoute
@@ -59,15 +61,27 @@ describe('Portfolio API', () => {
     expect(pct).toBe(25);
   });
 
-  test('calculateRetailPrice applies markup', () => {
-    expect(calculateRetailPrice(10, 30)).toBe(13);
+  test('calculateRetailPrice applies markup and charm rounding', () => {
+    expect(calculateRetailPrice(10, 30)).toBe(13.8);
+    expect(calculateRetailPrice(10, 30, null, '99')).toBeGreaterThanOrEqual(13);
+  });
+
+  test('charmRoundRetailPrice rounds up to .80 or .90', () => {
+    expect(charmRoundRetailPrice(21.1, 0)).toBe(21.8);
+    expect(charmRoundRetailPrice(21.1, 1)).toBe(21.9);
+    expect(charmRoundRetailPrice(21.91, 0)).toBe(22.8);
+  });
+
+  test('charmEndingSeed is stable per SKU', () => {
+    expect(charmEndingSeed('42')).toBe(charmEndingSeed('42'));
+    expect([0, 1]).toContain(charmEndingSeed('1'));
   });
 
   test('groupRawProducts merges variants by group_id', () => {
     const groups = groupRawProducts(sampleProducts, settings);
     expect(groups).toHaveLength(1);
     expect(groups[0].variants).toHaveLength(2);
-    expect(groups[0].variants[0].retail_price).toBe(12.5);
+    expect(groups[0].variants[0].retail_price).toBe(12.9);
   });
 
   test('buildCatalogMeta creates index and lookup', () => {

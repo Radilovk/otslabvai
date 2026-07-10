@@ -39,7 +39,44 @@ export const DEFAULT_SETTINGS = {
   reseller_name: '',
   reseller_phone: '',
   reseller_address: '',
-  reseller_delivery_note: 'Доставка до дистрибутор — разпределяне към клиенти от админ панела.'
+  reseller_delivery_note: 'Доставка до дистрибутор — разпределяне към клиенти от админ панела.',
+  hero_image: 'images/portfolio-hero.jpg',
+  hero_title: 'Каталог добавки',
+  footer: {
+    contact_email: 'office@biocode.com',
+    contact_phone: '',
+    copyright_text: '',
+    social_facebook: '',
+    social_instagram: '',
+    social_youtube: '',
+    columns: [
+      {
+        type: 'links',
+        title: 'Каталог',
+        links: [
+          { text: 'Всички продукти', url: 'portfolio.html' },
+          { text: 'Количка', url: 'portfolio-checkout.html' }
+        ]
+      },
+      {
+        type: 'links',
+        title: 'Информация',
+        links: [
+          { text: 'Доставка', url: 'portfolio-shipping.html' },
+          { text: 'Поверителност', url: 'portfolio-policy.html' },
+          { text: 'Общи условия', url: 'portfolio-terms.html' }
+        ]
+      },
+      {
+        type: 'contact',
+        title: 'Контакт',
+        lines: [
+          'office@biocode.com',
+          'Доставка до офис · наложен платеж'
+        ]
+      }
+    ]
+  }
 };
 
 export class PortfolioError extends Error {
@@ -95,11 +132,43 @@ export function calculateMarkupPercent(settings, product) {
   return Number(settings.global_markup_percent) || 0;
 }
 
-export function calculateRetailPrice(b2bPrice, markupPercent, override) {
-  if (override && typeof override.fixed_price === 'number') {
-    return roundPrice(override.fixed_price);
+/** Stable pseudo-random 0|1 from SKU – picks .80 vs .90 when both are valid. */
+export function charmEndingSeed(skuId) {
+  let hash = 0;
+  const s = String(skuId ?? '');
+  for (let i = 0; i < s.length; i++) {
+    hash = ((hash << 5) - hash + s.charCodeAt(i)) | 0;
   }
-  return roundPrice(b2bPrice * (1 + markupPercent / 100));
+  return Math.abs(hash) % 2;
+}
+
+/** Round retail price up to x.80 or x.90 (deterministic per SKU). */
+export function charmRoundRetailPrice(price, seed = 0) {
+  const p = Number(price);
+  if (!(p > 0)) return 0;
+
+  const endings = [0.8, 0.9];
+  let euros = Math.floor(p);
+  let candidates = endings
+    .map((ending) => roundPrice(euros + ending))
+    .filter((candidate) => candidate + 0.001 >= p);
+
+  while (!candidates.length) {
+    euros += 1;
+    candidates = endings.map((ending) => roundPrice(euros + ending));
+  }
+
+  if (candidates.length === 1) return candidates[0];
+  const idx = seed % 2;
+  return candidates[idx] ?? candidates[0];
+}
+
+export function calculateRetailPrice(b2bPrice, markupPercent, override, skuId) {
+  if (override && typeof override.fixed_price === 'number') {
+    return charmRoundRetailPrice(override.fixed_price, charmEndingSeed(skuId));
+  }
+  const raw = b2bPrice * (1 + markupPercent / 100);
+  return charmRoundRetailPrice(raw, charmEndingSeed(skuId));
 }
 
 export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
@@ -133,7 +202,7 @@ export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
 
     const b2b = parseFloat(p.b2b_price) || 0;
     const markup = calculateMarkupPercent(settings, { ...p, group_id: gid });
-    const retail = calculateRetailPrice(b2b, markup, overrides[gid]);
+    const retail = calculateRetailPrice(b2b, markup, overrides[gid], String(p.id));
 
     g.variants.push({
       sku_id: String(p.id),
@@ -339,7 +408,10 @@ async function handleSaveSettings(request, env) {
     reseller_name: incoming.reseller_name ?? current.reseller_name,
     reseller_phone: incoming.reseller_phone ?? current.reseller_phone,
     reseller_address: incoming.reseller_address ?? current.reseller_address,
-    reseller_delivery_note: incoming.reseller_delivery_note ?? current.reseller_delivery_note
+    reseller_delivery_note: incoming.reseller_delivery_note ?? current.reseller_delivery_note,
+    hero_image: incoming.hero_image ?? current.hero_image,
+    hero_title: incoming.hero_title ?? current.hero_title,
+    footer: incoming.footer ?? current.footer
   };
   await saveSettings(env, merged);
   return jsonResponse({ success: true, settings: merged });

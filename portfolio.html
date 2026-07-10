@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="bg">
+<html lang="bg" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0f2540">
+    <script>
+    (function(){try{var s=localStorage.getItem('theme');var t=s||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();
+    </script>
     <title>BIOCODE – Nutrition Science | Каталог хранителни добавки</title>
     <meta name="description" content="BIOCODE Nutrition Science – протеини, витамини, аминокиселини с доставка до офис.">
     <meta name="robots" content="index, follow">
@@ -20,7 +23,7 @@
 
     <section class="pf-hero" id="pf-hero">
         <div class="pf-hero-media" aria-hidden="true">
-            <img src="images/portfolio-hero.jpg" alt="" width="1400" height="666" loading="eager" decoding="async" fetchpriority="high">
+            <img id="hero-image" src="images/portfolio-hero.jpg" alt="" width="1400" height="666" loading="eager" decoding="async" fetchpriority="high">
         </div>
         <div class="pf-hero-overlay" aria-hidden="true"></div>
         <div class="pf-hero-inner">
