@@ -801,6 +801,34 @@
                 transform: none;
             }
         }
+        /* --- UX: тостове, празна количка, промо съобщения, изпращане --- */
+        .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+        #toast-container {
+            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+            z-index: 3000; display: flex; flex-direction: column; gap: 0.5rem;
+            width: min(420px, calc(100vw - 2rem)); pointer-events: none;
+        }
+        .toast {
+            display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+            padding: 0.8rem 1rem; border-radius: 10px;
+            background: var(--bg-secondary, #1d1d1f); color: var(--text-main, #fff);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.28); font-size: 0.95rem;
+            border-left: 4px solid var(--accent, var(--color-primary));
+            opacity: 1; transition: opacity .3s, transform .3s; pointer-events: auto;
+        }
+        .toast.success { border-left-color: #2fbf71; }
+        .toast.error { border-left-color: var(--error-color, #e34a4a); }
+        .toast.fade-out { opacity: 0; transform: translateY(8px); }
+        .toast-dismiss { background: none; border: none; color: inherit; cursor: pointer; font-size: 1.05rem; line-height: 1; }
+        .cart-empty-state { text-align: center; padding: 2rem 1rem; list-style: none; }
+        .cart-empty-state .cart-empty-icon { font-size: 2.2rem; display: block; margin-bottom: 0.5rem; }
+        .cart-empty-state a { display: inline-block; margin-top: 1rem; color: var(--accent, var(--color-primary)); font-weight: 600; }
+        .promo-message { font-size: 0.85rem; margin-top: 0.5rem; display: none; }
+        .promo-message.success { display: block; color: #2fbf71; }
+        .promo-message.error { display: block; color: var(--error-color, #e34a4a); }
+        .free-shipping-hint { font-size: 0.82rem; color: var(--text-secondary); padding: 0.25rem 0 0.5rem; }
+        .free-shipping-hint strong { color: var(--accent, var(--color-primary)); }
+        .courier-widget.is-invalid-section { outline: 2px solid var(--error-color, #e34a4a); outline-offset: 4px; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -974,6 +1002,7 @@
                 <input type="text" id="promo-code" placeholder="Промо код">
                 <button id="apply-promo">Приложи</button>
             </div>
+            <div id="promo-message" class="promo-message" role="status"></div>
             <div class="summary-details">
                 <div class="summary-row">
                     <span>Междинна сума</span>
@@ -983,6 +1012,7 @@
                     <span>Доставка</span>
                     <span id="summary-shipping">Изчислява се...</span>
                 </div>
+                <div class="free-shipping-hint" id="free-shipping-hint" style="display:none;"></div>
                 <div class="summary-row" id="discount-row" style="display:none;">
                     <span>Отстъпка</span>
                     <span id="summary-discount"></span>
@@ -1007,6 +1037,9 @@
     </footer>
 
     <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
+
+    <!-- Тост нотификации -->
+    <div id="toast-container" aria-live="polite"></div>
 
     <!-- Speedy Map Modal -->
     <div id="speedy-map-modal" class="speedy-map-modal" role="dialog" aria-modal="true" aria-label="Избор на офис на Спиди">
@@ -1351,6 +1384,41 @@
         const cartData = JSON.parse(localStorage.getItem('lifeCart') || '[]');
         let activeDiscount = 0;
         let activePromoCode = null;
+        let isSubmitting = false;
+
+        // --- Тост нотификации (заместват alert) ---
+        const toastContainer = document.getElementById('toast-container');
+        function showToast(message, type = 'info', duration = 4000) {
+            if (!toastContainer) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.setAttribute('role', 'alert');
+            const msg = document.createElement('span');
+            msg.textContent = message;
+            const dismiss = document.createElement('button');
+            dismiss.className = 'toast-dismiss';
+            dismiss.setAttribute('aria-label', 'Затвори');
+            dismiss.textContent = '✕';
+            let timer;
+            const remove = () => {
+                clearTimeout(timer);
+                toast.classList.add('fade-out');
+                toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+            };
+            dismiss.addEventListener('click', remove);
+            toast.appendChild(msg);
+            toast.appendChild(dismiss);
+            toastContainer.appendChild(toast);
+            timer = setTimeout(remove, duration);
+        }
+
+        // --- Промо съобщение под полето (вместо alert) ---
+        const promoMessageEl = document.getElementById('promo-message');
+        function setPromoMessage(text, type) {
+            if (!promoMessageEl) return;
+            promoMessageEl.textContent = text || '';
+            promoMessageEl.className = `promo-message${type ? ' ' + type : ''}`;
+        }
 
         // --- 2. ЕЛЕМЕНТИ ОТ DOM ---
         const productListEl = document.getElementById('product-list');
@@ -1374,12 +1442,22 @@
         };
         
         // --- 3. РЕНДЕРИРАНЕ И ИЗЧИСЛЕНИЯ ---
+        const submitBtn = form.querySelector('.btn-submit');
+
         function renderProducts() {
             productListEl.innerHTML = '';
             if (cartData.length === 0) {
-                productListEl.innerHTML = '<p style="text-align:center; padding: 2rem 0;">Кошницата е празна.</p>';
+                productListEl.innerHTML = `
+                    <li class="cart-empty-state">
+                        <span class="cart-empty-icon" aria-hidden="true">🛒</span>
+                        Количката ви е празна.<br>
+                        <a href="life.html">← Разгледайте продуктите</a>
+                    </li>`;
+                if (submitBtn && !isSubmitting) submitBtn.disabled = true;
+                updateSummary();
                 return;
             }
+            if (submitBtn && !isSubmitting) submitBtn.disabled = false;
 
             cartData.forEach(product => {
                 const itemEl = document.createElement('li');
@@ -1478,10 +1556,23 @@
             const total = subtotal - discountAmount + shipping;
 
             subtotalEl.textContent = `${subtotal.toFixed(2)} €`;
-            if (subtotal >= 100) {
-                shippingEl.textContent = 'Безплатна';
+            if (subtotal === 0) {
+                shippingEl.textContent = '—';
+            } else if (subtotal >= 100) {
+                shippingEl.textContent = 'Безплатна 🎉';
             } else {
                 shippingEl.textContent = `${shipping.toFixed(2)} €`;
+            }
+
+            // Подкана колко остава до безплатна доставка
+            const hintEl = document.getElementById('free-shipping-hint');
+            if (hintEl) {
+                if (subtotal > 0 && subtotal < 100) {
+                    hintEl.style.display = 'block';
+                    hintEl.innerHTML = `Добавете още <strong>${(100 - subtotal).toFixed(2)} €</strong> и доставката е безплатна`;
+                } else {
+                    hintEl.style.display = 'none';
+                }
             }
             if (activeDiscount > 0) {
                 discountRow.style.display = 'flex';
@@ -1509,7 +1600,7 @@
                     if (cartData[productIndex].quantity < max) {
                         cartData[productIndex].quantity++;
                     } else {
-                        alert('Няма повече наличности.');
+                        showToast('Няма повече наличности от този продукт.', 'error');
                     }
                 } else if (action === 'decrease' && cartData[productIndex].quantity > 1) {
                     cartData[productIndex].quantity--;
@@ -1520,31 +1611,46 @@
             }
 
             if (target.matches('.remove-item-btn')) {
-                if(confirm(`Сигурни ли сте, че искате да премахнете "${cartData[productIndex].name}"?`)){
-                    cartData.splice(productIndex, 1);
-                    renderProducts();
-                    saveCart();
-                    updateCartCount();
-                }
+                const removedName = cartData[productIndex].name;
+                cartData.splice(productIndex, 1);
+                renderProducts();
+                saveCart();
+                updateCartCount();
+                showToast(`„${removedName}" е премахнат от количката.`, 'success');
             }
         });
 
         applyPromoBtn.addEventListener('click', async () => {
-            const code = promoInput.value.trim().toUpperCase();
-            if (!code) {
-                alert('Моля, въведете промо код.');
+            // Втори клик = премахване на приложен промо код
+            if (applyPromoBtn.dataset.mode === 'remove') {
+                activeDiscount = 0;
+                activePromoCode = null;
+                promoInput.disabled = false;
+                promoInput.value = '';
+                applyPromoBtn.textContent = 'Приложи';
+                delete applyPromoBtn.dataset.mode;
+                setPromoMessage('');
+                updateSummary();
                 return;
             }
-            
+
+            const code = promoInput.value.trim().toUpperCase();
+            if (!code) {
+                setPromoMessage('Въведете промо код.', 'error');
+                promoInput.focus();
+                return;
+            }
+
+            applyPromoBtn.disabled = true;
             try {
                 const response = await fetch(`${API_URL}/validate-promo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ code })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.valid) {
                     activePromoCode = result.promoCode;
                     if (result.promoCode.discountType === 'percentage') {
@@ -1554,18 +1660,24 @@
                         activeDiscount = result.promoCode.discount;
                     }
                     updateSummary();
-                    alert(`Промо кодът е приложен! ${result.promoCode.description || ''}`);
+                    const discountLabel = result.promoCode.discountType === 'percentage'
+                        ? `-${result.promoCode.discount}%`
+                        : `-${Number(result.promoCode.discount).toFixed(2)} €`;
+                    setPromoMessage(`✓ Промо кодът е приложен (${discountLabel}). ${result.promoCode.description || ''}`.trim(), 'success');
                     promoInput.disabled = true;
-                    applyPromoBtn.disabled = true;
+                    applyPromoBtn.textContent = '✕ Премахни';
+                    applyPromoBtn.dataset.mode = 'remove';
                 } else {
-                    alert(result.error || 'Невалиден промо код.');
+                    setPromoMessage(result.error || 'Невалиден промо код.', 'error');
                     activeDiscount = 0;
                     activePromoCode = null;
                     updateSummary();
                 }
             } catch (err) {
                 console.error('Грешка при валидация на промо код:', err);
-                alert('Възникна грешка при валидация на промо кода.');
+                setPromoMessage('Възникна грешка при валидация на промо кода. Опитайте отново.', 'error');
+            } finally {
+                applyPromoBtn.disabled = false;
             }
         });
 
@@ -1801,9 +1913,37 @@
         }
         
         // --- 5. ВАЛИДАЦИЯ И ИЗПРАЩАНЕ НА ФОРМАТА ---
+        function scrollToFirstError() {
+            const firstInvalid = form.querySelector('.is-invalid')
+                || document.querySelector('.courier-widget.is-invalid-section')
+                || form.querySelector('.error-message[style*="block"]');
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (firstInvalid.focus && firstInvalid.classList.contains('is-invalid')) {
+                    firstInvalid.focus({ preventScroll: true });
+                }
+            }
+        }
+
+        function setSubmitting(state) {
+            isSubmitting = state;
+            if (!submitBtn) return;
+            submitBtn.disabled = state || cartData.length === 0;
+            submitBtn.textContent = state ? '⏳ Изпращане на поръчката...' : 'Поръчай с наложен платеж';
+        }
+
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            if (validateForm()) {
+            if (isSubmitting) return;
+            if (cartData.length === 0) {
+                showToast('Количката ви е празна — добавете продукти преди поръчка.', 'error');
+                return;
+            }
+            if (!validateForm()) {
+                scrollToFirstError();
+                return;
+            }
+            {
                 const formData = new FormData(form);
                 const orderData = Object.fromEntries(formData.entries());
                 
@@ -1851,13 +1991,16 @@
                     status: 'Нова'
                 };
 
+                // Защита от двойно изпращане + индикатор за прогрес
+                setSubmitting(true);
+
                 // If promo code is applied, increment usage count
                 const orderPromise = fetch(`${API_URL}/orders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(fullOrder)
                 });
-                
+
                 const promoPromise = activePromoCode ? fetch(`${API_URL}/validate-promo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1875,12 +2018,16 @@
                 })
                 .then(() => {
                     localStorage.removeItem('lifeCart');
-                    // Show success modal instead of alert
+                    // Изчистваме количката и на екрана (зад success модала)
+                    cartData.length = 0;
+                    renderProducts();
+                    updateCartCount();
                     showSuccessModal();
                 })
                 .catch(err => {
                     console.error('Грешка при изпращане на поръчката:', err);
-                    alert('Възникна грешка. Опитайте по-късно.');
+                    setSubmitting(false);
+                    showToast('Възникна грешка при изпращане на поръчката. Опитайте отново.', 'error');
                 });
             }
         });
@@ -1915,24 +2062,28 @@
             });
             
             // Validate courier office selection if courier delivery is selected
+            document.querySelectorAll('.courier-widget.is-invalid-section')
+                .forEach(el => el.classList.remove('is-invalid-section'));
             if (deliveryCourierRadio.checked) {
                 // Check if a courier is selected
                 if (!speedyRadio.checked && !ekontRadio.checked) {
-                    alert('Моля, изберете куриерска фирма (Speedy или Еконт).');
+                    showToast('Изберете куриерска фирма (Speedy или Еконт).', 'error');
                     isValid = false;
                 }
-                
+
                 // Check if an office is selected
                 if (speedyRadio.checked) {
                     const speedyOfficeId = document.getElementById('final-speedy-id').value;
                     if (!speedyOfficeId) {
-                        alert('Моля, изберете офис на Speedy от картата.');
+                        showToast('Изберете офис на Speedy от картата.', 'error');
+                        speedyWidget.classList.add('is-invalid-section');
                         isValid = false;
                     }
                 } else if (ekontRadio.checked) {
                     const ekontOfficeId = document.getElementById('final-office-id').value;
                     if (!ekontOfficeId) {
-                        alert('Моля, изберете офис на Еконт от списъка.');
+                        showToast('Изберете офис на Еконт от списъка.', 'error');
+                        ekontWidget.classList.add('is-invalid-section');
                         isValid = false;
                     }
                 }
@@ -1966,12 +2117,14 @@
         const modalOverlay = successModal ? successModal.querySelector('.success-modal-overlay') : null;
         
         // Define closeSuccessModal first
+        // Количката е изчистена след успешна поръчка — затварянето води обратно към магазина
         window.closeSuccessModal = function() {
             if (successModal) {
                 successModal.classList.remove('active');
                 document.body.style.overflow = '';
                 document.removeEventListener('keydown', handleModalEscape);
             }
+            window.location.href = 'life.html';
         };
         
         function handleModalEscape(e) {
