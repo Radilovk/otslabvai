@@ -525,6 +525,49 @@
         </footer>
     </div>
     
+    <!-- PORTFOLIO ИМПОРТ: избор на продукти от B2B каталога (ръчно или с AI) -->
+    <div id="pf-import-overlay" class="pf-import-overlay" hidden>
+        <div class="pf-import-dialog" role="dialog" aria-modal="true" aria-labelledby="pf-import-title">
+            <header class="pf-import-header">
+                <h3 id="pf-import-title">🔗 Импорт от Portfolio каталога (Fitness1 API)</h3>
+                <button type="button" class="close-modal-btn" data-action="pf-import-close" aria-label="Затвори">×</button>
+            </header>
+            <div class="pf-import-toolbar">
+                <input type="text" id="pf-import-search" class="pf-import-input" placeholder="🔍 Търсене по име или марка...">
+                <select id="pf-import-category" class="pf-import-input">
+                    <option value="">Всички категории</option>
+                </select>
+                <select id="pf-import-brand" class="pf-import-input">
+                    <option value="">Всички марки</option>
+                </select>
+                <button type="button" class="btn btn-secondary" data-action="pf-import-load">Търси</button>
+            </div>
+            <div class="pf-import-ai-bar">
+                <input type="text" id="pf-import-ai-prompt" class="pf-import-input" placeholder="Допълнителни AI инструкции (незадължително, напр. „фокус върху колаген и NAD+“)">
+                <label class="pf-import-ai-limit-label">Брой:
+                    <input type="number" id="pf-import-ai-limit" value="12" min="1" max="40">
+                </label>
+                <button type="button" class="btn btn-primary" data-action="pf-import-ai-select" title="AI избира най-подходящите продукти за текущия проект от каталога">🤖 AI подбор</button>
+            </div>
+            <div id="pf-import-status" class="pf-import-status" hidden></div>
+            <div id="pf-import-list" class="pf-import-list" aria-live="polite"></div>
+            <div class="pf-import-pagination">
+                <button type="button" class="btn btn-secondary btn-sm" data-action="pf-import-prev">← Назад</button>
+                <span id="pf-import-page-info"></span>
+                <button type="button" class="btn btn-secondary btn-sm" data-action="pf-import-next">Напред →</button>
+            </div>
+            <footer class="pf-import-footer">
+                <label class="checkbox-group pf-import-enrich-label" title="След импорта AI Асистентът попълва автоматично описание, слоган, ефекти и ползи за всеки продукт">
+                    <input type="checkbox" id="pf-import-enrich" checked> 🤖 AI обогатяване след импорт
+                </label>
+                <div class="pf-import-footer-actions">
+                    <span id="pf-import-selected-count">0 избрани</span>
+                    <button type="button" class="btn btn-primary" data-action="pf-import-confirm">📥 Импортирай избраните</button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
     <!-- Нотификации -->
     <div id="notification-container"></div>
     <div id="undo-notification" class="undo-bar">
@@ -1205,6 +1248,7 @@
                         <button type="button" class="btn btn-primary" data-action="import-product">Импортирай продукт (JSON)</button>
                         <button type="button" class="btn btn-secondary" data-action="import-products-csv" title="Импортирай продукти от CSV файл" aria-label="Импортирай продукти от CSV файл">📥 Импортирай CSV</button>
                         <button type="button" class="btn btn-secondary" data-action="import-products-xlsx" title="Импортирай продукти от B2B XLSX файл (формат fitness1.bg)" aria-label="Импортирай продукти от XLSX файл">📊 Импортирай B2B XLSX</button>
+                        <button type="button" class="btn btn-primary" data-action="import-products-portfolio" title="Импортирай продукти директно от Portfolio B2B каталога (Fitness1 API) с ръчен или AI подбор" aria-label="Импортирай продукти от Portfolio каталога">🔗 Импорт от Portfolio (AI)</button>
                         <button type="button" class="btn btn-secondary" data-action="export-products-csv" title="Експортирай всички продукти от категорията в CSV" aria-label="Експортирай продукти в CSV">📤 Експортирай CSV</button>
                         <button type="button" class="btn btn-secondary" data-action="download-csv-template" title="Изтегли шаблон за импорт на продукти в CSV формат" aria-label="Изтегли CSV шаблон">📋 CSV Шаблон</button>
                         <input type="file" id="product-import-input" style="display: none;" accept=".json">

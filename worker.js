@@ -1,6 +1,16 @@
 // ==== ВЕРСИЯ 4.0: ФУНКЦИОНАЛЕН АДМИН ПАНЕЛ ====
 
-import { handlePortfolioRoute } from './portfolio-api.js';
+import {
+  handlePortfolioRoute,
+  syncPortfolioCatalog,
+  getPortfolioMeta,
+  loadPortfolioGroupsByIds
+} from './portfolio-api.js';
+import {
+  handlePortfolioImportRoute,
+  refreshImportedProjects,
+  IMPORT_PROJECTS
+} from './portfolio-import.js';
 
 // Cache configuration constants
 const CACHE_CONFIG = {
@@ -181,7 +191,12 @@ export default {
               break;
 
           default:
-            if (url.pathname.startsWith('/portfolio/')) {
+            if (url.pathname.startsWith('/portfolio/import/')) {
+                response = await handlePortfolioImportRoute(request, env, url, getPortfolioImportDeps(ctx));
+            } else if (url.pathname === '/portfolio/sync' && request.method === 'POST') {
+                // Sync на каталога + авто-опресняване на импортираните продукти в index/life
+                response = await handlePortfolioSyncWithRefresh(env, ctx);
+            } else if (url.pathname.startsWith('/portfolio/')) {
                 response = await handlePortfolioRoute(request, env, url);
             } else {
                 throw new UserFacingError('Not Found', 404);
@@ -1350,6 +1365,102 @@ async function handleAIAssistant(request, env) {
         if (e instanceof UserFacingError) throw e;
         throw new UserFacingError(`Грешка при обработка на AI заявката: ${e.message}`, 500);
     }
+}
+
+// =======================================================
+//   PORTFOLIO → INDEX/LIFE ИМПОРТ (зависимости за portfolio-import.js)
+// =======================================================
+
+/**
+ * Зарежда page content JSON на проект (main | life) със static fallback.
+ */
+async function loadProjectContent(env, project) {
+    const [kvKey, fallbackKey] = project === 'life'
+        ? ['life_page_content', 'static_backend_life_page_content.json']
+        : ['page_content', 'static_backend_page_content.json'];
+    let raw = await env.PAGE_CONTENT.get(kvKey);
+    if (raw === null) raw = await env.PAGE_CONTENT.get(fallbackKey);
+    if (raw === null) throw new UserFacingError(`Няма page content за проект „${project}".`, 404);
+    return JSON.parse(raw);
+}
+
+/**
+ * Записва page content на проект в KV и async синхронизира към GitHub.
+ */
+async function saveProjectContent(env, project, contentString, ctx) {
+    if (project === 'life') {
+        await env.PAGE_CONTENT.put('life_page_content', contentString);
+        ctx.waitUntil(syncLifePageContentToGitHub(contentString, env));
+    } else {
+        await env.PAGE_CONTENT.put('page_content', contentString);
+        ctx.waitUntil(syncPageContentToGitHub(contentString, env));
+    }
+}
+
+/**
+ * Извиква конфигурирания AI доставчик (KV ai_settings) с подадени съобщения.
+ * Връща парснатия JSON отговор на модела.
+ */
+async function callAIWithStoredSettings(env, messages) {
+    const settingsJson = await env.PAGE_CONTENT.get('ai_settings');
+    const aiSettings = settingsJson ? JSON.parse(settingsJson) : getDefaultAISettings();
+
+    if (!aiSettings.apiKey && aiSettings.provider !== 'cloudflare') {
+        throw new UserFacingError("Липсва API ключ за избрания AI доставчик.", 400);
+    }
+    if (aiSettings.provider === 'cloudflare' && (!env.ACCOUNT_ID || !env.AI_TOKEN)) {
+        throw new UserFacingError("Cloudflare AI не е конфигуриран.", 500);
+    }
+
+    switch (aiSettings.provider) {
+        case 'cloudflare': return callCloudflareAI(env, aiSettings, messages);
+        case 'openai': return callOpenAI(aiSettings, messages);
+        case 'google': return callGoogleAI(aiSettings, messages);
+        default: throw new UserFacingError("Невалиден AI доставчик.", 400);
+    }
+}
+
+/** Зависимости, които portfolio-import.js използва за AI, каталог и page content. */
+function getPortfolioImportDeps(ctx) {
+    return {
+        callAI: callAIWithStoredSettings,
+        loadProjectContent,
+        saveProjectContent: (env, project, contentString) => saveProjectContent(env, project, contentString, ctx),
+        getCatalogMeta: getPortfolioMeta,
+        loadGroupsByIds: loadPortfolioGroupsByIds
+    };
+}
+
+/**
+ * POST /portfolio/sync: синхронизира B2B каталога и след това автоматично
+ * опреснява цените/наличностите на импортираните продукти в index и life.
+ */
+async function handlePortfolioSyncWithRefresh(env, ctx) {
+    let result;
+    try {
+        result = await syncPortfolioCatalog(env);
+    } catch (e) {
+        if (e && e.name === 'PortfolioError') {
+            return new Response(JSON.stringify({ error: e.message }), {
+                status: e.status || 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+        throw e;
+    }
+
+    let refresh;
+    try {
+        refresh = await refreshImportedProjects(env, Object.keys(IMPORT_PROJECTS), getPortfolioImportDeps(ctx));
+    } catch (e) {
+        console.error('Auto-refresh на импортираните продукти след sync се провали:', e);
+        refresh = { error: e.message };
+    }
+
+    return new Response(JSON.stringify({ ...result, imported_products_refresh: refresh }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
 }
 
 /**

@@ -130,6 +130,7 @@ Premium е-commerce за биохакинг продукти — пептиди,
 | POST | `/validate-promo` | П1 + П2 |
 | POST | `/quest-submit` | П1 |
 | POST | `/ai-assistant` | П1 |
+| GET/POST | `/portfolio/import/*` | П1 + П2 (импорт от B2B каталога, вж. `PORTFOLIO_TO_PROJECTS_IMPORT.md`) |
 | GET/POST | `/ai-settings` | Всички |
 | GET | `/api-token` | Вътрешен |
 
