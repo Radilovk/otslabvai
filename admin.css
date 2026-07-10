@@ -161,8 +161,13 @@ h2 {
     align-items: stretch;
     gap: 0.75rem;
     margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
+    padding: 0.5rem 0 0.75rem;
     border-bottom: 1px solid var(--border-color);
+    /* Хедърът е винаги видим — бутонът „Запиши" не се губи при дълги страници */
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg-main);
 }
 .header-actions {
     display: flex;
@@ -288,6 +293,26 @@ h2 {
 }
 .tab-btn:hover { color: var(--primary-color); }
 .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); font-weight: bold; }
+.tab-nav-divider {
+    flex-shrink: 0;
+    width: 1px;
+    align-self: center;
+    height: 1.25rem;
+    margin: 0 0.35rem;
+    background: var(--border-color);
+}
+.tab-badge {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.4;
+    vertical-align: middle;
+}
 .tab-pane { display: none; background: var(--bg-secondary); padding: 1rem; border-radius: 8px; box-shadow: var(--shadow); }
 .tab-pane.active { display: block; animation: fadeIn 0.5s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -1374,3 +1399,76 @@ input:checked + .slider:before {
 .admin-social-feed-status strong {
     color: var(--accent);
 }
+
+/* =======================================================
+   ИМПОРТ ОТ PORTFOLIO КАТАЛОГА (Fitness1 API)
+   ======================================================= */
+.pf-import-overlay {
+    position: fixed; inset: 0; z-index: 1500;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+}
+.pf-import-overlay[hidden] { display: none; }
+.pf-import-dialog {
+    background: var(--bg-secondary); border-radius: var(--border-radius);
+    box-shadow: var(--shadow); width: min(860px, 100%);
+    max-height: 92vh; display: flex; flex-direction: column;
+}
+.pf-import-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color);
+}
+.pf-import-header h3 { margin: 0; font-size: 1.1rem; }
+.pf-import-toolbar, .pf-import-ai-bar {
+    display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
+    padding: 0.75rem 1.25rem;
+}
+.pf-import-toolbar { border-bottom: 1px dashed var(--border-color); }
+.pf-import-ai-bar {
+    background: var(--bg-accent); border-bottom: 1px solid var(--border-color);
+}
+.pf-import-input {
+    padding: 0.5rem 0.75rem; border: 1px solid var(--border-color);
+    border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary);
+    font-family: var(--font-secondary); font-size: 0.9rem;
+}
+.pf-import-toolbar .pf-import-input[type="text"],
+.pf-import-ai-bar .pf-import-input[type="text"] { flex: 1 1 220px; min-width: 180px; }
+.pf-import-ai-limit-label { display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--text-secondary); }
+.pf-import-ai-limit-label input { width: 64px; padding: 0.4rem; border: 1px solid var(--border-color); border-radius: 6px; }
+.pf-import-status {
+    padding: 0.5rem 1.25rem; font-size: 0.85rem; color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+.pf-import-list { flex: 1; overflow-y: auto; padding: 0.5rem 1.25rem; min-height: 200px; }
+.pf-import-empty { color: var(--text-secondary); text-align: center; padding: 2rem 0; }
+.pf-import-row {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.5rem; border-radius: 6px; cursor: pointer;
+    border: 1px solid transparent;
+}
+.pf-import-row:hover { background: var(--bg-light); }
+.pf-import-row.selected { background: var(--bg-accent); border-color: var(--primary-color); }
+.pf-import-thumb {
+    width: 44px; height: 44px; object-fit: contain; flex-shrink: 0;
+    border-radius: 4px; background: var(--bg-light);
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.pf-import-row-main { flex: 1; display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.pf-import-row-main strong { font-size: 0.9rem; }
+.pf-import-row-main small { color: var(--text-secondary); font-size: 0.75rem; }
+.pf-import-ai-reason { color: var(--success-color); font-size: 0.78rem; font-style: normal; }
+.pf-import-price { font-weight: 600; white-space: nowrap; font-size: 0.9rem; }
+.pf-import-pagination {
+    display: flex; align-items: center; justify-content: center; gap: 1rem;
+    padding: 0.5rem 1.25rem; border-top: 1px solid var(--border-color);
+    font-size: 0.85rem; color: var(--text-secondary);
+}
+.pf-import-footer {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    flex-wrap: wrap; padding: 0.75rem 1.25rem; border-top: 1px solid var(--border-color);
+}
+.pf-import-enrich-label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; margin: 0; }
+.pf-import-footer-actions { display: flex; align-items: center; gap: 1rem; }
+#pf-import-selected-count { font-weight: 600; color: var(--primary-color); }

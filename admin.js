@@ -156,6 +156,11 @@ function updateProjectUI() {
     const saveBtn = DOM.saveBtn;
     const saveStatus = DOM.saveStatus;
 
+    // Групиращите разделители са само за main/life навигацията
+    document.querySelectorAll('.tab-nav-divider').forEach((d) => {
+        d.style.display = isPortfolioProject() ? 'none' : '';
+    });
+
     if (isPortfolioProject()) {
         mainLifeTabs.forEach((el) => {
             if (el.classList.contains('tab-btn')) el.style.display = 'none';
@@ -280,6 +285,13 @@ function updatePortfolioPendingUI() {
         }
     } else if (mainAlert) {
         mainAlert.style.display = 'none';
+    }
+
+    // Брояч върху таба „Поръчки" в portfolio режим
+    const pfTabBadge = document.getElementById('portfolio-orders-tab-badge');
+    if (pfTabBadge) {
+        pfTabBadge.hidden = portfolioPendingCount === 0;
+        pfTabBadge.textContent = String(portfolioPendingCount);
     }
 
     const pfBanner = document.getElementById('portfolio-pending-banner');
@@ -748,7 +760,17 @@ function applyOrderStatusBadge(badge, status) {
     else { badge.textContent = status || '—'; }
 }
 
+/** Брояч на новите поръчки върху таба „Поръчки" (main/life). */
+function updateOrdersTabBadge() {
+    const badge = document.getElementById('orders-tab-badge');
+    if (!badge) return;
+    const newCount = ordersData.filter(o => (o.status || 'Нова') === 'Нова').length;
+    badge.hidden = newCount === 0;
+    badge.textContent = String(newCount);
+}
+
 function renderOrders() {
+    updateOrdersTabBadge();
     DOM.ordersTableBody.innerHTML = '';
     filteredOrdersData.forEach((order) => {
         const rowTemplate = DOM.templates.orderRow.content.cloneNode(true);
@@ -1717,6 +1739,18 @@ function serializeForm(form) {
             // Задаваме display_order според текущата позиция
             productData.display_order = index;
 
+            // Възстановяваме portfolio метаданните (връзката към B2B каталога),
+            // които нямат полета в редактора, но са нужни за авто-опресняване.
+            if (productNode.dataset.pfMeta) {
+                try {
+                    const pfMeta = JSON.parse(productNode.dataset.pfMeta);
+                    if (pfMeta.portfolio) {
+                        setProperty(productData, 'system_data.source', pfMeta.source || 'portfolio');
+                        setProperty(productData, 'system_data.portfolio', pfMeta.portfolio);
+                    }
+                } catch (e) { console.warn('Невалидни portfolio метаданни на продукт:', e); }
+            }
+
             // Сериализираме вложените списъци
             ['effects', 'about-benefits', 'ingredients', 'faq', 'variants'].forEach(subListName => {
                 const subContainer = productNode.querySelector(`[data-sub-container="${subListName}"]`);
@@ -1801,7 +1835,16 @@ function addNestedItem(container, templateId, data) {
     
     const newItemFragment = template.content.cloneNode(true);
     const itemElement = newItemFragment.querySelector('.nested-item, .nested-sub-item');
-    
+
+    // Portfolio метаданните нямат полета в редактора — пренасяме ги през dataset,
+    // за да не се губят при сериализация (запис) на категорията.
+    if (templateId === 'product-editor-template' && data?.system_data?.portfolio) {
+        itemElement.dataset.pfMeta = JSON.stringify({
+            source: data.system_data.source || 'portfolio',
+            portfolio: data.system_data.portfolio
+        });
+    }
+
     if (data) {
         // Попълваме основните полета
         itemElement.querySelectorAll('[data-field]').forEach(input => {
@@ -1911,8 +1954,8 @@ function setupEventListeners() {
     DOM.tabNav.addEventListener('click', e => {
         const target = e.target.closest('.tab-btn');
         if (!target || target.classList.contains('active')) return;
-        
-        DOM.tabNav.querySelector('.active').classList.remove('active');
+
+        DOM.tabNav.querySelectorAll('.active').forEach(b => b.classList.remove('active'));
         target.classList.add('active');
         
         DOM.tabPanes.forEach(pane => pane.classList.remove('active'));
@@ -1938,6 +1981,7 @@ function setupEventListeners() {
         applyOrderStatusSelectColor(e.target, newStatus);
         const badge = row.querySelector('.mobile-status-badge');
         if (badge) applyOrderStatusBadge(badge, newStatus);
+        updateOrdersTabBadge();
         try {
             await fetch(`${API_URL}/orders`, {
                 method: 'PUT',
@@ -2579,8 +2623,37 @@ function handleAction(action, target, id) {
         case 'move-product': {
             const productEditor = target.closest('.nested-item[data-type="product"]');
             if (!productEditor) return;
-            
+
             handleMoveProduct(productEditor);
+            break;
+        }
+        case 'import-products-portfolio': {
+            const productsContainer = target.closest('.modal-tab-pane').querySelector('#products-editor');
+            openPortfolioImportModal(productsContainer);
+            break;
+        }
+        case 'pf-import-close': {
+            closePortfolioImportModal();
+            break;
+        }
+        case 'pf-import-load': {
+            pfImportLoadPage(1);
+            break;
+        }
+        case 'pf-import-prev': {
+            if (pfImportState.page > 1) pfImportLoadPage(pfImportState.page - 1);
+            break;
+        }
+        case 'pf-import-next': {
+            if (pfImportState.page < pfImportState.totalPages) pfImportLoadPage(pfImportState.page + 1);
+            break;
+        }
+        case 'pf-import-ai-select': {
+            pfImportAiSelect(target);
+            break;
+        }
+        case 'pf-import-confirm': {
+            pfImportConfirm(target);
             break;
         }
     }
@@ -3363,6 +3436,315 @@ function handleProductXLSXImport(event, triggerButton) {
     reader.readAsArrayBuffer(file);
 }
 
+// =======================================================
+//     ИМПОРТ ОТ PORTFOLIO КАТАЛОГА (Fitness1 API) С AI ПОДБОР
+// =======================================================
+
+const pfImportState = {
+    targetContainer: null,   // #products-editor на отворената категория
+    page: 1,
+    totalPages: 1,
+    pageItems: new Map(),    // group_id → каталожен запис от текущата страница
+    selection: new Map(),    // group_id → { name, brand, min_price, image, ai? }
+    initialized: false,
+    filtersLoaded: false
+};
+
+function pfEscapeHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function openPortfolioImportModal(productsContainer) {
+    if (!productsContainer) {
+        showNotification('Отворете категория, за да импортирате продукти.', 'error');
+        return;
+    }
+    pfImportState.targetContainer = productsContainer;
+    pfImportState.selection.clear();
+    pfImportInitOnce();
+    pfImportUpdateCount();
+    document.getElementById('pf-import-overlay').hidden = false;
+    pfImportLoadFilters();
+    pfImportLoadPage(1);
+}
+
+function closePortfolioImportModal() {
+    document.getElementById('pf-import-overlay').hidden = true;
+}
+
+function pfImportInitOnce() {
+    if (pfImportState.initialized) return;
+    pfImportState.initialized = true;
+
+    // Избор/премахване на продукт с чекбокс
+    document.getElementById('pf-import-list').addEventListener('change', (e) => {
+        const cb = e.target.closest('.pf-import-check');
+        if (!cb) return;
+        const gid = String(cb.dataset.groupId);
+        if (cb.checked) {
+            const entry = pfImportState.pageItems.get(gid) || pfImportState.selection.get(gid);
+            if (entry) pfImportState.selection.set(gid, entry);
+        } else {
+            pfImportState.selection.delete(gid);
+        }
+        cb.closest('.pf-import-row')?.classList.toggle('selected', cb.checked);
+        pfImportUpdateCount();
+    });
+
+    document.getElementById('pf-import-search').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            pfImportLoadPage(1);
+        }
+    });
+}
+
+function pfImportStatus(message) {
+    const el = document.getElementById('pf-import-status');
+    el.hidden = !message;
+    el.textContent = message || '';
+}
+
+function pfImportUpdateCount() {
+    const el = document.getElementById('pf-import-selected-count');
+    if (el) el.textContent = `${pfImportState.selection.size} избрани`;
+}
+
+async function pfImportLoadFilters() {
+    if (pfImportState.filtersLoaded) return;
+    try {
+        const res = await fetch(`${API_URL}/portfolio/filters`, { cache: 'no-cache' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.statusText);
+
+        const catSelect = document.getElementById('pf-import-category');
+        catSelect.innerHTML = '<option value="">Всички категории</option>' +
+            (data.categories || []).map(c => `<option value="${pfEscapeHtml(c.name)}">${pfEscapeHtml(c.name)} (${c.count})</option>`).join('');
+
+        const brandSelect = document.getElementById('pf-import-brand');
+        brandSelect.innerHTML = '<option value="">Всички марки</option>' +
+            (data.brands || []).map(b => `<option value="${pfEscapeHtml(b.id)}">${pfEscapeHtml(b.name)} (${b.count})</option>`).join('');
+
+        pfImportState.filtersLoaded = true;
+    } catch (e) {
+        pfImportStatus(`Каталогът не е достъпен: ${e.message}. Стартирайте sync от Portfolio настройките.`);
+    }
+}
+
+function pfImportCurrentFilters() {
+    return {
+        q: document.getElementById('pf-import-search').value.trim(),
+        category: document.getElementById('pf-import-category').value,
+        brand: document.getElementById('pf-import-brand').value
+    };
+}
+
+async function pfImportLoadPage(page) {
+    const { q, category, brand } = pfImportCurrentFilters();
+    pfImportStatus('⏳ Зареждане на каталога...');
+    try {
+        const params = new URLSearchParams({ page: String(page), limit: '50', available: '1' });
+        if (q) params.set('q', q);
+        if (category) params.set('category', category);
+        if (brand) params.set('brand', brand);
+
+        const res = await fetch(`${API_URL}/portfolio/catalog?${params}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.statusText);
+
+        pfImportState.page = data.page;
+        pfImportState.totalPages = data.total_pages || 1;
+        pfImportRenderList(data.items || []);
+        document.getElementById('pf-import-page-info').textContent =
+            data.total ? `Стр. ${data.page}/${data.total_pages} · ${data.total} продукта` : 'Няма резултати';
+        pfImportStatus('');
+    } catch (e) {
+        pfImportStatus(`Грешка при зареждане: ${e.message}`);
+    }
+}
+
+function pfImportRenderList(items) {
+    pfImportState.pageItems = new Map(items.map(e => [String(e.group_id), {
+        group_id: String(e.group_id),
+        name: e.name,
+        brand: e.brand,
+        min_price: e.min_price,
+        image: e.image
+    }]));
+
+    const listEl = document.getElementById('pf-import-list');
+    if (!items.length) {
+        listEl.innerHTML = '<p class="pf-import-empty">Няма продукти по зададените филтри.</p>';
+        return;
+    }
+
+    listEl.innerHTML = items.map(e => {
+        const gid = String(e.group_id);
+        const sel = pfImportState.selection.get(gid);
+        const aiReason = sel?.ai?.reason
+            ? `<em class="pf-import-ai-reason">🤖 ${pfEscapeHtml(sel.ai.reason)}</em>`
+            : '';
+        return `
+        <label class="pf-import-row${sel ? ' selected' : ''}">
+            <input type="checkbox" class="pf-import-check" data-group-id="${pfEscapeHtml(gid)}" ${sel ? 'checked' : ''}>
+            ${e.image ? `<img class="pf-import-thumb" src="${pfEscapeHtml(e.image)}" alt="" loading="lazy">` : '<span class="pf-import-thumb pf-import-noimg">📦</span>'}
+            <span class="pf-import-row-main">
+                <strong>${pfEscapeHtml(e.name)}</strong>
+                <small>${pfEscapeHtml(e.brand || '')}${e.category ? ' · ' + pfEscapeHtml(e.category) : ''}</small>
+                ${aiReason}
+            </span>
+            <span class="pf-import-price">${e.min_price ? Number(e.min_price).toFixed(2) + ' €' : ''}</span>
+        </label>`;
+    }).join('');
+}
+
+/**
+ * AI подбор: изпраща каталога (с текущите филтри) към конфигурирания AI
+ * доставчик, който избира най-подходящите продукти за текущия проект
+ * (main → отслабване, life → антиейджинг) и предлага слоган и цели.
+ */
+async function pfImportAiSelect(btn) {
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ AI избира...';
+    try {
+        const project = currentProject === 'life' ? 'life' : 'main';
+        const limit = parseInt(document.getElementById('pf-import-ai-limit').value, 10) || 12;
+        const prompt = document.getElementById('pf-import-ai-prompt').value.trim();
+        const { q, category, brand } = pfImportCurrentFilters();
+
+        const res = await fetch(`${API_URL}/portfolio/import/ai-select`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project, prompt, limit, filters: { q, category, brand } })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'AI подборът се провали');
+
+        if (!data.selected?.length) {
+            showNotification('AI не намери подходящи продукти по зададените критерии.', 'info');
+            return;
+        }
+
+        data.selected.forEach(item => {
+            pfImportState.selection.set(String(item.group_id), {
+                group_id: String(item.group_id),
+                name: item.name,
+                brand: item.brand,
+                min_price: item.min_price,
+                image: item.image,
+                ai: { reason: item.reason, goals: item.goals, tagline: item.tagline }
+            });
+        });
+        pfImportUpdateCount();
+
+        // Показваме AI подбора като списък с причините за избора
+        pfImportRenderList(data.selected.map(item => ({
+            group_id: item.group_id,
+            name: item.name,
+            brand: item.brand,
+            category: item.category,
+            min_price: item.min_price,
+            image: item.image
+        })));
+        document.getElementById('pf-import-page-info').textContent = `🤖 AI подбор: ${data.selected.length} продукта`;
+        pfImportStatus('');
+        showNotification(`AI подбра ${data.selected.length} продукта — прегледайте списъка и импортирайте.`, 'success');
+    } catch (e) {
+        showNotification(`AI подбор: ${e.message}`, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
+/**
+ * Импортира избраните продукти: взима ги конвертирани в хомогенната схема
+ * от бекенда и ги добавя в редактора на категорията (както CSV/XLSX импорта).
+ * Опционално ги обогатява последователно с AI Асистента.
+ */
+async function pfImportConfirm(btn) {
+    const ids = Array.from(pfImportState.selection.keys());
+    if (!ids.length) {
+        showNotification('Няма избрани продукти за импорт.', 'error');
+        return;
+    }
+    const container = pfImportState.targetContainer;
+    if (!container || !container.isConnected) {
+        showNotification('Редакторът на категорията е затворен. Отворете категорията отново.', 'error');
+        return;
+    }
+
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Импортиране...';
+    try {
+        const res = await fetch(`${API_URL}/portfolio/import/preview?ids=${encodeURIComponent(ids.join(','))}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        if (!data.products?.length) throw new Error('Продуктите не са намерени в каталога.');
+
+        const defaultGoals = currentProject === 'life' ? ['anti-aging'] : ['отслабване'];
+        const existingIds = Array.from(container.querySelectorAll('[data-field="product_id"]')).map(inp => inp.value);
+        const newNodes = [];
+
+        for (const product of data.products) {
+            // Прилагаме предложенията от AI подбора (слоган, цели)
+            const sel = pfImportState.selection.get(String(product.system_data?.portfolio?.group_id));
+            if (sel?.ai) {
+                if (sel.ai.tagline) product.public_data.tagline = sel.ai.tagline;
+                if (Array.isArray(sel.ai.goals) && sel.ai.goals.length) product.system_data.goals = sel.ai.goals;
+            }
+            if (!product.system_data.goals?.length) product.system_data.goals = [...defaultGoals];
+
+            let newId = product.product_id;
+            while (existingIds.includes(newId)) newId = `${newId}-copy`;
+            product.product_id = newId;
+            existingIds.push(newId);
+
+            addNestedItem(container, 'product-editor-template', product);
+            const node = container.lastElementChild;
+            if (node && node.matches('.nested-item[data-type="product"]')) newNodes.push(node);
+        }
+
+        const enrich = document.getElementById('pf-import-enrich').checked;
+        closePortfolioImportModal();
+        pfImportState.selection.clear();
+        pfImportUpdateCount();
+        showNotification(`${data.products.length} продукт(а) са импортирани от Portfolio каталога. Прегледайте и запазете категорията.`, 'success');
+
+        if (enrich && newNodes.length) {
+            await pfImportEnrichSequentially(newNodes);
+        }
+    } catch (e) {
+        showNotification(`Грешка при импорт: ${e.message}`, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
+/** Последователно AI обогатяване на новите продукти чрез съществуващия AI Асистент. */
+async function pfImportEnrichSequentially(nodes) {
+    showNotification(`🤖 AI обогатяване на ${nodes.length} продукта — може да отнеме няколко минути. Не затваряйте категорията.`, 'info', 8000);
+    let done = 0;
+    for (const node of nodes) {
+        if (!node.isConnected) break; // категорията е затворена — спираме
+        try {
+            await handleAIAssistant(node);
+            done++;
+        } catch (e) {
+            console.error('AI обогатяване — грешка за продукт:', e);
+        }
+    }
+    showNotification(`AI обогатяването приключи (${done}/${nodes.length}). Прегледайте продуктите и запазете категорията.`, 'success', 8000);
+}
+
 /**
  * Exports all products from the editor container to a CSV file.
  * @param {HTMLElement} productsContainer
@@ -3807,7 +4189,18 @@ function handleMoveProduct(productEditor) {
         }
         setProperty(productData, path, value);
     });
-    
+
+    // Пренасяме portfolio метаданните (връзка към B2B каталога) при преместване
+    if (productEditor.dataset.pfMeta) {
+        try {
+            const pfMeta = JSON.parse(productEditor.dataset.pfMeta);
+            if (pfMeta.portfolio) {
+                setProperty(productData, 'system_data.source', pfMeta.source || 'portfolio');
+                setProperty(productData, 'system_data.portfolio', pfMeta.portfolio);
+            }
+        } catch (e) { console.warn('Невалидни portfolio метаданни на продукт:', e); }
+    }
+
     // Serialize nested lists (effects, ingredients, etc.)
     ['effects', 'about-benefits', 'ingredients', 'faq', 'variants'].forEach(subListName => {
         const subContainer = productEditor.querySelector(`[data-sub-container="${subListName}"]`);

@@ -297,6 +297,42 @@ async function getMeta(env) {
   return raw ? JSON.parse(raw) : null;
 }
 
+/** Каталожната мета информация (за portfolio-import.js и worker.js). */
+export async function getPortfolioMeta(env) {
+  return getMeta(env);
+}
+
+/**
+ * Зарежда каталожни групи по group_id, като чете всеки нужен chunk само веднъж.
+ * @param {object} env
+ * @param {string[]} ids - portfolio group_id-та
+ * @returns {Promise<Map<string, object>>} намерените групи по group_id
+ */
+export async function loadPortfolioGroupsByIds(env, ids) {
+  const groups = new Map();
+  const meta = await getMeta(env);
+  if (!meta) return groups;
+
+  const byChunk = new Map();
+  for (const id of ids) {
+    const gid = String(id);
+    const chunkIndex = meta.lookup?.[gid];
+    if (chunkIndex == null) continue;
+    if (!byChunk.has(chunkIndex)) byChunk.set(chunkIndex, new Set());
+    byChunk.get(chunkIndex).add(gid);
+  }
+
+  await Promise.all(Array.from(byChunk.entries()).map(async ([chunkIndex, gids]) => {
+    const raw = await env.PAGE_CONTENT.get(chunkKey(chunkIndex));
+    if (!raw) return;
+    for (const g of JSON.parse(raw)) {
+      if (gids.has(String(g.group_id))) groups.set(String(g.group_id), g);
+    }
+  }));
+
+  return groups;
+}
+
 async function getGroupFromChunks(env, meta, groupId) {
   const chunkIndex = meta.lookup[groupId];
   if (chunkIndex == null) return null;
