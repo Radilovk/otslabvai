@@ -450,12 +450,22 @@ describe('handlePortfolioImportRoute', () => {
     const res = await handlePortfolioImportRoute(request, env, url, deps);
     expect(res.status).toBe(200);
     const data = JSON.parse(await res.text());
-    expect(deps.callAI).toHaveBeenCalled();
+    expect(deps.callAI).toHaveBeenCalledWith(env, expect.any(Array), null);
     expect(data.reply).toMatch(/протеин/);
     expect(data.selected).toHaveLength(1);
     expect(data.selected[0].group_id).toBe('100');
     expect(data.selected[0].name).toBe('Test Protein');
     expect(data.selected[0].min_price).toBe(15.9);
+  });
+
+  test('POST ai-select подава settings от заявката към callAI', async () => {
+    const deps = makeDeps();
+    const settings = { provider: 'openai', model: 'gpt-4', apiKey: 'sk-test', temperature: 0.3, maxTokens: 4096 };
+    const { request, url } = req('POST', '/portfolio/import/ai-select', {
+      project: 'main', prompt: 'цинк', settings
+    });
+    await handlePortfolioImportRoute(request, env, url, deps);
+    expect(deps.callAI).toHaveBeenCalledWith(env, expect.any(Array), settings);
   });
 
   test('POST ai-select без синхронизиран каталог връща 404', async () => {

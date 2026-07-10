@@ -1398,12 +1398,16 @@ async function saveProjectContent(env, project, contentString, ctx) {
 }
 
 /**
- * Извиква конфигурирания AI доставчик (KV ai_settings) с подадени съобщения.
+ * Извиква конфигурирания AI доставчик с подадени съобщения.
+ * Настройките могат да идват от заявката (admin localStorage) или от KV ai_settings.
  * Връща парснатия JSON отговор на модела.
  */
-async function callAIWithStoredSettings(env, messages) {
-    const settingsJson = await env.PAGE_CONTENT.get('ai_settings');
-    const aiSettings = settingsJson ? JSON.parse(settingsJson) : getDefaultAISettings();
+async function callAIWithStoredSettings(env, messages, settingsOverride = null) {
+    let aiSettings = settingsOverride;
+    if (!aiSettings) {
+        const settingsJson = await env.PAGE_CONTENT.get('ai_settings');
+        aiSettings = settingsJson ? JSON.parse(settingsJson) : getDefaultAISettings();
+    }
 
     if (!aiSettings.apiKey && aiSettings.provider !== 'cloudflare') {
         throw new UserFacingError("Липсва API ключ за избрания AI доставчик.", 400);

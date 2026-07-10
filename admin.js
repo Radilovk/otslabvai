@@ -3656,7 +3656,11 @@ async function pfImportAiChat(btn) {
         const res = await fetch(`${API_URL}/portfolio/import/ai-select`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project, prompt, limit, history, filters: { q, category, brand } })
+            body: JSON.stringify({
+                project, prompt, limit, history,
+                filters: { q, category, brand },
+                settings: getAISettingsForRequest()
+            })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `Грешка ${res.status}`);
@@ -4343,6 +4347,22 @@ function handleMoveProduct(productEditor) {
 // =======================================================
 
 let aiSettings = null;
+
+/** Настройки за AI заявки — включва API ключа от localStorage (не се пази в KV). */
+function getAISettingsForRequest() {
+    const apiKey = localStorage.getItem('ai_api_key') || '';
+    if (aiSettings) {
+        return { ...aiSettings, apiKey: aiSettings.apiKey || apiKey };
+    }
+    return {
+        provider: 'cloudflare',
+        model: '@cf/meta/llama-3.1-70b-instruct',
+        apiKey,
+        temperature: 0.3,
+        maxTokens: 8192,
+        promptTemplate: getDefaultPromptTemplate()
+    };
+}
 
 /**
  * Load AI settings from localStorage and server
