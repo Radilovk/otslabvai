@@ -13,8 +13,10 @@
   "include": [
     "worker.js",
     "portfolio-api.js",
+    "portfolio-import.js",
     "portfolio-filter.js",
-    "portfolio-search.js"
+    "portfolio-search.js",
+    "portfolio-order-validation.js"
   ],
   "exclude": ["node_modules", "e2e", "backend", "products"]
 }
