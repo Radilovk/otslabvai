@@ -11,6 +11,10 @@ import {
   refreshImportedProjects,
   IMPORT_PROJECTS
 } from './portfolio-import.js';
+import {
+  loadResolvedAISettings,
+  persistAISettings
+} from './ai-settings-resolver.js';
 
 // Cache configuration constants
 const CACHE_CONFIG = {
@@ -1117,8 +1121,8 @@ async function handleSaveAISettings(request, env, ctx) {
         throw new UserFacingError("Невалиден AI доставчик.", 400);
     }
     
-    // Save to KV
-    ctx.waitUntil(env.PAGE_CONTENT.put('ai_settings', JSON.stringify(settings, null, 2)));
+    // Save to KV (вкл. API ключ за сървърни заявки без браузер)
+    await persistAISettings(env, settings, ctx);
     
     return new Response(JSON.stringify({ success: true }), {
         status: 200,
@@ -1313,12 +1317,7 @@ async function handleAIAssistant(request, env) {
         throw new UserFacingError("Липсва име на продукта.", 400);
     }
     
-    // Get AI settings (use provided settings or load from KV)
-    let aiSettings = settings;
-    if (!aiSettings) {
-        const settingsJson = await env.PAGE_CONTENT.get('ai_settings');
-        aiSettings = settingsJson ? JSON.parse(settingsJson) : getDefaultAISettings();
-    }
+    const aiSettings = await loadResolvedAISettings(env, settings || null, getDefaultAISettings);
     
     // Validate API key
     if (!aiSettings.apiKey && aiSettings.provider !== 'cloudflare') {
@@ -1403,11 +1402,7 @@ async function saveProjectContent(env, project, contentString, ctx) {
  * Връща парснатия JSON отговор на модела.
  */
 async function callAIWithStoredSettings(env, messages, settingsOverride = null) {
-    let aiSettings = settingsOverride;
-    if (!aiSettings) {
-        const settingsJson = await env.PAGE_CONTENT.get('ai_settings');
-        aiSettings = settingsJson ? JSON.parse(settingsJson) : getDefaultAISettings();
-    }
+    const aiSettings = await loadResolvedAISettings(env, settingsOverride, getDefaultAISettings);
 
     if (!aiSettings.apiKey && aiSettings.provider !== 'cloudflare') {
         throw new UserFacingError("Липсва API ключ за избрания AI доставчик.", 400);
