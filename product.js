@@ -37,6 +37,17 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
+
+// Рендира текст като параграфи (запазва новите редове от структурирани описания)
+function renderTextParagraphs(text) {
+    return escapeHtml(text)
+        .split(/\n+/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .map(p => `<p>${p}</p>`)
+        .join('');
+}
+
 // =======================================================
 //          CART MANAGEMENT
 // =======================================================
@@ -140,7 +151,7 @@ function renderProductDetail(product) {
     const aboutContentHTML = publicData.about_content ? `
         <div class="product-about-section">
             <h3>${escapeHtml(publicData.about_content.title || 'За продукта')}</h3>
-            <p>${escapeHtml(publicData.about_content.description)}</p>
+            ${renderTextParagraphs(publicData.about_content.description)}
             ${publicData.about_content.benefits && publicData.about_content.benefits.length > 0 ? `
                 <div class="product-benefits-full">
                     ${publicData.about_content.benefits.map(benefit => `
@@ -410,7 +421,7 @@ function renderProductDetail(product) {
 
         <div class="product-detail-description">
             <h2>Описание</h2>
-            <p>${escapeHtml(publicData.description)}</p>
+            ${renderTextParagraphs(publicData.description)}
             ${publicData.research_note && publicData.research_note.url ? `
                 <div class="research-note">
                     Източник: <a href="${escapeHtml(publicData.research_note.url)}" target="_blank" rel="noopener">${escapeHtml(publicData.research_note.text)}</a>

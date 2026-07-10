@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import {
   stripHtml,
+  htmlToStructuredContent,
   portfolioGroupToSiteProduct,
   applyProductOverrides,
   mergeProductsIntoContent,
@@ -46,6 +47,50 @@ describe('stripHtml', () => {
   test('празен вход', () => {
     expect(stripHtml('')).toBe('');
     expect(stripHtml(null)).toBe('');
+  });
+});
+
+describe('htmlToStructuredContent', () => {
+  test('първи параграф → кратко описание, останалите → about_content', () => {
+    const html = '<p>Кратко интро за продукта.</p><p>Втори параграф с детайли.</p><p>Трети параграф.</p>';
+    const result = htmlToStructuredContent(html, 'Тест');
+    expect(result.description).toBe('Кратко интро за продукта.');
+    expect(result.about.title).toBe('За Тест');
+    expect(result.about.description).toBe('Втори параграф с детайли.\n\nТрети параграф.');
+  });
+
+  test('bullet списъци → ползи с title/text', () => {
+    const html = '<p>Интро.</p><ul><li>Енергия: повишава издръжливостта</li><li>Кратка полза</li></ul>';
+    const result = htmlToStructuredContent(html, 'X');
+    expect(result.about.benefits).toEqual([
+      { title: 'Енергия', text: 'повишава издръжливостта' },
+      { title: 'Кратка полза', text: '' }
+    ]);
+  });
+
+  test('заглавие от HTML става заглавие на секцията', () => {
+    const html = '<h2>Защо този продукт?</h2><p>Интро.</p><p>Детайли.</p>';
+    const result = htmlToStructuredContent(html, 'X');
+    expect(result.about.title).toBe('Защо този продукт?');
+  });
+
+  test('дълъг първи параграф се срязва на граница на изречение', () => {
+    const first = `${'Изречение едно е тук. '.repeat(40)}`;
+    const html = `<p>${first}</p>`;
+    const result = htmlToStructuredContent(html, 'X');
+    expect(result.description.length).toBeLessThanOrEqual(481);
+    expect(result.description.endsWith('.')).toBe(true);
+    expect(result.about.description.length).toBeGreaterThan(0);
+  });
+
+  test('само един параграф → без about', () => {
+    const result = htmlToStructuredContent('<p>Само това.</p>', 'X');
+    expect(result.description).toBe('Само това.');
+    expect(result.about).toBeNull();
+  });
+
+  test('празен вход', () => {
+    expect(htmlToStructuredContent('', 'X')).toEqual({ description: '', about: null });
   });
 });
 

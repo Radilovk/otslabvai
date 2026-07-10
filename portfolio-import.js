@@ -54,6 +54,77 @@ export function stripHtml(html) {
     .trim();
 }
 
+const SHORT_DESCRIPTION_LIMIT = 480;
+
+/**
+ * Разбива HTML описание (Fitness1) на структурирано съдържание за продуктовата
+ * страница — както изглежда в portfolio: кратко маркетингово описание за
+ * листинга, детайлен текст в секцията „За продукта" и ползи от bullet списъци.
+ * @param {string} html - HTML описание от каталога
+ * @param {string} productName - име на продукта (за заглавие по подразбиране)
+ * @returns {{ description: string, about: {title: string, description: string, benefits: Array<{title: string, text: string}>} | null }}
+ */
+export function htmlToStructuredContent(html, productName = '') {
+  if (!html) return { description: '', about: null };
+  const src = String(html);
+
+  // Bullet точки от <li> елементи → ползи
+  const bullets = [];
+  const liRe = /<li[^>]*>([\s\S]*?)<\/li>/gi;
+  let liMatch;
+  while ((liMatch = liRe.exec(src)) && bullets.length < 8) {
+    const text = stripHtml(liMatch[1]).replace(/\n+/g, ' ').trim();
+    if (text) bullets.push(text);
+  }
+
+  // Първото заглавие става заглавие на секцията „За продукта"
+  const headingMatch = src.match(/<h[1-4][^>]*>([\s\S]*?)<\/h[1-4]>/i);
+  const headingText = headingMatch
+    ? stripHtml(headingMatch[1]).replace(/\n+/g, ' ').trim()
+    : '';
+
+  // Параграфи — без списъците и заглавията, които вече са извлечени
+  const withoutBlocks = src
+    .replace(/<(ul|ol)[^>]*>[\s\S]*?<\/\1>/gi, '\n')
+    .replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, '\n');
+  const paragraphs = stripHtml(withoutBlocks)
+    .split('\n')
+    .map((s) => s.trim())
+    .filter((p) => p.length > 1);
+
+  // Кратко описание = първият параграф (до разумна дължина, срязан на изречение)
+  let description = paragraphs[0] || '';
+  const rest = paragraphs.slice(1);
+  if (description.length > SHORT_DESCRIPTION_LIMIT) {
+    const cut = description.slice(0, SHORT_DESCRIPTION_LIMIT);
+    const sentenceEnd = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
+    if (sentenceEnd > 120) {
+      rest.unshift(description.slice(sentenceEnd + 2));
+      description = description.slice(0, sentenceEnd + 1);
+    }
+  }
+
+  const benefits = bullets.slice(0, 6).map((b) => {
+    const sep = b.indexOf(':');
+    if (sep > 4 && sep < 90) {
+      return { title: b.slice(0, sep).trim(), text: b.slice(sep + 1).trim() };
+    }
+    if (b.length <= 90) return { title: b, text: '' };
+    return { title: `${b.slice(0, 88).trim()}…`, text: b };
+  });
+
+  const aboutDescription = rest.join('\n\n');
+  const about = (aboutDescription || benefits.length)
+    ? {
+        title: headingText || (productName ? `За ${productName}` : 'За продукта'),
+        description: aboutDescription,
+        benefits
+      }
+    : null;
+
+  return { description, about };
+}
+
 /**
  * Конвертира група от portfolio каталога (резултат от groupRawProducts със
  * retail цени) към хомогенната продуктова схема на index/life страниците.
@@ -78,6 +149,7 @@ export function portfolioGroupToSiteProduct(group) {
 
   const packs = [...new Set((group.variants || []).map((v) => v.pack).filter(Boolean))];
   const anyAvailable = variants.some((v) => v.available);
+  const structured = htmlToStructuredContent(group.description || '', group.name || '');
 
   return {
     product_id: `prod-pf-${group.group_id}`,
@@ -87,7 +159,8 @@ export function portfolioGroupToSiteProduct(group) {
       brand: group.brand || '',
       price,
       tagline: '',
-      description: stripHtml(group.description || ''),
+      description: structured.description,
+      ...(structured.about ? { about_content: structured.about } : {}),
       image_url: group.image || '',
       // Етикетът (supplement facts) влиза и като линк, и в галерията — както при B2B XLSX импорта.
       label_url: group.label || '',
@@ -146,6 +219,9 @@ function updateCommercialFields(existing, incoming) {
   if (!existing.public_data.image_url) existing.public_data.image_url = incoming.public_data.image_url;
   if (!existing.public_data.label_url) existing.public_data.label_url = incoming.public_data.label_url;
   if (!existing.public_data.description) existing.public_data.description = incoming.public_data.description;
+  if (!existing.public_data.about_content && incoming.public_data.about_content) {
+    existing.public_data.about_content = incoming.public_data.about_content;
+  }
 
   const anyAvailable = (incoming.public_data.variants || []).some((v) => v.available);
   if (!anyAvailable) {

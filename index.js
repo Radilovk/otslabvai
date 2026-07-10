@@ -123,12 +123,16 @@ const generateProductCard = (product) => {
     }
     const priceClass = hasSale ? 'product-price has-sale' : 'product-price';
 
+    // Кратък текст под името: слоган или начало на описанието (за импортирани продукти без слоган)
+    const cardTagline = publicData.tagline
+        || (publicData.description ? `${String(publicData.description).split(/[\n]/)[0].slice(0, 90)}` : '');
+
     return `
-    <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}" data-brand="${escapeHtml(publicData.brand || '')}" data-price="${Number(hasSale ? salePrice : publicData.price)}" data-sale="${hasSale ? 'true' : ''}" data-goals="${escapeHtml((product.system_data?.goals || []).join(','))}">
-        ${publicData.image_url ? `<div class="product-image">${variantBadge}<img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)} - ${escapeHtml(publicData.tagline)}" loading="lazy" decoding="async"></div>` : ''}
+    <a href="product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}" data-brand="${escapeHtml(publicData.brand || '')}" data-price="${Number(hasSale ? salePrice : publicData.price) || 0}" data-sale="${hasSale ? 'true' : ''}" data-goals="${escapeHtml((product.system_data?.goals || []).join(','))}">
+        ${publicData.image_url ? `<div class="product-image">${variantBadge}<img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)}${cardTagline ? ' - ' + escapeHtml(cardTagline) : ''}" loading="lazy" decoding="async"></div>` : ''}
         <div class="card-content">
             ${brandLabel}
-            <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(publicData.tagline)}</p></div>
+            <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(cardTagline)}</p></div>
             <div class="${priceClass}">${priceDisplay}</div>
             <div class="effects-container">
                 ${(publicData.effects || []).map(generateEffectBar).join('')}

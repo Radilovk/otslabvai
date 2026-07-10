@@ -14,6 +14,7 @@
     "test:portfolio-e2e": "node e2e/portfolio-e2e.mjs",
     "test:portfolio-full": "node e2e/portfolio-full-e2e.mjs",
     "test:portfolio-order-flow": "node e2e/portfolio-order-flow-e2e.mjs",
+    "test:life-e2e": "node e2e/life-e2e.mjs",
     "dev:portfolio": "node e2e/portfolio-dev-server.mjs",
     "typecheck": "tsc --noEmit",
     "sync-portfolio": "node portfolio-sync.mjs",
