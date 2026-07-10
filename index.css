@@ -1882,9 +1882,14 @@ main {
 
 .product-image {
     width: 100%;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     border-radius: var(--border-radius);
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.02);
+    min-height: 140px;
 }
 
 .product-image img {
@@ -1892,6 +1897,7 @@ main {
     height: auto;
     display: block;
     object-fit: contain;
+    object-position: center;
     max-height: 250px;
 }
 
@@ -1932,7 +1938,8 @@ main {
 
 .effects-container { 
     flex: 1 1 100%; 
-    order: 3; 
+    order: 3;
+    margin-top: 0.35rem;
 }
 
 .card-details {
@@ -1962,29 +1969,45 @@ main {
 }
 
 /* --- EFFECT BARS STYLES --- */
-.effect-bar-group { margin-bottom: 10px; }
+.effect-bar-group { margin-bottom: 5px; }
 .effect-bar-group:last-child { margin-bottom: 0; }
-.effect-label { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+.effect-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 3px;
+    line-height: 1.3;
+}
+.effect-score {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
 .effect-bar-container {
-  width: 100%; height: 22px; background-color: var(--bg-primary);
-  border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden;
+  width: 100%;
+  height: 8px;
+  background-color: rgba(0, 0, 0, 0.06);
+  border: none;
+  border-radius: 4px;
+  overflow: hidden;
 }
 .effect-bar {
-  width: 0; height: 100%; border-radius: 12px;
-  /* Initial gradient visible immediately - Lipolor-inspired magenta/teal */
-  background: linear-gradient(135deg, rgba(0, 169, 157, 0.3), rgba(228, 0, 124, 0.3));
-  display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; box-sizing: border-box;
-  color: #FFFFFF; font-weight: 600; font-size: 0.75rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  transition: width 1.5s cubic-bezier(0.25, 1, 0.5, 1), background 0.5s ease-out, box-shadow 0.5s ease-out;
+  width: 0;
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, rgba(0, 169, 157, 0.35), rgba(228, 0, 124, 0.35));
+  transition: width 1.2s cubic-bezier(0.25, 1, 0.5, 1), background 0.4s ease-out, box-shadow 0.4s ease-out;
 }
 .effect-bar.animated {
-  /* Vibrant Lipolor-inspired gradient: teal to magenta */
-  background: linear-gradient(135deg, #00A99D, #E4007C);
-  box-shadow: 0 0 15px rgba(228, 0, 124, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(90deg, #00A99D, #E4007C);
+  box-shadow: 0 0 6px rgba(228, 0, 124, 0.18);
 }
-/* Ensure text is always readable */
-.effect-bar { color: #FFFFFF; }
         
 /* ======================================================= */
 /*          6. ФУТЪР (LIPOLOR STYLE)                     */
@@ -3017,9 +3040,14 @@ body.modal-open { overflow: hidden; }
         padding: 20px;
     }
     
-    /* Optimize product images for mobile */
+    /* Optimize product images for mobile — full product visible, no crop */
+    .product-image {
+        min-height: 120px;
+    }
     .product-image img {
         max-height: 220px;
+        object-fit: contain;
+        object-position: center;
     }
     
     /* Reduce animation intensity on mobile */
@@ -3070,7 +3098,9 @@ body.modal-open { overflow: hidden; }
     
     /* Further optimize product images for very small screens */
     .product-image img {
-        max-height: 180px;
+        max-height: 200px;
+        object-fit: contain;
+        object-position: center;
     }
     
     .btn-hero-primary,
@@ -4459,15 +4489,18 @@ body.modal-open { overflow: hidden; }
     position: relative;
 }
 
-/* Brand label on product cards */
+/* Brand label on product cards — always on its own row above title */
 .brand-label {
-    display: inline-block;
-    font-size: 0.7rem;
+    display: block;
+    flex: 1 1 100%;
+    width: 100%;
+    font-size: 0.68rem;
     font-weight: 600;
     color: var(--text-secondary, #999);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.25rem;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.15rem;
+    line-height: 1.2;
 }
 
 /* Load more button */

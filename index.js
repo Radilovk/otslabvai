@@ -72,9 +72,9 @@ function escapeHtml(unsafe) {
 
 const generateEffectBar = effect => `
     <div class="effect-bar-group">
-        <div class="effect-label">${escapeHtml(effect.label)}</div>
+        <div class="effect-label"><span>${escapeHtml(effect.label)}</span><span class="effect-score">${(effect.value / 10).toFixed(1)}/10</span></div>
         <div class="effect-bar-container">
-            <div class="effect-bar" data-width="${Number(effect.value)}%">${(effect.value / 10).toFixed(1)} / 10</div>
+            <div class="effect-bar" data-width="${Number(effect.value)}%"></div>
         </div>
     </div>`;
 
