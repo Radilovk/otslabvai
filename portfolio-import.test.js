@@ -330,12 +330,12 @@ describe('buildAiSelectionMessages', () => {
   ];
 
   test('system съобщението включва каталога и лимита', () => {
-    const messages = buildAiSelectionMessages({ project: 'life', index, limit: 5, prompt: 'тест' });
+    const messages = buildAiSelectionMessages({ project: 'life', index, limit: 5, prompt: 'тест', catalogTotal: 2 });
     expect(messages[0].role).toBe('system');
     expect(messages[0].content).toContain('антиейджинг');
-    expect(messages[0].content).toContain('До 5 продукта');
-    expect(messages[0].content).toContain('100 | Fat Burner X');
-    expect(messages[0].content).not.toContain('300 | Unavailable');
+    expect(messages[0].content).toContain('До 5');
+    expect(messages[0].content).toContain('100;Fat Burner X');
+    expect(messages[0].content).not.toContain('300;Unavailable');
     expect(messages.at(-1)).toEqual({ role: 'user', content: 'тест' });
   });
 

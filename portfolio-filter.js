@@ -5,7 +5,7 @@ export { matchesSearchQuery, tokenizeQuery, buildSearchText, enrichIndexEntry } 
 
 /** Filters the index without sorting – reused by filterIndex and by facet counting. */
 export function applyFilters(index, params, meta = {}) {
-  let results = index;
+  let results = Array.isArray(index) ? index : [];
   const categories = meta.categories || [];
 
   if (params.brand) {
@@ -13,9 +13,10 @@ export function applyFilters(index, params, meta = {}) {
   }
   if (params.category) {
     const cat = params.category;
-    results = results.filter(
-      (i) => i.category_top === cat || i.category === cat || i.category.startsWith(`${cat} >`)
-    );
+    results = results.filter((i) => {
+      const path = i.category || '';
+      return i.category_top === cat || path === cat || path.startsWith(`${cat} >`);
+    });
   }
   if (params.available === '1' || params.available === 'true') {
     results = results.filter((i) => i.available);

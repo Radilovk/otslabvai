@@ -1490,6 +1490,25 @@ function buildAIMessages(template, productDataJson) {
     ];
 }
 
+/** Парсва JSON от AI — приема обект, чист JSON или markdown блок. */
+function parseJsonFromAI(value) {
+    if (value == null || value === '') {
+        throw new UserFacingError('AI отговорът е празен.', 502);
+    }
+    if (typeof value === 'object') return value;
+    let text = String(value).trim();
+    const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenced) text = fenced[1].trim();
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        throw new UserFacingError(
+            'AI върна невалиден JSON. Опитайте по-кратка заявка или увеличете лимита на токени в AI настройките.',
+            502
+        );
+    }
+}
+
 /**
  * Call Cloudflare AI
  */
@@ -1523,11 +1542,11 @@ async function callCloudflareAI(env, settings, messages) {
     }
     
     const aiEnvelope = JSON.parse(resultText);
-    if (!aiEnvelope.result || !aiEnvelope.result.response) {
+    if (!aiEnvelope.result || aiEnvelope.result.response == null) {
         throw new Error("AI response is missing the 'result.response' field.");
     }
     
-    return JSON.parse(aiEnvelope.result.response);
+    return parseJsonFromAI(aiEnvelope.result.response);
 }
 
 /**
@@ -1574,7 +1593,7 @@ async function callOpenAI(settings, messages) {
         );
     }
     
-    return JSON.parse(result.choices[0].message.content);
+    return parseJsonFromAI(result.choices[0].message.content);
 }
 
 /**
@@ -1593,7 +1612,10 @@ async function callGoogleAI(settings, messages) {
         ...(systemMsg ? { systemInstruction: { parts: [{ text: systemMsg.content }] } } : {}),
         // Google's REST API only accepts 'user' and 'model' turn roles in `contents`;
         // all non-system messages therefore map to 'user'.
-        contents: userMessages.map(m => ({ role: 'user', parts: [{ text: m.content }] })),
+        contents: userMessages.map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+        })),
         generationConfig: {
             temperature: settings.temperature || 0.3,
             maxOutputTokens: settings.maxTokens || 4096,
@@ -1631,7 +1653,7 @@ async function callGoogleAI(settings, messages) {
     }
     
     const textContent = candidate.content.parts[0].text;
-    return JSON.parse(textContent);
+    return parseJsonFromAI(textContent);
 }
 
 /**
