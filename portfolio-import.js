@@ -379,56 +379,39 @@ export function refreshImportedProductsInContent(pageContent, groupsById) {
   return { updated, missing };
 }
 
-const AI_SELECT_MAX_CATALOG_ENTRIES = 400;
+const AI_SELECT_MAX_CATALOG_ENTRIES = 180;
 
-/**
- * Изгражда system/user съобщения за AI подбор на продукти от каталога.
- * @param {object} opts - { project, prompt?, index, limit? }
- * @returns {Array<{role: string, content: string}>}
- */
-export function buildAiSelectionMessages({ project, prompt, index, limit = 12, history = [] }) {
+function formatCatalogLine(e) {
+  const kw = e.search_text ? e.search_text.slice(0, 60) : '';
+  return [e.group_id, e.name, e.brand || '-', e.brand_id || '-', e.category || '-', e.min_price ?? 0, kw].join(';');
+}
+
+export function buildAiSelectionMessages({ project, prompt, index, limit = 12, history = [], catalogTotal = 0 }) {
   const projectInfo = IMPORT_PROJECTS[project];
   if (!projectInfo) {
     throw new PortfolioImportError(`Невалиден проект „${project}". Позволени: ${Object.keys(IMPORT_PROJECTS).join(', ')}.`, 400);
   }
 
-  const entries = index
-    .filter((e) => e.available !== false)
-    .slice(0, AI_SELECT_MAX_CATALOG_ENTRIES)
-    .map((e) => [
-      e.group_id,
-      e.name,
-      e.brand || '-',
-      `brand_id:${e.brand_id || '-'}`,
-      e.category || '-',
-      `${e.min_price}€`,
-      e.search_text ? e.search_text.slice(0, 100) : ''
-    ].join(' | '))
-    .join('\n');
+  const available = (index || []).filter((e) => e.available !== false);
+  const shown = available.slice(0, AI_SELECT_MAX_CATALOG_ENTRIES);
+  const entries = shown.map(formatCatalogLine).join('\n');
+  const truncated = catalogTotal > shown.length
+    ? `\n(Показани ${shown.length} от ${catalogTotal} налични — използвай филтрите в админ панела за по-тесен обхват.)`
+    : '';
 
-  const system = `Ти си AI асистент за подбор на продукти от B2B каталог за импорт в онлайн магазин.
-Целеви сайт: ${projectInfo.siteLabel}.
-Тематика на сайта: ${projectInfo.goalLabel}.
+  const system = `Ти си AI асистент за подбор на продукти от B2B каталог.
+Сайт: ${projectInfo.siteLabel}. Тема: ${projectInfo.goalLabel}.
 
-Пълният наличен каталог е по-долу (формат: group_id | име | марка | brand_id | категория | цена | ключови думи).
-Разбираш естествен български и английски — марки, съставки, цени, марж, теми, уточняващи въпроси.
-Води диалог с администратора: отговаряй ясно и предлагай подходящи продукти от каталога.
+Каталог (group_id;име;марка;brand_id;категория;цена;ключови_думи):
+${entries}${truncated}
 
-Отговори САМО с валиден JSON:
-{"reply":"отговор на български","selected":[{"group_id":"123","reason":"защо е подходящ","goals":["цел"],"tagline":"кратък слоган"}]}
-
-Правила:
-- Използвай САМО group_id от каталога.
-- До ${limit} продукта в selected, ако администраторът иска подбор.
-- Ако само отговаряш без подбор — selected: [].
-- При неясна заявка — попитай в reply.
-
-Каталог:\n${entries}`;
+Отговори САМО с JSON: {"reply":"текст на български","selected":[{"group_id":"ID","reason":"...","goals":["..."],"tagline":"..."}]}
+Само group_id от каталога. До ${limit} в selected. Без подбор → selected:[].`;
 
   const messages = [{ role: 'system', content: system }];
   for (const msg of history) {
     if (msg?.role === 'user' || msg?.role === 'assistant') {
-      messages.push({ role: msg.role, content: String(msg.content || '').slice(0, 2000) });
+      messages.push({ role: msg.role, content: String(msg.content || '').slice(0, 1500) });
     }
   }
   messages.push({ role: 'user', content: prompt });
@@ -522,7 +505,7 @@ export async function handlePortfolioImportRoute(request, env, url, deps) {
       if (!meta) throw new PortfolioImportError('Каталогът не е синхронизиран. Стартирайте sync от админ панела.', 404);
 
       const filters = body.filters || {};
-      const indexSubset = filterIndex(meta.index, {
+      const indexSubset = filterIndex(meta.index || [], {
         brand: filters.brand || '',
         category: filters.category || '',
         q: filters.q || '',
@@ -535,13 +518,14 @@ export async function handlePortfolioImportRoute(request, env, url, deps) {
       }
 
       const limit = Math.max(1, Math.min(40, Number(body.limit) || 12));
-      const history = Array.isArray(body.history) ? body.history.slice(-10) : [];
+      const history = Array.isArray(body.history) ? body.history.slice(-8) : [];
       const messages = buildAiSelectionMessages({
         project: body.project,
         prompt,
         index: indexSubset,
         limit,
-        history
+        history,
+        catalogTotal: indexSubset.length
       });
 
       let aiResult;
@@ -550,6 +534,10 @@ export async function handlePortfolioImportRoute(request, env, url, deps) {
       } catch (e) {
         const status = e?.status || (e?.name === 'UserFacingError' ? 400 : 502);
         throw new PortfolioImportError(e?.message || 'AI заявката се провали.', status);
+      }
+
+      if (!aiResult || typeof aiResult !== 'object') {
+        throw new PortfolioImportError('AI върна неочакван формат на отговора.', 502);
       }
 
       const validIds = new Set(indexSubset.map((e) => String(e.group_id)));

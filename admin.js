@@ -3470,6 +3470,7 @@ function openPortfolioImportModal(productsContainer) {
     pfImportState.chatHistory = [];
     pfImportInitOnce();
     pfImportUpdateCount();
+    pfImportRenderChat();
     document.getElementById('pf-import-overlay').hidden = false;
     pfImportLoadFilters();
     pfImportLoadPage(1);
@@ -3508,7 +3509,7 @@ function pfImportInitOnce() {
     const cmdInput = document.getElementById('pf-import-ai-prompt');
     if (cmdInput) {
         cmdInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 const btn = document.querySelector('[data-action="pf-import-ai-select"]');
                 if (btn) pfImportAiChat(btn);
@@ -3573,8 +3574,11 @@ async function pfImportLoadPage(page) {
         pfImportState.page = data.page;
         pfImportState.totalPages = data.total_pages || 1;
         pfImportRenderList(data.items || []);
-        document.getElementById('pf-import-page-info').textContent =
-            data.total ? `Стр. ${data.page}/${data.total_pages} · ${data.total} продукта` : 'Няма резултати';
+        const pageText = data.total ? `стр. ${data.page}/${data.total_pages} · ${data.total} прод.` : 'Няма резултати';
+        const pageLabel = document.getElementById('pf-import-page-label');
+        const pageInfo = document.getElementById('pf-import-page-info');
+        if (pageLabel) pageLabel.textContent = pageText;
+        if (pageInfo) pageInfo.textContent = pageText;
         pfImportStatus('');
     } catch (e) {
         pfImportStatus(`Грешка при зареждане: ${e.message}`);
@@ -3619,9 +3623,12 @@ function pfImportRenderList(items) {
 function pfImportRenderChat() {
     const el = document.getElementById('pf-import-chat');
     if (!el) return;
-    el.innerHTML = pfImportState.chatHistory.map((m) =>
-        `<p class="pf-import-chat-msg ${m.role}"><strong>${m.role === 'user' ? 'Вие' : 'AI'}:</strong> ${pfEscapeHtml(m.content)}</p>`
-    ).join('');
+    el.innerHTML = pfImportState.chatHistory.map((m) => {
+        const role = m.role === 'user' ? 'user' : (m.error ? 'assistant error' : 'assistant');
+        const label = m.role === 'user' ? 'Вие' : 'AI';
+        const extra = m.typing ? ' typing' : '';
+        return `<p class="pf-import-chat-msg ${role}${extra}"><strong>${label}:</strong> ${pfEscapeHtml(m.content)}</p>`;
+    }).join('');
     el.scrollTop = el.scrollHeight;
 }
 
@@ -3632,31 +3639,29 @@ async function pfImportAiChat(btn) {
 
     const originalText = btn.textContent;
     btn.disabled = true;
+    input.disabled = true;
     btn.textContent = '⏳...';
     input.value = '';
 
     pfImportState.chatHistory.push({ role: 'user', content: prompt });
+    pfImportState.chatHistory.push({ role: 'assistant', content: 'Мисля…', typing: true });
     pfImportRenderChat();
 
     try {
         const project = currentProject === 'life' ? 'life' : 'main';
         const limit = parseInt(document.getElementById('pf-import-ai-limit').value, 10) || 12;
         const { q, category, brand } = pfImportCurrentFilters();
+        const history = pfImportState.chatHistory.filter(m => !m.typing).slice(0, -1);
 
         const res = await fetch(`${API_URL}/portfolio/import/ai-select`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                project,
-                prompt,
-                limit,
-                history: pfImportState.chatHistory.slice(0, -1),
-                filters: { q, category, brand }
-            })
+            body: JSON.stringify({ project, prompt, limit, history, filters: { q, category, brand } })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'AI заявката се провали');
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Грешка ${res.status}`);
 
+        pfImportState.chatHistory = pfImportState.chatHistory.filter(m => !m.typing);
         const reply = data.reply || (data.selected?.length ? `Подбрах ${data.selected.length} продукта.` : 'Готово.');
         pfImportState.chatHistory.push({ role: 'assistant', content: reply });
         pfImportRenderChat();
@@ -3681,13 +3686,19 @@ async function pfImportAiChat(btn) {
                 min_price: item.min_price,
                 image: item.image
             })));
-            document.getElementById('pf-import-page-info').textContent = `🤖 AI: ${data.selected.length} продукта`;
+            const info = document.getElementById('pf-import-page-info');
+            if (info) info.textContent = `AI: ${data.selected.length} подбрани`;
         }
     } catch (e) {
+        pfImportState.chatHistory = pfImportState.chatHistory.filter(m => !m.typing);
+        pfImportState.chatHistory.push({ role: 'assistant', content: e.message, error: true });
+        pfImportRenderChat();
         showNotification(`AI: ${e.message}`, 'error');
     } finally {
         btn.disabled = false;
+        input.disabled = false;
         btn.textContent = originalText;
+        input.focus();
     }
 }
 

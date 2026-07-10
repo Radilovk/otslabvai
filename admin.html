@@ -532,30 +532,46 @@
                 <h3 id="pf-import-title">🔗 Импорт от Portfolio каталога (Fitness1 API)</h3>
                 <button type="button" class="close-modal-btn" data-action="pf-import-close" aria-label="Затвори">×</button>
             </header>
-            <div class="pf-import-toolbar">
-                <input type="text" id="pf-import-search" class="pf-import-input" placeholder="🔍 Търсене по име или марка...">
-                <select id="pf-import-category" class="pf-import-input">
-                    <option value="">Всички категории</option>
-                </select>
-                <select id="pf-import-brand" class="pf-import-input">
-                    <option value="">Всички марки</option>
-                </select>
-                <button type="button" class="btn btn-secondary" data-action="pf-import-load">Търси</button>
-            </div>
-            <div id="pf-import-chat" class="pf-import-chat" aria-live="polite"></div>
-            <div class="pf-import-ai-bar">
-                <input type="text" id="pf-import-ai-prompt" class="pf-import-input" placeholder="Пишете на AI асистента… (напр. „продукти с цинк от марка Now“, „най-добрите за отслабване“)">
-                <label class="pf-import-ai-limit-label">Макс.:
-                    <input type="number" id="pf-import-ai-limit" value="12" min="1" max="40">
-                </label>
-                <button type="button" class="btn btn-primary" data-action="pf-import-ai-select" title="AI асистент с достъп до каталога">🤖 Изпрати</button>
-            </div>
-            <div id="pf-import-status" class="pf-import-status" hidden></div>
-            <div id="pf-import-list" class="pf-import-list" aria-live="polite"></div>
-            <div class="pf-import-pagination">
-                <button type="button" class="btn btn-secondary btn-sm" data-action="pf-import-prev">← Назад</button>
-                <span id="pf-import-page-info"></span>
-                <button type="button" class="btn btn-secondary btn-sm" data-action="pf-import-next">Напред →</button>
+            <div class="pf-import-body">
+                <section class="pf-import-panel pf-import-panel--catalog" aria-label="Каталог">
+                    <div class="pf-import-panel-head">
+                        <h4>Каталог</h4>
+                        <span id="pf-import-page-info" class="pf-import-meta"></span>
+                    </div>
+                    <div class="pf-import-toolbar">
+                        <input type="search" id="pf-import-search" class="pf-import-input" placeholder="Търсене…" autocomplete="off">
+                        <select id="pf-import-category" class="pf-import-input" aria-label="Категория">
+                            <option value="">Всички категории</option>
+                        </select>
+                        <select id="pf-import-brand" class="pf-import-input" aria-label="Марка">
+                            <option value="">Всички марки</option>
+                        </select>
+                        <button type="button" class="btn btn-secondary" data-action="pf-import-load">Търси</button>
+                    </div>
+                    <div id="pf-import-status" class="pf-import-status" hidden></div>
+                    <div id="pf-import-list" class="pf-import-list" aria-live="polite"></div>
+                    <div class="pf-import-pagination">
+                        <button type="button" class="btn btn-secondary btn-sm" data-action="pf-import-prev">←</button>
+                        <span id="pf-import-page-label"></span>
+                        <button type="button" class="btn btn-secondary btn-sm" data-action="pf-import-next">→</button>
+                    </div>
+                </section>
+                <section class="pf-import-panel pf-import-panel--ai" aria-label="AI асистент">
+                    <div class="pf-import-panel-head">
+                        <h4>🤖 AI асистент</h4>
+                        <span class="pf-import-meta">Диалог с достъп до каталога</span>
+                    </div>
+                    <div id="pf-import-chat" class="pf-import-chat" aria-live="polite"></div>
+                    <div class="pf-import-ai-bar">
+                        <textarea id="pf-import-ai-prompt" class="pf-import-input pf-import-textarea" rows="2" placeholder="Напишете заявка… напр. „продукти с цинк“, „от марки 1 и 2“, „топ за отслабване“"></textarea>
+                        <div class="pf-import-ai-actions">
+                            <label class="pf-import-ai-limit-label">Макс.
+                                <input type="number" id="pf-import-ai-limit" value="12" min="1" max="40" aria-label="Максимум продукти">
+                            </label>
+                            <button type="button" class="btn btn-primary" data-action="pf-import-ai-select">Изпрати</button>
+                        </div>
+                    </div>
+                </section>
             </div>
             <footer class="pf-import-footer">
                 <label class="checkbox-group pf-import-enrich-label" title="След импорта AI Асистентът попълва автоматично описание, слоган, ефекти и ползи за всеки продукт">
