@@ -242,6 +242,12 @@ export function buildCatalogMeta(groups) {
     const minPrice = prices.length ? Math.min(...prices) : 0;
     const maxPrice = prices.length ? Math.max(...prices) : 0;
     const packs = [...new Set(g.variants.map((v) => v.pack).filter(Boolean))];
+    const markupPcts = g.variants
+      .filter((v) => v.b2b_price > 0 && v.retail_price > 0)
+      .map((v) => ((v.retail_price - v.b2b_price) / v.b2b_price) * 100);
+    const fallbackMarkup = g.variants.find((v) => v.markup_percent != null)?.markup_percent ?? 0;
+    const minMarkupPercent = markupPcts.length ? Math.min(...markupPcts) : fallbackMarkup;
+    const maxMarkupPercent = markupPcts.length ? Math.max(...markupPcts) : fallbackMarkup;
 
     index.push(enrichIndexEntry({
       group_id: g.group_id,
@@ -253,6 +259,8 @@ export function buildCatalogMeta(groups) {
       category_path: g.category_path,
       min_price: minPrice,
       max_price: maxPrice,
+      min_markup_percent: minMarkupPercent,
+      max_markup_percent: maxMarkupPercent,
       variant_count: g.variants.length,
       available: availableVariants.length > 0,
       image: g.image,

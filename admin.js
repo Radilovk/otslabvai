@@ -2649,7 +2649,7 @@ function handleAction(action, target, id) {
             break;
         }
         case 'pf-import-ai-select': {
-            pfImportAiSelect(target);
+            pfImportRunCommand(target);
             break;
         }
         case 'pf-import-confirm': {
@@ -3502,6 +3502,17 @@ function pfImportInitOnce() {
             pfImportLoadPage(1);
         }
     });
+
+    const cmdInput = document.getElementById('pf-import-ai-prompt');
+    if (cmdInput) {
+        cmdInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const btn = document.querySelector('[data-action="pf-import-ai-select"]');
+                if (btn) pfImportRunCommand(btn);
+            }
+        });
+    }
 }
 
 function pfImportStatus(message) {
@@ -3603,60 +3614,74 @@ function pfImportRenderList(items) {
     }).join('');
 }
 
+function pfImportShowAnswer(text, { empty = false } = {}) {
+    const el = document.getElementById('pf-import-answer');
+    if (!el) return;
+    const hasText = Boolean(String(text || '').trim());
+    el.hidden = !hasText;
+    el.textContent = text || '';
+    el.classList.toggle('is-info', hasText && !empty);
+    el.classList.toggle('is-empty', empty);
+}
+
 /**
- * AI подбор: изпраща каталога (с текущите филтри) към конфигурирания AI
- * доставчик, който избира най-подходящите продукти за текущия проект
- * (main → отслабване, life → антиейджинг) и предлага слоган и цели.
+ * Изпълнява писмена команда: филтри, справки, статистика или AI подбор.
+ * Показва текстов отговор и при нужда попълва списъка с продукти.
  */
-async function pfImportAiSelect(btn) {
+async function pfImportRunCommand(btn) {
     const originalText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '⏳ AI избира...';
+    btn.textContent = '⏳...';
     try {
         const project = currentProject === 'life' ? 'life' : 'main';
         const limit = parseInt(document.getElementById('pf-import-ai-limit').value, 10) || 12;
-        const prompt = document.getElementById('pf-import-ai-prompt').value.trim();
+        const command = document.getElementById('pf-import-ai-prompt').value.trim();
         const { q, category, brand } = pfImportCurrentFilters();
 
-        const res = await fetch(`${API_URL}/portfolio/import/ai-select`, {
+        const res = await fetch(`${API_URL}/portfolio/import/command`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project, prompt, limit, filters: { q, category, brand } })
+            body: JSON.stringify({ project, command, limit, filters: { q, category, brand } })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'AI подборът се провали');
+        if (!res.ok) throw new Error(data.error || 'Командата се провали');
 
-        if (!data.selected?.length) {
-            showNotification('AI не намери подходящи продукти по зададените критерии.', 'info');
-            return;
-        }
+        pfImportShowAnswer(data.answer || '', { empty: !data.selected?.length && data.action !== 'help' });
 
-        data.selected.forEach(item => {
-            pfImportState.selection.set(String(item.group_id), {
-                group_id: String(item.group_id),
+        if (data.selected?.length) {
+            data.selected.forEach(item => {
+                pfImportState.selection.set(String(item.group_id), {
+                    group_id: String(item.group_id),
+                    name: item.name,
+                    brand: item.brand,
+                    min_price: item.min_price,
+                    image: item.image,
+                    ai: { reason: item.reason, goals: item.goals, tagline: item.tagline }
+                });
+            });
+            pfImportUpdateCount();
+            pfImportRenderList(data.selected.map(item => ({
+                group_id: item.group_id,
                 name: item.name,
                 brand: item.brand,
+                category: item.category,
                 min_price: item.min_price,
-                image: item.image,
-                ai: { reason: item.reason, goals: item.goals, tagline: item.tagline }
-            });
-        });
-        pfImportUpdateCount();
+                image: item.image
+            })));
+            const actionLabels = { list: 'Списък', select: 'AI подбор', count: 'Брой', stats: 'Статистика', brands: 'Марки', categories: 'Категории', help: 'Помощ' };
+            const label = actionLabels[data.action] || 'Резултат';
+            document.getElementById('pf-import-page-info').textContent = `${label}: ${data.selected.length} продукта`;
+        } else if (data.action === 'help') {
+            document.getElementById('pf-import-page-info').textContent = 'Помощ';
+        } else if (data.catalog_size != null) {
+            document.getElementById('pf-import-page-info').textContent = `Каталог: ${data.catalog_size} продукта`;
+        }
 
-        // Показваме AI подбора като списък с причините за избора
-        pfImportRenderList(data.selected.map(item => ({
-            group_id: item.group_id,
-            name: item.name,
-            brand: item.brand,
-            category: item.category,
-            min_price: item.min_price,
-            image: item.image
-        })));
-        document.getElementById('pf-import-page-info').textContent = `🤖 AI подбор: ${data.selected.length} продукта`;
         pfImportStatus('');
-        showNotification(`AI подбра ${data.selected.length} продукта — прегледайте списъка и импортирайте.`, 'success');
+        if (data.answer) showNotification(data.answer.split('\n')[0], data.selected?.length ? 'success' : 'info', 5000);
     } catch (e) {
-        showNotification(`AI подбор: ${e.message}`, 'error');
+        pfImportShowAnswer('');
+        showNotification(`Команда: ${e.message}`, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;

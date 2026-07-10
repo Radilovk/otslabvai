@@ -430,11 +430,12 @@ describe('handlePortfolioImportRoute', () => {
 
   test('POST ai-select връща нормализиран подбор с каталожни данни', async () => {
     const deps = makeDeps();
-    const { request, url } = req('POST', '/portfolio/import/ai-select', { project: 'main', limit: 5 });
+    const { request, url } = req('POST', '/portfolio/import/ai-select', { project: 'main', limit: 5, prompt: 'фокус върху протеини' });
     const res = await handlePortfolioImportRoute(request, env, url, deps);
     expect(res.status).toBe(200);
     const data = JSON.parse(await res.text());
     expect(deps.callAI).toHaveBeenCalled();
+    expect(data.answer).toBeTruthy();
     expect(data.selected).toHaveLength(1);
     expect(data.selected[0].group_id).toBe('100');
     expect(data.selected[0].name).toBe('Test Protein');
@@ -446,6 +447,71 @@ describe('handlePortfolioImportRoute', () => {
     const { request, url } = req('POST', '/portfolio/import/ai-select', { project: 'life' });
     const res = await handlePortfolioImportRoute(request, env, url, deps);
     expect(res.status).toBe(404);
+  });
+
+  test('POST ai-select с филтър prompt връща продукти без AI', async () => {
+    const deps = makeDeps({
+      getCatalogMeta: jest.fn(async () => ({
+        index: [
+          { group_id: '100', name: 'Zinc Plus', brand: 'Now', brand_id: '1', category: 'Минерали', min_price: 9.9, max_markup_percent: 35, available: true, search_text: 'zinc цинк now минерали' },
+          { group_id: '200', name: 'Whey', brand: 'Optimum', brand_id: '2', category: 'Протеини', min_price: 29.9, max_markup_percent: 20, available: true, search_text: 'whey optimum протеини' }
+        ],
+        brands: [], categories: []
+      }))
+    });
+    const { request, url } = req('POST', '/portfolio/import/ai-select', {
+      project: 'main',
+      prompt: 'изведи продукти от марки 1 съдържащи цинк',
+      limit: 10
+    });
+    const res = await handlePortfolioImportRoute(request, env, url, deps);
+    expect(res.status).toBe(200);
+    const data = JSON.parse(await res.text());
+    expect(data.action).toBe('list');
+    expect(data.answer).toMatch(/Показвам/);
+    expect(deps.callAI).not.toHaveBeenCalled();
+    expect(data.selected).toHaveLength(1);
+    expect(data.selected[0].group_id).toBe('100');
+  });
+
+  test('POST command връща answer за колко продукта', async () => {
+    const deps = makeDeps({
+      getCatalogMeta: jest.fn(async () => ({
+        index: [
+          { group_id: '100', name: 'A', brand: 'B', brand_id: '1', category: 'X', min_price: 10, available: true, search_text: 'a' },
+          { group_id: '200', name: 'C', brand: 'D', brand_id: '2', category: 'Y', min_price: 20, available: true, search_text: 'c' }
+        ],
+        brands: [], categories: []
+      }))
+    });
+    const { request, url } = req('POST', '/portfolio/import/command', { project: 'main', command: 'колко продукта има' });
+    const res = await handlePortfolioImportRoute(request, env, url, deps);
+    expect(res.status).toBe(200);
+    const data = JSON.parse(await res.text());
+    expect(data.action).toBe('count');
+    expect(data.answer).toMatch(/2/);
+    expect(deps.callAI).not.toHaveBeenCalled();
+  });
+
+  test('POST command помощ без текст', async () => {
+    const deps = makeDeps();
+    const { request, url } = req('POST', '/portfolio/import/command', { project: 'main', command: '' });
+    const res = await handlePortfolioImportRoute(request, env, url, deps);
+    expect(res.status).toBe(200);
+    const data = JSON.parse(await res.text());
+    expect(data.action).toBe('help');
+    expect(data.answer).toMatch(/Писмени команди/);
+  });
+
+  test('POST ai-select връща ясна грешка при AI failure', async () => {
+    const deps = makeDeps({
+      callAI: jest.fn(async () => { throw Object.assign(new Error('Липсва API ключ за избрания AI доставчик.'), { name: 'UserFacingError', status: 400 }); })
+    });
+    const { request, url } = req('POST', '/portfolio/import/ai-select', { project: 'main', prompt: 'фокус върху колаген' });
+    const res = await handlePortfolioImportRoute(request, env, url, deps);
+    expect(res.status).toBe(400);
+    const data = JSON.parse(await res.text());
+    expect(data.error).toMatch(/API ключ/);
   });
 
   test('POST apply слива продуктите и записва проекта', async () => {
