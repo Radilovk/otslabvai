@@ -14,6 +14,7 @@ function stripFilterBoilerplate(text) {
     .trim();
 }
 const BRANDS_RE = /(?:марк[аи](?:те)?|brand(?:s)?|от\s+марк[аи](?:те)?)\s+([\d][\d,\s]*)/i;
+export { BRANDS_RE };
 const MARKUP_RE = /(?:(?:марж|markup|надбавк[аи]).*?(?:над|over|по-голям[ао]\s+от|>|от)\s*(\d+(?:[.,]\d+)?)\s*%|(?:продажна\s+цена|retail\s+price?).*?(?:над|over)\s*(\d+(?:[.,]\d+)?)\s*(?:%|процент[аи])|(\d+(?:[.,]\d+)?)\s*%\s*(?:марж|markup|надбавка|от\s+базовата|над\s+базовата))/i;
 const CONTAINS_RE = /(?:съдържа(?:щи|т)?|със(?:\s+съставка)?|\bс\s+(?![\d,])|contain(?:ing)?|with)\s+([а-яa-z0-9+#\-\s]{2,50})/i;
 const MIN_PRICE_RE = /(?:цен[аи]|price).*?(?:над|over|>|от)\s*(\d+(?:[.,]\d+)?)\s*(?:€|евро|eur)?/i;
@@ -128,13 +129,14 @@ export function shouldUseFilterOnly(parsed, requestMode = 'auto') {
 
 /** @param {ParsedFilters} filters */
 export function hasStructuredFilters(filters = {}) {
+  const hasNum = (v) => v !== '' && v != null && !Number.isNaN(Number(v));
   return Boolean(
     filters.brands?.length
     || filters.q
     || filters.min_price
     || filters.max_price
-    || filters.min_markup_percent != null
-    || filters.max_markup_percent != null
+    || hasNum(filters.min_markup_percent)
+    || hasNum(filters.max_markup_percent)
     || filters.category
   );
 }
@@ -150,6 +152,30 @@ export function buildFilterReason(filters = {}) {
   if (filters.max_price) parts.push(`цена ≤ ${filters.max_price} €`);
   if (filters.category) parts.push(`категория „${filters.category}"`);
   return parts.length ? `Съответства на: ${parts.join('; ')}` : 'Съответства на зададените критерии';
+}
+
+/** Обогатява index запис с UI полета за подбор. */
+export function enrichSelectionEntry(item, entry) {
+  if (!entry) return item;
+  return {
+    ...item,
+    name: entry.name,
+    brand: entry.brand,
+    category: entry.category,
+    min_price: entry.min_price,
+    image: entry.image
+  };
+}
+
+/** Връща продукти от филтриран индекс без AI (бърз подбор по критерии). */
+export function selectionFromFilteredIndex(indexSubset, filters, limit) {
+  const reason = buildFilterReason(filters);
+  return indexSubset.slice(0, limit).map((entry) => enrichSelectionEntry({
+    group_id: String(entry.group_id),
+    reason,
+    goals: [],
+    tagline: ''
+  }, entry));
 }
 
 /**

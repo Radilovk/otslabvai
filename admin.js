@@ -2649,11 +2649,7 @@ function handleAction(action, target, id) {
             break;
         }
         case 'pf-import-ai-select': {
-            pfImportAiSelect(target);
-            break;
-        }
-        case 'pf-import-voice': {
-            pfImportToggleVoice(target);
+            pfImportRunCommand(target);
             break;
         }
         case 'pf-import-confirm': {
@@ -3507,67 +3503,15 @@ function pfImportInitOnce() {
         }
     });
 
-    pfImportInitVoice();
-}
-
-let pfImportVoiceRecognition = null;
-
-function pfImportInitVoice() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-
-    pfImportVoiceRecognition = new SpeechRecognition();
-    pfImportVoiceRecognition.lang = 'bg-BG';
-    pfImportVoiceRecognition.interimResults = false;
-    pfImportVoiceRecognition.maxAlternatives = 1;
-
-    pfImportVoiceRecognition.onresult = (e) => {
-        const transcript = e.results?.[0]?.[0]?.transcript?.trim();
-        if (transcript) {
-            const input = document.getElementById('pf-import-ai-prompt');
-            const existing = input.value.trim();
-            input.value = existing ? `${existing} ${transcript}` : transcript;
-        }
-    };
-
-    pfImportVoiceRecognition.onerror = (e) => {
-        const messages = {
-            'not-allowed': 'Достъпът до микрофона е отказан.',
-            'no-speech': 'Не беше чут глас. Опитайте отново.',
-            'network': 'Речевото разпознаване изисква интернет връзка.'
-        };
-        showNotification(messages[e.error] || `Реч: ${e.error}`, 'error');
-        pfImportSetVoiceListening(false);
-    };
-
-    pfImportVoiceRecognition.onend = () => pfImportSetVoiceListening(false);
-}
-
-function pfImportSetVoiceListening(listening) {
-    const btn = document.querySelector('[data-action="pf-import-voice"]');
-    if (!btn) return;
-    btn.classList.toggle('listening', listening);
-    btn.textContent = listening ? '⏹' : '🎤';
-    btn.title = listening ? 'Спри записа' : 'Речева команда (микрофон)';
-}
-
-function pfImportToggleVoice(btn) {
-    if (!pfImportVoiceRecognition) {
-        showNotification('Браузърът не поддържа речево разпознаване. Използвайте Chrome или Edge.', 'error');
-        return;
-    }
-    if (btn.classList.contains('listening')) {
-        pfImportVoiceRecognition.stop();
-        pfImportSetVoiceListening(false);
-        return;
-    }
-    try {
-        pfImportSetVoiceListening(true);
-        pfImportVoiceRecognition.start();
-        showNotification('Слушам… кажете критериите за подбор.', 'info', 2500);
-    } catch (e) {
-        pfImportSetVoiceListening(false);
-        showNotification(`Микрофон: ${e.message}`, 'error');
+    const cmdInput = document.getElementById('pf-import-ai-prompt');
+    if (cmdInput) {
+        cmdInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const btn = document.querySelector('[data-action="pf-import-ai-select"]');
+                if (btn) pfImportRunCommand(btn);
+            }
+        });
     }
 }
 
@@ -3670,64 +3614,74 @@ function pfImportRenderList(items) {
     }).join('');
 }
 
+function pfImportShowAnswer(text, { empty = false } = {}) {
+    const el = document.getElementById('pf-import-answer');
+    if (!el) return;
+    const hasText = Boolean(String(text || '').trim());
+    el.hidden = !hasText;
+    el.textContent = text || '';
+    el.classList.toggle('is-info', hasText && !empty);
+    el.classList.toggle('is-empty', empty);
+}
+
 /**
- * AI/филтър подбор: парсира естествен език (текст или глас) в критерии,
- * филтрира каталога и при нужда използва AI за тематичен избор за проекта.
+ * Изпълнява писмена команда: филтри, справки, статистика или AI подбор.
+ * Показва текстов отговор и при нужда попълва списъка с продукти.
  */
-async function pfImportAiSelect(btn) {
+async function pfImportRunCommand(btn) {
     const originalText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '⏳ Подбира...';
+    btn.textContent = '⏳...';
     try {
         const project = currentProject === 'life' ? 'life' : 'main';
         const limit = parseInt(document.getElementById('pf-import-ai-limit').value, 10) || 12;
-        const prompt = document.getElementById('pf-import-ai-prompt').value.trim();
+        const command = document.getElementById('pf-import-ai-prompt').value.trim();
         const { q, category, brand } = pfImportCurrentFilters();
 
-        const res = await fetch(`${API_URL}/portfolio/import/ai-select`, {
+        const res = await fetch(`${API_URL}/portfolio/import/command`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project, prompt, limit, mode: 'auto', filters: { q, category, brand } })
+            body: JSON.stringify({ project, command, limit, filters: { q, category, brand } })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Подборът се провали');
+        if (!res.ok) throw new Error(data.error || 'Командата се провали');
 
-        if (!data.selected?.length) {
-            const hint = data.message || 'Няма продукти по зададените критерии.';
-            showNotification(hint, 'info');
-            return;
-        }
+        pfImportShowAnswer(data.answer || '', { empty: !data.selected?.length && data.action !== 'help' });
 
-        data.selected.forEach(item => {
-            pfImportState.selection.set(String(item.group_id), {
-                group_id: String(item.group_id),
+        if (data.selected?.length) {
+            data.selected.forEach(item => {
+                pfImportState.selection.set(String(item.group_id), {
+                    group_id: String(item.group_id),
+                    name: item.name,
+                    brand: item.brand,
+                    min_price: item.min_price,
+                    image: item.image,
+                    ai: { reason: item.reason, goals: item.goals, tagline: item.tagline }
+                });
+            });
+            pfImportUpdateCount();
+            pfImportRenderList(data.selected.map(item => ({
+                group_id: item.group_id,
                 name: item.name,
                 brand: item.brand,
+                category: item.category,
                 min_price: item.min_price,
-                image: item.image,
-                ai: { reason: item.reason, goals: item.goals, tagline: item.tagline }
-            });
-        });
-        pfImportUpdateCount();
+                image: item.image
+            })));
+            const actionLabels = { list: 'Списък', select: 'AI подбор', count: 'Брой', stats: 'Статистика', brands: 'Марки', categories: 'Категории', help: 'Помощ' };
+            const label = actionLabels[data.action] || 'Резултат';
+            document.getElementById('pf-import-page-info').textContent = `${label}: ${data.selected.length} продукта`;
+        } else if (data.action === 'help') {
+            document.getElementById('pf-import-page-info').textContent = 'Помощ';
+        } else if (data.catalog_size != null) {
+            document.getElementById('pf-import-page-info').textContent = `Каталог: ${data.catalog_size} продукта`;
+        }
 
-        pfImportRenderList(data.selected.map(item => ({
-            group_id: item.group_id,
-            name: item.name,
-            brand: item.brand,
-            category: item.category,
-            min_price: item.min_price,
-            image: item.image
-        })));
-
-        const modeLabel = data.mode === 'filter' ? '🔎 Филтър' : '🤖 AI подбор';
-        document.getElementById('pf-import-page-info').textContent = `${modeLabel}: ${data.selected.length} продукта`;
-        pfImportStatus(data.applied_filters?.q || data.applied_filters?.brands?.length
-            ? `Приложени критерии: ${[data.applied_filters.brands?.length ? `марки ${data.applied_filters.brands.join(',')}` : '', data.applied_filters.q, data.applied_filters.min_markup_percent != null ? `марж ≥${data.applied_filters.min_markup_percent}%` : ''].filter(Boolean).join(' · ')}`
-            : '');
-        const suffix = data.message ? ` ${data.message}` : '';
-        showNotification(`${modeLabel}: ${data.selected.length} продукта.${suffix}`, 'success');
+        pfImportStatus('');
+        if (data.answer) showNotification(data.answer.split('\n')[0], data.selected?.length ? 'success' : 'info', 5000);
     } catch (e) {
-        showNotification(`Подбор: ${e.message}`, 'error');
+        pfImportShowAnswer('');
+        showNotification(`Команда: ${e.message}`, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
