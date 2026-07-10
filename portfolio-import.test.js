@@ -9,6 +9,7 @@ import {
   refreshImportedProductsInContent,
   buildAiSelectionMessages,
   normalizeAiSelection,
+  parseAiSelectResponse,
   handlePortfolioImportRoute,
   refreshImportedProjects,
   IMPORT_PROJECTS
@@ -328,28 +329,40 @@ describe('buildAiSelectionMessages', () => {
     { group_id: '300', name: 'Unavailable', brand: 'B3', category: 'Друго', min_price: 9.9, available: false }
   ];
 
-  test('system съобщението включва целта на проекта и лимита', () => {
-    const messages = buildAiSelectionMessages({ project: 'life', index, limit: 5 });
+  test('system съобщението включва каталога и лимита', () => {
+    const messages = buildAiSelectionMessages({ project: 'life', index, limit: 5, prompt: 'тест' });
     expect(messages[0].role).toBe('system');
     expect(messages[0].content).toContain('антиейджинг');
-    expect(messages[0].content).toContain('до 5 продукта');
-    expect(messages[0].content).toContain('"selected"');
+    expect(messages[0].content).toContain('До 5 продукта');
+    expect(messages[0].content).toContain('100 | Fat Burner X');
+    expect(messages[0].content).not.toContain('300 | Unavailable');
+    expect(messages.at(-1)).toEqual({ role: 'user', content: 'тест' });
   });
 
-  test('user съобщението съдържа само наличните продукти', () => {
-    const messages = buildAiSelectionMessages({ project: 'main', index });
-    expect(messages[1].content).toContain('100 | Fat Burner X');
-    expect(messages[1].content).toContain('200 | Collagen Pro');
-    expect(messages[1].content).not.toContain('300 | Unavailable');
-  });
-
-  test('допълнителният prompt се добавя', () => {
-    const messages = buildAiSelectionMessages({ project: 'main', prompt: 'само колаген', index });
-    expect(messages[1].content).toContain('само колаген');
+  test('включва история на диалога', () => {
+    const messages = buildAiSelectionMessages({
+      project: 'main',
+      prompt: 'още с цинк',
+      index,
+      history: [{ role: 'user', content: 'продукти с цинк' }, { role: 'assistant', content: 'Ето няколко.' }]
+    });
+    expect(messages).toHaveLength(4);
+    expect(messages[2].content).toBe('Ето няколко.');
   });
 
   test('невалиден проект хвърля грешка', () => {
     expect(() => buildAiSelectionMessages({ project: 'bogus', index })).toThrow(/Невалиден проект/);
+  });
+});
+
+describe('parseAiSelectResponse', () => {
+  test('извлича reply и selected', () => {
+    const { reply, selected } = parseAiSelectResponse({
+      reply: 'Ето подбор.',
+      selected: [{ group_id: '100', reason: 'добър', goals: [], tagline: '' }]
+    }, new Set(['100']));
+    expect(reply).toBe('Ето подбор.');
+    expect(selected).toHaveLength(1);
   });
 });
 
@@ -388,7 +401,10 @@ describe('handlePortfolioImportRoute', () => {
 
   function makeDeps(overrides = {}) {
     return {
-      callAI: jest.fn(async () => ({ selected: [{ group_id: '100', reason: 'подходящ', goals: ['отслабване'], tagline: 'Топ' }] })),
+      callAI: jest.fn(async () => ({
+        reply: 'Подбрах протеин за отслабване.',
+        selected: [{ group_id: '100', reason: 'подходящ', goals: ['отслабване'], tagline: 'Топ' }]
+      })),
       loadProjectContent: jest.fn(async () => makeContent()),
       saveProjectContent: jest.fn(async () => {}),
       getCatalogMeta: jest.fn(async () => ({
@@ -435,7 +451,7 @@ describe('handlePortfolioImportRoute', () => {
     expect(res.status).toBe(200);
     const data = JSON.parse(await res.text());
     expect(deps.callAI).toHaveBeenCalled();
-    expect(data.answer).toBeTruthy();
+    expect(data.reply).toMatch(/протеин/);
     expect(data.selected).toHaveLength(1);
     expect(data.selected[0].group_id).toBe('100');
     expect(data.selected[0].name).toBe('Test Protein');
@@ -444,63 +460,15 @@ describe('handlePortfolioImportRoute', () => {
 
   test('POST ai-select без синхронизиран каталог връща 404', async () => {
     const deps = makeDeps({ getCatalogMeta: jest.fn(async () => null) });
-    const { request, url } = req('POST', '/portfolio/import/ai-select', { project: 'life' });
+    const { request, url } = req('POST', '/portfolio/import/ai-select', { project: 'life', prompt: 'тест' });
     const res = await handlePortfolioImportRoute(request, env, url, deps);
     expect(res.status).toBe(404);
   });
 
-  test('POST ai-select с филтър prompt връща продукти без AI', async () => {
-    const deps = makeDeps({
-      getCatalogMeta: jest.fn(async () => ({
-        index: [
-          { group_id: '100', name: 'Zinc Plus', brand: 'Now', brand_id: '1', category: 'Минерали', min_price: 9.9, max_markup_percent: 35, available: true, search_text: 'zinc цинк now минерали' },
-          { group_id: '200', name: 'Whey', brand: 'Optimum', brand_id: '2', category: 'Протеини', min_price: 29.9, max_markup_percent: 20, available: true, search_text: 'whey optimum протеини' }
-        ],
-        brands: [], categories: []
-      }))
-    });
-    const { request, url } = req('POST', '/portfolio/import/ai-select', {
-      project: 'main',
-      prompt: 'изведи продукти от марки 1 съдържащи цинк',
-      limit: 10
-    });
-    const res = await handlePortfolioImportRoute(request, env, url, deps);
-    expect(res.status).toBe(200);
-    const data = JSON.parse(await res.text());
-    expect(data.action).toBe('list');
-    expect(data.answer).toMatch(/Показвам/);
-    expect(deps.callAI).not.toHaveBeenCalled();
-    expect(data.selected).toHaveLength(1);
-    expect(data.selected[0].group_id).toBe('100');
-  });
-
-  test('POST command връща answer за колко продукта', async () => {
-    const deps = makeDeps({
-      getCatalogMeta: jest.fn(async () => ({
-        index: [
-          { group_id: '100', name: 'A', brand: 'B', brand_id: '1', category: 'X', min_price: 10, available: true, search_text: 'a' },
-          { group_id: '200', name: 'C', brand: 'D', brand_id: '2', category: 'Y', min_price: 20, available: true, search_text: 'c' }
-        ],
-        brands: [], categories: []
-      }))
-    });
-    const { request, url } = req('POST', '/portfolio/import/command', { project: 'main', command: 'колко продукта има' });
-    const res = await handlePortfolioImportRoute(request, env, url, deps);
-    expect(res.status).toBe(200);
-    const data = JSON.parse(await res.text());
-    expect(data.action).toBe('count');
-    expect(data.answer).toMatch(/2/);
-    expect(deps.callAI).not.toHaveBeenCalled();
-  });
-
-  test('POST command помощ без текст', async () => {
-    const deps = makeDeps();
-    const { request, url } = req('POST', '/portfolio/import/command', { project: 'main', command: '' });
-    const res = await handlePortfolioImportRoute(request, env, url, deps);
-    expect(res.status).toBe(200);
-    const data = JSON.parse(await res.text());
-    expect(data.action).toBe('help');
-    expect(data.answer).toMatch(/Писмени команди/);
+  test('POST ai-select изисква prompt', async () => {
+    const { request, url } = req('POST', '/portfolio/import/ai-select', { project: 'main' });
+    const res = await handlePortfolioImportRoute(request, env, url, makeDeps());
+    expect(res.status).toBe(400);
   });
 
   test('POST ai-select връща ясна грешка при AI failure', async () => {

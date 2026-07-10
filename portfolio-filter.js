@@ -8,12 +8,8 @@ export function applyFilters(index, params, meta = {}) {
   let results = index;
   const categories = meta.categories || [];
 
-  const brandIds = Array.isArray(params.brands) && params.brands.length
-    ? params.brands.map(String)
-    : (params.brand ? [String(params.brand)] : []);
-  if (brandIds.length) {
-    const brandSet = new Set(brandIds);
-    results = results.filter((i) => brandSet.has(String(i.brand_id)));
+  if (params.brand) {
+    results = results.filter((i) => i.brand_id === params.brand);
   }
   if (params.category) {
     const cat = params.category;
@@ -34,18 +30,6 @@ export function applyFilters(index, params, meta = {}) {
   if (params.max_price) {
     const max = parseFloat(params.max_price);
     if (!Number.isNaN(max)) results = results.filter((i) => i.min_price <= max);
-  }
-  if (params.min_markup_percent !== '' && params.min_markup_percent != null) {
-    const minMarkup = parseFloat(params.min_markup_percent);
-    if (!Number.isNaN(minMarkup)) {
-      results = results.filter((i) => (i.max_markup_percent ?? i.min_markup_percent ?? 0) >= minMarkup);
-    }
-  }
-  if (params.max_markup_percent !== '' && params.max_markup_percent != null) {
-    const maxMarkup = parseFloat(params.max_markup_percent);
-    if (!Number.isNaN(maxMarkup)) {
-      results = results.filter((i) => (i.min_markup_percent ?? i.max_markup_percent ?? 0) <= maxMarkup);
-    }
   }
 
   return results;
