@@ -309,3 +309,15 @@ Hero хексагони, trust badges и stats остават с SVG (решен
 **Употреба:** hero hex fallback кадрите (когато няма hero_images в съдържанието — как е на живо) показват frosted иконите вместо линейните SVG: vial→cross (здраве), lab→logo (бранд, централен хекс), face→trophy (доказани резултати). Иконите са центрирани на 62% от хекса, `object-fit: contain` — НЕ cover (поуката от запис 3). SVG остава fallback за неизвестни имена. star е наличен по име в `LIFE_ICON_IMAGES`.
 
 **Файлове:** `images/life-icons/{trophy,cross,logo,star}.png`, `life-icons.js` (`HERO_HEX_ICON_IMAGES`), `life.js` (makeHexFrame), `life.css`
+
+---
+
+### 2026-07-11 (6) — Hero без икони; frosted иконите → stat картите и хедър логото
+
+По указание на собственика: hero visual вече показва САМО реално зададени изображения (hero_images/visual_bg) — fallback хексагоните с икони (и PNG, и SVG) са премахнати; слот без снимка не се рендира. Новите frosted икони отиват на бял фон:
+
+- **Stat картите**: `statFrostedIcon(stat)` в life-icons.js — тематичен подбор по текста на лейбъла (доверие/доказан→trophy, формули/научн/медиц→cross, клиенти/доволн/успех→star), 44px, SVG остава резерва при липса на съвпадение.
+- **Хедър логото**: `images/life-icons/logo.png` е подразбиране при празен URL и onerror fallback при счупено лого (на живо логото беше счупено изображение).
+- Премахнати: `HERO_HEX_ICON_IMAGES`, hex fallback CSS правилото.
+
+**Файлове:** `life.js`, `life-icons.js`, `life.css`

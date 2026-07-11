@@ -5,8 +5,8 @@
 import { API_URL } from './config.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import {
-    getFeatureIconSVG, iconChevronDown, iconCheck, getLifeIconImg, HERO_HEX_ICON_IMAGES,
-    getHeroHexIconSVG, getStatIconElement, getBenefitIconSVG, getGuaranteeIconSVG
+    getFeatureIconSVG, iconChevronDown, iconCheck, getLifeIconImg, statFrostedIcon,
+    getStatIconElement, getBenefitIconSVG, getGuaranteeIconSVG
 } from './life-icons.js';
 
 const DOM = {
@@ -274,7 +274,8 @@ const generateHeroHTML = component => {
         return `
         <div class="stat-item">
             ${safeIconUrl ? `<img src="${safeIconUrl}" alt="${escapeHtml(stat.label)}" class="stat-icon" width="32" height="32" style="object-fit:contain;">` :
-              stat.icon ? getStatIconElement(stat.icon, 32) : ''}
+              statFrostedIcon(stat) ||
+              (stat.icon ? getStatIconElement(stat.icon, 32) : '')}
             <strong>${escapeHtml(stat.value)}</strong>
             <span>${escapeHtml(stat.label)}</span>
         </div>
@@ -361,7 +362,7 @@ const generateHeroHTML = component => {
         }
     }
 
-    const makeHexFrame = (imgUrl, cls, altText, fallbackType) => {
+    const makeHexFrame = (imgUrl, cls, altText) => {
         if (imgUrl) {
             const rawUrl = String(imgUrl);
             const lowerUrl = rawUrl.toLowerCase();
@@ -377,11 +378,8 @@ const generateHeroHTML = component => {
                 return `<div class="hex-frame ${cls}"><img src="${escapeHtml(rawUrl)}" alt="${escapeHtml(altText)}" loading="lazy"></div>`;
             }
         }
-        const frostedSrc = HERO_HEX_ICON_IMAGES[fallbackType];
-        const inner = frostedSrc
-            ? `<img src="${frostedSrc}" alt="${escapeHtml(altText)}" class="hex-life-icon" loading="lazy" decoding="async">`
-            : getHeroHexIconSVG(fallbackType, 52);
-        return `<div class="hex-frame ${cls} hex-frame-icon">${inner}</div>`;
+        // Без fallback икони: hero показва само реално зададени изображения
+        return '';
     };
 
     let heroSideHTML = '';
@@ -389,9 +387,9 @@ const generateHeroHTML = component => {
     if (hasHexVisual) {
         heroSideHTML = `
     <div class="hero-visual" aria-hidden="true"${heroVisualStyle}>
-        ${makeHexFrame(vialImg, 'hex-vial', 'Биологичен флакон', 'vial')}
-        ${makeHexFrame(labImg, 'hex-lab', 'Лабораторно изследване', 'lab')}
-        ${makeHexFrame(faceImg, 'hex-face', 'Клетъчно подмладяване', 'face')}
+        ${makeHexFrame(vialImg, 'hex-vial', 'Биологичен флакон')}
+        ${makeHexFrame(labImg, 'hex-lab', 'Лабораторно изследване')}
+        ${makeHexFrame(faceImg, 'hex-face', 'Клетъчно подмладяване')}
         <div class="molecule-node node-1"></div>
         <div class="molecule-node node-2"></div>
         <div class="molecule-node node-3"></div>
@@ -1092,7 +1090,12 @@ function updateLogoForTheme() {
     const logoUrl = currentTheme === 'dark' ? window.logoSettings.darkLogo : window.logoSettings.lightLogo;
     
     if (DOM.header.logoImg) {
-        DOM.header.logoImg.src = encodeURI(logoUrl);
+        const fallbackLogo = 'images/life-icons/logo.png';
+        DOM.header.logoImg.onerror = () => {
+            DOM.header.logoImg.onerror = null;
+            DOM.header.logoImg.src = fallbackLogo;
+        };
+        DOM.header.logoImg.src = logoUrl ? encodeURI(logoUrl) : fallbackLogo;
     }
     
     // Also update footer logo if it exists
