@@ -3,6 +3,7 @@
 // =======================================================
 
 import { API_URL } from './config.js';
+import { normalizeEffectLabel } from './effect-labels.js';
 
 const DOM = {
     mainContainer: document.getElementById('main-content-container'),
@@ -72,7 +73,7 @@ function escapeHtml(unsafe) {
 
 const generateEffectBar = effect => `
     <div class="effect-bar-group">
-        <div class="effect-label">${escapeHtml(effect.label)}</div>
+        <div class="effect-label">${escapeHtml(normalizeEffectLabel(effect.label))}</div>
         <div class="effect-bar-container">
             <div class="effect-bar" data-width="${Number(effect.value)}%"><span class="effect-bar-value">${(effect.value / 10).toFixed(1)}</span></div>
         </div>
