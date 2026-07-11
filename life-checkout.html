@@ -1403,6 +1403,24 @@
 
         // --- 1. Зареждане на количката от localStorage ---
         const cartData = JSON.parse(localStorage.getItem('lifeCart') || '[]');
+
+        // Предварително попълване от протоколен въпросник
+        try {
+            const lead = JSON.parse(localStorage.getItem('lifeProtocolLead') || 'null');
+            if (lead?.email) {
+                const emailInput = document.getElementById('email');
+                if (emailInput && !emailInput.value) emailInput.value = lead.email;
+            }
+            if (lead?.name) {
+                const nameInput = document.getElementById('first-name') || document.getElementById('name');
+                if (nameInput && !nameInput.value) {
+                    const parts = lead.name.trim().split(/\s+/);
+                    nameInput.value = parts[0] || '';
+                    const lastInput = document.getElementById('last-name');
+                    if (lastInput && parts.length > 1) lastInput.value = parts.slice(1).join(' ');
+                }
+            }
+        } catch (e) { /* ignore */ }
         let activeDiscount = 0;
         let activePromoCode = null;
         let isSubmitting = false;

@@ -1,0 +1,342 @@
+/* Life Protocol Quiz — стил в духа на Life Protocols */
+
+:root {
+  --lpq-accent: #00c4c8;
+  --lpq-accent-dim: rgba(0, 196, 200, 0.12);
+  --lpq-bg: #f4fafc;
+  --lpq-card: #ffffff;
+  --lpq-text: #0f2540;
+  --lpq-muted: #5a7184;
+  --lpq-border: rgba(15, 37, 64, 0.1);
+  --lpq-error: #c0392b;
+  --lpq-radius: 16px;
+  --lpq-font: 'DM Sans', 'Segoe UI', sans-serif;
+  --lpq-display: 'Playfair Display', Georgia, serif;
+}
+
+[data-theme="dark"] {
+  --lpq-bg: #0a1218;
+  --lpq-card: #121c24;
+  --lpq-text: #e8f0f5;
+  --lpq-muted: #8fa3b3;
+  --lpq-border: rgba(255, 255, 255, 0.1);
+}
+
+* { box-sizing: border-box; }
+
+body.lpq-body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--lpq-font);
+  background: var(--lpq-bg);
+  color: var(--lpq-text);
+  line-height: 1.6;
+}
+
+.lpq-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.lpq-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.lpq-header h1 {
+  font-family: var(--lpq-display);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 500;
+  margin: 0 0 0.5rem;
+}
+
+.lpq-header p {
+  color: var(--lpq-muted);
+  margin: 0;
+}
+
+.lpq-progress {
+  height: 6px;
+  background: var(--lpq-border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.lpq-progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--lpq-accent), #4dd9dc);
+  transition: width 0.35s ease;
+}
+
+.lpq-card {
+  background: var(--lpq-card);
+  border: 1px solid var(--lpq-border);
+  border-radius: var(--lpq-radius);
+  padding: 2rem;
+  box-shadow: 0 12px 40px rgba(15, 37, 64, 0.06);
+}
+
+.lpq-step { display: none; }
+.lpq-step.active { display: block; }
+
+.lpq-step h2 {
+  font-family: var(--lpq-display);
+  font-size: 1.35rem;
+  margin: 0 0 0.35rem;
+}
+
+.lpq-step .lpq-hint {
+  color: var(--lpq-muted);
+  font-size: 0.92rem;
+  margin-bottom: 1.25rem;
+}
+
+.lpq-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.lpq-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1.5px solid var(--lpq-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.lpq-option:hover { border-color: var(--lpq-accent); }
+.lpq-option.selected {
+  border-color: var(--lpq-accent);
+  background: var(--lpq-accent-dim);
+}
+
+.lpq-option input { margin-top: 0.2rem; accent-color: var(--lpq-accent); }
+
+.lpq-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 520px) {
+  .lpq-grid-2 { grid-template-columns: 1fr; }
+  .lpq-card { padding: 1.25rem; }
+}
+
+.lpq-field label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.lpq-field input[type="text"],
+.lpq-field input[type="email"],
+.lpq-field input[type="number"] {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--lpq-border);
+  border-radius: 10px;
+  font: inherit;
+  background: transparent;
+  color: inherit;
+}
+
+.lpq-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.lpq-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.lpq-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.lpq-btn-primary {
+  background: var(--lpq-accent);
+  color: #fff;
+}
+
+.lpq-btn-primary:hover:not(:disabled) { transform: translateY(-1px); }
+
+.lpq-btn-ghost {
+  background: transparent;
+  color: var(--lpq-muted);
+  border: 1.5px solid var(--lpq-border);
+}
+
+.lpq-error {
+  color: var(--lpq-error);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  display: none;
+}
+
+.lpq-error.visible { display: block; }
+
+.lpq-loading {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.lpq-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--lpq-border);
+  border-top-color: var(--lpq-accent);
+  border-radius: 50%;
+  animation: lpqSpin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes lpqSpin { to { transform: rotate(360deg); } }
+
+.lpq-disclaimer {
+  font-size: 0.78rem;
+  color: var(--lpq-muted);
+  margin-top: 1rem;
+  line-height: 1.5;
+}
+
+.lpq-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--lpq-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.lpq-back-link:hover { color: var(--lpq-accent); }
+
+.lpr-analysis {
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+  padding: 1.25rem;
+  background: var(--lpq-accent-dim);
+  border-radius: 12px;
+  border-left: 3px solid var(--lpq-accent);
+}
+
+.lpr-tiers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 900px) {
+  .lpr-tiers { grid-template-columns: 1fr; }
+}
+
+.lpr-tier {
+  border: 1.5px solid var(--lpq-border);
+  border-radius: var(--lpq-radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.lpr-tier.recommended {
+  border-color: var(--lpq-accent);
+  box-shadow: 0 8px 32px rgba(0, 196, 200, 0.15);
+}
+
+.lpr-tier-badge {
+  position: absolute;
+  top: -10px;
+  right: 12px;
+  background: var(--lpq-accent);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lpr-tier h3 {
+  font-family: var(--lpq-display);
+  margin: 0 0 0.25rem;
+  font-size: 1.2rem;
+}
+
+.lpr-tier .lpr-tagline {
+  color: var(--lpq-muted);
+  font-size: 0.88rem;
+  margin-bottom: 0.75rem;
+}
+
+.lpr-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--lpq-accent);
+  margin-bottom: 0.25rem;
+}
+
+.lpr-price-sub {
+  font-size: 0.8rem;
+  color: var(--lpq-muted);
+  margin-bottom: 1rem;
+}
+
+.lpr-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  flex: 1;
+}
+
+.lpr-benefits li {
+  padding: 0.35rem 0 0.35rem 1.4rem;
+  position: relative;
+  font-size: 0.9rem;
+}
+
+.lpr-benefits li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.65rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lpq-accent);
+}
+
+.lpr-products-mini {
+  font-size: 0.82rem;
+  color: var(--lpq-muted);
+  margin-bottom: 1rem;
+}
+
+.lpr-schedule {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  border: 1px solid var(--lpq-border);
+  border-radius: 12px;
+}
+
+.lpr-schedule h3 {
+  font-family: var(--lpq-display);
+  margin-top: 0;
+}

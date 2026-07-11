@@ -15,6 +15,14 @@ import {
   loadResolvedAISettings,
   persistAISettings
 } from './ai-settings-resolver.js';
+import {
+  prepareProtocolSubmission,
+  validateProtocolResponse,
+} from './protocol-quiz-engine.js';
+import {
+  getDefaultProtocolQuizPrompt,
+  buildProtocolQuizMessages,
+} from './protocol-quiz-prompt.js';
 
 // Cache configuration constants
 const CACHE_CONFIG = {
@@ -64,6 +72,14 @@ export default {
       let response;
       
       switch (url.pathname) {
+          case '/life-protocol-submit':
+            if (request.method === 'POST') {
+              response = await handleLifeProtocolSubmit(request, env, ctx);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
           case '/quest-submit':
             response = await handleQuestSubmit(request, env, ctx);
             break;
@@ -1871,6 +1887,109 @@ async function getAIRecommendation(env, formData, productList, mainPromptTemplat
     if (e instanceof UserFacingError) throw e; 
     console.error("The entire AI response was not valid JSON. Raw text:", resultText, e);
     throw new UserFacingError("Цялостният отговор от AI не беше валиден JSON.");
+  }
+}
+
+// --- LIFE PROTOCOL QUIZ ---
+
+/**
+ * POST /life-protocol-submit
+ * Въпросник → refresh наличности → safety filter → AI 3-tier stack.
+ */
+async function handleLifeProtocolSubmit(request, env, ctx) {
+  const rawAnswers = await request.json();
+  const deps = {
+    loadProjectContent,
+    loadGroupsByIds: loadPortfolioGroupsByIds,
+  };
+
+  let profile;
+  let payload;
+  let candidates;
+  let excludedProductIds;
+
+  try {
+    const prepared = await prepareProtocolSubmission(env, rawAnswers, deps);
+    profile = prepared.profile;
+    payload = prepared.payload;
+    candidates = prepared.candidates;
+    excludedProductIds = prepared.payload.constraints.excluded_product_ids;
+  } catch (e) {
+    throw new UserFacingError(e.message || 'Грешка при подготовка на протокола.', 400);
+  }
+
+  const promptTemplate = (await env.PAGE_CONTENT.get('life_protocol_prompt'))
+    || getDefaultProtocolQuizPrompt();
+
+  const messages = buildProtocolQuizMessages(promptTemplate, payload);
+
+  let aiRaw;
+  try {
+    aiRaw = await callAIWithStoredSettings(env, messages, null);
+  } catch (e) {
+    if (e instanceof UserFacingError) throw e;
+    console.error('Life protocol AI error:', e);
+    throw new UserFacingError('AI услугата не успя да генерира протокол. Опитайте отново.', 502);
+  }
+
+  let recommendation;
+  try {
+    recommendation = parseJsonFromAI(aiRaw);
+    recommendation = validateProtocolResponse(recommendation, candidates, excludedProductIds);
+  } catch (e) {
+    console.error('Life protocol validation error:', e);
+    throw new UserFacingError('AI върна невалиден протокол. Моля, опитайте отново.', 502);
+  }
+
+  const sessionId = `life-protocol-${Date.now()}`;
+  const leadRecord = {
+    id: sessionId,
+    source: 'life-protocol-quiz',
+    timestamp: new Date().toISOString(),
+    email: profile.email,
+    name: profile.name || '',
+    profile,
+    catalog_stats: payload.catalog_stats,
+  };
+
+  const resultRecord = {
+    sessionId,
+    timestamp: leadRecord.timestamp,
+    email: profile.email,
+    recommendation,
+    catalog_stats: payload.catalog_stats,
+  };
+
+  ctx.waitUntil(saveLifeProtocolLead(env, leadRecord));
+  ctx.waitUntil(saveLifeProtocolResult(env, resultRecord));
+
+  return new Response(JSON.stringify({
+    sessionId,
+    email: profile.email,
+    ...recommendation,
+  }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function saveLifeProtocolLead(env, lead) {
+  try {
+    const list = await env.PAGE_CONTENT.get('life_protocol_leads', { type: 'json' }) || [];
+    list.push(lead);
+    await env.PAGE_CONTENT.put('life_protocol_leads', JSON.stringify(list, null, 2));
+  } catch (e) {
+    console.error('Failed to save life protocol lead:', e);
+  }
+}
+
+async function saveLifeProtocolResult(env, result) {
+  try {
+    const list = await env.PAGE_CONTENT.get('life_protocol_results', { type: 'json' }) || [];
+    list.push(result);
+    await env.PAGE_CONTENT.put('life_protocol_results', JSON.stringify(list, null, 2));
+  } catch (e) {
+    console.error('Failed to save life protocol result:', e);
   }
 }
 
