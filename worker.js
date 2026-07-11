@@ -1647,6 +1647,9 @@ async function callOpenAI(settings, messages) {
     }
     
     if (result.choices[0].finish_reason === 'length') {
+        if (settings.allowTruncated) {
+            try { return parseJsonFromAI(result.choices[0].message.content); } catch { /* fall through */ }
+        }
         throw new UserFacingError(
             "AI отговорът е прекъснат поради ограничение на токените. Увеличете 'Максимум токени' в настройките на AI асистента (препоръчително: 8192).",
             500
@@ -1679,8 +1682,8 @@ async function callGoogleAI(settings, messages) {
         generationConfig: {
             temperature: settings.temperature || 0.3,
             maxOutputTokens: settings.maxTokens || 4096,
-            // Instruct Gemini to produce only valid JSON — primary prevention mechanism.
-            responseMimeType: 'application/json'
+            responseMimeType: 'application/json',
+            ...(settings.disableThinking ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
         }
     };
     
@@ -1706,6 +1709,12 @@ async function callGoogleAI(settings, messages) {
     
     const candidate = result.candidates[0];
     if (candidate.finishReason === 'MAX_TOKENS') {
+        if (settings.allowTruncated) {
+            const textContent = candidate.content.parts?.[0]?.text;
+            if (textContent) {
+                try { return parseJsonFromAI(textContent); } catch { /* fall through */ }
+            }
+        }
         throw new UserFacingError(
             "AI отговорът е прекъснат поради ограничение на токените. Увеличете 'Максимум токени' в настройките на AI асистента (препоръчително: 8192).",
             500
@@ -1931,6 +1940,17 @@ async function getAIRecommendation(env, formData, productList, mainPromptTemplat
 
 // --- LIFE PROTOCOL QUIZ ---
 
+const PROTOCOL_QUIZ_AI_OVERRIDES = {
+    maxTokens: 8192,
+    temperature: 0.15,
+    disableThinking: true,
+};
+
+function isProtocolAIRecoverableError(err) {
+    const msg = String(err?.message || err || '');
+    return msg.includes('токен') || msg.includes('JSON') || msg.includes('празен');
+}
+
 async function runLifeProtocolGeneration(env, rawAnswers, { useMockAi = false, settingsOverride = null, skipEnabledCheck = false } = {}) {
   const settings = settingsOverride || await loadLifeProtocolSettings(env);
   if (!skipEnabledCheck && !settings.enabled) {
@@ -1953,10 +1973,18 @@ async function runLifeProtocolGeneration(env, rawAnswers, { useMockAi = false, s
 
   const promptTemplate = settings.prompt || getDefaultProtocolQuizPrompt();
   const messages = buildProtocolQuizMessages(promptTemplate, payload);
-  const aiRaw = await callAIWithStoredSettings(env, messages, null);
-  let recommendation = parseJsonFromAI(aiRaw);
-  recommendation = validateProtocolResponse(recommendation, candidates, excludedProductIds);
-  return { profile, payload, candidates, recommendation, mock: false };
+
+  try {
+    const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+    let recommendation = parseJsonFromAI(aiRaw);
+    recommendation = validateProtocolResponse(recommendation, candidates, excludedProductIds);
+    return { profile, payload, candidates, recommendation, mock: false };
+  } catch (e) {
+    console.warn('Life protocol AI failed, using deterministic fallback:', e.message || e);
+    if (!isProtocolAIRecoverableError(e)) throw e;
+    const recommendation = buildMockProtocolResponse(candidates, profile);
+    return { profile, payload, candidates, recommendation, mock: true, ai_fallback: true };
+  }
 }
 
 /**

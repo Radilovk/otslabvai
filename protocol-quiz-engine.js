@@ -182,7 +182,7 @@ export function scoreProduct(product, profile) {
   return score;
 }
 
-export function buildCandidatePool(profile, products, { maxCandidates = 25 } = {}) {
+export function buildCandidatePool(profile, products, { maxCandidates = 12 } = {}) {
   const excluded = new Map();
   const eligible = [];
 
@@ -243,16 +243,8 @@ export function transformProductForAI(product) {
   return {
     product_id: product.product_id,
     name: product.public_data?.name,
-    brand: product.public_data?.brand,
     price_eur: Math.round(priceEur * 100) / 100,
-    price_bgn: eurToBgn(priceEur),
-    tagline: product.public_data?.tagline,
-    goals: product.system_data?.goals || [],
-    effects: product.public_data?.effects || [],
-    ingredients: (product.public_data?.ingredients || []).map((i) => i.name).filter(Boolean),
-    protocol_hint: product.system_data?.protocol_hint || '',
-    target_profile: product.system_data?.target_profile || '',
-    category: product.system_data?.portfolio?.category || '',
+    goals: (product.system_data?.goals || []).slice(0, 3),
   };
 }
 

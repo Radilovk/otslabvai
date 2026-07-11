@@ -371,7 +371,7 @@ async function submitQuiz() {
     logEl: document.getElementById('lpq-analysis-log'),
     progressEl: document.getElementById('lpq-analysis-progress'),
     statusEl: document.getElementById('lpq-loading-status'),
-    minDurationMs: 11000,
+    minDurationMs: 5500,
   });
   animator.start(answers);
 
