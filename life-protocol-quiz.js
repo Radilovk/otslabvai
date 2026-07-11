@@ -1,4 +1,5 @@
 import { API_URL } from './config.js';
+import { ProtocolAnalysisAnimator } from './life-protocol-analysis.js';
 
 const STORAGE_KEY = 'lifeProtocolLead';
 const RESULT_KEY = 'lifeProtocolResult';
@@ -366,12 +367,24 @@ async function submitQuiz() {
   formCard.hidden = true;
   loadingCard.hidden = false;
 
+  const animator = new ProtocolAnalysisAnimator({
+    logEl: document.getElementById('lpq-analysis-log'),
+    progressEl: document.getElementById('lpq-analysis-progress'),
+    statusEl: document.getElementById('lpq-loading-status'),
+    minDurationMs: 11000,
+  });
+  animator.start(answers);
+
   try {
     const res = await fetch(`${API_URL}/life-protocol-submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(answers),
     });
+
+    animator.notifyApiComplete();
+    await animator.waitUntilReady();
+
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       const msg = data.error || data.message || 'Грешка при генериране.';
@@ -390,6 +403,7 @@ async function submitQuiz() {
 
     window.location.href = 'life-protocol-result.html';
   } catch (e) {
+    animator.stop();
     loadingCard.hidden = true;
     formCard.hidden = false;
     showError('contact', e.message || 'Възникна грешка. Опитайте отново.');
@@ -412,3 +426,30 @@ nextBtn.addEventListener('click', async () => {
 });
 
 renderSteps();
+
+async function checkQuizEnabled() {
+  try {
+    const res = await fetch(`${API_URL}/life-protocol/settings`, { cache: 'no-cache' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.enabled === false) {
+      formCard.innerHTML = `<div class="lpq-step active" style="text-align:center;padding:2rem 0">
+        <h2>Въпросникът е временно недостъпен</h2>
+        <p class="lpq-hint">Моля, опитайте по-късно или разгледайте <a href="life.html">продуктите ни</a>.</p>
+      </div>`;
+      prevBtn.hidden = true;
+      nextBtn.hidden = true;
+    }
+  } catch {
+    /* offline / not deployed */
+  }
+}
+
+checkQuizEnabled();
+
+document.addEventListener('keydown', (e) => {
+  if (!formCard.hidden && loadingCard.hidden && e.key === 'Enter' && document.activeElement?.tagName !== 'TEXTAREA') {
+    e.preventDefault();
+    nextBtn.click();
+  }
+});

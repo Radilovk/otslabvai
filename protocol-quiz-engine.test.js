@@ -5,7 +5,7 @@ import {
   isOralSupplement,
   isProductAvailable,
   isPeptideOrInjectable,
-  getProductPriceBgn,
+  getProductPriceEur,
   scoreProduct,
 } from './protocol-quiz-engine.js';
 import { getExclusionReasons } from './protocol-safety-rules.js';
@@ -104,8 +104,8 @@ describe('buildCandidatePool', () => {
   });
 });
 
-describe('getProductPriceBgn', () => {
-  test('взима минималната налична variant цена', () => {
+describe('getProductPriceEur', () => {
+  test('взима минималната налична variant цена в EUR', () => {
     const p = sampleProduct({
       public_data: {
         price: 40,
@@ -115,7 +115,7 @@ describe('getProductPriceBgn', () => {
         ],
       },
     });
-    expect(getProductPriceBgn(p)).toBe(35);
+    expect(getProductPriceEur(p)).toBe(35);
   });
 });
 

@@ -2076,7 +2076,6 @@ async function handleLifeProtocolSimulate(request, env) {
   const useMockAi = body.use_mock_ai !== false;
 
   try {
-    const useMockAi = body.use_mock_ai !== false;
     const result = await runLifeProtocolGeneration(env, sampleProfile, {
       useMockAi,
       skipEnabledCheck: true,

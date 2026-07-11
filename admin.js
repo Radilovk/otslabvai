@@ -5569,9 +5569,9 @@ function renderLifeProtocolResults() {
             <td>${d}</td>
             <td>${escapeHtml(row.email || '')}</td>
             <td>${escapeHtml(rec.recommended_tier || '—')}</td>
-            <td>${tiers.basic?.monthly_total_bgn?.toFixed?.(2) ?? '—'}</td>
-            <td>${tiers.optimal?.monthly_total_bgn?.toFixed?.(2) ?? '—'}</td>
-            <td>${tiers.premium?.monthly_total_bgn?.toFixed?.(2) ?? '—'}</td>
+            <td>${tiers.basic?.monthly_total_eur?.toFixed?.(2) ?? '—'} €</td>
+            <td>${tiers.optimal?.monthly_total_eur?.toFixed?.(2) ?? '—'} €</td>
+            <td>${tiers.premium?.monthly_total_eur?.toFixed?.(2) ?? '—'} €</td>
             <td><button type="button" class="btn btn-sm btn-secondary lp-view-result" data-idx="${idx}">Виж</button></td>`;
         tbody.appendChild(tr);
     });
@@ -5588,40 +5588,135 @@ function renderLifeProtocolResults() {
     });
 }
 
+async function runLifeProtocolSimulateLocal(useMockAi) {
+    const { prepareProtocolSubmission, buildMockProtocolResponse } = await import('./protocol-quiz-engine.js');
+    const contentRes = await fetch('backend/life_page_content.json', { cache: 'no-cache' });
+    if (!contentRes.ok) throw new Error('Неуспешно зареждане на life_page_content.json');
+    const lifeContent = await contentRes.json();
+
+    const mockEnv = {
+        PAGE_CONTENT: {
+            async get(key) {
+                if (key === 'life_page_content') return JSON.stringify(lifeContent);
+                if (key === 'static_backend_life_page_content.json') return JSON.stringify(lifeContent);
+                return null;
+            },
+        },
+    };
+    const deps = {
+        loadProjectContent: async () => lifeContent,
+        loadGroupsByIds: async () => new Map(),
+    };
+
+    const sampleProfile = {
+        sex: 'female',
+        age_band: '45-54',
+        height_cm: 168,
+        weight_kg: 65,
+        priority: 'skin',
+        conditions: ['none'],
+        medications: ['none'],
+        activity: 'rare',
+        diet: 'omnivore',
+        symptoms: ['fatigue'],
+        allergies: ['none'],
+        pregnancy: 'no',
+        sun_exposure: 'moderate',
+        email: 'test@life-protocol.local',
+        name: 'Тест Клиент',
+    };
+
+    const prepared = await prepareProtocolSubmission(mockEnv, sampleProfile, deps);
+    const recommendation = buildMockProtocolResponse(prepared.candidates, prepared.profile);
+
+    return {
+        success: true,
+        mock: true,
+        local_fallback: true,
+        catalog_stats: prepared.payload.catalog_stats,
+        candidates_count: prepared.candidates.length,
+        recommendation,
+    };
+}
+
+function openLifeProtocolPreview(recommendation) {
+    if (!recommendation?.tiers) {
+        showNotification('Няма валиден резултат за преглед.', 'error');
+        return;
+    }
+    sessionStorage.setItem('lifeProtocolResult', JSON.stringify(recommendation));
+    const url = new URL('life-protocol-result.html', window.location.href);
+    url.searchParams.set('preview', 'admin');
+    const win = window.open(url.toString(), '_blank', 'noopener,noreferrer');
+    if (!win) {
+        showNotification('Блокиран popup — разрешете нови прозорци или отворете life-protocol-result.html ръчно.', 'error');
+    }
+}
+
 async function runLifeProtocolSimulate(useMockAi) {
     const out = document.getElementById('lp-simulate-output');
-    if (out) {
-        out.style.display = 'block';
-        out.textContent = 'Симулацията работи...';
+    const statusEl = document.getElementById('lp-simulate-status');
+    if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.textContent = 'Симулацията работи…';
     }
+    if (out) {
+        out.style.display = 'none';
+        out.textContent = '';
+    }
+
+    let data;
     try {
         const res = await fetch(`${API_URL}/life-protocol/simulate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ use_mock_ai: useMockAi }),
         });
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || `HTTP ${res.status}`);
-        if (out) {
-            out.textContent = JSON.stringify({
-                mock: data.mock,
-                catalog_stats: data.catalog_stats,
-                candidates_count: data.candidates_count,
-                excluded_count: data.excluded_count,
-                recommended_tier: data.recommendation?.recommended_tier,
-                tier_prices: {
-                    basic: data.recommendation?.tiers?.basic?.monthly_total_bgn,
-                    optimal: data.recommendation?.tiers?.optimal?.monthly_total_bgn,
-                    premium: data.recommendation?.tiers?.premium?.monthly_total_bgn,
-                },
-                analysis: data.recommendation?.analysis,
-            }, null, 2);
+        data = await res.json();
+        if (!res.ok || !data.success) {
+            throw new Error(data.error || `HTTP ${res.status}`);
         }
-        showNotification(useMockAi ? 'Mock симулацията завърши успешно.' : 'AI симулацията завърши успешно.', 'success');
-    } catch (e) {
-        if (out) out.textContent = `Грешка: ${e.message}`;
-        showNotification(`Симулацията се провали: ${e.message}`, 'error');
+    } catch (apiErr) {
+        if (!useMockAi) {
+            if (statusEl) statusEl.textContent = `API грешка: ${apiErr.message}`;
+            showNotification(`AI симулацията се провали: ${apiErr.message}`, 'error');
+            return;
+        }
+        try {
+            data = await runLifeProtocolSimulateLocal(true);
+            if (statusEl) statusEl.textContent = 'Локален fallback (worker не е deploy-нат) — отваряне на преглед…';
+        } catch (localErr) {
+            if (statusEl) statusEl.textContent = `Грешка: ${localErr.message}`;
+            showNotification(`Симулацията се провали: ${localErr.message}`, 'error');
+            return;
+        }
     }
+
+    const rec = data.recommendation;
+    if (out) {
+        out.style.display = 'block';
+        out.textContent = JSON.stringify({
+            mock: data.mock,
+            local_fallback: data.local_fallback || false,
+            catalog_stats: data.catalog_stats,
+            candidates_count: data.candidates_count,
+            recommended_tier: rec?.recommended_tier,
+            tier_prices_eur: {
+                basic: rec?.tiers?.basic?.monthly_total_eur,
+                optimal: rec?.tiers?.optimal?.monthly_total_eur,
+                premium: rec?.tiers?.premium?.monthly_total_eur,
+            },
+        }, null, 2);
+    }
+
+    openLifeProtocolPreview(rec);
+
+    if (statusEl) {
+        statusEl.textContent = data.local_fallback
+            ? 'Локална mock симулация — прегледът е отворен в нов таб.'
+            : (useMockAi ? 'Mock симулация — прегледът е отворен в нов таб.' : 'AI симулация — прегледът е отворен в нов таб.');
+    }
+    showNotification('Симулацията завърши — прегледът е отворен в нов таб.', 'success');
 }
 
 async function refreshLifeProtocolAdmin() {
@@ -5637,6 +5732,9 @@ function setupLifeProtocolAdminListeners() {
     document.getElementById('lp-refresh-btn')?.addEventListener('click', refreshLifeProtocolAdmin);
     document.getElementById('lp-simulate-mock-btn')?.addEventListener('click', () => runLifeProtocolSimulate(true));
     document.getElementById('lp-simulate-real-btn')?.addEventListener('click', () => runLifeProtocolSimulate(false));
+    document.getElementById('lp-open-quiz-btn')?.addEventListener('click', () => {
+        window.open('life-protocol-quiz.html', '_blank', 'noopener,noreferrer');
+    });
 
     const tabBtn = document.querySelector('[data-tab="tab-life-protocol"]');
     tabBtn?.addEventListener('click', () => {

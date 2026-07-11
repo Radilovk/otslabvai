@@ -37,9 +37,17 @@
     </div>
 
     <div class="lpq-card lpq-loading" id="lpq-loading" hidden>
-      <div class="lpq-spinner"></div>
-      <p><strong>Анализираме профила ви...</strong></p>
-      <p class="lpq-hint">Проверяваме наличности и сглобяваме 3 персонални варианта</p>
+      <div class="lpq-loading-header">
+        <div class="lpq-spinner"></div>
+        <div>
+          <p><strong id="lpq-loading-title">Анализираме профила ви...</strong></p>
+          <p class="lpq-hint" id="lpq-loading-status">Инициализиране на протоколен двигател</p>
+        </div>
+      </div>
+      <div class="lpq-analysis-progress" aria-hidden="true">
+        <div class="lpq-analysis-progress-fill" id="lpq-analysis-progress"></div>
+      </div>
+      <div class="lpq-analysis-terminal" id="lpq-analysis-log" role="log" aria-live="polite" aria-label="Ход на анализа"></div>
     </div>
   </div>
   <script type="module" src="life-protocol-quiz.js"></script>

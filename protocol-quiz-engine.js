@@ -14,7 +14,16 @@ import {
   productSearchText,
 } from './protocol-safety-rules.js';
 
-const EUR_RATE = 1.96;
+/** Официален фиксиран курс BGN/EUR — цените в каталога са в EUR */
+export const EUR_RATE = 1.95583;
+
+export function formatPriceEur(amount) {
+  return `${Number(amount || 0).toFixed(2)} €`;
+}
+
+export function eurToBgn(eur) {
+  return Math.round(Number(eur || 0) * EUR_RATE * 100) / 100;
+}
 
 const PRIORITY_GOAL_KEYWORDS = {
   skin: ['кожа', 'skin', 'колаген', 'collagen', 'еластич', 'антиейджинг', 'anti-aging', 'хиалурон', 'hyaluronic'],
@@ -84,7 +93,8 @@ export function isProductAvailable(product) {
   return variants.some((v) => v.available !== false && Number(v.price) > 0);
 }
 
-export function getProductPriceBgn(product) {
+/** Минимална налична цена в EUR (каталогът на Life е в евро) */
+export function getProductPriceEur(product) {
   const sale = product.public_data?.sale_price;
   const price = product.public_data?.price;
   const variants = (product.public_data?.variants || []).filter((v) => v.available !== false && v.price > 0);
@@ -92,6 +102,9 @@ export function getProductPriceBgn(product) {
   if (typeof sale === 'number' && sale > 0) return sale;
   return Number(price) || 0;
 }
+
+/** @deprecated използвайте getProductPriceEur */
+export const getProductPriceBgn = getProductPriceEur;
 
 export function filterEligibleProducts(products) {
   return products.filter((p) => isOralSupplement(p) && isProductAvailable(p));
@@ -204,14 +217,35 @@ export function buildCandidatePool(profile, products, { maxCandidates = 25 } = {
   };
 }
 
+function getCheapestVariant(product) {
+  const variants = (product.public_data?.variants || []).filter((v) => v.available !== false && v.price > 0);
+  if (!variants.length) return null;
+  return variants.reduce((min, v) => (Number(v.price) < Number(min.price) ? v : min));
+}
+
+export function enrichProtocolProductItem(item, product) {
+  const priceEur = getProductPriceEur(product);
+  const variant = getCheapestVariant(product);
+  return {
+    ...item,
+    name: product.public_data?.name,
+    brand: product.public_data?.brand,
+    price_eur: Math.round(priceEur * 100) / 100,
+    price_bgn: eurToBgn(priceEur),
+    image_url: variant?.image_url || product.public_data?.image_url || '',
+    variant_name: variant?.option_name || '',
+    product_url: `life-product.html?id=${encodeURIComponent(product.product_id)}`,
+  };
+}
+
 export function transformProductForAI(product) {
-  const priceBgn = getProductPriceBgn(product);
+  const priceEur = getProductPriceEur(product);
   return {
     product_id: product.product_id,
     name: product.public_data?.name,
     brand: product.public_data?.brand,
-    price_bgn: priceBgn,
-    price_eur: Math.round((priceBgn / EUR_RATE) * 100) / 100,
+    price_eur: Math.round(priceEur * 100) / 100,
+    price_bgn: eurToBgn(priceEur),
     tagline: product.public_data?.tagline,
     goals: product.system_data?.goals || [],
     effects: product.public_data?.effects || [],
@@ -242,21 +276,10 @@ export function validateProtocolResponse(response, candidates, excludedProductId
       if (!validIds.has(pid)) throw new Error(`Невалиден product_id: ${pid}`);
       if (excluded.has(pid)) throw new Error(`Изключен продукт в стака: ${pid}`);
     }
-    tier.products = tier.products.map((item) => {
-      const p = productMap.get(item.product_id);
-      const priceBgn = getProductPriceBgn(p);
-      return {
-        ...item,
-        name: p.public_data?.name,
-        brand: p.public_data?.brand,
-        price_bgn: priceBgn,
-        price_eur: Math.round((priceBgn / EUR_RATE) * 100) / 100,
-        image_url: p.public_data?.image_url || '',
-      };
-    });
-    const totalBgn = tier.products.reduce((s, i) => s + (i.price_bgn || 0), 0);
-    tier.monthly_total_bgn = Math.round(totalBgn * 100) / 100;
-    tier.monthly_total_eur = Math.round((totalBgn / EUR_RATE) * 100) / 100;
+    tier.products = tier.products.map((item) => enrichProtocolProductItem(item, productMap.get(item.product_id)));
+    const totalEur = tier.products.reduce((s, i) => s + (i.price_eur || 0), 0);
+    tier.monthly_total_eur = Math.round(totalEur * 100) / 100;
+    tier.monthly_total_bgn = eurToBgn(totalEur);
     if (!Array.isArray(tier.benefits)) tier.benefits = [];
   }
 
@@ -325,19 +348,21 @@ export function buildMockProtocolResponse(candidates, profile) {
     timing: i % 2 === 0 ? 'сутрин с храна' : 'вечер',
     why_for_you: `Подходящ за приоритет „${profile.priority}"`,
     marketing_angle: 'Тестова препоръка',
-    price_bgn: getProductPriceBgn(p),
-    price_eur: Math.round((getProductPriceBgn(p) / EUR_RATE) * 100) / 100,
+    price_eur: Math.round(getProductPriceEur(p) * 100) / 100,
+    price_bgn: eurToBgn(getProductPriceEur(p)),
     image_url: p.public_data?.image_url || '',
+    variant_name: getCheapestVariant(p)?.option_name || '',
+    product_url: `life-product.html?id=${encodeURIComponent(p.product_id)}`,
   }));
 
   const mkTier = (key, name, tagline, items, benefits) => {
     const products = mkProducts(items);
-    const totalBgn = products.reduce((s, x) => s + (x.price_bgn || 0), 0);
+    const totalEur = products.reduce((s, x) => s + (x.price_eur || 0), 0);
     return {
       name,
       tagline,
-      monthly_total_bgn: Math.round(totalBgn * 100) / 100,
-      monthly_total_eur: Math.round((totalBgn / EUR_RATE) * 100) / 100,
+      monthly_total_eur: Math.round(totalEur * 100) / 100,
+      monthly_total_bgn: eurToBgn(totalEur),
       benefits,
       strategy: `Стратегия за ${name.toLowerCase()} — фокус върху ${profile.priority}`,
       expected_timeline: 'Първи ефекти: 3–4 седмици',
