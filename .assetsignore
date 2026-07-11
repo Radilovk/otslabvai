@@ -3,6 +3,8 @@ worker.js
 worker.test.js
 portfolio-api.js
 portfolio-api.test.js
+portfolio-import.js
+portfolio-import.test.js
 portfolio-sync.mjs
 upload-portfolio-catalog.mjs
 e2e/

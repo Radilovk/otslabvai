@@ -7975,3 +7975,10 @@ body.nav-open {
         transform: translateY(calc(var(--parallax-offset) * 0.6));
     }
 }
+
+/* --- Реални frosted-glass икони (images/life-icons) --- */
+.life-icon-img {
+    display: inline-block;
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+}
+.hex-icon-inner .life-icon-img { width: 48px; height: 48px; }

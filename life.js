@@ -5,7 +5,7 @@
 import { API_URL } from './config.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import {
-    getFeatureIconSVG, iconChevronDown, iconCheck,
+    getFeatureIconSVG, iconChevronDown, iconCheck, getLifeIconImg,
     getHeroHexIconSVG, getStatIconElement, getBenefitIconSVG, getGuaranteeIconSVG
 } from './life-icons.js';
 
@@ -325,7 +325,7 @@ const generateHeroHTML = component => {
                         <svg class="hex-icon-bg-svg" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                             <polygon points="45,4 86,26 86,64 45,86 4,64 4,26" fill="rgba(201,168,76,0.06)" stroke="#C9A84C" stroke-width="1.5"/>
                         </svg>
-                        <span class="hex-icon-inner">${getFeatureIconSVG(f.icon, 36)}</span>
+                        <span class="hex-icon-inner">${getLifeIconImg(f.icon, 48, f.title) || getFeatureIconSVG(f.icon, 36)}</span>
                     </div>
                     <h3>${escapeHtml(f.title)}</h3>
                     <p>${escapeHtml(f.description)}</p>

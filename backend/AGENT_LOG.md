@@ -284,3 +284,18 @@
 **⚠️ КРИТИЧНО ЗА БЪДЕЩИ АГЕНТИ:** `life.html` съдържа ИНЛАЙН копие на цялата логика (~2700 реда) и НЕ зарежда `life.js` — двата файла са се разминали (различни hero имплементации: inline ползва `hero_images`, life.js — `hero_image`). Инлайн версията е живата. Промени по life логиката се правят в life.html (и по желание огледално в life.js). Дългосрочно: унифициране към външен файл, но изисква внимателно сливане на hero кода.
 
 **Файлове:** `portfolio-import.js`, `portfolio-import.test.js`, `product.js`, `life-product.js`, `life.js`, `index.js`, `life.html`, `life-checkout.html`, `e2e/life-e2e.mjs`, `package.json`
+
+---
+
+### 2026-07-11 (4) — Rebase на иконната делта върху новия main (PR #355 беше merged рано)
+
+PR #355 е бил merge-нат от собственика след първите 2 комита; следващите комити останаха в клона върху merged история → конфликти. Междувременно main унифицира life.html→life.js (нов модул life-icons.js) и добави Life protocol quiz. Клонът е рестартиран от origin/main и нетната неслята делта е приложена наново върху новата структура:
+
+- `images/life-icons/*.png` — 10-те frosted икони (~107 KB общо);
+- `life-icons.js` — `LIFE_ICON_IMAGES` + `getLifeIconImg()` (в единния иконен модул на main);
+- `life.js` — hex feature картите ползват frosted иконата по име със SVG fallback (`mitochondria`→capsule alias);
+- `life.css` — `.life-icon-img`; `.assetsignore` — portfolio-import.js/test (worker-only).
+
+Hero хексагони, trust badges и stats остават с SVG (решение на собственика — вж. запис 2026-07-11 (3)).
+
+**Файлове:** `images/life-icons/*.png`, `life-icons.js`, `life.js`, `life.css`, `.assetsignore`
