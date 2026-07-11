@@ -191,9 +191,77 @@ body.lpq-body {
 .lpq-error.visible { display: block; }
 
 .lpq-loading {
-  text-align: center;
-  padding: 3rem 1rem;
+  text-align: left;
+  padding: 2rem 1.5rem;
 }
+
+.lpq-loading-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.lpq-loading-header .lpq-spinner {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.lpq-analysis-progress {
+  height: 4px;
+  background: var(--lpq-border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.lpq-analysis-progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--lpq-accent), #4dd9dc);
+  transition: width 0.35s ease;
+}
+
+.lpq-analysis-terminal {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  background: #0a1218;
+  color: #b8d4e8;
+  border-radius: 12px;
+  padding: 1rem;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 196, 200, 0.2);
+}
+
+[data-theme="dark"] .lpq-analysis-terminal {
+  background: #050a0e;
+}
+
+.lpq-log-line {
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.15rem 0;
+  animation: lpqLogIn 0.25s ease;
+}
+
+@keyframes lpqLogIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.lpq-log-time {
+  color: #5a7184;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+}
+
+.lpq-log-system .lpq-log-text { color: #4dd9dc; }
+.lpq-log-ok .lpq-log-text { color: #5dd39e; }
+.lpq-log-warn .lpq-log-text { color: #f0c674; }
+.lpq-log-data .lpq-log-text { color: #9ec8ff; }
+.lpq-log-info .lpq-log-text { color: #b8d4e8; }
 
 .lpq-spinner {
   width: 48px;
@@ -327,6 +395,138 @@ body.lpq-body {
   font-size: 0.82rem;
   color: var(--lpq-muted);
   margin-bottom: 1rem;
+}
+
+.lpr-strategy {
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  color: var(--lpq-muted);
+}
+
+.lpr-products-section {
+  margin-bottom: 1rem;
+}
+
+.lpr-products-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid var(--lpq-border);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.lpr-products-toggle:hover,
+.lpr-products-toggle.open {
+  border-color: var(--lpq-accent);
+  background: var(--lpq-accent-dim);
+}
+
+.lpr-products-toggle svg {
+  transition: transform 0.25s ease;
+}
+
+.lpr-products-toggle.open svg {
+  transform: rotate(180deg);
+}
+
+.lpr-product-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.lpr-product-card {
+  display: flex;
+  gap: 0.85rem;
+  padding: 0.75rem;
+  border: 1px solid var(--lpq-border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.lpr-product-card:hover {
+  border-color: var(--lpq-accent);
+  box-shadow: 0 6px 20px rgba(0, 196, 200, 0.12);
+  transform: translateY(-1px);
+}
+
+.lpr-product-img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.lpr-product-img--placeholder {
+  background: var(--lpq-accent-dim);
+}
+
+.lpr-product-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.lpr-product-name {
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+
+.lpr-product-brand,
+.lpr-product-variant,
+.lpr-product-dose {
+  font-size: 0.78rem;
+  color: var(--lpq-muted);
+}
+
+.lpr-product-why {
+  font-size: 0.78rem;
+  color: var(--lpq-text);
+  opacity: 0.85;
+}
+
+.lpr-product-price {
+  font-weight: 700;
+  color: var(--lpq-accent);
+  font-size: 0.95rem;
+  margin-top: 0.15rem;
+}
+
+.lpr-order-btn {
+  width: 100%;
+  margin-top: auto;
+}
+
+.lpr-schedule-link {
+  color: var(--lpq-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.lpr-schedule-link:hover {
+  text-decoration: underline;
+}
+
+.lpr-schedule-products {
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+  line-height: 1.7;
 }
 
 .lpr-schedule {

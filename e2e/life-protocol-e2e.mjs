@@ -133,7 +133,7 @@ async function runEngineChecks() {
   check(mock.tiers?.basic?.products?.length >= 1, 'Mock basic tier има продукти');
   check(mock.tiers?.optimal?.products?.length >= 1, 'Mock optimal tier има продукти');
   check(mock.tiers?.premium?.products?.length >= 1, 'Mock premium tier има продукти');
-  check(mock.tiers.optimal.monthly_total_bgn >= mock.tiers.basic.monthly_total_bgn, 'Optimal >= Basic по цена');
+  check(mock.tiers.optimal.monthly_total_eur >= mock.tiers.basic.monthly_total_eur, 'Optimal >= Basic по цена (EUR)');
   check((mock.tiers.premium.benefits?.length || 0) >= (mock.tiers.basic.benefits?.length || 0), 'Premium има повече ползи от Basic');
 }
 
@@ -205,6 +205,20 @@ async function runPlaywrightFlow(page) {
 
   const analysis = await page.textContent('.lpr-analysis');
   check((analysis || '').length > 20, 'Персонален анализ се показва');
+
+  await page.click('.lpr-tier.recommended [data-tier-toggle]');
+  await page.waitForSelector('.lpr-product-card', { timeout: 5000 });
+  const productCards = await page.$$('.lpr-product-card');
+  check(productCards.length >= 1, `Продуктовите карти се показват (${productCards.length})`);
+
+  const firstCard = await page.$eval('.lpr-product-card', (el) => ({
+    hasImg: !!el.querySelector('img'),
+    hasPrice: el.textContent.includes('€'),
+    hasLink: el.getAttribute('href')?.includes('life-product.html'),
+  }));
+  check(firstCard.hasImg, 'Продуктова карта има снимка');
+  check(firstCard.hasPrice, 'Продуктова карта показва цена в EUR');
+  check(firstCard.hasLink, 'Продуктова карта има линк към продукта');
 
   await page.click('[data-action="add-tier"][data-tier="optimal"]');
   await page.waitForURL('**/life-checkout.html', { timeout: 10000 });
