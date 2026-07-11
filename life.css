@@ -1894,21 +1894,22 @@ main {
 }
 
 .category-expand-icon {
-    flex-shrink: 0; 
-    width: 0.8em; 
-    height: 0.8em; 
-    border-style: solid;
-    border-width: 0.15em 0.15em 0 0; 
-    border-color: var(--text-secondary);
-    display: inline-block; 
-    transform: rotate(135deg);
-    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s ease;
-    margin-left: 1rem; 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 0.75rem;
+    color: var(--text-secondary);
+    transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1), color 0.3s ease;
+}
+
+.category-expand-icon svg {
+    display: block;
 }
 
 [aria-expanded="true"] .category-expand-icon {
-    transform: rotate(-45deg); 
-    border-color: var(--accent);
+    transform: rotate(180deg);
+    color: var(--accent);
 }
 
 /* --- PRODUCT GRID & CARDS (Store + LIFE BioHack style) --- */
@@ -5914,6 +5915,10 @@ section[id="scientific"] {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.hex-frame.hex-frame-icon svg {
+    stroke: #00c4c8;
 }
 
 .hex-frame:hover {
