@@ -269,8 +269,8 @@ function updatePortfolioPendingUI() {
         const portfolioOption = projectSelector.querySelector('option[value="portfolio"]');
         if (portfolioOption) {
             portfolioOption.textContent = portfolioPendingCount > 0
-                ? `📦 Portfolio B2B (${portfolioPendingCount} чакащи)`
-                : '📦 Portfolio B2B';
+                ? `Portfolio B2B (${portfolioPendingCount} чакащи)`
+                : 'Portfolio B2B';
         }
     }
 
@@ -344,8 +344,8 @@ function updatePortfolioBatchApproveButton() {
         return;
     }
     btn.textContent = selected.length > 1
-        ? `Обобщи ${selected.length} поръчки → Fitness1`
-        : 'Изпрати маркираната поръчка → Fitness1';
+        ? `Обобщи ${selected.length} поръчки Fitness1`
+        : 'Изпрати маркираната поръчка Fitness1';
 }
 
 function switchToPortfolioOrdersTab() {
@@ -668,7 +668,7 @@ function renderPageContent() {
     };
     appData.page_content.forEach(component => {
         const typeLabel = (component.is_hidden && component.type === 'product_category')
-            ? `${componentTypes[component.type] || component.type} 🙈 Скрита`
+            ? `${componentTypes[component.type] || component.type} Скрита`
             : (componentTypes[component.type] || component.type);
         const item = createListItem({
             id: component.component_id,
@@ -714,7 +714,7 @@ function renderFooter() {
     socialCard.className = 'admin-social-card';
     socialCard.innerHTML = `
         <div class="admin-social-header">
-            <span class="admin-social-title">📱 Социални мрежи</span>
+            <span class="admin-social-title">Социални мрежи</span>
             <button class="btn btn-secondary btn-sm" data-action="edit-footer">Редактирай</button>
         </div>
         <div class="admin-social-icons">
@@ -732,7 +732,7 @@ function renderFooter() {
         ${(() => {
             const feed = footer.social_feed_platform || '';
             const feedLabels = { facebook: 'Facebook', instagram: 'Instagram', youtube: 'YouTube' };
-            return feed ? `<p class="admin-social-feed-status">📺 Показва публикации от: <strong>${feedLabels[feed] || feed}</strong></p>` : '<p class="admin-social-feed-status">📺 Показване на публикации: <em>изключено</em></p>';
+            return feed ? `<p class="admin-social-feed-status">Показва публикации от: <strong>${feedLabels[feed] || feed}</strong></p>` : '<p class="admin-social-feed-status">Показване на публикации: <em>изключено</em></p>';
         })()}
     `;
     DOM.footerSettingsContainer.appendChild(socialCard);
@@ -754,9 +754,9 @@ function applyOrderStatusSelectColor(select, status) {
 
 function applyOrderStatusBadge(badge, status) {
     badge.classList.remove('order-badge-new', 'order-badge-processing', 'order-badge-shipped');
-    if (status === 'Нова') { badge.textContent = '🔵 Нова'; badge.classList.add('order-badge-new'); }
-    else if (status === 'Обработва се') { badge.textContent = '🟡 Обработва се'; badge.classList.add('order-badge-processing'); }
-    else if (status === 'Изпратена') { badge.textContent = '✅ Изпратена'; badge.classList.add('order-badge-shipped'); }
+    if (status === 'Нова') { badge.textContent = 'Нова'; badge.classList.add('order-badge-new'); }
+    else if (status === 'Обработва се') { badge.textContent = 'Обработва се'; badge.classList.add('order-badge-processing'); }
+    else if (status === 'Изпратена') { badge.textContent = 'Изпратена'; badge.classList.add('order-badge-shipped'); }
     else { badge.textContent = status || '—'; }
 }
 
@@ -784,7 +784,7 @@ function renderOrders() {
 
         const customerCell = rowTemplate.querySelector('.order-customer');
         customerCell.textContent = `${customer.firstName || ''} ${customer.lastName || ''}`.trim();
-        customerCell.dataset.icon = '📦';
+        customerCell.dataset.icon = '';
         customerCell.classList.add('mobile-key');
 
         rowTemplate.querySelector('.order-phone').textContent = customer.phone || '';
@@ -864,9 +864,9 @@ function applyContactStatusSelectColor(select, status) {
 
 function applyContactStatusBadge(badge, status) {
     badge.classList.remove('contact-badge-new', 'contact-badge-viewed', 'contact-badge-answered');
-    if (status === 'Нов') { badge.textContent = '🔴 Нов'; badge.classList.add('contact-badge-new'); }
-    else if (status === 'Прегледан') { badge.textContent = '🟡 Прегледан'; badge.classList.add('contact-badge-viewed'); }
-    else if (status === 'Отговорен') { badge.textContent = '✅ Отговорен'; badge.classList.add('contact-badge-answered'); }
+    if (status === 'Нов') { badge.textContent = 'Нов'; badge.classList.add('contact-badge-new'); }
+    else if (status === 'Прегледан') { badge.textContent = 'Прегледан'; badge.classList.add('contact-badge-viewed'); }
+    else if (status === 'Отговорен') { badge.textContent = 'Отговорен'; badge.classList.add('contact-badge-answered'); }
     else { badge.textContent = status || '—'; }
 }
 
@@ -883,7 +883,7 @@ function renderContacts() {
 
         const nameCell = rowTemplate.querySelector('.contact-name');
         nameCell.textContent = contact.name || '';
-        nameCell.dataset.icon = '✉️';
+        nameCell.dataset.icon = '️';
         nameCell.classList.add('mobile-key');
 
         rowTemplate.querySelector('.contact-email').textContent = contact.email || '';
@@ -932,7 +932,7 @@ function renderBiocodeInquiries() {
 
         const nameCell = rowTemplate.querySelector('.biocode-inquiry-name');
         nameCell.textContent = inquiry.name || '';
-        nameCell.dataset.icon = '🧪';
+        nameCell.dataset.icon = '';
         nameCell.classList.add('mobile-key');
 
         rowTemplate.querySelector('.biocode-inquiry-org').textContent = inquiry.organization || '—';
@@ -1498,7 +1498,7 @@ function showOrderDetailModal(order, originalIndex) {
 
     const html = `
         <div class="detail-modal-section">
-            <h4>👤 Клиент</h4>
+            <h4>Клиент</h4>
             <dl class="detail-modal-grid">
                 <dt>Имена</dt><dd>${escAdminHtml((customer.firstName || '') + ' ' + (customer.lastName || ''))}</dd>
                 <dt>Телефон</dt><dd>${escAdminHtml(customer.phone || '—')}</dd>
@@ -1507,15 +1507,15 @@ function showOrderDetailModal(order, originalIndex) {
             </dl>
         </div>
         <div class="detail-modal-section">
-            <h4>📦 Продукти</h4>
+            <h4>Продукти</h4>
             <table class="detail-products-table">${productsRows}</table>
         </div>
         <div class="detail-modal-section">
-            <h4>🚚 Доставка</h4>
+            <h4>Доставка</h4>
             <p class="detail-modal-text">${deliveryHTML}</p>
         </div>
         <div class="detail-modal-section">
-            <h4>📋 Статус</h4>
+            <h4>Статус</h4>
             <div class="detail-modal-status-row">
                 <label for="detail-order-status">Статус:</label>
                 <select id="detail-order-status" class="detail-modal-select">
@@ -1554,7 +1554,7 @@ function showContactDetailModal(contact, originalIndex) {
 
     const html = `
         <div class="detail-modal-section">
-            <h4>👤 Подател</h4>
+            <h4>Подател</h4>
             <dl class="detail-modal-grid">
                 <dt>Имена</dt><dd>${escAdminHtml(contact.name || '—')}</dd>
                 <dt>Email</dt><dd>${escAdminHtml(contact.email || '—')}</dd>
@@ -1563,15 +1563,15 @@ function showContactDetailModal(contact, originalIndex) {
             </dl>
         </div>
         <div class="detail-modal-section">
-            <h4>💬 Тема</h4>
+            <h4>Тема</h4>
             <p class="detail-modal-subject">${escAdminHtml(contact.subject || '(няма тема)')}</p>
         </div>
         <div class="detail-modal-section">
-            <h4>📝 Съобщение</h4>
+            <h4>Съобщение</h4>
             <div class="detail-modal-message">${escAdminHtml(contact.message || '—')}</div>
         </div>
         <div class="detail-modal-section">
-            <h4>📋 Статус</h4>
+            <h4>Статус</h4>
             <div class="detail-modal-status-row">
                 <label for="detail-contact-status">Статус:</label>
                 <select id="detail-contact-status" class="detail-modal-select">
@@ -1602,7 +1602,7 @@ function showBiocodeInquiryDetailModal(inquiry, originalIndex) {
 
     const html = `
         <div class="detail-modal-section">
-            <h4>🧪 Подател</h4>
+            <h4>Подател</h4>
             <dl class="detail-modal-grid">
                 <dt>Имена</dt><dd>${escAdminHtml(inquiry.name || '—')}</dd>
                 <dt>Организация</dt><dd>${escAdminHtml(inquiry.organization || '—')}</dd>
@@ -1611,15 +1611,15 @@ function showBiocodeInquiryDetailModal(inquiry, originalIndex) {
             </dl>
         </div>
         <div class="detail-modal-section">
-            <h4>💬 Тема</h4>
+            <h4>Тема</h4>
             <p class="detail-modal-subject">${escAdminHtml(inquiry.topic || 'General Question')}</p>
         </div>
         <div class="detail-modal-section">
-            <h4>📝 Съобщение</h4>
+            <h4>Съобщение</h4>
             <div class="detail-modal-message">${escAdminHtml(inquiry.message || '—')}</div>
         </div>
         <div class="detail-modal-section">
-            <h4>📋 Статус</h4>
+            <h4>Статус</h4>
             <div class="detail-modal-status-row">
                 <label for="detail-biocode-inquiry-status">Статус:</label>
                 <select id="detail-biocode-inquiry-status" class="detail-modal-select">
@@ -1995,7 +1995,7 @@ function setupEventListeners() {
         }
     });
 
-    // Click on order row → detail modal (only when on mobile, i.e. clicking the card itself not the select)
+    // Click on order row detail modal (only when on mobile, i.e. clicking the card itself not the select)
     DOM.ordersTableBody.addEventListener('click', e => {
         if (e.target.tagName === 'SELECT') return;
         const row = e.target.closest('tr');
@@ -2039,7 +2039,7 @@ function setupEventListeners() {
     if (ordersMobileSortDir) {
         ordersMobileSortDir.addEventListener('click', () => {
             orderSortDir = orderSortDir === 'asc' ? 'desc' : 'asc';
-            ordersMobileSortDir.textContent = orderSortDir === 'asc' ? '↑' : '↓';
+            ordersMobileSortDir.textContent = orderSortDir === 'asc' ? '' : '';
             filterOrders();
         });
     }
@@ -2060,7 +2060,7 @@ function setupEventListeners() {
         showNotification('Статусът е обновен.', 'success');
     });
 
-    // Click on contact row → detail modal
+    // Click on contact row detail modal
     DOM.contactsTableBody.addEventListener('click', e => {
         if (e.target.tagName === 'SELECT') return;
         const row = e.target.closest('tr');
@@ -2103,7 +2103,7 @@ function setupEventListeners() {
     if (contactsMobileSortDir) {
         contactsMobileSortDir.addEventListener('click', () => {
             contactSortDir = contactSortDir === 'asc' ? 'desc' : 'asc';
-            contactsMobileSortDir.textContent = contactSortDir === 'asc' ? '↑' : '↓';
+            contactsMobileSortDir.textContent = contactSortDir === 'asc' ? '' : '';
             filterContacts();
         });
     }
@@ -2134,7 +2134,7 @@ function setupEventListeners() {
         showNotification('Статусът е обновен.', 'success');
     });
 
-    // Click on BioCode inquiry row → detail modal
+    // Click on BioCode inquiry row detail modal
     DOM.biocodeInquiriesTableBody.addEventListener('click', e => {
         if (e.target.tagName === 'SELECT') return;
         const row = e.target.closest('tr');
@@ -2177,7 +2177,7 @@ function setupEventListeners() {
     if (biocodeInquiriesMobileSortDir) {
         biocodeInquiriesMobileSortDir.addEventListener('click', () => {
             biocodeInquirySortDir = biocodeInquirySortDir === 'asc' ? 'desc' : 'asc';
-            biocodeInquiriesMobileSortDir.textContent = biocodeInquirySortDir === 'asc' ? '↑' : '↓';
+            biocodeInquiriesMobileSortDir.textContent = biocodeInquirySortDir === 'asc' ? '' : '';
             filterBiocodeInquiries();
         });
     }
@@ -2454,7 +2454,7 @@ function handleAction(action, target, id) {
                 try {
                     // Show loading state
                     target.disabled = true;
-                    target.textContent = '⏳ Качване...';
+                    target.textContent = 'Качване...';
                     
                     // Upload the file
                     const imageUrl = await uploadImageToGitHub(file);
@@ -2471,7 +2471,7 @@ function handleAction(action, target, id) {
                 } finally {
                     // Reset button state
                     target.disabled = false;
-                    target.textContent = '📤 Upload';
+                    target.textContent = 'Upload';
                     // Clear file input
                     fileInput.value = '';
                 }
@@ -2514,7 +2514,7 @@ function handleAction(action, target, id) {
                     
                     // Show loading state
                     target.disabled = true;
-                    target.textContent = `⏳ Качване на ${files.length} ${getImageWord(files.length)}...`;
+                    target.textContent = `Качване на ${files.length} ${getImageWord(files.length)}...`;
                     
                     // Upload all files
                     const uploadPromises = files.map(file => uploadImageToGitHub(file));
@@ -2537,7 +2537,7 @@ function handleAction(action, target, id) {
                 } finally {
                     // Reset button state
                     target.disabled = false;
-                    target.textContent = '📤 Upload';
+                    target.textContent = 'Upload';
                     // Clear file input
                     fileInput.value = '';
                 }
@@ -2589,7 +2589,7 @@ function handleAction(action, target, id) {
                 try {
                     // Show loading state
                     target.disabled = true;
-                    target.textContent = '⏳ Качване...';
+                    target.textContent = 'Качване...';
                     
                     // Upload the file
                     const imageUrl = await uploadImageToGitHub(file);
@@ -2604,7 +2604,7 @@ function handleAction(action, target, id) {
                 } finally {
                     // Reset button state
                     target.disabled = false;
-                    target.textContent = '📤 Upload';
+                    target.textContent = 'Upload';
                     // Clear file input
                     fileInput.value = '';
                 }
@@ -2784,10 +2784,10 @@ function updateOrderSortHeaders() {
     document.querySelectorAll('.orders-sort-th').forEach(th => {
         th.classList.remove('sort-asc', 'sort-desc');
         const icon = th.querySelector('.sort-icon');
-        if (icon) icon.textContent = '⇅';
+        if (icon) icon.textContent = '';
         if (th.dataset.sort === orderSortField) {
             th.classList.add(orderSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
-            if (icon) icon.textContent = orderSortDir === 'asc' ? '↑' : '↓';
+            if (icon) icon.textContent = orderSortDir === 'asc' ? '' : '';
         }
     });
 }
@@ -2830,10 +2830,10 @@ function updateContactSortHeaders() {
     document.querySelectorAll('.contacts-sort-th').forEach(th => {
         th.classList.remove('sort-asc', 'sort-desc');
         const icon = th.querySelector('.sort-icon');
-        if (icon) icon.textContent = '⇅';
+        if (icon) icon.textContent = '';
         if (th.dataset.sort === contactSortField) {
             th.classList.add(contactSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
-            if (icon) icon.textContent = contactSortDir === 'asc' ? '↑' : '↓';
+            if (icon) icon.textContent = contactSortDir === 'asc' ? '' : '';
         }
     });
 }
@@ -2877,10 +2877,10 @@ function updateBiocodeInquirySortHeaders() {
     document.querySelectorAll('.biocode-inquiries-sort-th').forEach(th => {
         th.classList.remove('sort-asc', 'sort-desc');
         const icon = th.querySelector('.sort-icon');
-        if (icon) icon.textContent = '⇅';
+        if (icon) icon.textContent = '';
         if (th.dataset.sort === biocodeInquirySortField) {
             th.classList.add(biocodeInquirySortDir === 'asc' ? 'sort-asc' : 'sort-desc');
-            if (icon) icon.textContent = biocodeInquirySortDir === 'asc' ? '↑' : '↓';
+            if (icon) icon.textContent = biocodeInquirySortDir === 'asc' ? '' : '';
         }
     });
 }
@@ -3028,7 +3028,7 @@ const CSV_COLUMNS = [
     { key: 'public_data.about_content.description',    header: 'about_description',                        description: 'Подробно описание в секцията "За продукта".' },
     { key: 'public_data.label_url',                    header: 'label_url',                                description: 'URL на етикета/суплемент-фактс страницата на продукта.' },
     { key: 'public_data.effects',                      header: 'effects_json',                             description: 'Масив с ефекти в JSON формат. Пример: [{"label":"Енергия","value":85},{"label":"Фокус","value":70}]. Стойността е число от 0 до 100.' },
-    { key: 'public_data.about_content.benefits',       header: 'benefits_json',                            description: 'Масив с ползи в JSON формат. Пример: [{"icon":"✓","title":"Заглавие","description":"Описание"}].' },
+    { key: 'public_data.about_content.benefits',       header: 'benefits_json',                            description: 'Масив с ползи в JSON формат. Пример: [{"icon":"","title":"Заглавие","description":"Описание"}].' },
     { key: 'public_data.ingredients',                  header: 'ingredients_json',                         description: 'Масив от съставки в JSON формат. Пример: [{"name":"Магнезий","amount":"300мг","benefit":"Подкрепя мускулите"}].' },
     { key: 'public_data.faq',                          header: 'faq_json',                                 description: 'Масив от въпроси/отговори в JSON формат. Пример: [{"question":"Кога?","answer":"Сутрин."}].' },
     { key: 'public_data.variants',                     header: 'variants_json',                            description: 'Масив от варианти в JSON формат. Пример: [{"option_name":"Ягода","sku":"73101","price":29.99,"ean":"","image_url":"","available":true}].' },
@@ -3107,7 +3107,7 @@ function csvRowToProduct(headers, values) {
                 // ignore malformed JSON
             }
         } else if (key === 'public_data.additional_images') {
-            // pipe-separated URLs → newline-separated string (matches textarea format)
+            // pipe-separated URLs newline-separated string (matches textarea format)
             setProperty(product, key, raw.split('|').map(s => s.trim()).filter(Boolean).join('\n'));
         } else if (key === 'system_data.inventory') {
             const n = parseInt(raw, 10);
@@ -3136,7 +3136,7 @@ function productToCSVRow(product) {
             return Array.isArray(val) ? JSON.stringify(val) : '';
         }
         if (key === 'public_data.additional_images') {
-            // newline-separated → pipe-separated
+            // newline-separated pipe-separated
             if (typeof val === 'string') {
                 return val.split('\n').map(s => s.trim()).filter(Boolean).join('|');
             }
@@ -3173,7 +3173,7 @@ function downloadCSVTemplate() {
             'about_description':             'Подробно описание на продукта...',
             'label_url':                      'https://example.com/omega3-label.jpg',
             'effects_json':                   '[{"label":"Сърдечно-съдово здраве","value":90},{"label":"Мозъчна функция","value":75}]',
-            'benefits_json':                  '[{"icon":"❤️","title":"Сърце","description":"Поддържа здравето на сърцето"}]',
+            'benefits_json':                  '[{"icon":"️","title":"Сърце","description":"Поддържа здравето на сърцето"}]',
             'ingredients_json':               '[{"name":"EPA","amount":"360мг","benefit":"Противовъзпалително действие"}]',
             'faq_json':                       '[{"question":"Кога да приемам?","answer":"С храна сутрин."}]',
             'variants_json':                  '[{"option_name":"Стандартен","sku":"","price":29.99,"ean":"","image_url":"","available":true}]',
@@ -3300,7 +3300,7 @@ function b2bXLSXRowToProduct(rows) {
     const imageUrl = firstRow['Image'] ? String(firstRow['Image']).trim() : '';
 
     // Parse packaging info from product name bracket suffix, e.g. "[60 капсули, 60 Дози]".
-    // parts[0] → capsules_or_grams, parts[1] → doses_per_package; missing parts default to ''.
+    // parts[0] capsules_or_grams, parts[1] doses_per_package; missing parts default to ''.
     const packagingMatch = productName.match(/\[([^\]]+)\]/);
     let capsules = '';
     let doses = '';
@@ -3560,7 +3560,7 @@ function pfImportCurrentFilters() {
 
 async function pfImportLoadPage(page) {
     const { q, category, brand } = pfImportCurrentFilters();
-    pfImportStatus('⏳ Зареждане на каталога...');
+    pfImportStatus('Зареждане на каталога...');
     try {
         const params = new URLSearchParams({ page: String(page), limit: '50', available: '1' });
         if (q) params.set('q', q);
@@ -3604,12 +3604,12 @@ function pfImportRenderList(items) {
         const gid = String(e.group_id);
         const sel = pfImportState.selection.get(gid);
         const aiReason = sel?.ai?.reason
-            ? `<em class="pf-import-ai-reason">🤖 ${pfEscapeHtml(sel.ai.reason)}</em>`
+            ? `<em class="pf-import-ai-reason">${pfEscapeHtml(sel.ai.reason)}</em>`
             : '';
         return `
         <label class="pf-import-row${sel ? ' selected' : ''}">
             <input type="checkbox" class="pf-import-check" data-group-id="${pfEscapeHtml(gid)}" ${sel ? 'checked' : ''}>
-            ${e.image ? `<img class="pf-import-thumb" src="${pfEscapeHtml(e.image)}" alt="" loading="lazy">` : '<span class="pf-import-thumb pf-import-noimg">📦</span>'}
+            ${e.image ? `<img class="pf-import-thumb" src="${pfEscapeHtml(e.image)}" alt="" loading="lazy">` : '<span class="pf-import-thumb pf-import-noimg"><svg viewBox="0 0 24 24" stroke-width="1.5" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>'}
             <span class="pf-import-row-main">
                 <strong>${pfEscapeHtml(e.name)}</strong>
                 <small>${pfEscapeHtml(e.brand || '')}${e.category ? ' · ' + pfEscapeHtml(e.category) : ''}</small>
@@ -3640,7 +3640,7 @@ async function pfImportAiChat(btn) {
     const originalText = btn.textContent;
     btn.disabled = true;
     input.disabled = true;
-    btn.textContent = '⏳...';
+    btn.textContent = '...';
     input.value = '';
 
     pfImportState.chatHistory.push({ role: 'user', content: prompt });
@@ -3725,7 +3725,7 @@ async function pfImportConfirm(btn) {
 
     const originalText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = '⏳ Импортиране...';
+    btn.textContent = 'Импортиране...';
     try {
         const res = await fetch(`${API_URL}/portfolio/import/preview?ids=${encodeURIComponent(ids.join(','))}`);
         const data = await res.json();
@@ -3774,7 +3774,7 @@ async function pfImportConfirm(btn) {
 
 /** Последователно AI обогатяване на новите продукти чрез съществуващия AI Асистент. */
 async function pfImportEnrichSequentially(nodes) {
-    showNotification(`🤖 AI обогатяване на ${nodes.length} продукта — може да отнеме няколко минути. Не затваряйте категорията.`, 'info', 8000);
+    showNotification(`AI обогатяване на ${nodes.length} продукта — може да отнеме няколко минути. Не затваряйте категорията.`, 'info', 8000);
     let done = 0;
     for (const node of nodes) {
         if (!node.isConnected) break; // категорията е затворена — спираме
@@ -3990,7 +3990,7 @@ async function handleAIAssistant(productEditor) {
         const aiBtn = productEditor.querySelector('.ai-assistant-btn');
         const originalText = aiBtn.textContent;
         aiBtn.disabled = true;
-        aiBtn.textContent = '⏳ AI обработва...';
+        aiBtn.textContent = 'AI обработва...';
         
         // Събираме текущите данни от продуктовия редактор
         const currentData = {
@@ -4181,17 +4181,17 @@ async function handleAIAssistant(productEditor) {
             }
         }
         
-        showNotification('✅ AI Асистентът успешно попълни информацията за продукта!', 'success', 6000);
+        showNotification('AI Асистентът успешно попълни информацията за продукта!', 'success', 6000);
         
     } catch (error) {
         console.error('AI Assistant error:', error);
-        showNotification(`❌ Грешка при AI обработка: ${error.message}`, 'error', 6000);
+        showNotification(`Грешка при AI обработка: ${error.message}`, 'error', 6000);
     } finally {
         // Възстановяваме бутона
         const aiBtn = productEditor.querySelector('.ai-assistant-btn');
         if (aiBtn) {
             aiBtn.disabled = false;
-            aiBtn.textContent = '🤖 AI Асистент';
+            aiBtn.textContent = 'AI Асистент';
         }
     }
 }
@@ -4438,11 +4438,11 @@ async function saveAISettings() {
         }
         
         aiSettings = settings;
-        showNotification('✅ AI настройките са запазени успешно!', 'success');
+        showNotification('AI настройките са запазени успешно!', 'success');
         
     } catch (error) {
         console.error('Failed to save AI settings:', error);
-        showNotification('❌ Грешка при запазване на настройките', 'error');
+        showNotification('Грешка при запазване на настройките', 'error');
     }
 }
 
@@ -4453,7 +4453,7 @@ async function testAISettings() {
     try {
         const testBtn = document.getElementById('test-ai-settings-btn');
         testBtn.disabled = true;
-        testBtn.textContent = '⏳ Тестване...';
+        testBtn.textContent = 'Тестване...';
         
         // Collect current settings
         const settings = {
@@ -4487,18 +4487,18 @@ async function testAISettings() {
         const result = await response.json();
         
         if (result.success) {
-            showNotification('✅ AI тестът премина успешно! Моделът работи правилно.', 'success', 6000);
+            showNotification('AI тестът премина успешно! Моделът работи правилно.', 'success', 6000);
         } else {
             throw new Error('Invalid response');
         }
         
     } catch (error) {
         console.error('AI test failed:', error);
-        showNotification(`❌ AI тестът се провали: ${error.message}`, 'error', 6000);
+        showNotification(`AI тестът се провали: ${error.message}`, 'error', 6000);
     } finally {
         const testBtn = document.getElementById('test-ai-settings-btn');
         testBtn.disabled = false;
-        testBtn.textContent = '🧪 Тествай AI';
+        testBtn.textContent = 'Тествай AI';
     }
 }
 
@@ -4518,7 +4518,7 @@ function resetAISettings() {
     document.getElementById('ai-prompt-template').value = getDefaultPromptTemplate();
     
     updateModelPlaceholder();
-    showNotification('🔄 Настройките са възстановени по подразбиране', 'info');
+    showNotification('Настройките са възстановени по подразбиране', 'info');
 }
 
 /**
@@ -4965,7 +4965,7 @@ function renderPortfolioSettings() {
                 <label for="pf-hero-image">Hero изображение (URL)</label>
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;max-width:560px;">
                     <input type="url" id="pf-hero-image" data-field="hero_image" value="${escAdminHtml(s.hero_image || 'images/portfolio-hero.jpg')}" style="flex:1;min-width:200px;padding:0.5rem;">
-                    <button type="button" class="btn btn-secondary" data-action="upload-simple-image" data-target-field="hero_image">📤 Качи снимка</button>
+                    <button type="button" class="btn btn-secondary" data-action="upload-simple-image" data-target-field="hero_image">Качи снимка</button>
                 </div>
                 <img id="pf-hero-preview" src="${escAdminHtml(s.hero_image || 'images/portfolio-hero.jpg')}" alt="Hero preview" style="display:block;max-width:min(100%,420px);margin-top:0.75rem;border-radius:10px;border:1px solid var(--border-color);">
             </div>
@@ -5217,7 +5217,7 @@ function showPortfolioOrderDetailModal(order) {
 
     const html = `
         <div class="detail-modal-section">
-            <h4>👤 Клиент</h4>
+            <h4>Клиент</h4>
             <dl class="detail-modal-grid">
                 <dt>Имена</dt><dd>${escAdminHtml(`${customer.firstName || ''} ${customer.lastName || ''}`.trim())}</dd>
                 <dt>Телефон</dt><dd>${escAdminHtml(customer.phone || '—')}</dd>
@@ -5228,14 +5228,14 @@ function showPortfolioOrderDetailModal(order) {
             </dl>
         </div>
         <div class="detail-modal-section">
-            <h4>📦 Доставка до клиент</h4>
+            <h4>Доставка до клиент</h4>
             <div>${formatPortfolioDelivery(customer)}</div>
             <p style="margin-top:0.75rem;font-size:0.9rem;color:var(--text-secondary);">
                 След одобрение продуктите отиват към Fitness1 от вашия B2B профил. Вие разпределяте пратката към този клиент.
             </p>
         </div>
         <div class="detail-modal-section">
-            <h4>🛒 Продукти и суми</h4>
+            <h4>Продукти и суми</h4>
             <table class="detail-products-table">
                 <thead><tr><th>Продукт</th><th>Кол.</th><th>Продажна</th><th>B2B</th></tr></thead>
                 <tbody>${productsRows}</tbody>
@@ -5251,7 +5251,7 @@ function showPortfolioOrderDetailModal(order) {
             ${f1Info}
         </div>
         <div class="detail-modal-section">
-            <h4>📝 Бележка (админ)</h4>
+            <h4>Бележка (админ)</h4>
             <textarea id="portfolio-order-admin-note" rows="3" style="width:100%;padding:0.65rem;border:1px solid var(--border-color);border-radius:6px;font:inherit;">${escAdminHtml(order.admin_note || '')}</textarea>
             <div style="margin-top:0.65rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
                 <button type="button" class="btn btn-secondary" id="portfolio-save-note-btn" data-id="${escAdminHtml(order.id)}">Запази бележка</button>

@@ -123,7 +123,7 @@ const generateEffectBar = effect => `
     <div class="effect-bar-group">
         <div class="effect-label">${escapeHtml(effect.label)}</div>
         <div class="effect-bar-container">
-            <div class="effect-bar animated" style="width: ${Number(effect.value)}%">${(effect.value / 10).toFixed(1)} / 10</div>
+            <div class="effect-bar animated" style="width: ${Number(effect.value)}%"><span class="effect-bar-value">${(effect.value / 10).toFixed(1)}</span></div>
         </div>
     </div>`;
 
@@ -356,7 +356,7 @@ function renderProductDetail(product) {
     // Label (nutrition facts) link
     const labelHTML = publicData.label_url ? `
         <div class="product-label-link">
-            <a href="${escapeHtml(publicData.label_url)}" target="_blank" rel="noopener">📋 Хранителна информация</a>
+            <a href="${escapeHtml(publicData.label_url)}" target="_blank" rel="noopener">Хранителна информация</a>
         </div>
     ` : '';
 
