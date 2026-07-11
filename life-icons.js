@@ -42,12 +42,21 @@ export const LIFE_ICON_IMAGES = {
   mitochondria: 'images/life-icons/capsule.png'
 };
 
-/* Frosted икони за hero hex fallback кадрите: здраве, бранд, доказани резултати */
-export const HERO_HEX_ICON_IMAGES = {
-  vial: LIFE_ICON_IMAGES.cross,
-  lab: LIFE_ICON_IMAGES.logo,
-  face: LIFE_ICON_IMAGES.trophy
-};
+/**
+ * Тематична frosted икона за stat картите (бял фон) — подбор по смисъла на
+ * текста: доверие/постижение → купа, формули/медицина → кръст,
+ * клиенти/резултати → звезда. Празен низ, ако няма тематично съвпадение.
+ */
+export function statFrostedIcon(stat, size = 44) {
+  const text = `${stat.label || ''} ${stat.icon || ''}`;
+  const rules = [
+    { match: /довер|доказан|ефектив|награда|качеств|гаранци/i, icon: 'trophy' },
+    { match: /формул|научн|медиц|клинич|здрав/i, icon: 'cross' },
+    { match: /клиент|общност|доволн|успех|резултат|рейтинг|биохакер/i, icon: 'star' }
+  ];
+  const hit = rules.find((r) => r.match.test(text));
+  return hit ? getLifeIconImg(hit.icon, size, stat.label || '', 'stat-icon life-icon-img') : '';
+}
 
 /** <img> за frosted икона по име; празен низ, ако няма такава (SVG fallback). */
 export function getLifeIconImg(name, size = 48, alt = '', cls = 'life-icon-img') {

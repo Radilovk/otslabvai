@@ -7983,10 +7983,10 @@ body.nav-open {
 }
 .hex-icon-inner .life-icon-img { width: 48px; height: 48px; }
 
-/* Frosted икона в hero hex fallback: центрирана, без изрязване */
-.hex-frame.hex-frame-icon .hex-life-icon {
-    width: 62%;
-    height: 62%;
+/* Frosted икони в stat картите (бял фон): сянката е в самото изображение */
+.stat-item .life-icon-img {
+    width: 44px;
+    height: 44px;
     object-fit: contain;
-    filter: drop-shadow(0 8px 18px rgba(10, 61, 63, 0.28));
+    filter: none;
 }
