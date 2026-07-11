@@ -17,6 +17,36 @@ export function iconCheck(size = 16) {
   return wrapIcon('<path d="M20 6 9 17l-5-5"/>', size);
 }
 
+
+/**
+ * Реални frosted-glass икони (images/life-icons/*.png), генерирани от
+ * брандирани снимки — тюркоазена течност в матирано стъкло. Използват се
+ * във hex feature картите; останалите са налични за употреба по име.
+ */
+export const LIFE_ICON_IMAGES = {
+  flask: 'images/life-icons/flask.png',
+  dna: 'images/life-icons/dna.png',
+  brain: 'images/life-icons/brain.png',
+  molecule: 'images/life-icons/molecule.png',
+  capsule: 'images/life-icons/capsule.png',
+  hourglass: 'images/life-icons/hourglass.png',
+  microscope: 'images/life-icons/microscope.png',
+  longevity: 'images/life-icons/longevity.png',
+  formula: 'images/life-icons/formula.png',
+  data: 'images/life-icons/data.png',
+  // Псевдоним за името, използвано в съществуващото съдържание (feature карти)
+  mitochondria: 'images/life-icons/capsule.png'
+};
+
+/** <img> за frosted икона по име; празен низ, ако няма такава (SVG fallback). */
+export function getLifeIconImg(name, size = 48, alt = '', cls = 'life-icon-img') {
+  const src = LIFE_ICON_IMAGES[name];
+  if (!src) return '';
+  const safeAlt = String(alt)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return `<img src="${src}" alt="${safeAlt}" class="${cls}" width="${size}" height="${size}" loading="lazy" decoding="async" style="object-fit:contain;">`;
+}
+
 /** Икони за hex feature cards (митохондрии, ДНК, мозък) */
 export function getFeatureIconSVG(iconName, size = 32) {
   const icons = {
