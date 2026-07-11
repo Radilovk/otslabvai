@@ -7982,3 +7982,11 @@ body.nav-open {
     filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
 }
 .hex-icon-inner .life-icon-img { width: 48px; height: 48px; }
+
+/* Frosted икона в hero hex fallback: центрирана, без изрязване */
+.hex-frame.hex-frame-icon .hex-life-icon {
+    width: 62%;
+    height: 62%;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 18px rgba(10, 61, 63, 0.28));
+}

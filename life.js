@@ -5,7 +5,7 @@
 import { API_URL } from './config.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import {
-    getFeatureIconSVG, iconChevronDown, iconCheck, getLifeIconImg,
+    getFeatureIconSVG, iconChevronDown, iconCheck, getLifeIconImg, HERO_HEX_ICON_IMAGES,
     getHeroHexIconSVG, getStatIconElement, getBenefitIconSVG, getGuaranteeIconSVG
 } from './life-icons.js';
 
@@ -377,7 +377,11 @@ const generateHeroHTML = component => {
                 return `<div class="hex-frame ${cls}"><img src="${escapeHtml(rawUrl)}" alt="${escapeHtml(altText)}" loading="lazy"></div>`;
             }
         }
-        return `<div class="hex-frame ${cls} hex-frame-icon">${getHeroHexIconSVG(fallbackType, 52)}</div>`;
+        const frostedSrc = HERO_HEX_ICON_IMAGES[fallbackType];
+        const inner = frostedSrc
+            ? `<img src="${frostedSrc}" alt="${escapeHtml(altText)}" class="hex-life-icon" loading="lazy" decoding="async">`
+            : getHeroHexIconSVG(fallbackType, 52);
+        return `<div class="hex-frame ${cls} hex-frame-icon">${inner}</div>`;
     };
 
     let heroSideHTML = '';

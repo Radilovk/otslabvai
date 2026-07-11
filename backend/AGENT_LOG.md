@@ -299,3 +299,13 @@ PR #355 е бил merge-нат от собственика след първит
 Hero хексагони, trust badges и stats остават с SVG (решение на собственика — вж. запис 2026-07-11 (3)).
 
 **Файлове:** `images/life-icons/*.png`, `life-icons.js`, `life.js`, `life.css`, `.assetsignore`
+
+---
+
+### 2026-07-11 (5) — Нови frosted икони: trophy, cross, logo, star + hero hex fallback
+
+Нови 4 снимки от собственика, обработени със **soft-matte** (alpha = рампа по разстоянието до фоновия цвят + най-голям компонент): сенките от снимките стават полупрозрачни и естествени вместо изрязани с грапав ръб. В `images/life-icons/`: trophy (купа), cross (медицински кръст), logo (хекс логото на Life Protocols), star (звезда със стрелка).
+
+**Употреба:** hero hex fallback кадрите (когато няма hero_images в съдържанието — как е на живо) показват frosted иконите вместо линейните SVG: vial→cross (здраве), lab→logo (бранд, централен хекс), face→trophy (доказани резултати). Иконите са центрирани на 62% от хекса, `object-fit: contain` — НЕ cover (поуката от запис 3). SVG остава fallback за неизвестни имена. star е наличен по име в `LIFE_ICON_IMAGES`.
+
+**Файлове:** `images/life-icons/{trophy,cross,logo,star}.png`, `life-icons.js` (`HERO_HEX_ICON_IMAGES`), `life.js` (makeHexFrame), `life.css`

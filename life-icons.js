@@ -34,8 +34,19 @@ export const LIFE_ICON_IMAGES = {
   longevity: 'images/life-icons/longevity.png',
   formula: 'images/life-icons/formula.png',
   data: 'images/life-icons/data.png',
+  trophy: 'images/life-icons/trophy.png',
+  cross: 'images/life-icons/cross.png',
+  logo: 'images/life-icons/logo.png',
+  star: 'images/life-icons/star.png',
   // Псевдоним за името, използвано в съществуващото съдържание (feature карти)
   mitochondria: 'images/life-icons/capsule.png'
+};
+
+/* Frosted икони за hero hex fallback кадрите: здраве, бранд, доказани резултати */
+export const HERO_HEX_ICON_IMAGES = {
+  vial: LIFE_ICON_IMAGES.cross,
+  lab: LIFE_ICON_IMAGES.logo,
+  face: LIFE_ICON_IMAGES.trophy
 };
 
 /** <img> за frosted икона по име; празен низ, ако няма такава (SVG fallback). */
