@@ -153,12 +153,22 @@ function isPortfolioProject() {
 function updateProjectUI() {
     const mainLifeTabs = document.querySelectorAll('.tab-main-life');
     const portfolioTabs = document.querySelectorAll('.tab-portfolio-only');
+    const lifeOnlyTabs = document.querySelectorAll('.tab-life-only');
     const saveBtn = DOM.saveBtn;
     const saveStatus = DOM.saveStatus;
 
     // Групиращите разделители са само за main/life навигацията
     document.querySelectorAll('.tab-nav-divider').forEach((d) => {
         d.style.display = isPortfolioProject() ? 'none' : '';
+    });
+
+    const showLifeOnly = currentProject === 'life';
+    lifeOnlyTabs.forEach((el) => {
+        if (el.classList.contains('tab-btn')) {
+            el.style.display = showLifeOnly ? '' : 'none';
+        } else if (!showLifeOnly) {
+            el.classList.remove('active');
+        }
     });
 
     if (isPortfolioProject()) {
@@ -5448,10 +5458,197 @@ function renderPortfolioPromoCodes() {
     });
 }
 
+// --- LIFE PROTOCOL QUIZ ADMIN ---
+
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+let lifeProtocolLeads = [];
+let lifeProtocolResults = [];
+
+async function fetchLifeProtocolSettings() {
+    try {
+        const res = await fetch(`${API_URL}/life-protocol/settings`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const enabledEl = document.getElementById('lp-enabled');
+        const promptEl = document.getElementById('lp-prompt');
+        if (enabledEl) enabledEl.checked = data.enabled !== false;
+        if (promptEl && data.prompt) promptEl.value = data.prompt;
+    } catch (e) {
+        console.error('Life protocol settings:', e);
+        showNotification('Грешка при зареждане на настройките за протоколи.', 'error');
+    }
+}
+
+async function saveLifeProtocolSettingsAdmin() {
+    const enabled = document.getElementById('lp-enabled')?.checked !== false;
+    const prompt = document.getElementById('lp-prompt')?.value || '';
+    try {
+        const res = await fetch(`${API_URL}/life-protocol/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled, prompt }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        showNotification('Настройките за протоколи са запазени.', 'success');
+    } catch (e) {
+        showNotification('Грешка при запазване на настройките.', 'error');
+    }
+}
+
+async function fetchLifeProtocolLeads() {
+    try {
+        const res = await fetch(`${API_URL}/life-protocol/leads`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        lifeProtocolLeads = await res.json();
+        renderLifeProtocolLeads();
+    } catch (e) {
+        console.error('Life protocol leads:', e);
+        lifeProtocolLeads = [];
+        renderLifeProtocolLeads();
+    }
+}
+
+async function fetchLifeProtocolResults() {
+    try {
+        const res = await fetch(`${API_URL}/life-protocol/results`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        lifeProtocolResults = await res.json();
+        renderLifeProtocolResults();
+    } catch (e) {
+        console.error('Life protocol results:', e);
+        lifeProtocolResults = [];
+        renderLifeProtocolResults();
+    }
+}
+
+function renderLifeProtocolLeads() {
+    const tbody = document.getElementById('lp-leads-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!lifeProtocolLeads.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">Няма leads все още</td></tr>';
+        return;
+    }
+    lifeProtocolLeads.forEach((lead) => {
+        const tr = document.createElement('tr');
+        const d = lead.timestamp ? new Date(lead.timestamp).toLocaleString('bg-BG') : '—';
+        const stats = lead.catalog_stats || {};
+        tr.innerHTML = `
+            <td>${d}</td>
+            <td>${escapeHtml(lead.email || '')}</td>
+            <td>${escapeHtml(lead.name || '—')}</td>
+            <td>${escapeHtml(lead.profile?.priority || '—')}</td>
+            <td>${stats.eligible_available ?? '—'}</td>
+            <td>${stats.candidates_sent_to_ai ?? '—'}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function renderLifeProtocolResults() {
+    const tbody = document.getElementById('lp-results-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!lifeProtocolResults.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary);">Няма генерирани протоколи</td></tr>';
+        return;
+    }
+    lifeProtocolResults.forEach((row, idx) => {
+        const rec = row.recommendation || {};
+        const tiers = rec.tiers || {};
+        const tr = document.createElement('tr');
+        const d = row.timestamp ? new Date(row.timestamp).toLocaleString('bg-BG') : '—';
+        tr.innerHTML = `
+            <td>${d}</td>
+            <td>${escapeHtml(row.email || '')}</td>
+            <td>${escapeHtml(rec.recommended_tier || '—')}</td>
+            <td>${tiers.basic?.monthly_total_bgn?.toFixed?.(2) ?? '—'}</td>
+            <td>${tiers.optimal?.monthly_total_bgn?.toFixed?.(2) ?? '—'}</td>
+            <td>${tiers.premium?.monthly_total_bgn?.toFixed?.(2) ?? '—'}</td>
+            <td><button type="button" class="btn btn-sm btn-secondary lp-view-result" data-idx="${idx}">Виж</button></td>`;
+        tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('.lp-view-result').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const item = lifeProtocolResults[Number(btn.dataset.idx)];
+            const detail = document.getElementById('lp-result-detail');
+            const pre = document.getElementById('lp-result-json');
+            if (detail && pre) {
+                pre.textContent = JSON.stringify(item, null, 2);
+                detail.style.display = 'block';
+            }
+        });
+    });
+}
+
+async function runLifeProtocolSimulate(useMockAi) {
+    const out = document.getElementById('lp-simulate-output');
+    if (out) {
+        out.style.display = 'block';
+        out.textContent = 'Симулацията работи...';
+    }
+    try {
+        const res = await fetch(`${API_URL}/life-protocol/simulate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ use_mock_ai: useMockAi }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || `HTTP ${res.status}`);
+        if (out) {
+            out.textContent = JSON.stringify({
+                mock: data.mock,
+                catalog_stats: data.catalog_stats,
+                candidates_count: data.candidates_count,
+                excluded_count: data.excluded_count,
+                recommended_tier: data.recommendation?.recommended_tier,
+                tier_prices: {
+                    basic: data.recommendation?.tiers?.basic?.monthly_total_bgn,
+                    optimal: data.recommendation?.tiers?.optimal?.monthly_total_bgn,
+                    premium: data.recommendation?.tiers?.premium?.monthly_total_bgn,
+                },
+                analysis: data.recommendation?.analysis,
+            }, null, 2);
+        }
+        showNotification(useMockAi ? 'Mock симулацията завърши успешно.' : 'AI симулацията завърши успешно.', 'success');
+    } catch (e) {
+        if (out) out.textContent = `Грешка: ${e.message}`;
+        showNotification(`Симулацията се провали: ${e.message}`, 'error');
+    }
+}
+
+async function refreshLifeProtocolAdmin() {
+    await Promise.all([
+        fetchLifeProtocolSettings(),
+        fetchLifeProtocolLeads(),
+        fetchLifeProtocolResults(),
+    ]);
+}
+
+function setupLifeProtocolAdminListeners() {
+    document.getElementById('lp-save-settings-btn')?.addEventListener('click', saveLifeProtocolSettingsAdmin);
+    document.getElementById('lp-refresh-btn')?.addEventListener('click', refreshLifeProtocolAdmin);
+    document.getElementById('lp-simulate-mock-btn')?.addEventListener('click', () => runLifeProtocolSimulate(true));
+    document.getElementById('lp-simulate-real-btn')?.addEventListener('click', () => runLifeProtocolSimulate(false));
+
+    const tabBtn = document.querySelector('[data-tab="tab-life-protocol"]');
+    tabBtn?.addEventListener('click', () => {
+        if (currentProject === 'life') refreshLifeProtocolAdmin();
+    });
+}
+
 async function init() {
     initThemeToggle();
     setupEventListeners();
     setupPortfolioEventListeners();
+    setupLifeProtocolAdminListeners();
     populateAddComponentMenu();
     updateProjectUI();
     startPortfolioOrdersPolling();
@@ -5471,6 +5668,9 @@ async function init() {
     await fetchBiocodeInquiries();
     await fetchPromoCodes();
     await loadAISettings();
+    if (currentProject === 'life') {
+        await refreshLifeProtocolAdmin();
+    }
     if (appData) {
         renderAll();
         renderPromoCodes();

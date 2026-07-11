@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="bg" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="images/lifelogo1.png">
+  <title>Вашият персонален протокол | Life Protocols</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="life-protocol-quiz.css">
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('theme');
+        document.documentElement.setAttribute('data-theme', t || 'light');
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="lpq-body">
+  <div class="lpq-wrap" style="max-width:1100px">
+    <a href="life.html" class="lpq-back-link">← Към магазина</a>
+    <header class="lpq-header">
+      <h1>Вашият персонален протокол</h1>
+      <p id="lpr-subtitle">3 варианта, съобразени с вашия профил</p>
+    </header>
+    <div id="lpr-content"></div>
+    <p class="lpq-disclaimer" id="lpr-disclaimer"></p>
+  </div>
+  <script type="module" src="life-protocol-result.js"></script>
+</body>
+</html>

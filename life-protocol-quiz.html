@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="bg" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="images/lifelogo1.png">
+  <title>Персонален Anti-Aging Протокол | Life Protocols</title>
+  <meta name="description" content="Отговорете на кратък въпросник и получете индивидуален протокол с хранителни добавки в 3 ценови варианта.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="life-protocol-quiz.css">
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('theme');
+        document.documentElement.setAttribute('data-theme', t || 'light');
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="lpq-body">
+  <div class="lpq-wrap">
+    <a href="life.html" class="lpq-back-link">← Обратно към Life Protocols</a>
+    <header class="lpq-header">
+      <h1>Вашият персонален протокол</h1>
+      <p>10 кратки стъпки → индивидуален стак с хранителни добавки</p>
+    </header>
+    <div class="lpq-progress" aria-hidden="true"><div class="lpq-progress-fill" id="lpq-progress"></div></div>
+
+    <div class="lpq-card" id="lpq-form-card">
+      <form id="lpq-form" novalidate></form>
+      <div class="lpq-nav">
+        <button type="button" class="lpq-btn lpq-btn-ghost" id="lpq-prev" hidden>Назад</button>
+        <button type="button" class="lpq-btn lpq-btn-primary" id="lpq-next">Напред</button>
+      </div>
+    </div>
+
+    <div class="lpq-card lpq-loading" id="lpq-loading" hidden>
+      <div class="lpq-spinner"></div>
+      <p><strong>Анализираме профила ви...</strong></p>
+      <p class="lpq-hint">Проверяваме наличности и сглобяваме 3 персонални варианта</p>
+    </div>
+  </div>
+  <script type="module" src="life-protocol-quiz.js"></script>
+</body>
+</html>
