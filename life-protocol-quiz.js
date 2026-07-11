@@ -211,9 +211,10 @@ let activeSteps = getActiveSteps();
 
 function renderSteps() {
   activeSteps = getActiveSteps();
-  form.innerHTML = activeSteps.map((step, i) => renderStep(step, i)).join('');
+  const prevIndex = stepIndex;
+  form.innerHTML = activeSteps.map((step) => renderStep(step)).join('');
   bindStepEvents();
-  showStep(stepIndex);
+  showStep(prevIndex);
 }
 
 function renderStep(step) {
@@ -290,6 +291,11 @@ function bindStepEvents() {
 
 function showStep(index) {
   activeSteps = getActiveSteps();
+  const domStepCount = form.querySelectorAll('.lpq-step').length;
+  if (domStepCount !== activeSteps.length) {
+    renderSteps();
+    index = Math.min(index, activeSteps.length - 1);
+  }
   if (index >= activeSteps.length) index = activeSteps.length - 1;
   if (index < 0) index = 0;
   stepIndex = index;
@@ -366,8 +372,12 @@ async function submitQuiz() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(answers),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || data.message || 'Грешка при генериране.');
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = data.error || data.message || 'Грешка при генериране.';
+      if (res.status === 503) throw new Error('Въпросникът е временно изключен. Опитайте по-късно.');
+      throw new Error(msg);
+    }
 
     localStorage.setItem('lifeProtocolLead', JSON.stringify({
       email: answers.email,

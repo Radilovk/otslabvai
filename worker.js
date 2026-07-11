@@ -18,11 +18,16 @@ import {
 import {
   prepareProtocolSubmission,
   validateProtocolResponse,
+  buildMockProtocolResponse,
 } from './protocol-quiz-engine.js';
 import {
   getDefaultProtocolQuizPrompt,
   buildProtocolQuizMessages,
 } from './protocol-quiz-prompt.js';
+import {
+  loadLifeProtocolSettings,
+  saveLifeProtocolSettings,
+} from './protocol-quiz-settings.js';
 
 // Cache configuration constants
 const CACHE_CONFIG = {
@@ -75,6 +80,40 @@ export default {
           case '/life-protocol-submit':
             if (request.method === 'POST') {
               response = await handleLifeProtocolSubmit(request, env, ctx);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/life-protocol/settings':
+            if (request.method === 'GET') {
+              response = await handleGetLifeProtocolSettings(env);
+            } else if (request.method === 'POST') {
+              response = await handleSaveLifeProtocolSettings(request, env, ctx);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/life-protocol/leads':
+            if (request.method === 'GET') {
+              response = await handleGetLifeProtocolLeads(env);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/life-protocol/results':
+            if (request.method === 'GET') {
+              response = await handleGetLifeProtocolResults(env);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/life-protocol/simulate':
+            if (request.method === 'POST') {
+              response = await handleLifeProtocolSimulate(request, env);
             } else {
               throw new UserFacingError('Method Not Allowed.', 405);
             }
@@ -1892,55 +1931,49 @@ async function getAIRecommendation(env, formData, productList, mainPromptTemplat
 
 // --- LIFE PROTOCOL QUIZ ---
 
-/**
- * POST /life-protocol-submit
- * Въпросник → refresh наличности → safety filter → AI 3-tier stack.
- */
-async function handleLifeProtocolSubmit(request, env, ctx) {
-  const rawAnswers = await request.json();
+async function runLifeProtocolGeneration(env, rawAnswers, { useMockAi = false, settingsOverride = null, skipEnabledCheck = false } = {}) {
+  const settings = settingsOverride || await loadLifeProtocolSettings(env);
+  if (!skipEnabledCheck && !settings.enabled) {
+    throw new UserFacingError('Въпросникът за персонален протокол е временно изключен.', 503);
+  }
+
   const deps = {
     loadProjectContent,
     loadGroupsByIds: loadPortfolioGroupsByIds,
   };
 
-  let profile;
-  let payload;
-  let candidates;
-  let excludedProductIds;
+  const prepared = await prepareProtocolSubmission(env, rawAnswers, deps);
+  const { profile, payload, candidates } = prepared;
+  const excludedProductIds = payload.constraints.excluded_product_ids;
 
+  if (useMockAi) {
+    const recommendation = buildMockProtocolResponse(candidates, profile);
+    return { profile, payload, candidates, recommendation, mock: true };
+  }
+
+  const promptTemplate = settings.prompt || getDefaultProtocolQuizPrompt();
+  const messages = buildProtocolQuizMessages(promptTemplate, payload);
+  const aiRaw = await callAIWithStoredSettings(env, messages, null);
+  let recommendation = parseJsonFromAI(aiRaw);
+  recommendation = validateProtocolResponse(recommendation, candidates, excludedProductIds);
+  return { profile, payload, candidates, recommendation, mock: false };
+}
+
+/**
+ * POST /life-protocol-submit
+ */
+async function handleLifeProtocolSubmit(request, env, ctx) {
+  const rawAnswers = await request.json();
+
+  let result;
   try {
-    const prepared = await prepareProtocolSubmission(env, rawAnswers, deps);
-    profile = prepared.profile;
-    payload = prepared.payload;
-    candidates = prepared.candidates;
-    excludedProductIds = prepared.payload.constraints.excluded_product_ids;
+    result = await runLifeProtocolGeneration(env, rawAnswers);
   } catch (e) {
+    if (e instanceof UserFacingError) throw e;
     throw new UserFacingError(e.message || 'Грешка при подготовка на протокола.', 400);
   }
 
-  const promptTemplate = (await env.PAGE_CONTENT.get('life_protocol_prompt'))
-    || getDefaultProtocolQuizPrompt();
-
-  const messages = buildProtocolQuizMessages(promptTemplate, payload);
-
-  let aiRaw;
-  try {
-    aiRaw = await callAIWithStoredSettings(env, messages, null);
-  } catch (e) {
-    if (e instanceof UserFacingError) throw e;
-    console.error('Life protocol AI error:', e);
-    throw new UserFacingError('AI услугата не успя да генерира протокол. Опитайте отново.', 502);
-  }
-
-  let recommendation;
-  try {
-    recommendation = parseJsonFromAI(aiRaw);
-    recommendation = validateProtocolResponse(recommendation, candidates, excludedProductIds);
-  } catch (e) {
-    console.error('Life protocol validation error:', e);
-    throw new UserFacingError('AI върна невалиден протокол. Моля, опитайте отново.', 502);
-  }
-
+  const { profile, payload, recommendation } = result;
   const sessionId = `life-protocol-${Date.now()}`;
   const leadRecord = {
     id: sessionId,
@@ -1951,7 +1984,6 @@ async function handleLifeProtocolSubmit(request, env, ctx) {
     profile,
     catalog_stats: payload.catalog_stats,
   };
-
   const resultRecord = {
     sessionId,
     timestamp: leadRecord.timestamp,
@@ -1971,6 +2003,104 @@ async function handleLifeProtocolSubmit(request, env, ctx) {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+async function handleGetLifeProtocolSettings(env) {
+  const settings = await loadLifeProtocolSettings(env);
+  return new Response(JSON.stringify(settings), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+  });
+}
+
+async function handleSaveLifeProtocolSettings(request, env, ctx) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    throw new UserFacingError('Невалиден JSON.', 400);
+  }
+  const saved = await saveLifeProtocolSettings(env, body, ctx);
+  if (body.prompt) {
+    ctx.waitUntil(env.PAGE_CONTENT.put('life_protocol_prompt', body.prompt));
+  }
+  return new Response(JSON.stringify({ success: true, settings: saved }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleGetLifeProtocolLeads(env) {
+  const leads = await env.PAGE_CONTENT.get('life_protocol_leads', { type: 'json' }) || [];
+  return new Response(JSON.stringify(leads.slice().reverse()), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+  });
+}
+
+async function handleGetLifeProtocolResults(env) {
+  const results = await env.PAGE_CONTENT.get('life_protocol_results', { type: 'json' }) || [];
+  return new Response(JSON.stringify(results.slice().reverse()), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+  });
+}
+
+/**
+ * POST /life-protocol/simulate — admin тест без запис (mock AI по подразбиране)
+ */
+async function handleLifeProtocolSimulate(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const sampleProfile = body.profile || {
+    sex: 'female',
+    age_band: '45-54',
+    height_cm: 168,
+    weight_kg: 65,
+    priority: 'skin',
+    conditions: ['none'],
+    medications: ['none'],
+    activity: 'rare',
+    diet: 'omnivore',
+    symptoms: ['fatigue'],
+    allergies: ['none'],
+    pregnancy: 'no',
+    sun_exposure: 'moderate',
+    email: 'test@life-protocol.local',
+    name: 'Тест Клиент',
+  };
+
+  if (body.profile) {
+    sampleProfile.email = sampleProfile.email || 'test@life-protocol.local';
+  }
+
+  const useMockAi = body.use_mock_ai !== false;
+
+  try {
+    const useMockAi = body.use_mock_ai !== false;
+    const result = await runLifeProtocolGeneration(env, sampleProfile, {
+      useMockAi,
+      skipEnabledCheck: true,
+    });
+    return new Response(JSON.stringify({
+      success: true,
+      mock: result.mock,
+      catalog_stats: result.payload.catalog_stats,
+      candidates_count: result.candidates.length,
+      excluded_count: result.payload.constraints.excluded_product_ids.length,
+      profile: result.profile,
+      recommendation: result.recommendation,
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    const msg = e instanceof UserFacingError ? e.message : (e.message || 'Симулацията се провали.');
+    const status = e instanceof UserFacingError ? e.status : 500;
+    return new Response(JSON.stringify({ success: false, error: msg }), {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
 
 async function saveLifeProtocolLead(env, lead) {

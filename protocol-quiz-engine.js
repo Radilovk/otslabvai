@@ -51,6 +51,8 @@ export async function refreshLifeProductsAvailability(env, pageContent, loadGrou
   if (!groupIds.length) return pageContent;
 
   const groupsMap = await loadGroupsByIds(env, groupIds);
+  if (!groupsMap.size) return pageContent;
+
   const fresh = JSON.parse(JSON.stringify(pageContent));
   refreshImportedProductsInContent(fresh, groupsMap);
   return fresh;
@@ -284,6 +286,10 @@ export async function prepareProtocolSubmission(env, rawAnswers, deps) {
   }
 
   const { candidates, excluded_product_ids, exclusion_map } = buildCandidatePool(profile, eligible);
+
+  if (candidates.length < 3) {
+    throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
+  }
   const mustIncludeKws = getMustIncludeKeywords(profile);
 
   const payload = {
@@ -306,4 +312,66 @@ export async function prepareProtocolSubmission(env, rawAnswers, deps) {
   };
 
   return { profile, payload, candidates, content };
+}
+
+/** Детерминистичен mock отговор за тестове/E2E без AI */
+export function buildMockProtocolResponse(candidates, profile) {
+  const slice = (start, count) => candidates.slice(start, start + count);
+  const mkProducts = (items) => items.map((p, i) => ({
+    product_id: p.product_id,
+    name: p.public_data?.name,
+    role: i === 0 ? 'core' : 'support',
+    dose: 'Според етикета',
+    timing: i % 2 === 0 ? 'сутрин с храна' : 'вечер',
+    why_for_you: `Подходящ за приоритет „${profile.priority}"`,
+    marketing_angle: 'Тестова препоръка',
+    price_bgn: getProductPriceBgn(p),
+    price_eur: Math.round((getProductPriceBgn(p) / EUR_RATE) * 100) / 100,
+    image_url: p.public_data?.image_url || '',
+  }));
+
+  const mkTier = (key, name, tagline, items, benefits) => {
+    const products = mkProducts(items);
+    const totalBgn = products.reduce((s, x) => s + (x.price_bgn || 0), 0);
+    return {
+      name,
+      tagline,
+      monthly_total_bgn: Math.round(totalBgn * 100) / 100,
+      monthly_total_eur: Math.round((totalBgn / EUR_RATE) * 100) / 100,
+      benefits,
+      strategy: `Стратегия за ${name.toLowerCase()} — фокус върху ${profile.priority}`,
+      expected_timeline: 'Първи ефекти: 3–4 седмици',
+      products,
+    };
+  };
+
+  const basicItems = slice(0, Math.min(3, candidates.length));
+  const optimalItems = slice(0, Math.min(5, candidates.length));
+  const premiumItems = slice(0, Math.min(7, candidates.length));
+
+  const response = {
+    analysis: `Профилът ви показва фокус върху ${profile.priority}. Подготвихме три варианта от наличните орални добавки.`,
+    recommended_tier: 'optimal',
+    tiers: {
+      basic: mkTier('basic', 'Базов старт', 'Минимален ефективен протокол', basicItems, [
+        'Ускорява метаболизма', 'Подкрепя ежедневната енергия',
+      ]),
+      optimal: mkTier('optimal', 'Оптимален протокол', 'Най-добра стойност', optimalItems, [
+        'Ускорява метаболизма', 'Подобрява съня', 'Укрепва имунитета', 'Подкрепя кожата',
+      ]),
+      premium: mkTier('premium', 'Премиум регенерация', 'Пълен клетъчен протокол', premiumItems, [
+        'Ускорява метаболизма', 'Подобрява съня', 'Укрепва имунитета', 'Подкрепя кожата',
+        'Защитава клетките от стрес', 'Подобрява когнитивната функция', 'Подкрепя дълголетието',
+      ]),
+    },
+    protocol_schedule: {
+      morning: ['Основните добавки със закуска'],
+      evening: ['Поддържащи добавки преди сън'],
+      weekly_notes: 'Пийте достатъчно вода и поддържайте редовен режим.',
+    },
+    lifestyle_tips: ['Движение 30 мин дневно', '7–8 часа сън', 'Балансирана храна'],
+    disclaimer: 'Информацията не замества лекарска консултация.',
+  };
+
+  return validateProtocolResponse(response, candidates, []);
 }
