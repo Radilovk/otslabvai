@@ -1555,3 +1555,23 @@ input:checked + .slider:before {
     .pf-import-footer-actions { justify-content: space-between; width: 100%; }
     .pf-import-footer-actions .btn { flex: 1; }
 }
+
+/* Icon buttons — SVG instead of emoji */
+.btn-with-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+}
+.ui-icon {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    stroke: currentColor;
+    fill: none;
+}
+.pf-import-noimg svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    opacity: 0.45;
+}
