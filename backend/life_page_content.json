@@ -46,8 +46,8 @@
       "buttons": {
         "primary": {
           "text": "Започнете вашия протокол",
-          "action": "scroll",
-          "target": "#peptides"
+          "action": "link",
+          "target": "life-protocol-quiz.html"
         },
         "secondary": {
           "text": "Научи повече",

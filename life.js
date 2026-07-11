@@ -206,8 +206,13 @@ const generateHeroHTML = component => {
     
     // Get buttons configuration with defaults
     const buttons = component.buttons || {};
-    const primaryBtn = buttons.primary || { text: 'Разгледай продуктите', action: 'scroll', target: '#products' };
+    let primaryBtn = buttons.primary || { text: 'Разгледай продуктите', action: 'scroll', target: '#products' };
     const secondaryBtn = buttons.secondary || { text: 'Научи повече', action: 'link', target: 'life-about.html' };
+
+    // Legacy hero CTA: #peptides не съществува на Life — насочваме към въпросника
+    if (primaryBtn.action === 'scroll' && (primaryBtn.target === '#peptides' || primaryBtn.target === '#protocol-quiz')) {
+        primaryBtn = { ...primaryBtn, action: 'link', target: 'life-protocol-quiz.html' };
+    }
     
     // Generate primary button (scroll or link)
     let primaryButtonHTML = '';

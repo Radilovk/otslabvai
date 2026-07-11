@@ -32,10 +32,10 @@ function buildLogSequence(answers) {
   const symptoms = (answers.symptoms || []).filter((s) => s !== 'none');
 
   const lines = [
-    { type: 'system', text: 'Инициализиране на Life Protocol Engine v2.4…', delay: 320 },
-    { type: 'info', text: 'Зареждане на anti-aging каталог (орални добавки)…', delay: 480 },
-    { type: 'ok', text: 'Синхронизация с наличности — активна', delay: 360 },
-    { type: 'info', text: `Профил: ${answers.sex === 'male' ? 'мъж' : 'жена'}, ${answers.age_band || '—'} г.`, delay: 280 },
+    { type: 'system', text: 'Инициализиране на Life Protocol Engine v2.4…', delay: 200 },
+    { type: 'info', text: 'Зареждане на anti-aging каталог (орални добавки)…', delay: 280 },
+    { type: 'ok', text: 'Синхронизация с наличности — активна', delay: 220 },
+    { type: 'info', text: `Профил: ${answers.sex === 'male' ? 'мъж' : 'жена'}, ${answers.age_band || '—'} г.`, delay: 180 },
   ];
 
   if (bmi) {
@@ -81,7 +81,7 @@ function buildLogSequence(answers) {
 }
 
 export class ProtocolAnalysisAnimator {
-  constructor({ logEl, progressEl, statusEl, minDurationMs = 11000 } = {}) {
+  constructor({ logEl, progressEl, statusEl, minDurationMs = 5500 } = {}) {
     this.logEl = logEl;
     this.progressEl = progressEl;
     this.statusEl = statusEl;
