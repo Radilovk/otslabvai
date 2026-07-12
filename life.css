@@ -2777,12 +2777,14 @@ body.modal-open { overflow: hidden; }
 }
 
 .card-front {
-    background-color: var(--bg-primary);
-    color: var(--color-dark);
+    background: linear-gradient(135deg, #ffffff, #F7F9FB);
+    color: #0f2540;
+    border: 1px solid rgba(0, 196, 200, 0.12);
 }
 
 .card-front h5 {
     font-size: 1.2rem;
+    color: #0f2540;
 }
 
 .card-front span {
@@ -2792,8 +2794,9 @@ body.modal-open { overflow: hidden; }
 }
 
 .card-back {
-    background-color: var(--color-secondary);
-    color: white;
+    background: linear-gradient(135deg, #F0FDFD, #E8F8F8);
+    color: #0f2540;
+    border: 1px solid rgba(0, 196, 200, 0.15);
     transform: rotateY(180deg);
     overflow-y: auto;
 }
@@ -4295,7 +4298,18 @@ body.modal-open { overflow: hidden; }
     font-weight: 600;
 }
 
+.ingredient-card-mini .card-front {
+    background: linear-gradient(135deg, #ffffff, #F7F9FB);
+    color: #0f2540;
+    border: 1px solid rgba(0, 196, 200, 0.12);
+    border-radius: var(--border-radius);
+}
+
 .ingredient-card-mini .card-back {
+    background: linear-gradient(135deg, #F0FDFD, #E8F8F8);
+    color: #0f2540;
+    border: 1px solid rgba(0, 196, 200, 0.15);
+    border-radius: var(--border-radius);
     transform: rotateY(180deg);
     padding: 15px;
     overflow-y: auto;
@@ -4304,7 +4318,7 @@ body.modal-open { overflow: hidden; }
 .ingredient-card-mini .card-back p {
     font-size: 0.85rem;
     line-height: 1.4;
-    color: var(--text-secondary);
+    color: #0f2540;
 }
 
 .ingredient-card-mini:hover {
@@ -4538,8 +4552,9 @@ body.modal-open { overflow: hidden; }
 }
 
 .ingredient-card-full .card-front {
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
+    background: linear-gradient(135deg, #ffffff, #F7F9FB);
+    color: #0f2540;
+    border: 1px solid rgba(0, 196, 200, 0.12);
 }
 
 .ingredient-card-full .card-front h5 {
@@ -4556,8 +4571,9 @@ body.modal-open { overflow: hidden; }
 }
 
 .ingredient-card-full .card-back {
-    background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-    color: var(--color-white);
+    background: linear-gradient(135deg, #F0FDFD, #E8F8F8);
+    color: #0f2540;
+    border: 1px solid rgba(0, 196, 200, 0.15);
     transform: rotateY(180deg);
     overflow-y: auto;
 }
@@ -4565,7 +4581,7 @@ body.modal-open { overflow: hidden; }
 .ingredient-card-full .card-back p {
     font-size: 0.95rem;
     line-height: 1.5;
-    color: var(--color-white);
+    color: #0f2540;
 }
 
 /* FAQ Section (Full Version) */
@@ -6951,14 +6967,30 @@ section[id="scientific"] {
 /* ── INGREDIENT CARD BACK: clean clinical white ── */
 .ingredient-card-full .card-back,
 .card-back {
-    background: linear-gradient(135deg, #F7F9FB, #EEF3F8);
+    background: linear-gradient(135deg, #F0FDFD, #E8F8F8);
     color: #0f2540;
+    border: 1px solid rgba(0, 196, 200, 0.15);
 }
 
-[data-theme] .ingredient-card-full .card-back,
-[data-theme] .card-back {
-    background: linear-gradient(135deg, #1A1410, #2A2218);
-    color: #E8D4A0;
+.ingredient-card-full .card-front,
+.card-front {
+    background: linear-gradient(135deg, #ffffff, #F7F9FB);
+    color: #0f2540;
+    border: 1px solid rgba(0, 196, 200, 0.12);
+}
+
+[data-theme="dark"] .ingredient-card-full .card-back,
+[data-theme="dark"] .card-back {
+    background: linear-gradient(135deg, #1A2832, #243540);
+    color: #E8F4F8;
+    border-color: rgba(0, 196, 200, 0.2);
+}
+
+[data-theme="dark"] .ingredient-card-full .card-front,
+[data-theme="dark"] .card-front {
+    background: linear-gradient(135deg, #121c24, #1a2832);
+    color: #E8F4F8;
+    border-color: rgba(0, 196, 200, 0.15);
 }
 
 /* ── SEARCH RESULT HIGHLIGHT: gold ── */

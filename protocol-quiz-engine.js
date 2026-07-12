@@ -248,6 +248,47 @@ export function transformProductForAI(product) {
   };
 }
 
+export function normalizeCumulativeBenefits(response) {
+  const tiers = response?.tiers;
+  if (!tiers?.basic || !tiers?.optimal || !tiers?.premium) return response;
+
+  const dedupe = (arr) => [...new Set((arr || []).map((s) => String(s).trim()).filter(Boolean))];
+
+  const defaultBasic = [
+    'Подкрепя ежедневната енергия',
+    'Укрепва имунната защита',
+    'Защитава клетките от оксидативен стрес',
+  ];
+  const defaultOptimalAdd = [
+    'Подобрява качеството на съня',
+    'Подпомага възстановяването след натоварване',
+    'Подкрепя кожата отвътре',
+  ];
+  const defaultPremiumAdd = [
+    'Стимулира клетъчната регенерация',
+    'Подобрява когнитивната острота и фокуса',
+    'Максимална антиейджинг защита',
+    'Пълна подкрепа за дълголетие',
+  ];
+
+  const basic = dedupe(tiers.basic.benefits);
+  const basicFinal = (basic.length ? basic : defaultBasic).slice(0, 4);
+
+  const optimalRaw = dedupe(tiers.optimal.benefits);
+  const optimalAdd = optimalRaw.filter((b) => !basicFinal.includes(b));
+  const optimalFinal = [...basicFinal, ...(optimalAdd.length ? optimalAdd : defaultOptimalAdd).slice(0, 3)];
+
+  const premiumRaw = dedupe(tiers.premium.benefits);
+  const premiumAdd = premiumRaw.filter((b) => !optimalFinal.includes(b));
+  const premiumFinal = [...optimalFinal, ...(premiumAdd.length ? premiumAdd : defaultPremiumAdd).slice(0, 4)];
+
+  tiers.basic.benefits = basicFinal;
+  tiers.optimal.benefits = optimalFinal;
+  tiers.premium.benefits = premiumFinal;
+
+  return response;
+}
+
 export function validateProtocolResponse(response, candidates, excludedProductIds = []) {
   const validIds = new Set(candidates.map((p) => p.product_id));
   const excluded = new Set(excludedProductIds);
@@ -280,7 +321,7 @@ export function validateProtocolResponse(response, candidates, excludedProductId
     response.recommended_tier = 'optimal';
   }
 
-  return response;
+  return normalizeCumulativeBenefits(response);
 }
 
 export async function prepareProtocolSubmission(env, rawAnswers, deps) {
@@ -371,14 +412,29 @@ export function buildMockProtocolResponse(candidates, profile) {
     recommended_tier: 'optimal',
     tiers: {
       basic: mkTier('basic', 'Базов старт', 'Минимален ефективен протокол', basicItems, [
-        'Ускорява метаболизма', 'Подкрепя ежедневната енергия',
+        'Подкрепя ежедневната енергия',
+        'Укрепва имунната защита',
+        'Защитава клетките от оксидативен стрес',
       ]),
       optimal: mkTier('optimal', 'Оптимален протокол', 'Най-добра стойност', optimalItems, [
-        'Ускорява метаболизма', 'Подобрява съня', 'Укрепва имунитета', 'Подкрепя кожата',
+        'Подкрепя ежедневната енергия',
+        'Укрепва имунната защита',
+        'Защитава клетките от оксидативен стрес',
+        'Подобрява качеството на съня',
+        'Подпомага възстановяването след натоварване',
+        'Подкрепя кожата отвътре',
       ]),
       premium: mkTier('premium', 'Премиум регенерация', 'Пълен клетъчен протокол', premiumItems, [
-        'Ускорява метаболизма', 'Подобрява съня', 'Укрепва имунитета', 'Подкрепя кожата',
-        'Защитава клетките от стрес', 'Подобрява когнитивната функция', 'Подкрепя дълголетието',
+        'Подкрепя ежедневната енергия',
+        'Укрепва имунната защита',
+        'Защитава клетките от оксидативен стрес',
+        'Подобрява качеството на съня',
+        'Подпомага възстановяването след натоварване',
+        'Подкрепя кожата отвътре',
+        'Стимулира клетъчната регенерация',
+        'Подобрява когнитивната острота и фокуса',
+        'Максимална антиейджинг защита',
+        'Пълна подкрепа за дълголетие',
       ]),
     },
     protocol_schedule: {
