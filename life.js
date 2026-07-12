@@ -106,9 +106,6 @@ const generateProductCard = (product) => {
     const productId = product.product_id;
     const variants = publicData.variants || [];
     const availableVariants = variants.filter(v => v.available !== false && typeof v.price === 'number');
-    const variantBadge = variants.length > 1
-        ? `<span class="variant-badge">${variants.length} варианта</span>`
-        : '';
     const brandLabel = publicData.brand
         ? `<span class="brand-label">${escapeHtml(publicData.brand)}</span>`
         : '';
@@ -139,14 +136,16 @@ const generateProductCard = (product) => {
     }
     const priceClass = hasSale ? 'product-price has-sale' : 'product-price';
     const dataPrice = Number(hasSale ? salePrice : (availableVariants[0]?.price ?? publicData.price)) || 0;
+    const priceBlock = `<div class="${priceClass}">${priceHTML}</div>`;
 
     return `
     <a href="life-product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}" data-brand="${escapeHtml(publicData.brand || '')}" data-price="${dataPrice}" data-sale="${hasSale ? 'true' : ''}" data-goals="${escapeHtml((product.system_data?.goals || []).join(','))}">
-        ${publicData.image_url ? `<div class="product-image">${variantBadge}<img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)}${cardTagline ? ' - ' + escapeHtml(cardTagline) : ''}" loading="lazy" decoding="async"></div>` : ''}
+        ${publicData.image_url
+            ? `<div class="product-image"><img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)}${cardTagline ? ' - ' + escapeHtml(cardTagline) : ''}" loading="lazy" decoding="async">${priceBlock}</div>`
+            : priceBlock}
         <div class="card-content">
             ${brandLabel}
             <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(cardTagline)}</p></div>
-            <div class="${priceClass}">${priceHTML}</div>
             <div class="effects-container">
                 ${(publicData.effects || []).map(generateEffectBar).join('')}
             </div>
@@ -1563,8 +1562,9 @@ function initializePageInteractions(settings = {}) {
 function initializeGlobalScripts() {
     // --- Sticky Header on Scroll (Lipolor style) ---
     const header = document.querySelector('.main-header');
-    
+
     function handleStickyHeader() {
+        if (!header) return;
         const stickyThreshold = 50;
         if (window.scrollY > stickyThreshold) {
             header.classList.add('scrolled');
@@ -1572,7 +1572,15 @@ function initializeGlobalScripts() {
             header.classList.remove('scrolled');
         }
     }
-    
+
+    if (header) {
+        if (document.documentElement.classList.contains('header-pre-scrolled')) {
+            header.classList.add('scrolled');
+            document.documentElement.classList.remove('header-pre-scrolled');
+        }
+        handleStickyHeader();
+    }
+
     window.addEventListener('scroll', () => {
         handleStickyHeader();
         DOM.backToTopBtn.classList.toggle('visible', window.scrollY > 300);

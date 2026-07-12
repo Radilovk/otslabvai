@@ -39,14 +39,37 @@ function escapeHtml(unsafe) {
 }
 
 
-// Рендира текст като параграфи (запазва новите редове от структурирани описания)
+// Рендира текст като параграфи; &rarr;/→ редове стават стилизиран bullet списък
 function renderTextParagraphs(text) {
-    return escapeHtml(text)
-        .split(/\n+/)
-        .map(s => s.trim())
-        .filter(Boolean)
-        .map(p => `<p>${p}</p>`)
-        .join('');
+    if (!text) return '';
+
+    const lines = String(text).split(/\n+/).map(s => s.trim()).filter(Boolean);
+    let html = '';
+    let inList = false;
+
+    const closeList = () => {
+        if (inList) {
+            html += '</ul>';
+            inList = false;
+        }
+    };
+
+    for (const line of lines) {
+        const bulletMatch = line.match(/^(?:&rarr;|→)\s*(.+)$/u);
+        if (bulletMatch) {
+            if (!inList) {
+                html += '<ul class="desc-bullet-list">';
+                inList = true;
+            }
+            html += `<li><span class="desc-bullet-icon" aria-hidden="true"></span><span>${escapeHtml(bulletMatch[1])}</span></li>`;
+        } else {
+            closeList();
+            html += `<p>${escapeHtml(line)}</p>`;
+        }
+    }
+
+    closeList();
+    return html;
 }
 
 // =======================================================
@@ -1011,8 +1034,9 @@ function initializeProductInteractions() {
 function initializeGlobalScripts() {
     // Sticky Header on Scroll
     const header = document.querySelector('.main-header');
-    
+
     function handleStickyHeader() {
+        if (!header) return;
         const stickyThreshold = 50;
         if (window.scrollY > stickyThreshold) {
             header.classList.add('scrolled');
@@ -1020,7 +1044,15 @@ function initializeGlobalScripts() {
             header.classList.remove('scrolled');
         }
     }
-    
+
+    if (header) {
+        if (document.documentElement.classList.contains('header-pre-scrolled')) {
+            header.classList.add('scrolled');
+            document.documentElement.classList.remove('header-pre-scrolled');
+        }
+        handleStickyHeader();
+    }
+
     window.addEventListener('scroll', () => {
         handleStickyHeader();
     });
