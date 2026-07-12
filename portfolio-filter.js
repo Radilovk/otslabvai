@@ -18,7 +18,13 @@ export function applyFilters(index, params, meta = {}) {
       return i.category_top === cat || path === cat || path.startsWith(`${cat} >`);
     });
   }
-  if (params.available === '1' || params.available === 'true') {
+  if (params.goal) {
+    const goal = params.goal;
+    results = results.filter((i) => Array.isArray(i.goals) && i.goals.includes(goal));
+  }
+  if (params.available === '0' || params.available === 'all' || params.available === 'false') {
+    // Admin-only: include unavailable products when explicitly requested.
+  } else {
     results = results.filter((i) => i.available);
   }
   if (params.q) {
@@ -55,7 +61,7 @@ export function sortResults(results, sort = 'name') {
   if (sort === 'price_desc') {
     return [...results].sort((a, b) => b.max_price - a.max_price || a.name.localeCompare(b.name, 'bg'));
   }
-  if (sort === 'margin_desc') {
+  if (sort === 'margin_desc' || sort === 'relevance') {
     return sortByMarginDesc(results);
   }
   if (sort === 'name_desc') {
@@ -99,6 +105,7 @@ export function paginateIndex(filtered, page = 1, limit = 24) {
 export function computeFacets(index, params, meta = {}) {
   const categoriesMeta = meta.categories || [];
   const brandsMeta = meta.brands || [];
+  const goalsMeta = meta.goals || [];
 
   const forCategoryFacet = applyFilters(index, { ...params, category: '' }, meta);
   const categoryCounts = new Map();
@@ -119,5 +126,16 @@ export function computeFacets(index, params, meta = {}) {
     .filter((b) => brandCounts.has(b.id))
     .map((b) => ({ id: b.id, name: b.name, count: brandCounts.get(b.id) }));
 
-  return { categories, brands };
+  const forGoalFacet = applyFilters(index, { ...params, goal: '' }, meta);
+  const goalCounts = new Map();
+  for (const item of forGoalFacet) {
+    for (const goalId of item.goals || []) {
+      goalCounts.set(goalId, (goalCounts.get(goalId) || 0) + 1);
+    }
+  }
+  const goals = goalsMeta
+    .filter((g) => goalCounts.has(g.id))
+    .map((g) => ({ id: g.id, label: g.label, count: goalCounts.get(g.id) }));
+
+  return { categories, brands, goals };
 }

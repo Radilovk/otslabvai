@@ -2,7 +2,7 @@ import {
   escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage, icon
 } from './portfolio-shared.js';
 import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
-import { sortByMarginDesc } from './portfolio-filter.js';
+import { filterIndex } from './portfolio-filter.js';
 
 const DOM = {
   root: document.getElementById('product-root'),
@@ -92,8 +92,10 @@ function renderRelated() {
   const meta = getCachedMeta();
   const topCat = product.category_path?.[0];
   if (!meta?.index || !topCat) return '';
-  const related = sortByMarginDesc(
-    meta.index.filter((i) => i.category_top === topCat && i.group_id !== product.group_id && i.available !== false)
+  const related = filterIndex(
+    meta.index.filter((i) => i.category_top === topCat && i.group_id !== product.group_id),
+    { sort: 'relevance' },
+    meta
   ).slice(0, 4);
   if (!related.length) return '';
   return `
@@ -323,9 +325,20 @@ async function loadProduct() {
     return;
   }
   try {
+    const meta = getCachedMeta();
+    const listed = meta?.index?.some((item) => item.group_id === groupId);
+    if (meta?.index && !listed) {
+      DOM.root.innerHTML = '<div class="pf-error">Продуктът не е наличен в момента.</div>';
+      return;
+    }
     product = await getProductFromCache(groupId);
     if (!product) {
       DOM.root.innerHTML = '<div class="pf-error">Продуктът не е намерен.</div>';
+      return;
+    }
+    product.variants = (product.variants || []).filter((v) => v.available);
+    if (!product.variants.length) {
+      DOM.root.innerHTML = '<div class="pf-error">Продуктът не е наличен в момента.</div>';
       return;
     }
     pickDefaultVariant();

@@ -10,7 +10,6 @@ import {
 } from './portfolio-catalog-ui.js';
 
 const LIMIT = 24;
-const MAX_CHIPS = 9;
 
 const DOM = {
   grid: document.getElementById('catalog-grid'),
@@ -18,10 +17,10 @@ const DOM = {
   resultsMeta: document.getElementById('results-meta'),
   searchInput: document.getElementById('search-input'),
   filterCategory: document.getElementById('filter-category'),
+  filterGoal: document.getElementById('filter-goal'),
   filterBrand: document.getElementById('filter-brand'),
   filterMinPrice: document.getElementById('filter-min-price'),
   filterMaxPrice: document.getElementById('filter-max-price'),
-  filterAvailable: document.getElementById('filter-available'),
   sortSelect: document.getElementById('sort-select'),
   clearFilters: document.getElementById('clear-filters'),
   syncBanner: document.getElementById('sync-banner'),
@@ -33,22 +32,20 @@ const DOM = {
   heroStats: document.getElementById('hero-stats'),
   statProducts: document.getElementById('stat-products'),
   statBrands: document.getElementById('stat-brands'),
-  categoryChips: document.getElementById('category-chips'),
   activeFilters: document.getElementById('active-filters')
 };
 
 let state = { page: 1, total: 0, totalPages: 0, loading: false, cacheReady: false };
-let topCategories = [];
 
 function getFilterParams() {
   return {
     sort: DOM.sortSelect.value,
     q: DOM.searchInput.value.trim(),
     category: DOM.filterCategory.value,
+    goal: DOM.filterGoal.value,
     brand: DOM.filterBrand.value,
     min_price: DOM.filterMinPrice.value,
-    max_price: DOM.filterMaxPrice.value,
-    available: DOM.filterAvailable.checked ? '1' : ''
+    max_price: DOM.filterMaxPrice.value
   };
 }
 
@@ -61,12 +58,11 @@ const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000
 
 function renderCard(item) {
   const variantBadge = item.variant_count > 1 ? `<span class="pf-badge">${item.variant_count} варианта</span>` : '';
-  const stockBadge = !item.available ? '<span class="pf-badge out">Изчерпан</span>' : '';
   const img = item.image || PLACEHOLDER_IMG;
   return `
     <div class="pf-product-card">
       <a href="portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}" class="pf-card-link">
-        <div class="pf-card-image">${variantBadge}${stockBadge}
+        <div class="pf-card-image">${variantBadge}
           <img src="${escapeHtml(img)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" sizes="(max-width: 640px) 45vw, 210px" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
         </div>
         <div class="pf-card-body">
@@ -119,10 +115,10 @@ function getFilterState() {
   return {
     q: params.q,
     category: params.category,
+    goal: params.goal,
     brand: params.brand,
     min_price: params.min_price,
-    max_price: params.max_price,
-    availableOnly: DOM.filterAvailable.checked
+    max_price: params.max_price
   };
 }
 
@@ -149,13 +145,22 @@ function renderActiveFilterChips() {
   const brandOpt = params.brand
     ? [...DOM.filterBrand.options].find((o) => o.value === params.brand)
     : null;
+  const categoryOpt = params.category
+    ? [...DOM.filterCategory.options].find((o) => o.value === params.category)
+    : null;
+  const goalOpt = params.goal
+    ? [...DOM.filterGoal.options].find((o) => o.value === params.goal)
+    : null;
   const chips = getRemovableFilterChips({
     q: params.q,
+    category: params.category,
+    categoryLabel: categoryOpt ? categoryOpt.textContent.replace(/\s*\(\d+\)$/, '') : '',
+    goal: params.goal,
+    goalLabel: goalOpt ? goalOpt.textContent.replace(/\s*\(\d+\)$/, '') : '',
     brand: params.brand,
     brandLabel: brandOpt ? brandOpt.textContent.replace(/\s*\(\d+\)$/, '') : '',
     min_price: params.min_price,
-    max_price: params.max_price,
-    availableOnly: DOM.filterAvailable.checked
+    max_price: params.max_price
   });
 
   DOM.activeFilters.innerHTML = chips.map((c) => `
@@ -174,40 +179,12 @@ function clearOneFilter(key) {
   if (key === 'all') { DOM.clearFilters.click(); return; }
   if (key === 'q') DOM.searchInput.value = '';
   if (key === 'category') DOM.filterCategory.value = '';
+  if (key === 'goal') DOM.filterGoal.value = '';
   if (key === 'brand') DOM.filterBrand.value = '';
   if (key === 'price') { DOM.filterMinPrice.value = ''; DOM.filterMaxPrice.value = ''; }
-  if (key === 'available') DOM.filterAvailable.checked = true;
   state.page = 1;
   reconcileFacets();
   loadCatalog();
-}
-
-function renderCategoryChips() {
-  if (!DOM.categoryChips || !topCategories.length) return;
-  const activeCategory = DOM.filterCategory.value;
-  const facets = getFacetsFromCache(getFilterParams());
-  const visibleNames = new Set((facets?.categories || topCategories).map((c) => c.name));
-
-  DOM.categoryChips.innerHTML = topCategories
-    .filter((c) => {
-      const active = c.name === activeCategory;
-      return active || visibleNames.has(c.name);
-    })
-    .map((c) => {
-    const active = c.name === activeCategory;
-    return `<button type="button" class="pf-chip ${active ? 'active' : ''}" data-chip-category="${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>`;
-  }).join('');
-
-  DOM.categoryChips.querySelectorAll('[data-chip-category]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const name = btn.dataset.chipCategory;
-      DOM.filterCategory.value = DOM.filterCategory.value === name ? '' : name;
-      state.page = 1;
-      reconcileFacets();
-      loadCatalog();
-      closeFilters();
-    });
-  });
 }
 
 function loadCatalog() {
@@ -220,9 +197,7 @@ function loadCatalog() {
   state.total = data.total;
   state.totalPages = data.total_pages;
   state.page = data.page;
-  DOM.resultsMeta.textContent = DOM.filterAvailable.checked
-    ? `${data.total.toLocaleString('bg-BG')} налични продукта`
-    : `${data.total.toLocaleString('bg-BG')} продукта`;
+  DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
   DOM.grid.innerHTML = data.items.length
     ? data.items.map(renderCard).join('')
     : `<div class="pf-empty">
@@ -236,18 +211,25 @@ function loadCatalog() {
   renderPagination();
   updateFiltersToggleLabel();
   renderActiveFilterChips();
-  renderCategoryChips();
   updateSidebarApplyLabel();
 }
 
 function populateFilters(filters) {
   DOM.filterCategory.innerHTML = '<option value="">Всички категории</option>';
+  DOM.filterGoal.innerHTML = '<option value="">Всички цели</option>';
   DOM.filterBrand.innerHTML = '<option value="">Всички марки</option>';
+
   filters.categories.forEach((c) => {
     const opt = document.createElement('option');
     opt.value = c.name;
     opt.textContent = `${c.name} (${c.count})`;
     DOM.filterCategory.appendChild(opt);
+  });
+  (filters.goals || []).forEach((g) => {
+    const opt = document.createElement('option');
+    opt.value = g.id;
+    opt.textContent = `${g.label} (${g.count})`;
+    DOM.filterGoal.appendChild(opt);
   });
   filters.brands.forEach((b) => {
     const opt = document.createElement('option');
@@ -255,17 +237,14 @@ function populateFilters(filters) {
     opt.textContent = `${b.name} (${b.count})`;
     DOM.filterBrand.appendChild(opt);
   });
+
   if (DOM.heroStats) {
     DOM.heroStats.style.display = 'flex';
     DOM.statProducts.textContent = filters.total_groups.toLocaleString('bg-BG');
     DOM.statBrands.textContent = filters.brands.length.toLocaleString('bg-BG');
   }
-  topCategories = [...filters.categories].sort((a, b) => b.count - a.count).slice(0, MAX_CHIPS);
 }
 
-/** Rebuild category/brand <select> options scoped to the other active filters
- *  (hides brands with nothing in the chosen category and vice versa), and
- *  resets a selection that's no longer valid. Pure client-side, 0 requests. */
 function reconcileFacets() {
   let params = getFilterParams();
   let facets = getFacetsFromCache(params);
@@ -274,6 +253,10 @@ function reconcileFacets() {
   let changed = false;
   if (params.category && !facets.categories.some((c) => c.name === params.category)) {
     DOM.filterCategory.value = '';
+    changed = true;
+  }
+  if (params.goal && !facets.goals?.some((g) => g.id === params.goal)) {
+    DOM.filterGoal.value = '';
     changed = true;
   }
   if (params.brand && !facets.brands.some((b) => b.id === params.brand)) {
@@ -286,14 +269,18 @@ function reconcileFacets() {
   }
 
   const prevCategory = DOM.filterCategory.value;
+  const prevGoal = DOM.filterGoal.value;
   const prevBrand = DOM.filterBrand.value;
 
   DOM.filterCategory.innerHTML = '<option value="">Всички категории</option>'
     + facets.categories.map((c) => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${c.count})</option>`).join('');
+  DOM.filterGoal.innerHTML = '<option value="">Всички цели</option>'
+    + (facets.goals || []).map((g) => `<option value="${escapeHtml(g.id)}">${escapeHtml(g.label)} (${g.count})</option>`).join('');
   DOM.filterBrand.innerHTML = '<option value="">Всички марки</option>'
     + facets.brands.map((b) => `<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)} (${b.count})</option>`).join('');
 
   DOM.filterCategory.value = prevCategory;
+  DOM.filterGoal.value = prevGoal;
   DOM.filterBrand.value = prevBrand;
 }
 
@@ -327,19 +314,19 @@ function bindEvents() {
   DOM.searchInput.addEventListener('input', reload);
   [DOM.filterMinPrice, DOM.filterMaxPrice]
     .forEach((el) => el.addEventListener('input', reload));
-  [DOM.filterMinPrice, DOM.filterMaxPrice, DOM.filterAvailable]
+  [DOM.filterMinPrice, DOM.filterMaxPrice]
     .forEach((el) => el.addEventListener('change', () => { state.page = 1; reconcileFacets(); loadCatalog(); }));
-  [DOM.filterCategory, DOM.filterBrand]
+  [DOM.filterCategory, DOM.filterGoal, DOM.filterBrand]
     .forEach((el) => el.addEventListener('change', () => { state.page = 1; reconcileFacets(); loadCatalog(); closeFilters(); }));
   DOM.sortSelect.addEventListener('change', () => { state.page = 1; loadCatalog(); });
   DOM.clearFilters.addEventListener('click', () => {
     DOM.searchInput.value = '';
     DOM.filterCategory.value = '';
+    DOM.filterGoal.value = '';
     DOM.filterBrand.value = '';
     DOM.filterMinPrice.value = '';
     DOM.filterMaxPrice.value = '';
-    DOM.filterAvailable.checked = true;
-    DOM.sortSelect.value = 'name';
+    DOM.sortSelect.value = 'relevance';
     state.page = 1;
     reconcileFacets();
     loadCatalog();
@@ -358,6 +345,7 @@ function bindEvents() {
   const params = new URLSearchParams(location.search);
   if (params.get('q')) DOM.searchInput.value = params.get('q');
   if (params.get('category')) DOM.filterCategory.value = params.get('category');
+  if (params.get('goal')) DOM.filterGoal.value = params.get('goal');
   if (params.get('brand')) DOM.filterBrand.value = params.get('brand');
 }
 

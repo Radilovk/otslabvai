@@ -5,6 +5,7 @@
 
 import { filterIndex } from './portfolio-filter.js';
 import { enrichIndexEntry } from './portfolio-search.js';
+import { inferProductGoals, buildGoalFacetCounts } from './portfolio-goals.js';
 import {
   validatePortfolioCustomer,
   sanitizePortfolioCustomer,
@@ -250,7 +251,7 @@ export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
   return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name, 'bg'));
 }
 
-export function buildCatalogMeta(groups) {
+export function buildCatalogMeta(groups, settings = null) {
   const brandMap = new Map();
   const categoryMap = new Map();
   const lookup = {};
@@ -272,7 +273,7 @@ export function buildCatalogMeta(groups) {
     const packs = [...new Set(g.variants.map((v) => v.pack).filter(Boolean))];
     const marginStats = summarizeGroupMargin(g);
 
-    index.push(enrichIndexEntry({
+    const entry = enrichIndexEntry({
       group_id: g.group_id,
       name: g.name,
       brand: g.brand,
@@ -287,7 +288,9 @@ export function buildCatalogMeta(groups) {
       image: g.image,
       packs,
       ...marginStats
-    }, g));
+    }, g);
+    entry.goals = inferProductGoals(entry, settings);
+    index.push(entry);
 
     const bCount = brandMap.get(g.brand_id) || { id: g.brand_id, name: g.brand, count: 0 };
     bCount.count++;
@@ -306,8 +309,53 @@ export function buildCatalogMeta(groups) {
     categories: Array.from(categoryMap.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name, 'bg')),
+    goals: buildGoalFacetCounts(index),
     lookup,
     sku_lookup,
+    index
+  };
+}
+
+/** Strip admin-only pricing fields before sending catalog index to the client. */
+export function sanitizeIndexEntryForClient(entry) {
+  if (!entry) return entry;
+  const {
+    max_margin,
+    max_margin_pct,
+    markup_percent,
+    ...clientEntry
+  } = entry;
+  return clientEntry;
+}
+
+/** Client-facing meta: only in-stock products, no margin fields. */
+export function buildClientCatalogMeta(meta) {
+  const index = (meta.index || [])
+    .filter((item) => item.available)
+    .map(sanitizeIndexEntryForClient);
+
+  const brandMap = new Map();
+  const categoryMap = new Map();
+  for (const item of index) {
+    const bCount = brandMap.get(item.brand_id) || { id: item.brand_id, name: item.brand, count: 0 };
+    bCount.count++;
+    brandMap.set(item.brand_id, bCount);
+    const topCat = item.category_top || 'Други';
+    categoryMap.set(topCat, (categoryMap.get(topCat) || 0) + 1);
+  }
+
+  return {
+    version: meta.version,
+    synced_at: meta.synced_at,
+    total_groups: index.length,
+    chunk_size: meta.chunk_size,
+    chunk_count: meta.chunk_count,
+    brands: Array.from(brandMap.values()).sort((a, b) => a.name.localeCompare(b.name, 'bg')),
+    categories: Array.from(categoryMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'bg')),
+    goals: buildGoalFacetCounts(index),
+    lookup: meta.lookup,
     index
   };
 }
@@ -420,7 +468,7 @@ export async function syncPortfolioCatalog(env) {
   const descriptionMap = await fetchDescriptionMap(apiKey);
 
   const groups = groupRawProducts(data.products, settings, descriptionMap);
-  const meta = buildCatalogMeta(groups);
+  const meta = buildCatalogMeta(groups, settings);
   meta.synced_at = new Date().toISOString();
 
   const chunkCount = meta.chunk_count;
@@ -488,10 +536,12 @@ async function handleGetFilters(env) {
   if (!meta) {
     throw new PortfolioError('Каталогът не е синхронизиран. Стартирайте sync от админ панела.', 404);
   }
+  const clientMeta = buildClientCatalogMeta(meta);
   return cachedResponse({
-    brands: meta.brands,
-    categories: meta.categories,
-    total_groups: meta.total_groups,
+    brands: clientMeta.brands,
+    categories: clientMeta.categories,
+    goals: clientMeta.goals,
+    total_groups: clientMeta.total_groups,
     synced_at: meta.synced_at
   });
 }
@@ -508,17 +558,19 @@ async function handleGetCatalog(request, env) {
   const params = {
     brand: url.searchParams.get('brand') || '',
     category: url.searchParams.get('category') || '',
+    goal: url.searchParams.get('goal') || '',
     q: url.searchParams.get('q') || '',
     available: url.searchParams.get('available') || '',
     min_price: url.searchParams.get('min_price') || '',
     max_price: url.searchParams.get('max_price') || '',
-    sort: url.searchParams.get('sort') || 'name'
+    sort: url.searchParams.get('sort') || 'relevance'
   };
 
-  const filtered = filterIndex(meta.index, params, meta);
+  const clientMeta = buildClientCatalogMeta(meta);
+  const filtered = filterIndex(clientMeta.index, params, clientMeta);
   const total = filtered.length;
   const start = (page - 1) * limit;
-  const items = filtered.slice(start, start + limit);
+  const items = filtered.slice(start, start + limit).map(sanitizeIndexEntryForClient);
 
   return cachedResponse({
     page,
@@ -680,18 +732,20 @@ async function handleBootstrap(env) {
   if (!meta) {
     throw new PortfolioError('Каталогът не е синхронизиран.', 404);
   }
+  const clientMeta = buildClientCatalogMeta(meta);
   return cachedResponse({
     settings,
     meta: {
-      version: meta.version,
-      synced_at: meta.synced_at,
-      total_groups: meta.total_groups,
-      chunk_size: meta.chunk_size,
-      chunk_count: meta.chunk_count,
-      brands: meta.brands,
-      categories: meta.categories,
-      lookup: meta.lookup,
-      index: meta.index
+      version: clientMeta.version,
+      synced_at: clientMeta.synced_at,
+      total_groups: clientMeta.total_groups,
+      chunk_size: clientMeta.chunk_size,
+      chunk_count: clientMeta.chunk_count,
+      brands: clientMeta.brands,
+      categories: clientMeta.categories,
+      goals: clientMeta.goals,
+      lookup: clientMeta.lookup,
+      index: clientMeta.index
     }
   }, 3600);
 }

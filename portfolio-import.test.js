@@ -335,7 +335,7 @@ describe('buildAiSelectionMessages', () => {
     expect(messages[0].content).toContain('антиейджинг');
     expect(messages[0].content).toContain('До 5');
     expect(messages[0].content).toContain('200;Collagen Pro');
-    expect(messages[0].content).toContain('марж');
+    expect(messages[0].content).toContain('отстъпка');
     expect(messages[0].content).not.toContain('300;Unavailable');
     expect(messages.at(-1)).toEqual({ role: 'user', content: 'тест' });
   });

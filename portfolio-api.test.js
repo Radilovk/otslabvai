@@ -5,6 +5,8 @@ import {
   charmEndingSeed,
   groupRawProducts,
   buildCatalogMeta,
+  buildClientCatalogMeta,
+  sanitizeIndexEntryForClient,
   summarizeGroupMargin,
   handlePortfolioRoute
 } from './portfolio-api.js';
@@ -104,6 +106,29 @@ describe('Portfolio API', () => {
     expect(stats.max_margin_pct).toBe(29);
   });
 
+  test('buildClientCatalogMeta strips margin and unavailable products', () => {
+    const groups = groupRawProducts(sampleProducts, settings);
+    const meta = buildCatalogMeta(groups, settings);
+    meta.index.push({
+      group_id: '999',
+      name: 'Out of stock',
+      brand: 'X',
+      brand_id: '1',
+      category: 'Test',
+      category_top: 'Test',
+      min_price: 10,
+      max_price: 10,
+      available: false,
+      max_margin: 5,
+      max_margin_pct: 50,
+      goals: ['health']
+    });
+    const clientMeta = buildClientCatalogMeta(meta);
+    expect(clientMeta.index.some((i) => i.group_id === '999')).toBe(false);
+    expect(clientMeta.index[0].max_margin).toBeUndefined();
+    expect(sanitizeIndexEntryForClient(meta.index[0]).max_margin_pct).toBeUndefined();
+  });
+
   test('handlePortfolioRoute returns 404 when catalog is not synced', async () => {
     const env = {
       PAGE_CONTENT: {
@@ -169,14 +194,24 @@ describe('Portfolio search', () => {
     expect(result[0].name).toBe('Vitamin C 1000');
   });
 
-  test('sorts by margin descending', () => {
+  test('sorts by relevance (internal margin ranking)', () => {
     const withMargin = index.map((item, idx) => ({
       ...item,
+      available: true,
       max_margin_pct: idx === 0 ? 40 : 25
     }));
-    const result = filterIndex(withMargin, { sort: 'margin_desc' });
+    const result = filterIndex(withMargin, { sort: 'relevance' });
     expect(result[0].group_id).toBe('1');
     expect(result[1].group_id).toBe('2');
+  });
+
+  test('hides unavailable products by default', () => {
+    const mixed = [
+      { ...index[0], available: true },
+      { ...index[1], available: false }
+    ];
+    expect(filterIndex(mixed, {})).toHaveLength(1);
+    expect(filterIndex(mixed, { available: 'all' })).toHaveLength(2);
   });
 
   test('paginates results', () => {

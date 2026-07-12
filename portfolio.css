@@ -837,6 +837,78 @@ img, svg { display: block; max-width: 100%; height: auto; }
   pointer-events: none;
 }
 
+/* ─── Filter bar (category / goal / brand) ─── */
+.pf-filter-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.pf-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.pf-filter-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pf-muted);
+}
+
+.pf-filter-select,
+.pf-sidebar select,
+.pf-filter-group select {
+  width: 100%;
+  min-height: var(--pf-touch);
+  padding: 0.55rem 2rem 0.55rem 0.85rem;
+  border: 1.5px solid var(--pf-border);
+  border-radius: var(--pf-radius-sm);
+  background: var(--pf-surface);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pf-text);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s var(--pf-ease);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23646870' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  box-shadow: var(--pf-shadow);
+}
+
+.pf-filter-select:hover,
+.pf-sidebar select:hover,
+.pf-filter-group select:hover {
+  border-color: var(--pf-border-strong);
+}
+
+.pf-filter-select:focus,
+.pf-sidebar select:focus,
+.pf-filter-group select:focus {
+  outline: none;
+  border-color: var(--pf-primary);
+  box-shadow: 0 0 0 4px rgba(var(--pf-primary-rgb), 0.1), var(--pf-shadow);
+}
+
+[data-theme="dark"] .pf-filter-select,
+[data-theme="dark"] .pf-sidebar select,
+[data-theme="dark"] .pf-filter-group select {
+  background-color: var(--pf-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238aa4be' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .pf-search-wrap input:focus {
+  background: var(--pf-surface);
+}
+
 /* ─── Product Grid ─── */
 .pf-grid {
   display: grid;
@@ -2354,6 +2426,11 @@ img, svg { display: block; max-width: 100%; height: auto; }
   .pf-sort select { width: 100%; }
 
   .pf-search-wrap input { font-size: 16px; }
+
+  .pf-filter-bar {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
 
   .pf-chips { gap: 0.35rem; }
   .pf-chip { font-size: 0.75rem; padding: 0.35rem 0.65rem; }
