@@ -80,7 +80,7 @@ function startServer() {
     try {
       const profile = req.body?.profile || SAMPLE_ANSWERS;
       const prepared = await prepareProtocolSubmission(mockEnv, profile, deps);
-      const recommendation = buildMockProtocolResponse(prepared.candidates, prepared.profile);
+      const recommendation = buildMockProtocolResponse(prepared.candidates, prepared.profile, { ranked: prepared.ranked });
       res.json({
         success: true,
         mock: true,
@@ -96,7 +96,7 @@ function startServer() {
   const submitHandler = async (req, res) => {
     try {
       const prepared = await prepareProtocolSubmission(mockEnv, req.body, deps);
-      const recommendation = buildMockProtocolResponse(prepared.candidates, prepared.profile);
+      const recommendation = buildMockProtocolResponse(prepared.candidates, prepared.profile, { ranked: prepared.ranked });
       res.json({
         sessionId: `e2e-${Date.now()}`,
         email: prepared.profile.email,
@@ -129,7 +129,7 @@ async function runEngineChecks() {
   check(prepared.candidates.length >= 3, `Кандидат-пул: ${prepared.candidates.length} продукта`);
   check(prepared.payload.catalog_stats.eligible_available === eligible.length, 'catalog_stats съвпадат');
 
-  const mock = buildMockProtocolResponse(prepared.candidates, prepared.profile);
+  const mock = buildMockProtocolResponse(prepared.candidates, prepared.profile, { ranked: prepared.ranked });
   check(mock.tiers?.basic?.products?.length >= 1, 'Mock basic tier има продукти');
   check(mock.tiers?.optimal?.products?.length >= 1, 'Mock optimal tier има продукти');
   check(mock.tiers?.premium?.products?.length >= 1, 'Mock premium tier има продукти');

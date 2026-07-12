@@ -13,6 +13,11 @@ import {
   productMatchesAnyKeyword,
   productSearchText,
 } from './protocol-safety-rules.js';
+import {
+  assembleProtocolFromComposition,
+  buildMockNarration,
+  composeProtocolStacks,
+} from './protocol-stack-composer.js';
 
 /** Официален фиксиран курс BGN/EUR — цените в каталога са в EUR */
 export const EUR_RATE = 1.95583;
@@ -225,6 +230,29 @@ export function buildCandidatePool(profile, products, { maxCandidates = 12 } = {
   };
 }
 
+/** Ранкиране на всички eligible продукти — O(n), без горен лимит за compose-then-narrate */
+export function rankEligibleProducts(profile, products) {
+  const excluded = new Map();
+  const ranked = [];
+
+  for (const product of products) {
+    const reasons = getExclusionReasons(profile, product);
+    if (reasons.length) {
+      excluded.set(product.product_id, reasons);
+      continue;
+    }
+    ranked.push({ product, score: scoreProduct(product, profile) });
+  }
+
+  ranked.sort((a, b) => b.score - a.score);
+
+  return {
+    ranked,
+    excluded_product_ids: Array.from(excluded.keys()),
+    exclusion_map: Object.fromEntries(excluded),
+  };
+}
+
 function getCheapestVariant(product) {
   const variants = (product.public_data?.variants || []).filter((v) => v.available !== false && v.price > 0);
   if (!variants.length) return null;
@@ -419,7 +447,42 @@ export function validateProtocolResponse(response, candidates, excludedProductId
   return normalizeCumulativeBenefits(response);
 }
 
-export async function prepareProtocolSubmission(env, rawAnswers, deps) {
+/** Обогатява и финализира отговор с фиксирани product_id (compose-then-narrate) */
+export function finalizeProtocolResponse(response, eligibleProducts, excludedProductIds = []) {
+  const excluded = new Set(excludedProductIds);
+  const productMap = new Map(eligibleProducts.map((p) => [p.product_id, p]));
+
+  if (!response?.tiers?.basic || !response?.tiers?.optimal || !response?.tiers?.premium) {
+    throw new Error('Липсват трите ценови класа в отговора.');
+  }
+
+  for (const key of ['basic', 'optimal', 'premium']) {
+    const tier = response.tiers[key];
+    if (!Array.isArray(tier.products) || !tier.products.length) {
+      throw new Error(`Tier "${key}" няма продукти.`);
+    }
+    for (const item of tier.products) {
+      const pid = item.product_id;
+      const product = productMap.get(pid);
+      if (!product) throw new Error(`Липсва продукт в каталога: ${pid}`);
+      if (excluded.has(pid)) throw new Error(`Изключен продукт в стака: ${pid}`);
+    }
+    tier.products = tier.products.map((item) => enrichProtocolProductItem(item, productMap.get(item.product_id)));
+    const totalEur = tier.products.reduce((s, i) => s + (i.price_eur || 0), 0);
+    tier.monthly_total_eur = Math.round(totalEur * 100) / 100;
+    tier.monthly_total_bgn = eurToBgn(totalEur);
+    if (!Array.isArray(tier.benefits)) tier.benefits = [];
+  }
+
+  const rec = response.recommended_tier;
+  if (!['basic', 'optimal', 'premium'].includes(rec)) {
+    response.recommended_tier = 'optimal';
+  }
+
+  return normalizeCumulativeBenefits(response);
+}
+
+export async function prepareProtocolSubmission(env, rawAnswers, deps, { compositionMode = 'compose_narrate' } = {}) {
   const profile = buildClientProfile(rawAnswers);
   if (!profile.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
     throw new Error('Невалиден имейл адрес.');
@@ -436,110 +499,108 @@ export async function prepareProtocolSubmission(env, rawAnswers, deps) {
     throw new Error('Няма достатъчно налични орални продукти за персонален протокол. Моля, опитайте по-късно.');
   }
 
-  const { candidates, excluded_product_ids, exclusion_map } = buildCandidatePool(profile, eligible);
+  const rankedResult = rankEligibleProducts(profile, eligible);
 
-  if (candidates.length < 3) {
+  if (rankedResult.ranked.length < 3) {
     throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
   }
+
   const mustIncludeKws = getMustIncludeKeywords(profile);
+
+  if (compositionMode === 'ai_pick') {
+    const { candidates, excluded_product_ids, exclusion_map } = buildCandidatePool(profile, eligible);
+    if (candidates.length < 3) {
+      throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
+    }
+    const payload = {
+      client_profile: profile,
+      priority_summary: profile.priority,
+      composition_mode: 'ai_pick',
+      candidate_products: candidates.map(transformProductForAI),
+      constraints: {
+        excluded_product_ids,
+        must_include_keywords: mustIncludeKws,
+        oral_only: true,
+        price_ceiling_eur: { basic_target: 25, premium_max: 100 },
+        tier_product_counts: { basic: '3-4', optimal: '5-6', premium: '6-8' },
+      },
+      exclusion_map,
+      catalog_stats: {
+        total_in_catalog: allProducts.length,
+        eligible_available: eligible.length,
+        ranked_pool_size: rankedResult.ranked.length,
+        candidates_sent_to_ai: candidates.length,
+      },
+    };
+    return {
+      profile,
+      payload,
+      candidates,
+      eligible,
+      ranked: rankedResult.ranked,
+      excluded_product_ids,
+      exclusion_map,
+      compositionMode,
+      content,
+    };
+  }
 
   const payload = {
     client_profile: profile,
     priority_summary: profile.priority,
-    candidate_products: candidates.map(transformProductForAI),
+    composition_mode: 'compose_narrate',
     constraints: {
-      excluded_product_ids,
+      excluded_product_ids: rankedResult.excluded_product_ids,
       must_include_keywords: mustIncludeKws,
       oral_only: true,
       price_ceiling_eur: { basic_target: 25, premium_max: 100 },
       tier_product_counts: { basic: '3-4', optimal: '5-6', premium: '6-8' },
     },
-    exclusion_map,
+    exclusion_map: rankedResult.exclusion_map,
     catalog_stats: {
       total_in_catalog: allProducts.length,
       eligible_available: eligible.length,
-      candidates_sent_to_ai: candidates.length,
+      ranked_pool_size: rankedResult.ranked.length,
+      candidates_sent_to_ai: 0,
     },
   };
 
-  return { profile, payload, candidates, content };
+  return {
+    profile,
+    payload,
+    eligible,
+    ranked: rankedResult.ranked,
+    excluded_product_ids: rankedResult.excluded_product_ids,
+    exclusion_map: rankedResult.exclusion_map,
+    compositionMode,
+    content,
+  };
 }
 
-/** Детерминистичен mock отговор за тестове/E2E без AI */
-export function buildMockProtocolResponse(candidates, profile) {
-  const slice = (start, count) => candidates.slice(start, start + count);
-  const mkProducts = (items) => items.map((p, i) => ({
-    product_id: p.product_id,
-    name: p.public_data?.name,
-    role: i === 0 ? 'core' : 'support',
-    dose: 'Според етикета',
-    timing: i % 2 === 0 ? 'сутрин с храна' : 'вечер',
-    why_for_you: `Подходящ за приоритет „${profile.priority}"`,
-    marketing_angle: 'Тестова препоръка',
-    price_eur: Math.round(getProductPriceEur(p) * 100) / 100,
-    price_bgn: eurToBgn(getProductPriceEur(p)),
-    image_url: p.public_data?.image_url || '',
-    variant_name: getCheapestVariant(p)?.option_name || '',
-    product_url: `life-product.html?id=${encodeURIComponent(p.product_id)}`,
-  }));
+/**
+ * @param {unknown} candidatesOrRanked
+ * @param {object} profile
+ * @param {{ ranked?: { product: object, score: number }[] }} [options]
+ */
+export function buildMockProtocolResponse(candidatesOrRanked, profile, options = {}) {
+  const { ranked } = options;
 
-  const mkTier = (key, name, tagline, items, benefits) => {
-    const products = mkProducts(items);
-    const totalEur = products.reduce((s, x) => s + (x.price_eur || 0), 0);
-    return {
-      name,
-      tagline,
-      monthly_total_eur: Math.round(totalEur * 100) / 100,
-      monthly_total_bgn: eurToBgn(totalEur),
-      benefits,
-      strategy: `Стратегия за ${name.toLowerCase()} — фокус върху ${profile.priority}`,
-      expected_timeline: 'Първи ефекти: 3–4 седмици',
-      products,
-    };
-  };
+  /** @type {{ product: object, score: number }[]} */
+  let rankedEntries = ranked || [];
 
-  const basicItems = slice(0, Math.min(3, candidates.length));
-  const optimalItems = slice(0, Math.min(5, candidates.length));
-  const premiumItems = slice(0, Math.min(7, candidates.length));
+  if (!ranked) {
+    if (Array.isArray(candidatesOrRanked) && candidatesOrRanked[0]?.product) {
+      rankedEntries = candidatesOrRanked;
+    } else {
+      const candidates = Array.isArray(candidatesOrRanked) ? candidatesOrRanked : [];
+      rankedEntries = candidates.map((product) => ({ product, score: 0 }));
+    }
+  }
 
-  const response = {
-    analysis: `Профилът ви показва фокус върху ${profile.priority}. Подготвихме три варианта от наличните орални добавки.`,
-    recommended_tier: 'optimal',
-    tiers: {
-      basic: mkTier('basic', 'Базов старт', 'Минимален ефективен протокол', basicItems, [
-        'Подкрепя ежедневната енергия',
-        'Укрепва имунната защита',
-        'Защитава клетките от оксидативен стрес',
-      ]),
-      optimal: mkTier('optimal', 'Оптимален протокол', 'Най-добра стойност', optimalItems, [
-        'Подкрепя ежедневната енергия',
-        'Укрепва имунната защита',
-        'Защитава клетките от оксидативен стрес',
-        'Подобрява качеството на съня',
-        'Подпомага възстановяването след натоварване',
-        'Подкрепя кожата отвътре',
-      ]),
-      premium: mkTier('premium', 'Премиум регенерация', 'Пълен клетъчен протокол', premiumItems, [
-        'Подкрепя ежедневната енергия',
-        'Укрепва имунната защита',
-        'Защитава клетките от оксидативен стрес',
-        'Подобрява качеството на съня',
-        'Подпомага възстановяването след натоварване',
-        'Подкрепя кожата отвътре',
-        'Стимулира клетъчната регенерация',
-        'Подобрява когнитивната острота и фокуса',
-        'Максимална антиейджинг защита',
-        'Пълна подкрепа за дълголетие',
-      ]),
-    },
-    protocol_schedule: {
-      morning: ['Основните добавки със закуска'],
-      evening: ['Поддържащи добавки преди сън'],
-      weekly_notes: 'Пийте достатъчно вода и поддържайте редовен режим.',
-    },
-    lifestyle_tips: ['Движение 30 мин дневно', '7–8 часа сън', 'Балансирана храна'],
-    disclaimer: 'Информацията не замества лекарска консултация.',
-  };
-
-  return validateProtocolResponse(response, candidates, []);
+  const composed = composeProtocolStacks(profile, rankedEntries);
+  const narration = buildMockNarration(composed, profile);
+  const eligible = rankedEntries.map((e) => e.product);
+  const productMap = new Map(eligible.map((p) => [p.product_id, p]));
+  const { response } = assembleProtocolFromComposition(composed, narration, productMap, []);
+  return finalizeProtocolResponse(response, eligible, []);
 }

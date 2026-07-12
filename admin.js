@@ -5627,7 +5627,7 @@ async function runLifeProtocolSimulateLocal(useMockAi) {
     };
 
     const prepared = await prepareProtocolSubmission(mockEnv, sampleProfile, deps);
-    const recommendation = buildMockProtocolResponse(prepared.candidates, prepared.profile);
+    const recommendation = buildMockProtocolResponse(prepared.candidates, prepared.profile, { ranked: prepared.ranked });
 
     return {
         success: true,
