@@ -5,6 +5,7 @@ import {
   charmEndingSeed,
   groupRawProducts,
   buildCatalogMeta,
+  summarizeGroupMargin,
   handlePortfolioRoute
 } from './portfolio-api.js';
 import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
@@ -89,9 +90,18 @@ describe('Portfolio API', () => {
     const meta = buildCatalogMeta(groups);
     expect(meta.total_groups).toBe(1);
     expect(meta.index[0].variant_count).toBe(2);
+    expect(meta.index[0].max_margin).toBeGreaterThan(0);
+    expect(meta.index[0].max_margin_pct).toBeGreaterThan(0);
     expect(meta.lookup['100']).toBe(0);
     expect(meta.sku_lookup['1']).toBe('100');
     expect(meta.sku_lookup['2']).toBe('100');
+  });
+
+  test('summarizeGroupMargin uses best variant margin', () => {
+    const groups = groupRawProducts(sampleProducts, settings);
+    const stats = summarizeGroupMargin(groups[0]);
+    expect(stats.max_margin).toBe(2.9);
+    expect(stats.max_margin_pct).toBe(29);
   });
 
   test('handlePortfolioRoute returns 404 when catalog is not synced', async () => {
@@ -157,6 +167,16 @@ describe('Portfolio search', () => {
   test('sorts name descending', () => {
     const result = filterIndex(index, { sort: 'name_desc' });
     expect(result[0].name).toBe('Vitamin C 1000');
+  });
+
+  test('sorts by margin descending', () => {
+    const withMargin = index.map((item, idx) => ({
+      ...item,
+      max_margin_pct: idx === 0 ? 40 : 25
+    }));
+    const result = filterIndex(withMargin, { sort: 'margin_desc' });
+    expect(result[0].group_id).toBe('1');
+    expect(result[1].group_id).toBe('2');
   });
 
   test('paginates results', () => {

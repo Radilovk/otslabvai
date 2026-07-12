@@ -171,6 +171,34 @@ export function calculateRetailPrice(b2bPrice, markupPercent, override, skuId) {
   return charmRoundRetailPrice(raw, charmEndingSeed(skuId));
 }
 
+/** Margin stats for a catalog group – used for recommendation ranking. */
+export function summarizeGroupMargin(group) {
+  const variants = group?.variants || [];
+  let maxMargin = 0;
+  let maxMarginPct = 0;
+  let maxMarkupPercent = 0;
+
+  for (const variant of variants) {
+    const b2b = Number(variant.b2b_price) || 0;
+    const retail = Number(variant.retail_price) || 0;
+    if (!(b2b > 0 && retail > b2b)) continue;
+
+    const margin = retail - b2b;
+    const marginPct = (margin / b2b) * 100;
+    const markup = Number(variant.markup_percent) || marginPct;
+
+    if (margin > maxMargin) maxMargin = margin;
+    if (marginPct > maxMarginPct) maxMarginPct = marginPct;
+    if (markup > maxMarkupPercent) maxMarkupPercent = markup;
+  }
+
+  return {
+    max_margin: roundPrice(maxMargin),
+    max_margin_pct: roundPrice(maxMarginPct),
+    markup_percent: roundPrice(maxMarkupPercent)
+  };
+}
+
 export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
   const groups = new Map();
   const overrides = settings.product_overrides || {};
@@ -242,6 +270,7 @@ export function buildCatalogMeta(groups) {
     const minPrice = prices.length ? Math.min(...prices) : 0;
     const maxPrice = prices.length ? Math.max(...prices) : 0;
     const packs = [...new Set(g.variants.map((v) => v.pack).filter(Boolean))];
+    const marginStats = summarizeGroupMargin(g);
 
     index.push(enrichIndexEntry({
       group_id: g.group_id,
@@ -256,7 +285,8 @@ export function buildCatalogMeta(groups) {
       variant_count: g.variants.length,
       available: availableVariants.length > 0,
       image: g.image,
-      packs
+      packs,
+      ...marginStats
     }, g));
 
     const bCount = brandMap.get(g.brand_id) || { id: g.brand_id, name: g.brand, count: 0 };

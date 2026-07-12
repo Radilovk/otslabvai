@@ -282,7 +282,7 @@ export function renderHeader(active = 'catalog') {
     <header class="pf-header">
       <div class="pf-header-inner">
         <a href="portfolio.html" class="pf-logo" aria-label="${BRAND_FULL} – начало">
-          <img src="${BRAND_LOGO}" alt="" class="pf-logo-img" width="40" height="40" decoding="async">
+          <img src="${BRAND_LOGO}" alt="" class="pf-logo-img" width="46" height="46" decoding="async">
           <div class="pf-logo-text-wrap">
             <span class="pf-logo-text" id="site-name">${BRAND_NAME}</span>
             <span class="pf-logo-tagline" id="site-tagline">Nutrition Science</span>
