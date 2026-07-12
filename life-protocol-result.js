@@ -1,4 +1,4 @@
-import { formatPriceEur } from './protocol-quiz-engine.js';
+import { formatPriceEur, buildCumulativeBenefitTiers } from './protocol-quiz-engine.js';
 
 const RESULT_KEY = 'lifeProtocolResult';
 const CART_KEY = 'lifeCart';
@@ -32,25 +32,9 @@ function tierTotalEur(tier) {
   return Math.round(sum * 100) / 100;
 }
 
-/** Кумулативни ползи: basic → optimal (+) → premium (+) */
+/** Кумулативни ползи със семантична дедупликация */
 function normalizeBenefitsForDisplay(tiers) {
-  const dedupe = (arr) => [...new Set((arr || []).map((s) => String(s).trim()).filter(Boolean))];
-
-  const basic = dedupe(tiers.basic?.benefits).slice(0, 4);
-  const optimalRaw = dedupe(tiers.optimal?.benefits);
-  const premiumRaw = dedupe(tiers.premium?.benefits);
-
-  const optimalAdd = optimalRaw.filter((b) => !basic.includes(b));
-  const optimal = [...basic, ...optimalAdd.slice(0, 3)];
-
-  const premiumAdd = premiumRaw.filter((b) => !optimal.includes(b));
-  const premium = [...optimal, ...premiumAdd.slice(0, 4)];
-
-  return {
-    basic: { list: basic, inherited: 0 },
-    optimal: { list: optimal, inherited: basic.length },
-    premium: { list: premium, inherited: optimal.length },
-  };
+  return buildCumulativeBenefitTiers(tiers);
 }
 
 function renderBenefits(benefits, inheritedCount = 0) {
@@ -99,11 +83,11 @@ function renderTier(key, tier, recommended, benefitMeta) {
     <ul class="lpr-benefits">${benefits}</ul>
     ${tier.strategy ? `<p class="lpr-strategy">${escapeHtml(tier.strategy)}</p>` : ''}
     <div class="lpr-products-section">
-      <button type="button" class="lpr-products-toggle" data-tier-toggle="${key}" aria-expanded="false" aria-controls="lpr-products-${key}">
-        <span>Виж всички продукти (${products.length})</span>
+      <button type="button" class="lpr-products-toggle open" data-tier-toggle="${key}" aria-expanded="true" aria-controls="lpr-products-${key}">
+        <span>Продукти в стака (${products.length})</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
       </button>
-      <div class="lpr-product-grid" id="lpr-products-${key}" hidden>${productCards}</div>
+      <div class="lpr-product-grid" id="lpr-products-${key}">${productCards}</div>
     </div>
     <button type="button" class="lpq-btn lpq-btn-primary lpr-order-btn" data-action="add-tier" data-tier="${key}">
       Поръчай този протокол — ${formatPriceEur(totalEur)}
@@ -201,10 +185,8 @@ function bindTierToggles() {
       e.stopPropagation();
       toggleProductGrid(btn);
     });
+    toggleProductGrid(btn, true);
   });
-
-  const recommendedBtn = container.querySelector('.lpr-tier.recommended [data-tier-toggle]');
-  if (recommendedBtn) toggleProductGrid(recommendedBtn, true);
 }
 
 function updateSchedulePanel(tiers, baseSchedule, tierKey) {
@@ -275,7 +257,7 @@ function renderResult(data) {
   });
 
   if (subtitleEl) {
-    subtitleEl.textContent = 'Изберете вариант за график · разгънете продуктите с бутона по-долу';
+    subtitleEl.textContent = 'Изберете вариант за график · продуктите са видими във всеки стак';
   }
 }
 
