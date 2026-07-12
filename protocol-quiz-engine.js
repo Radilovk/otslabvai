@@ -123,6 +123,8 @@ export function buildClientProfile(raw) {
   const ageBand = raw.age_band || '';
   const menopauseContext = sex === 'female' && ['45-54', '55-64', '65+'].includes(ageBand);
 
+  const pickOther = (field) => String(raw[`${field}_other`] || '').trim();
+
   return {
     sex,
     age_band: ageBand,
@@ -130,12 +132,18 @@ export function buildClientProfile(raw) {
     height_cm: heightCm,
     weight_kg: weightKg,
     priority: raw.priority || 'longevity',
+    priority_other: pickOther('priority'),
     conditions: Array.isArray(raw.conditions) ? raw.conditions : [],
+    conditions_other: pickOther('conditions'),
     medications: Array.isArray(raw.medications) ? raw.medications : [],
+    medications_other: pickOther('medications'),
     activity: raw.activity || 'rare',
     diet: raw.diet || 'omnivore',
+    diet_other: pickOther('diet'),
     symptoms: Array.isArray(raw.symptoms) ? raw.symptoms : [],
+    symptoms_other: pickOther('symptoms'),
     allergies: Array.isArray(raw.allergies) ? raw.allergies : [],
+    allergies_other: pickOther('allergies'),
     pregnancy: raw.pregnancy || 'no',
     sun_exposure: raw.sun_exposure || null,
     joint_duration: raw.joint_duration || null,

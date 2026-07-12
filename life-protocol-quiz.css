@@ -119,6 +119,43 @@ body.lpq-body {
 
 .lpq-option input { margin-top: 0.2rem; accent-color: var(--lpq-accent); }
 
+.lpq-other-input {
+  margin-top: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1.5px dashed var(--lpq-accent);
+  border-radius: 12px;
+  background: var(--lpq-accent-dim);
+}
+
+.lpq-other-input[hidden] {
+  display: none !important;
+}
+
+.lpq-other-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--lpq-muted);
+  margin-bottom: 0.4rem;
+}
+
+.lpq-other-text {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid var(--lpq-border);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--lpq-text);
+  background: var(--lpq-card);
+}
+
+.lpq-other-text:focus {
+  outline: none;
+  border-color: var(--lpq-accent);
+  box-shadow: 0 0 0 3px var(--lpq-accent-dim);
+}
+
 .lpq-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
