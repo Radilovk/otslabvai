@@ -2,6 +2,7 @@ import {
   escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage, icon
 } from './portfolio-shared.js';
 import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
+import { sortByMarginDesc } from './portfolio-filter.js';
 
 const DOM = {
   root: document.getElementById('product-root'),
@@ -91,10 +92,9 @@ function renderRelated() {
   const meta = getCachedMeta();
   const topCat = product.category_path?.[0];
   if (!meta?.index || !topCat) return '';
-  const related = meta.index
-    .filter((i) => i.category_top === topCat && i.group_id !== product.group_id)
-    .sort((a, b) => Number(b.available) - Number(a.available))
-    .slice(0, 4);
+  const related = sortByMarginDesc(
+    meta.index.filter((i) => i.category_top === topCat && i.group_id !== product.group_id && i.available !== false)
+  ).slice(0, 4);
   if (!related.length) return '';
   return `
     <section class="pf-related">

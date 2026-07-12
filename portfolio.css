@@ -120,6 +120,10 @@
   background: var(--pf-surface);
 }
 
+[data-theme="dark"] .pf-card-image {
+  background: linear-gradient(180deg, rgba(16, 31, 51, 0.95) 0%, rgba(13, 26, 45, 0.98) 100%);
+}
+
 [data-theme="dark"] .pf-filters-toggle,
 [data-theme="dark"] .pf-theme-toggle {
   background: var(--pf-surface);
@@ -223,6 +227,8 @@ img, svg { display: block; max-width: 100%; height: auto; }
 }
 
 .pf-card-image img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   max-width: 100%;
@@ -286,16 +292,19 @@ img, svg { display: block; max-width: 100%; height: auto; }
 }
 
 .pf-logo-img {
-  width: 36px;
-  height: 36px;
+  width: 41px;
+  height: 41px;
   border-radius: 10px;
   object-fit: contain;
   flex-shrink: 0;
-  background: #fff;
-  padding: 2px;
+  background: transparent;
 }
 
 .pf-logo:hover .pf-logo-img { transform: scale(1.04); }
+
+[data-theme="dark"] .pf-logo-img {
+  background: transparent;
+}
 
 .pf-logo-icon {
   width: 40px;
@@ -877,6 +886,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
+  z-index: 2;
   background: var(--pf-primary);
   color: #fff;
   font-size: 0.65rem;
@@ -885,6 +895,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
   border-radius: var(--pf-radius-pill);
   box-shadow: 0 2px 8px rgba(var(--pf-primary-rgb), 0.35);
   letter-spacing: 0.02em;
+  pointer-events: none;
 }
 
 .pf-badge.out { background: #8a9098; box-shadow: none; }
@@ -2280,7 +2291,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
   }
 
   .pf-logo { gap: 0.45rem; min-width: 0; flex: 1; }
-  .pf-logo-img { width: 32px; height: 32px; }
+  .pf-logo-img { width: 37px; height: 37px; }
   .pf-logo-text { font-size: 0.88rem; }
   .pf-logo-tagline { font-size: 0.6rem; }
 
@@ -2430,7 +2441,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
 @media (min-width: 900px) {
   :root { --pf-header-h: 64px; }
 
-  .pf-logo-img { width: 40px; height: 40px; }
+  .pf-logo-img { width: 46px; height: 46px; }
 
   .pf-layout {
     grid-template-columns: 280px minmax(0, 1fr);

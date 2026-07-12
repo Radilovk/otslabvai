@@ -36,12 +36,27 @@ export function applyFilters(index, params, meta = {}) {
   return results;
 }
 
+export function compareByMarginDesc(a, b) {
+  const marginPctDiff = (b.max_margin_pct ?? 0) - (a.max_margin_pct ?? 0);
+  if (marginPctDiff !== 0) return marginPctDiff;
+  const marginDiff = (b.max_margin ?? 0) - (a.max_margin ?? 0);
+  if (marginDiff !== 0) return marginDiff;
+  return a.name.localeCompare(b.name, 'bg');
+}
+
+export function sortByMarginDesc(items) {
+  return [...items].sort(compareByMarginDesc);
+}
+
 export function sortResults(results, sort = 'name') {
   if (sort === 'price_asc') {
     return [...results].sort((a, b) => a.min_price - b.min_price || a.name.localeCompare(b.name, 'bg'));
   }
   if (sort === 'price_desc') {
     return [...results].sort((a, b) => b.max_price - a.max_price || a.name.localeCompare(b.name, 'bg'));
+  }
+  if (sort === 'margin_desc') {
+    return sortByMarginDesc(results);
   }
   if (sort === 'name_desc') {
     return [...results].sort((a, b) => b.name.localeCompare(a.name, 'bg'));

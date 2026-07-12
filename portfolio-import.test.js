@@ -324,9 +324,9 @@ describe('collectImportedGroupIds / refreshImportedProductsInContent', () => {
 
 describe('buildAiSelectionMessages', () => {
   const index = [
-    { group_id: '100', name: 'Fat Burner X', brand: 'B1', category: 'Фет бърнъри', min_price: 19.9, available: true },
-    { group_id: '200', name: 'Collagen Pro', brand: 'B2', category: 'Колаген', min_price: 29.9, available: true },
-    { group_id: '300', name: 'Unavailable', brand: 'B3', category: 'Друго', min_price: 9.9, available: false }
+    { group_id: '100', name: 'Fat Burner X', brand: 'B1', category: 'Фет бърнъри', min_price: 19.9, max_margin: 5.2, max_margin_pct: 35, available: true },
+    { group_id: '200', name: 'Collagen Pro', brand: 'B2', category: 'Колаген', min_price: 29.9, max_margin: 8.1, max_margin_pct: 42, available: true },
+    { group_id: '300', name: 'Unavailable', brand: 'B3', category: 'Друго', min_price: 9.9, max_margin: 1, max_margin_pct: 10, available: false }
   ];
 
   test('system съобщението включва каталога и лимита', () => {
@@ -334,7 +334,8 @@ describe('buildAiSelectionMessages', () => {
     expect(messages[0].role).toBe('system');
     expect(messages[0].content).toContain('антиейджинг');
     expect(messages[0].content).toContain('До 5');
-    expect(messages[0].content).toContain('100;Fat Burner X');
+    expect(messages[0].content).toContain('200;Collagen Pro');
+    expect(messages[0].content).toContain('марж');
     expect(messages[0].content).not.toContain('300;Unavailable');
     expect(messages.at(-1)).toEqual({ role: 'user', content: 'тест' });
   });

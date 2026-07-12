@@ -9,7 +9,7 @@
  * Използва се от worker.js за /portfolio/import/* маршрутите.
  */
 
-import { filterIndex } from './portfolio-filter.js';
+import { filterIndex, sortByMarginDesc } from './portfolio-filter.js';
 
 export class PortfolioImportError extends Error {
   constructor(message, status = 500) {
@@ -383,7 +383,9 @@ const AI_SELECT_MAX_CATALOG_ENTRIES = 180;
 
 function formatCatalogLine(e) {
   const kw = e.search_text ? e.search_text.slice(0, 60) : '';
-  return [e.group_id, e.name, e.brand || '-', e.brand_id || '-', e.category || '-', e.min_price ?? 0, kw].join(';');
+  const marginPct = e.max_margin_pct ?? 0;
+  const marginEur = e.max_margin ?? 0;
+  return [e.group_id, e.name, e.brand || '-', e.brand_id || '-', e.category || '-', e.min_price ?? 0, marginPct, marginEur, kw].join(';');
 }
 
 export function buildAiSelectionMessages({ project, prompt, index, limit = 12, history = [], catalogTotal = 0 }) {
@@ -392,18 +394,20 @@ export function buildAiSelectionMessages({ project, prompt, index, limit = 12, h
     throw new PortfolioImportError(`Невалиден проект „${project}". Позволени: ${Object.keys(IMPORT_PROJECTS).join(', ')}.`, 400);
   }
 
-  const available = (index || []).filter((e) => e.available !== false);
+  const available = sortByMarginDesc((index || []).filter((e) => e.available !== false));
   const shown = available.slice(0, AI_SELECT_MAX_CATALOG_ENTRIES);
   const entries = shown.map(formatCatalogLine).join('\n');
   const truncated = catalogTotal > shown.length
-    ? `\n(Показани ${shown.length} от ${catalogTotal} налични — използвай филтрите в админ панела за по-тесен обхват.)`
+    ? `\n(Показани ${shown.length} от ${catalogTotal} налични — подредени по марж; използвай филтрите в админ панела за по-тесен обхват.)`
     : '';
 
   const system = `Ти си AI асистент за подбор на продукти от B2B каталог.
 Сайт: ${projectInfo.siteLabel}. Тема: ${projectInfo.goalLabel}.
 
-Каталог (group_id;име;марка;brand_id;категория;цена;ключови_думи):
+Каталог (group_id;име;марка;brand_id;категория;цена;марж_%;марж_€;ключови_думи):
 ${entries}${truncated}
+
+ВАЖНО: При равна релевантност винаги предпочитай продукти и марки с по-висок марж (марж_% и марж_€ от базата за цени/отстъпки). Подреди selected по низходящ марж.
 
 Отговори САМО с JSON: {"reply":"текст на български","selected":[{"group_id":"ID","reason":"...","goals":["..."],"tagline":"..."}]}
 Само group_id от каталога. До ${limit} в selected. Без подбор → selected:[].`;
@@ -543,10 +547,21 @@ export async function handlePortfolioImportRoute(request, env, url, deps) {
       const validIds = new Set(indexSubset.map((e) => String(e.group_id)));
       const { reply, selected } = parseAiSelectResponse(aiResult, validIds);
       const indexById = new Map(indexSubset.map((e) => [String(e.group_id), e]));
-      const enriched = selected.slice(0, limit).map((item) => {
+      const enriched = sortByMarginDesc(selected.slice(0, limit).map((item) => {
         const entry = indexById.get(item.group_id);
-        return entry ? { ...item, name: entry.name, brand: entry.brand, category: entry.category, min_price: entry.min_price, image: entry.image } : item;
-      });
+        return entry
+          ? {
+              ...item,
+              name: entry.name,
+              brand: entry.brand,
+              category: entry.category,
+              min_price: entry.min_price,
+              max_margin: entry.max_margin,
+              max_margin_pct: entry.max_margin_pct,
+              image: entry.image
+            }
+          : item;
+      }));
 
       return jsonResponse({ reply, selected: enriched, catalog_size: indexSubset.length });
     }
