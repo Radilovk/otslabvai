@@ -23,13 +23,22 @@ function calcBmi(heightCm, weightKg) {
   return Math.round((weightKg / (m * m)) * 10) / 10;
 }
 
+function formatAnswerList(values, otherText) {
+  const items = (values || []).filter((v) => v && v !== 'none' && v !== 'other');
+  if (otherText) items.push(`друго: ${otherText}`);
+  return items;
+}
+
 function buildLogSequence(answers) {
   const bmi = calcBmi(answers.height_cm, answers.weight_kg);
-  const priority = PRIORITY_LABELS[answers.priority] || answers.priority || 'общо здраве';
+  const priority = answers.priority === 'other'
+    ? (answers.priority_other || 'друго')
+    : (PRIORITY_LABELS[answers.priority] || answers.priority || 'общо здраве');
   const activity = ACTIVITY_LABELS[answers.activity] || answers.activity || '—';
-  const conditions = (answers.conditions || []).filter((c) => c !== 'none');
-  const meds = (answers.medications || []).filter((m) => m !== 'none');
-  const symptoms = (answers.symptoms || []).filter((s) => s !== 'none');
+  const conditions = formatAnswerList(answers.conditions, answers.conditions_other);
+  const meds = formatAnswerList(answers.medications, answers.medications_other);
+  const symptoms = formatAnswerList(answers.symptoms, answers.symptoms_other);
+  const allergies = formatAnswerList(answers.allergies, answers.allergies_other);
 
   const lines = [
     { type: 'system', text: 'Инициализиране на Life Protocol Engine v2.4…', delay: 200 },
@@ -63,6 +72,12 @@ function buildLogSequence(answers) {
 
   if (symptoms.length) {
     lines.push({ type: 'data', text: `Симптомна корелация: ${symptoms.join(', ')}`, delay: 380 });
+  }
+  if (allergies.length) {
+    lines.push({ type: 'warn', text: `Алергии / непоносимости: ${allergies.join(', ')}`, delay: 320 });
+  }
+  if (answers.diet === 'other' && answers.diet_other) {
+    lines.push({ type: 'info', text: `Хранителен модел (друго): ${answers.diet_other}`, delay: 280 });
   }
 
   lines.push(

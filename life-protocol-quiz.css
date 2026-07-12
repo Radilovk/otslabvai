@@ -119,6 +119,43 @@ body.lpq-body {
 
 .lpq-option input { margin-top: 0.2rem; accent-color: var(--lpq-accent); }
 
+.lpq-other-input {
+  margin-top: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1.5px dashed var(--lpq-accent);
+  border-radius: 12px;
+  background: var(--lpq-accent-dim);
+}
+
+.lpq-other-input[hidden] {
+  display: none !important;
+}
+
+.lpq-other-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--lpq-muted);
+  margin-bottom: 0.4rem;
+}
+
+.lpq-other-text {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid var(--lpq-border);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--lpq-text);
+  background: var(--lpq-card);
+}
+
+.lpq-other-text:focus {
+  outline: none;
+  border-color: var(--lpq-accent);
+  box-shadow: 0 0 0 3px var(--lpq-accent-dim);
+}
+
 .lpq-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -226,17 +263,19 @@ body.lpq-body {
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
   font-size: 0.78rem;
   line-height: 1.55;
-  background: #0a1218;
-  color: #b8d4e8;
+  background: linear-gradient(135deg, #f7fcfd 0%, #eef8f9 100%);
+  color: #0f2540;
   border-radius: 12px;
   padding: 1rem;
   max-height: 280px;
   overflow-y: auto;
   border: 1px solid rgba(0, 196, 200, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 [data-theme="dark"] .lpq-analysis-terminal {
-  background: #050a0e;
+  background: linear-gradient(135deg, #121c24 0%, #0f1820 100%);
+  color: #e8f0f5;
 }
 
 .lpq-log-line {
@@ -252,16 +291,23 @@ body.lpq-body {
 }
 
 .lpq-log-time {
-  color: #5a7184;
+  color: #7a94a8;
   flex-shrink: 0;
   font-size: 0.72rem;
 }
 
-.lpq-log-system .lpq-log-text { color: #4dd9dc; }
-.lpq-log-ok .lpq-log-text { color: #5dd39e; }
-.lpq-log-warn .lpq-log-text { color: #f0c674; }
-.lpq-log-data .lpq-log-text { color: #9ec8ff; }
-.lpq-log-info .lpq-log-text { color: #b8d4e8; }
+.lpq-log-system .lpq-log-text { color: #009a9e; }
+.lpq-log-ok .lpq-log-text { color: #1a9e6a; }
+.lpq-log-warn .lpq-log-text { color: #c48a1a; }
+.lpq-log-data .lpq-log-text { color: #3a7ec8; }
+.lpq-log-info .lpq-log-text { color: #3d5a73; }
+
+[data-theme="dark"] .lpq-log-time { color: #5a7184; }
+[data-theme="dark"] .lpq-log-system .lpq-log-text { color: #4dd9dc; }
+[data-theme="dark"] .lpq-log-ok .lpq-log-text { color: #5dd39e; }
+[data-theme="dark"] .lpq-log-warn .lpq-log-text { color: #f0c674; }
+[data-theme="dark"] .lpq-log-data .lpq-log-text { color: #9ec8ff; }
+[data-theme="dark"] .lpq-log-info .lpq-log-text { color: #b8d4e8; }
 
 .lpq-spinner {
   width: 48px;
@@ -314,6 +360,13 @@ body.lpq-body {
   .lpr-tiers { grid-template-columns: 1fr; }
 }
 
+.lpr-tier-hint {
+  font-size: 0.88rem;
+  color: var(--lpq-muted);
+  margin: -1rem 0 1.25rem;
+  text-align: center;
+}
+
 .lpr-tier {
   border: 1.5px solid var(--lpq-border);
   border-radius: var(--lpq-radius);
@@ -321,11 +374,26 @@ body.lpq-body {
   display: flex;
   flex-direction: column;
   position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.lpr-tier:hover {
+  border-color: rgba(0, 196, 200, 0.35);
+}
+
+.lpr-tier.selected {
+  border-color: var(--lpq-accent);
+  box-shadow: 0 6px 24px rgba(0, 196, 200, 0.12);
 }
 
 .lpr-tier.recommended {
   border-color: var(--lpq-accent);
   box-shadow: 0 8px 32px rgba(0, 196, 200, 0.15);
+}
+
+.lpr-tier.recommended.selected {
+  box-shadow: 0 10px 36px rgba(0, 196, 200, 0.2);
 }
 
 .lpr-tier-badge {
@@ -391,6 +459,16 @@ body.lpq-body {
   background: var(--lpq-accent);
 }
 
+.lpr-benefits li.lpr-benefit-new::before {
+  background: linear-gradient(135deg, var(--lpq-accent), #4dd9dc);
+  box-shadow: 0 0 0 2px rgba(0, 196, 200, 0.15);
+}
+
+.lpr-benefits li.lpr-benefit-new {
+  font-weight: 600;
+  color: var(--lpq-text);
+}
+
 .lpr-products-mini {
   font-size: 0.82rem;
   color: var(--lpq-muted);
@@ -444,6 +522,10 @@ body.lpq-body {
   grid-template-columns: 1fr;
   gap: 0.75rem;
   margin-top: 0.75rem;
+}
+
+.lpr-product-grid[hidden] {
+  display: none !important;
 }
 
 .lpr-product-card {
@@ -524,16 +606,127 @@ body.lpq-body {
 }
 
 .lpr-schedule-products {
-  margin-top: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--lpq-border);
   font-size: 0.88rem;
   line-height: 1.7;
 }
 
+.lpr-schedule-sep {
+  margin: 0 0.35rem;
+  color: var(--lpq-muted);
+}
+
 .lpr-schedule {
   margin-top: 2rem;
-  padding: 1.25rem;
+  padding: 1.5rem;
   border: 1px solid var(--lpq-border);
+  border-radius: 16px;
+  background: var(--lpq-card);
+  box-shadow: 0 4px 20px rgba(15, 37, 64, 0.04);
+}
+
+.lpr-schedule-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--lpq-border);
+}
+
+.lpr-schedule-header h3 {
+  font-family: var(--lpq-display);
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.lpr-schedule-tier-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--lpq-accent);
+  background: var(--lpq-accent-dim);
+  padding: 0.25rem 0.75rem;
+  border-radius: 99px;
+}
+
+.lpr-schedule-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lpr-schedule-block {
+  padding: 1rem 1.1rem;
+  background: var(--lpq-accent-dim);
   border-radius: 12px;
+  border-left: 3px solid var(--lpq-accent);
+}
+
+.lpr-schedule-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.95rem;
+  color: var(--lpq-text);
+}
+
+.lpr-schedule-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.lpr-schedule-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.lpr-schedule-list li {
+  position: relative;
+  padding-left: 1.15rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--lpq-text);
+}
+
+.lpr-schedule-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lpq-accent);
+}
+
+.lpr-schedule-notes {
+  margin-top: 1.1rem;
+  padding: 0.85rem 1rem;
+  background: rgba(15, 37, 64, 0.03);
+  border-radius: 10px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--lpq-muted);
+}
+
+.lpr-schedule-empty {
+  color: var(--lpq-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.lpr-lifestyle-tips h3 {
+  font-family: var(--lpq-display);
+  margin-top: 0;
 }
 
 .lpr-schedule h3 {

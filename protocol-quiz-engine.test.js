@@ -71,6 +71,32 @@ describe('buildClientProfile', () => {
     expect(p.bmi).toBeCloseTo(23.5, 0);
     expect(p.menopause_context).toBe(true);
   });
+
+  test('предава свободен текст от опция „Друго“', () => {
+    const p = buildClientProfile({
+      sex: 'female',
+      age_band: '35-44',
+      height_cm: 165,
+      weight_kg: 60,
+      email: 'test@example.com',
+      priority: 'other',
+      priority_other: 'хормонален баланс',
+      conditions: ['other'],
+      conditions_other: 'хашимото',
+      medications: ['none'],
+      symptoms: ['fatigue', 'other'],
+      symptoms_other: 'вечерна умора',
+      allergies: ['other'],
+      allergies_other: 'цитруси',
+      diet: 'other',
+      diet_other: 'без лактоза',
+    });
+    expect(p.priority_other).toBe('хормонален баланс');
+    expect(p.conditions_other).toBe('хашимото');
+    expect(p.symptoms_other).toBe('вечерна умора');
+    expect(p.allergies_other).toBe('цитруси');
+    expect(p.diet_other).toBe('без лактоза');
+  });
 });
 
 describe('buildCandidatePool', () => {

@@ -6,7 +6,9 @@ export function getDefaultProtocolQuizPrompt() {
   return `Експерт по anti-aging протоколи. Избери САМО product_id от списъка. БЕЗ reasoning, БЕЗ обяснения извън JSON.
 
 3 tier-а: basic (3-4 продукта), optimal (5-6, препоръчан), premium (6-8).
-Кратки ползи на български с глаголи. Кратки dose/timing/why_for_you (макс. 12 думи).
+Ползите (benefits) са КУМУЛАТИВНИ: basic = 3-4 базови ползи; optimal = всички от basic + 2-3 нови; premium = всички от optimal + 3-4 нови премиум ползи. Новите ползи да звучат ясно, категорично и маркетингово убедително.
+Кратки dose/timing/why_for_you (макс. 12 думи).
+Ако в профила има *_other полета (свободен текст от „Друго“), използвай ги при персонализацията на анализа и why_for_you.
 
 Върни САМО JSON:
 {"analysis":"2 изречения","recommended_tier":"optimal","tiers":{"basic":{"name":"Базов старт","tagline":"...","benefits":["..."],"strategy":"...","products":[{"product_id":"...","role":"core","dose":"1 капс","timing":"сутрин","why_for_you":"..."}]},"optimal":{...},"premium":{...}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."],"disclaimer":"Информацията не замества лекарска консултация."}
@@ -22,12 +24,18 @@ export function buildCompactProtocolPayload(payload) {
       age_band: p.age_band,
       bmi: p.bmi,
       priority: p.priority,
+      priority_other: p.priority_other || '',
       conditions: p.conditions,
+      conditions_other: p.conditions_other || '',
       medications: p.medications,
+      medications_other: p.medications_other || '',
       symptoms: p.symptoms,
+      symptoms_other: p.symptoms_other || '',
       allergies: p.allergies,
+      allergies_other: p.allergies_other || '',
       activity: p.activity,
       diet: p.diet,
+      diet_other: p.diet_other || '',
     },
     products: (payload.candidate_products || []).map((item) => ({
       id: item.product_id,

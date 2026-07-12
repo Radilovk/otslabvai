@@ -48,6 +48,7 @@ const STEPS = [
       { value: 'sleep', label: 'Сън и възстановяване' },
       { value: 'cognition', label: 'Умствена концентрация и памет' },
       { value: 'longevity', label: 'Обща жизненост и дълголетие' },
+      { value: 'other', label: 'Друго', allowsText: true },
     ],
   },
   {
@@ -64,6 +65,7 @@ const STEPS = [
       { value: 'kidney', label: 'Бъбречно или чернодробно заболяване' },
       { value: 'cardiovascular', label: 'Сърдечно-съдово заболяване' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
+      { value: 'other', label: 'Друго', allowsText: true },
     ],
   },
   {
@@ -78,6 +80,7 @@ const STEPS = [
       { value: 'hormone_therapy', label: 'Хормонална терапия / контрацепция' },
       { value: 'thyroid_meds', label: 'Медикаменти за щитовидна жлеза' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
+      { value: 'other', label: 'Друго', allowsText: true },
     ],
   },
   {
@@ -100,6 +103,7 @@ const STEPS = [
       { value: 'vegetarian', label: 'Вегетарианец' },
       { value: 'vegan', label: 'Веган' },
       { value: 'keto', label: 'Кето / нисковъглехидратен' },
+      { value: 'other', label: 'Друго', allowsText: true },
     ],
   },
   {
@@ -114,6 +118,7 @@ const STEPS = [
       { value: 'hair_nails', label: 'Косопад / чупливи нокти' },
       { value: 'concentration', label: 'Затруднена концентрация' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
+      { value: 'other', label: 'Друго', allowsText: true },
     ],
   },
   {
@@ -128,6 +133,7 @@ const STEPS = [
       { value: 'lactose', label: 'Лактоза' },
       { value: 'nuts', label: 'Ядки' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
+      { value: 'other', label: 'Друго', allowsText: true },
     ],
   },
 ];
@@ -140,6 +146,46 @@ const formCard = document.getElementById('lpq-form-card');
 const loadingCard = document.getElementById('lpq-loading');
 
 const answers = loadDraft();
+
+const OTHER_VALUE = 'other';
+const OTHER_MAX_WORDS = 8;
+
+function otherFieldKey(field) {
+  return `${field}_other`;
+}
+
+function escapeHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function wordCount(text) {
+  return String(text || '').trim().split(/\s+/).filter(Boolean).length;
+}
+
+function syncOtherInputs() {
+  form.querySelectorAll('.lpq-other-text').forEach((input) => {
+    const field = input.dataset.otherField;
+    if (field) answers[otherFieldKey(field)] = input.value.trim();
+  });
+}
+
+function setOtherInputVisible(field, visible) {
+  const wrap = form.querySelector(`[data-other-for="${field}"]`);
+  if (!wrap) return;
+  if (visible) wrap.removeAttribute('hidden');
+  else wrap.setAttribute('hidden', '');
+}
+
+function clearOtherField(field) {
+  answers[otherFieldKey(field)] = '';
+  const input = form.querySelector(`.lpq-other-text[data-other-field="${field}"]`);
+  if (input) input.value = '';
+  setOtherInputVisible(field, false);
+}
 
 function loadDraft() {
   try {
@@ -225,15 +271,20 @@ function renderStep(step) {
     const inputType = step.type === 'single' ? 'radio' : 'checkbox';
     const current = answers[step.field];
     const selected = step.type === 'single' ? [current] : (Array.isArray(current) ? current : []);
+    const hasOtherSelected = selected.includes(OTHER_VALUE);
     inner += `<div class="lpq-options" data-field="${step.field}" data-type="${step.type}">`;
     for (const opt of step.options) {
       const checked = selected.includes(opt.value);
-      inner += `<label class="lpq-option${checked ? ' selected' : ''}">
-        <input type="${inputType}" name="${step.field}" value="${opt.value}"${checked ? ' checked' : ''}${opt.exclusive ? ' data-exclusive' : ''}>
+      inner += `<label class="lpq-option${checked ? ' selected' : ''}${opt.allowsText ? ' lpq-option-other' : ''}">
+        <input type="${inputType}" name="${step.field}" value="${opt.value}"${checked ? ' checked' : ''}${opt.exclusive ? ' data-exclusive' : ''}${opt.allowsText ? ' data-allows-text' : ''}>
         <span>${opt.label}</span>
       </label>`;
     }
-    inner += '</div>';
+    inner += `</div>
+      <div class="lpq-other-input" data-other-for="${step.field}"${hasOtherSelected ? '' : ' hidden'}>
+        <label class="lpq-other-label" for="other-${step.field}">Опишете накратко</label>
+        <input type="text" class="lpq-other-text" id="other-${step.field}" data-other-field="${step.field}" maxlength="80" placeholder="До няколко думи, напр. „хронична умора следобед“" value="${escapeHtml(answers[otherFieldKey(step.field)] || '')}">
+      </div>`;
   } else if (step.type === 'body') {
     inner += `<div class="lpq-grid-2">
       <div class="lpq-field"><label for="height_cm">Ръст (см)</label>
@@ -270,22 +321,45 @@ function bindStepEvents() {
           answers[field] = input.value;
           group.querySelectorAll('.lpq-option').forEach((l) => l.classList.remove('selected'));
           input.closest('.lpq-option')?.classList.add('selected');
+          if (input.value === OTHER_VALUE) {
+            setOtherInputVisible(field, true);
+            form.querySelector(`.lpq-other-text[data-other-field="${field}"]`)?.focus();
+          } else {
+            clearOtherField(field);
+          }
         } else {
           let vals = [...group.querySelectorAll('input:checked')].map((i) => i.value);
           if (input.dataset.exclusive && input.checked) {
             vals = [input.value];
             group.querySelectorAll('input').forEach((i) => { if (i !== input) i.checked = false; });
+            if (input.value === 'none') clearOtherField(field);
           } else if (input.checked && input.value !== 'none') {
             const none = group.querySelector('input[value="none"]');
             if (none) none.checked = false;
+            vals = [...group.querySelectorAll('input:checked')].map((i) => i.value);
+          }
+          if (input.value === OTHER_VALUE && !input.checked) {
+            clearOtherField(field);
           }
           answers[field] = vals.filter((v) => v !== 'none' || vals.length === 1);
           group.querySelectorAll('.lpq-option').forEach((l) => {
             l.classList.toggle('selected', l.querySelector('input')?.checked);
           });
+          setOtherInputVisible(field, answers[field].includes(OTHER_VALUE));
+          if (input.value === OTHER_VALUE && input.checked) {
+            form.querySelector(`.lpq-other-text[data-other-field="${field}"]`)?.focus();
+          }
         }
         saveDraft();
       });
+    });
+  });
+
+  form.querySelectorAll('.lpq-other-text').forEach((input) => {
+    input.addEventListener('input', () => {
+      const field = input.dataset.otherField;
+      answers[otherFieldKey(field)] = input.value.trim();
+      saveDraft();
     });
   });
 }
@@ -324,6 +398,31 @@ function clearErrors() {
   form.querySelectorAll('.lpq-error').forEach((e) => e.classList.remove('visible'));
 }
 
+function validateOtherText(step) {
+  syncOtherInputs();
+  const field = step.field;
+  if (!field) return true;
+
+  const selected = step.type === 'single'
+    ? [answers[field]]
+    : (Array.isArray(answers[field]) ? answers[field] : []);
+
+  if (!selected.includes(OTHER_VALUE)) return true;
+
+  const text = answers[otherFieldKey(field)]?.trim() || '';
+  if (!text) {
+    showError(step.id, 'При „Друго“ въведете кратко описание (до няколко думи).');
+    setOtherInputVisible(field, true);
+    form.querySelector(`.lpq-other-text[data-other-field="${field}"]`)?.focus();
+    return false;
+  }
+  if (wordCount(text) > OTHER_MAX_WORDS) {
+    showError(step.id, `Моля, съкратете описанието (макс. ${OTHER_MAX_WORDS} думи).`);
+    return false;
+  }
+  return true;
+}
+
 function validateCurrentStep() {
   clearErrors();
   const step = activeSteps[stepIndex];
@@ -332,10 +431,12 @@ function validateCurrentStep() {
     showError(step.id, 'Моля, изберете опция.');
     return false;
   }
+  if (step.type === 'single' && !validateOtherText(step)) return false;
   if (step.type === 'multi' && !answers[step.field]?.length) {
     showError(step.id, 'Моля, изберете поне една опция или „Нищо от изброените“.');
     return false;
   }
+  if (step.type === 'multi' && !validateOtherText(step)) return false;
   if (step.type === 'body') {
     const h = Number(document.getElementById('height_cm')?.value);
     const w = Number(document.getElementById('weight_kg')?.value);
@@ -364,6 +465,9 @@ function validateCurrentStep() {
 }
 
 async function submitQuiz() {
+  syncOtherInputs();
+  saveDraft();
+
   formCard.hidden = true;
   loadingCard.hidden = false;
 

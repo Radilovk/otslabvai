@@ -245,11 +245,12 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: var(--bg-primary);
-            border-top: 2px solid var(--border-color);
+            background: transparent;
+            border: none !important;
             padding: 15px 20px;
             z-index: 999;
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: none !important;
+            pointer-events: none;
         }
         
         .sticky-order-button .container {
@@ -257,6 +258,7 @@
             margin: 0 auto;
             display: flex;
             justify-content: center;
+            pointer-events: none;
         }
         
         .order-now-btn {
@@ -269,22 +271,11 @@
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(228, 0, 124, 0.4);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             font-family: var(--font-primary);
-            animation: pulseGlow 2s ease-in-out infinite;
             position: relative;
             overflow: hidden;
-        }
-        
-        @keyframes pulseGlow {
-            0%, 100% {
-                box-shadow: 0 8px 25px rgba(228, 0, 124, 0.4), 0 0 20px rgba(228, 0, 124, 0.3);
-                transform: scale(1);
-            }
-            50% {
-                box-shadow: 0 12px 35px rgba(228, 0, 124, 0.6), 0 0 30px rgba(228, 0, 124, 0.5);
-                transform: scale(1.05);
-            }
+            pointer-events: auto;
         }
         
         .order-now-btn::before {
@@ -303,8 +294,8 @@
         }
         
         .order-now-btn:hover {
-            transform: translateY(-3px) scale(1.08);
-            box-shadow: 0 15px 40px rgba(228, 0, 124, 0.6), 0 0 40px rgba(228, 0, 124, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
         }
         
         .order-now-btn:active {
