@@ -9,6 +9,9 @@ import {
     getStatIconElement, getBenefitIconSVG, getGuaranteeIconSVG
 } from './life-icons.js';
 
+const LOGO_FALLBACK = 'images/lifelogo3.png';
+const LOGO_FALLBACK_ALT = 'images/life-icons/logo.png';
+
 const DOM = {
     mainContainer: document.getElementById('main-content-container'),
     header: {
@@ -1073,6 +1076,16 @@ function initializeLogoFromCache() {
     return false;
 }
 
+function applyLogoWithFallback(img, logoUrl) {
+    if (!img) return;
+    img.onerror = () => {
+        if (img.src.includes(LOGO_FALLBACK_ALT)) return;
+        img.onerror = null;
+        img.src = img.src.includes(LOGO_FALLBACK) ? LOGO_FALLBACK_ALT : LOGO_FALLBACK;
+    };
+    img.src = logoUrl ? encodeURI(logoUrl) : LOGO_FALLBACK;
+}
+
 // Helper function to update logo based on current theme
 function updateLogoForTheme() {
     // Try to use cached logo settings first for instant display
@@ -1088,20 +1101,10 @@ function updateLogoForTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const logoUrl = currentTheme === 'dark' ? window.logoSettings.darkLogo : window.logoSettings.lightLogo;
     
-    if (DOM.header.logoImg) {
-        const fallbackLogo = 'images/life-icons/logo.png';
-        DOM.header.logoImg.onerror = () => {
-            DOM.header.logoImg.onerror = null;
-            DOM.header.logoImg.src = fallbackLogo;
-        };
-        DOM.header.logoImg.src = logoUrl ? encodeURI(logoUrl) : fallbackLogo;
-    }
+    applyLogoWithFallback(DOM.header.logoImg, logoUrl);
     
-    // Also update footer logo if it exists
     const footerLogo = document.querySelector('.footer-logo-container img');
-    if (footerLogo) {
-        footerLogo.src = encodeURI(logoUrl);
-    }
+    applyLogoWithFallback(footerLogo, logoUrl);
 }
 
 function renderMainContent(pageContent) {
@@ -1170,12 +1173,13 @@ function renderFooter(settings, footer) {
     
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const logoUrl = currentTheme === 'dark' ? window.logoSettings.darkLogo : window.logoSettings.lightLogo;
+    const logoSrc = logoUrl ? encodeURI(logoUrl) : LOGO_FALLBACK;
     
     const columnsHTML = footer.columns.map(col => {
         if (col.type === 'logo') {
             return `<div class="footer-column">
                  <a href="#" class="logo-container footer-logo-container">
-                    <img src="${logoUrl}" alt="${settings.site_name} Logo">
+                    <img src="${logoSrc}" alt="${settings.site_name} Logo" id="footer-logo-img">
                     <div><span class="brand-name">${settings.site_name}</span><span class="brand-slogan">${settings.site_slogan}</span></div>
                 </a>
             </div>`;
@@ -1205,6 +1209,7 @@ function renderFooter(settings, footer) {
             </a>` : ''}
         </div>` : '';
     DOM.footer.copyrightContainer.innerHTML = `<span>${footer.copyright_text}</span>${socialFooterHTML}`;
+    updateLogoForTheme();
 }
 
 function renderSocialFeed(footer) {
@@ -1560,31 +1565,44 @@ function initializePageInteractions(settings = {}) {
 }
 
 function initializeGlobalScripts() {
-    // --- Sticky Header on Scroll (Lipolor style) ---
+    // --- Sticky Header on Scroll — morphing glass with hysteresis to prevent flicker ---
     const header = document.querySelector('.main-header');
+    let headerScrolled = false;
+    const SCROLL_ON = 60;
+    const SCROLL_OFF = 20;
 
     function handleStickyHeader() {
         if (!header) return;
-        const stickyThreshold = 50;
-        if (window.scrollY > stickyThreshold) {
+        const y = window.scrollY;
+        if (!headerScrolled && y > SCROLL_ON) {
+            headerScrolled = true;
             header.classList.add('scrolled');
-        } else {
+        } else if (headerScrolled && y < SCROLL_OFF) {
+            headerScrolled = false;
             header.classList.remove('scrolled');
         }
     }
 
     if (header) {
         if (document.documentElement.classList.contains('header-pre-scrolled')) {
+            headerScrolled = true;
             header.classList.add('scrolled');
             document.documentElement.classList.remove('header-pre-scrolled');
         }
         handleStickyHeader();
     }
 
+    let scrollTicking = false;
     window.addEventListener('scroll', () => {
-        handleStickyHeader();
-        DOM.backToTopBtn.classList.toggle('visible', window.scrollY > 300);
-    });
+        if (!scrollTicking) {
+            scrollTicking = true;
+            requestAnimationFrame(() => {
+                handleStickyHeader();
+                DOM.backToTopBtn.classList.toggle('visible', window.scrollY > 300);
+                scrollTicking = false;
+            });
+        }
+    }, { passive: true });
 
     // --- Scroll Animations (Lipolor style) ---
     function handleScrollAnimations() {

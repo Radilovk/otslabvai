@@ -11,7 +11,7 @@
   --lpq-error: #c0392b;
   --lpq-radius: 16px;
   --lpq-font: 'DM Sans', 'Segoe UI', sans-serif;
-  --lpq-display: 'Playfair Display', Georgia, serif;
+  --lpq-display: 'Cormorant Garamond', Georgia, serif;
 }
 
 [data-theme="dark"] {

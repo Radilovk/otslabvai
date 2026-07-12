@@ -685,8 +685,8 @@ function renderHeader(settings, navigation, pageContent) {
     
     // Cache logo URLs in localStorage for instant loading on next visit
     try {
-        localStorage.setItem('cachedLogoLight', window.logoSettings.lightLogo);
-        localStorage.setItem('cachedLogoDark', window.logoSettings.darkLogo);
+        localStorage.setItem('lifeCachedLogoLight', window.logoSettings.lightLogo);
+        localStorage.setItem('lifeCachedLogoDark', window.logoSettings.darkLogo);
     } catch (e) {
         console.warn('Could not cache logo URLs:', e);
     }
@@ -1032,30 +1032,43 @@ function initializeProductInteractions() {
 // =======================================================
 
 function initializeGlobalScripts() {
-    // Sticky Header on Scroll
+    // Sticky Header on Scroll — morphing glass with hysteresis
     const header = document.querySelector('.main-header');
+    let headerScrolled = false;
+    const SCROLL_ON = 60;
+    const SCROLL_OFF = 20;
 
     function handleStickyHeader() {
         if (!header) return;
-        const stickyThreshold = 50;
-        if (window.scrollY > stickyThreshold) {
+        const y = window.scrollY;
+        if (!headerScrolled && y > SCROLL_ON) {
+            headerScrolled = true;
             header.classList.add('scrolled');
-        } else {
+        } else if (headerScrolled && y < SCROLL_OFF) {
+            headerScrolled = false;
             header.classList.remove('scrolled');
         }
     }
 
     if (header) {
         if (document.documentElement.classList.contains('header-pre-scrolled')) {
+            headerScrolled = true;
             header.classList.add('scrolled');
             document.documentElement.classList.remove('header-pre-scrolled');
         }
         handleStickyHeader();
     }
 
+    let scrollTicking = false;
     window.addEventListener('scroll', () => {
-        handleStickyHeader();
-    });
+        if (!scrollTicking) {
+            scrollTicking = true;
+            requestAnimationFrame(() => {
+                handleStickyHeader();
+                scrollTicking = false;
+            });
+        }
+    }, { passive: true });
 
     // Mobile Menu
     const closeMenu = () => {
