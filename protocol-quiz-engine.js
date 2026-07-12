@@ -577,12 +577,25 @@ export async function prepareProtocolSubmission(env, rawAnswers, deps, { composi
   };
 }
 
-/** Детерминистичен mock отговор за тестове/E2E без AI */
-export function buildMockProtocolResponse(candidatesOrRanked, profile, { ranked } = {}) {
-  const rankedEntries = ranked
-    || (Array.isArray(candidatesOrRanked) && candidatesOrRanked[0]?.product
-      ? candidatesOrRanked
-      : (candidatesOrRanked || []).map((product) => ({ product, score: 0 })));
+/**
+ * @param {unknown} candidatesOrRanked
+ * @param {object} profile
+ * @param {{ ranked?: { product: object, score: number }[] }} [options]
+ */
+export function buildMockProtocolResponse(candidatesOrRanked, profile, options = {}) {
+  const { ranked } = options;
+
+  /** @type {{ product: object, score: number }[]} */
+  let rankedEntries = ranked || [];
+
+  if (!ranked) {
+    if (Array.isArray(candidatesOrRanked) && candidatesOrRanked[0]?.product) {
+      rankedEntries = candidatesOrRanked;
+    } else {
+      const candidates = Array.isArray(candidatesOrRanked) ? candidatesOrRanked : [];
+      rankedEntries = candidates.map((product) => ({ product, score: 0 }));
+    }
+  }
 
   const composed = composeProtocolStacks(profile, rankedEntries);
   const narration = buildMockNarration(composed, profile);
