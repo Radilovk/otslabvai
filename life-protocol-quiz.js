@@ -1,5 +1,6 @@
 import { API_URL } from './config.js';
 import { ProtocolAnalysisAnimator } from './life-protocol-analysis.js';
+import { persistProtocolResult, hasPurchasedProtocol } from './life-protocol-store.js';
 
 const STORAGE_KEY = 'lifeProtocolLead';
 const RESULT_KEY = 'lifeProtocolResult';
@@ -503,6 +504,7 @@ async function submitQuiz() {
       timestamp: Date.now(),
     }));
     sessionStorage.setItem(RESULT_KEY, JSON.stringify(data));
+    persistProtocolResult(data);
     sessionStorage.removeItem('lifeProtocolDraft');
 
     window.location.href = 'life-protocol-result.html';
@@ -550,6 +552,13 @@ async function checkQuizEnabled() {
 }
 
 checkQuizEnabled();
+
+if (new URLSearchParams(window.location.search).get('replace') === '1' && hasPurchasedProtocol()) {
+  const banner = document.createElement('div');
+  banner.className = 'lpq-replace-banner';
+  banner.innerHTML = '<strong>Нов протокол</strong> — при завършване на въпросника и нова поръчка текущият протокол ще бъде заменен.';
+  formCard?.parentElement?.insertBefore(banner, formCard);
+}
 
 document.addEventListener('keydown', (e) => {
   if (!formCard.hidden && loadingCard.hidden && e.key === 'Enter' && document.activeElement?.tagName !== 'TEXTAREA') {

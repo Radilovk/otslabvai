@@ -1,4 +1,5 @@
 import { formatPriceEur, buildCumulativeBenefitTiers } from './protocol-quiz-engine.js';
+import { persistProtocolResult } from './life-protocol-store.js';
 
 const RESULT_KEY = 'lifeProtocolResult';
 const CART_KEY = 'lifeCart';
@@ -281,11 +282,21 @@ function addTierToCart(tier, btn) {
   }
 
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  const tierKey = btn.dataset.tier;
   localStorage.setItem('lifeProtocolSelectedTier', JSON.stringify({
     tierName: tier.name,
+    tierKey,
     monthly_total_eur: tierTotalEur(tier),
     timestamp: Date.now(),
   }));
+
+  if (resultData) {
+    persistProtocolResult(resultData);
+    localStorage.setItem('lifeProtocolPending', JSON.stringify({
+      tierKey,
+      timestamp: Date.now()
+    }));
+  }
 
   btn.textContent = 'Добавено ✓';
   btn.disabled = true;

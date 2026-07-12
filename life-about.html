@@ -2,7 +2,7 @@
 <html lang="bg" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <script src="life-header-preinit.js"></script>
     <link rel="icon" type="image/png" href="images/lifelogo3.png">
     <title>За нас - Life Protocols</title>
@@ -26,7 +26,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
     <link rel="preload" as="image" href="images/lifelogo3.png" type="image/png">
     <link rel="stylesheet" href="life.css">
@@ -47,7 +47,7 @@
             margin-bottom: 3rem;
         }
         .about-hero h1 {
-            font-family: var(--font-display, 'Playfair Display', serif);
+            font-family: var(--font-display, 'Cormorant Garamond', serif);
             font-size: 3rem;
             color: white;
             margin-bottom: 1rem;
@@ -77,7 +77,7 @@
             flex: 1;
         }
         .about-text h2 {
-            font-family: var(--font-display, 'Playfair Display', serif);
+            font-family: var(--font-display, 'Cormorant Garamond', serif);
             font-size: 2rem;
             color: var(--text-primary);
             margin-bottom: 1rem;
@@ -95,7 +95,7 @@
             color: white;
             text-decoration: none;
             border-radius: 50px;
-            font-family: var(--font-display, 'Playfair Display', serif);
+            font-family: var(--font-display, 'Cormorant Garamond', serif);
             font-weight: 600;
             font-size: 1.1rem;
             transition: all 0.3s ease;
@@ -223,7 +223,7 @@
                 <p>Всеки продукт в нашето портфолио е внимателно подбран въз основа на съвременни научни изследвания в областта на антиейджинга и клетъчното подмладяване. Вярваме в основани на доказателства подходи - не в магически решения, а в протоколи с доказана ефективност.</p>
                 <p>Вашето дълголетие е нашият приоритет. Затова предлагаме само безопасни и ефективни продукти, които поддържат митохондриалната функция, стимулират автофагията и подпомагат клетъчното обновяване по естествен начин.</p>
                 <p>Заедно можем да постигнем вашите цели и да създадем устойчиви навици за оптимално здраве и дълголетие.</p>
-                <a href="life.html#products" class="cta-button">Разгледай протоколите</a>
+                <a href="life-protocol-quiz.html" class="cta-button" id="about-cta-button">Започнете вашия протокол</a>
             </div>
         </div>
     </main>
@@ -246,6 +246,19 @@
     <script type="module" src="life.js"></script>
     <script type="module">
         import { API_URL } from './config.js';
+        import { getCtaButtonTarget, hasPurchasedProtocol } from './life-protocol-store.js';
+
+        function initAboutCta() {
+            const cta = document.getElementById('about-cta-button');
+            if (!cta) return;
+            if (hasPurchasedProtocol()) {
+                cta.href = 'life-my-protocol.html';
+                cta.textContent = 'Моят протокол';
+            } else {
+                cta.href = getCtaButtonTarget();
+                cta.textContent = 'Започнете вашия протокол';
+            }
+        }
 
         async function loadAboutSettings() {
             const heroTitle = document.getElementById('about-hero-title');
@@ -284,8 +297,12 @@
         }
 
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', loadAboutSettings);
+            document.addEventListener('DOMContentLoaded', () => {
+                initAboutCta();
+                loadAboutSettings();
+            });
         } else {
+            initAboutCta();
             loadAboutSettings();
         }
     </script>
