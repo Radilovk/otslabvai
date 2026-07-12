@@ -19,11 +19,19 @@ import {
   prepareProtocolSubmission,
   validateProtocolResponse,
   buildMockProtocolResponse,
+  finalizeProtocolResponse,
 } from './protocol-quiz-engine.js';
 import {
   getDefaultProtocolQuizPrompt,
+  getDefaultNarratorPrompt,
   buildProtocolQuizMessages,
+  buildNarratorMessages,
 } from './protocol-quiz-prompt.js';
+import {
+  composeProtocolStacks,
+  assembleProtocolFromComposition,
+  buildMockNarration,
+} from './protocol-stack-composer.js';
 import {
   loadLifeProtocolSettings,
   saveLifeProtocolSettings,
@@ -1957,33 +1965,72 @@ async function runLifeProtocolGeneration(env, rawAnswers, { useMockAi = false, s
     throw new UserFacingError('Въпросникът за персонален протокол е временно изключен.', 503);
   }
 
+  const compositionMode = settings.composition_mode === 'ai_pick' ? 'ai_pick' : 'compose_narrate';
+
   const deps = {
     loadProjectContent,
     loadGroupsByIds: loadPortfolioGroupsByIds,
   };
 
-  const prepared = await prepareProtocolSubmission(env, rawAnswers, deps);
-  const { profile, payload, candidates } = prepared;
-  const excludedProductIds = payload.constraints.excluded_product_ids;
+  const prepared = await prepareProtocolSubmission(env, rawAnswers, deps, { compositionMode });
+  const {
+    profile,
+    payload,
+    ranked,
+    eligible,
+    excluded_product_ids: excludedProductIds,
+    candidates,
+  } = prepared;
 
-  if (useMockAi) {
-    const recommendation = buildMockProtocolResponse(candidates, profile);
-    return { profile, payload, candidates, recommendation, mock: true };
+  if (compositionMode === 'ai_pick') {
+    if (useMockAi) {
+      const recommendation = buildMockProtocolResponse(candidates, profile, { ranked });
+      return { profile, payload, candidates, recommendation, mock: true };
+    }
+
+    const promptTemplate = settings.prompt || getDefaultProtocolQuizPrompt();
+    const messages = buildProtocolQuizMessages(promptTemplate, payload);
+
+    try {
+      const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+      let recommendation = parseJsonFromAI(aiRaw);
+      recommendation = validateProtocolResponse(recommendation, candidates, excludedProductIds);
+      return { profile, payload, candidates, recommendation, mock: false };
+    } catch (e) {
+      console.warn('Life protocol AI failed, using deterministic fallback:', e.message || e);
+      if (!isProtocolAIRecoverableError(e)) throw e;
+      const recommendation = buildMockProtocolResponse(candidates, profile, { ranked });
+      return { profile, payload, candidates, recommendation, mock: true, ai_fallback: true };
+    }
   }
 
-  const promptTemplate = settings.prompt || getDefaultProtocolQuizPrompt();
-  const messages = buildProtocolQuizMessages(promptTemplate, payload);
+  const composed = composeProtocolStacks(profile, ranked);
+  const productMap = new Map(eligible.map((p) => [p.product_id, p]));
+  payload.composed_meta = composed.meta;
+
+  if (useMockAi) {
+    const narration = buildMockNarration(composed, profile);
+    const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
+    const recommendation = finalizeProtocolResponse(response, eligible, excludedProductIds);
+    return { profile, payload, composed, recommendation, mock: true };
+  }
+
+  const promptTemplate = settings.narrator_prompt || getDefaultNarratorPrompt();
+  const messages = buildNarratorMessages(promptTemplate, profile, composed, eligible);
 
   try {
     const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
-    let recommendation = parseJsonFromAI(aiRaw);
-    recommendation = validateProtocolResponse(recommendation, candidates, excludedProductIds);
-    return { profile, payload, candidates, recommendation, mock: false };
+    const narration = parseJsonFromAI(aiRaw);
+    const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
+    const recommendation = finalizeProtocolResponse(response, eligible, excludedProductIds);
+    return { profile, payload, composed, recommendation, mock: false };
   } catch (e) {
-    console.warn('Life protocol AI failed, using deterministic fallback:', e.message || e);
+    console.warn('Life protocol narrator AI failed, using deterministic fallback:', e.message || e);
     if (!isProtocolAIRecoverableError(e)) throw e;
-    const recommendation = buildMockProtocolResponse(candidates, profile);
-    return { profile, payload, candidates, recommendation, mock: true, ai_fallback: true };
+    const narration = buildMockNarration(composed, profile);
+    const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
+    const recommendation = finalizeProtocolResponse(response, eligible, excludedProductIds);
+    return { profile, payload, composed, recommendation, mock: true, ai_fallback: true };
   }
 }
 
