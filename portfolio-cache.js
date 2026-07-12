@@ -197,6 +197,7 @@ export function getFiltersFromCache() {
   return {
     brands: meta.brands,
     categories: meta.categories,
+    goals: meta.goals || [],
     total_groups: meta.total_groups,
     synced_at: meta.synced_at
   };

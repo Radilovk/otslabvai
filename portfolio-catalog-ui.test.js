@@ -6,21 +6,24 @@ import {
 } from './portfolio-catalog-ui.js';
 
 describe('portfolio-catalog-ui', () => {
-  test('countActiveFilters ignores default availability', () => {
+  test('countActiveFilters counts category, goal and brand', () => {
     expect(countActiveFilters({})).toBe(0);
     expect(countActiveFilters({ category: 'Протеини' })).toBe(1);
+    expect(countActiveFilters({ category: 'Протеини', goal: 'muscle' })).toBe(2);
     expect(countActiveFilters({ category: 'Протеини', brand: 'optimum' })).toBe(2);
-    expect(countActiveFilters({ availableOnly: false })).toBe(1);
   });
 
-  test('getRemovableFilterChips excludes category', () => {
+  test('getRemovableFilterChips includes category and goal labels', () => {
     const chips = getRemovableFilterChips({
       q: 'whey',
+      category: 'Протеини',
+      categoryLabel: 'Протеини',
+      goal: 'muscle',
+      goalLabel: 'Мускулна маса',
       brand: '749',
-      brandLabel: 'Optimum',
-      category: 'Протеини'
+      brandLabel: 'Optimum'
     });
-    expect(chips.map((c) => c.key)).toEqual(['q', 'brand']);
+    expect(chips.map((c) => c.key)).toEqual(['q', 'category', 'goal', 'brand']);
   });
 
   test('shouldShowActiveFilterRow hides single-criterion state', () => {
