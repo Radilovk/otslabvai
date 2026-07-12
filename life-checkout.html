@@ -1405,6 +1405,46 @@
         // --- 1. Зареждане на количката от localStorage ---
         const cartData = JSON.parse(localStorage.getItem('lifeCart') || '[]');
 
+        function savePurchasedProtocolFromCheckout(orderResponse) {
+            try {
+                const pending = JSON.parse(localStorage.getItem('lifeProtocolPending') || 'null');
+                const tierKey = pending?.tierKey
+                    || JSON.parse(localStorage.getItem('lifeProtocolSelectedTier') || 'null')?.tierKey
+                    || JSON.parse(localStorage.getItem('lifeProtocolSelectedTier') || 'null')?.tierName;
+                const resultData = JSON.parse(sessionStorage.getItem('lifeProtocolResult') || 'null')
+                    || JSON.parse(localStorage.getItem('lifeProtocolResultPersistent') || 'null');
+                if (!resultData?.tiers || !tierKey) return;
+
+                const resolvedKey = resultData.tiers[tierKey]
+                    ? tierKey
+                    : (resultData.recommended_tier || 'optimal');
+                const tier = resultData.tiers[resolvedKey];
+                if (!tier) return;
+
+                const emailInput = document.getElementById('email');
+                const payload = {
+                    purchased: true,
+                    purchasedAt: Date.now(),
+                    orderId: orderResponse?.id || null,
+                    sessionId: resultData.sessionId || null,
+                    email: emailInput?.value || null,
+                    tierKey: resolvedKey,
+                    tierName: tier.name,
+                    analysis: resultData.analysis || '',
+                    selectedTier: tier,
+                    tiers: resultData.tiers,
+                    protocol_schedule: resultData.protocol_schedule || null,
+                    lifestyle_tips: resultData.lifestyle_tips || [],
+                    disclaimer: resultData.disclaimer || '',
+                    recommended_tier: resultData.recommended_tier || resolvedKey
+                };
+                localStorage.setItem('lifeMyProtocol', JSON.stringify(payload));
+                localStorage.removeItem('lifeProtocolPending');
+            } catch (e) {
+                console.warn('Could not save purchased protocol', e);
+            }
+        }
+
         // Предварително попълване от протоколен въпросник
         try {
             const lead = JSON.parse(localStorage.getItem('lifeProtocolLead') || 'null');
@@ -2058,7 +2098,8 @@
                     }
                     return orderRes.json();
                 })
-                .then(() => {
+                .then((orderJson) => {
+                    savePurchasedProtocolFromCheckout(orderJson);
                     localStorage.removeItem('lifeCart');
                     // Изчистваме количката и на екрана (зад success модала)
                     cartData.length = 0;

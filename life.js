@@ -8,9 +8,39 @@ import {
     getFeatureIconSVG, iconChevronDown, iconCheck, getLifeIconImg, statFrostedIcon,
     getStatIconElement, getBenefitIconSVG, getGuaranteeIconSVG
 } from './life-icons.js';
+import {
+    getHeroPrimaryCta,
+    getPremiumCta
+} from './life-protocol-store.js';
+import { LIFE_CATEGORY_DEFS } from './life-category-assign.js';
 
 const LOGO_FALLBACK = 'images/lifelogo3.png';
 const LOGO_FALLBACK_ALT = 'images/life-icons/logo.png';
+
+function resolveCategoryAnchor(categoryId, pageContent = []) {
+    if (!categoryId) return null;
+    const cat = (pageContent || []).find(
+        (c) => c.type === 'product_category' && !c.is_hidden
+            && (c.id === categoryId || c.category_id === categoryId)
+    );
+    if (cat) return `#${cat.id || cat.category_id}`;
+    const legacyMap = {
+        'anti-aging': 'anti-aging-beauty',
+        peptides: 'health-longevity',
+        'all-products': 'brain-cognition'
+    };
+    const mapped = legacyMap[categoryId];
+    if (mapped) return resolveCategoryAnchor(mapped, pageContent);
+    return null;
+}
+
+function resolveFeatureLink(feature, pageContent = []) {
+    const catId = feature.category_id || (feature.link || '').replace(/^#/, '');
+    const anchor = resolveCategoryAnchor(catId, pageContent);
+    if (anchor) return anchor;
+    if (feature.link && feature.link.startsWith('#')) return feature.link;
+    return '#anti-aging-beauty';
+}
 
 const DOM = {
     mainContainer: document.getElementById('main-content-container'),
@@ -158,7 +188,7 @@ const generateProductCard = (product) => {
 // --- END: MODIFIED FUNCTION ---
 
 
-const generateHeroHTML = component => {
+const generateHeroHTML = (component, pageContent = []) => {
     // Build style attribute for custom background
     let heroStyle = '';
     let heroClass = '';
@@ -206,15 +236,17 @@ const generateHeroHTML = component => {
         return allowedSelectors.includes(selector) ? selector : '#products';
     }
     
-    // Get buttons configuration with defaults
+    // Hero CTA — протокол или „Моят протокол“ след покупка
     const buttons = component.buttons || {};
-    let primaryBtn = buttons.primary || { text: 'Разгледай продуктите', action: 'scroll', target: '#products' };
+    const defaultPrimary = buttons.primary || { text: 'Започнете вашия протокол', action: 'link', target: 'life-protocol-quiz.html' };
+    const primaryCta = getHeroPrimaryCta(defaultPrimary.text);
+    let primaryBtn = {
+        ...defaultPrimary,
+        text: primaryCta.text,
+        action: 'link',
+        target: primaryCta.target
+    };
     const secondaryBtn = buttons.secondary || { text: 'Научи повече', action: 'link', target: 'life-about.html' };
-
-    // Legacy hero CTA: #peptides не съществува на Life — насочваме към въпросника
-    if (primaryBtn.action === 'scroll' && (primaryBtn.target === '#peptides' || primaryBtn.target === '#protocol-quiz')) {
-        primaryBtn = { ...primaryBtn, action: 'link', target: 'life-protocol-quiz.html' };
-    }
     
     // Generate primary button (scroll or link)
     let primaryButtonHTML = '';
@@ -301,34 +333,25 @@ const generateHeroHTML = component => {
     `;
     }).join('');
     
-    // Feature cards (hexagonal highlight cards below hero)
-    const features = component.features || [
-        {
-            title: 'МИТОХОНДРИАЛЕН БУСТ',
-            description: 'Активирайте клетъчната енергия и подобрете митохондриалната функция с доказани пептиди.',
-            icon: 'mitochondria',
-            link: '#peptides'
-        },
-        {
-            title: 'ТЕЛОМЕРНА ПОДКРЕПА',
-            description: 'Иновативни формули за защита на теломерите и клетъчно подмладяване на молекулярно ниво.',
-            icon: 'dna',
-            link: '#anti-aging'
-        },
-        {
-            title: 'НЕВРО-УСИЛВАНЕ',
-            description: 'Нутрацевтици за когнитивна функция, невропластичност и дългосрочно мозъчно здраве.',
-            icon: 'brain',
-            link: '#all-products'
-        }
-    ];
+    // Feature cards — връзка към категории от page_content
+    const defaultFeatures = LIFE_CATEGORY_DEFS.map((def) => ({
+        title: def.title.toUpperCase(),
+        description: def.description,
+        icon: def.icon,
+        category_id: def.id
+    }));
+    const features = (component.features && component.features.length)
+        ? component.features
+        : defaultFeatures;
 
     const featuresHTML = `
     <section class="hero-features-section">
         <div class="container">
             <div class="hero-features-grid">
-                ${features.map(f => `
-                <article class="hex-feature-card fade-in-up">
+                ${features.map((f) => {
+                    const href = resolveFeatureLink(f, pageContent);
+                    return `
+                <a href="${escapeHtml(href)}" class="hex-feature-card fade-in-up hex-feature-card--link">
                     <div class="hex-icon-outer">
                         <svg class="hex-icon-bg-svg" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                             <polygon points="45,4 86,26 86,64 45,86 4,64 4,26" fill="rgba(201,168,76,0.06)" stroke="#C9A84C" stroke-width="1.5"/>
@@ -337,9 +360,9 @@ const generateHeroHTML = component => {
                     </div>
                     <h3>${escapeHtml(f.title)}</h3>
                     <p>${escapeHtml(f.description)}</p>
-                    <a href="${escapeHtml(f.link)}" class="btn-learn-more">Виж повече</a>
-                </article>
-                `).join('')}
+                    <span class="btn-learn-more">Виж категорията</span>
+                </a>`;
+                }).join('')}
             </div>
         </div>
     </section>`;
@@ -555,7 +578,12 @@ function encodeProductsForAttr(products) {
 }
 // --- END: MODIFIED FUNCTION ---
 
-const generateInfoCardHTML = component => `
+const generateInfoCardHTML = (component) => {
+    const premium = getPremiumCta(
+        component.button?.text || 'Получи своя протокол',
+        component.button?.url || 'life-protocol-quiz.html'
+    );
+    return `
     <section ${component.id ? `id="${component.id}"` : ''} class="info-card-section fade-in-up ${'image-align-' + (component.options?.image_align || 'left')}">
         <div class="container">
             <div class="info-card-image">
@@ -564,13 +592,14 @@ const generateInfoCardHTML = component => `
             <div class="info-card-content">
                 <h2>${component.title}</h2>
                 <p>${component.content}</p>
-                ${component.button && component.button.text ? `<a href="${component.button.url}" class="btn-premium">
+                ${component.button && component.button.text ? `<a href="${escapeHtml(premium.url)}" class="btn-premium" data-cta-variant="${premium.variant}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                    ${component.button.text}
+                    ${escapeHtml(premium.text)}
                 </a>` : ''}
             </div>
         </div>
     </section>`;
+};
 
 const generateBenefitsHTML = component => `
     <section id="benefits" class="section-padding">
@@ -1125,7 +1154,7 @@ function renderMainContent(pageContent) {
         
         switch (component.type) {
             case 'hero_banner':
-                contentHtml += generateHeroHTML(component);
+                contentHtml += generateHeroHTML(component, pageContent);
                 break;
             case 'product_category':
                 contentHtml += generateProductCategoryHTML(component, index);

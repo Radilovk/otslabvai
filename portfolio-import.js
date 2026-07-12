@@ -10,6 +10,11 @@
  */
 
 import { filterIndex, sortByMarginDesc } from './portfolio-filter.js';
+import {
+  assignLifeProductCategory,
+  ensureLifeCategories,
+  migrateLegacyLifeCategories
+} from './life-category-assign.js';
 
 export class PortfolioImportError extends Error {
   constructor(message, status = 500) {
@@ -595,11 +600,38 @@ export async function handlePortfolioImportRoute(request, env, url, deps) {
       }
 
       const content = await deps.loadProjectContent(env, body.project);
-      const result = mergeProductsIntoContent(content, {
-        categoryId: body.category_id,
-        categoryTitle: body.category_title,
-        products
-      });
+      let result;
+
+      if (body.project === 'life' && !body.category_id) {
+        migrateLegacyLifeCategories(content);
+        const byCategory = new Map();
+        for (const product of products) {
+          const catId = assignLifeProductCategory(product);
+          if (!byCategory.has(catId)) byCategory.set(catId, []);
+          byCategory.get(catId).push(product);
+        }
+        let added = 0;
+        let updated = 0;
+        let createdCategory = false;
+        const categoryIds = [];
+        for (const [catId, catProducts] of byCategory) {
+          const mergeResult = mergeProductsIntoContent(content, {
+            categoryId: catId,
+            products: catProducts
+          });
+          added += mergeResult.added;
+          updated += mergeResult.updated;
+          if (mergeResult.createdCategory) createdCategory = true;
+          categoryIds.push(mergeResult.categoryId);
+        }
+        result = { added, updated, categoryId: categoryIds.join(','), createdCategory, auto_assigned: true };
+      } else {
+        result = mergeProductsIntoContent(content, {
+          categoryId: body.category_id,
+          categoryTitle: body.category_title,
+          products
+        });
+      }
 
       await deps.saveProjectContent(env, body.project, JSON.stringify(content, null, 2));
       return jsonResponse({ success: true, ...result, not_found: notFound });

@@ -6157,6 +6157,17 @@ section[id="scientific"] {
     border-color: rgba(0, 196, 200, 0.35);
 }
 
+a.hex-feature-card--link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+a.hex-feature-card--link .btn-learn-more {
+    pointer-events: none;
+}
+
 /* Hexagonal icon wrapper */
 .hex-icon-outer {
     width: 88px;
@@ -6864,8 +6875,8 @@ section[id="scientific"] {
 
 [data-theme] .stat-item strong {
     background: none;
-    color: var(--accent);
-    -webkit-text-fill-color: var(--accent);
+    color: var(--accent-gold);
+    -webkit-text-fill-color: var(--accent-gold);
 }
 
 /* ── PRODUCT BADGE BESTSELLER: refined gold ── */

@@ -223,7 +223,7 @@
                 <p>Всеки продукт в нашето портфолио е внимателно подбран въз основа на съвременни научни изследвания в областта на антиейджинга и клетъчното подмладяване. Вярваме в основани на доказателства подходи - не в магически решения, а в протоколи с доказана ефективност.</p>
                 <p>Вашето дълголетие е нашият приоритет. Затова предлагаме само безопасни и ефективни продукти, които поддържат митохондриалната функция, стимулират автофагията и подпомагат клетъчното обновяване по естествен начин.</p>
                 <p>Заедно можем да постигнем вашите цели и да създадем устойчиви навици за оптимално здраве и дълголетие.</p>
-                <a href="life.html#products" class="cta-button">Разгледай протоколите</a>
+                <a href="life-protocol-quiz.html" class="cta-button" id="about-cta-button">Започнете вашия протокол</a>
             </div>
         </div>
     </main>
@@ -246,6 +246,19 @@
     <script type="module" src="life.js"></script>
     <script type="module">
         import { API_URL } from './config.js';
+        import { getCtaButtonTarget, hasPurchasedProtocol } from './life-protocol-store.js';
+
+        function initAboutCta() {
+            const cta = document.getElementById('about-cta-button');
+            if (!cta) return;
+            if (hasPurchasedProtocol()) {
+                cta.href = 'life-my-protocol.html';
+                cta.textContent = 'Моят протокол';
+            } else {
+                cta.href = getCtaButtonTarget();
+                cta.textContent = 'Започнете вашия протокол';
+            }
+        }
 
         async function loadAboutSettings() {
             const heroTitle = document.getElementById('about-hero-title');
@@ -284,8 +297,12 @@
         }
 
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', loadAboutSettings);
+            document.addEventListener('DOMContentLoaded', () => {
+                initAboutCta();
+                loadAboutSettings();
+            });
         } else {
+            initAboutCta();
             loadAboutSettings();
         }
     </script>

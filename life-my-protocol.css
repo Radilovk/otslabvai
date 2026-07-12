@@ -1,0 +1,241 @@
+/* Моят протокол — чист pharma UX */
+
+.lmp-page {
+  padding: 2.5rem 0 4rem;
+  min-height: 60vh;
+}
+
+.lmp-hero {
+  margin-bottom: 2rem;
+  max-width: 720px;
+}
+
+.lmp-eyebrow {
+  font-family: var(--font-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.lmp-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  line-height: 1.1;
+}
+
+.lmp-subtitle {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin-bottom: 1rem;
+}
+
+.lmp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.lmp-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(0, 196, 200, 0.08);
+  border: 1px solid rgba(0, 196, 200, 0.18);
+  font-family: var(--font-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.lmp-meta-chip.gold {
+  background: rgba(212, 168, 67, 0.10);
+  border-color: rgba(212, 168, 67, 0.28);
+  color: #8B7030;
+}
+
+.lmp-analysis {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.75rem;
+  box-shadow: var(--box-shadow);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.lmp-section {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--box-shadow);
+}
+
+.lmp-section h2 {
+  font-family: var(--font-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.lmp-schedule-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .lmp-schedule-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.lmp-slot {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(0, 196, 200, 0.12);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+
+.lmp-slot h3 {
+  font-family: var(--font-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 0.65rem;
+}
+
+.lmp-slot ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lmp-slot li {
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(0, 196, 200, 0.08);
+  line-height: 1.45;
+}
+
+.lmp-slot li:last-child {
+  border-bottom: none;
+}
+
+.lmp-products {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.lmp-product {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 0.85rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 196, 200, 0.12);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lmp-product:hover {
+  border-color: rgba(0, 196, 200, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 196, 200, 0.10);
+}
+
+.lmp-product img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.lmp-product-body strong {
+  display: block;
+  font-family: var(--font-primary);
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+.lmp-product-dose {
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.lmp-product-why {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+  line-height: 1.45;
+}
+
+.lmp-tips ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.lmp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.lmp-disclaimer {
+  margin-top: 1.5rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.lmp-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.lmp-empty p {
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+}
+
+.lmp-nav-new {
+  color: var(--accent-gold) !important;
+}
+
+@media (max-width: 768px) {
+  .lmp-page {
+    padding: 1.5rem 0 3rem;
+  }
+
+  .lmp-actions {
+    flex-direction: column;
+  }
+
+  .lmp-actions .btn-hero-primary,
+  .lmp-actions .btn-hero-secondary {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}
