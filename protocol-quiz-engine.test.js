@@ -7,6 +7,9 @@ import {
   isPeptideOrInjectable,
   getProductPriceEur,
   scoreProduct,
+  isBenefitSemanticallySimilar,
+  filterNovelBenefits,
+  buildCumulativeBenefitTiers,
 } from './protocol-quiz-engine.js';
 import { getExclusionReasons } from './protocol-safety-rules.js';
 
@@ -161,6 +164,52 @@ describe('scoreProduct', () => {
       email: 'x@y.com', priority: 'skin',
     });
     expect(scoreProduct(skinProd, profile)).toBeGreaterThan(scoreProduct(sampleProduct(), profile));
+  });
+});
+
+describe('benefit semantics', () => {
+  test('отсява синонимични ползи в една тема', () => {
+    expect(isBenefitSemanticallySimilar(
+      'Подкрепя ежедневната енергия',
+      'Повишава енергийния тонус',
+    )).toBe(true);
+    expect(isBenefitSemanticallySimilar(
+      'Подобрява качеството на съня',
+      'Подкрепя ежедневната енергия',
+    )).toBe(false);
+  });
+
+  test('кумулативните tier ползи не повтарят смисъл', () => {
+    const built = buildCumulativeBenefitTiers({
+      basic: { benefits: ['Подкрепя ежедневната енергия', 'Укрепва имунната защита'] },
+      optimal: {
+        benefits: [
+          'Подкрепя ежедневната енергия',
+          'Повишава енергийния тонус',
+          'Подобрява качеството на съня',
+        ],
+      },
+      premium: {
+        benefits: [
+          'Подобрява когнитивната острота',
+          'Подкрепя дълголетието',
+          'Максимална антиейджинг защита',
+        ],
+      },
+    });
+    expect(built.optimal.list).toContain('Подобрява качеството на съня');
+    expect(built.optimal.list).not.toContain('Повишава енергийния тонус');
+    expect(built.premium.list.length).toBeGreaterThan(built.optimal.list.length);
+  });
+
+  test('filterNovelBenefits връща само нови теми', () => {
+    const novel = filterNovelBenefits(
+      ['Ускорява метаболизма', 'Подобрява съня', 'По-добър нощен сън'],
+      ['Подкрепя ежедневната енергия'],
+    );
+    expect(novel).toContain('Подобрява съня');
+    expect(novel).not.toContain('Ускорява метаболизма');
+    expect(novel).not.toContain('По-добър нощен сън');
   });
 });
 

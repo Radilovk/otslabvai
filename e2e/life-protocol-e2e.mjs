@@ -206,7 +206,6 @@ async function runPlaywrightFlow(page) {
   const analysis = await page.textContent('.lpr-analysis');
   check((analysis || '').length > 20, 'Персонален анализ се показва');
 
-  await page.click('.lpr-tier.recommended [data-tier-toggle]');
   await page.waitForSelector('.lpr-product-card', { timeout: 5000 });
   const productCards = await page.$$('.lpr-product-card');
   check(productCards.length >= 1, `Продуктовите карти се показват (${productCards.length})`);
