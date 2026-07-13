@@ -23,7 +23,7 @@
     --danger: #ef4444;
     --success: #10b981;
     --warning: #f59e0b;
-    --color-sale: #E8502A;          /* Terracotta — promotion / sale accent */
+    --color-sale: #c9a227;          /* Gold — promotion / sale accent */
 
     /* Legacy aliases */
     --color-primary: #00c4c8;
@@ -645,10 +645,11 @@ html.header-pre-scrolled .main-header {
 }
 
 .logo-container .brand-name {
-    font-size: 1.1rem;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
     font-weight: 600;
     color: var(--text-primary);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
     white-space: nowrap;
 }
 
@@ -1606,7 +1607,7 @@ main {
     transform: translateY(-5px) scale(1.07);
     box-shadow: var(--glow-cta-lg);
     animation: none;
-    background: linear-gradient(135deg, #D4906B 0%, #00c4c8 50%, #C06040 100%);
+    background: linear-gradient(135deg, #00c4c8 0%, #0090a8 50%, #d4a843 100%);
 }
 
 .btn-hero-primary:hover svg {
@@ -2070,7 +2071,7 @@ main {
 }
 
 .product-image .product-price .price-sale {
-    color: var(--color-sale, #E8502A);
+    color: var(--color-sale, #c9a227);
 }
 
 .product-title { 
@@ -2229,11 +2230,11 @@ main {
 }
 
 .footer-logo-container .brand-name {
-    font-family: var(--font-primary);
-    font-size: 1.1rem;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
     font-weight: 600;
     color: var(--text-primary);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
 }
 
 .footer-logo-container .brand-slogan {
@@ -3625,7 +3626,7 @@ body.modal-open { overflow: hidden; }
     transform: scale(1.08) translateY(-4px);
     box-shadow: var(--glow-cta-lg);
     animation-play-state: paused;
-    background: linear-gradient(135deg, #D4906B 0%, #00c4c8 50%, #C06040 100%);
+    background: linear-gradient(135deg, #00c4c8 0%, #0090a8 50%, #d4a843 100%);
 }
 
 .sticky-cta-btn:hover svg {
@@ -3679,7 +3680,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .product-badge.sale {
-    background: linear-gradient(135deg, var(--color-sale, #E8502A), #C9764F);
+    background: linear-gradient(135deg, var(--color-sale, #c9a227), #d4a843);
     animation: badgeUrgent 1s ease-in-out infinite;
 }
 
@@ -3754,7 +3755,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .price-sale {
-    color: var(--color-sale, #E8502A);
+    color: var(--color-sale, #c9a227);
     font-weight: 700;
 }
 
@@ -3774,7 +3775,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .product-detail-price .price-sale {
-    color: var(--color-sale, #E8502A);
+    color: var(--color-sale, #c9a227);
 }
 
 /* Enhanced Product Card with Badges */
@@ -4031,7 +4032,7 @@ body.modal-open { overflow: hidden; }
 .exit-cta-btn:hover {
     transform: translateY(-4px) scale(1.02);
     box-shadow: var(--glow-cta-lg);
-    background: linear-gradient(135deg, #D4906B 0%, #00c4c8 50%, #C06040 100%);
+    background: linear-gradient(135deg, #00c4c8 0%, #0090a8 50%, #d4a843 100%);
 }
 
 .exit-modal-footer {
@@ -6972,15 +6973,15 @@ a.hex-feature-card--link .btn-learn-more {
     color: var(--text-primary);
 }
 
-/* ── PRODUCT TAG/BENEFIT ITEM HEADING: terracotta ── */
+/* ── PRODUCT TAG/BENEFIT ITEM HEADING: gold accent ── */
 .benefit-item h4,
 .product-benefits-full .benefit-item h4 {
-    color: #B8603A;
+    color: #9a7b2e;
 }
 
 [data-theme] .benefit-item h4,
 [data-theme] .product-benefits-full .benefit-item h4 {
-    color: #D4906B;
+    color: var(--accent-gold, #d4a843);
 }
 
 /* ── HEX ICON: gold border ── */

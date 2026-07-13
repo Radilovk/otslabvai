@@ -15,8 +15,8 @@ import {
 import { LIFE_CATEGORY_DEFS, collectProductsForCategory } from './life-category-assign.js';
 import { rewriteAllProductImages } from './life-img.js';
 
-const LOGO_FALLBACK = 'images/lifelogo3.png';
-const LOGO_FALLBACK_ALT = 'images/life-icons/logo.png';
+const LOGO_FALLBACK = 'images/life-icons/logo.png';
+const LOGO_FALLBACK_ALT = 'images/lifelogo3.png';
 
 function resolveCategoryAnchor(categoryId, pageContent = []) {
     if (!categoryId) return null;
@@ -1259,6 +1259,8 @@ function renderFooter(settings, footer) {
             </a>` : ''}
         </div>` : '';
     DOM.footer.copyrightContainer.innerHTML = `<span>${footer.copyright_text}</span>${socialFooterHTML}`;
+    const footerImg = document.getElementById('footer-logo-img');
+    applyLogoWithFallback(footerImg, logoSrc);
     updateLogoForTheme();
 }
 
@@ -1458,7 +1460,7 @@ function initializePageInteractions(settings = {}) {
                 el.classList.add('is-visible');
             }
         });
-    }, 2500);
+    }, 800);
 
     // --- Save scroll position and category states before navigating to product page ---
     document.body.addEventListener('click', (e) => {

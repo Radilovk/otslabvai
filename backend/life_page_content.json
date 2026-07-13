@@ -2,9 +2,9 @@
   "settings": {
     "site_name": "Life Protocols",
     "site_slogan": "Протоколи за Здраве и Дълголетие",
-    "logo_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773504917832-IMG_20260314_181503.png",
-    "logo_url_light": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773504921534-IMG_20260314_181503.png",
-    "logo_url_dark": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773504924973-IMG_20260314_181503.png",
+    "logo_url": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/life-icons/logo.png",
+    "logo_url_light": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/life-icons/logo.png",
+    "logo_url_dark": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/life-icons/logo.png",
     "promo_banner": {
       "text": "ЕКСКЛУЗИВНО: Безплатна консултация при първа поръчка на пептиди!"
     },
@@ -110,7 +110,7 @@
         }
       ],
       "background_image": "",
-      "background_gradient": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      "background_gradient": "linear-gradient(155deg, #EAF6FB 0%, #F4FAFE 40%, #E8F3F9 100%)",
       "hero_image": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773968432606-Gemini_Generated_Image_vih0e8vih0e8vih0__1_.png"
     },
     {

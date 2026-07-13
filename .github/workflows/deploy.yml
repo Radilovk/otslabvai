@@ -163,12 +163,21 @@ jobs:
           KV="https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/d220db696e414b7cb3da2b19abd53d0f/values"
           AUTH="Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}"
           if [ -f backend/life_page_content.json ]; then
+            # Always refresh the static fallback seed used when life_page_content is missing.
             curl -s -X PUT "${KV}/static_backend_life_page_content.json" \
               -H "$AUTH" -H "Content-Type: application/json" \
               --data-binary "@backend/life_page_content.json" | python3 -c "import sys,json; r=json.load(sys.stdin); print('life static fallback KV:', 'OK' if r.get('success') else r)"
-            curl -s -X PUT "${KV}/life_page_content" \
-              -H "$AUTH" -H "Content-Type: application/json" \
-              --data-binary "@backend/life_page_content.json" | python3 -c "import sys,json; r=json.load(sys.stdin); print('life_page_content KV:', 'OK' if r.get('success') else r)"
+            # Do NOT overwrite live life_page_content — admin panel edits go there and
+            # would be lost on every deploy (logo, hero, categories). Seed only if absent.
+            existing=$(curl -s -H "$AUTH" "${KV}/life_page_content")
+            if [ -z "$existing" ] || [ "$existing" = "null" ]; then
+              curl -s -X PUT "${KV}/life_page_content" \
+                -H "$AUTH" -H "Content-Type: application/json" \
+                --data-binary "@backend/life_page_content.json" | python3 -c "import sys,json; r=json.load(sys.stdin); print('life_page_content KV (seed):', 'OK' if r.get('success') else r)"
+            else
+              echo "life_page_content KV already set — preserving admin edits (logo, hero, etc.)"
+            fi
+            node scripts/merge-life-logo-to-kv.mjs
           else
             echo "backend/life_page_content.json not found, skipping KV sync"
           fi
