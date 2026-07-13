@@ -157,6 +157,22 @@ jobs:
           fi
           node upload-portfolio-catalog.mjs
 
+      - name: Sync Life page content to KV
+        if: github.ref == 'refs/heads/main'
+        run: |
+          KV="https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/d220db696e414b7cb3da2b19abd53d0f/values"
+          AUTH="Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}"
+          if [ -f backend/life_page_content.json ]; then
+            curl -s -X PUT "${KV}/static_backend_life_page_content.json" \
+              -H "$AUTH" -H "Content-Type: application/json" \
+              --data-binary "@backend/life_page_content.json" | python3 -c "import sys,json; r=json.load(sys.stdin); print('life static fallback KV:', 'OK' if r.get('success') else r)"
+            curl -s -X PUT "${KV}/life_page_content" \
+              -H "$AUTH" -H "Content-Type: application/json" \
+              --data-binary "@backend/life_page_content.json" | python3 -c "import sys,json; r=json.load(sys.stdin); print('life_page_content KV:', 'OK' if r.get('success') else r)"
+          else
+            echo "backend/life_page_content.json not found, skipping KV sync"
+          fi
+
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
