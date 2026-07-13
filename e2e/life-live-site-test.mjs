@@ -4,7 +4,7 @@
  */
 import { chromium } from 'playwright';
 
-const URL = 'https://daotslabna.com/life.html';
+const URL = process.env.LIFE_TEST_URL || 'https://daotslabna.com/life.html';
 const fails = [];
 
 async function main() {
@@ -20,10 +20,11 @@ async function main() {
   const page = await context.newPage();
 
   await page.goto(URL, { waitUntil: 'networkidle', timeout: 60000 });
+  await page.waitForSelector('.hero-content h1', { timeout: 30000 });
 
   const cssHref = await page.$eval('link[href*="life.css"]', (el) => el.getAttribute('href'));
   if (!cssHref?.includes('20260713d')) {
-    fails.push(`Cache bust not updated: ${cssHref}`);
+    fails.push(`Cache bust not updated (expected 20260713d): ${cssHref}`);
   }
 
   const h1Color = await page.$eval('.hero-content h1', (el) => {
