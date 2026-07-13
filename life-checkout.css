@@ -1,0 +1,50 @@
+/* Life checkout — portfolio layout + mobile scroll clearance */
+body.life-checkout-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    overflow-x: clip;
+}
+
+body.life-checkout-page .main-header {
+    flex-shrink: 0;
+}
+
+body.life-checkout-page .main-footer {
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+body.life-checkout-page .pf-checkout-page {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+}
+
+/* Mobile: form must scroll fully above FAB + footer */
+@media (max-width: 1023px) {
+    body.life-checkout-page.pf-checkout-has-fab .pf-checkout-page {
+        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    body.life-checkout-page .pf-checkout-page {
+        padding-bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    body.life-checkout-page .main-footer {
+        position: relative;
+        z-index: 1;
+    }
+
+    body.life-checkout-page .pf-fab-action {
+        z-index: 1200;
+    }
+}
+
+/* Life brand tokens on portfolio checkout components */
+body.life-checkout-page {
+    --pf-primary: var(--accent, #00c4c8);
+    --pf-primary-hover: #00a8ac;
+    --pf-primary-soft: rgba(0, 196, 200, 0.12);
+    --pf-accent: var(--accent-secondary, #d4a843);
+}
