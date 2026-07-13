@@ -3792,6 +3792,19 @@ body.modal-open { overflow: hidden; }
     font-weight: 700;
 }
 
+/* Product detail — brand & label links (never pink) */
+.product-detail-container .product-detail-brand {
+    color: var(--accent, #00c4c8);
+}
+
+.product-detail-container .product-label-link a {
+    color: var(--accent, #00c4c8);
+}
+
+.product-detail-container .product-label-link a:hover {
+    color: var(--note-color, #00a8ac);
+}
+
 /* Product detail page sale price */
 .product-detail-price.has-sale {
     display: flex;

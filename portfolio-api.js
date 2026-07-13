@@ -596,6 +596,49 @@ async function handleGetProduct(request, env) {
   return cachedResponse(group, 1800);
 }
 
+function parseLifeCartRef(rawId) {
+  const id = String(rawId || '').trim();
+  if (!id) return { skuId: null, groupId: null };
+
+  const variantMatch = id.match(/^prod-pf-(\d+)_(.+)$/);
+  if (variantMatch) {
+    return { groupId: variantMatch[1], skuId: variantMatch[2] };
+  }
+
+  const groupMatch = id.match(/^prod-pf-(\d+)$/);
+  if (groupMatch) {
+    return { groupId: groupMatch[1], skuId: null };
+  }
+
+  return { skuId: id, groupId: null };
+}
+
+async function resolveCartSku(env, rawId) {
+  const { skuId, groupId } = parseLifeCartRef(rawId);
+
+  if (skuId) {
+    const found = await findVariantInCatalog(env, skuId);
+    if (found) return found;
+  }
+
+  if (groupId) {
+    const meta = await getMeta(env);
+    if (!meta) return null;
+    const group = await getGroupFromChunks(env, meta, groupId);
+    if (!group?.variants?.length) return null;
+    const variant = group.variants.find((v) => v.available) || group.variants[0];
+    return {
+      group_id: group.group_id,
+      group_name: group.name,
+      brand: group.brand,
+      image: variant.image || group.image,
+      variant
+    };
+  }
+
+  return null;
+}
+
 async function findVariantInCatalog(env, skuId) {
   const meta = await getMeta(env);
   if (!meta) return null;
@@ -649,7 +692,7 @@ async function validateAndNormalizeCartItems(env, products) {
       continue;
     }
 
-    const found = await findVariantInCatalog(env, skuId);
+    const found = await resolveCartSku(env, skuId);
     if (!found) {
       errors.push(`Продукт ${skuId} не е намерен в каталога.`);
       continue;
@@ -942,9 +985,12 @@ async function handleCreateOrder(request, env) {
     await savePromoCodes(env, codes);
   }
 
+  const project = String(body.project || 'portfolio').trim() || 'portfolio';
+  const orderPrefix = project === 'life' ? 'life' : 'pf';
+
   const newOrder = {
-    id: `pf-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    project: 'portfolio',
+    id: `${orderPrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    project,
     timestamp: new Date().toISOString(),
     status: 'Чака одобрение',
     customer,

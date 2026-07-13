@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="bg" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script src="life-header-preinit.js"></script>
+    <link rel="icon" type="image/png" href="images/life-icons/logo.png">
+    <title>Поръчка - Life Protocols</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="life.css?v=20260713e">
+    <link rel="stylesheet" href="portfolio.css">
+    <script>
+        (function() {
+            try {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body class="pf-body life-checkout-page">
+    <header class="main-header">
+        <div class="header-container">
+            <a href="life.html" class="logo-container" id="header-logo-link">
+                <img src="images/life-icons/logo.png" alt="Life Protocols Лого" id="header-logo-img" style="display: block;">
+                <div>
+                    <span class="brand-name" id="header-brand-name">Life Protocols</span>
+                    <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <ul class="nav-links" id="main-nav-links"></ul>
+            </nav>
+            <div class="header-actions">
+                <a href="life-checkout.html" class="cart-icon-btn" aria-label="Количка">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-badge" id="cart-count">0</span>
+                </a>
+            </div>
+            <button class="menu-toggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    <div class="nav-overlay"></div>
+
+    <main class="pf-success-page">
+        <div class="pf-success-card pf-card" id="success-card" style="display:none">
+            <div class="pf-success-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg></div>
+            <h1>Поръчката е приета!</h1>
+            <p class="pf-lead" id="success-message">Благодарим ви. Ще се свържем с вас за потвърждение.</p>
+            <div class="pf-order-id-box">
+                <span>Номер на поръчка</span>
+                <strong id="order-id">—</strong>
+            </div>
+            <ul class="pf-success-steps">
+                <li><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><rect x="8.5" y="2" width="7" height="4" rx="1.2"/><path d="M8.5 11h7M8.5 15h7"/></svg><span>Поръчката се преглежда от екипа</span></li>
+                <li><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12.5 3 3 6-6.5"/></svg><span>Получавате потвърждение по телефон</span></li>
+                <li><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 22 8v8l-10 5.5L2 16V8z"/><path d="M2 8l10 5.5L22 8"/><path d="M12 13.5V22"/></svg><span>Изпращане след одобрение</span></li>
+            </ul>
+            <a href="life.html" class="pf-btn pf-btn-primary">Продължи пазаруването</a>
+            <a href="life-my-protocol.html" class="pf-btn pf-btn-outline" style="margin-top:0.75rem">Моят протокол</a>
+        </div>
+
+        <div class="pf-success-card pf-card" id="error-card" style="display:none">
+            <div class="pf-success-icon" style="color:#c0392b" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 8.5 15.5 15.5M15.5 8.5 8.5 15.5"/></svg></div>
+            <h1>Поръчката не е потвърдена</h1>
+            <p class="pf-lead" id="error-message">Не намерихме записана поръчка. Моля, опитайте отново от checkout.</p>
+            <a href="life-checkout.html" class="pf-btn pf-btn-primary">Към поръчката</a>
+        </div>
+
+        <div class="pf-success-card pf-card" id="loading-card">
+            <p class="pf-lead">Проверяваме поръчката...</p>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid" id="footer-grid-container"></div>
+            <div class="footer-bottom" id="footer-copyright-container"></div>
+        </div>
+    </footer>
+
+    <script type="module" src="life.js?v=20260713e"></script>
+    <script type="module">
+        import { API_URL } from './config.js';
+
+        const params = new URLSearchParams(location.search);
+        const id = params.get('id')?.trim();
+        const successCard = document.getElementById('success-card');
+        const errorCard = document.getElementById('error-card');
+        const loadingCard = document.getElementById('loading-card');
+
+        function showError(message) {
+            loadingCard.style.display = 'none';
+            successCard.style.display = 'none';
+            errorCard.style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+            document.title = 'Поръчката не е потвърдена – Life Protocols';
+        }
+
+        function showSuccess(order) {
+            loadingCard.style.display = 'none';
+            errorCard.style.display = 'none';
+            successCard.style.display = 'block';
+            document.getElementById('order-id').textContent = order.id;
+            if (order.customer?.firstName) {
+                document.getElementById('success-message').textContent =
+                    `${order.customer.firstName}, благодарим! Ще се обадим на ${order.customer.phone || 'посочения телефон'} за потвърждение.`;
+            }
+            document.title = 'Поръчката е приета – Life Protocols';
+        }
+
+        function readStoredOrder(orderId) {
+            try {
+                const raw = sessionStorage.getItem('life_last_order');
+                if (!raw) return null;
+                const order = JSON.parse(raw);
+                return order?.id === orderId ? order : null;
+            } catch {
+                return null;
+            }
+        }
+
+        if (!id) {
+            showError('Липсва номер на поръчка. Ако сте изпратили формата, проверете дали сте получили съобщение за грешка.');
+        } else {
+            const stored = readStoredOrder(id);
+            if (stored) {
+                showSuccess(stored);
+            } else {
+                try {
+                    const res = await fetch(`${API_URL}/portfolio/order?id=${encodeURIComponent(id)}`, { cache: 'no-cache' });
+                    const data = await res.json();
+                    if (!res.ok || !data.id) {
+                        showError(data.error || 'Поръчката не е намерена в системата. Тя не е приета — опитайте отново.');
+                    } else {
+                        showSuccess(data);
+                    }
+                } catch {
+                    showError('Не успяхме да потвърдим поръчката. Проверете връзката и опитайте отново.');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
