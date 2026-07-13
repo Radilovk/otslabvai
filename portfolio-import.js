@@ -13,7 +13,8 @@ import { filterIndex, sortByMarginDesc } from './portfolio-filter.js';
 import {
   assignLifeProductCategory,
   ensureLifeCategories,
-  migrateLegacyLifeCategories
+  migrateLegacyLifeCategories,
+  LIFE_CATEGORY_DEFS
 } from './life-category-assign.js';
 
 export class PortfolioImportError extends Error {
@@ -258,7 +259,7 @@ function findCategoryComponent(pageContent, categoryId) {
  * @param {object} opts - { categoryId?, categoryTitle?, products }
  * @returns {{ added: number, updated: number, categoryId: string, createdCategory: boolean }}
  */
-export function mergeProductsIntoContent(pageContent, { categoryId, categoryTitle, products }) {
+export function mergeProductsIntoContent(pageContent, { categoryId, categoryTitle = undefined, products }) {
   if (!Array.isArray(pageContent.page_content)) {
     throw new PortfolioImportError('Невалидна структура на page content.', 500);
   }
@@ -615,8 +616,10 @@ export async function handlePortfolioImportRoute(request, env, url, deps) {
         let createdCategory = false;
         const categoryIds = [];
         for (const [catId, catProducts] of byCategory) {
+          const catDef = LIFE_CATEGORY_DEFS.find((d) => d.id === catId);
           const mergeResult = mergeProductsIntoContent(content, {
             categoryId: catId,
+            categoryTitle: catDef?.title,
             products: catProducts
           });
           added += mergeResult.added;
