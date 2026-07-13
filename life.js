@@ -15,8 +15,8 @@ import {
 import { LIFE_CATEGORY_DEFS, collectProductsForCategory } from './life-category-assign.js';
 import { rewriteAllProductImages } from './life-img.js';
 
-const LOGO_FALLBACK = 'images/lifelogo3.png';
-const LOGO_FALLBACK_ALT = 'images/life-icons/logo.png';
+const LOGO_FALLBACK = 'images/life-icons/logo.png';
+const LOGO_FALLBACK_ALT = 'images/lifelogo3.png';
 
 function resolveCategoryAnchor(categoryId, pageContent = []) {
     if (!categoryId) return null;
