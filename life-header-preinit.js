@@ -5,7 +5,7 @@
 
     try {
         // Invalidate stale logo URLs cached before frosted-icon rebrand
-        var LOGO_CACHE_VERSION = '20260713b';
+        var LOGO_CACHE_VERSION = '20260713c';
         if (localStorage.getItem('lifeLogoCacheVersion') !== LOGO_CACHE_VERSION) {
             localStorage.removeItem('lifeCachedLogoLight');
             localStorage.removeItem('lifeCachedLogoDark');

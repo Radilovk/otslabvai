@@ -1259,6 +1259,8 @@ function renderFooter(settings, footer) {
             </a>` : ''}
         </div>` : '';
     DOM.footer.copyrightContainer.innerHTML = `<span>${footer.copyright_text}</span>${socialFooterHTML}`;
+    const footerImg = document.getElementById('footer-logo-img');
+    applyLogoWithFallback(footerImg, logoSrc);
     updateLogoForTheme();
 }
 
@@ -1458,7 +1460,7 @@ function initializePageInteractions(settings = {}) {
                 el.classList.add('is-visible');
             }
         });
-    }, 2500);
+    }, 800);
 
     // --- Save scroll position and category states before navigating to product page ---
     document.body.addEventListener('click', (e) => {
