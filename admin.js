@@ -2947,7 +2947,12 @@ function initNestedItemUI(itemElement, data) {
         // Задаваме заглавие на редактора на продукта
         const titleSpan = itemElement.querySelector('.product-editor-title');
         if (titleSpan) {
-            titleSpan.textContent = getProperty(data, 'public_data.name') || 'Нов Продукт';
+            const name = getProperty(data, 'public_data.name') || 'Нов Продукт';
+            const onHomepage = getProperty(data, 'system_data.show_on_homepage');
+            const homeBadge = onHomepage === false
+                ? ' <span class="product-home-badge product-home-badge--catalog" title="Само в каталога (Виж още)">каталог</span>'
+                : ' <span class="product-home-badge product-home-badge--home" title="На началната страница">начало</span>';
+            titleSpan.innerHTML = `${escAdminHtml(name)}${homeBadge}`;
         }
         // Инициализираме вложените табове в продукта
         initModalTabs(itemElement);
@@ -2957,12 +2962,26 @@ function initNestedItemUI(itemElement, data) {
         if (header) {
             header.addEventListener('click', (e) => {
                 // Не затваряме/отваряме ако е кликнато върху бутон или handle
-                if (e.target.closest('button, .handle, .ai-assistant-btn, .delete-nested-btn')) {
+                if (e.target.closest('button, .handle, .ai-assistant-btn, .delete-nested-btn, input[type="checkbox"]')) {
                     return;
                 }
                 itemElement.classList.toggle('collapsed');
             });
         }
+
+        const homeCheckbox = itemElement.querySelector('[data-field="system_data.show_on_homepage"]');
+        const nameInput = itemElement.querySelector('[data-field="public_data.name"]');
+        const refreshTitle = () => {
+            if (!titleSpan) return;
+            const name = nameInput?.value?.trim() || 'Нов Продукт';
+            const onHomepage = homeCheckbox ? homeCheckbox.checked : true;
+            const homeBadge = onHomepage
+                ? ' <span class="product-home-badge product-home-badge--home" title="На началната страница">начало</span>'
+                : ' <span class="product-home-badge product-home-badge--catalog" title="Само в каталога (Виж още)">каталог</span>';
+            titleSpan.innerHTML = `${escAdminHtml(name)}${homeBadge}`;
+        };
+        homeCheckbox?.addEventListener('change', refreshTitle);
+        nameInput?.addEventListener('input', refreshTitle);
     }
 }
 
@@ -3754,6 +3773,7 @@ async function pfImportConfirm(btn) {
                 if (Array.isArray(sel.ai.goals) && sel.ai.goals.length) product.system_data.goals = sel.ai.goals;
             }
             if (!product.system_data.goals?.length) product.system_data.goals = [...defaultGoals];
+            product.system_data.show_on_homepage = false;
 
             let newId = product.product_id;
             while (existingIds.includes(newId)) newId = `${newId}-copy`;

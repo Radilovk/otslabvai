@@ -646,7 +646,7 @@
             </div>
             <footer class="pf-import-footer">
                 <label class="checkbox-group pf-import-enrich-label" title="След импорта AI Асистентът попълва автоматично описание, слоган, ефекти и ползи за всеки продукт">
-                    <input type="checkbox" id="pf-import-enrich" checked> AI обогатяване след импорт
+                    <input type="checkbox" id="pf-import-enrich"> AI обогатяване след импорт
                 </label>
                 <div class="pf-import-footer-actions">
                     <span id="pf-import-selected-count">0 избрани</span>
@@ -1541,6 +1541,13 @@
 
                 <!-- ТАБ 3: СИСТЕМНИ ДАННИ -->
                 <div class="modal-tab-pane product-tab-system">
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" data-field="system_data.show_on_homepage" checked>
+                            Показвай на началната страница (AI витрина с ефекти и ползи)
+                        </label>
+                        <small class="form-hint">Изключете за продукти, които ще се виждат само чрез бутона „Виж още“ в категорията.</small>
+                    </div>
                     <div class="form-group">
                         <label>Производител</label>
                         <input type="text" data-field="system_data.manufacturer" placeholder="Име на производител">
