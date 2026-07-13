@@ -4,6 +4,7 @@
 
 import { API_URL } from './config.js';
 import { normalizeEffectLabel } from './effect-labels.js';
+import { rewriteProductImages } from './life-img.js';
 
 const DOM = {
     productContent: document.getElementById('product-detail-content'),
@@ -162,6 +163,8 @@ function renderProductDetail(product) {
         `;
         return;
     }
+
+    rewriteProductImages(product);
 
     const publicData = product.public_data;
     const systemData = product.system_data || {};

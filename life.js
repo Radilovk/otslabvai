@@ -12,7 +12,8 @@ import {
     getHeroPrimaryCta,
     getPremiumCta
 } from './life-protocol-store.js';
-import { LIFE_CATEGORY_DEFS } from './life-category-assign.js';
+import { LIFE_CATEGORY_DEFS, collectProductsForCategory } from './life-category-assign.js';
+import { rewriteAllProductImages } from './life-img.js';
 
 const LOGO_FALLBACK = 'images/lifelogo3.png';
 const LOGO_FALLBACK_ALT = 'images/life-icons/logo.png';
@@ -1138,7 +1139,10 @@ function updateLogoForTheme() {
 
 function renderMainContent(pageContent) {
     if (!DOM.mainContainer) return;
-    
+
+    // Пренаписваме блокираните продуктови изображения (fitness1 hotlink protection)
+    rewriteAllProductImages(pageContent);
+
     let contentHtml = '';
     pageContent.forEach((component, index) => {
         // Filter out the individual analysis info card (containing analyzis.png image)
@@ -1151,7 +1155,24 @@ function renderMainContent(pageContent) {
         if (component.type === 'product_category' && component.is_hidden) {
             return;
         }
-        
+
+        // Life категории: извеждаме продуктите по цел (goals), не по CMS запис —
+        // един продукт може да се показва в няколко категории (напр. Мозъчна дейност
+        // включва всички продукти с цел „Когнитивно здраве").
+        if (component.type === 'product_category') {
+            const catDef = LIFE_CATEGORY_DEFS.find(
+                (d) => d.id === component.id || d.id === component.category_id
+            );
+            if (catDef) {
+                const goalProducts = collectProductsForCategory(pageContent, catDef);
+                if (goalProducts.length) {
+                    component = { ...component, products: goalProducts };
+                } else if (!(component.products || []).length) {
+                    return; // празна категория не се извежда
+                }
+            }
+        }
+
         switch (component.type) {
             case 'hero_banner':
                 contentHtml += generateHeroHTML(component, pageContent);
@@ -1427,6 +1448,17 @@ function initializePageInteractions(settings = {}) {
         });
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in-up').forEach(el => scrollObserver.observe(el));
+
+    // Safety net: ако IntersectionObserver не сработи (стари браузъри, edge
+    // cases при бързо скролиране), елементите във видимата зона се показват.
+    setTimeout(() => {
+        document.querySelectorAll('.fade-in-up:not(.is-visible)').forEach(el => {
+            const rect = el.getBoundingClientRect();
+            if (rect.top < window.innerHeight * 1.25 && rect.bottom > -100) {
+                el.classList.add('is-visible');
+            }
+        });
+    }, 2500);
 
     // --- Save scroll position and category states before navigating to product page ---
     document.body.addEventListener('click', (e) => {
