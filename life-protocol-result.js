@@ -1,5 +1,6 @@
 import { formatPriceEur, buildCumulativeBenefitTiers } from './protocol-quiz-engine.js';
 import { persistProtocolResult } from './life-protocol-store.js';
+import { resolveImageUrl } from './life-img.js';
 
 const RESULT_KEY = 'lifeProtocolResult';
 const CART_KEY = 'lifeCart';
@@ -49,8 +50,9 @@ function renderBenefits(benefits, inheritedCount = 0) {
 }
 
 function renderProductCard(product) {
-  const img = product.image_url
-    ? `<img src="${escapeHtml(product.image_url)}" alt="" class="lpr-product-img" loading="lazy">`
+  const imgUrl = resolveImageUrl(product.image_url, 400);
+  const img = imgUrl
+    ? `<img src="${escapeHtml(imgUrl)}" alt="" class="lpr-product-img" loading="lazy">`
     : '<div class="lpr-product-img lpr-product-img--placeholder" aria-hidden="true"></div>';
   const url = product.product_url || `life-product.html?id=${encodeURIComponent(product.product_id || '')}`;
   const dose = [product.timing, product.dose].filter(Boolean).join(' · ');
@@ -276,7 +278,7 @@ function addTierToCart(tier, btn) {
       price: item.price_eur || 0,
       quantity: 1,
       inventory: 99,
-      image: item.image_url || '',
+      image: resolveImageUrl(item.image_url, 400) || '',
     });
     existingIds.add(item.product_id);
   }

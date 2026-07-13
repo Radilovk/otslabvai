@@ -1,5 +1,6 @@
 import { formatPriceEur } from './protocol-quiz-engine.js';
 import { getMyProtocol } from './life-protocol-store.js';
+import { resolveImageUrl } from './life-img.js';
 
 const contentEl = document.getElementById('lmp-content');
 const titleEl = document.getElementById('lmp-title');
@@ -44,8 +45,9 @@ function renderSlot(label, items) {
 
 function renderProduct(p) {
   const url = p.product_url || `life-product.html?id=${encodeURIComponent(p.product_id || '')}`;
-  const img = p.image_url
-    ? `<img src="${escapeHtml(p.image_url)}" alt="" loading="lazy">`
+  const imgUrl = resolveImageUrl(p.image_url, 400);
+  const img = imgUrl
+    ? `<img src="${escapeHtml(imgUrl)}" alt="" loading="lazy">`
     : '<div style="width:64px;height:64px;background:var(--bg-secondary);border-radius:8px;"></div>';
   const dose = [p.timing, p.dose].filter(Boolean).join(' · ');
   return `<a href="${escapeHtml(url)}" class="lmp-product">

@@ -126,10 +126,12 @@ async function runEngineChecks() {
   check(eligible.length >= 3, `Налични орални: ${eligible.length} (минимум 3 за протокол)`);
 
   const prepared = await prepareProtocolSubmission(mockEnv, SAMPLE_ANSWERS, deps);
-  check(prepared.candidates.length >= 3, `Кандидат-пул: ${prepared.candidates.length} продукта`);
+  // compose_narrate (default) връща ranked; ai_pick връща candidates
+  const candidatePool = prepared.candidates || (prepared.ranked || []).map((r) => r.product);
+  check(candidatePool.length >= 3, `Кандидат-пул: ${candidatePool.length} продукта`);
   check(prepared.payload.catalog_stats.eligible_available === eligible.length, 'catalog_stats съвпадат');
 
-  const mock = buildMockProtocolResponse(prepared.candidates, prepared.profile, { ranked: prepared.ranked });
+  const mock = buildMockProtocolResponse(candidatePool, prepared.profile, { ranked: prepared.ranked });
   check(mock.tiers?.basic?.products?.length >= 1, 'Mock basic tier има продукти');
   check(mock.tiers?.optimal?.products?.length >= 1, 'Mock optimal tier има продукти');
   check(mock.tiers?.premium?.products?.length >= 1, 'Mock premium tier има продукти');
