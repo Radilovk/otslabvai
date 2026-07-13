@@ -1108,12 +1108,20 @@ function initializeLogoFromCache() {
 
 function applyLogoWithFallback(img, logoUrl) {
     if (!img) return;
+    const nextSrc = logoUrl ? encodeURI(logoUrl) : LOGO_FALLBACK;
+    const current = img.getAttribute('src') || '';
+    if (current === nextSrc || img.dataset.logoSrc === nextSrc) {
+        return;
+    }
+    img.dataset.logoSrc = nextSrc;
     img.onerror = () => {
         if (img.src.includes(LOGO_FALLBACK_ALT)) return;
         img.onerror = null;
-        img.src = img.src.includes(LOGO_FALLBACK) ? LOGO_FALLBACK_ALT : LOGO_FALLBACK;
+        const fallback = img.src.includes(LOGO_FALLBACK) ? LOGO_FALLBACK_ALT : LOGO_FALLBACK;
+        img.dataset.logoSrc = fallback;
+        img.src = fallback;
     };
-    img.src = logoUrl ? encodeURI(logoUrl) : LOGO_FALLBACK;
+    img.src = nextSrc;
 }
 
 // Helper function to update logo based on current theme
@@ -1631,8 +1639,9 @@ function initializeGlobalScripts() {
     // --- Sticky Header on Scroll — morphing glass with hysteresis to prevent flicker ---
     const header = document.querySelector('.main-header');
     let headerScrolled = false;
-    const SCROLL_ON = 60;
-    const SCROLL_OFF = 20;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const SCROLL_ON = isMobile ? 100 : 60;
+    const SCROLL_OFF = isMobile ? 40 : 20;
 
     function handleStickyHeader() {
         if (!header) return;
@@ -2776,6 +2785,10 @@ function initMagneticButtons() {
 // ── Hero Title Gradient Word ──
 // Wraps the last word in the hero h1 with .hero-gradient-word for animated gradient
 function initHeroGradientWord() {
+    // Sterile light theme: no animated gradient word on mobile or light mode
+    const theme = document.documentElement.getAttribute('data-theme') || 'light';
+    if (theme === 'light' || window.matchMedia('(max-width: 768px)').matches) return;
+
     const h1 = document.querySelector('.hero-section .hero-content h1');
     if (!h1 || h1.dataset.gradientApplied) return;
     h1.dataset.gradientApplied = 'true';

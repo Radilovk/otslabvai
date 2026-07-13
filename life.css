@@ -147,6 +147,14 @@ html {
     font-size: 16px;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    overflow-x: clip;
+    height: 100%;
+}
+
+@supports (height: 100dvh) {
+    html {
+        height: 100dvh;
+    }
 }
 
 body {
@@ -154,9 +162,12 @@ body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
-    overflow-x: hidden;
+    overflow-x: clip;
     transition: background-color 0.4s ease, color 0.4s ease;
     padding-top: var(--header-offset);
+    min-height: 100%;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
 }
 
 img,
@@ -588,10 +599,10 @@ img {
     z-index: 1001;
     transition:
         background 0.35s ease,
-        backdrop-filter 0.35s ease,
-        -webkit-backdrop-filter 0.35s ease,
         border-color 0.35s ease,
         box-shadow 0.35s ease;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.85),
         0 4px 24px rgba(0, 0, 0, 0.04);
@@ -1420,6 +1431,15 @@ main {
     z-index: 0;
 }
 
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+    .hero-section::before,
+    .hero-section::after {
+        animation: none !important;
+        transform: none !important;
+        opacity: 0.35;
+    }
+}
+
 [data-theme] .hero-section::after {
     background: radial-gradient(
         circle at center,
@@ -1459,10 +1479,22 @@ main {
     text-shadow: none;
     animation: fadeInDown 1s ease-out;
     letter-spacing: -0.03em;
+    -webkit-text-fill-color: currentColor;
 }
 
-[data-theme] .hero-content h1 {
-    background: linear-gradient(135deg, var(--text-primary-dark) 40%, var(--accent-dark) 100%);
+/* Light theme: solid pharma navy — no gradient text hacks */
+[data-theme="light"] .hero-content h1,
+[data-theme="light"] .hero-content h1 .hero-gradient-word {
+    color: var(--text-primary);
+    background: none;
+    -webkit-text-fill-color: var(--text-primary);
+    background-clip: border-box;
+    animation: none;
+}
+
+/* Dark theme only: subtle cyan accent in title */
+[data-theme="dark"] .hero-content h1 {
+    background: linear-gradient(135deg, #e8f4f8 0%, #00c4c8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -3130,7 +3162,8 @@ body.modal-open { overflow: hidden; }
         top: 0; 
         right: -100%; 
         width: 280px; 
-        height: 100vh;
+        height: 100dvh;
+        height: -webkit-fill-available;
         background: var(--bg-secondary);
         flex-direction: column; 
         justify-content: center;
@@ -3675,13 +3708,13 @@ body.modal-open { overflow: hidden; }
 }
 
 .product-badge.limited {
-    background: linear-gradient(135deg, #DC143C, #8B0000);
-    animation: badgeUrgent 1s ease-in-out infinite;
+    background: linear-gradient(135deg, #9a7b2e, #d4a843);
+    animation: none;
 }
 
 .product-badge.sale {
     background: linear-gradient(135deg, var(--color-sale, #c9a227), #d4a843);
-    animation: badgeUrgent 1s ease-in-out infinite;
+    animation: none;
 }
 
 @keyframes badgeUrgent {
@@ -6788,13 +6821,7 @@ a.hex-feature-card--link .btn-learn-more {
     color: var(--text-primary);
 }
 
-/* ── DARK HERO GRADIENT (richer, deeper) ── */
-[data-theme] .hero-content h1 {
-    background: linear-gradient(135deg, #0f2540 40%, #00c4c8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
+/* (hero h1 light/dark rules consolidated above — removed duplicate [data-theme] override) */
 
 /* ── STAT ITEM: refined glass for both themes ── */
 [data-theme] .stat-item {
@@ -7096,8 +7123,8 @@ a.hex-feature-card--link .btn-learn-more {
     --btn-gradient-biohack: linear-gradient(135deg, #00C4C8 0%, #0090A8 45%, #00c4c8 100%);
 }
 
-/* ── DARK HERO: animated cyan-gold mesh (inspired by protocols.html bg-mesh) ── */
-[data-theme] .hero-section:not([data-bg-image]):not(.hero-custom-bg)::before {
+/* ── DARK HERO: static mesh (no scale animation — causes viewport jitter) ── */
+[data-theme="dark"] .hero-section:not([data-bg-image]):not(.hero-custom-bg)::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -7107,13 +7134,9 @@ a.hex-feature-card--link .btn-learn-more {
         radial-gradient(ellipse at 50% 15%, rgba(0, 130, 160, 0.05) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
-    animation: darkHeroMeshShift 22s ease-in-out infinite alternate;
 }
 
-@keyframes darkHeroMeshShift {
-    0%   { transform: scale(1)    translate(0,   0);   }
-    100% { transform: scale(1.08) translate(3%, 2.5%); }
-}
+/* (removed darkHeroMeshShift scale animation — caused perceived screen scaling) */
 
 /* Richer animated radial pulse in dark mode – add cyan orb alongside gold */
 [data-theme] .hero-section::after {
@@ -7122,16 +7145,10 @@ a.hex-feature-card--link .btn-learn-more {
         radial-gradient(ellipse at 30% 70%, rgba(0, 196, 200, 0.07) 0%, transparent 40%);
 }
 
-/* ── DARK HERO h1: cream → gold → cyan gradient (like protocols.html card titles) ── */
-[data-theme] .hero-content h1 {
-    background: linear-gradient(135deg, #0f2540 0%, #00c4c8 50%, #00C4C8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
+/* ── DARK HERO h1: handled in consolidated hero-content h1 rules above ── */
 
-/* ── DARK HERO tagline: cyan (instead of muted gold) ── */
-[data-theme] .hero-tagline {
+/* ── DARK HERO tagline: cyan ── */
+[data-theme="dark"] .hero-tagline {
     color: #00C4C8;
     text-shadow: 0 0 12px rgba(0, 196, 200, 0.45);
 }
@@ -8164,6 +8181,46 @@ body.nav-open {
     filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
 }
 .hex-icon-inner .life-icon-img { width: 48px; height: 48px; }
+
+/* ======================================================= */
+/*   MOBILE STABILITY — fixed viewport, no header flicker  */
+/* ======================================================= */
+@media (max-width: 768px) {
+    .main-header,
+    .main-header.scrolled {
+        transition: none;
+        backdrop-filter: var(--header-glass-blur-scrolled);
+        -webkit-backdrop-filter: var(--header-glass-blur-scrolled);
+        background: var(--header-scrolled-bg);
+    }
+
+    .hero-content h1 {
+        animation: none;
+    }
+
+    .hero-content p {
+        animation: none;
+        animation-fill-mode: none;
+    }
+
+    .hero-stats {
+        animation: none;
+        animation-fill-mode: none;
+    }
+
+    .fade-in-up {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+
+    .product-card,
+    .category-section,
+    .hex-feature-card {
+        opacity: 1;
+        transform: none;
+    }
+}
 
 /* Frosted икони в stat картите (бял фон): сянката е в самото изображение */
 .stat-item .life-icon-img {
