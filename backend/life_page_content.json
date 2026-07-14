@@ -1384,7 +1384,7 @@
             ]
           },
           "system_data": {
-            "show_on_homepage": true,
+            "show_on_homepage": false,
             "manufacturer": "Osavi",
             "application_type": "Oral",
             "inventory": 10,
