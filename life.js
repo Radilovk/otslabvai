@@ -1070,7 +1070,8 @@ function initNavDropdowns() {
     // renderHeader() is called; the handler always queries the live DOM.
     if (!_navDropdownOutsideClickAttached) {
         _navDropdownOutsideClickAttached = true;
-        document.addEventListener('click', () => {
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.nav-item.has-dropdown')) return;
             document.querySelectorAll('.nav-item.has-dropdown .nav-dropdown-menu.open').forEach(menu => {
                 menu.classList.remove('open');
                 const toggle = menu.previousElementSibling;

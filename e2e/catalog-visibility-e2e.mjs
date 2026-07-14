@@ -84,6 +84,14 @@ async function testCatalogPage(page, url, expectTitle, expectCards, expectNames 
   const title = await page.$eval('#category-title', (el) => el.textContent.trim());
   check(title === expectTitle, `Title on ${url}: "${title}" (expected "${expectTitle}")`);
 
+  const mainVisible = await page.evaluate(() => {
+    const main = document.getElementById('main-content-container');
+    if (!main) return true;
+    return main.classList.contains('is-loaded') &&
+      getComputedStyle(main.querySelector('.container') || main).opacity !== '0';
+  });
+  check(mainVisible, `Main content visible (is-loaded) on ${url}`);
+
   const cards = await page.$$(cardSel);
   check(cards.length === expectCards, `Cards on ${url}: ${cards.length} (expected ${expectCards})`);
 
