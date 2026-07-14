@@ -601,8 +601,8 @@ img {
         background 0.35s ease,
         border-color 0.35s ease,
         box-shadow 0.35s ease;
-    /* Без transform — position:fixed на .nav-links иначе се позиционира спрямо header-а */
-    will-change: background, box-shadow;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.85),
         0 4px 24px rgba(0, 0, 0, 0.04);
@@ -3158,31 +3158,49 @@ body.modal-open { overflow: hidden; }
 }
 
 @media (max-width: 992px) {
+    /* backdrop-filter/transform on header trap position:fixed nav inside header height (~102px).
+       Disable on mobile so the slide-out drawer covers the full viewport. */
+    .main-header,
+    .main-header.scrolled,
+    html.header-pre-scrolled .main-header {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        transform: none;
+        -webkit-transform: none;
+        background: var(--bg-secondary);
+    }
+
     .nav-links {
         position: fixed; 
         top: 0; 
         right: -100%; 
-        width: 280px; 
+        bottom: 0;
+        left: auto;
+        width: min(300px, 85vw);
         height: 100dvh;
-        height: -webkit-fill-available;
+        max-height: 100dvh;
+        min-height: 100dvh;
         background: var(--bg-secondary);
         display: flex;
         flex-direction: column; 
         justify-content: flex-start;
-        align-items: stretch; 
+        align-items: center; 
         gap: 1.25rem; 
         transition: right 0.4s cubic-bezier(0.23, 1, 0.32, 1); 
         z-index: 1002;
-        padding: calc(var(--header-offset, 72px) + 1.25rem) 1.25rem 2rem;
+        padding: calc(var(--header-offset, 72px) + 1rem) 1.25rem 2rem;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        box-shadow: -8px 0 32px rgba(0, 0, 0, 0.18);
     }
     .nav-links.active { 
         right: 0; 
     }
     .nav-links > li { 
         text-align: center; 
-        width: 100%;
+        width: 80%;
+        flex-shrink: 0;
     }
     .nav-links a { 
         font-size: 1.2rem; 
@@ -7426,17 +7444,7 @@ body {
     }
 }
 
-/* ── Nav links: improve mobile menu appearance ── */
-@media (max-width: 992px) {
-    .nav-links {
-        padding-top: var(--header-offset);
-    }
-
-    .nav-links a {
-        font-size: 1.1rem;
-        padding: 0.5rem 1rem;
-    }
-}
+/* ── Nav links: mobile padding handled in main nav drawer block above ── */
 
 /* ── Product filter bar: mobile ── */
 @media (max-width: 640px) {
@@ -7502,20 +7510,10 @@ body {
 
 /* ── 2. MOBILE NAV MENU – BETTER WIDTH, SCROLL, OVERLAY ── */
 @media (max-width: 992px) {
-    .nav-links {
-        width: min(300px, 85vw);
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
-        padding-bottom: env(safe-area-inset-bottom, 20px);
-        box-shadow: -8px 0 32px rgba(0, 0, 0, 0.18);
-    }
-
     .nav-links a {
         padding: 0.65rem 1.25rem;
         border-radius: 8px;
-        width: 80%;
+        width: 100%;
         transition: background 0.2s ease, color 0.2s ease;
         -webkit-tap-highlight-color: transparent;
     }
@@ -8212,8 +8210,6 @@ body.nav-open {
     .main-header,
     .main-header.scrolled {
         transition: none;
-        backdrop-filter: var(--header-glass-blur-scrolled);
-        -webkit-backdrop-filter: var(--header-glass-blur-scrolled);
         background: var(--header-scrolled-bg);
     }
 

@@ -52,20 +52,24 @@ const mainContent = {
 };
 
 const lifeContent = {
-  settings: { site_name: 'Life Protocols' },
-  navigation: [],
-  page_content: [{
-    type: 'product_category',
-    component_id: 'life-cat-test',
-    id: 'life-test-cat',
-    title: 'Life Test',
-    description: 'Life desc',
-    options: { is_collapsible: false },
-    products: [
-      makeProduct('life-home', 'Life Home', true),
-      makeProduct('life-catalog', 'Life Catalog', false)
-    ]
-  }],
+  settings: { site_name: 'Life Protocols', site_slogan: 'Test' },
+  navigation: [{ text: 'За нас', link: 'life-about.html' }],
+  page_content: [
+    {
+      type: 'product_category',
+      component_id: 'life-cat-test',
+      id: 'life-test-cat',
+      title: 'Life Test',
+      description: 'Life desc',
+      options: { is_collapsible: false },
+      products: [
+        makeProduct('life-home', 'Life Home', true),
+        makeProduct('life-catalog', 'Life Catalog', false)
+      ]
+    },
+    { type: 'product_category', id: 'cat-a', component_id: 'ca', title: 'Cat A', products: [] },
+    { type: 'product_category', id: 'cat-b', component_id: 'cb', title: 'Cat B', products: [] }
+  ],
   footer: { columns: [], copyright_text: '' }
 };
 
@@ -104,6 +108,32 @@ async function testCatalogPage(page, url, expectTitle, expectCards, expectNames 
   }
 }
 
+async function testMobileNavDrawer() {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true
+  }).then(c => c.newPage());
+
+  await page.goto(`${BASE}/life.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await page.waitForSelector('.nav-dropdown-toggle', { timeout: 20000 }).catch(() => {});
+  await page.click('.menu-toggle');
+  await page.waitForTimeout(400);
+
+  const navHeight = await page.evaluate(() => document.querySelector('.nav-links')?.getBoundingClientRect().height || 0);
+  check(navHeight >= 500, `Mobile nav drawer height ${navHeight}px (expected full viewport)`);
+
+  if (await page.locator('.nav-dropdown-toggle').count()) {
+    await page.locator('.nav-dropdown-toggle').click();
+    await page.waitForTimeout(200);
+    const open = await page.evaluate(() => document.querySelector('.nav-dropdown-menu')?.classList.contains('open'));
+    check(open, 'Categories dropdown opens inside mobile drawer');
+  }
+
+  await browser.close();
+}
+
 async function main() {
 const server = await new Promise((resolve) => {
   const s = app.listen(PORT, () => resolve(s));
@@ -132,10 +162,9 @@ const server = await new Promise((resolve) => {
 
   // Homepage shows only homepage products + view-more link
   await page.goto(`${BASE}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
-  // index.html fetches real API unless we patch - use inline test via local server won't work for index
-  // Instead verify generateProductCategoryHTML logic via node (already tested)
 
   await browser.close();
+  await testMobileNavDrawer();
   await new Promise((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
 
   console.log(`\nPassed: ${passes.length}`);
