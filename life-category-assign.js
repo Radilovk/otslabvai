@@ -3,6 +3,10 @@
  * Използва се от portfolio-import.js при AI/API импорт и от клиентския рендер.
  */
 
+import { isProductOnHomepage } from './product-visibility.js';
+
+export { isProductOnHomepage };
+
 export const LIFE_CATEGORY_DEFS = [
   {
     id: 'anti-aging-beauty',
@@ -128,11 +132,6 @@ export function productMatchesCategory(product, categoryDef) {
  * @param {object} categoryDef - запис от LIFE_CATEGORY_DEFS
  * @returns {Array} продукти
  */
-/** Дали продуктът е избран за витрина на началната страница (undefined = да, за обратна съвместимост). */
-export function isProductOnHomepage(product) {
-  return product?.system_data?.show_on_homepage !== false;
-}
-
 export function collectProductsForCategory(pageContent, categoryDef) {
   const seen = new Set();
   const out = [];

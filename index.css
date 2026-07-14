@@ -2842,6 +2842,7 @@ body.modal-open { overflow: hidden; }
         width: 280px; 
         height: 100vh;
         background: var(--bg-secondary);
+        display: flex;
         flex-direction: column; 
         justify-content: center;
         align-items: center; 
@@ -4891,4 +4892,212 @@ body.modal-open { overflow: hidden; }
     border-color: var(--glass-border-dark);
     box-shadow: 0 8px 32px rgba(228, 0, 124, 0.1),
                 inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ── Category "View more" CTA (homepage → full catalog) ── */
+.category-view-more {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 0.5rem;
+}
+
+.category-view-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    border-radius: 10px;
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+    background: transparent;
+    transition: all 0.25s ease;
+}
+
+.category-view-more-btn:hover {
+    background: var(--color-primary);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: var(--glow-primary-sm);
+}
+
+.category-view-more-btn svg {
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+}
+
+.category-view-more-btn:hover svg {
+    transform: translateX(3px);
+}
+
+/* ── Category catalog page (basic portfolio-style grid) ── */
+.site-category-page {
+    padding: 2.5rem 0 4rem;
+}
+
+.site-category-header {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto 2.5rem;
+    padding: 0 20px;
+}
+
+.site-category-header h1 {
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+.site-category-header p {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    line-height: 1.65;
+}
+
+.site-category-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 1.25rem;
+    color: var(--color-primary);
+    font-weight: 600;
+    font-size: 0.92rem;
+    text-decoration: none;
+}
+
+.site-category-back:hover {
+    color: var(--color-secondary);
+}
+
+.site-catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.site-catalog-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--box-shadow);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.site-catalog-card:hover {
+    border-color: rgba(228, 0, 124, 0.35);
+    box-shadow: 0 8px 28px rgba(228, 0, 124, 0.12);
+    transform: translateY(-3px);
+}
+
+.site-catalog-image {
+    aspect-ratio: 1;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.site-catalog-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 12px;
+}
+
+.site-catalog-no-image {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--color-light) 100%);
+}
+
+.site-catalog-body {
+    padding: 1rem 1.1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+}
+
+.site-catalog-brand {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+}
+
+.site-catalog-title {
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.site-catalog-tagline {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.site-catalog-price {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.site-catalog-price .price-from {
+    font-weight: 500;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-right: 0.2rem;
+}
+
+.site-catalog-price .price-original {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.88rem;
+    margin-right: 0.35rem;
+}
+
+.site-catalog-price .price-sale {
+    color: var(--color-sale, #c9a227);
+}
+
+.site-category-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 640px) {
+    .site-catalog-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.85rem;
+    }
+
+    .site-catalog-body {
+        padding: 0.75rem 0.85rem 0.9rem;
+    }
+
+    .site-catalog-title {
+        font-size: 0.88rem;
+    }
 }

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <title>Категория - ДА ОТСЛАБНА</title>
+    <meta name="description" content="Пълен каталог от продукти за отслабване. ДА ОТСЛАБНА — ефективни решения за контрол на теглото.">
+    <meta name="robots" content="index, follow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <script>
+        (function() {
+            try {
+                const saved = localStorage.getItem('theme');
+                document.documentElement.setAttribute('data-theme', saved === 'dark' ? 'dark' : 'light');
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <a href="index.html" class="logo-container" id="header-logo-link">
+                <img src="https://radilovk.github.io/face/assets/logoblack.png" alt="Лого" id="header-logo-img" style="display: block;">
+                <div>
+                    <span class="brand-name" id="header-brand-name">ДА ОТСЛАБНА</span>
+                    <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <ul class="nav-links" id="main-nav-links">
+                    <li class="cart-link-mobile">
+                        <span class="cart-link-mobile-label">Количка</span>
+                        <a href="checkout.html">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span>Виж количката</span>
+                            <span class="cart-badge" id="cart-count-menu">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <a href="checkout.html" class="cart-icon-btn" aria-label="Количка">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-badge" id="cart-count">0</span>
+                </a>
+            </div>
+            <button class="menu-toggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    <div class="nav-overlay"></div>
+
+    <main id="main-content-container" class="site-category-page">
+        <div class="container">
+            <div class="site-category-header">
+                <a href="index.html" class="site-category-back" id="category-back-link">← Към началната страница</a>
+                <h1 id="category-title">Категория</h1>
+                <p id="category-description"></p>
+            </div>
+            <div id="category-grid" class="site-catalog-grid" aria-live="polite"></div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid" id="footer-grid-container"></div>
+            <div class="footer-bottom" id="footer-copyright-container"></div>
+        </div>
+    </footer>
+
+    <div id="toast-container" class="toast-container"></div>
+    <button id="back-to-top" class="back-to-top" aria-label="Нагоре">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+    </button>
+
+    <script src="category.js" type="module"></script>
+</body>
+</html>
