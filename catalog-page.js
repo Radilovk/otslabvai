@@ -95,8 +95,12 @@ async function run(siteKey) {
   initMenu();
   const cartKey = cfg.cartKey;
   const count = JSON.parse(localStorage.getItem(cartKey) || '[]').reduce((n, i) => n + i.quantity, 0);
-  document.getElementById('cart-count')?.textContent = count;
-  document.getElementById('cart-count-menu')?.textContent = count;
+  const cartCountEl = document.getElementById('cart-count');
+  const cartCountMenuEl = document.getElementById('cart-count-menu');
+  if (cartCountEl) cartCountEl.textContent = count;
+  if (cartCountMenuEl) cartCountMenuEl.textContent = count;
+
+  if (!grid) return;
 
   if (!categoryId && !componentId) {
     grid.innerHTML = `<p class="catalog-empty">Липсва категория. <a href="${cfg.homePage}">Начало</a></p>`;
@@ -118,8 +122,8 @@ async function run(siteKey) {
     }
 
     document.title = `${cat.title || categoryId} - ${data.settings?.site_name || cfg.defaultBrand}`;
-    titleEl.textContent = cat.title || categoryId;
-    descEl.textContent = cat.description || '';
+    if (titleEl) titleEl.textContent = cat.title || categoryId;
+    if (descEl) descEl.textContent = cat.description || '';
     if (backEl) backEl.href = cat.id ? `${cfg.homePage}#${cat.id}` : cfg.homePage;
 
     const products = sortByOrder(cat.products).filter(isCatalogOnly);

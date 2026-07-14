@@ -1657,7 +1657,8 @@ function populateForm(form, data) {
         const path = input.dataset.field;
         const value = getProperty(data, path);
         if (input.type === 'checkbox') {
-            input.checked = !!value;
+            // show_on_homepage: undefined means homepage (back compat)
+            input.checked = path === 'system_data.show_on_homepage' ? value !== false : !!value;
         } else if (Array.isArray(value)) {
             input.value = value.join(', ');
         } else {
