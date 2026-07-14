@@ -402,8 +402,9 @@ const generateProductCategoryHTML = (component, index) => {
             </div>` : ''}
             ${catalogOnlyCount > 0 ? `
             <div class="category-view-more">
+                <p class="category-view-more-hint">На началната страница са показани избраните продукти. В пълния каталог има още <strong>${catalogOnlyCount}</strong>.</p>
                 <a href="${catalogLink('category.html', component, categorySlug)}" class="category-view-more-btn">
-                    Виж още (${catalogOnlyCount})
+                    Виж всички в каталога (${catalogOnlyCount})
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 </a>
             </div>` : ''}
