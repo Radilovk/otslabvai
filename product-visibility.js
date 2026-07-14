@@ -1,58 +1,28 @@
-/**
- * Витрина на началната страница — per-category (флагът е на продукта в масива products[] на категорията).
- * undefined → показване на началната (обратна съвместимост).
- */
-export function isProductOnHomepage(product) {
-  return product?.system_data?.show_on_homepage !== false;
-}
+/** Per-category flag on product in category.products[] — undefined = on homepage (back compat). */
+export const isOnHomepage = (p) => p?.system_data?.show_on_homepage !== false;
+export const isCatalogOnly = (p) => p?.system_data?.show_on_homepage === false;
 
-export function isProductCatalogOnly(product) {
-  return product?.system_data?.show_on_homepage === false;
-}
-
-export function filterHomepageProducts(products) {
-  return (products || []).filter(isProductOnHomepage);
-}
-
-export function filterCatalogProducts(products) {
-  return (products || []).filter(isProductCatalogOnly);
-}
-
-export function sortProductsByDisplayOrder(products) {
-  return (products || []).slice().sort((a, b) => {
-    const orderA = a.display_order !== undefined ? a.display_order : 999999;
-    const orderB = b.display_order !== undefined ? b.display_order : 999999;
-    return orderA - orderB;
-  });
-}
-
-/**
- * Намира product_category компонент по component_id (предпочитано) или category slug/id.
- */
-export function findCategoryComponent(pageContent, { categoryId = '', componentId = '' } = {}) {
-  const categories = (pageContent || []).filter(
-    (c) => c.type === 'product_category' && !c.is_hidden
-  );
-
+export function findCategory(pageContent, categoryId = '', componentId = '') {
+  const cats = (pageContent || []).filter((c) => c.type === 'product_category' && !c.is_hidden);
   if (componentId) {
-    const byComponent = categories.find((c) => c.component_id === componentId);
-    if (byComponent) return byComponent;
+    const hit = cats.find((c) => c.component_id === componentId);
+    if (hit) return hit;
   }
-
   if (categoryId) {
-    return categories.find(
-      (c) => c.id === categoryId || c.category_id === categoryId || c.component_id === categoryId
-    ) || null;
+    return cats.find((c) => c.id === categoryId || c.category_id === categoryId) || null;
   }
-
   return null;
 }
 
-export function buildCategoryCatalogUrl(basePage, component, categorySlug) {
-  const slug = categorySlug || component?.id || component?.category_id || '';
-  const params = new URLSearchParams();
-  if (slug) params.set('category', slug);
-  if (component?.component_id) params.set('component', component.component_id);
-  const qs = params.toString();
-  return qs ? `${basePage}?${qs}` : basePage;
+export function catalogLink(page, component, slug) {
+  const p = new URLSearchParams();
+  const id = slug || component?.id || component?.category_id;
+  if (id) p.set('category', id);
+  if (component?.component_id) p.set('component', component.component_id);
+  const qs = p.toString();
+  return qs ? `${page}?${qs}` : page;
+}
+
+export function sortByOrder(products) {
+  return (products || []).slice().sort((a, b) => (a.display_order ?? 999999) - (b.display_order ?? 999999));
 }

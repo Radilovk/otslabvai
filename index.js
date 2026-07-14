@@ -4,7 +4,7 @@
 
 import { API_URL } from './config.js';
 import { normalizeEffectLabel } from './effect-labels.js';
-import { filterHomepageProducts, filterCatalogProducts, buildCategoryCatalogUrl, sortProductsByDisplayOrder } from './product-visibility.js';
+import { isOnHomepage, isCatalogOnly, sortByOrder, catalogLink } from './product-visibility.js';
 
 const DOM = {
     mainContainer: document.getElementById('main-content-container'),
@@ -326,12 +326,9 @@ const generateProductCategoryHTML = (component, index) => {
     const categorySlug = component.id || component.category_id || sectionId;
     
     // Sort products by display_order if it exists, otherwise maintain current order
-    const sortedProducts = sortProductsByDisplayOrder(component.products);
-
-    const homepageProducts = filterHomepageProducts(sortedProducts);
-    const catalogProducts = filterCatalogProducts(sortedProducts);
-    const catalogOnlyCount = catalogProducts.length;
-    const displayProducts = homepageProducts;
+    const sortedProducts = sortByOrder(component.products);
+    const displayProducts = sortedProducts.filter(isOnHomepage);
+    const catalogOnlyCount = sortedProducts.filter(isCatalogOnly).length;
 
     // Build filter bar HTML if enabled
     let filterBarHTML = '';
@@ -405,7 +402,7 @@ const generateProductCategoryHTML = (component, index) => {
             </div>` : ''}
             ${catalogOnlyCount > 0 ? `
             <div class="category-view-more">
-                <a href="${buildCategoryCatalogUrl('category.html', component, categorySlug)}" class="category-view-more-btn">
+                <a href="${catalogLink('category.html', component, categorySlug)}" class="category-view-more-btn">
                     Виж още (${catalogOnlyCount})
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 </a>
