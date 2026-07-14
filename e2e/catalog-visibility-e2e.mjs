@@ -75,7 +75,7 @@ app.get('/backend/page_content.json', (_req, res) => res.json(mainContent));
 app.get('/backend/life_page_content.json', (_req, res) => res.json(lifeContent));
 app.use(express.static(ROOT));
 
-async function testCatalogPage(page, url, expectTitle, expectCards, expectNames = []) {
+async function testCatalogPage(page, url, expectTitle, expectCards, expectNames = [], cardSel = '.catalog-card') {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
@@ -84,11 +84,12 @@ async function testCatalogPage(page, url, expectTitle, expectCards, expectNames 
   const title = await page.$eval('#category-title', (el) => el.textContent.trim());
   check(title === expectTitle, `Title on ${url}: "${title}" (expected "${expectTitle}")`);
 
-  const cards = await page.$$('.catalog-card');
+  const cards = await page.$$(cardSel);
   check(cards.length === expectCards, `Cards on ${url}: ${cards.length} (expected ${expectCards})`);
 
   if (expectNames.length) {
-    const names = await page.$$eval('.catalog-title', (els) => els.map((e) => e.textContent.trim()));
+    const titleSel = cardSel.includes('life-') ? '.life-catalog-title' : '.catalog-title';
+    const names = await page.$$eval(titleSel, (els) => els.map((e) => e.textContent.trim()));
     for (const n of expectNames) {
       check(names.includes(n), `Catalog contains "${n}" on ${url}`);
     }
@@ -117,7 +118,8 @@ const server = await new Promise((resolve) => {
     `${BASE}/life-category.html?category=life-test-cat&component=life-cat-test`,
     'Life Test',
     1,
-    ['Life Catalog']
+    ['Life Catalog'],
+    '.life-catalog-card'
   );
 
   // Homepage shows only homepage products + view-more link

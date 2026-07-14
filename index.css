@@ -4895,15 +4895,58 @@ body.modal-open { overflow: hidden; }
 }
 
 /* main site: homepage „Виж още“ button */
+.category-view-more {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.category-view-more-hint {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    max-width: 28rem;
+    line-height: 1.55;
+}
+
+.category-view-more-hint strong {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
 .category-view-more-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    padding: 1rem 2rem;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    border-radius: 999px;
     border: 2px solid var(--color-primary);
     color: var(--color-primary);
-    background: transparent;
+    background: linear-gradient(135deg, rgba(228, 0, 124, 0.08) 0%, rgba(228, 0, 124, 0.02) 100%);
+    box-shadow: 0 4px 24px rgba(228, 0, 124, 0.1);
     transition: all 0.25s ease;
 }
+
+.category-view-more-btn svg {
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+}
+
 .category-view-more-btn:hover {
     background: var(--color-primary);
     color: #fff;
     transform: translateY(-2px);
     box-shadow: var(--glow-primary-sm);
+}
+
+.category-view-more-btn:hover svg {
+    transform: translateX(4px);
 }
