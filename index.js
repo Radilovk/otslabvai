@@ -4,6 +4,7 @@
 
 import { API_URL } from './config.js';
 import { normalizeEffectLabel } from './effect-labels.js';
+import { isProductOnHomepage } from './product-visibility.js';
 
 const DOM = {
     mainContainer: document.getElementById('main-content-container'),
@@ -322,6 +323,7 @@ const generateProductCategoryHTML = (component, index) => {
     const sectionId = component.id || component.component_id || `category-${index}`;
     const productGridId = `product-grid-${sectionId}`;
     const enableFilters = component.options && component.options.enable_filters;
+    const categorySlug = component.id || component.category_id || sectionId;
     
     // Sort products by display_order if it exists, otherwise maintain current order
     const sortedProducts = (component.products || []).slice().sort((a, b) => {
@@ -330,14 +332,18 @@ const generateProductCategoryHTML = (component, index) => {
         return orderA - orderB;
     });
 
+    const homepageProducts = sortedProducts.filter(isProductOnHomepage);
+    const catalogOnlyCount = sortedProducts.length - homepageProducts.length;
+    const displayProducts = homepageProducts.length ? homepageProducts : sortedProducts;
+
     // Build filter bar HTML if enabled
     let filterBarHTML = '';
     if (enableFilters) {
         // Extract unique brands
-        const brands = [...new Set(sortedProducts.map(p => p.public_data?.brand).filter(Boolean))].sort();
+        const brands = [...new Set(displayProducts.map(p => p.public_data?.brand).filter(Boolean))].sort();
         // Extract unique goals
         const goalsSet = new Set();
-        sortedProducts.forEach(p => {
+        displayProducts.forEach(p => {
             (p.system_data?.goals || []).forEach(g => goalsSet.add(g));
         });
         const goals = [...goalsSet].sort();
@@ -378,9 +384,9 @@ const generateProductCategoryHTML = (component, index) => {
     }
 
     // For filterable categories with many products, show limited initially
-    const INITIAL_SHOW = enableFilters ? 24 : sortedProducts.length;
-    const initialProducts = sortedProducts.slice(0, INITIAL_SHOW);
-    const hasMore = sortedProducts.length > INITIAL_SHOW;
+    const INITIAL_SHOW = enableFilters ? 24 : displayProducts.length;
+    const initialProducts = displayProducts.slice(0, INITIAL_SHOW);
+    const hasMore = displayProducts.length > INITIAL_SHOW;
     
     return `
     <section id="${sectionId}" class="category-section fade-in-up ${isCollapsible ? '' : 'not-collapsible'}">
@@ -394,11 +400,18 @@ const generateProductCategoryHTML = (component, index) => {
                 ${component.description ? `<p class="category-description">${component.description}</p>` : ''}
             </div>
             ${filterBarHTML}
-            <div class="product-grid" id="${productGridId}" ${enableFilters ? `data-all-products='${encodeProductsForAttr(sortedProducts)}' data-page-size="24"` : ''}>
+            <div class="product-grid" id="${productGridId}" ${enableFilters ? `data-all-products='${encodeProductsForAttr(displayProducts)}' data-page-size="24"` : ''}>
                 ${initialProducts.map(generateProductCard).join('')}
             </div>
             ${hasMore ? `<div class="load-more-container" id="load-more-${productGridId}">
-                <button class="btn-load-more" data-grid-id="${productGridId}">Зареди още продукти (${sortedProducts.length - INITIAL_SHOW} остават)</button>
+                <button class="btn-load-more" data-grid-id="${productGridId}">Зареди още продукти (${displayProducts.length - INITIAL_SHOW} остават)</button>
+            </div>` : ''}
+            ${catalogOnlyCount > 0 ? `
+            <div class="category-view-more">
+                <a href="category.html?category=${encodeURIComponent(categorySlug)}" class="category-view-more-btn">
+                    Виж още (${catalogOnlyCount})
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
             </div>` : ''}
         </div>
     </section>`;
@@ -1471,25 +1484,26 @@ function initializeGlobalScripts() {
     handleScrollAnimations();
 
     const closeMenu = () => {
-        DOM.menuToggle.classList.remove('active');
-        DOM.navLinksContainer.classList.remove('active');
-        DOM.navOverlay.classList.remove('active');
+        DOM.menuToggle?.classList.remove('active');
+        DOM.navLinksContainer?.classList.remove('active');
+        DOM.navOverlay?.classList.remove('active');
         DOM.body.classList.remove('nav-open');
     };
-    DOM.menuToggle.addEventListener('click', () => {
-        DOM.menuToggle.classList.toggle('active');
-        DOM.navLinksContainer.classList.toggle('active');
-        DOM.navOverlay.classList.toggle('active');
-        DOM.body.classList.toggle('nav-open');
-    });
-    DOM.navOverlay.addEventListener('click', closeMenu);
-    DOM.navLinksContainer.addEventListener('click', e => {
-        // Don't close the mobile nav when the user is toggling the categories dropdown
-        if (e.target.closest('.nav-dropdown-toggle')) return;
-        if (e.target.tagName === 'A' || e.target.closest('button')) {
-            closeMenu();
-        }
-    });
+    if (DOM.menuToggle && DOM.navLinksContainer && DOM.navOverlay) {
+        DOM.menuToggle.addEventListener('click', () => {
+            DOM.menuToggle.classList.toggle('active');
+            DOM.navLinksContainer.classList.toggle('active');
+            DOM.navOverlay.classList.toggle('active');
+            DOM.body.classList.toggle('nav-open');
+        });
+        DOM.navOverlay.addEventListener('click', closeMenu);
+        DOM.navLinksContainer.addEventListener('click', e => {
+            if (e.target.closest('.nav-dropdown-toggle')) return;
+            if (e.target.tagName === 'A' || e.target.closest('button')) {
+                closeMenu();
+            }
+        });
+    }
 
     // --- Quest Modal ---
     // Only initialize quest modal if elements exist
@@ -2393,6 +2407,15 @@ function initCard3DTilt() {
     }, { passive: true });
 
     document.addEventListener('mouseleave', (e) => {
+        if (!e.target?.closest) {
+            if (currentTiltCard) {
+                currentTiltCard.classList.remove('tilting');
+                currentTiltCard.style.transform = '';
+                currentTiltCard.style.transition = '';
+                currentTiltCard = null;
+            }
+            return;
+        }
         const card = e.target.closest('.product-card');
         if (card) {
             card.classList.remove('tilting');
