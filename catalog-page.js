@@ -109,7 +109,8 @@ function initNavDropdowns() {
 
   if (!navDropdownOutsideClickAttached) {
     navDropdownOutsideClickAttached = true;
-    document.addEventListener('click', () => {
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.nav-item.has-dropdown')) return;
       document.querySelectorAll('.nav-item.has-dropdown .nav-dropdown-menu.open').forEach((menu) => {
         menu.classList.remove('open');
         const toggle = menu.previousElementSibling;
@@ -209,6 +210,10 @@ function renderLifeChrome(data, cfg) {
   }
 }
 
+function markContentLoaded() {
+  document.getElementById('main-content-container')?.classList.add('is-loaded');
+}
+
 async function run(siteKey) {
   const cfg = SITES[siteKey];
   if (!cfg) return;
@@ -237,6 +242,7 @@ async function run(siteKey) {
 
   if (!categoryId && !componentId) {
     grid.innerHTML = `<p class="${emptyClass}">Липсва категория. <a href="${cfg.homePage}">Начало</a></p>`;
+    markContentLoaded();
     return;
   }
 
@@ -252,6 +258,7 @@ async function run(siteKey) {
     const cat = findCategory(data.page_content, categoryId, componentId);
     if (!cat) {
       grid.innerHTML = `<p class="${emptyClass}">Категорията не е намерена. <a href="${cfg.homePage}">Начало</a></p>`;
+      markContentLoaded();
       return;
     }
 
@@ -264,6 +271,7 @@ async function run(siteKey) {
     const products = sortByOrder(cat.products).filter(isCatalogOnly);
     if (!products.length) {
       grid.innerHTML = `<p class="${emptyClass}">Няма допълнителни продукти. Превключете продукти на „каталог“ от админ панела.</p>`;
+      markContentLoaded();
       return;
     }
 
@@ -272,9 +280,11 @@ async function run(siteKey) {
       countEl.textContent = `${products.length} ${products.length === 1 ? 'продукт' : 'продукта'} в каталога`;
     }
     grid.innerHTML = products.map((p) => cardHtml(p, cfg.productPage, siteKey)).join('');
+    markContentLoaded();
   } catch (e) {
     console.error(e);
     grid.innerHTML = `<p class="${emptyClass}">Грешка при зареждане. <a href="${cfg.homePage}">Начало</a></p>`;
+    markContentLoaded();
   }
 }
 

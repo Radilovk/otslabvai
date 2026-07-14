@@ -3239,6 +3239,11 @@ body.modal-open { overflow: hidden; }
         display: none;
     }
 
+    /* Pages without search (e.g. life-category): hide empty cyan pill next to menu */
+    .header-actions:not(:has(.search-container)) {
+        display: none;
+    }
+
     /* Show fixed mobile cart icon */
     .cart-icon-fixed-mobile {
         display: flex;
