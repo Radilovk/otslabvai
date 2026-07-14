@@ -110,7 +110,7 @@
         }
       ],
       "background_image": "",
-      "background_gradient": "linear-gradient(155deg, #EAF6FB 0%, #F4FAFE 40%, #E8F3F9 100%)",
+      "background_gradient": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       "hero_image": "https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/products/product-1773968432606-Gemini_Generated_Image_vih0e8vih0e8vih0__1_.png"
     },
     {
@@ -1252,6 +1252,7 @@
             ]
           },
           "system_data": {
+            "show_on_homepage": false,
             "manufacturer": "Reflex",
             "application_type": "Oral",
             "inventory": 10,
@@ -1272,7 +1273,7 @@
               "imported_at": "2026-07-10T23:17:00.693Z"
             }
           },
-          "display_order": 6
+          "display_order": 0
         },
         {
           "product_id": "prod-pf-40457",
@@ -1383,6 +1384,7 @@
             ]
           },
           "system_data": {
+            "show_on_homepage": true,
             "manufacturer": "Osavi",
             "application_type": "Oral",
             "inventory": 10,
@@ -1402,7 +1404,7 @@
               "imported_at": "2026-07-10T23:17:00.693Z"
             }
           },
-          "display_order": 8
+          "display_order": 1
         },
         {
           "product_id": "prod-pf-41126",
@@ -1531,6 +1533,7 @@
             ]
           },
           "system_data": {
+            "show_on_homepage": true,
             "manufacturer": "SWANSON",
             "application_type": "Oral",
             "inventory": 10,
@@ -1551,7 +1554,7 @@
               "imported_at": "2026-07-10T23:17:00.693Z"
             }
           },
-          "display_order": 9
+          "display_order": 2
         },
         {
           "product_id": "prod-pf-32896",
@@ -1662,6 +1665,7 @@
             ]
           },
           "system_data": {
+            "show_on_homepage": true,
             "manufacturer": "Double Wood Supplements",
             "application_type": "Oral",
             "inventory": 10,
@@ -1682,7 +1686,7 @@
               "imported_at": "2026-07-10T23:17:00.693Z"
             }
           },
-          "display_order": 11
+          "display_order": 3
         },
         {
           "product_id": "prod-pf-41238",
@@ -1768,6 +1772,7 @@
             ]
           },
           "system_data": {
+            "show_on_homepage": true,
             "manufacturer": "Biovital",
             "application_type": "Oral",
             "inventory": 10,
@@ -1788,7 +1793,7 @@
               "imported_at": "2026-07-10T23:17:00.693Z"
             }
           },
-          "display_order": 12
+          "display_order": 4
         },
         {
           "product_id": "prod-pf-25670",
@@ -1913,6 +1918,7 @@
             ]
           },
           "system_data": {
+            "show_on_homepage": true,
             "manufacturer": "Osavi",
             "application_type": "Oral",
             "inventory": 10,
@@ -1933,9 +1939,11 @@
               "imported_at": "2026-07-10T23:17:00.693Z"
             }
           },
-          "display_order": 14
+          "display_order": 5
         }
-      ]
+      ],
+      "image": "",
+      "is_hidden": false
     }
   ],
   "footer": {
