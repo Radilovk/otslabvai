@@ -2944,44 +2944,48 @@ function initModalTabs(container) {
 
 function initNestedItemUI(itemElement, data) {
     if (itemElement.matches('[data-type="product"]')) {
-        // Задаваме заглавие на редактора на продукта
         const titleSpan = itemElement.querySelector('.product-editor-title');
-        if (titleSpan) {
-            const name = getProperty(data, 'public_data.name') || 'Нов Продукт';
-            const onHomepage = getProperty(data, 'system_data.show_on_homepage');
-            const homeBadge = onHomepage === false
-                ? ' <span class="product-home-badge product-home-badge--catalog" title="Само в каталога (Виж още)">каталог</span>'
-                : ' <span class="product-home-badge product-home-badge--home" title="На началната страница">начало</span>';
-            titleSpan.innerHTML = `${escAdminHtml(name)}${homeBadge}`;
-        }
-        // Инициализираме вложените табове в продукта
+        const homeCheckbox = itemElement.querySelector('[data-field="system_data.show_on_homepage"]');
+        const nameInput = itemElement.querySelector('[data-field="public_data.name"]');
+
+        const renderProductTitle = () => {
+            if (!titleSpan) return;
+            const name = nameInput?.value?.trim() || getProperty(data, 'public_data.name') || 'Нов Продукт';
+            const onHomepage = homeCheckbox ? homeCheckbox.checked : true;
+            const badgeClass = onHomepage ? 'product-home-badge--home' : 'product-home-badge--catalog';
+            const badgeLabel = onHomepage ? 'начало' : 'каталог';
+            const badgeTitle = onHomepage
+                ? 'На началната страница — кликни за каталог'
+                : 'Само в каталога (Виж още) — кликни за начало';
+
+            titleSpan.innerHTML = `${escAdminHtml(name)}<button type="button" class="product-home-badge ${badgeClass}" title="${badgeTitle}" aria-pressed="${onHomepage ? 'true' : 'false'}">${badgeLabel}</button>`;
+
+            titleSpan.querySelector('.product-home-badge')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (homeCheckbox) homeCheckbox.checked = !homeCheckbox.checked;
+                setUnsavedChanges(true);
+                renderProductTitle();
+            });
+        };
+
+        renderProductTitle();
         initModalTabs(itemElement);
-        
-        // Добавяме collapse/expand функционалност
+
         const header = itemElement.querySelector('.product-header-clickable');
         if (header) {
             header.addEventListener('click', (e) => {
-                // Не затваряме/отваряме ако е кликнато върху бутон или handle
-                if (e.target.closest('button, .handle, .ai-assistant-btn, .delete-nested-btn, input[type="checkbox"]')) {
+                if (e.target.closest('button, .handle, .ai-assistant-btn, .delete-nested-btn, .product-home-badge, input[type="checkbox"]')) {
                     return;
                 }
                 itemElement.classList.toggle('collapsed');
             });
         }
 
-        const homeCheckbox = itemElement.querySelector('[data-field="system_data.show_on_homepage"]');
-        const nameInput = itemElement.querySelector('[data-field="public_data.name"]');
-        const refreshTitle = () => {
-            if (!titleSpan) return;
-            const name = nameInput?.value?.trim() || 'Нов Продукт';
-            const onHomepage = homeCheckbox ? homeCheckbox.checked : true;
-            const homeBadge = onHomepage
-                ? ' <span class="product-home-badge product-home-badge--home" title="На началната страница">начало</span>'
-                : ' <span class="product-home-badge product-home-badge--catalog" title="Само в каталога (Виж още)">каталог</span>';
-            titleSpan.innerHTML = `${escAdminHtml(name)}${homeBadge}`;
-        };
-        homeCheckbox?.addEventListener('change', refreshTitle);
-        nameInput?.addEventListener('input', refreshTitle);
+        homeCheckbox?.addEventListener('change', () => {
+            setUnsavedChanges(true);
+            renderProductTitle();
+        });
+        nameInput?.addEventListener('input', renderProductTitle);
     }
 }
 

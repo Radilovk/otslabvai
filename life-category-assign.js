@@ -1,11 +1,7 @@
 /**
  * Life Protocols — автоматично разпределяне на продукти в категории.
- * Използва се от portfolio-import.js при AI/API импорт и от клиентския рендер.
+ * Използва се от portfolio-import.js при AI/API импорт.
  */
-
-import { isProductOnHomepage } from './product-visibility.js';
-
-export { isProductOnHomepage };
 
 export const LIFE_CATEGORY_DEFS = [
   {
