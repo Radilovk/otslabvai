@@ -1,4 +1,9 @@
 import { API_URL } from './config.js';
+import {
+    findCategoryComponent,
+    filterCatalogProducts,
+    sortProductsByDisplayOrder
+} from './product-visibility.js';
 
 const DOM = {
     title: document.getElementById('category-title'),
@@ -148,32 +153,33 @@ async function main() {
     updateCartCount();
 
     const params = new URLSearchParams(window.location.search);
-    const categoryId = params.get('category') || params.get('id');
-    if (!categoryId) {
+    const categoryId = params.get('category') || params.get('id') || '';
+    const componentId = params.get('component') || '';
+    if (!categoryId && !componentId) {
         DOM.grid.innerHTML = '<p class="site-category-empty">Липсва категория. <a href="index.html">Към началната страница</a></p>';
         return;
     }
 
     try {
-        const response = await fetch(`${API_URL}/page_content.json`, { cache: 'default' });
+        const pageDirty = document.cookie.split(';').some(c => c.trim() === 'page_dirty=1');
+        if (pageDirty) document.cookie = 'page_dirty=; Max-Age=0; path=/';
+        const response = await fetch(`${API_URL}/page_content.json`, {
+            cache: pageDirty ? 'no-store' : 'default'
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
 
         renderMinimalHeader(data.settings, data.navigation);
         renderMinimalFooter(data.settings, data.footer);
 
-        const cmsCategory = (data.page_content || []).find(
-            c => c.type === 'product_category'
-                && !c.is_hidden
-                && (c.id === categoryId || c.category_id === categoryId || c.component_id === categoryId)
-        );
+        const cmsCategory = findCategoryComponent(data.page_content, { categoryId, componentId });
 
         if (!cmsCategory) {
             DOM.grid.innerHTML = '<p class="site-category-empty">Категорията не е намерена. <a href="index.html">Към началната страница</a></p>';
             return;
         }
 
-        const title = cmsCategory.title || categoryId;
+        const title = cmsCategory.title || categoryId || 'Категория';
         const description = cmsCategory.description || '';
 
         document.title = `${title} - ДА ОТСЛАБНА`;
@@ -183,19 +189,22 @@ async function main() {
             DOM.backLink.href = cmsCategory.id ? `index.html#${cmsCategory.id}` : 'index.html';
         }
 
-        const products = (cmsCategory.products || []).slice().sort(
-            (a, b) => (a.display_order ?? 999999) - (b.display_order ?? 999999)
+        const catalogProducts = filterCatalogProducts(
+            sortProductsByDisplayOrder(cmsCategory.products)
         );
 
-        const catalogProducts = products.filter(p => p.system_data?.show_on_homepage === false);
-        const displayProducts = catalogProducts.length ? catalogProducts : products;
-
-        if (!displayProducts.length) {
-            DOM.grid.innerHTML = '<p class="site-category-empty">Няма допълнителни продукти в тази категория.</p>';
+        if (!catalogProducts.length) {
+            DOM.grid.innerHTML = '<p class="site-category-empty">Няма допълнителни продукти в тази категория. Маркирайте продукти като „каталог“ от админ панела.</p>';
             return;
         }
 
-        DOM.grid.innerHTML = displayProducts.map(generateBasicProductCard).join('');
+        const cards = catalogProducts.map(generateBasicProductCard).filter(Boolean);
+        if (!cards.length) {
+            DOM.grid.innerHTML = '<p class="site-category-empty">Продуктите нямат публични данни за показване.</p>';
+            return;
+        }
+
+        DOM.grid.innerHTML = cards.join('');
     } catch (err) {
         console.error(err);
         DOM.grid.innerHTML = '<p class="site-category-empty">Грешка при зареждане на категорията. <a href="index.html">Към началната страница</a></p>';
