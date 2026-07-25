@@ -188,7 +188,7 @@ export function initPortfolioTheme() {
 
   const applyMetaTheme = (theme) => {
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = theme === 'dark' ? '#0a1628' : '#0f2540';
+    if (meta) meta.content = theme === 'dark' ? '#080f1a' : '#0f2540';
   };
 
   const setTheme = (theme) => {
