@@ -1247,6 +1247,37 @@ img, svg { display: block; max-width: 100%; height: auto; }
 
 .pf-card-price .from { font-size: 0.7rem; font-weight: 500; color: var(--pf-muted); font-family: var(--pf-font); }
 
+.pf-price-compare {
+  display: inline-block;
+  margin-right: 0.35rem;
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--pf-muted);
+  text-decoration: line-through;
+}
+
+.pf-price-sale {
+  color: var(--pf-primary);
+  font-weight: 700;
+}
+
+.pf-badge--promo {
+  background: #c62828;
+  color: #fff;
+}
+
+.pf-product-price .pf-price-compare {
+  font-size: 1rem;
+}
+
+.pf-product-price .pf-price-sale {
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+}
+
+[data-theme="dark"] .pf-price-compare {
+  color: var(--pf-muted);
+}
+
 /* ─── Skeleton ─── */
 .pf-skeleton {
   background: linear-gradient(90deg, #eceee9 25%, #f8f9f6 50%, #eceee9 75%);

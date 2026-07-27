@@ -117,13 +117,23 @@ function renderRelated() {
     </section>`;
 }
 
+function formatVariantPrice(variant) {
+  if (!variant) return '—';
+  const current = `${variant.retail_price.toFixed(2)} €`;
+  const compare = Number(variant.compare_at_price) || 0;
+  if (variant.is_on_promo && compare > variant.retail_price) {
+    return `<span class="pf-price-compare">${compare.toFixed(2)} €</span><span class="pf-price-sale">${current}</span>`;
+  }
+  return current;
+}
+
 function render() {
   if (!product) return;
   const packs = getPacks();
   const hasPacks = packs.length > 1 || (packs.length === 1 && packs[0]);
   const options = getOptionsForPack(selectedPack);
   const hasOptions = options.some((o) => o.option);
-  const price = selectedVariant ? selectedVariant.retail_price.toFixed(2) : '—';
+  const price = formatVariantPrice(selectedVariant);
   const maxQty = selectedVariant?.available ? 99 : 1;
 
   document.title = `${product.name} – BIOCODE`;
@@ -136,7 +146,7 @@ function render() {
         <div class="pf-product-brand">${escapeHtml(product.brand)}</div>
         <h1>${escapeHtml(product.name)}</h1>
         <p class="pf-product-cat">${escapeHtml(product.category)}</p>
-        <div class="pf-product-price" id="price-display">${price} €</div>
+        <div class="pf-product-price" id="price-display">${price}</div>
 
         ${hasPacks ? `
         <div class="pf-variant-group">

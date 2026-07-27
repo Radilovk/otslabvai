@@ -16,8 +16,24 @@ import {
   isSyncStale,
   extractCartSkuIds
 } from './portfolio-sync-policy.js';
+import {
+  DEFAULT_PRICING_POLICY,
+  resolveVariantPricing,
+  summarizeGroupPricing,
+  normalizePricingPolicy,
+  applyPromoCodePrice
+} from './portfolio-pricing.js';
 
-export { filterIndex, SYNC_POLICY, isSyncStale, extractCartSkuIds };
+export {
+  filterIndex,
+  SYNC_POLICY,
+  isSyncStale,
+  extractCartSkuIds,
+  DEFAULT_PRICING_POLICY,
+  resolveVariantPricing,
+  summarizeGroupPricing,
+  normalizePricingPolicy
+};
 
 const CHUNK_SIZE = 150;
 const KV_SETTINGS = 'portfolio_settings';
@@ -53,6 +69,7 @@ export const DEFAULT_SETTINGS = {
   reseller_delivery_note: 'Доставка до дистрибутор — разпределяне към клиенти от админ панела.',
   hero_image: 'images/portfolio-hero.jpg',
   hero_title: 'Каталог добавки',
+  pricing_policy: { ...DEFAULT_PRICING_POLICY },
   footer: {
     contact_email: 'office@biocode.com',
     contact_phone: '',
@@ -210,9 +227,48 @@ export function summarizeGroupMargin(group) {
   };
 }
 
+function pricingPolicyFromSettings(settings) {
+  return normalizePricingPolicy(settings?.pricing_policy, settings);
+}
+
+function buildVariantPricing(raw, settings, gid) {
+  const overrides = settings.product_overrides || {};
+  const b2b = parseFloat(raw.b2b_price) || 0;
+  const regular = parseFloat(raw.regular_price) || 0;
+  const sale = parseFloat(raw.sale_price) || 0;
+  const markup = calculateMarkupPercent(settings, { ...raw, group_id: gid });
+  const skuId = String(raw.id);
+  const resolved = resolveVariantPricing({
+    b2b,
+    regular,
+    sale,
+    override: overrides[gid],
+    policy: pricingPolicyFromSettings(settings),
+    settings,
+    markupRetail: () => calculateRetailPrice(b2b, markup, overrides[gid], skuId)
+  });
+
+  return {
+    sku_id: skuId,
+    barcode: raw.barcode || '',
+    pack: raw.pack || '',
+    option: raw.option || '',
+    b2b_price: b2b,
+    retail_price: resolved.retail_price,
+    markup_percent: markup,
+    regular_price: regular,
+    sale_price: sale,
+    compare_at_price: resolved.compare_at_price,
+    is_on_promo: resolved.is_on_promo,
+    f1_reference_price: resolved.f1_reference_price,
+    pricing_mode: resolved.pricing_mode,
+    available: raw.available === true,
+    image: raw.image || ''
+  };
+}
+
 export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
   const groups = new Map();
-  const overrides = settings.product_overrides || {};
 
   for (const p of rawProducts) {
     const gid = String(p.group_id);
@@ -239,23 +295,9 @@ export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
     }
     if (p.label && !g.label) g.label = p.label;
 
-    const b2b = parseFloat(p.b2b_price) || 0;
-    const markup = calculateMarkupPercent(settings, { ...p, group_id: gid });
-    const retail = calculateRetailPrice(b2b, markup, overrides[gid], String(p.id));
-
-    g.variants.push({
-      sku_id: String(p.id),
-      barcode: p.barcode || '',
-      pack: p.pack || '',
-      option: p.option || '',
-      b2b_price: b2b,
-      retail_price: retail,
-      markup_percent: markup,
-      regular_price: parseFloat(p.regular_price) || 0,
-      sale_price: parseFloat(p.sale_price) || 0,
-      available: p.available === true,
-      image: p.image || g.image
-    });
+    const variant = buildVariantPricing(p, settings, gid);
+    variant.image = variant.image || g.image;
+    g.variants.push(variant);
   }
 
   return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name, 'bg'));
@@ -277,9 +319,7 @@ export function buildCatalogMeta(groups, settings = null) {
     }
 
     const availableVariants = g.variants.filter((v) => v.available);
-    const prices = g.variants.map((v) => v.retail_price).filter((n) => n > 0);
-    const minPrice = prices.length ? Math.min(...prices) : 0;
-    const maxPrice = prices.length ? Math.max(...prices) : 0;
+    const priceStats = summarizeGroupPricing(g.variants);
     const packs = [...new Set(g.variants.map((v) => v.pack).filter(Boolean))];
     const marginStats = summarizeGroupMargin(g);
 
@@ -291,8 +331,10 @@ export function buildCatalogMeta(groups, settings = null) {
       category: g.category,
       category_top: g.category_path[0] || '',
       category_path: g.category_path,
-      min_price: minPrice,
-      max_price: maxPrice,
+      min_price: priceStats.min_price,
+      max_price: priceStats.max_price,
+      has_promo: priceStats.has_promo,
+      compare_at_price: priceStats.compare_at_price,
       variant_count: g.variants.length,
       available: availableVariants.length > 0,
       image: g.image,
@@ -516,13 +558,15 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = true } =
 
 function rebuildIndexEntryForGroup(entry, group, settings) {
   const availableVariants = group.variants.filter((v) => v.available);
-  const prices = group.variants.map((v) => v.retail_price).filter((n) => n > 0);
+  const priceStats = summarizeGroupPricing(group.variants);
   const packs = [...new Set(group.variants.map((v) => v.pack).filter(Boolean))];
   const marginStats = summarizeGroupMargin(group);
   const updated = enrichIndexEntry({
     ...entry,
-    min_price: prices.length ? Math.min(...prices) : 0,
-    max_price: prices.length ? Math.max(...prices) : 0,
+    min_price: priceStats.min_price,
+    max_price: priceStats.max_price,
+    has_promo: priceStats.has_promo,
+    compare_at_price: priceStats.compare_at_price,
     variant_count: group.variants.length,
     available: availableVariants.length > 0,
     packs,
@@ -605,7 +649,6 @@ export async function refreshCartStockInKv(env, skuIds) {
 
   const affectedGroupIds = new Set();
   const chunkIndexes = new Set();
-  const overrides = settings.product_overrides || {};
 
   for (const skuId of uniqueSkus) {
     const found = await findVariantInCatalog(env, skuId);
@@ -636,13 +679,10 @@ export async function refreshCartStockInKv(env, skuIds) {
           }
           continue;
         }
-        const b2b = parseFloat(fresh.b2b_price) || 0;
-        const markup = calculateMarkupPercent(settings, { ...fresh, group_id: group.group_id });
-        variant.b2b_price = b2b;
-        variant.retail_price = calculateRetailPrice(b2b, markup, overrides[group.group_id], variant.sku_id);
-        variant.markup_percent = markup;
-        variant.available = fresh.available === true;
-        variant.barcode = fresh.barcode || variant.barcode;
+        const priced = buildVariantPricing(fresh, settings, group.group_id);
+        Object.assign(variant, priced, {
+          image: variant.image || priced.image || group.image
+        });
         modified = true;
       }
     }
@@ -743,7 +783,10 @@ async function handleSaveSettings(request, env) {
     reseller_delivery_note: incoming.reseller_delivery_note ?? current.reseller_delivery_note,
     hero_image: incoming.hero_image ?? current.hero_image,
     hero_title: incoming.hero_title ?? current.hero_title,
-    footer: incoming.footer ?? current.footer
+    footer: incoming.footer ?? current.footer,
+    pricing_policy: incoming.pricing_policy
+      ? { ...current.pricing_policy, ...incoming.pricing_policy }
+      : current.pricing_policy
   };
   await saveSettings(env, merged);
   return jsonResponse({ success: true, settings: merged });
@@ -898,7 +941,9 @@ async function findVariantInCatalog(env, skuId) {
   return null;
 }
 
-async function validateAndNormalizeCartItems(env, products) {
+async function validateAndNormalizeCartItems(env, products, { promoRecord = null } = {}) {
+  const settings = await getSettings(env);
+  const policy = pricingPolicyFromSettings(settings);
   const normalized = [];
   const errors = [];
 
@@ -920,6 +965,12 @@ async function validateAndNormalizeCartItems(env, products) {
       continue;
     }
 
+    const catalogRetail = Number(found.variant.retail_price) || 0;
+    const promoRetail = promoRecord
+      ? applyPromoCodePrice(found.variant, promoRecord, policy)
+      : catalogRetail;
+    const retailPrice = promoRecord ? promoRetail : catalogRetail;
+
     const label = [found.group_name, found.variant.pack, found.variant.option].filter(Boolean).join(' – ');
     normalized.push({
       sku_id: found.variant.sku_id,
@@ -929,7 +980,12 @@ async function validateAndNormalizeCartItems(env, products) {
       option: found.variant.option,
       quantity: qty,
       b2b_price: found.variant.b2b_price,
-      retail_price: found.variant.retail_price,
+      retail_price: retailPrice,
+      catalog_retail_price: catalogRetail,
+      compare_at_price: found.variant.compare_at_price || 0,
+      pricing_mode: promoRecord?.pricing_mode && promoRecord.pricing_mode !== 'none'
+        ? `promo_${promoRecord.pricing_mode}`
+        : (found.variant.pricing_mode || 'catalog'),
       image: found.image
     });
   }
@@ -946,7 +1002,17 @@ async function handleValidateCart(request, env) {
   }
   const skuIds = extractCartSkuIds(body.products);
   const stockCheckedAt = await ensureStockFresh(env, skuIds, SYNC_POLICY.ORDER_FRESHNESS_MS);
-  const items = await validateAndNormalizeCartItems(env, body.products);
+
+  let promoRecord = null;
+  if (body.promoCode) {
+    const codes = await getPromoCodes(env);
+    const promo = codes.find((p) => p.code === String(body.promoCode).toUpperCase().trim());
+    const check = validatePromoRecord(promo);
+    if (!check.valid) throw new PortfolioError(check.error, 400);
+    promoRecord = promo;
+  }
+
+  const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord });
   const retailTotal = items.reduce((s, i) => s + i.retail_price * i.quantity, 0);
   return jsonResponse({
     valid: true,
@@ -1079,7 +1145,9 @@ function validatePromoRecord(promo, { increment = false } = {}) {
       code: promo.code,
       discount: promo.discount,
       discountType: promo.discountType || 'percentage',
-      description: promo.description || ''
+      description: promo.description || '',
+      pricing_mode: promo.pricing_mode || 'none',
+      pricing_percent: promo.pricing_percent ?? null
     }
   };
 }
@@ -1109,6 +1177,8 @@ async function handleCreatePromoCode(request, env) {
     maxUses: data.maxUses ? parseInt(data.maxUses, 10) : null,
     usedCount: 0,
     active: data.active !== false,
+    pricing_mode: data.pricing_mode || 'none',
+    pricing_percent: data.pricing_percent != null ? Number(data.pricing_percent) : null,
     createdAt: new Date().toISOString()
   };
   codes.push(newPromo);
@@ -1130,7 +1200,11 @@ async function handleUpdatePromoCode(request, env) {
     validFrom: data.validFrom ?? codes[idx].validFrom,
     validUntil: data.validUntil ?? codes[idx].validUntil,
     maxUses: data.maxUses !== undefined ? (data.maxUses ? parseInt(data.maxUses, 10) : null) : codes[idx].maxUses,
-    active: data.active !== undefined ? data.active : codes[idx].active
+    active: data.active !== undefined ? data.active : codes[idx].active,
+    pricing_mode: data.pricing_mode ?? codes[idx].pricing_mode ?? 'none',
+    pricing_percent: data.pricing_percent !== undefined
+      ? (data.pricing_percent != null ? Number(data.pricing_percent) : null)
+      : codes[idx].pricing_percent
   });
   await savePromoCodes(env, codes);
   return jsonResponse({ success: true, promoCode: codes[idx] });
@@ -1203,7 +1277,20 @@ async function handleCreateOrder(request, env) {
   const customer = sanitizePortfolioCustomer(body.customer);
   const skuIds = extractCartSkuIds(body.products);
   const stockCheckedAt = await ensureStockFresh(env, skuIds, SYNC_POLICY.ORDER_FRESHNESS_MS);
-  const items = await validateAndNormalizeCartItems(env, body.products);
+
+  let promoRecord = null;
+  let appliedPromo = null;
+  if (body.promoCode) {
+    const codes = await getPromoCodes(env);
+    const promo = codes.find((p) => p.code === String(body.promoCode).toUpperCase().trim());
+    const check = validatePromoRecord(promo, { increment: true });
+    if (!check.valid) throw new PortfolioError(check.error, 400);
+    promoRecord = promo;
+    appliedPromo = check.promoCode;
+    await savePromoCodes(env, codes);
+  }
+
+  const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord });
 
   let b2bTotal = 0;
   let retailTotal = 0;
@@ -1213,15 +1300,8 @@ async function handleCreateOrder(request, env) {
   }
 
   let promoDiscount = 0;
-  let appliedPromo = null;
-  if (body.promoCode) {
-    const codes = await getPromoCodes(env);
-    const promo = codes.find((p) => p.code === String(body.promoCode).toUpperCase().trim());
-    const check = validatePromoRecord(promo, { increment: true });
-    if (!check.valid) throw new PortfolioError(check.error, 400);
-    promoDiscount = applyPromoDiscount(retailTotal, check.promoCode);
-    appliedPromo = check.promoCode;
-    await savePromoCodes(env, codes);
+  if (appliedPromo && (!appliedPromo.pricing_mode || appliedPromo.pricing_mode === 'none')) {
+    promoDiscount = applyPromoDiscount(retailTotal, appliedPromo);
   }
 
   const project = String(body.project || 'portfolio').trim() || 'portfolio';
