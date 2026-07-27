@@ -16,8 +16,14 @@ import {
   isSyncStale,
   extractCartSkuIds
 } from './portfolio-sync-policy.js';
+import {
+  DEFAULT_PRICING_POLICY,
+  resolveVariantPricing,
+  summarizeGroupPricing
+} from './portfolio-pricing.js';
 
 export { filterIndex, SYNC_POLICY, isSyncStale, extractCartSkuIds };
+export { DEFAULT_PRICING_POLICY, resolveVariantPricing, summarizeGroupPricing };
 
 const CHUNK_SIZE = 150;
 const KV_SETTINGS = 'portfolio_settings';
@@ -53,6 +59,7 @@ export const DEFAULT_SETTINGS = {
   reseller_delivery_note: 'Доставка до дистрибутор — разпределяне към клиенти от админ панела.',
   hero_image: 'images/portfolio-hero.jpg',
   hero_title: 'Каталог добавки',
+  pricing_policy: { ...DEFAULT_PRICING_POLICY },
   footer: {
     contact_email: 'office@biocode.com',
     contact_phone: '',
@@ -210,9 +217,49 @@ export function summarizeGroupMargin(group) {
   };
 }
 
+function pricingPolicyFromSettings(settings) {
+  return { ...DEFAULT_PRICING_POLICY, ...(settings?.pricing_policy || {}) };
+}
+
+function buildVariantPricing(raw, settings, gid) {
+  const overrides = settings.product_overrides || {};
+  const b2b = parseFloat(raw.b2b_price) || 0;
+  const regular = parseFloat(raw.regular_price) || 0;
+  const sale = parseFloat(raw.sale_price) || 0;
+  const markup = calculateMarkupPercent(settings, { ...raw, group_id: gid });
+  const skuId = String(raw.id);
+  const resolved = resolveVariantPricing({
+    b2b,
+    regular,
+    sale,
+    markupPercent: markup,
+    override: overrides[gid],
+    skuId,
+    policy: pricingPolicyFromSettings(settings),
+    markupRetail: () => calculateRetailPrice(b2b, markup, overrides[gid], skuId)
+  });
+
+  return {
+    sku_id: skuId,
+    barcode: raw.barcode || '',
+    pack: raw.pack || '',
+    option: raw.option || '',
+    b2b_price: b2b,
+    retail_price: resolved.retail_price,
+    markup_percent: markup,
+    regular_price: regular,
+    sale_price: sale,
+    compare_at_price: resolved.compare_at_price,
+    is_on_promo: resolved.is_on_promo,
+    f1_reference_price: resolved.f1_reference_price,
+    pricing_mode: resolved.pricing_mode,
+    available: raw.available === true,
+    image: raw.image || ''
+  };
+}
+
 export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
   const groups = new Map();
-  const overrides = settings.product_overrides || {};
 
   for (const p of rawProducts) {
     const gid = String(p.group_id);
@@ -239,23 +286,9 @@ export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
     }
     if (p.label && !g.label) g.label = p.label;
 
-    const b2b = parseFloat(p.b2b_price) || 0;
-    const markup = calculateMarkupPercent(settings, { ...p, group_id: gid });
-    const retail = calculateRetailPrice(b2b, markup, overrides[gid], String(p.id));
-
-    g.variants.push({
-      sku_id: String(p.id),
-      barcode: p.barcode || '',
-      pack: p.pack || '',
-      option: p.option || '',
-      b2b_price: b2b,
-      retail_price: retail,
-      markup_percent: markup,
-      regular_price: parseFloat(p.regular_price) || 0,
-      sale_price: parseFloat(p.sale_price) || 0,
-      available: p.available === true,
-      image: p.image || g.image
-    });
+    const variant = buildVariantPricing(p, settings, gid);
+    variant.image = variant.image || g.image;
+    g.variants.push(variant);
   }
 
   return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name, 'bg'));
@@ -277,9 +310,7 @@ export function buildCatalogMeta(groups, settings = null) {
     }
 
     const availableVariants = g.variants.filter((v) => v.available);
-    const prices = g.variants.map((v) => v.retail_price).filter((n) => n > 0);
-    const minPrice = prices.length ? Math.min(...prices) : 0;
-    const maxPrice = prices.length ? Math.max(...prices) : 0;
+    const priceStats = summarizeGroupPricing(g.variants);
     const packs = [...new Set(g.variants.map((v) => v.pack).filter(Boolean))];
     const marginStats = summarizeGroupMargin(g);
 
@@ -291,8 +322,10 @@ export function buildCatalogMeta(groups, settings = null) {
       category: g.category,
       category_top: g.category_path[0] || '',
       category_path: g.category_path,
-      min_price: minPrice,
-      max_price: maxPrice,
+      min_price: priceStats.min_price,
+      max_price: priceStats.max_price,
+      has_promo: priceStats.has_promo,
+      compare_at_price: priceStats.compare_at_price,
       variant_count: g.variants.length,
       available: availableVariants.length > 0,
       image: g.image,
@@ -516,13 +549,15 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = true } =
 
 function rebuildIndexEntryForGroup(entry, group, settings) {
   const availableVariants = group.variants.filter((v) => v.available);
-  const prices = group.variants.map((v) => v.retail_price).filter((n) => n > 0);
+  const priceStats = summarizeGroupPricing(group.variants);
   const packs = [...new Set(group.variants.map((v) => v.pack).filter(Boolean))];
   const marginStats = summarizeGroupMargin(group);
   const updated = enrichIndexEntry({
     ...entry,
-    min_price: prices.length ? Math.min(...prices) : 0,
-    max_price: prices.length ? Math.max(...prices) : 0,
+    min_price: priceStats.min_price,
+    max_price: priceStats.max_price,
+    has_promo: priceStats.has_promo,
+    compare_at_price: priceStats.compare_at_price,
     variant_count: group.variants.length,
     available: availableVariants.length > 0,
     packs,
@@ -605,7 +640,6 @@ export async function refreshCartStockInKv(env, skuIds) {
 
   const affectedGroupIds = new Set();
   const chunkIndexes = new Set();
-  const overrides = settings.product_overrides || {};
 
   for (const skuId of uniqueSkus) {
     const found = await findVariantInCatalog(env, skuId);
@@ -636,13 +670,10 @@ export async function refreshCartStockInKv(env, skuIds) {
           }
           continue;
         }
-        const b2b = parseFloat(fresh.b2b_price) || 0;
-        const markup = calculateMarkupPercent(settings, { ...fresh, group_id: group.group_id });
-        variant.b2b_price = b2b;
-        variant.retail_price = calculateRetailPrice(b2b, markup, overrides[group.group_id], variant.sku_id);
-        variant.markup_percent = markup;
-        variant.available = fresh.available === true;
-        variant.barcode = fresh.barcode || variant.barcode;
+        const priced = buildVariantPricing(fresh, settings, group.group_id);
+        Object.assign(variant, priced, {
+          image: variant.image || priced.image || group.image
+        });
         modified = true;
       }
     }
