@@ -536,7 +536,18 @@ async function isSyncInProgress(env) {
   return !!(await env.PAGE_CONTENT.get(KV_SYNC_LOCK));
 }
 
-async function withSyncLock(env, fn, { isFresh } = {}) {
+/**
+ * @typedef {object} SyncLockOptions
+ * @property {() => Promise<boolean>} [isFresh] Return true when data is already fresh (skip waiting).
+ */
+
+/**
+ * @param {object} env
+ * @param {() => Promise<*>} fn
+ * @param {SyncLockOptions} [options]
+ */
+async function withSyncLock(env, fn, options = {}) {
+  const isFresh = options.isFresh;
   const token = crypto.randomUUID();
   const maxAttempts = Math.ceil(SYNC_POLICY.SYNC_LOCK_MAX_WAIT_MS / SYNC_POLICY.SYNC_LOCK_POLL_MS);
 

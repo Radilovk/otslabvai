@@ -32,11 +32,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Typecheck Worker modules
-        run: npm run typecheck
-
-      - name: Run Portfolio unit tests
-        run: npm run test:portfolio
+      - name: Validate Worker (typecheck + Portfolio tests)
+        run: npm run validate:worker
 
       - name: Bake bio_content.json into bio.html
         if: github.ref == 'refs/heads/main'

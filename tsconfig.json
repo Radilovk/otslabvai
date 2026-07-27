@@ -1,4 +1,5 @@
 {
+  "_comment": "Single source of truth for Worker typecheck; jsconfig.json extends this file.",
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
@@ -8,7 +9,8 @@
     "lib": ["ES2022", "WebWorker"],
     "noEmit": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "maxNodeModuleJsDepth": 0
   },
   "include": [
     "worker.js",
@@ -16,7 +18,10 @@
     "portfolio-import.js",
     "portfolio-filter.js",
     "portfolio-search.js",
-    "portfolio-order-validation.js"
+    "portfolio-order-validation.js",
+    "portfolio-sync-policy.js",
+    "portfolio-goals.js",
+    "ai-settings-resolver.js"
   ],
-  "exclude": ["node_modules", "e2e", "backend", "products"]
+  "exclude": ["node_modules", "e2e", "backend", "products", "**/*.test.js"]
 }
