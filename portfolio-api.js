@@ -19,11 +19,21 @@ import {
 import {
   DEFAULT_PRICING_POLICY,
   resolveVariantPricing,
-  summarizeGroupPricing
+  summarizeGroupPricing,
+  normalizePricingPolicy,
+  applyPromoCodePrice
 } from './portfolio-pricing.js';
 
-export { filterIndex, SYNC_POLICY, isSyncStale, extractCartSkuIds };
-export { DEFAULT_PRICING_POLICY, resolveVariantPricing, summarizeGroupPricing };
+export {
+  filterIndex,
+  SYNC_POLICY,
+  isSyncStale,
+  extractCartSkuIds,
+  DEFAULT_PRICING_POLICY,
+  resolveVariantPricing,
+  summarizeGroupPricing,
+  normalizePricingPolicy
+};
 
 const CHUNK_SIZE = 150;
 const KV_SETTINGS = 'portfolio_settings';
@@ -218,7 +228,7 @@ export function summarizeGroupMargin(group) {
 }
 
 function pricingPolicyFromSettings(settings) {
-  return { ...DEFAULT_PRICING_POLICY, ...(settings?.pricing_policy || {}) };
+  return normalizePricingPolicy(settings?.pricing_policy, settings);
 }
 
 function buildVariantPricing(raw, settings, gid) {
@@ -232,10 +242,9 @@ function buildVariantPricing(raw, settings, gid) {
     b2b,
     regular,
     sale,
-    markupPercent: markup,
     override: overrides[gid],
-    skuId,
     policy: pricingPolicyFromSettings(settings),
+    settings,
     markupRetail: () => calculateRetailPrice(b2b, markup, overrides[gid], skuId)
   });
 
@@ -774,7 +783,10 @@ async function handleSaveSettings(request, env) {
     reseller_delivery_note: incoming.reseller_delivery_note ?? current.reseller_delivery_note,
     hero_image: incoming.hero_image ?? current.hero_image,
     hero_title: incoming.hero_title ?? current.hero_title,
-    footer: incoming.footer ?? current.footer
+    footer: incoming.footer ?? current.footer,
+    pricing_policy: incoming.pricing_policy
+      ? { ...current.pricing_policy, ...incoming.pricing_policy }
+      : current.pricing_policy
   };
   await saveSettings(env, merged);
   return jsonResponse({ success: true, settings: merged });
@@ -929,7 +941,9 @@ async function findVariantInCatalog(env, skuId) {
   return null;
 }
 
-async function validateAndNormalizeCartItems(env, products) {
+async function validateAndNormalizeCartItems(env, products, { promoRecord = null } = {}) {
+  const settings = await getSettings(env);
+  const policy = pricingPolicyFromSettings(settings);
   const normalized = [];
   const errors = [];
 
@@ -951,6 +965,12 @@ async function validateAndNormalizeCartItems(env, products) {
       continue;
     }
 
+    const catalogRetail = Number(found.variant.retail_price) || 0;
+    const promoRetail = promoRecord
+      ? applyPromoCodePrice(found.variant, promoRecord, policy)
+      : catalogRetail;
+    const retailPrice = promoRecord ? promoRetail : catalogRetail;
+
     const label = [found.group_name, found.variant.pack, found.variant.option].filter(Boolean).join(' – ');
     normalized.push({
       sku_id: found.variant.sku_id,
@@ -960,7 +980,12 @@ async function validateAndNormalizeCartItems(env, products) {
       option: found.variant.option,
       quantity: qty,
       b2b_price: found.variant.b2b_price,
-      retail_price: found.variant.retail_price,
+      retail_price: retailPrice,
+      catalog_retail_price: catalogRetail,
+      compare_at_price: found.variant.compare_at_price || 0,
+      pricing_mode: promoRecord?.pricing_mode && promoRecord.pricing_mode !== 'none'
+        ? `promo_${promoRecord.pricing_mode}`
+        : (found.variant.pricing_mode || 'catalog'),
       image: found.image
     });
   }
@@ -977,7 +1002,17 @@ async function handleValidateCart(request, env) {
   }
   const skuIds = extractCartSkuIds(body.products);
   const stockCheckedAt = await ensureStockFresh(env, skuIds, SYNC_POLICY.ORDER_FRESHNESS_MS);
-  const items = await validateAndNormalizeCartItems(env, body.products);
+
+  let promoRecord = null;
+  if (body.promoCode) {
+    const codes = await getPromoCodes(env);
+    const promo = codes.find((p) => p.code === String(body.promoCode).toUpperCase().trim());
+    const check = validatePromoRecord(promo);
+    if (!check.valid) throw new PortfolioError(check.error, 400);
+    promoRecord = promo;
+  }
+
+  const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord });
   const retailTotal = items.reduce((s, i) => s + i.retail_price * i.quantity, 0);
   return jsonResponse({
     valid: true,
@@ -1110,7 +1145,9 @@ function validatePromoRecord(promo, { increment = false } = {}) {
       code: promo.code,
       discount: promo.discount,
       discountType: promo.discountType || 'percentage',
-      description: promo.description || ''
+      description: promo.description || '',
+      pricing_mode: promo.pricing_mode || 'none',
+      pricing_percent: promo.pricing_percent ?? null
     }
   };
 }
@@ -1140,6 +1177,8 @@ async function handleCreatePromoCode(request, env) {
     maxUses: data.maxUses ? parseInt(data.maxUses, 10) : null,
     usedCount: 0,
     active: data.active !== false,
+    pricing_mode: data.pricing_mode || 'none',
+    pricing_percent: data.pricing_percent != null ? Number(data.pricing_percent) : null,
     createdAt: new Date().toISOString()
   };
   codes.push(newPromo);
@@ -1161,7 +1200,11 @@ async function handleUpdatePromoCode(request, env) {
     validFrom: data.validFrom ?? codes[idx].validFrom,
     validUntil: data.validUntil ?? codes[idx].validUntil,
     maxUses: data.maxUses !== undefined ? (data.maxUses ? parseInt(data.maxUses, 10) : null) : codes[idx].maxUses,
-    active: data.active !== undefined ? data.active : codes[idx].active
+    active: data.active !== undefined ? data.active : codes[idx].active,
+    pricing_mode: data.pricing_mode ?? codes[idx].pricing_mode ?? 'none',
+    pricing_percent: data.pricing_percent !== undefined
+      ? (data.pricing_percent != null ? Number(data.pricing_percent) : null)
+      : codes[idx].pricing_percent
   });
   await savePromoCodes(env, codes);
   return jsonResponse({ success: true, promoCode: codes[idx] });
@@ -1234,7 +1277,20 @@ async function handleCreateOrder(request, env) {
   const customer = sanitizePortfolioCustomer(body.customer);
   const skuIds = extractCartSkuIds(body.products);
   const stockCheckedAt = await ensureStockFresh(env, skuIds, SYNC_POLICY.ORDER_FRESHNESS_MS);
-  const items = await validateAndNormalizeCartItems(env, body.products);
+
+  let promoRecord = null;
+  let appliedPromo = null;
+  if (body.promoCode) {
+    const codes = await getPromoCodes(env);
+    const promo = codes.find((p) => p.code === String(body.promoCode).toUpperCase().trim());
+    const check = validatePromoRecord(promo, { increment: true });
+    if (!check.valid) throw new PortfolioError(check.error, 400);
+    promoRecord = promo;
+    appliedPromo = check.promoCode;
+    await savePromoCodes(env, codes);
+  }
+
+  const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord });
 
   let b2bTotal = 0;
   let retailTotal = 0;
@@ -1244,15 +1300,8 @@ async function handleCreateOrder(request, env) {
   }
 
   let promoDiscount = 0;
-  let appliedPromo = null;
-  if (body.promoCode) {
-    const codes = await getPromoCodes(env);
-    const promo = codes.find((p) => p.code === String(body.promoCode).toUpperCase().trim());
-    const check = validatePromoRecord(promo, { increment: true });
-    if (!check.valid) throw new PortfolioError(check.error, 400);
-    promoDiscount = applyPromoDiscount(retailTotal, check.promoCode);
-    appliedPromo = check.promoCode;
-    await savePromoCodes(env, codes);
+  if (appliedPromo && (!appliedPromo.pricing_mode || appliedPromo.pricing_mode === 'none')) {
+    promoDiscount = applyPromoDiscount(retailTotal, appliedPromo);
   }
 
   const project = String(body.project || 'portfolio').trim() || 'portfolio';

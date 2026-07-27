@@ -4751,6 +4751,27 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
                 Активен
             </label>
         </div>
+        ${scope === 'portfolio' ? `
+        <fieldset style="margin-top:1rem;border:1px solid var(--border-color);border-radius:8px;padding:1rem;">
+            <legend>Персонални цени (по избор)</legend>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0;">
+                Ако е зададено, кодът променя цените в количката вместо (или в допълнение към) отстъпката при плащане.
+            </p>
+            <div class="form-group" style="margin-top:0.75rem;">
+                <label for="promo-pricing-mode">Режим на цена</label>
+                <select id="promo-pricing-mode">
+                    <option value="none" ${!isEdit || !promoData.pricing_mode || promoData.pricing_mode === 'none' ? 'selected' : ''}>Само отстъпка при плащане</option>
+                    <option value="below_regular" ${isEdit && promoData.pricing_mode === 'below_regular' ? 'selected' : ''}>% под препоръчителна</option>
+                    <option value="above_b2b" ${isEdit && promoData.pricing_mode === 'above_b2b' ? 'selected' : ''}>% над доставна</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="promo-pricing-percent">Процент за персонална цена</label>
+                <input type="number" id="promo-pricing-percent" min="0" max="99" step="0.5"
+                    value="${isEdit && promoData.pricing_percent != null ? promoData.pricing_percent : ''}" placeholder="напр. 8">
+            </div>
+        </fieldset>
+        ` : ''}
     `;
     
     DOM.modal.body.innerHTML = '';
@@ -4797,6 +4818,19 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
             maxUses: maxUses ? parseInt(maxUses) : null,
             active
         };
+
+        if (promoApiScope === 'portfolio') {
+            const pricingMode = document.getElementById('promo-pricing-mode')?.value || 'none';
+            const pricingPercentRaw = document.getElementById('promo-pricing-percent')?.value;
+            promoPayload.pricing_mode = pricingMode;
+            promoPayload.pricing_percent = pricingMode === 'none' || pricingPercentRaw === ''
+                ? null
+                : parseFloat(pricingPercentRaw);
+            if (pricingMode !== 'none' && (promoPayload.pricing_percent == null || promoPayload.pricing_percent < 0)) {
+                alert('Въведете валиден процент за персонална цена.');
+                return false;
+            }
+        }
         
         if (isEdit) {
             promoPayload.id = promoData.id;
@@ -4952,10 +4986,12 @@ function renderPortfolioSettings() {
     if (!container) return;
 
     const s = portfolioSettingsData || {};
+    const pp = s.pricing_policy || {};
     const lastSync = s.last_sync
         ? new Date(s.last_sync).toLocaleString('bg-BG')
         : 'Никога';
     const count = s.last_sync_count ? s.last_sync_count.toLocaleString('bg-BG') : '—';
+    const standardMode = pp.standard_mode || 'below_regular';
 
     container.innerHTML = `
         <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
@@ -4964,8 +5000,42 @@ function renderPortfolioSettings() {
             <p><strong>Брой продуктови групи:</strong> ${escAdminHtml(count)}</p>
             <button type="button" class="btn btn-primary" id="portfolio-sync-btn" style="margin-top:1rem;">🔄 Синхронизирай каталога</button>
             <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.75rem;">
-                Изисква <code>FITNESS1_API_KEY</code> в Worker secrets. Синхронизацията отнема 1–2 минути.
+                <strong>Автоматично:</strong> каталогът се обновява при първи посетител (след 24h) и при поръчка/одобрение — без излишни F1 заявки.
+                Ръчният sync тук е за пълно обновяване + описания.
             </p>
+        </div>
+        <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
+            <h3 style="margin-top:0;">Ценова политика</h3>
+            <p style="font-size:0.9rem;color:var(--text-secondary);">
+                F1 промоции (sale &lt; regular): винаги под тяхната цена. Стандартни продукти: изберете режим по-долу.
+            </p>
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="pf-f1-undercut">Под F1 промо цена (€)</label>
+                <input type="number" id="pf-f1-undercut" min="0.01" max="5" step="0.01" value="${Number(pp.f1_promo_undercut_eur ?? 0.1)}" style="width:120px;padding:0.5rem;">
+            </div>
+            <fieldset style="margin-top:1rem;border:1px solid var(--border-color);border-radius:8px;padding:1rem;">
+                <legend>Ненамалени продукти</legend>
+                <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
+                    <input type="radio" name="pf-standard-mode" value="below_regular" ${standardMode === 'below_regular' ? 'checked' : ''}>
+                    % под препоръчителна цена (regular_price)
+                </label>
+                <div class="form-group" style="margin-left:1.5rem;">
+                    <input type="number" id="pf-below-regular-pct" min="0" max="50" step="0.5" value="${Number(pp.below_regular_percent ?? 3)}" style="width:120px;padding:0.5rem;">
+                    <span style="margin-left:0.5rem;">%</span>
+                </div>
+                <label style="display:flex;align-items:center;gap:0.5rem;margin:0.75rem 0;">
+                    <input type="radio" name="pf-standard-mode" value="above_b2b" ${standardMode === 'above_b2b' ? 'checked' : ''}>
+                    % над доставна цена (b2b_price)
+                </label>
+                <div class="form-group" style="margin-left:1.5rem;">
+                    <input type="number" id="pf-above-b2b-pct" min="0" max="200" step="1" value="${Number(pp.above_b2b_percent ?? s.global_markup_percent ?? 30)}" style="width:120px;padding:0.5rem;">
+                    <span style="margin-left:0.5rem;">%</span>
+                </div>
+            </fieldset>
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="pf-min-profit">Минимална печалба над b2b (€)</label>
+                <input type="number" id="pf-min-profit" min="0.01" max="5" step="0.01" value="${Number(pp.min_profit_eur ?? 0.01)}" style="width:120px;padding:0.5rem;">
+            </div>
         </div>
         <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
             <h3 style="margin-top:0;">Дистрибутор (вашата B2B доставка)</h3>
@@ -5029,9 +5099,9 @@ function renderPortfolioSettings() {
             </div>
         </div>
         <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;">
-            <h3 style="margin-top:0;">Надценка</h3>
+            <h3 style="margin-top:0;">Сайт и надценка (fallback)</h3>
             <div class="form-group">
-                <label for="pf-global-markup">Глобална надценка (%)</label>
+                <label for="pf-global-markup">Глобална надценка (%) — за бранд/категория override и fallback</label>
                 <input type="number" id="pf-global-markup" min="0" max="200" step="1" value="${Number(s.global_markup_percent) || 30}" style="width:120px;padding:0.5rem;">
             </div>
             <div class="form-group" style="margin-top:1rem;">
@@ -5076,6 +5146,7 @@ async function syncPortfolioCatalog() {
 
 async function savePortfolioSettings() {
     const current = portfolioSettingsData || {};
+    const standardMode = document.querySelector('input[name="pf-standard-mode"]:checked')?.value || 'below_regular';
     const payload = {
         global_markup_percent: Number(document.getElementById('pf-global-markup')?.value) || 30,
         site_name: document.getElementById('pf-site-name')?.value || 'Portfolio',
@@ -5086,6 +5157,14 @@ async function savePortfolioSettings() {
         reseller_phone: document.getElementById('pf-reseller-phone')?.value || '',
         reseller_address: document.getElementById('pf-reseller-address')?.value || '',
         reseller_delivery_note: document.getElementById('pf-reseller-note')?.value || '',
+        pricing_policy: {
+            ...(current.pricing_policy || {}),
+            standard_mode: standardMode,
+            below_regular_percent: Number(document.getElementById('pf-below-regular-pct')?.value) || 3,
+            above_b2b_percent: Number(document.getElementById('pf-above-b2b-pct')?.value) || 30,
+            f1_promo_undercut_eur: Number(document.getElementById('pf-f1-undercut')?.value) || 0.1,
+            min_profit_eur: Number(document.getElementById('pf-min-profit')?.value) || 0.01
+        },
         footer: {
             ...(current.footer || {}),
             contact_email: document.getElementById('pf-footer-email')?.value || 'office@biocode.com',
@@ -5105,6 +5184,7 @@ async function savePortfolioSettings() {
         if (!res.ok) throw new Error(data.error || 'Грешка');
         portfolioSettingsData = data.settings;
         showNotification('Настройките са запазени. Препоръчително: resync на каталога за нови цени.', 'success');
+        renderPortfolioSettings();
     } catch (e) {
         showNotification(e.message || 'Грешка при запис', 'error');
     }
@@ -5231,8 +5311,13 @@ function showPortfolioOrderDetailModal(order) {
             <td>x${escAdminHtml(p.quantity)}</td>
             <td>${Number(p.retail_price || 0).toFixed(2)} €</td>
             <td>${Number(p.b2b_price || 0).toFixed(2)} €</td>
+            <td><small>${escAdminHtml(p.pricing_mode || '—')}</small></td>
         </tr>`
     ).join('');
+
+    const stockChecked = order.stock_checked_at
+        ? new Date(order.stock_checked_at).toLocaleString('bg-BG')
+        : '—';
 
     const promoLine = order.promo?.code
         ? `<p><strong>Промо код:</strong> ${escAdminHtml(order.promo.code)} (−${Number(summary.promo_discount || 0).toFixed(2)} €)</p>`
@@ -5272,9 +5357,12 @@ function showPortfolioOrderDetailModal(order) {
         <div class="detail-modal-section">
             <h4>Продукти и суми</h4>
             <table class="detail-products-table">
-                <thead><tr><th>Продукт</th><th>Кол.</th><th>Продажна</th><th>B2B</th></tr></thead>
+                <thead><tr><th>Продукт</th><th>Кол.</th><th>Продажна</th><th>B2B</th><th>Ценообр.</th></tr></thead>
                 <tbody>${productsRows}</tbody>
             </table>
+            <p style="margin-top:0.75rem;font-size:0.9rem;color:var(--text-secondary);">
+                <strong>Проверка на наличност:</strong> ${escAdminHtml(stockChecked)}
+            </p>
             <p style="margin-top:0.75rem;">
                 <strong>Междинна (продажна):</strong> ${Number(summary.retail_total || 0).toFixed(2)} € /
                 <strong>B2B:</strong> ${Number(summary.b2b_total || 0).toFixed(2)} € /
@@ -5470,7 +5558,10 @@ function renderPortfolioPromoCodes() {
             ? `${promo.discount}%`
             : `${promo.discount} €`;
         rowTemplate.querySelector('.promo-discount').textContent = discountText;
-        rowTemplate.querySelector('.promo-description').textContent = promo.description || '';
+        const pricingExtra = promo.pricing_mode && promo.pricing_mode !== 'none'
+            ? ` · цени: ${promo.pricing_percent}% ${promo.pricing_mode === 'below_regular' ? 'под regular' : 'над b2b'}`
+            : '';
+        rowTemplate.querySelector('.promo-description').textContent = `${promo.description || ''}${pricingExtra}`.trim();
         const validFrom = promo.validFrom ? new Date(promo.validFrom).toLocaleDateString('bg-BG') : '';
         const validUntil = promo.validUntil ? new Date(promo.validUntil).toLocaleDateString('bg-BG') : 'Безсрочен';
         rowTemplate.querySelector('.promo-validity').textContent = `${validFrom} - ${validUntil}`;

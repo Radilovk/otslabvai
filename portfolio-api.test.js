@@ -80,13 +80,12 @@ describe('Portfolio API', () => {
     expect([0, 1]).toContain(charmEndingSeed('1'));
   });
 
-  test('groupRawProducts merges variants and undercuts F1 regular price', () => {
+  test('groupRawProducts merges variants and prices below regular percent', () => {
     const groups = groupRawProducts(sampleProducts, settings);
     expect(groups).toHaveLength(1);
     expect(groups[0].variants).toHaveLength(2);
-    expect(groups[0].variants[0].retail_price).toBe(19.9);
-    expect(groups[0].variants[0].retail_price).toBeLessThan(20);
-    expect(groups[0].variants[0].is_on_promo).toBe(true);
+    expect(groups[0].variants[0].retail_price).toBe(19.4);
+    expect(groups[0].variants[0].pricing_mode).toBe('below_regular');
   });
 
   test('groupRawProducts undercuts F1 sale promo', () => {
@@ -98,7 +97,7 @@ describe('Portfolio API', () => {
     }];
     const groups = groupRawProducts(promoProduct, settings);
     expect(groups[0].variants[0].retail_price).toBe(19.8);
-    expect(groups[0].variants[0].compare_at_price).toBe(24.9);
+    expect(groups[0].variants[0].pricing_mode).toBe('f1_promo');
   });
 
   test('buildCatalogMeta creates index and lookup', () => {
@@ -116,8 +115,8 @@ describe('Portfolio API', () => {
   test('summarizeGroupMargin uses best variant margin', () => {
     const groups = groupRawProducts(sampleProducts, settings);
     const stats = summarizeGroupMargin(groups[0]);
-    expect(stats.max_margin).toBe(9.9);
-    expect(stats.max_margin_pct).toBe(99);
+    expect(stats.max_margin).toBe(9.4);
+    expect(stats.max_margin_pct).toBe(94);
   });
 
   test('buildClientCatalogMeta strips margin and unavailable products', () => {

@@ -1,17 +1,32 @@
 /**
- * Competitive pricing vs Fitness1 – uses regular_price / sale_price from products_v3.
- * Goal: strictly below F1 customer price when profitable (retail > b2b).
+ * Portfolio pricing vs Fitness1 – standard catalog rules + F1 promo undercut + promo-code overrides.
  */
 
 function roundPrice(value) {
   return Math.round(value * 100) / 100;
 }
 
-/** @type {{ undercut_eur: number, min_profit_eur: number }} */
+/** @type {{ min_profit_eur: number, f1_promo_undercut_eur: number, standard_mode: string, below_regular_percent: number, above_b2b_percent: number }} */
 export const DEFAULT_PRICING_POLICY = {
-  undercut_eur: 0.10,
-  min_profit_eur: 0.01
+  min_profit_eur: 0.01,
+  f1_promo_undercut_eur: 0.10,
+  standard_mode: 'below_regular',
+  below_regular_percent: 3,
+  above_b2b_percent: 30
 };
+
+export function normalizePricingPolicy(policy, settings = null) {
+  const fromSettings = policy || settings?.pricing_policy || {};
+  const globalMarkup = Number(settings?.global_markup_percent);
+  return {
+    ...DEFAULT_PRICING_POLICY,
+    ...fromSettings,
+    above_b2b_percent: Number(fromSettings.above_b2b_percent ?? globalMarkup ?? DEFAULT_PRICING_POLICY.above_b2b_percent),
+    below_regular_percent: Number(fromSettings.below_regular_percent ?? DEFAULT_PRICING_POLICY.below_regular_percent),
+    f1_promo_undercut_eur: Number(fromSettings.f1_promo_undercut_eur ?? DEFAULT_PRICING_POLICY.f1_promo_undercut_eur),
+    min_profit_eur: Number(fromSettings.min_profit_eur ?? DEFAULT_PRICING_POLICY.min_profit_eur)
+  };
+}
 
 /** Active F1 end-customer price (promo sale wins over regular list price). */
 export function getF1CustomerPrice(regularPrice, salePrice) {
@@ -34,7 +49,7 @@ export function isF1PromoActive(regularPrice, salePrice) {
  * @param {number} reference
  * @param {number} [undercutEur]
  */
-export function priceStrictlyBelow(reference, undercutEur = DEFAULT_PRICING_POLICY.undercut_eur) {
+export function priceStrictlyBelow(reference, undercutEur = DEFAULT_PRICING_POLICY.f1_promo_undercut_eur) {
   const ref = Number(reference) || 0;
   if (!(ref > 0)) return 0;
   const step = Math.max(Number(undercutEur) || 0.01, 0.01);
@@ -44,76 +59,136 @@ export function priceStrictlyBelow(reference, undercutEur = DEFAULT_PRICING_POLI
   return candidate;
 }
 
+function priceBelowRegular(regular, percentBelow, floor) {
+  const regularPrice = Number(regular) || 0;
+  if (!(regularPrice > 0)) return 0;
+  const pct = Math.max(0, Math.min(99, Number(percentBelow) || 0));
+  let target = roundPrice(regularPrice * (1 - pct / 100));
+  if (target >= regularPrice) target = roundPrice(regularPrice - 0.01);
+  return Math.max(floor, target);
+}
+
+function resolveF1PromoPrice(b2b, regular, sale, policy) {
+  const floor = roundPrice(b2b + policy.min_profit_eur);
+  const f1Ref = getF1CustomerPrice(regular, sale);
+  let competitive = priceStrictlyBelow(f1Ref, policy.f1_promo_undercut_eur);
+  competitive = Math.max(floor, competitive);
+  if (competitive >= f1Ref) competitive = roundPrice(f1Ref - 0.01);
+  if (competitive < floor) competitive = floor;
+
+  const belowF1 = competitive < f1Ref;
+  const compareAt = Number(regular) > competitive ? Number(regular) : f1Ref;
+
+  return {
+    retail_price: competitive,
+    compare_at_price: belowF1 ? compareAt : 0,
+    is_on_promo: true,
+    f1_reference_price: f1Ref,
+    pricing_mode: belowF1 ? 'f1_promo' : 'floor'
+  };
+}
+
+function resolveStandardPrice(b2b, regular, policy, markupRetail) {
+  const floor = roundPrice(b2b + policy.min_profit_eur);
+  const regularPrice = Number(regular) || 0;
+
+  if (policy.standard_mode === 'below_regular' && regularPrice > floor) {
+    const retail = priceBelowRegular(regularPrice, policy.below_regular_percent, floor);
+    return {
+      retail_price: retail,
+      compare_at_price: retail < regularPrice ? regularPrice : 0,
+      is_on_promo: retail < regularPrice,
+      f1_reference_price: regularPrice,
+      pricing_mode: 'below_regular'
+    };
+  }
+
+  const markupFn = typeof markupRetail === 'function' ? markupRetail : null;
+  let retail = markupFn ? Number(markupFn()) || 0 : 0;
+  if (!(retail > 0)) {
+    retail = roundPrice(b2b * (1 + (Number(policy.above_b2b_percent) || 0) / 100));
+  }
+  retail = Math.max(floor, retail);
+
+  return {
+    retail_price: retail,
+    compare_at_price: regularPrice > retail ? regularPrice : 0,
+    is_on_promo: false,
+    f1_reference_price: regularPrice,
+    pricing_mode: 'above_b2b'
+  };
+}
+
 /**
- * @param {object} input
- * @param {number} input.b2b
- * @param {number} [input.regular]
- * @param {number} [input.sale]
- * @param {number} [input.markupPercent]
- * @param {object} [input.override]
- * @param {string} [input.skuId]
- * @param {() => number} [input.markupRetail] - fallback retail from markup + charm
- * @param {object} [input.policy]
+ * @typedef {object} VariantPricingInput
+ * @property {number} b2b
+ * @property {number} [regular]
+ * @property {number} [sale]
+ * @property {object} [override]
+ * @property {() => number} [markupRetail]
+ * @property {object} [policy]
+ * @property {object} [settings]
+ */
+
+/**
+ * @param {VariantPricingInput} input
  * @returns {{
  *   retail_price: number,
  *   compare_at_price: number,
  *   is_on_promo: boolean,
  *   f1_reference_price: number,
- *   pricing_mode: 'competitive'|'markup'|'fixed_override'|'floor'
+ *   pricing_mode: string
  * }}
  */
 export function resolveVariantPricing(input) {
-  const policy = { ...DEFAULT_PRICING_POLICY, ...input.policy };
+  const policy = normalizePricingPolicy(input.policy, input.settings);
   const b2b = Number(input.b2b) || 0;
-  const floor = roundPrice(b2b + policy.min_profit_eur);
   const regular = Number(input.regular) || 0;
   const sale = Number(input.sale) || 0;
-  const f1Ref = getF1CustomerPrice(regular, sale);
-  const onPromo = isF1PromoActive(regular, sale);
+  const floor = roundPrice(b2b + policy.min_profit_eur);
 
   if (input.override && typeof input.override.fixed_price === 'number') {
     const fixed = roundPrice(input.override.fixed_price);
+    const onPromo = isF1PromoActive(regular, sale);
     return {
       retail_price: Math.max(floor, fixed),
-      compare_at_price: onPromo && regular > fixed ? regular : 0,
-      is_on_promo: onPromo,
-      f1_reference_price: f1Ref,
+      compare_at_price: onPromo && regular > fixed ? regular : (regular > fixed ? regular : 0),
+      is_on_promo: onPromo || (regular > fixed),
+      f1_reference_price: getF1CustomerPrice(regular, sale),
       pricing_mode: 'fixed_override'
     };
   }
 
-  if (f1Ref > floor) {
-    let competitive = priceStrictlyBelow(f1Ref, policy.undercut_eur);
-    competitive = Math.max(floor, competitive);
-    if (competitive >= f1Ref) competitive = roundPrice(f1Ref - 0.01);
-    if (competitive < floor) competitive = floor;
-
-    const belowF1 = competitive < f1Ref;
-    const compareAt = onPromo && regular > competitive
-      ? regular
-      : (belowF1 ? f1Ref : 0);
-
-    return {
-      retail_price: competitive,
-      compare_at_price: compareAt,
-      is_on_promo: onPromo || belowF1,
-      f1_reference_price: f1Ref,
-      pricing_mode: belowF1 ? 'competitive' : 'floor'
-    };
+  if (isF1PromoActive(regular, sale)) {
+    return resolveF1PromoPrice(b2b, regular, sale, policy);
   }
 
-  const markupRetail = typeof input.markupRetail === 'function'
-    ? Number(input.markupRetail()) || 0
-    : 0;
-  const retail = Math.max(floor, markupRetail);
+  return resolveStandardPrice(b2b, regular, policy, input.markupRetail);
+}
 
-  return {
-    retail_price: retail,
-    compare_at_price: 0,
-    is_on_promo: false,
-    f1_reference_price: f1Ref,
-    pricing_mode: 'markup'
-  };
+/**
+ * Personal promo-code pricing (optional % below regular or % above b2b).
+ * @param {object} variant - catalog variant with b2b/regular/retail
+ * @param {object|null} promo - { pricing_mode, pricing_percent }
+ * @param {object} [policy]
+ */
+export function applyPromoCodePrice(variant, promo, policy = DEFAULT_PRICING_POLICY) {
+  const base = roundPrice(Number(variant?.retail_price) || 0);
+  if (!promo?.pricing_mode || promo.pricing_mode === 'none') return base;
+
+  const normalized = normalizePricingPolicy(policy);
+  const b2b = Number(variant?.b2b_price) || 0;
+  const regular = Number(variant?.regular_price) || 0;
+  const floor = roundPrice(b2b + normalized.min_profit_eur);
+  const pct = Math.max(0, Number(promo.pricing_percent) || 0);
+
+  if (promo.pricing_mode === 'below_regular' && regular > floor) {
+    return priceBelowRegular(regular, pct, floor);
+  }
+  if (promo.pricing_mode === 'above_b2b') {
+    return Math.max(floor, roundPrice(b2b * (1 + pct / 100)));
+  }
+  return base;
 }
 
 /** Summarize promo/compare fields for a catalog group index row. */
@@ -123,7 +198,8 @@ export function summarizeGroupPricing(variants) {
   const minPrice = priced.length ? Math.min(...priced.map((v) => v.retail_price)) : 0;
   const maxPrice = priced.length ? Math.max(...priced.map((v) => v.retail_price)) : 0;
   const promoPriced = list.filter(
-    (v) => v.is_on_promo && (Number(v.compare_at_price) || 0) > (Number(v.retail_price) || 0)
+    (v) => (v.is_on_promo || v.pricing_mode === 'f1_promo') &&
+      (Number(v.compare_at_price) || 0) > (Number(v.retail_price) || 0)
   );
   const compareAt = promoPriced.length
     ? Math.max(...promoPriced.map((v) => Number(v.compare_at_price) || 0))

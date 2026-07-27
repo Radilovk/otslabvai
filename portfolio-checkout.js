@@ -42,6 +42,7 @@ function getSubtotal() {
 
 function getPromoDiscount(subtotal) {
   if (!activePromoCode) return 0;
+  if (activePromoCode.pricing_mode && activePromoCode.pricing_mode !== 'none') return 0;
   if (activePromoCode.discountType === 'percentage') {
     return subtotal * (activePromoCode.discount / 100);
   }
@@ -146,7 +147,7 @@ function renderCart() {
   scheduleCartStockCheck();
 }
 
-async function validateCartOnServer() {
+async function validateCartOnServer({ silent = false } = {}) {
   if (!cart.length) {
     cartStockWarning = '';
     return true;
@@ -156,14 +157,33 @@ async function validateCartOnServer() {
     const res = await fetch(`${API_URL}/portfolio/validate-cart`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ products: cart })
+      body: JSON.stringify({
+        products: cart,
+        promoCode: activePromoCode?.code || undefined
+      })
     });
     const data = await res.json();
     if (!res.ok) {
       cartStockWarning = data.error || 'Някои продукти вече не са налични.';
-      showToast(cartStockWarning, 'error');
+      if (!silent) showToast(cartStockWarning, 'error');
       return false;
     }
+
+    if (Array.isArray(data.products)) {
+      let pricesChanged = false;
+      for (const item of data.products) {
+        const idx = cart.findIndex((c) => String(c.sku_id || c.id) === String(item.sku_id));
+        if (idx >= 0 && item.retail_price != null && cart[idx].price !== item.retail_price) {
+          cart[idx].price = item.retail_price;
+          pricesChanged = true;
+        }
+      }
+      if (pricesChanged) {
+        saveCart(cart);
+        renderCart();
+      }
+    }
+
     cartStockWarning = '';
     return true;
   } catch {
@@ -480,10 +500,19 @@ async function applyPromoCode() {
       return;
     }
     activePromoCode = data.promoCode;
-    const discountLabel = data.promoCode.discountType === 'percentage'
-      ? `${data.promoCode.discount}%`
-      : formatPrice(data.promoCode.discount);
-    setPromoMessage(`Промо кодът е приложен: −${discountLabel}`, 'success');
+    if (data.promoCode.pricing_mode && data.promoCode.pricing_mode !== 'none') {
+      const pct = data.promoCode.pricing_percent ?? 0;
+      const modeLabel = data.promoCode.pricing_mode === 'below_regular'
+        ? `${pct}% под препоръчителна цена`
+        : `${pct}% над доставна`;
+      setPromoMessage(`Промо кодът е приложен: персонални цени (${modeLabel}).`, 'success');
+      await validateCartOnServer({ silent: true });
+    } else {
+      const discountLabel = data.promoCode.discountType === 'percentage'
+        ? `${data.promoCode.discount}%`
+        : formatPrice(data.promoCode.discount);
+      setPromoMessage(`Промо кодът е приложен: −${discountLabel}`, 'success');
+    }
     if ($('promo-code-input')) $('promo-code-input').value = data.promoCode.code;
     if ($('promo-code-input-summary')) $('promo-code-input-summary').value = data.promoCode.code;
     updateSummary();
