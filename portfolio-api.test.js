@@ -327,13 +327,23 @@ describe('Portfolio Fitness1 order approval', () => {
     id: 'pf-test-1',
     status: 'Чака одобрение',
     products: [{ sku_id: '1', barcode: '1234567890', name: 'Test Protein', quantity: 2 }],
-    fitness1_order: null
+    fitness1_order: null,
+    stock_checked_at: new Date().toISOString()
+  };
+
+  const catalogMeta = {
+    chunk_count: 1,
+    total_groups: 1,
+    index: [],
+    lookup: { 100: 0 },
+    sku_lookup: { 1: '100' },
+    synced_at: new Date().toISOString()
   };
 
   test('POST /portfolio/orders/approve submits to Fitness1 and updates order', async () => {
     const store = new Map([
       ['portfolio_orders', JSON.stringify([pendingOrder])],
-      ['portfolio_meta', JSON.stringify({ chunk_count: 1, total_groups: 1, index: [], lookup: {} })],
+      ['portfolio_meta', JSON.stringify(catalogMeta)],
       ['portfolio_chunk_0', JSON.stringify(catalogChunk)]
     ]);
 
@@ -341,7 +351,8 @@ describe('Portfolio Fitness1 order approval', () => {
       FITNESS1_API_KEY: 'test-key',
       PAGE_CONTENT: {
         get: async (key) => store.get(key) ?? null,
-        put: async (key, value) => { store.set(key, value); }
+        put: async (key, value) => { store.set(key, value); },
+        delete: async (key) => { store.delete(key); }
       }
     };
 
@@ -380,18 +391,20 @@ describe('Portfolio Fitness1 order approval', () => {
       id: 'pf-a',
       status: 'Чака одобрение',
       products: [{ sku_id: '1', barcode: '1234567890', name: 'Test Protein', quantity: 2 }],
-      fitness1_order: null
+      fitness1_order: null,
+      stock_checked_at: new Date().toISOString()
     };
     const orderB = {
       id: 'pf-b',
       status: 'Чака одобрение',
       products: [{ sku_id: '1', barcode: '1234567890', name: 'Test Protein', quantity: 3 }],
-      fitness1_order: null
+      fitness1_order: null,
+      stock_checked_at: new Date().toISOString()
     };
 
     const store = new Map([
       ['portfolio_orders', JSON.stringify([orderA, orderB])],
-      ['portfolio_meta', JSON.stringify({ chunk_count: 1, total_groups: 1, index: [], lookup: {} })],
+      ['portfolio_meta', JSON.stringify(catalogMeta)],
       ['portfolio_chunk_0', JSON.stringify(catalogChunk)]
     ]);
 
@@ -399,7 +412,8 @@ describe('Portfolio Fitness1 order approval', () => {
       FITNESS1_API_KEY: 'test-key',
       PAGE_CONTENT: {
         get: async (key) => store.get(key) ?? null,
-        put: async (key, value) => { store.set(key, value); }
+        put: async (key, value) => { store.set(key, value); },
+        delete: async (key) => { store.delete(key); }
       }
     };
 

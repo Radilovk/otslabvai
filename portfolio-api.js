@@ -11,8 +11,13 @@ import {
   sanitizePortfolioCustomer,
   validateCartHasSku
 } from './portfolio-order-validation.js';
+import {
+  SYNC_POLICY,
+  isSyncStale,
+  extractCartSkuIds
+} from './portfolio-sync-policy.js';
 
-export { filterIndex };
+export { filterIndex, SYNC_POLICY, isSyncStale, extractCartSkuIds };
 
 const CHUNK_SIZE = 150;
 const KV_SETTINGS = 'portfolio_settings';
@@ -21,6 +26,11 @@ const KV_ORDERS = 'portfolio_orders';
 const KV_PROMO = 'portfolio_promo_codes';
 const chunkKey = (n) => `portfolio_chunk_${n}`;
 const KV_FITNESS1_KEY = 'fitness1_api_key';
+const KV_SYNC_LOCK = 'portfolio_sync_lock';
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export async function getFitness1ApiKey(env) {
   if (env.FITNESS1_API_KEY) return env.FITNESS1_API_KEY;
@@ -420,6 +430,20 @@ async function getGroupFromChunks(env, meta, groupId) {
   return chunk.find((g) => g.group_id === groupId) || null;
 }
 
+export async function fetchFitness1Products(apiKey) {
+  const response = await fetch(
+    `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(apiKey)}&format=json`
+  );
+  if (!response.ok) {
+    throw new PortfolioError(`Fitness1 API грешка: ${response.status}`, 502);
+  }
+  const data = await response.json();
+  if (data.status !== 'ok' || !Array.isArray(data.products)) {
+    throw new PortfolioError('Невалиден отговор от Fitness1 API.', 502);
+  }
+  return data.products;
+}
+
 export async function fetchDescriptionMap(apiKey) {
   try {
     const response = await fetch(
@@ -442,32 +466,19 @@ export async function fetchDescriptionMap(apiKey) {
   }
 }
 
-export async function syncPortfolioCatalog(env) {
+export async function syncPortfolioCatalog(env, { includeDescriptions = true } = {}) {
   const apiKey = await getFitness1ApiKey(env);
   if (!apiKey) {
     throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран (Worker secret или KV fitness1_api_key).', 500);
   }
 
   const settings = await getSettings(env);
-  const response = await fetch(
-    `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(apiKey)}&format=json`
-  );
+  const rawProducts = await fetchFitness1Products(apiKey);
 
-  if (!response.ok) {
-    throw new PortfolioError(`Fitness1 API грешка: ${response.status}`, 502);
-  }
+  // Admin sync fetches descriptions once so product pages avoid on-demand F1 calls.
+  const descriptionMap = includeDescriptions ? await fetchDescriptionMap(apiKey) : null;
 
-  const data = await response.json();
-  if (data.status !== 'ok' || !Array.isArray(data.products)) {
-    throw new PortfolioError('Невалиден отговор от Fitness1 API.', 502);
-  }
-
-  // Fetch full descriptions once here (sync is admin-triggered, not per-visitor)
-  // so product pages never have to hit Fitness1 on-demand — that was the cause
-  // of the very slow pf-description load.
-  const descriptionMap = await fetchDescriptionMap(apiKey);
-
-  const groups = groupRawProducts(data.products, settings, descriptionMap);
+  const groups = groupRawProducts(rawProducts, settings, descriptionMap);
   const meta = buildCatalogMeta(groups, settings);
   meta.synced_at = new Date().toISOString();
 
@@ -498,9 +509,205 @@ export async function syncPortfolioCatalog(env) {
     success: true,
     synced_at: meta.synced_at,
     total_groups: groups.length,
-    total_skus: data.products.length,
+    total_skus: rawProducts.length,
     chunk_count: chunkCount
   };
+}
+
+function rebuildIndexEntryForGroup(entry, group, settings) {
+  const availableVariants = group.variants.filter((v) => v.available);
+  const prices = group.variants.map((v) => v.retail_price).filter((n) => n > 0);
+  const packs = [...new Set(group.variants.map((v) => v.pack).filter(Boolean))];
+  const marginStats = summarizeGroupMargin(group);
+  const updated = enrichIndexEntry({
+    ...entry,
+    min_price: prices.length ? Math.min(...prices) : 0,
+    max_price: prices.length ? Math.max(...prices) : 0,
+    variant_count: group.variants.length,
+    available: availableVariants.length > 0,
+    packs,
+    ...marginStats
+  }, group);
+  updated.goals = inferProductGoals(updated, settings);
+  return updated;
+}
+
+async function isSyncInProgress(env) {
+  return !!(await env.PAGE_CONTENT.get(KV_SYNC_LOCK));
+}
+
+async function withSyncLock(env, fn, { isFresh } = {}) {
+  const token = crypto.randomUUID();
+  const maxAttempts = Math.ceil(SYNC_POLICY.SYNC_LOCK_MAX_WAIT_MS / SYNC_POLICY.SYNC_LOCK_POLL_MS);
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const existing = await env.PAGE_CONTENT.get(KV_SYNC_LOCK);
+    if (!existing) {
+      await env.PAGE_CONTENT.put(KV_SYNC_LOCK, token, {
+        expirationTtl: Math.ceil(SYNC_POLICY.SYNC_LOCK_TTL_MS / 1000)
+      });
+      await sleep(30);
+      const check = await env.PAGE_CONTENT.get(KV_SYNC_LOCK);
+      if (check === token) {
+        try {
+          return await fn();
+        } finally {
+          const current = await env.PAGE_CONTENT.get(KV_SYNC_LOCK);
+          if (current === token) {
+            if (typeof env.PAGE_CONTENT.delete === 'function') {
+              await env.PAGE_CONTENT.delete(KV_SYNC_LOCK);
+            } else {
+              await env.PAGE_CONTENT.put(KV_SYNC_LOCK, '', { expirationTtl: 1 });
+            }
+          }
+        }
+      }
+    }
+    if (isFresh && await isFresh()) return null;
+    await sleep(SYNC_POLICY.SYNC_LOCK_POLL_MS);
+  }
+
+  throw new PortfolioError('Синхронизацията отнема твърде дълго. Опитайте отново.', 503);
+}
+
+/**
+ * 1× F1 fetch, patch only cart SKUs in KV chunks + index (must run under sync lock).
+ */
+export async function refreshCartStockInKv(env, skuIds) {
+  const uniqueSkus = [...new Set((skuIds || []).map(String).filter(Boolean))];
+  if (!uniqueSkus.length) return null;
+
+  const meta = await getMeta(env);
+  if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+
+  const settings = await getSettings(env);
+  const apiKey = await getFitness1ApiKey(env);
+  if (!apiKey) throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран.', 500);
+
+  const rawProducts = await fetchFitness1Products(apiKey);
+  const skuSet = new Set(uniqueSkus);
+  const freshBySku = new Map();
+  for (const p of rawProducts) {
+    const id = String(p.id);
+    if (skuSet.has(id)) freshBySku.set(id, p);
+  }
+
+  const affectedGroupIds = new Set();
+  const chunkIndexes = new Set();
+  const overrides = settings.product_overrides || {};
+
+  for (const skuId of uniqueSkus) {
+    const found = await findVariantInCatalog(env, skuId);
+    if (found) {
+      affectedGroupIds.add(found.group_id);
+      const chunkIndex = meta.lookup[found.group_id];
+      if (chunkIndex != null) chunkIndexes.add(chunkIndex);
+    }
+    const fresh = freshBySku.get(skuId);
+    if (fresh?.group_id) affectedGroupIds.add(String(fresh.group_id));
+  }
+
+  const chunksToSave = new Map();
+  for (const chunkIndex of chunkIndexes) {
+    const chunkRaw = await env.PAGE_CONTENT.get(chunkKey(chunkIndex));
+    if (!chunkRaw) continue;
+    const chunk = JSON.parse(chunkRaw);
+    let modified = false;
+
+    for (const group of chunk) {
+      if (!affectedGroupIds.has(group.group_id)) continue;
+      for (const variant of group.variants) {
+        const fresh = freshBySku.get(variant.sku_id);
+        if (!fresh) {
+          if (skuSet.has(variant.sku_id)) {
+            variant.available = false;
+            modified = true;
+          }
+          continue;
+        }
+        const b2b = parseFloat(fresh.b2b_price) || 0;
+        const markup = calculateMarkupPercent(settings, { ...fresh, group_id: group.group_id });
+        variant.b2b_price = b2b;
+        variant.retail_price = calculateRetailPrice(b2b, markup, overrides[group.group_id], variant.sku_id);
+        variant.markup_percent = markup;
+        variant.available = fresh.available === true;
+        variant.barcode = fresh.barcode || variant.barcode;
+        modified = true;
+      }
+    }
+
+    if (modified) chunksToSave.set(chunkIndex, chunk);
+  }
+
+  const newIndex = [...meta.index];
+  for (let i = 0; i < newIndex.length; i++) {
+    const entry = newIndex[i];
+    if (!affectedGroupIds.has(entry.group_id)) continue;
+    const chunkIndex = meta.lookup[entry.group_id];
+    let group = chunksToSave.get(chunkIndex);
+    if (!group) {
+      const chunkRaw = await env.PAGE_CONTENT.get(chunkKey(chunkIndex));
+      if (!chunkRaw) continue;
+      group = JSON.parse(chunkRaw).find((g) => g.group_id === entry.group_id);
+    } else {
+      group = group.find((g) => g.group_id === entry.group_id);
+    }
+    if (!group) continue;
+    newIndex[i] = rebuildIndexEntryForGroup(entry, group, settings);
+  }
+
+  const syncedAt = new Date().toISOString();
+  meta.synced_at = syncedAt;
+  meta.index = newIndex;
+  meta.goals = buildGoalFacetCounts(newIndex);
+
+  const puts = [env.PAGE_CONTENT.put(KV_META, JSON.stringify(meta))];
+  for (const [idx, chunk] of chunksToSave) {
+    puts.push(env.PAGE_CONTENT.put(chunkKey(idx), JSON.stringify(chunk)));
+  }
+  settings.last_sync = syncedAt;
+  puts.push(saveSettings(env, settings));
+  await Promise.all(puts);
+
+  return syncedAt;
+}
+
+async function ensureStockFresh(env, skuIds, freshnessMs) {
+  const meta = await getMeta(env);
+  if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+  if (!isSyncStale(meta.synced_at, freshnessMs)) return meta.synced_at;
+
+  await withSyncLock(env, async () => {
+    const current = await getMeta(env);
+    if (current && !isSyncStale(current.synced_at, freshnessMs)) return null;
+    return refreshCartStockInKv(env, skuIds);
+  }, {
+    isFresh: async () => {
+      const m = await getMeta(env);
+      return !!(m && !isSyncStale(m.synced_at, freshnessMs));
+    }
+  });
+
+  const updated = await getMeta(env);
+  return updated?.synced_at || null;
+}
+
+function scheduleBrowseSyncIfStale(env, ctx) {
+  if (!ctx?.waitUntil) return;
+  ctx.waitUntil((async () => {
+    const meta = await getMeta(env);
+    if (!meta || !isSyncStale(meta.synced_at, SYNC_POLICY.BROWSE_TTL_MS)) return;
+    await withSyncLock(env, async () => {
+      const current = await getMeta(env);
+      if (!current || !isSyncStale(current.synced_at, SYNC_POLICY.BROWSE_TTL_MS)) return null;
+      return syncPortfolioCatalog(env, { includeDescriptions: false });
+    }, {
+      isFresh: async () => {
+        const m = await getMeta(env);
+        return !!(m && !isSyncStale(m.synced_at, SYNC_POLICY.BROWSE_TTL_MS));
+      }
+    });
+  })());
 }
 
 async function handleGetSettings(env) {
@@ -726,9 +933,16 @@ async function handleValidateCart(request, env) {
   if (!Array.isArray(body.products) || !body.products.length) {
     throw new PortfolioError('Липсват продукти.', 400);
   }
+  const skuIds = extractCartSkuIds(body.products);
+  const stockCheckedAt = await ensureStockFresh(env, skuIds, SYNC_POLICY.ORDER_FRESHNESS_MS);
   const items = await validateAndNormalizeCartItems(env, body.products);
   const retailTotal = items.reduce((s, i) => s + i.retail_price * i.quantity, 0);
-  return jsonResponse({ valid: true, products: items, retail_total: roundPrice(retailTotal) });
+  return jsonResponse({
+    valid: true,
+    products: items,
+    retail_total: roundPrice(retailTotal),
+    stock_checked_at: stockCheckedAt
+  });
 }
 
 async function handleGetProductDescription(request, env) {
@@ -769,13 +983,24 @@ async function handleMetaVersion(env) {
 }
 
 /** Single bootstrap: settings + catalog meta (1 KV read batch for client cache) */
-async function handleBootstrap(env) {
+async function handleBootstrap(env, ctx) {
   const settings = await getSettings(env);
-  const meta = await getMeta(env);
+  let meta = await getMeta(env);
+
   if (!meta) {
-    throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+    const apiKey = await getFitness1ApiKey(env);
+    if (!apiKey) {
+      throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+    }
+    await syncPortfolioCatalog(env, { includeDescriptions: false });
+    meta = await getMeta(env);
+    if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+  } else if (isSyncStale(meta.synced_at, SYNC_POLICY.BROWSE_TTL_MS)) {
+    scheduleBrowseSyncIfStale(env, ctx);
   }
+
   const clientMeta = buildClientCatalogMeta(meta);
+  const syncing = await isSyncInProgress(env);
   return cachedResponse({
     settings,
     meta: {
@@ -789,7 +1014,8 @@ async function handleBootstrap(env) {
       goals: clientMeta.goals,
       lookup: clientMeta.lookup,
       index: clientMeta.index
-    }
+    },
+    syncing
   }, 3600);
 }
 
@@ -964,6 +1190,8 @@ async function handleCreateOrder(request, env) {
   }
 
   const customer = sanitizePortfolioCustomer(body.customer);
+  const skuIds = extractCartSkuIds(body.products);
+  const stockCheckedAt = await ensureStockFresh(env, skuIds, SYNC_POLICY.ORDER_FRESHNESS_MS);
   const items = await validateAndNormalizeCartItems(env, body.products);
 
   let b2bTotal = 0;
@@ -1005,7 +1233,8 @@ async function handleCreateOrder(request, env) {
       total: body.summary?.total ?? `${roundPrice(retailTotal - promoDiscount)} €`
     },
     fitness1_order: null,
-    admin_note: ''
+    admin_note: '',
+    stock_checked_at: stockCheckedAt
   };
 
   const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
@@ -1157,6 +1386,12 @@ async function handleApproveOrder(request, env) {
     throw new PortfolioError(`Поръчката вече е изпратена (F1 #${order.fitness1_order.id}).`, 409);
   }
 
+  const skuIds = extractCartSkuIds(order.products);
+  const needsRefresh = isSyncStale(order.stock_checked_at, SYNC_POLICY.APPROVE_FRESHNESS_MS);
+  if (needsRefresh) {
+    await ensureStockFresh(env, skuIds, SYNC_POLICY.APPROVE_FRESHNESS_MS);
+  }
+
   await validateOrderProductsForF1(env, order);
   const products = productsToF1Payload(order.products);
   const f1Data = await submitProductsToFitness1(env, products);
@@ -1196,6 +1431,14 @@ async function handleApproveBatchOrder(request, env) {
     selected.push({ idx, order });
   }
 
+  const allSkuIds = selected.flatMap((s) => extractCartSkuIds(s.order.products));
+  const needsRefresh = selected.some((s) =>
+    isSyncStale(s.order.stock_checked_at, SYNC_POLICY.APPROVE_FRESHNESS_MS)
+  );
+  if (needsRefresh) {
+    await ensureStockFresh(env, allSkuIds, SYNC_POLICY.APPROVE_FRESHNESS_MS);
+  }
+
   for (const { order } of selected) {
     await validateOrderProductsForF1(env, order);
   }
@@ -1228,7 +1471,7 @@ async function handleApproveBatchOrder(request, env) {
 /**
  * Main router for /portfolio/* paths.
  */
-export async function handlePortfolioRoute(request, env, url) {
+export async function handlePortfolioRoute(request, env, url, ctx) {
   const path = url.pathname;
   const method = request.method;
 
@@ -1253,7 +1496,7 @@ export async function handlePortfolioRoute(request, env, url) {
       return await handleValidateCart(request, env);
     }
     if (path === '/portfolio/bootstrap' && method === 'GET') {
-      return await handleBootstrap(env);
+      return await handleBootstrap(env, ctx);
     }
     if (path === '/portfolio/meta-version' && method === 'GET') {
       return await handleMetaVersion(env);
