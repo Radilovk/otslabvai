@@ -10,6 +10,8 @@ import {
 
 let cart = getCart();
 let activePromoCode = null;
+let cartValidateTimer = null;
+let cartStockWarning = '';
 
 const els = {};
 
@@ -137,8 +139,43 @@ function renderCart() {
       } else if (action === 'remove') cart.splice(i, 1);
       saveCart(cart);
       renderCart();
+      scheduleCartStockCheck();
     });
   });
+
+  scheduleCartStockCheck();
+}
+
+async function validateCartOnServer() {
+  if (!cart.length) {
+    cartStockWarning = '';
+    return true;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/portfolio/validate-cart`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ products: cart })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      cartStockWarning = data.error || 'Някои продукти вече не са налични.';
+      showToast(cartStockWarning, 'error');
+      return false;
+    }
+    cartStockWarning = '';
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+function scheduleCartStockCheck() {
+  if (cartValidateTimer) clearTimeout(cartValidateTimer);
+  cartValidateTimer = setTimeout(() => {
+    validateCartOnServer();
+  }, 600);
 }
 
 function toggleDeliveryFields() {
@@ -358,6 +395,14 @@ function validateForm() {
 async function submitOrder(e) {
   e.preventDefault();
   if (!cart.length || !validateForm()) return;
+
+  syncSubmitButtons({ disabled: true, label: 'Проверка на наличност...' });
+
+  const stockOk = await validateCartOnServer();
+  if (!stockOk) {
+    syncSubmitButtons({ disabled: false });
+    return;
+  }
 
   syncSubmitButtons({ disabled: true, label: 'Изпращане...' });
 

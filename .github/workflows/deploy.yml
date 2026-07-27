@@ -32,11 +32,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Typecheck Worker modules
-        run: npm run typecheck
-
-      - name: Run Portfolio unit tests
-        run: npm run test:portfolio
+      - name: Validate Worker (typecheck + Portfolio tests)
+        run: npm run validate:worker
 
       - name: Bake bio_content.json into bio.html
         if: github.ref == 'refs/heads/main'
@@ -144,18 +141,6 @@ jobs:
             echo "Skipping GOOGLE_AI_API_KEY – GitHub secret not set"
           fi
 
-      - name: Sync Portfolio catalog to KV
-        env:
-          FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          if [ -z "$FITNESS1_API_KEY" ]; then
-            echo "::warning::FITNESS1_API_KEY not in GitHub secrets – pre-deploy KV upload skipped."
-            echo "Catalog can still sync post-deploy if the key is set as a Worker secret (wrangler secret put FITNESS1_API_KEY)."
-            exit 0
-          fi
-          node upload-portfolio-catalog.mjs
 
       - name: Sync Life page content to KV
         if: github.ref == 'refs/heads/main'
@@ -188,23 +173,15 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Sync Portfolio catalog (post-deploy fallback)
+      - name: Verify Portfolio catalog bootstrap
         run: |
           BASE="https://port.radilov-k.workers.dev"
           sleep 5
           code=$(curl -s -o /tmp/boot.json -w "%{http_code}" "${BASE}/portfolio/bootstrap")
           if [ "$code" = "200" ]; then
-            echo "Portfolio catalog already in KV"
-            exit 0
-          fi
-          echo "Bootstrap HTTP ${code} – calling POST ${BASE}/portfolio/sync ..."
-          sync=$(curl -s -X POST "${BASE}/portfolio/sync")
-          echo "Sync response: $(echo "$sync" | head -c 300)"
-          sleep 8
-          code2=$(curl -s -o /tmp/boot2.json -w "%{http_code}" "${BASE}/portfolio/bootstrap")
-          echo "Bootstrap after sync: HTTP ${code2}"
-          if [ "$code2" != "200" ]; then
-            echo "::warning::Portfolio catalog still not synced. Add FITNESS1_API_KEY to GitHub repo secrets (Settings → Secrets → Actions) or run: npx wrangler secret put FITNESS1_API_KEY"
+            echo "Portfolio catalog bootstrap OK"
+          else
+            echo "::warning::Bootstrap HTTP ${code}. Catalog syncs on first visitor when FITNESS1_API_KEY is configured (Worker secret or KV)."
           fi
 
       - name: Smoke test Portfolio API (production)

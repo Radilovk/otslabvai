@@ -79,15 +79,25 @@ describe('Portfolio order creation rejects invalid orders', () => {
     }]
   }];
 
+  const freshMeta = {
+    chunk_count: 1,
+    total_groups: 1,
+    index: [],
+    lookup: { 100: 0 },
+    sku_lookup: { 1: '100' },
+    synced_at: new Date().toISOString()
+  };
+
   const env = {
     PAGE_CONTENT: {
       data: new Map([
-        ['portfolio_meta', JSON.stringify({ chunk_count: 1, total_groups: 1, index: [], lookup: {} })],
+        ['portfolio_meta', JSON.stringify(freshMeta)],
         ['portfolio_chunk_0', JSON.stringify(catalogChunk)],
         ['portfolio_orders', '[]']
       ]),
       get: async (key) => env.PAGE_CONTENT.data.get(key) ?? null,
-      put: async (key, value) => { env.PAGE_CONTENT.data.set(key, value); }
+      put: async (key, value) => { env.PAGE_CONTENT.data.set(key, value); },
+      delete: async (key) => { env.PAGE_CONTENT.data.delete(key); }
     }
   };
 
