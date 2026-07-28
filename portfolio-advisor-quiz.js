@@ -1,7 +1,7 @@
 import { API_URL } from './config.js';
 import { PortfolioAdvisorAnimator } from './portfolio-advisor-analysis.js';
 import { persistAdvisorResult, DRAFT_KEY, RESULT_KEY, LEAD_KEY } from './portfolio-advisor-store.js';
-import { ADVISOR_STEPS } from './portfolio-advisor-config.js';
+import { buildActiveAdvisorSteps } from './portfolio-advisor-config.js';
 
 const form = document.getElementById('lpq-form');
 const progressEl = document.getElementById('lpq-progress');
@@ -64,30 +64,7 @@ function saveDraft() {
 }
 
 function getActiveSteps() {
-  const steps = [...ADVISOR_STEPS];
-
-  if (answers.sex === 'female') {
-    steps.push({
-      id: 'pregnancy',
-      title: 'Бременност / кърмене',
-      type: 'single',
-      field: 'pregnancy',
-      options: [
-        { value: 'no', label: 'Не' },
-        { value: 'yes', label: 'Да' },
-        { value: 'na', label: 'Не е приложимо' },
-      ],
-    });
-  }
-
-  steps.push({
-    id: 'contact',
-    title: 'Вашата препоръка е почти готова',
-    hint: 'Въведете имейл, за да видите резултата. Ще го използваме при поръчка.',
-    type: 'contact',
-  });
-
-  return steps;
+  return buildActiveAdvisorSteps(answers);
 }
 
 let stepIndex = 0;

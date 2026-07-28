@@ -4,6 +4,9 @@ import {
   enrichPortfolioProductItem,
   getPortfolioComposeOptions,
   preparePortfolioAdvisorSubmission,
+  buildPortfolioAdvisorProfile,
+  scorePortfolioAdvisorProduct,
+  rankPortfolioAdvisorProducts,
   PORTFOLIO_PACKAGE_TIER_LIMITS,
   PORTFOLIO_SINGLE_TIER_LIMITS,
 } from './portfolio-advisor-engine.js';
@@ -122,5 +125,26 @@ describe('preparePortfolioAdvisorSubmission', () => {
     await expect(
       preparePortfolioAdvisorSubmission(mockEnv, { ...sampleAnswers, email: 'bad' })
     ).rejects.toThrow(/имейл/i);
+  });
+
+  test('buildPortfolioAdvisorProfile default priority е health', () => {
+    const profile = buildPortfolioAdvisorProfile({ email: 'a@b.com', priority: 'muscle' });
+    expect(profile.priority).toBe('muscle');
+    const fallback = buildPortfolioAdvisorProfile({ email: 'a@b.com' });
+    expect(fallback.priority).toBe('health');
+  });
+
+  test('scorePortfolioAdvisorProduct boost при съвпадение на goal', () => {
+    const product = makeProduct();
+    product.system_data.goals = ['muscle'];
+    const score = scorePortfolioAdvisorProduct(product, buildPortfolioAdvisorProfile({
+      priority: 'muscle',
+      email: 'a@b.com',
+    }));
+    const other = scorePortfolioAdvisorProduct(product, buildPortfolioAdvisorProfile({
+      priority: 'health',
+      email: 'a@b.com',
+    }));
+    expect(score).toBeGreaterThan(other);
   });
 });

@@ -5005,6 +5005,16 @@ function renderPortfolioSettings() {
             </p>
         </div>
         <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
+            <h3 style="margin-top:0;">AI консултант</h3>
+            <p style="font-size:0.9rem;color:var(--text-secondary);">
+                Персонализирани пакети и продуктови препоръки за клиентите. Управление на prompts, leads и симулации.
+            </p>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem;">
+                <button type="button" class="btn btn-primary" id="portfolio-open-advisor-tab">Отвори AI консултант</button>
+                <a href="portfolio-advisor-quiz.html" target="_blank" rel="noopener" class="btn btn-secondary">Въпросник (клиент)</a>
+            </div>
+        </div>
+        <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
             <h3 style="margin-top:0;">Ценова политика</h3>
             <p style="font-size:0.9rem;color:var(--text-secondary);">
                 F1 промоции (sale &lt; regular): винаги под тяхната цена. Стандартни продукти: изберете режим по-долу.
@@ -5117,6 +5127,9 @@ function renderPortfolioSettings() {
 
     document.getElementById('portfolio-sync-btn')?.addEventListener('click', syncPortfolioCatalog);
     document.getElementById('portfolio-save-settings-btn')?.addEventListener('click', savePortfolioSettings);
+    document.getElementById('portfolio-open-advisor-tab')?.addEventListener('click', () => {
+        document.querySelector('[data-tab="tab-portfolio-advisor"]')?.click();
+    });
     document.getElementById('pf-hero-image')?.addEventListener('input', (e) => {
         const preview = document.getElementById('pf-hero-preview');
         if (preview && e.target.value) preview.src = e.target.value;
@@ -5858,11 +5871,243 @@ function setupLifeProtocolAdminListeners() {
     });
 }
 
+// =======================================================
+//          PORTFOLIO AI ADVISOR ADMIN
+// =======================================================
+
+let portfolioAdvisorLeads = [];
+let portfolioAdvisorResults = [];
+
+const PFA_GOAL_LABELS = {
+    otshalvane: 'Отслабване',
+    muscle: 'Мускулна маса',
+    health: 'Здраве',
+    antiaging: 'Антиейджинг',
+    energy: 'Енергия',
+    recovery: 'Възстановяване',
+};
+
+async function fetchPortfolioAdvisorSettings() {
+    try {
+        const res = await fetch(`${API_URL}/portfolio-advisor/settings`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        document.getElementById('pfa-enabled') && (document.getElementById('pfa-enabled').checked = data.enabled !== false);
+        const modeEl = document.getElementById('pfa-composition-mode');
+        if (modeEl) modeEl.value = data.composition_mode === 'ai_pick' ? 'ai_pick' : 'compose_narrate';
+        const promptEl = document.getElementById('pfa-prompt');
+        if (promptEl && data.prompt) promptEl.value = data.prompt;
+        const narrEl = document.getElementById('pfa-narrator-prompt');
+        if (narrEl && data.narrator_prompt) narrEl.value = data.narrator_prompt;
+    } catch (e) {
+        console.error('Portfolio advisor settings:', e);
+        showNotification('Грешка при зареждане на настройките за AI консултант.', 'error');
+    }
+}
+
+async function savePortfolioAdvisorSettingsAdmin() {
+    const enabled = document.getElementById('pfa-enabled')?.checked !== false;
+    const composition_mode = document.getElementById('pfa-composition-mode')?.value || 'compose_narrate';
+    const prompt = document.getElementById('pfa-prompt')?.value || '';
+    const narrator_prompt = document.getElementById('pfa-narrator-prompt')?.value || '';
+    try {
+        const res = await fetch(`${API_URL}/portfolio-advisor/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled, composition_mode, prompt, narrator_prompt }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        showNotification('Настройките за AI консултант са запазени.', 'success');
+    } catch (e) {
+        showNotification('Грешка при запазване на настройките.', 'error');
+    }
+}
+
+async function fetchPortfolioAdvisorLeads() {
+    try {
+        const res = await fetch(`${API_URL}/portfolio-advisor/leads`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        portfolioAdvisorLeads = await res.json();
+        renderPortfolioAdvisorLeads();
+    } catch (e) {
+        portfolioAdvisorLeads = [];
+        renderPortfolioAdvisorLeads();
+    }
+}
+
+async function fetchPortfolioAdvisorResults() {
+    try {
+        const res = await fetch(`${API_URL}/portfolio-advisor/results`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        portfolioAdvisorResults = await res.json();
+        renderPortfolioAdvisorResults();
+    } catch (e) {
+        portfolioAdvisorResults = [];
+        renderPortfolioAdvisorResults();
+    }
+}
+
+function renderPortfolioAdvisorLeads() {
+    const tbody = document.getElementById('pfa-leads-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!portfolioAdvisorLeads.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">Няма leads все още</td></tr>';
+        return;
+    }
+    portfolioAdvisorLeads.forEach((lead) => {
+        const tr = document.createElement('tr');
+        const d = lead.timestamp ? new Date(lead.timestamp).toLocaleString('bg-BG') : '—';
+        const stats = lead.catalog_stats || {};
+        const goal = PFA_GOAL_LABELS[lead.profile?.priority] || lead.profile?.priority || '—';
+        const mode = lead.profile?.selection_mode === 'single' ? 'Единичен' : 'Пакет';
+        tr.innerHTML = `
+            <td>${d}</td>
+            <td>${escapeHtml(lead.email || '')}</td>
+            <td>${escapeHtml(lead.name || '—')}</td>
+            <td>${escapeHtml(goal)}</td>
+            <td>${mode}</td>
+            <td>${stats.eligible_available ?? '—'}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function renderPortfolioAdvisorResults() {
+    const tbody = document.getElementById('pfa-results-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!portfolioAdvisorResults.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary);">Няма генерирани препоръки</td></tr>';
+        return;
+    }
+    portfolioAdvisorResults.forEach((row, idx) => {
+        const rec = row.recommendation || {};
+        const tiers = rec.tiers || {};
+        const tr = document.createElement('tr');
+        const d = row.timestamp ? new Date(row.timestamp).toLocaleString('bg-BG') : '—';
+        tr.innerHTML = `
+            <td>${d}</td>
+            <td>${escapeHtml(row.email || '')}</td>
+            <td>${escapeHtml(rec.recommended_tier || '—')}</td>
+            <td>${tiers.basic?.monthly_total_eur?.toFixed?.(2) ?? '—'} €</td>
+            <td>${tiers.optimal?.monthly_total_eur?.toFixed?.(2) ?? '—'} €</td>
+            <td>${tiers.premium?.monthly_total_eur?.toFixed?.(2) ?? '—'} €</td>
+            <td><button type="button" class="btn btn-sm btn-secondary pfa-view-result" data-idx="${idx}">Виж</button></td>`;
+        tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('.pfa-view-result').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const item = portfolioAdvisorResults[Number(btn.dataset.idx)];
+            const detail = document.getElementById('pfa-result-detail');
+            const pre = document.getElementById('pfa-result-json');
+            if (detail && pre) {
+                pre.textContent = JSON.stringify(item, null, 2);
+                detail.style.display = 'block';
+            }
+            if (item?.recommendation) openPortfolioAdvisorPreview(item.recommendation);
+        });
+    });
+}
+
+function openPortfolioAdvisorPreview(recommendation) {
+    if (!recommendation?.tiers) {
+        showNotification('Няма валиден резултат за преглед.', 'error');
+        return;
+    }
+    sessionStorage.setItem('portfolioAdvisorResult', JSON.stringify(recommendation));
+    const url = new URL('portfolio-advisor-result.html', window.location.href);
+    url.searchParams.set('preview', 'admin');
+    const win = window.open(url.toString(), '_blank', 'noopener,noreferrer');
+    if (!win) {
+        showNotification('Блокиран popup — отворете portfolio-advisor-result.html ръчно.', 'error');
+    }
+}
+
+async function runPortfolioAdvisorSimulate(useMockAi) {
+    const out = document.getElementById('pfa-simulate-output');
+    const statusEl = document.getElementById('pfa-simulate-status');
+    if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.textContent = 'Симулацията работи…';
+    }
+    if (out) {
+        out.style.display = 'none';
+        out.textContent = '';
+    }
+
+    let data;
+    try {
+        const res = await fetch(`${API_URL}/portfolio-advisor/simulate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ use_mock_ai: useMockAi }),
+        });
+        data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || `HTTP ${res.status}`);
+    } catch (apiErr) {
+        if (!useMockAi) {
+            if (statusEl) statusEl.textContent = `API грешка: ${apiErr.message}`;
+            showNotification(`AI симулацията се провали: ${apiErr.message}`, 'error');
+            return;
+        }
+        if (statusEl) statusEl.textContent = `Грешка: ${apiErr.message}`;
+        showNotification(`Симулацията се провали: ${apiErr.message}`, 'error');
+        return;
+    }
+
+    const rec = data.recommendation;
+    if (out) {
+        out.style.display = 'block';
+        out.textContent = JSON.stringify({
+            mock: data.mock,
+            catalog_stats: rec?.catalog_stats,
+            recommended_tier: rec?.recommended_tier,
+            tier_prices_eur: {
+                basic: rec?.tiers?.basic?.monthly_total_eur,
+                optimal: rec?.tiers?.optimal?.monthly_total_eur,
+                premium: rec?.tiers?.premium?.monthly_total_eur,
+            },
+        }, null, 2);
+    }
+
+    openPortfolioAdvisorPreview(rec);
+
+    if (statusEl) {
+        statusEl.textContent = useMockAi
+            ? 'Mock симулация — прегледът е отворен в нов таб.'
+            : 'AI симулация — прегледът е отворен в нов таб.';
+    }
+    showNotification('Симулацията завърши — прегледът е отворен в нов таб.', 'success');
+}
+
+async function refreshPortfolioAdvisorAdmin() {
+    await Promise.all([
+        fetchPortfolioAdvisorSettings(),
+        fetchPortfolioAdvisorLeads(),
+        fetchPortfolioAdvisorResults(),
+    ]);
+}
+
+function setupPortfolioAdvisorAdminListeners() {
+    document.getElementById('pfa-save-settings-btn')?.addEventListener('click', savePortfolioAdvisorSettingsAdmin);
+    document.getElementById('pfa-refresh-btn')?.addEventListener('click', refreshPortfolioAdvisorAdmin);
+    document.getElementById('pfa-simulate-mock-btn')?.addEventListener('click', () => runPortfolioAdvisorSimulate(true));
+    document.getElementById('pfa-simulate-real-btn')?.addEventListener('click', () => runPortfolioAdvisorSimulate(false));
+    document.getElementById('pfa-open-quiz-btn')?.addEventListener('click', () => {
+        window.open('portfolio-advisor-quiz.html', '_blank', 'noopener,noreferrer');
+    });
+
+    document.querySelector('[data-tab="tab-portfolio-advisor"]')?.addEventListener('click', () => {
+        if (isPortfolioProject()) refreshPortfolioAdvisorAdmin();
+    });
+}
+
 async function init() {
     initThemeToggle();
     setupEventListeners();
     setupPortfolioEventListeners();
     setupLifeProtocolAdminListeners();
+    setupPortfolioAdvisorAdminListeners();
     populateAddComponentMenu();
     updateProjectUI();
     startPortfolioOrdersPolling();
@@ -5871,6 +6116,7 @@ async function init() {
         await fetchPortfolioSettings();
         await fetchPortfolioOrders();
         await fetchPortfolioPromoCodes();
+        await refreshPortfolioAdvisorAdmin();
         renderAll();
         return;
     }

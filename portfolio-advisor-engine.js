@@ -8,15 +8,15 @@ import { GOAL_KEYWORD_HINTS, inferProductGoals } from './portfolio-goals.js';
 import {
   buildClientProfile,
   buildCandidatePool,
-  rankEligibleProducts,
   getProductPriceEur,
   eurToBgn,
   isProductAvailable,
   isPeptideOrInjectable,
   transformProductForAI,
   normalizeCumulativeBenefits,
+  scoreProduct,
 } from './protocol-quiz-engine.js';
-import { getMustIncludeKeywords } from './protocol-safety-rules.js';
+import { getMustIncludeKeywords, getExclusionReasons, productSearchText, productMatchesAnyKeyword } from './protocol-safety-rules.js';
 
 const CHUNK_KEY = (n) => `portfolio_chunk_${n}`;
 const KV_SETTINGS = 'portfolio_settings';
@@ -47,6 +47,94 @@ export const PORTFOLIO_SINGLE_TIER_META = {
 
 export function filterPortfolioEligibleProducts(products) {
   return products.filter((p) => isProductAvailable(p) && !isPeptideOrInjectable(p));
+}
+
+const BRANCH_KEYWORD_BOOSTS = {
+  fat_burn: ['thermo', 'burn', 'fat', 'отслаб', 'лида'],
+  appetite: ['appetite', 'апетит', 'ситост'],
+  metabolism: ['метабол', 'metabol', 'l-carnitine', 'карнитин'],
+  protein: ['protein', 'протеин', 'whey', 'isolate'],
+  strength: ['creatine', 'креатин', 'preworkout', 'предтрен'],
+  mass: ['gainer', 'гейн', 'mass', 'маса'],
+  immunity: ['имун', 'immune', 'витамин c', 'цинк', 'zinc'],
+  vitamins: ['multi', 'витамин', 'vitamin', 'минерал'],
+  joints: ['joint', 'став', 'глюкозамин', 'glucosamine', 'хондро'],
+  preworkout: ['preworkout', 'предтрен', 'caffeine', 'кофеин'],
+  daily: ['b12', 'коензим', 'coq10', 'магнезий', 'magnesium'],
+  focus: ['focus', 'фокус', 'nootropic', 'ноотроп', 'ginkgo'],
+  sleep: ['sleep', 'сън', 'melatonin', 'мелатонин'],
+  muscle: ['recovery', 'възстанов', 'bcaa', 'глутамин', 'glutamine'],
+  stress: ['ashwagandha', 'ашваганда', 'adaptogen', 'релакс', 'stress'],
+};
+
+/** Portfolio профил с допълнителни полета от goal branches. */
+export function buildPortfolioAdvisorProfile(raw) {
+  const profile = buildClientProfile(raw);
+  if (!profile.priority || profile.priority === 'longevity') {
+    profile.priority = raw.priority || 'health';
+  }
+  profile.weight_focus = raw.weight_focus || null;
+  profile.muscle_focus = raw.muscle_focus || null;
+  profile.health_focus = raw.health_focus || null;
+  profile.energy_focus = raw.energy_focus || null;
+  profile.recovery_focus = raw.recovery_focus || null;
+  return profile;
+}
+
+export function scorePortfolioAdvisorProduct(product, profile) {
+  let score = scoreProduct(product, profile, GOAL_KEYWORD_HINTS);
+  const goals = product.system_data?.goals || [];
+  const text = productSearchText(product);
+
+  if (goals.includes(profile.priority)) score += 6;
+
+  const branchFields = ['weight_focus', 'muscle_focus', 'health_focus', 'energy_focus', 'recovery_focus'];
+  for (const field of branchFields) {
+    const branch = profile[field];
+    if (!branch) continue;
+    const kws = BRANCH_KEYWORD_BOOSTS[branch] || [];
+    if (kws.some((kw) => text.includes(kw))) score += 3;
+  }
+
+  if (profile.activity === 'regular') {
+    if (goals.includes('muscle') || goals.includes('recovery')) score += 2;
+    if (productMatchesAnyKeyword(text, ['protein', 'протеин', 'bcaa', 'креатин', 'creatine'])) score += 1;
+  }
+
+  if (profile.symptoms?.includes('joint_pain') && productMatchesAnyKeyword(text, ['joint', 'став', 'колаген', 'collagen'])) {
+    score += 2;
+  }
+  if (profile.symptoms?.includes('low_appetite') && productMatchesAnyKeyword(text, ['mass', 'гейн', 'gainer', 'протеин'])) {
+    score += 1;
+  }
+
+  if (profile.selection_mode === 'single' && getProductPriceEur(product) > 50) {
+    score -= 0.5;
+  }
+
+  return score;
+}
+
+export function rankPortfolioAdvisorProducts(profile, products) {
+  const excluded = new Map();
+  const ranked = [];
+
+  for (const product of products) {
+    const reasons = getExclusionReasons(profile, product);
+    if (reasons.length) {
+      excluded.set(product.product_id, reasons);
+      continue;
+    }
+    ranked.push({ product, score: scorePortfolioAdvisorProduct(product, profile) });
+  }
+
+  ranked.sort((a, b) => b.score - a.score);
+
+  return {
+    ranked,
+    excluded_product_ids: Array.from(excluded.keys()),
+    exclusion_map: Object.fromEntries(excluded),
+  };
 }
 
 function getCheapestVariant(product) {
@@ -174,7 +262,7 @@ export function getPortfolioComposeOptions(profile) {
 }
 
 export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compositionMode = 'compose_narrate' } = {}) {
-  const profile = buildClientProfile(rawAnswers);
+  const profile = buildPortfolioAdvisorProfile(rawAnswers);
   if (!profile.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
     throw new Error('Невалиден имейл адрес.');
   }
@@ -187,7 +275,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     throw new Error('Няма достатъчно налични продукти за персонална препоръка. Моля, опитайте по-късно.');
   }
 
-  const rankedResult = rankEligibleProducts(profile, eligible, { priorityKeywords: GOAL_KEYWORD_HINTS });
+  const rankedResult = rankPortfolioAdvisorProducts(profile, eligible);
 
   if (rankedResult.ranked.length < 3) {
     throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');

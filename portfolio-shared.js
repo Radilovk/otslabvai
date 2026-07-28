@@ -20,10 +20,11 @@ const DEFAULT_FOOTER = {
     {
       type: 'links',
       title: 'Каталог',
-      links: [
-        { text: 'Всички продукти', url: 'portfolio.html' },
-        { text: 'Количка', url: 'portfolio-checkout.html' }
-      ]
+        links: [
+          { text: 'Всички продукти', url: 'portfolio.html' },
+          { text: 'AI консултант', url: 'portfolio-advisor-quiz.html' },
+          { text: 'Количка', url: 'portfolio-checkout.html' }
+        ]
     },
     {
       type: 'links',
@@ -291,6 +292,7 @@ export function renderHeader(active = 'catalog') {
         </a>
         <nav class="pf-nav" aria-label="Основна навигация">
           <a href="portfolio.html" class="pf-nav-link ${active === 'catalog' ? 'active' : ''}">Каталог</a>
+          <a href="portfolio-advisor-quiz.html" class="pf-nav-link ${active === 'advisor' ? 'active' : ''}">AI консултант</a>
         </nav>
         <div class="pf-header-actions">
           <button type="button" class="pf-theme-toggle" id="pf-theme-toggle" aria-label="Тъмна тема">${THEME_TOGGLE_SVG}</button>
