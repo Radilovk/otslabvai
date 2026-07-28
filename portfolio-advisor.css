@@ -1,0 +1,21 @@
+/* Portfolio AI Advisor — accent overrides върху life-protocol-quiz.css */
+
+.pfa-body {
+  --lpq-accent: #1a6b4a;
+  --lpq-accent-dim: rgba(26, 107, 74, 0.12);
+  --lpq-display: 'Outfit', 'Segoe UI', sans-serif;
+  --lpq-font: 'Manrope', 'Segoe UI', sans-serif;
+}
+
+.pfa-body .lpq-header h1 {
+  font-family: var(--lpq-display);
+  font-weight: 700;
+}
+
+.pfa-body .lpq-btn-primary {
+  background: linear-gradient(135deg, #1a6b4a, #0f2540);
+}
+
+.pfa-body .lpq-progress-fill {
+  background: linear-gradient(90deg, #1a6b4a, #2d8f63);
+}

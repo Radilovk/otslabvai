@@ -155,14 +155,20 @@ export function buildClientProfile(raw) {
     menopause_context: menopauseContext,
     email: String(raw.email || '').trim().toLowerCase(),
     name: String(raw.name || '').trim(),
+    selection_mode: raw.selection_mode === 'single' ? 'single' : 'package',
   };
 }
 
-export function scoreProduct(product, profile) {
+/**
+ * @param {object} product
+ * @param {object} profile
+ * @param {Record<string, string[]>} [priorityKeywordsMap]
+ */
+export function scoreProduct(product, profile, priorityKeywordsMap = PRIORITY_GOAL_KEYWORDS) {
   const text = productSearchText(product);
   let score = 0;
 
-  const priorityKws = PRIORITY_GOAL_KEYWORDS[profile.priority] || [];
+  const priorityKws = priorityKeywordsMap[profile.priority] || [];
   for (const kw of priorityKws) {
     if (text.includes(kw)) score += 3;
   }
@@ -195,9 +201,15 @@ export function scoreProduct(product, profile) {
   return score;
 }
 
-export function buildCandidatePool(profile, products, { maxCandidates = 12 } = {}) {
+/**
+ * @param {object} profile
+ * @param {object[]} products
+ * @param {{ maxCandidates?: number, priorityKeywords?: Record<string, string[]> }} [options]
+ */
+export function buildCandidatePool(profile, products, { maxCandidates = 12, priorityKeywords } = {}) {
   const excluded = new Map();
   const eligible = [];
+  const keywords = priorityKeywords || PRIORITY_GOAL_KEYWORDS;
 
   for (const product of products) {
     const reasons = getExclusionReasons(profile, product);
@@ -205,7 +217,7 @@ export function buildCandidatePool(profile, products, { maxCandidates = 12 } = {
       excluded.set(product.product_id, reasons);
       continue;
     }
-    eligible.push({ product, score: scoreProduct(product, profile) });
+    eligible.push({ product, score: scoreProduct(product, profile, keywords) });
   }
 
   eligible.sort((a, b) => b.score - a.score);
@@ -230,10 +242,15 @@ export function buildCandidatePool(profile, products, { maxCandidates = 12 } = {
   };
 }
 
-/** Ранкиране на всички eligible продукти — O(n), без горен лимит за compose-then-narrate */
-export function rankEligibleProducts(profile, products) {
+/** Ранкиране на всички eligible продукти — O(n), без горен лимит за compose-then-narrate
+ * @param {object} profile
+ * @param {object[]} products
+ * @param {{ priorityKeywords?: Record<string, string[]> }} [options]
+ */
+export function rankEligibleProducts(profile, products, { priorityKeywords } = {}) {
   const excluded = new Map();
   const ranked = [];
+  const keywords = priorityKeywords || PRIORITY_GOAL_KEYWORDS;
 
   for (const product of products) {
     const reasons = getExclusionReasons(profile, product);
@@ -241,7 +258,7 @@ export function rankEligibleProducts(profile, products) {
       excluded.set(product.product_id, reasons);
       continue;
     }
-    ranked.push({ product, score: scoreProduct(product, profile) });
+    ranked.push({ product, score: scoreProduct(product, profile, keywords) });
   }
 
   ranked.sort((a, b) => b.score - a.score);

@@ -36,6 +36,21 @@ import {
   loadLifeProtocolSettings,
   saveLifeProtocolSettings,
 } from './protocol-quiz-settings.js';
+import {
+  preparePortfolioAdvisorSubmission,
+  finalizePortfolioAdvisorResponse,
+  getPortfolioComposeOptions,
+} from './portfolio-advisor-engine.js';
+import {
+  loadPortfolioAdvisorSettings,
+  savePortfolioAdvisorSettings,
+} from './portfolio-advisor-settings.js';
+import {
+  getDefaultPortfolioAdvisorPrompt,
+  getDefaultPortfolioNarratorPrompt,
+  buildPortfolioAdvisorMessages,
+  buildPortfolioNarratorMessages,
+} from './portfolio-advisor-prompt.js';
 
 // Cache configuration constants
 const CACHE_CONFIG = {
@@ -122,6 +137,48 @@ export default {
           case '/life-protocol/simulate':
             if (request.method === 'POST') {
               response = await handleLifeProtocolSimulate(request, env);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/portfolio-advisor-submit':
+            if (request.method === 'POST') {
+              response = await handlePortfolioAdvisorSubmit(request, env, ctx);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/portfolio-advisor/settings':
+            if (request.method === 'GET') {
+              response = await handleGetPortfolioAdvisorSettings(env);
+            } else if (request.method === 'POST') {
+              response = await handleSavePortfolioAdvisorSettings(request, env, ctx);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/portfolio-advisor/leads':
+            if (request.method === 'GET') {
+              response = await handleGetPortfolioAdvisorLeads(env);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/portfolio-advisor/results':
+            if (request.method === 'GET') {
+              response = await handleGetPortfolioAdvisorResults(env);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/portfolio-advisor/simulate':
+            if (request.method === 'POST') {
+              response = await handlePortfolioAdvisorSimulate(request, env);
             } else {
               throw new UserFacingError('Method Not Allowed.', 405);
             }
@@ -2174,6 +2231,232 @@ async function handleLifeProtocolSimulate(request, env) {
       status,
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+}
+
+async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = false, settingsOverride = null, skipEnabledCheck = false } = {}) {
+  const settings = settingsOverride || await loadPortfolioAdvisorSettings(env);
+  if (!skipEnabledCheck && !settings.enabled) {
+    throw new UserFacingError('AI консултантът е временно изключен.', 503);
+  }
+
+  const compositionMode = settings.composition_mode === 'ai_pick' ? 'ai_pick' : 'compose_narrate';
+  const prepared = await preparePortfolioAdvisorSubmission(env, rawAnswers, { compositionMode });
+  const {
+    profile,
+    payload,
+    ranked,
+    eligible,
+    excluded_product_ids: excludedProductIds,
+    candidates,
+  } = prepared;
+
+  const composeOptions = getPortfolioComposeOptions(profile);
+  let recommendation;
+
+  if (compositionMode === 'ai_pick') {
+    if (useMockAi) {
+      const mock = buildMockProtocolResponse(candidates, profile, { ranked });
+      recommendation = finalizePortfolioAdvisorResponse(mock, eligible, excludedProductIds);
+    } else {
+      const promptTemplate = settings.prompt || getDefaultPortfolioAdvisorPrompt();
+      const messages = buildPortfolioAdvisorMessages(promptTemplate, payload);
+
+      try {
+        const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+        let parsed = parseJsonFromAI(aiRaw);
+        parsed = validateProtocolResponse(parsed, candidates, excludedProductIds);
+        recommendation = finalizePortfolioAdvisorResponse(parsed, eligible, excludedProductIds);
+      } catch (e) {
+        console.warn('Portfolio advisor AI failed, using deterministic fallback:', e.message || e);
+        if (!isProtocolAIRecoverableError(e)) throw e;
+        const mock = buildMockProtocolResponse(candidates, profile, { ranked });
+        recommendation = finalizePortfolioAdvisorResponse(mock, eligible, excludedProductIds);
+      }
+    }
+  } else if (useMockAi) {
+    const composed = composeProtocolStacks(profile, ranked, composeOptions);
+    const productMap = new Map(eligible.map((p) => [p.product_id, p]));
+    payload.composed_meta = composed.meta;
+    const narration = buildMockNarration(composed, profile);
+    const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
+    recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds);
+  } else {
+    const composed = composeProtocolStacks(profile, ranked, composeOptions);
+    const productMap = new Map(eligible.map((p) => [p.product_id, p]));
+    payload.composed_meta = composed.meta;
+    const promptTemplate = settings.narrator_prompt || getDefaultPortfolioNarratorPrompt();
+    const messages = buildPortfolioNarratorMessages(promptTemplate, profile, composed, eligible);
+
+    try {
+      const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+      const narration = parseJsonFromAI(aiRaw);
+      const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
+      recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds);
+    } catch (e) {
+      console.warn('Portfolio advisor narrator AI failed, using deterministic fallback:', e.message || e);
+      if (!isProtocolAIRecoverableError(e)) throw e;
+      const narration = buildMockNarration(composed, profile);
+      const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
+      recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds);
+    }
+  }
+
+  return { profile, payload, recommendation };
+}
+
+/**
+ * POST /portfolio-advisor-submit
+ */
+async function handlePortfolioAdvisorSubmit(request, env, ctx) {
+  const rawAnswers = await request.json();
+
+  let result;
+  try {
+    result = await runPortfolioAdvisorGeneration(env, rawAnswers);
+  } catch (e) {
+    if (e instanceof UserFacingError) throw e;
+    throw new UserFacingError(e.message || 'Грешка при подготовка на препоръката.', 400);
+  }
+
+  const { profile, payload, recommendation } = result;
+  const sessionId = `portfolio-advisor-${Date.now()}`;
+  const catalogStats = payload.catalog_stats;
+  const leadRecord = {
+    id: sessionId,
+    source: 'portfolio-advisor-quiz',
+    timestamp: new Date().toISOString(),
+    email: profile.email,
+    name: profile.name || '',
+    profile,
+    catalog_stats: catalogStats,
+  };
+  const resultRecord = {
+    sessionId,
+    timestamp: leadRecord.timestamp,
+    email: profile.email,
+    recommendation,
+    catalog_stats: catalogStats,
+  };
+  ctx.waitUntil(savePortfolioAdvisorLead(env, leadRecord));
+  ctx.waitUntil(savePortfolioAdvisorResult(env, resultRecord));
+
+  return new Response(JSON.stringify({
+    sessionId,
+    email: profile.email,
+    selection_mode: profile.selection_mode,
+    ...recommendation,
+  }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleGetPortfolioAdvisorSettings(env) {
+  const settings = await loadPortfolioAdvisorSettings(env);
+  return new Response(JSON.stringify(settings), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+  });
+}
+
+async function handleSavePortfolioAdvisorSettings(request, env, ctx) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    throw new UserFacingError('Невалиден JSON.', 400);
+  }
+  const saved = await savePortfolioAdvisorSettings(env, body, ctx);
+  return new Response(JSON.stringify({ success: true, settings: saved }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleGetPortfolioAdvisorLeads(env) {
+  const leads = await env.PAGE_CONTENT.get('portfolio_advisor_leads', { type: 'json' }) || [];
+  return new Response(JSON.stringify(leads.slice().reverse()), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+  });
+}
+
+async function handleGetPortfolioAdvisorResults(env) {
+  const results = await env.PAGE_CONTENT.get('portfolio_advisor_results', { type: 'json' }) || [];
+  return new Response(JSON.stringify(results.slice().reverse()), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+  });
+}
+
+async function handlePortfolioAdvisorSimulate(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const sampleProfile = body.profile || {
+    selection_mode: 'package',
+    sex: 'male',
+    age_band: '25-34',
+    height_cm: 180,
+    weight_kg: 82,
+    priority: 'muscle',
+    conditions: ['none'],
+    medications: ['none'],
+    activity: 'regular',
+    diet: 'omnivore',
+    symptoms: ['none'],
+    allergies: ['none'],
+    pregnancy: 'no',
+    email: 'test@portfolio-advisor.local',
+    name: 'Тест Клиент',
+  };
+
+  if (body.profile) {
+    sampleProfile.email = sampleProfile.email || 'test@portfolio-advisor.local';
+  }
+
+  const useMockAi = body.use_mock_ai !== false;
+
+  try {
+    const { recommendation } = await runPortfolioAdvisorGeneration(env, sampleProfile, {
+      useMockAi,
+      skipEnabledCheck: true,
+    });
+    return new Response(JSON.stringify({
+      success: true,
+      recommendation,
+      mock: useMockAi,
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: e.message || String(e),
+    }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+async function savePortfolioAdvisorLead(env, lead) {
+  try {
+    const list = await env.PAGE_CONTENT.get('portfolio_advisor_leads', { type: 'json' }) || [];
+    list.push(lead);
+    await env.PAGE_CONTENT.put('portfolio_advisor_leads', JSON.stringify(list, null, 2));
+  } catch (e) {
+    console.error('Failed to save portfolio advisor lead:', e);
+  }
+}
+
+async function savePortfolioAdvisorResult(env, result) {
+  try {
+    const list = await env.PAGE_CONTENT.get('portfolio_advisor_results', { type: 'json' }) || [];
+    list.push(result);
+    await env.PAGE_CONTENT.put('portfolio_advisor_results', JSON.stringify(list, null, 2));
+  } catch (e) {
+    console.error('Failed to save portfolio advisor result:', e);
   }
 }
 
