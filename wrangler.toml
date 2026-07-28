@@ -2,7 +2,8 @@ name = "port"
 main = "worker.js"
 compatibility_date = "2024-04-05"
 
-# Static HTML/JS/CSS files are bundled from the repo at deploy time and served
+# Set via: npx wrangler secret put FITNESS1_API_KEY
+# Or KV key fitness1_api_key (see upload-portfolio-catalog.mjs)
 # directly by the Cloudflare edge — they never touch the Worker or KV.
 # Only API routes (/page_content.json, /orders, /contacts, etc.) hit the Worker.
 [assets]

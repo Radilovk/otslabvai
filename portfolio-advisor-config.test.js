@@ -6,6 +6,7 @@ import {
   buildActiveAdvisorSteps,
 } from './portfolio-advisor-config.js';
 import { PORTFOLIO_GOALS } from './portfolio-goals.js';
+import { buildPortfolioAdvisorProfile, normalizeAdvisorCategories } from './portfolio-advisor-engine.js';
 
 describe('portfolio-advisor-config', () => {
   test('priority options match PORTFOLIO_GOALS ids', () => {
@@ -27,11 +28,29 @@ describe('portfolio-advisor-config', () => {
     expect(step.options.length).toBeGreaterThan(FALLBACK_CATALOG_CATEGORIES.length);
   });
 
+  test('buildCategoryStep single mode е radio без „Всички категории“', () => {
+    const step = buildCategoryStep([{ name: 'Протеини' }], { singleSelect: true });
+    expect(step.type).toBe('single');
+    expect(step.field).toBe('product_category');
+    expect(step.options.some((o) => o.value === 'all')).toBe(false);
+  });
+
   test('buildActiveAdvisorSteps inserts category step right after priority', () => {
-    const steps = buildActiveAdvisorSteps({ priority: 'muscle', sex: 'male' }, [{ name: 'Протеини' }]);
-    const priorityIdx = steps.findIndex((s) => s.field === 'priority');
-    expect(steps[priorityIdx + 1]?.id).toBe('product_categories');
-    expect(steps.findIndex((s) => s.field === 'activity')).toBeGreaterThan(priorityIdx);
+    const packageSteps = buildActiveAdvisorSteps({ priority: 'muscle', sex: 'male', selection_mode: 'package' }, [{ name: 'Протеини' }]);
+    const singleSteps = buildActiveAdvisorSteps({ priority: 'muscle', sex: 'male', selection_mode: 'single' }, [{ name: 'Протеини' }]);
+    const priorityIdx = packageSteps.findIndex((s) => s.field === 'priority');
+    expect(packageSteps[priorityIdx + 1]?.field).toBe('product_categories');
+    expect(singleSteps[priorityIdx + 1]?.field).toBe('product_category');
+  });
+
+  test('normalizeAdvisorCategories single mode взима една категория', () => {
+    expect(normalizeAdvisorCategories({ selection_mode: 'single', product_category: 'Витамини' })).toEqual(['Витамини']);
+    expect(buildPortfolioAdvisorProfile({
+      selection_mode: 'single',
+      product_category: 'Протеини',
+      email: 'a@b.com',
+      priority: 'muscle',
+    }).product_categories).toEqual(['Протеини']);
   });
 
   test('buildActiveAdvisorSteps adds pregnancy for female', () => {

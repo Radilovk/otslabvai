@@ -134,6 +134,14 @@ function bindStepEvents() {
       input.addEventListener('change', () => {
         if (type === 'single') {
           answers[field] = input.value;
+          if (field === 'selection_mode') {
+            delete answers.product_categories;
+            delete answers.product_category;
+            saveDraft();
+            renderSteps();
+            showStep(stepIndex);
+            return;
+          }
           group.querySelectorAll('.lpq-option').forEach((l) => l.classList.remove('selected'));
           input.closest('.lpq-option')?.classList.add('selected');
           if (input.value === OTHER_VALUE) {
@@ -173,10 +181,15 @@ function bindStepEvents() {
   });
 }
 
+function stepsDomOutOfSync() {
+  const domSteps = form.querySelectorAll('.lpq-step');
+  if (domSteps.length !== activeSteps.length) return true;
+  return [...domSteps].some((el, i) => el.id !== `step-${activeSteps[i]?.id}`);
+}
+
 function showStep(index) {
   activeSteps = getActiveSteps();
-  const domStepCount = form.querySelectorAll('.lpq-step').length;
-  if (domStepCount !== activeSteps.length) {
+  if (stepsDomOutOfSync()) {
     renderSteps();
     index = Math.min(index, activeSteps.length - 1);
   }
