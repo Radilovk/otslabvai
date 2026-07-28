@@ -105,7 +105,9 @@ function buildTierProducts(products) {
  * Кумулативни стекове: basic ⊂ optimal ⊂ premium
  * Сканира целия ranked pool (стотици продукти).
  */
-export function composeProtocolStacks(profile, rankedEntries) {
+export function composeProtocolStacks(profile, rankedEntries, options = {}) {
+  const limits = options.tierLimits || TIER_LIMITS;
+  const meta = options.tierMeta || TIER_META;
   const picked = new Set();
   const mustInclude = findMustIncludeProducts(profile, rankedEntries);
 
@@ -116,41 +118,41 @@ export function composeProtocolStacks(profile, rankedEntries) {
   const basicCore = [
     ...mustInclude,
     ...pickProducts(rankedEntries, {
-      count: TIER_LIMITS.basic.max,
-      budgetEur: TIER_LIMITS.basic.budgetEur,
+      count: limits.basic.max,
+      budgetEur: limits.basic.budgetEur,
       picked,
     }),
-  ].slice(0, TIER_LIMITS.basic.max);
+  ].slice(0, limits.basic.max);
 
   for (const p of basicCore) picked.add(p.product_id);
 
   const optimalExtra = pickProducts(rankedEntries, {
-    count: Math.max(0, TIER_LIMITS.optimal.max - basicCore.length),
-    budgetEur: TIER_LIMITS.optimal.budgetEur,
+    count: Math.max(0, limits.optimal.max - basicCore.length),
+    budgetEur: limits.optimal.budgetEur,
     picked,
   });
-  const optimalProducts = [...basicCore, ...optimalExtra].slice(0, TIER_LIMITS.optimal.max);
+  const optimalProducts = [...basicCore, ...optimalExtra].slice(0, limits.optimal.max);
 
   for (const p of optimalProducts) picked.add(p.product_id);
 
   const premiumExtra = pickProducts(rankedEntries, {
-    count: Math.max(0, TIER_LIMITS.premium.max - optimalProducts.length),
-    budgetEur: TIER_LIMITS.premium.budgetEur,
+    count: Math.max(0, limits.premium.max - optimalProducts.length),
+    budgetEur: limits.premium.budgetEur,
     picked,
   });
-  const premiumProducts = [...optimalProducts, ...premiumExtra].slice(0, TIER_LIMITS.premium.max);
+  const premiumProducts = [...optimalProducts, ...premiumExtra].slice(0, limits.premium.max);
 
   const tiers = {
     basic: {
-      ...TIER_META.basic,
+      ...meta.basic,
       products: buildTierProducts(basicCore),
     },
     optimal: {
-      ...TIER_META.optimal,
+      ...meta.optimal,
       products: buildTierProducts(optimalProducts),
     },
     premium: {
-      ...TIER_META.premium,
+      ...meta.premium,
       products: buildTierProducts(premiumProducts),
     },
   };

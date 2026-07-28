@@ -1,0 +1,103 @@
+/**
+ * Portfolio AI Advisor — design tokens mapped to portfolio.css (--pf-*).
+ * Builds on life-protocol-quiz.css structure with portfolio branding.
+ */
+
+.pfa-body {
+  --lpq-accent: var(--pf-primary, #00c4c8);
+  --lpq-accent-dim: rgba(0, 196, 200, 0.14);
+  --lpq-bg: var(--pf-bg, #f4f8fb);
+  --lpq-card: var(--pf-surface, #ffffff);
+  --lpq-text: var(--pf-text, #0f2540);
+  --lpq-muted: var(--pf-text-muted, #5a7184);
+  --lpq-border: var(--pf-border, rgba(15, 37, 64, 0.1));
+  --lpq-display: 'Outfit', 'Segoe UI', sans-serif;
+  --lpq-font: 'Manrope', 'Segoe UI', sans-serif;
+  padding-top: 0;
+}
+
+[data-theme="dark"] .pfa-body {
+  --lpq-accent: var(--pf-primary, #00c4c8);
+  --lpq-accent-dim: rgba(0, 196, 200, 0.12);
+  --lpq-bg: var(--pf-bg, #0a1218);
+  --lpq-card: var(--pf-surface, #121c24);
+  --lpq-text: var(--pf-text, #e8f0f5);
+  --lpq-muted: var(--pf-text-muted, #8fa3b3);
+  --lpq-border: rgba(255, 255, 255, 0.1);
+}
+
+.pfa-body .lpq-header h1 {
+  font-family: var(--lpq-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.pfa-body .lpq-btn-primary {
+  background: linear-gradient(135deg, var(--pf-primary, #00c4c8), var(--pf-navy, #0f2540));
+  border: none;
+  font-weight: 600;
+}
+
+.pfa-body .lpq-btn-primary:hover {
+  filter: brightness(1.06);
+}
+
+.pfa-body .lpq-progress-fill {
+  background: linear-gradient(90deg, var(--pf-primary, #00c4c8), #2dd4bf);
+}
+
+.pfa-body .lpq-option.selected {
+  border-color: var(--pf-primary, #00c4c8);
+  background: var(--lpq-accent-dim);
+}
+
+.pfa-body .lpq-back-link {
+  color: var(--pf-primary, #00c4c8);
+}
+
+.pfa-body .lpq-card {
+  box-shadow: var(--pf-shadow-md, 0 4px 24px rgba(15, 37, 64, 0.08));
+}
+
+.pfa-main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+.pfa-main--wide {
+  max-width: 1100px;
+}
+
+.pfa-hero-strip {
+  background: linear-gradient(135deg, var(--pf-navy, #0f2540) 0%, #163a5c 100%);
+  color: #fff;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-size: 0.88rem;
+}
+
+.pfa-hero-strip a {
+  color: var(--pf-primary, #00c4c8);
+  font-weight: 600;
+}
+
+.pfa-body .lpr-tier.recommended {
+  border-color: var(--pf-primary, #00c4c8);
+}
+
+.pfa-body .lpr-tier-badge {
+  background: var(--pf-primary, #00c4c8);
+  color: var(--pf-navy, #0f2540);
+}
+
+.pfa-body .lpr-order-btn,
+.pfa-body .lpq-btn-primary.lpr-order-btn {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .pfa-main {
+    padding: 1rem 0.75rem 3rem;
+  }
+}

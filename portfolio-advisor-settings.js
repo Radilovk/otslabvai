@@ -1,0 +1,47 @@
+import {
+  getDefaultPortfolioAdvisorPrompt,
+  getDefaultPortfolioNarratorPrompt,
+} from './portfolio-advisor-prompt.js';
+
+export function getDefaultPortfolioAdvisorSettings() {
+  return {
+    enabled: true,
+    composition_mode: 'compose_narrate',
+    prompt: getDefaultPortfolioAdvisorPrompt(),
+    narrator_prompt: getDefaultPortfolioNarratorPrompt(),
+  };
+}
+
+export async function loadPortfolioAdvisorSettings(env) {
+  const raw = await env.PAGE_CONTENT?.get('portfolio_advisor_settings');
+  if (!raw) return getDefaultPortfolioAdvisorSettings();
+  try {
+    const parsed = JSON.parse(raw);
+    const defaults = getDefaultPortfolioAdvisorSettings();
+    return {
+      enabled: parsed.enabled !== false,
+      composition_mode: parsed.composition_mode === 'ai_pick' ? 'ai_pick' : 'compose_narrate',
+      prompt: typeof parsed.prompt === 'string' && parsed.prompt.trim()
+        ? parsed.prompt
+        : defaults.prompt,
+      narrator_prompt: typeof parsed.narrator_prompt === 'string' && parsed.narrator_prompt.trim()
+        ? parsed.narrator_prompt
+        : defaults.narrator_prompt,
+    };
+  } catch {
+    return getDefaultPortfolioAdvisorSettings();
+  }
+}
+
+export async function savePortfolioAdvisorSettings(env, settings, ctx) {
+  const toSave = {
+    enabled: settings.enabled !== false,
+    composition_mode: settings.composition_mode === 'ai_pick' ? 'ai_pick' : 'compose_narrate',
+    prompt: String(settings.prompt || getDefaultPortfolioAdvisorPrompt()),
+    narrator_prompt: String(settings.narrator_prompt || getDefaultPortfolioNarratorPrompt()),
+  };
+  const put = env.PAGE_CONTENT.put('portfolio_advisor_settings', JSON.stringify(toSave, null, 2));
+  if (ctx?.waitUntil) ctx.waitUntil(put);
+  else await put;
+  return toSave;
+}

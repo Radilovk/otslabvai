@@ -83,6 +83,7 @@ export const DEFAULT_SETTINGS = {
         title: 'Каталог',
         links: [
           { text: 'Всички продукти', url: 'portfolio.html' },
+          { text: 'AI консултант', url: 'portfolio-advisor-quiz.html' },
           { text: 'Количка', url: 'portfolio-checkout.html' }
         ]
       },

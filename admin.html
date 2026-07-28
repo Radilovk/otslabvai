@@ -92,6 +92,7 @@
             <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-settings" style="display:none;">Настройки</button>
             <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-orders" style="display:none;">Поръчки<span id="portfolio-orders-tab-badge" class="tab-badge" hidden></span></button>
             <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-promo-codes" style="display:none;">Промо Кодове</button>
+            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-advisor" style="display:none;">AI консултант</button>
             <!-- BioCode запитвания — общи за всички проекти -->
             <button class="tab-btn" data-tab="tab-biocode-inquiries">BioCode Запитвания</button>
         </nav>
@@ -576,6 +577,87 @@
                         <tbody id="portfolio-promo-codes-table-body"></tbody>
                     </table>
                 </div>
+            </section>
+
+            <!-- Portfolio: AI консултант -->
+            <section id="tab-portfolio-advisor" class="tab-pane tab-portfolio-only">
+                <div class="orders-header">
+                    <h2>Portfolio – AI консултант</h2>
+                    <div class="orders-controls">
+                        <a href="portfolio-advisor-quiz.html" target="_blank" rel="noopener" class="btn btn-secondary">Отвори въпросника</a>
+                        <button type="button" id="pfa-refresh-btn" class="btn btn-secondary">Опресни</button>
+                    </div>
+                </div>
+
+                <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1.5rem;">
+                    <h3 style="margin-top:0;">Контрол на функцията</h3>
+                    <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;cursor:pointer;">
+                        <input type="checkbox" id="pfa-enabled" checked>
+                        <span>AI консултантът е активен (клиентите могат да получават препоръки)</span>
+                    </label>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="pfa-composition-mode" style="font-weight:600;display:block;margin-bottom:0.5rem;">Режим на съставяне</label>
+                        <select id="pfa-composition-mode" style="padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);">
+                            <option value="compose_narrate">Compose + Narrate (препоръчително)</option>
+                            <option value="ai_pick">AI избира продукти</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="pfa-prompt" style="font-weight:600;display:block;margin-bottom:0.5rem;">AI промпт (ai_pick режим)</label>
+                        <textarea id="pfa-prompt" rows="6" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);"></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom:1rem;">
+                        <label for="pfa-narrator-prompt" style="font-weight:600;display:block;margin-bottom:0.5rem;">Narrator промпт (compose_narrate)</label>
+                        <textarea id="pfa-narrator-prompt" rows="6" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);"></textarea>
+                    </div>
+                    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                        <button type="button" id="pfa-save-settings-btn" class="btn btn-success">Запази настройки</button>
+                        <button type="button" id="pfa-simulate-mock-btn" class="btn btn-primary">Симулация + преглед (mock)</button>
+                        <button type="button" id="pfa-simulate-real-btn" class="btn btn-secondary">Симулация + преглед (AI)</button>
+                        <button type="button" id="pfa-open-quiz-btn" class="btn btn-secondary">Отвори въпросника</button>
+                    </div>
+                    <p id="pfa-simulate-status" style="margin-top:0.75rem;font-size:0.88rem;color:var(--text-secondary);display:none;"></p>
+                    <pre id="pfa-simulate-output" style="margin-top:0.75rem;padding:1rem;background:var(--bg-primary);border-radius:8px;font-size:0.8rem;max-height:200px;overflow:auto;display:none;"></pre>
+                </div>
+
+                <h3>Leads от въпросника</h3>
+                <div class="table-wrapper" style="margin-bottom:2rem;">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Имейл</th>
+                                <th>Име</th>
+                                <th>Цел</th>
+                                <th>Режим</th>
+                                <th>Налични</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pfa-leads-body"></tbody>
+                    </table>
+                </div>
+
+                <h3>Генерирани препоръки</h3>
+                <div class="table-wrapper">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Имейл</th>
+                                <th>Препоръчан</th>
+                                <th>Стартов (€)</th>
+                                <th>Оптимален (€)</th>
+                                <th>Пълен (€)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="pfa-results-body"></tbody>
+                    </table>
+                </div>
+                <details id="pfa-result-detail" style="margin-top:1rem;display:none;">
+                    <summary style="cursor:pointer;font-weight:600;">Детайли на избрана препоръка</summary>
+                    <pre id="pfa-result-json" style="padding:1rem;background:var(--bg-secondary);border-radius:8px;font-size:0.78rem;overflow:auto;max-height:400px;"></pre>
+                </details>
             </section>
         </main>
     </div>
