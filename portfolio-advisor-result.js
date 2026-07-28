@@ -24,7 +24,14 @@ function tierTotalEur(tier) {
   return Math.round(sum * 100) / 100;
 }
 
-function normalizeBenefitsForDisplay(tiers) {
+function normalizeBenefitsForDisplay(tiers, isSingle) {
+  if (isSingle) {
+    return {
+      basic: { list: tiers.basic?.benefits || [], inherited: 0 },
+      optimal: { list: tiers.optimal?.benefits || [], inherited: 0 },
+      premium: { list: tiers.premium?.benefits || [], inherited: 0 },
+    };
+  }
   return buildCumulativeBenefitTiers(tiers);
 }
 
@@ -101,6 +108,9 @@ function classifyTiming(timing) {
 }
 
 function buildTierSchedule(tier, baseSchedule) {
+  if (tier.schedule) {
+    return { ...tier.schedule, products: tier.products || [] };
+  }
   const products = tier.products || [];
   const schedule = { morning: [], midday: [], evening: [], weekly_notes: baseSchedule?.weekly_notes || '', products };
 
@@ -207,8 +217,8 @@ function renderResult(data) {
   resultData = data;
   const rec = data.recommended_tier || 'optimal';
   const tiers = data.tiers || {};
-  const benefits = normalizeBenefitsForDisplay(tiers);
   const isSingle = data.selection_mode === 'single';
+  const benefits = normalizeBenefitsForDisplay(tiers, isSingle);
 
   container.innerHTML = `
     <div class="lpr-analysis">${escapeHtml(data.analysis || '')}</div>

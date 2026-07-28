@@ -6,7 +6,7 @@ import express from 'express';
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { handlePortfolioRoute } from '../portfolio-api.js';
+import { handlePortfolioRoute, buildCatalogMeta } from '../portfolio-api.js';
 import {
   preparePortfolioAdvisorSubmission,
   finalizePortfolioAdvisorResponse,
@@ -18,6 +18,7 @@ import {
   assembleProtocolFromComposition,
   buildMockNarration,
 } from '../protocol-stack-composer.js';
+import { buildPortfolioAdvisorNarration } from '../portfolio-advisor-narration.js';
 import { buildMockProtocolResponse } from '../protocol-quiz-engine.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -65,25 +66,20 @@ function seedMinimalCatalog() {
       variants: [{ sku_id: '107', pack: '60 caps', option: '', b2b_price: 7, retail_price: 12.5, available: true, image: '' }],
     },
   ];
-  const meta = {
-    version: 1, chunk_size: 150, chunk_count: 1, total_groups: groups.length,
-    lookup: Object.fromEntries(groups.map((g) => [g.group_id, 0])),
-    index: groups.map((g) => ({ group_id: g.group_id, name: g.name, available: true })),
-    categories: [
-      { name: 'Протеини', count: 3 },
-      { name: 'Креатин', count: 1 },
-      { name: 'Витамини и минерали', count: 1 },
-      { name: 'Омега мастни киселини', count: 1 },
-      { name: 'Хербални добавки', count: 1 },
-    ],
-  };
+  const settings = { product_overrides: {}, global_markup_percent: 30 };
+  const meta = buildCatalogMeta(groups, settings);
+  meta.synced_at = new Date().toISOString();
   kvStore.set('portfolio_meta', JSON.stringify(meta));
   kvStore.set('portfolio_chunk_0', JSON.stringify(groups));
-  kvStore.set('portfolio_settings', JSON.stringify({ product_overrides: {}, global_markup_percent: 30 }));
+  kvStore.set('portfolio_settings', JSON.stringify(settings));
   console.log('Seeded minimal catalog for dev/E2E (7 groups)');
 }
 
 function loadKvFromDisk() {
+  if (process.env.PORTFOLIO_E2E_MINIMAL === '1') {
+    seedMinimalCatalog();
+    return false;
+  }
   if (!existsSync(DATA_DIR)) {
     console.warn('No backend/portfolio/ – using minimal seed catalog');
     seedMinimalCatalog();
@@ -142,9 +138,11 @@ async function runAdvisorMockGeneration(env, rawAnswers) {
   const { profile, payload, ranked, eligible, excluded_product_ids: excludedIds } = prepared;
   const composed = composePortfolioAdvisorStacks(profile, ranked, getPortfolioComposeOptions(profile));
   const productMap = new Map(eligible.map((p) => [p.product_id, p]));
-  const narration = buildMockNarration(composed, profile);
+  const narration = buildPortfolioAdvisorNarration(composed, profile, productMap);
   const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedIds);
-  const recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedIds);
+  const recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedIds, {
+    selection_mode: profile.selection_mode,
+  });
   return { profile, payload, recommendation };
 }
 

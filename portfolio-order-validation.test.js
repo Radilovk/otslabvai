@@ -147,6 +147,29 @@ describe('Portfolio order creation rejects invalid orders', () => {
     expect(data.order.customer.phone).toBe('+359888123456');
   });
 
+  test('POST /portfolio/validate-cart works with stale catalog when Fitness1 is unavailable', async () => {
+    const staleMeta = {
+      ...freshMeta,
+      synced_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+    };
+    env.PAGE_CONTENT.data.set('portfolio_meta', JSON.stringify(staleMeta));
+
+    const originalFetch = global.fetch;
+    global.fetch = async () => ({ ok: false, status: 500, json: async () => ({}) });
+
+    const request = new Request('https://example.com/portfolio/validate-cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ products: [{ sku_id: '1', quantity: 1 }] }),
+    });
+    const res = await handlePortfolioRoute(request, env, new URL(request.url));
+    global.fetch = originalFetch;
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.valid).toBe(true);
+  });
+
   test('GET /portfolio/order returns saved order', async () => {
     const orders = JSON.parse(env.PAGE_CONTENT.data.get('portfolio_orders'));
     const id = orders[0].id;

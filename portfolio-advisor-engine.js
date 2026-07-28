@@ -86,15 +86,26 @@ export function filterProductsByCategories(products, selectedCategories) {
   return products.filter((p) => productMatchesCategories(p, selectedCategories));
 }
 
+/** Нормализира избраните категории според режима */
+export function normalizeAdvisorCategories(raw) {
+  if (raw.selection_mode === 'single') {
+    const cat = raw.product_category
+      ?? (Array.isArray(raw.product_categories) ? raw.product_categories[0] : raw.product_categories);
+    const val = String(cat || '').trim();
+    return val ? [val] : [];
+  }
+  return Array.isArray(raw.product_categories)
+    ? raw.product_categories.map((c) => String(c).trim()).filter(Boolean)
+    : [];
+}
+
 /** Portfolio профил с категории за търсене */
 export function buildPortfolioAdvisorProfile(raw) {
   const profile = buildClientProfile(raw);
   if (!profile.priority || profile.priority === 'longevity') {
     profile.priority = raw.priority || 'health';
   }
-  profile.product_categories = Array.isArray(raw.product_categories)
-    ? raw.product_categories.map((c) => String(c).trim()).filter(Boolean)
-    : [];
+  profile.product_categories = normalizeAdvisorCategories(raw);
   return profile;
 }
 
@@ -172,9 +183,10 @@ export function enrichPortfolioProductItem(item, product) {
   };
 }
 
-export function finalizePortfolioAdvisorResponse(response, eligibleProducts, excludedProductIds = []) {
+export function finalizePortfolioAdvisorResponse(response, eligibleProducts, excludedProductIds = [], options = {}) {
   const excluded = new Set(excludedProductIds);
   const productMap = new Map(eligibleProducts.map((p) => [p.product_id, p]));
+  const independentTiers = options.selection_mode === 'single' || options.independent_tiers === true;
 
   if (!response?.tiers?.basic || !response?.tiers?.optimal || !response?.tiers?.premium) {
     throw new Error('Липсват трите ценови класа в отговора.');
@@ -203,6 +215,9 @@ export function finalizePortfolioAdvisorResponse(response, eligibleProducts, exc
     response.recommended_tier = 'optimal';
   }
 
+  if (independentTiers) {
+    return response;
+  }
   return normalizeCumulativeBenefits(response);
 }
 

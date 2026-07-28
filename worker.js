@@ -52,6 +52,7 @@ import {
   buildPortfolioAdvisorMessages,
   buildPortfolioNarratorMessages,
 } from './portfolio-advisor-prompt.js';
+import { buildPortfolioAdvisorNarration } from './portfolio-advisor-narration.js';
 
 // Cache configuration constants
 const CACHE_CONFIG = {
@@ -2253,12 +2254,13 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
   } = prepared;
 
   const composeOptions = getPortfolioComposeOptions(profile);
+  const finalizeOpts = { selection_mode: profile.selection_mode };
   let recommendation;
 
   if (compositionMode === 'ai_pick') {
     if (useMockAi) {
       const mock = buildMockProtocolResponse(candidates, profile, { ranked });
-      recommendation = finalizePortfolioAdvisorResponse(mock, eligible, excludedProductIds);
+      recommendation = finalizePortfolioAdvisorResponse(mock, eligible, excludedProductIds, finalizeOpts);
     } else {
       const promptTemplate = settings.prompt || getDefaultPortfolioAdvisorPrompt();
       const messages = buildPortfolioAdvisorMessages(promptTemplate, payload);
@@ -2267,21 +2269,21 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
         const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
         let parsed = parseJsonFromAI(aiRaw);
         parsed = validateProtocolResponse(parsed, candidates, excludedProductIds);
-        recommendation = finalizePortfolioAdvisorResponse(parsed, eligible, excludedProductIds);
+        recommendation = finalizePortfolioAdvisorResponse(parsed, eligible, excludedProductIds, finalizeOpts);
       } catch (e) {
         console.warn('Portfolio advisor AI failed, using deterministic fallback:', e.message || e);
         if (!isProtocolAIRecoverableError(e)) throw e;
         const mock = buildMockProtocolResponse(candidates, profile, { ranked });
-        recommendation = finalizePortfolioAdvisorResponse(mock, eligible, excludedProductIds);
+        recommendation = finalizePortfolioAdvisorResponse(mock, eligible, excludedProductIds, finalizeOpts);
       }
     }
   } else if (useMockAi) {
     const composed = composePortfolioAdvisorStacks(profile, ranked, composeOptions);
     const productMap = new Map(eligible.map((p) => [p.product_id, p]));
     payload.composed_meta = composed.meta;
-    const narration = buildMockNarration(composed, profile);
+    const narration = buildPortfolioAdvisorNarration(composed, profile, productMap);
     const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
-    recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds);
+    recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts);
   } else {
     const composed = composePortfolioAdvisorStacks(profile, ranked, composeOptions);
     const productMap = new Map(eligible.map((p) => [p.product_id, p]));
@@ -2293,13 +2295,13 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
       const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
       const narration = parseJsonFromAI(aiRaw);
       const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
-      recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds);
+      recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts);
     } catch (e) {
       console.warn('Portfolio advisor narrator AI failed, using deterministic fallback:', e.message || e);
       if (!isProtocolAIRecoverableError(e)) throw e;
-      const narration = buildMockNarration(composed, profile);
+      const narration = buildPortfolioAdvisorNarration(composed, profile, productMap);
       const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
-      recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds);
+      recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts);
     }
   }
 

@@ -11,6 +11,7 @@ export function getDefaultPortfolioAdvisorPrompt() {
 3 tier-а: basic (стартов пакет), optimal (препоръчан), premium (пълен пакет).
 Ако selection_mode е "single" — всеки tier съдържа ТОЧНО 1 продукт (различни ценови нива).
 Ползите (benefits) са кумулативни: optimal включва basic + нови теми; premium включва optimal + нови.
+При selection_mode "single" — ползите и strategy са САМО за единичния продукт в tier-а (без кумулативност).
 Кратки dose/timing/why_for_you (макс. 12 думи).
 Приоритетът (priority) е цел от каталога: отслабване, мускули, здраве, антиейджинг, енергия, възстановяване.
 
@@ -71,7 +72,10 @@ export function buildPortfolioNarratorPayload(profile, composed, eligibleProduct
 export function buildPortfolioNarratorMessages(template, profile, composed, eligibleProducts) {
   const payload = buildPortfolioNarratorPayload(profile, composed, eligibleProducts);
   const dataJson = JSON.stringify(payload);
-  const system = `${template}\n\nВАЖНО: Без chain-of-thought. Само финален JSON. Не променяй product_id.`;
+  const singleModeNote = profile.selection_mode === 'single'
+    ? '\n\nSINGLE MODE: Всеки tier съдържа ТОЧНО 1 продукт. Ползите и strategy са САМО за този продукт — без кумулативни пакетни ползи и без други артикули.'
+    : '';
+  const system = `${template}${singleModeNote}\n\nВАЖНО: Без chain-of-thought. Само финален JSON. Не променяй product_id.`;
   if (template.includes('{{protocolData}}')) {
     return [{ role: 'user', content: template.replace('{{protocolData}}', () => dataJson) }];
   }

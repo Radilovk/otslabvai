@@ -176,6 +176,7 @@ export function composeProtocolStacks(profile, rankedEntries, options = {}) {
 export function assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds = []) {
   const tierKeys = ['basic', 'optimal', 'premium'];
   const tiers = {};
+  const tierSchedules = narration?.tier_schedules || null;
 
   for (const key of tierKeys) {
     const base = composed.tiers[key];
@@ -198,6 +199,7 @@ export function assembleProtocolFromComposition(composed, narration, productMap,
       strategy: copy.strategy || '',
       benefits: Array.isArray(copy.benefits) ? copy.benefits : [],
       products,
+      ...(tierSchedules?.[key] ? { schedule: tierSchedules[key] } : {}),
     };
   }
 

@@ -49,9 +49,9 @@ function sleep(ms) {
 }
 
 export async function getFitness1ApiKey(env) {
-  if (env.FITNESS1_API_KEY) return env.FITNESS1_API_KEY;
-  const kvKey = await env.PAGE_CONTENT.get(KV_FITNESS1_KEY);
-  return kvKey || null;
+  const raw = env.FITNESS1_API_KEY || await env.PAGE_CONTENT.get(KV_FITNESS1_KEY);
+  if (!raw) return null;
+  return String(raw).trim();
 }
 
 export const DEFAULT_SETTINGS = {
@@ -729,19 +729,27 @@ async function ensureStockFresh(env, skuIds, freshnessMs) {
   if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
   if (!isSyncStale(meta.synced_at, freshnessMs)) return meta.synced_at;
 
-  await withSyncLock(env, async () => {
-    const current = await getMeta(env);
-    if (current && !isSyncStale(current.synced_at, freshnessMs)) return null;
-    return refreshCartStockInKv(env, skuIds);
-  }, {
-    isFresh: async () => {
-      const m = await getMeta(env);
-      return !!(m && !isSyncStale(m.synced_at, freshnessMs));
-    }
-  });
+  try {
+    await withSyncLock(env, async () => {
+      const current = await getMeta(env);
+      if (current && !isSyncStale(current.synced_at, freshnessMs)) return null;
+      return refreshCartStockInKv(env, skuIds);
+    }, {
+      isFresh: async () => {
+        const m = await getMeta(env);
+        return !!(m && !isSyncStale(m.synced_at, freshnessMs));
+      }
+    });
 
-  const updated = await getMeta(env);
-  return updated?.synced_at || null;
+    const updated = await getMeta(env);
+    return updated?.synced_at || meta.synced_at;
+  } catch (e) {
+    if (meta.synced_at) {
+      console.warn('Stock refresh failed, using cached catalog:', e?.message || e);
+      return meta.synced_at;
+    }
+    throw e;
+  }
 }
 
 function scheduleBrowseSyncIfStale(env, ctx) {
@@ -1423,14 +1431,17 @@ async function submitProductsToFitness1(env, products) {
   const apiKey = await getFitness1ApiKey(env);
   if (!apiKey) throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран.', 500);
 
-  const f1Response = await fetch('https://fitness1.bg/b2b/api/orders/create', {
-    method: 'POST',
-    headers: {
-      'X-Api-Key': apiKey,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ products })
-  });
+  const f1Response = await fetch(
+    `https://fitness1.bg/b2b/api/orders/create?key=${encodeURIComponent(apiKey)}`,
+    {
+      method: 'POST',
+      headers: {
+        'X-Api-Key': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ products }),
+    }
+  );
 
   let f1Data;
   try {

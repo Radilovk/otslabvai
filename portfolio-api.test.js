@@ -373,7 +373,8 @@ describe('Portfolio Fitness1 order approval', () => {
     let fetchCalled = false;
     global.fetch = async (url, opts) => {
       fetchCalled = true;
-      expect(url).toBe('https://fitness1.bg/b2b/api/orders/create');
+      expect(url).toContain('https://fitness1.bg/b2b/api/orders/create');
+      expect(url).toContain('key=test-key');
       expect(opts.headers['X-Api-Key']).toBe('test-key');
       const body = JSON.parse(opts.body);
       expect(body.products).toEqual([{ barcode: '1234567890', quantity: 2 }]);

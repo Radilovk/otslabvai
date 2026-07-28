@@ -172,8 +172,24 @@ export const GOAL_IDS = PORTFOLIO_GOALS.map((g) => g.id);
  * Стъпка за избор на продуктови категории (от каталога).
  * @param {{ name: string, count?: number }[]} catalogCategories
  */
-export function buildCategoryStep(catalogCategories = []) {
+export function buildCategoryStep(catalogCategories = [], { singleSelect = false } = {}) {
   const cats = catalogCategories.length ? catalogCategories : FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name }));
+  const categoryOptions = cats.map((c) => ({
+    value: c.name,
+    label: c.count != null ? `${c.name} (${c.count})` : c.name,
+  }));
+
+  if (singleSelect) {
+    return {
+      id: 'product_category',
+      title: 'В коя категория да търсим?',
+      hint: 'Изберете една категория от каталога — независимо от основната цел. При единичен продукт се търси само в нея.',
+      type: 'single',
+      field: 'product_category',
+      options: categoryOptions,
+    };
+  }
+
   return {
     id: 'product_categories',
     title: 'В какви категории да търсим?',
@@ -182,10 +198,7 @@ export function buildCategoryStep(catalogCategories = []) {
     field: 'product_categories',
     options: [
       { value: 'all', label: 'Всички категории', exclusive: true },
-      ...cats.map((c) => ({
-        value: c.name,
-        label: c.count != null ? `${c.name} (${c.count})` : c.name,
-      })),
+      ...categoryOptions,
     ],
   };
 }
@@ -200,7 +213,7 @@ export function buildActiveAdvisorSteps(answers = {}, catalogCategories = []) {
   for (const step of ADVISOR_STEPS) {
     steps.push(step);
     if (step.field === 'priority') {
-      steps.push(buildCategoryStep(catalogCategories));
+      steps.push(buildCategoryStep(catalogCategories, { singleSelect: answers.selection_mode === 'single' }));
     }
   }
 
