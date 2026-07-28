@@ -1,7 +1,7 @@
 import { API_URL } from './config.js';
 import { PortfolioAdvisorAnimator } from './portfolio-advisor-analysis.js';
 import { persistAdvisorResult, DRAFT_KEY, RESULT_KEY, LEAD_KEY } from './portfolio-advisor-store.js';
-import { buildActiveAdvisorSteps } from './portfolio-advisor-config.js';
+import { buildActiveAdvisorSteps, FALLBACK_CATALOG_CATEGORIES } from './portfolio-advisor-config.js';
 
 const form = document.getElementById('lpq-form');
 const progressEl = document.getElementById('lpq-progress');
@@ -13,6 +13,7 @@ const loadingCard = document.getElementById('lpq-loading');
 const answers = loadDraft();
 const OTHER_VALUE = 'other';
 const OTHER_MAX_WORDS = 8;
+let catalogCategories = FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name }));
 
 function otherFieldKey(field) {
   return `${field}_other`;
@@ -64,7 +65,7 @@ function saveDraft() {
 }
 
 function getActiveSteps() {
-  return buildActiveAdvisorSteps(answers);
+  return buildActiveAdvisorSteps(answers, catalogCategories);
 }
 
 let stepIndex = 0;
@@ -146,10 +147,10 @@ function bindStepEvents() {
           if (input.dataset.exclusive && input.checked) {
             vals = [input.value];
             group.querySelectorAll('input').forEach((i) => { if (i !== input) i.checked = false; });
-            if (input.value === 'none') clearOtherField(field);
-          } else if (input.checked && input.value !== 'none') {
-            const none = group.querySelector('input[value="none"]');
-            if (none) none.checked = false;
+            if (input.value === 'none' || input.value === 'all') clearOtherField(field);
+          } else if (input.checked && input.value !== 'none' && input.value !== 'all') {
+            const exclusive = group.querySelector('input[data-exclusive]');
+            if (exclusive?.checked) exclusive.checked = false;
             vals = [...group.querySelectorAll('input:checked')].map((i) => i.value);
           }
           if (input.value === OTHER_VALUE && !input.checked) clearOtherField(field);
@@ -328,7 +329,18 @@ nextBtn.addEventListener('click', async () => {
   else await submitQuiz();
 });
 
-renderSteps();
+async function loadCatalogCategories() {
+  try {
+    const res = await fetch(`${API_URL}/portfolio/bootstrap`, { cache: 'no-cache' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (Array.isArray(data?.meta?.categories) && data.meta.categories.length) {
+      catalogCategories = data.meta.categories;
+    }
+  } catch {
+    /* offline / fallback categories */
+  }
+}
 
 async function checkQuizEnabled() {
   try {
@@ -348,7 +360,13 @@ async function checkQuizEnabled() {
   }
 }
 
-checkQuizEnabled();
+async function initQuiz() {
+  await loadCatalogCategories();
+  renderSteps();
+  await checkQuizEnabled();
+}
+
+initQuiz();
 
 document.addEventListener('keydown', (e) => {
   if (!formCard.hidden && loadingCard.hidden && e.key === 'Enter' && document.activeElement?.tagName !== 'TEXTAREA') {

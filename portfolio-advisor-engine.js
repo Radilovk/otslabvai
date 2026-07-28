@@ -17,6 +17,9 @@ import {
   scoreProduct,
 } from './protocol-quiz-engine.js';
 import { getMustIncludeKeywords, getExclusionReasons, productSearchText, productMatchesAnyKeyword } from './protocol-safety-rules.js';
+import { composePortfolioAdvisorStacks } from './portfolio-advisor-compose.js';
+
+export { composePortfolioAdvisorStacks };
 
 const CHUNK_KEY = (n) => `portfolio_chunk_${n}`;
 const KV_SETTINGS = 'portfolio_settings';
@@ -67,17 +70,31 @@ const BRANCH_KEYWORD_BOOSTS = {
   stress: ['ashwagandha', 'ашваганда', 'adaptogen', 'релакс', 'stress'],
 };
 
-/** Portfolio профил с допълнителни полета от goal branches. */
+/** Продуктът попада в избрана каталожна категория */
+export function productMatchesCategories(product, selectedCategories) {
+  if (!selectedCategories?.length || selectedCategories.includes('all')) return true;
+  const top = String(product.system_data?.portfolio?.category_top || '').trim().toLowerCase();
+  const cat = String(product.system_data?.portfolio?.category || '').trim().toLowerCase();
+  return selectedCategories.some((raw) => {
+    const needle = String(raw).trim().toLowerCase();
+    if (!needle) return false;
+    return top === needle || top.includes(needle) || cat.includes(needle);
+  });
+}
+
+export function filterProductsByCategories(products, selectedCategories) {
+  return products.filter((p) => productMatchesCategories(p, selectedCategories));
+}
+
+/** Portfolio профил с категории за търсене */
 export function buildPortfolioAdvisorProfile(raw) {
   const profile = buildClientProfile(raw);
   if (!profile.priority || profile.priority === 'longevity') {
     profile.priority = raw.priority || 'health';
   }
-  profile.weight_focus = raw.weight_focus || null;
-  profile.muscle_focus = raw.muscle_focus || null;
-  profile.health_focus = raw.health_focus || null;
-  profile.energy_focus = raw.energy_focus || null;
-  profile.recovery_focus = raw.recovery_focus || null;
+  profile.product_categories = Array.isArray(raw.product_categories)
+    ? raw.product_categories.map((c) => String(c).trim()).filter(Boolean)
+    : [];
   return profile;
 }
 
@@ -86,15 +103,7 @@ export function scorePortfolioAdvisorProduct(product, profile) {
   const goals = product.system_data?.goals || [];
   const text = productSearchText(product);
 
-  if (goals.includes(profile.priority)) score += 6;
-
-  const branchFields = ['weight_focus', 'muscle_focus', 'health_focus', 'energy_focus', 'recovery_focus'];
-  for (const field of branchFields) {
-    const branch = profile[field];
-    if (!branch) continue;
-    const kws = BRANCH_KEYWORD_BOOSTS[branch] || [];
-    if (kws.some((kw) => text.includes(kw))) score += 3;
-  }
+  if (goals.includes(profile.priority)) score += 4;
 
   if (profile.activity === 'regular') {
     if (goals.includes('muscle') || goals.includes('recovery')) score += 2;
@@ -108,8 +117,8 @@ export function scorePortfolioAdvisorProduct(product, profile) {
     score += 1;
   }
 
-  if (profile.selection_mode === 'single' && getProductPriceEur(product) > 50) {
-    score -= 0.5;
+  if (profile.selection_mode === 'single' && getProductPriceEur(product) > 80) {
+    score -= 0.3;
   }
 
   return score;
@@ -218,6 +227,8 @@ function attachGoals(product, group, settings) {
     search_text: [group.name, group.brand, group.category].filter(Boolean).join(' '),
   };
   product.system_data.goals = inferProductGoals(entry, settings);
+  product.system_data.portfolio.category = group.category || '';
+  product.system_data.portfolio.category_top = group.category_path?.[0] || '';
   return product;
 }
 
@@ -267,6 +278,9 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     throw new Error('Невалиден имейл адрес.');
   }
   if (!profile.priority) throw new Error('Липсва основна цел.');
+  if (!profile.product_categories?.length) {
+    throw new Error('Изберете поне една продуктова категория или „Всички категории“.');
+  }
 
   const allProducts = await loadPortfolioCatalogProducts(env);
   const eligible = filterPortfolioEligibleProducts(allProducts);
@@ -275,7 +289,12 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     throw new Error('Няма достатъчно налични продукти за персонална препоръка. Моля, опитайте по-късно.');
   }
 
-  const rankedResult = rankPortfolioAdvisorProducts(profile, eligible);
+  const categoryPool = filterProductsByCategories(eligible, profile.product_categories);
+  if (categoryPool.length < 3) {
+    throw new Error('Няма достатъчно продукти в избраните категории. Добавете още категории или изберете „Всички категории“.');
+  }
+
+  const rankedResult = rankPortfolioAdvisorProducts(profile, categoryPool);
 
   if (rankedResult.ranked.length < 3) {
     throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
@@ -291,7 +310,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     : { basic: '2-3', optimal: '3-5', premium: '4-6' };
 
   if (compositionMode === 'ai_pick') {
-    const { candidates, excluded_product_ids, exclusion_map } = buildCandidatePool(profile, eligible, {
+    const { candidates, excluded_product_ids, exclusion_map } = buildCandidatePool(profile, categoryPool, {
       priorityKeywords: GOAL_KEYWORD_HINTS,
     });
     if (candidates.length < 3) {
@@ -313,7 +332,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       exclusion_map,
       catalog_stats: {
         total_in_catalog: allProducts.length,
-        eligible_available: eligible.length,
+        eligible_available: categoryPool.length,
         ranked_pool_size: rankedResult.ranked.length,
         candidates_sent_to_ai: candidates.length,
       },
@@ -322,7 +341,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       profile,
       payload,
       candidates,
-      eligible,
+      eligible: categoryPool,
       ranked: rankedResult.ranked,
       excluded_product_ids,
       exclusion_map,
@@ -345,7 +364,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     exclusion_map: rankedResult.exclusion_map,
     catalog_stats: {
       total_in_catalog: allProducts.length,
-      eligible_available: eligible.length,
+      eligible_available: categoryPool.length,
       ranked_pool_size: rankedResult.ranked.length,
       candidates_sent_to_ai: 0,
     },
@@ -354,7 +373,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
   return {
     profile,
     payload,
-    eligible,
+    eligible: categoryPool,
     ranked: rankedResult.ranked,
     excluded_product_ids: rankedResult.excluded_product_ids,
     exclusion_map: rankedResult.exclusion_map,

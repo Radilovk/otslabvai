@@ -39,21 +39,19 @@ async function selectRadio(page, name, value) {
   await label.click();
 }
 
+async function selectCheckbox(page, name, value) {
+  const label = page.locator(`label.lpq-option:has(input[name="${name}"][value="${value}"])`);
+  await label.waitFor({ state: 'visible', timeout: 5000 });
+  await label.click();
+}
+
 async function selectExclusiveNone(page, name) {
   await selectRadio(page, name, 'none');
 }
 
-async function runFlow(page) {
-  await page.goto(`${BASE}/portfolio-advisor-quiz.html`, { waitUntil: 'networkidle' });
-  await page.evaluate(() => sessionStorage.removeItem('portfolioAdvisorDraft'));
-
-  check(await page.locator('.pf-header').count() > 0, 'Portfolio header visible');
-  check(await page.locator('#lpq-next').isVisible(), 'Quiz next button visible');
-
+async function completeCommonSteps(page, { priority = 'muscle', categories = ['all'] } = {}) {
   const next = () => page.click('#lpq-next');
 
-  await selectRadio(page, 'selection_mode', 'package');
-  await next();
   await selectRadio(page, 'sex', 'male');
   await next();
   await selectRadio(page, 'age_band', '25-34');
@@ -61,10 +59,16 @@ async function runFlow(page) {
   await page.locator('#height_cm').fill('180');
   await page.locator('#weight_kg').fill('80');
   await next();
-  await selectRadio(page, 'priority', 'muscle');
+  await selectRadio(page, 'priority', priority);
   await next();
-  await selectRadio(page, 'muscle_focus', 'protein');
+
+  check(await page.locator('#step-product_categories').isVisible(), 'Category step shown after priority');
+  for (const cat of categories) {
+    await page.waitForSelector(`input[name="product_categories"][value="${cat}"]`, { timeout: 15000 });
+    await selectCheckbox(page, 'product_categories', cat);
+  }
   await next();
+
   await selectRadio(page, 'activity', 'regular');
   await next();
   await selectRadio(page, 'diet', 'omnivore');
@@ -79,15 +83,72 @@ async function runFlow(page) {
   await next();
   await page.locator('#lpq-email').fill(`e2e-${Date.now()}@test.local`);
   await next();
+}
+
+async function waitForQuizReady(page) {
+  await page.waitForSelector('input[name="selection_mode"]', { timeout: 15000 });
+}
+
+async function runPackageFlow(page) {
+  await page.goto(`${BASE}/portfolio-advisor-quiz.html`, { waitUntil: 'networkidle' });
+  await page.evaluate(() => sessionStorage.removeItem('portfolioAdvisorDraft'));
+  await waitForQuizReady(page);
+
+  check(await page.locator('.pf-header').count() > 0, 'Portfolio header visible');
+  check(await page.locator('#lpq-next').isVisible(), 'Quiz next button visible');
+
+  await selectRadio(page, 'selection_mode', 'package');
+  await page.click('#lpq-next');
+
+  await completeCommonSteps(page, { priority: 'muscle', categories: ['all'] });
 
   await page.waitForURL(/portfolio-advisor-result/, { timeout: 45000 });
-  check(page.url().includes('portfolio-advisor-result'), 'Redirected to result page');
+  check(page.url().includes('portfolio-advisor-result'), 'Package flow redirected to result page');
   check(await page.locator('.lpr-tier').count() >= 3, 'Three tier cards rendered');
 
   await page.locator('[data-action="add-tier"]').first().click();
   await page.waitForTimeout(800);
   const cart = await page.evaluate(() => JSON.parse(localStorage.getItem('portfolioCart') || '[]'));
   check(cart.length > 0, 'Products added to portfolioCart');
+}
+
+async function getCatalogCategoryNames() {
+  const res = await fetch(`${BASE}/portfolio/bootstrap`);
+  const data = await res.json();
+  return (data.meta?.categories || []).map((c) => c.name).filter(Boolean);
+}
+
+async function runSingleFlow(page) {
+  const categoryNames = await getCatalogCategoryNames();
+  const selectedCategories = categoryNames.length >= 2
+    ? categoryNames.slice(0, 2)
+    : ['all'];
+
+  await page.goto(`${BASE}/portfolio-advisor-quiz.html`, { waitUntil: 'networkidle' });
+  await page.evaluate(() => sessionStorage.removeItem('portfolioAdvisorDraft'));
+  await waitForQuizReady(page);
+
+  await selectRadio(page, 'selection_mode', 'single');
+  await page.click('#lpq-next');
+
+  await completeCommonSteps(page, {
+    priority: 'muscle',
+    categories: selectedCategories,
+  });
+
+  await page.waitForURL(/portfolio-advisor-result/, { timeout: 45000 });
+  check(page.url().includes('portfolio-advisor-result'), 'Single flow redirected to result page');
+
+  const tierProductIds = await page.evaluate(() => {
+    const raw = sessionStorage.getItem('portfolioAdvisorResult')
+      || localStorage.getItem('portfolioAdvisorResultPersistent');
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    return ['basic', 'optimal', 'premium'].map((k) => data.tiers?.[k]?.products?.[0]?.product_id).filter(Boolean);
+  });
+
+  check(tierProductIds.length === 3, 'Single mode has 3 tier products');
+  check(new Set(tierProductIds).size === 3, 'Single mode tiers use 3 different products');
 }
 
 async function main() {
@@ -104,7 +165,8 @@ async function main() {
     logPass('Dev server ready');
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
-    await runFlow(page);
+    await runPackageFlow(page);
+    await runSingleFlow(page);
     await browser.close();
   } finally {
     server.kill('SIGTERM');

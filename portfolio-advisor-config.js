@@ -4,6 +4,20 @@
 
 import { PORTFOLIO_GOALS } from './portfolio-goals.js';
 
+/** Fallback категории ако bootstrap още не е зареден */
+export const FALLBACK_CATALOG_CATEGORIES = [
+  'Протеини',
+  'Витамини и минерали',
+  'Аминокиселини',
+  'Креатин',
+  'Отслабване',
+  'Хербални добавки',
+  'Омега мастни киселини',
+  'Стави и опорно-двигателна система',
+  'Енергия и фокус',
+  'Възстановяване и сън',
+];
+
 export const ADVISOR_STEPS = [
   {
     id: 'selection_mode',
@@ -13,7 +27,7 @@ export const ADVISOR_STEPS = [
     field: 'selection_mode',
     options: [
       { value: 'package', label: 'Пълен пакет — комбинация от продукти' },
-      { value: 'single', label: 'Един основен продукт' },
+      { value: 'single', label: 'Един основен продукт (3 ценови варианта)' },
     ],
   },
   {
@@ -50,7 +64,7 @@ export const ADVISOR_STEPS = [
   {
     id: 'priority',
     title: 'Основна цел',
-    hint: 'Същите категории като филтъра „Цел“ в каталога.',
+    hint: 'За персонализация на ползите и приоритета — не ограничава категориите по-долу.',
     type: 'single',
     field: 'priority',
     options: [
@@ -148,76 +162,6 @@ export const ADVISOR_STEPS = [
   },
 ];
 
-/** Допълнителни стъпки по избрана цел (същите ID като PORTFOLIO_GOALS). */
-export const GOAL_BRANCH_STEPS = {
-  otshalvane: {
-    id: 'branch_otshalvane',
-    title: 'Отслабване — фокус',
-    type: 'single',
-    field: 'weight_focus',
-    options: [
-      { value: 'fat_burn', label: 'Изгаряне на мазнини / термогенни' },
-      { value: 'appetite', label: 'Контрол на апетита' },
-      { value: 'metabolism', label: 'Метаболизъм и енергия' },
-    ],
-  },
-  muscle: {
-    id: 'branch_muscle',
-    title: 'Мускулна маса — фокус',
-    type: 'single',
-    field: 'muscle_focus',
-    options: [
-      { value: 'protein', label: 'Протеин и аминокиселини' },
-      { value: 'strength', label: 'Сила и креатин' },
-      { value: 'mass', label: 'Гейнър / маса' },
-    ],
-  },
-  health: {
-    id: 'branch_health',
-    title: 'Здраве — фокус',
-    type: 'single',
-    field: 'health_focus',
-    options: [
-      { value: 'immunity', label: 'Имунитет и сезонна защита' },
-      { value: 'vitamins', label: 'Витамини и минерали' },
-      { value: 'joints', label: 'Стави и опорно-двигателна система' },
-    ],
-  },
-  antiaging: {
-    id: 'branch_antiaging',
-    title: 'Антиейджинг — фокус',
-    type: 'single',
-    field: 'sun_exposure',
-    options: [
-      { value: 'rare', label: 'Рядко излагане на слънце' },
-      { value: 'moderate', label: 'Умерено излагане' },
-      { value: 'frequent', label: 'Често излагане / активен на открито' },
-    ],
-  },
-  energy: {
-    id: 'branch_energy',
-    title: 'Енергия — фокус',
-    type: 'single',
-    field: 'energy_focus',
-    options: [
-      { value: 'preworkout', label: 'Преди тренировка / стимуланти' },
-      { value: 'daily', label: 'Дневна енергия без кофеин' },
-      { value: 'focus', label: 'Фокус и концентрация' },
-    ],
-  },
-  recovery: {
-    id: 'branch_recovery',
-    title: 'Възстановяване — фокус',
-    type: 'single',
-    field: 'recovery_focus',
-    options: [
-      { value: 'sleep', label: 'Сън и релакс' },
-      { value: 'muscle', label: 'Мускулно възстановяване' },
-      { value: 'stress', label: 'Стрес и адаптогени' },
-    ],
-  },
-};
-
 export const PRIORITY_LABELS = Object.fromEntries(
   PORTFOLIO_GOALS.map((g) => [g.id, g.label])
 );
@@ -225,17 +169,38 @@ export const PRIORITY_LABELS = Object.fromEntries(
 export const GOAL_IDS = PORTFOLIO_GOALS.map((g) => g.id);
 
 /**
- * Динамични стъпки: базови + клон по цел + бременност (жени) + контакт.
- * @param {object} answers
+ * Стъпка за избор на продуктови категории (от каталога).
+ * @param {{ name: string, count?: number }[]} catalogCategories
  */
-export function buildActiveAdvisorSteps(answers = {}) {
+export function buildCategoryStep(catalogCategories = []) {
+  const cats = catalogCategories.length ? catalogCategories : FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name }));
+  return {
+    id: 'product_categories',
+    title: 'В какви категории да търсим?',
+    hint: 'Изберете една или повече категории от каталога — независимо от основната цел. Напр. при „мускулна маса“ може да искате витамини или билки, не само протеин.',
+    type: 'multi',
+    field: 'product_categories',
+    options: [
+      { value: 'all', label: 'Всички категории', exclusive: true },
+      ...cats.map((c) => ({
+        value: c.name,
+        label: c.count != null ? `${c.name} (${c.count})` : c.name,
+      })),
+    ],
+  };
+}
+
+/**
+ * @param {object} answers
+ * @param {{ name: string, count?: number }[]} catalogCategories
+ */
+export function buildActiveAdvisorSteps(answers = {}, catalogCategories = []) {
   const steps = [];
-  const priority = answers.priority;
 
   for (const step of ADVISOR_STEPS) {
     steps.push(step);
-    if (step.field === 'priority' && priority && GOAL_BRANCH_STEPS[priority]) {
-      steps.push(GOAL_BRANCH_STEPS[priority]);
+    if (step.field === 'priority') {
+      steps.push(buildCategoryStep(catalogCategories));
     }
   }
 

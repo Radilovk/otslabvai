@@ -40,6 +40,7 @@ import {
   preparePortfolioAdvisorSubmission,
   finalizePortfolioAdvisorResponse,
   getPortfolioComposeOptions,
+  composePortfolioAdvisorStacks,
 } from './portfolio-advisor-engine.js';
 import {
   loadPortfolioAdvisorSettings,
@@ -2275,14 +2276,14 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
       }
     }
   } else if (useMockAi) {
-    const composed = composeProtocolStacks(profile, ranked, composeOptions);
+    const composed = composePortfolioAdvisorStacks(profile, ranked, composeOptions);
     const productMap = new Map(eligible.map((p) => [p.product_id, p]));
     payload.composed_meta = composed.meta;
     const narration = buildMockNarration(composed, profile);
     const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
     recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds);
   } else {
-    const composed = composeProtocolStacks(profile, ranked, composeOptions);
+    const composed = composePortfolioAdvisorStacks(profile, ranked, composeOptions);
     const productMap = new Map(eligible.map((p) => [p.product_id, p]));
     payload.composed_meta = composed.meta;
     const promptTemplate = settings.narrator_prompt || getDefaultPortfolioNarratorPrompt();
@@ -2399,6 +2400,7 @@ async function handlePortfolioAdvisorSimulate(request, env) {
     height_cm: 180,
     weight_kg: 82,
     priority: 'muscle',
+    product_categories: ['all'],
     conditions: ['none'],
     medications: ['none'],
     activity: 'regular',
