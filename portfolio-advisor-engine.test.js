@@ -1,6 +1,8 @@
 import { jest } from '@jest/globals';
 import {
   filterPortfolioEligibleProducts,
+  filterProductsByCategories,
+  productMatchesCategories,
   enrichPortfolioProductItem,
   getPortfolioComposeOptions,
   preparePortfolioAdvisorSubmission,
@@ -104,6 +106,7 @@ describe('preparePortfolioAdvisorSubmission', () => {
     height_cm: 180,
     weight_kg: 80,
     priority: 'muscle',
+    product_categories: ['all'],
     conditions: ['none'],
     medications: ['none'],
     activity: 'regular',
@@ -132,6 +135,23 @@ describe('preparePortfolioAdvisorSubmission', () => {
     expect(profile.priority).toBe('muscle');
     const fallback = buildPortfolioAdvisorProfile({ email: 'a@b.com' });
     expect(fallback.priority).toBe('health');
+  });
+
+  test('отхвърля липсващи категории', async () => {
+    await expect(
+      preparePortfolioAdvisorSubmission(mockEnv, { ...sampleAnswers, product_categories: [] })
+    ).rejects.toThrow(/категор/i);
+  });
+
+  test('филтрира по избрани категории', () => {
+    const protein = makeProduct();
+    protein.system_data.portfolio.category_top = 'Протеини';
+    const vitamin = makeProduct({ product_id: 'prod-pf-201' });
+    vitamin.system_data.portfolio.category_top = 'Витамини';
+    const filtered = filterProductsByCategories([protein, vitamin], ['Витамини']);
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].product_id).toBe(vitamin.product_id);
+    expect(productMatchesCategories(protein, ['all'])).toBe(true);
   });
 
   test('scorePortfolioAdvisorProduct boost при съвпадение на goal', () => {

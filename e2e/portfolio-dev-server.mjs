@@ -11,10 +11,10 @@ import {
   preparePortfolioAdvisorSubmission,
   finalizePortfolioAdvisorResponse,
   getPortfolioComposeOptions,
+  composePortfolioAdvisorStacks,
 } from '../portfolio-advisor-engine.js';
 import { getDefaultPortfolioAdvisorSettings } from '../portfolio-advisor-settings.js';
 import {
-  composeProtocolStacks,
   assembleProtocolFromComposition,
   buildMockNarration,
 } from '../protocol-stack-composer.js';
@@ -41,24 +41,46 @@ function seedMinimalCatalog() {
     },
     {
       group_id: '1003', product_id: 'p3', name: 'Multivitamin Complex', brand: 'TestBrand', brand_id: '1',
-      category: 'Витамини', category_path: ['Витамини'], image: '',
+      category: 'Витамини и минерали', category_path: ['Витамини и минерали'], image: '',
       variants: [{ sku_id: '103', pack: '60 caps', option: '', b2b_price: 10, retail_price: 18.0, available: true, image: '' }],
     },
     {
       group_id: '1004', product_id: 'p4', name: 'Omega 3 Fish Oil', brand: 'TestBrand', brand_id: '1',
-      category: 'Омега', category_path: ['Омега'], image: '',
+      category: 'Омега мастни киселини', category_path: ['Омега мастни киселини'], image: '',
       variants: [{ sku_id: '104', pack: '90 caps', option: '', b2b_price: 12, retail_price: 22.0, available: true, image: '' }],
+    },
+    {
+      group_id: '1005', product_id: 'p5', name: 'Budget Whey', brand: 'TestBrand', brand_id: '1',
+      category: 'Протеини > Whey', category_path: ['Протеини', 'Whey'], image: '',
+      variants: [{ sku_id: '105', pack: '900g', option: '', b2b_price: 6, retail_price: 9.9, available: true, image: '' }],
+    },
+    {
+      group_id: '1006', product_id: 'p6', name: 'Premium Isolate', brand: 'TestBrand', brand_id: '1',
+      category: 'Протеини > Whey', category_path: ['Протеини', 'Whey'], image: '',
+      variants: [{ sku_id: '106', pack: '1kg', option: '', b2b_price: 35, retail_price: 59.9, available: true, image: '' }],
+    },
+    {
+      group_id: '1007', product_id: 'p7', name: 'Ashwagandha Root', brand: 'TestBrand', brand_id: '1',
+      category: 'Хербални добавки', category_path: ['Хербални добавки'], image: '',
+      variants: [{ sku_id: '107', pack: '60 caps', option: '', b2b_price: 7, retail_price: 12.5, available: true, image: '' }],
     },
   ];
   const meta = {
     version: 1, chunk_size: 150, chunk_count: 1, total_groups: groups.length,
     lookup: Object.fromEntries(groups.map((g) => [g.group_id, 0])),
     index: groups.map((g) => ({ group_id: g.group_id, name: g.name, available: true })),
+    categories: [
+      { name: 'Протеини', count: 3 },
+      { name: 'Креатин', count: 1 },
+      { name: 'Витамини и минерали', count: 1 },
+      { name: 'Омега мастни киселини', count: 1 },
+      { name: 'Хербални добавки', count: 1 },
+    ],
   };
   kvStore.set('portfolio_meta', JSON.stringify(meta));
   kvStore.set('portfolio_chunk_0', JSON.stringify(groups));
   kvStore.set('portfolio_settings', JSON.stringify({ product_overrides: {}, global_markup_percent: 30 }));
-  console.log('Seeded minimal catalog for dev/E2E (4 groups)');
+  console.log('Seeded minimal catalog for dev/E2E (7 groups)');
 }
 
 function loadKvFromDisk() {
@@ -118,7 +140,7 @@ app.use(express.json({ limit: '2mb' }));
 async function runAdvisorMockGeneration(env, rawAnswers) {
   const prepared = await preparePortfolioAdvisorSubmission(env, rawAnswers);
   const { profile, payload, ranked, eligible, excluded_product_ids: excludedIds } = prepared;
-  const composed = composeProtocolStacks(profile, ranked, getPortfolioComposeOptions(profile));
+  const composed = composePortfolioAdvisorStacks(profile, ranked, getPortfolioComposeOptions(profile));
   const productMap = new Map(eligible.map((p) => [p.product_id, p]));
   const narration = buildMockNarration(composed, profile);
   const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedIds);
@@ -160,7 +182,7 @@ app.post('/portfolio-advisor/simulate', async (req, res) => {
       height_cm: 180,
       weight_kg: 82,
       priority: 'muscle',
-      muscle_focus: 'protein',
+      product_categories: ['all'],
       conditions: ['none'],
       medications: ['none'],
       activity: 'regular',
