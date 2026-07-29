@@ -18,6 +18,11 @@ import {
 } from './protocol-quiz-engine.js';
 import { getMustIncludeKeywords, getExclusionReasons, productSearchText, productMatchesAnyKeyword } from './protocol-safety-rules.js';
 import { composePortfolioAdvisorStacks } from './portfolio-advisor-compose.js';
+import {
+  filterAdvisorRetailProducts,
+  isAdvisorExcludedProduct,
+  sanitizeAdvisorProductName,
+} from './portfolio-advisor-catalog.js';
 
 export { composePortfolioAdvisorStacks };
 
@@ -48,8 +53,11 @@ export const PORTFOLIO_SINGLE_TIER_META = {
   premium: { name: 'Премиум избор', tagline: 'Топ марка и формула' },
 };
 
-export function filterPortfolioEligibleProducts(products) {
-  return products.filter((p) => isProductAvailable(p) && !isPeptideOrInjectable(p));
+export function filterPortfolioEligibleProducts(products, options = {}) {
+  return filterAdvisorRetailProducts(
+    products.filter((p) => isProductAvailable(p) && !isPeptideOrInjectable(p)),
+    { selectionMode: options.selectionMode }
+  );
 }
 
 const BRANCH_KEYWORD_BOOSTS = {
@@ -130,8 +138,11 @@ export function scorePortfolioAdvisorProduct(product, profile) {
     score += 1;
   }
 
-  if (profile.selection_mode === 'single' && getProductPriceEur(product) > 80) {
-    score -= 0.3;
+  if (profile.selection_mode === 'single') {
+    if (isAdvisorExcludedProduct(product)) return -Infinity;
+    const price = getProductPriceEur(product);
+    if (price < 5) return -Infinity;
+    if (price > 80) score -= 0.3;
   }
 
   return score;
@@ -150,10 +161,11 @@ export function rankPortfolioAdvisorProducts(profile, products) {
     ranked.push({ product, score: scorePortfolioAdvisorProduct(product, profile) });
   }
 
-  ranked.sort((a, b) => b.score - a.score);
+  const finiteRanked = ranked.filter((entry) => Number.isFinite(entry.score));
+  finiteRanked.sort((a, b) => b.score - a.score);
 
   return {
-    ranked,
+    ranked: finiteRanked,
     excluded_product_ids: Array.from(excluded.keys()),
     exclusion_map: Object.fromEntries(excluded),
   };
@@ -173,8 +185,8 @@ export function enrichPortfolioProductItem(item, product) {
 
   return {
     ...item,
-    name: product.public_data?.name,
-    brand: product.public_data?.brand,
+    name: sanitizeAdvisorProductName(product.public_data?.name),
+    brand: sanitizeAdvisorProductName(product.public_data?.brand),
     price_eur: Math.round(priceEur * 100) / 100,
     price_bgn: eurToBgn(priceEur),
     image_url: variant?.image_url || product.public_data?.image_url || '',
@@ -246,6 +258,9 @@ function attachGoals(product, group, settings) {
   product.system_data.goals = inferProductGoals(entry, settings);
   product.system_data.portfolio.category = group.category || '';
   product.system_data.portfolio.category_top = group.category_path?.[0] || '';
+  product.system_data.portfolio.variant_labels = (group.variants || [])
+    .map((v) => [v.pack, v.option].filter(Boolean).join(' • '))
+    .filter(Boolean);
   return product;
 }
 
@@ -300,7 +315,9 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
   }
 
   const allProducts = await loadPortfolioCatalogProducts(env);
-  const eligible = filterPortfolioEligibleProducts(allProducts);
+  const eligible = filterPortfolioEligibleProducts(allProducts, {
+    selectionMode: profile.selection_mode,
+  });
 
   if (eligible.length < 3) {
     throw new Error('Няма достатъчно налични продукти за персонална препоръка. Моля, опитайте по-късно.');

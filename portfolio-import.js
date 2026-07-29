@@ -17,6 +17,10 @@ import {
   LIFE_CATEGORY_DEFS
 } from './life-category-assign.js';
 
+function decodeName(text) {
+  return decodeHtmlEntities(text || '').replace(/\s+/g, ' ').trim();
+}
+
 export class PortfolioImportError extends Error {
   constructor(message, status = 500) {
     super(message);
@@ -44,17 +48,22 @@ export const IMPORT_PROJECTS = {
 };
 
 /** Премахва HTML тагове и нормализира whitespace (описанията от Fitness1 са HTML). */
-export function stripHtml(html) {
-  if (!html) return '';
-  return String(html)
-    .replace(/<\s*(br|\/p|\/div|\/li|\/h[1-6])\s*\/?\s*>/gi, '\n')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
+export function decodeHtmlEntities(text) {
+  if (!text) return '';
+  return String(text)
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#0?39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+}
+
+export function stripHtml(html) {
+  if (!html) return '';
+  return decodeHtmlEntities(String(html))
+    .replace(/<\s*(br|\/p|\/div|\/li|\/h[1-6])\s*\/?\s*>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
     .replace(/[ \t]+/g, ' ')
     .replace(/\s*\n\s*/g, '\n')
     .trim();
@@ -139,7 +148,7 @@ export function htmlToStructuredContent(html, productName = '') {
  */
 export function portfolioGroupToSiteProduct(group) {
   const variants = (group.variants || []).map((v) => ({
-    option_name: [v.pack, v.option].filter(Boolean).join(' • '),
+    option_name: decodeName([v.pack, v.option].filter(Boolean).join(' • ')),
     sku: String(v.sku_id || ''),
     price: Number(v.retail_price) || 0,
     ean: v.barcode || '',
@@ -155,14 +164,16 @@ export function portfolioGroupToSiteProduct(group) {
 
   const packs = [...new Set((group.variants || []).map((v) => v.pack).filter(Boolean))];
   const anyAvailable = variants.some((v) => v.available);
-  const structured = htmlToStructuredContent(group.description || '', group.name || '');
+  const productName = decodeName(group.name || '');
+  const brandName = decodeName(group.brand || '');
+  const structured = htmlToStructuredContent(group.description || '', productName);
 
   return {
     product_id: `prod-pf-${group.group_id}`,
     display_order: 0,
     public_data: {
-      name: group.name || '',
-      brand: group.brand || '',
+      name: productName,
+      brand: brandName,
       price,
       tagline: '',
       description: structured.description,
@@ -178,7 +189,7 @@ export function portfolioGroupToSiteProduct(group) {
       variants
     },
     system_data: {
-      manufacturer: group.brand || '',
+      manufacturer: brandName,
       application_type: 'Oral',
       inventory: anyAvailable ? 10 : 0,
       goals: [],

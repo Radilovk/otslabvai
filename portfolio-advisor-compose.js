@@ -3,7 +3,11 @@
  */
 
 import { composeProtocolStacks } from './protocol-stack-composer.js';
-import { getProductPriceEur } from './protocol-quiz-engine.js';
+import {
+  filterAdvisorRetailProducts,
+  pickSingleModeBasicProduct,
+  pickSingleModePremiumProduct,
+} from './portfolio-advisor-catalog.js';
 
 function toStackItem(product) {
   return {
@@ -21,7 +25,10 @@ function toStackItem(product) {
  * - premium: премиум / по-скъп вариант
  */
 export function composeSingleProductOptions(rankedEntries, tierMeta) {
-  const candidates = rankedEntries.map((e) => e.product);
+  const candidates = filterAdvisorRetailProducts(
+    rankedEntries.map((e) => e.product),
+    { selectionMode: 'single' }
+  );
   if (!candidates.length) {
     throw new Error('Няма кандидати за единичен продукт.');
   }
@@ -29,14 +36,18 @@ export function composeSingleProductOptions(rankedEntries, tierMeta) {
   const optimal = candidates[0];
   const others = candidates.filter((p) => p.product_id !== optimal.product_id);
 
-  const pickCheapest = (list) => [...list].sort((a, b) => getProductPriceEur(a) - getProductPriceEur(b))[0];
-  const pickPriciest = (list) => [...list].sort((a, b) => getProductPriceEur(b) - getProductPriceEur(a))[0];
+  let basic = pickSingleModeBasicProduct(others.length ? others : candidates.filter((p) => p.product_id !== optimal.product_id));
+  if (!basic || basic.product_id === optimal.product_id) {
+    basic = pickSingleModeBasicProduct(candidates) || optimal;
+  }
 
-  let basic = others.length ? pickCheapest(others) : candidates[1] || optimal;
-  let premium = others.length ? pickPriciest(others) : candidates[2] || optimal;
+  const excludeForPremium = new Set([optimal.product_id, basic.product_id]);
+  let premium = pickSingleModePremiumProduct(others.length ? others : candidates, excludeForPremium);
+  if (!premium || excludeForPremium.has(premium.product_id)) {
+    premium = pickSingleModePremiumProduct(candidates, new Set([optimal.product_id])) || optimal;
+  }
 
   const ensureDistinct = () => {
-    const picks = { optimal, basic, premium };
     const ids = new Set([optimal.product_id, basic.product_id, premium.product_id]);
     if (ids.size >= 3 || candidates.length < 3) return;
 
@@ -44,11 +55,11 @@ export function composeSingleProductOptions(rankedEntries, tierMeta) {
     if (!unused.length) return;
 
     if (basic.product_id === optimal.product_id) {
-      basic = pickCheapest(unused) || unused[0];
+      basic = pickSingleModeBasicProduct(unused) || unused[0];
     }
     if (premium.product_id === optimal.product_id || premium.product_id === basic.product_id) {
       const pool = candidates.filter((p) => p.product_id !== optimal.product_id && p.product_id !== basic.product_id);
-      premium = pickPriciest(pool) || pool[0] || premium;
+      premium = pickSingleModePremiumProduct(pool) || pool[0] || premium;
     }
   };
 
