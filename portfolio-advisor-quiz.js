@@ -13,7 +13,8 @@ const loadingCard = document.getElementById('lpq-loading');
 const answers = loadDraft();
 const OTHER_VALUE = 'other';
 const OTHER_MAX_WORDS = 8;
-let catalogCategories = FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name }));
+let catalogCategories = [];
+let catalogCategoriesReady = false;
 
 function otherFieldKey(field) {
   return `${field}_other`;
@@ -251,6 +252,10 @@ function validateCurrentStep() {
     showError(step.id, 'Моля, изберете поне една опция или „Нищо от изброените“.');
     return false;
   }
+  if ((step.field === 'product_categories' || step.field === 'product_category') && !catalogCategoriesReady) {
+    showError(step.id, 'Категориите се зареждат. Моля, изчакайте секунда и опитайте отново.');
+    return false;
+  }
   if (step.type === 'multi' && !validateOtherText(step)) return false;
   if (step.type === 'body') {
     const h = Number(document.getElementById('height_cm')?.value);
@@ -343,16 +348,24 @@ nextBtn.addEventListener('click', async () => {
 });
 
 async function loadCatalogCategories() {
-  try {
-    const res = await fetch(`${API_URL}/portfolio/bootstrap`, { cache: 'no-cache' });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (Array.isArray(data?.meta?.categories) && data.meta.categories.length) {
-      catalogCategories = data.meta.categories;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const res = await fetch(`${API_URL}/portfolio/bootstrap`, { cache: 'no-cache' });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (Array.isArray(data?.meta?.categories) && data.meta.categories.length) {
+        catalogCategories = data.meta.categories;
+        catalogCategoriesReady = true;
+        return true;
+      }
+    } catch {
+      /* retry */
     }
-  } catch {
-    /* offline / fallback categories */
+    await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
   }
+  catalogCategories = FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name }));
+  catalogCategoriesReady = true;
+  return false;
 }
 
 async function checkQuizEnabled() {

@@ -2272,7 +2272,6 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
         recommendation = finalizePortfolioAdvisorResponse(parsed, eligible, excludedProductIds, finalizeOpts);
       } catch (e) {
         console.warn('Portfolio advisor AI failed, using deterministic fallback:', e.message || e);
-        if (!isProtocolAIRecoverableError(e)) throw e;
         const mock = buildMockProtocolResponse(candidates, profile, { ranked });
         recommendation = finalizePortfolioAdvisorResponse(mock, eligible, excludedProductIds, finalizeOpts);
       }
@@ -2298,7 +2297,6 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
       recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts);
     } catch (e) {
       console.warn('Portfolio advisor narrator AI failed, using deterministic fallback:', e.message || e);
-      if (!isProtocolAIRecoverableError(e)) throw e;
       const narration = buildPortfolioAdvisorNarration(composed, profile, productMap);
       const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
       recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts);

@@ -7,6 +7,7 @@ import {
   getPortfolioComposeOptions,
   preparePortfolioAdvisorSubmission,
   buildPortfolioAdvisorProfile,
+  normalizeAdvisorCategories,
   scorePortfolioAdvisorProduct,
   rankPortfolioAdvisorProducts,
   PORTFOLIO_PACKAGE_TIER_LIMITS,
@@ -137,10 +138,13 @@ describe('preparePortfolioAdvisorSubmission', () => {
     expect(fallback.priority).toBe('health');
   });
 
-  test('отхвърля липсващи категории', async () => {
-    await expect(
-      preparePortfolioAdvisorSubmission(mockEnv, { ...sampleAnswers, product_categories: [] })
-    ).rejects.toThrow(/категор/i);
+  test('нормализира липсващи категории към all', () => {
+    expect(normalizeAdvisorCategories({ selection_mode: 'package', product_categories: [] })).toEqual(['all']);
+    expect(buildPortfolioAdvisorProfile({
+      selection_mode: 'single',
+      email: 'a@b.com',
+      priority: 'muscle',
+    }).product_categories).toEqual(['all']);
   });
 
   test('филтрира по избрани категории', () => {

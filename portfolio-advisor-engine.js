@@ -92,11 +92,13 @@ export function normalizeAdvisorCategories(raw) {
     const cat = raw.product_category
       ?? (Array.isArray(raw.product_categories) ? raw.product_categories[0] : raw.product_categories);
     const val = String(cat || '').trim();
-    return val ? [val] : [];
+    if (val) return [val];
+    return ['all'];
   }
-  return Array.isArray(raw.product_categories)
+  const list = Array.isArray(raw.product_categories)
     ? raw.product_categories.map((c) => String(c).trim()).filter(Boolean)
     : [];
+  return list.length ? list : ['all'];
 }
 
 /** Portfolio профил с категории за търсене */
