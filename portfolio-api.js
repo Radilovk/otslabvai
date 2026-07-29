@@ -23,6 +23,7 @@ import {
   normalizePricingPolicy,
   applyPromoCodePrice
 } from './portfolio-pricing.js';
+import { decodeHtmlEntities } from './portfolio-import.js';
 
 export {
   filterIndex,
@@ -277,8 +278,8 @@ export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
       groups.set(gid, {
         group_id: gid,
         product_id: p.product_id,
-        name: p.product_name,
-        brand: p.brand_name,
+        name: decodeHtmlEntities(p.product_name || '').replace(/\s+/g, ' ').trim(),
+        brand: decodeHtmlEntities(p.brand_name || '').replace(/\s+/g, ' ').trim(),
         brand_id: String(p.brand_id),
         category: p.category || '',
         category_path: (p.category || '').split(' > ').filter(Boolean),

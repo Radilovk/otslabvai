@@ -26,7 +26,7 @@ describe('composeSingleProductOptions', () => {
       makeRanked(1, 'Premium Whey', 55),
       makeRanked(2, 'Creatine', 12),
       makeRanked(3, 'Multivitamin', 18),
-      makeRanked(4, 'Budget Protein', 9),
+      makeRanked(4, 'Budget Protein', 15),
     ];
 
     const composed = composeSingleProductOptions(ranked, PORTFOLIO_SINGLE_TIER_META);
@@ -35,6 +35,21 @@ describe('composeSingleProductOptions', () => {
     expect(new Set(ids).size).toBe(3);
     expect(composed.meta.distinct_products).toBe(3);
     expect(ids[1]).toBe(ranked[0].product.product_id);
+  });
+
+  test('не предлага мостра за basic tier', () => {
+    const ranked = [
+      makeRanked(1, 'Optimal Whey', 40),
+      makeRanked(2, 'Creatine 300g', 14),
+      makeRanked(3, 'Sample мостра', 2.5),
+    ];
+    ranked[2].product.public_data.variants = [{ option_name: '1 бр.', price: 2.5, available: true, sku: '3' }];
+    ranked[2].product.system_data.portfolio.variant_labels = ['1 бр.'];
+
+    const composed = composeSingleProductOptions(ranked, PORTFOLIO_SINGLE_TIER_META);
+    const basicId = composed.tiers.basic.products[0].product_id;
+    expect(basicId).not.toBe(ranked[2].product.product_id);
+    expect(basicId).toBe(ranked[1].product.product_id);
   });
 });
 
