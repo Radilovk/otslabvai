@@ -505,8 +505,8 @@ async function fetchFitness1Catalog(apiKey, { description = false } = {}) {
       'Accept-Encoding': 'identity',
       'Accept-Language': 'bg-BG,bg;q=0.9,en;q=0.8',
       'User-Agent': 'Mozilla/5.0 (compatible; BiocodePortfolio/1.0; +https://daotslabna.com)',
+      'Cache-Control': 'no-cache',
     },
-    cf: { cacheTtl: 0 },
   });
   const text = await response.text();
 
