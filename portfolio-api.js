@@ -49,26 +49,19 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function getFitness1ApiKeyCandidates(env) {
-  const seen = new Set();
-  /** @type {string[]} */
-  const keys = [];
-  const add = (value) => {
-    const key = String(value || '').trim();
-    if (!key || seen.has(key)) return;
-    seen.add(key);
-    keys.push(key);
-  };
-
-  const kvKey = await env.PAGE_CONTENT?.get(KV_FITNESS1_KEY);
-  add(kvKey);
-  add(env.FITNESS1_API_KEY);
-  return keys;
+function normalizeFitness1ApiKey(raw) {
+  if (!raw) return '';
+  let key = String(raw).trim();
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+    key = key.slice(1, -1).trim();
+  }
+  return key;
 }
 
 export async function getFitness1ApiKey(env) {
-  const keys = await getFitness1ApiKeyCandidates(env);
-  return keys[0] || null;
+  const raw = env.FITNESS1_API_KEY || await env.PAGE_CONTENT?.get(KV_FITNESS1_KEY);
+  const key = normalizeFitness1ApiKey(raw);
+  return key || null;
 }
 
 export const DEFAULT_SETTINGS = {
@@ -484,132 +477,42 @@ async function getGroupFromChunks(env, meta, groupId) {
   return chunk.find((g) => g.group_id === groupId) || null;
 }
 
-function isFitness1AuthError(message) {
-  return /api\s*key|ключ|missing or wrong/i.test(String(message || ''));
-}
-
-/** URL по официалната Fitness1 B2B документация (key в query; description=1 по избор). */
-export function buildFitness1ProductsUrl(apiKey, { description = false } = {}) {
+async function fetchFitness1Catalog(apiKey, { description = false } = {}) {
   let url = `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(apiKey)}`;
   if (description) url += '&description=1';
-  return url;
-}
 
-async function fetchFitness1Json(apiKey, { description = false } = {}) {
-  const url = buildFitness1ProductsUrl(apiKey, { description });
-  const retryDelays = [0, 1000, 2500];
-  /** @type {PortfolioError | null} */
-  let lastError = null;
+  const response = await fetch(url);
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new PortfolioError(`Fitness1 API грешка: ${response.status} (невалиден JSON)`, 502);
+  }
 
-  for (const delay of retryDelays) {
-    if (delay) await sleep(delay);
-
-    const response = await fetch(url, {
-      headers: { Accept: 'application/json' },
-    });
-
-    let data = null;
-    try {
-      data = await response.json();
-    } catch {
-      data = null;
-    }
-
-    const bodyError = data?.error || data?.message || '';
-
-    if (response.ok && data?.status === 'ok') {
-      return data;
-    }
-
-    if (data?.status === 'error' && isFitness1AuthError(bodyError)) {
-      throw new PortfolioError(`Fitness1 API ключ: ${bodyError}`, 502);
-    }
-
-    if (response.status >= 500 || response.status === 429) {
-      lastError = new PortfolioError(
-        `Fitness1 API временна грешка: ${response.status}${bodyError ? ` — ${bodyError}` : ''}`,
-        502
-      );
-      continue;
-    }
-
+  if (!response.ok) {
+    const detail = data?.error || data?.message || '';
     throw new PortfolioError(
-      `Fitness1 API грешка: ${response.status}${bodyError ? ` — ${bodyError}` : ''}`,
+      `Fitness1 API грешка: ${response.status}${detail ? ` — ${detail}` : ''}`,
       502
     );
   }
-
-  throw lastError || new PortfolioError('Fitness1 API не отговори след няколко опита.', 502);
+  if (data.status !== 'ok') {
+    throw new PortfolioError(data.error || 'Невалиден отговор от Fitness1 API.', 502);
+  }
+  return data;
 }
 
 export async function fetchFitness1Products(apiKey) {
-  const data = await fetchFitness1Json(apiKey);
+  const data = await fetchFitness1Catalog(apiKey);
   if (!Array.isArray(data.products)) {
     throw new PortfolioError('Невалиден отговор от Fitness1 API.', 502);
   }
   return data.products;
 }
 
-export async function checkFitness1ApiConnection(env) {
-  const keys = await getFitness1ApiKeyCandidates(env);
-  if (!keys.length) {
-    return { ok: false, error: 'Липсва API ключ (KV fitness1_api_key или Worker secret FITNESS1_API_KEY).' };
-  }
-
-  /** @type {Array<{source: string, ok: boolean, error?: string}>} */
-  const attempts = [];
-  const kvKey = await env.PAGE_CONTENT?.get(KV_FITNESS1_KEY);
-  const sources = [];
-  if (kvKey) sources.push('kv');
-  if (env.FITNESS1_API_KEY) sources.push('secret');
-
-  for (let i = 0; i < keys.length; i += 1) {
-    const apiKey = keys[i];
-    const source = sources[i] || `key-${i + 1}`;
-    try {
-      const data = await fetchFitness1Json(apiKey);
-      const count = Array.isArray(data.products) ? data.products.length : 0;
-      attempts.push({ source, ok: true });
-      return { ok: true, source, product_count: count, attempts };
-    } catch (e) {
-      attempts.push({ source, ok: false, error: e?.message || String(e) });
-    }
-  }
-
-  return {
-    ok: false,
-    error: 'Нито един конфигуриран Fitness1 ключ не работи.',
-    attempts,
-  };
-}
-
-async function fetchFitness1ProductsForEnv(env) {
-  const keys = await getFitness1ApiKeyCandidates(env);
-  if (!keys.length) {
-    throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран (Worker secret или KV fitness1_api_key).', 500);
-  }
-
-  /** @type {PortfolioError | null} */
-  let lastError = null;
-  for (const apiKey of keys) {
-    try {
-      const products = await fetchFitness1Products(apiKey);
-      return { products, apiKey };
-    } catch (e) {
-      if (e instanceof PortfolioError && isFitness1AuthError(e.message)) {
-        lastError = e;
-        continue;
-      }
-      throw e;
-    }
-  }
-
-  throw lastError || new PortfolioError('Fitness1 API ключът не е валиден.', 502);
-}
-
 export async function fetchDescriptionMap(apiKey) {
   try {
-    const data = await fetchFitness1Json(apiKey, { description: true });
+    const data = await fetchFitness1Catalog(apiKey, { description: true });
     if (!Array.isArray(data.products)) return new Map();
 
     const map = new Map();
@@ -619,18 +522,18 @@ export async function fetchDescriptionMap(apiKey) {
     }
     return map;
   } catch {
-    // Descriptions are non-critical — sync still succeeds with prices/stock,
-    // individual product pages fall back to the on-demand fetch.
     return new Map();
   }
 }
 
 export async function syncPortfolioCatalog(env, { includeDescriptions = false } = {}) {
-  const { products: rawProducts, apiKey } = await fetchFitness1ProductsForEnv(env);
+  const apiKey = await getFitness1ApiKey(env);
+  if (!apiKey) {
+    throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран (Worker secret или KV fitness1_api_key).', 500);
+  }
 
   const settings = await getSettings(env);
-
-  // Admin sync fetches descriptions once so product pages avoid on-demand F1 calls.
+  const rawProducts = await fetchFitness1Products(apiKey);
   const descriptionMap = includeDescriptions ? await fetchDescriptionMap(apiKey) : null;
 
   const groups = groupRawProducts(rawProducts, settings, descriptionMap);
@@ -749,7 +652,10 @@ export async function refreshCartStockInKv(env, skuIds) {
   if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
 
   const settings = await getSettings(env);
-  const { products: rawProducts } = await fetchFitness1ProductsForEnv(env);
+  const apiKey = await getFitness1ApiKey(env);
+  if (!apiKey) throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран.', 500);
+
+  const rawProducts = await fetchFitness1Products(apiKey);
   const skuSet = new Set(uniqueSkus);
   const freshBySku = new Map();
   for (const p of rawProducts) {
@@ -1157,8 +1063,8 @@ async function handleGetProductDescription(request, env) {
     return jsonResponse({ description: group.description });
   }
 
-  const response = await fetchFitness1Json(apiKey, { description: true });
-  const match = (response.products || []).find((p) => String(p.group_id) === String(groupId) && p.description);
+  const data = await fetchFitness1Catalog(apiKey, { description: true });
+  const match = (data.products || []).find((p) => String(p.group_id) === String(groupId) && p.description);
   const description = match ? decodeDescription(match.description) : '';
   return jsonResponse({ description });
 }
@@ -1717,14 +1623,8 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     if (path === '/portfolio/validate-promo' && method === 'POST') {
       return await handleValidatePromo(request, env);
     }
-    if (path === '/portfolio/fitness1-check' && method === 'GET') {
-      const result = await checkFitness1ApiConnection(env);
-      return jsonResponse(result, result.ok ? 200 : 502);
-    }
     if (path === '/portfolio/sync' && method === 'POST') {
-      const url = new URL(request.url);
-      const includeDescriptions = url.searchParams.get('descriptions') === '1';
-      const result = await withSyncLock(env, () => syncPortfolioCatalog(env, { includeDescriptions }));
+      const result = await syncPortfolioCatalog(env);
       return jsonResponse(result);
     }
     if (path === '/portfolio/chunk' && method === 'GET') {
