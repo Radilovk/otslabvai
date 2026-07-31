@@ -44,12 +44,13 @@ function getGalleryImages() {
 function renderBreadcrumb() {
   const topCat = product.category_path?.[0] || '';
   const restCat = (product.category_path || []).slice(1);
+  const sep = '<span class="pf-breadcrumb-sep" aria-hidden="true">/</span>';
   return `
     <nav class="pf-breadcrumb" aria-label="Път в каталога">
       <a href="portfolio.html">Начало</a>
-      ${topCat ? `<span>/</span><a href="portfolio.html?category=${encodeURIComponent(topCat)}">${escapeHtml(topCat)}</a>` : ''}
-      ${restCat.map((c) => `<span>/</span><span>${escapeHtml(c)}</span>`).join('')}
-      <span>/</span><span class="pf-breadcrumb-current">${escapeHtml(product.name)}</span>
+      ${topCat ? `${sep}<a href="portfolio.html?category=${encodeURIComponent(topCat)}">${escapeHtml(topCat)}</a>` : ''}
+      ${restCat.map((c) => `${sep}<span class="pf-breadcrumb-mid">${escapeHtml(c)}</span>`).join('')}
+      ${sep}<span class="pf-breadcrumb-current">${escapeHtml(product.name)}</span>
     </nav>`;
 }
 
