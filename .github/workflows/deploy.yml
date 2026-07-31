@@ -183,6 +183,28 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
+      - name: Sync Portfolio catalog to KV (Fitness1 → KV)
+        env:
+          FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$FITNESS1_API_KEY" ]; then
+            echo "::warning::Skipping catalog sync – FITNESS1_API_KEY GitHub secret not set"
+            exit 0
+          fi
+          node upload-portfolio-catalog.mjs
+
+      - name: Verify Fitness1 API key format
+        env:
+          FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
+        run: |
+          if [ -z "$FITNESS1_API_KEY" ]; then exit 0; fi
+          if ! printf '%s' "$FITNESS1_API_KEY" | grep -Eq '^[a-f0-9]{32}$'; then
+            echo "::error::FITNESS1_API_KEY must be 32 hex characters (see Fitness1 B2B docs)"
+            exit 1
+          fi
+
       - name: Verify Portfolio catalog bootstrap
         run: |
           BASE="https://port.radilov-k.workers.dev"

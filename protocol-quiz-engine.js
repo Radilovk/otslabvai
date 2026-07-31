@@ -30,6 +30,7 @@ export function eurToBgn(eur) {
   return Math.round(Number(eur || 0) * EUR_RATE * 100) / 100;
 }
 
+/** @type {Record<string, string[]>} */
 const PRIORITY_GOAL_KEYWORDS = {
   skin: ['кожа', 'skin', 'колаген', 'collagen', 'еластич', 'антиейджинг', 'anti-aging', 'хиалурон', 'hyaluronic'],
   joints: ['став', 'joint', 'хондро', 'chondro', 'глюкозамин', 'glucosamine', 'подвижност', 'mobility'],

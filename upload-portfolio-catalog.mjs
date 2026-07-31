@@ -23,7 +23,7 @@ async function kvPut(key, body, contentType = 'application/json') {
 }
 
 async function fetchProducts() {
-  const url = `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(API_KEY)}&format=json`;
+  const url = `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(API_KEY)}`;
   console.log('Fetching products from Fitness1...');
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Fitness1 API: ${res.status}`);
