@@ -121,6 +121,16 @@ jobs:
             -H "Content-Type: text/plain" \
             --data-binary "$FITNESS1_API_KEY"
 
+      - name: Set Fitness1 API key as Worker secret
+        env:
+          FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
+        run: |
+          if [ -z "$FITNESS1_API_KEY" ]; then
+            echo "Skipping Worker secret – FITNESS1_API_KEY not configured"
+            exit 0
+          fi
+          printf '%s' "$FITNESS1_API_KEY" | npx wrangler secret put FITNESS1_API_KEY
+
       - name: Set AI API keys in KV
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
