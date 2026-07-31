@@ -1209,6 +1209,25 @@ img, svg { display: block; max-width: 100%; height: auto; }
 
 .pf-product-card:hover .pf-card-image img { transform: scale(1.08); }
 
+.pf-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--pf-radius-pill);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.pf-badge--promo {
+  background: #c62828;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(198, 40, 40, 0.35);
+}
+
 .pf-card-body {
   padding: clamp(0.75rem, 2vw, 1rem);
   flex: 1;
