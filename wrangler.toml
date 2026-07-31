@@ -2,6 +2,11 @@ name = "port"
 main = "worker.js"
 compatibility_date = "2024-04-05"
 
+# Deploy: npm run deploy  (or GitHub Actions on push to main / cursor/*)
+# Do NOT paste only worker.js in the Cloudflare dashboard — this project imports
+# 20+ sibling .js modules (portfolio-api.js, protocol-quiz-engine.js, …).
+# Wrangler uploads the full worker bundle from this directory.
+
 # Set via: npx wrangler secret put FITNESS1_API_KEY
 # Or KV key fitness1_api_key (see upload-portfolio-catalog.mjs)
 # directly by the Cloudflare edge — they never touch the Worker or KV.

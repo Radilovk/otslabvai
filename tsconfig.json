@@ -3,8 +3,8 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "target": "ES2022",
     "lib": ["ES2022", "WebWorker"],
     "noEmit": true,
@@ -22,7 +22,20 @@
     "portfolio-sync-policy.js",
     "portfolio-goals.js",
     "portfolio-pricing.js",
-    "ai-settings-resolver.js"
+    "portfolio-text.js",
+    "portfolio-advisor-engine.js",
+    "portfolio-advisor-compose.js",
+    "portfolio-advisor-catalog.js",
+    "portfolio-advisor-narration.js",
+    "portfolio-advisor-settings.js",
+    "portfolio-advisor-prompt.js",
+    "ai-settings-resolver.js",
+    "protocol-quiz-engine.js",
+    "protocol-quiz-prompt.js",
+    "protocol-stack-composer.js",
+    "protocol-quiz-settings.js",
+    "protocol-safety-rules.js",
+    "life-category-assign.js"
   ],
-  "exclude": ["node_modules", "e2e", "backend", "products", "**/*.test.js"]
+  "exclude": ["node_modules", "e2e", "backend", "products", "local", "**/*.test.js"]
 }
