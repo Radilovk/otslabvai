@@ -9,7 +9,7 @@
   --lpq-bg: var(--pf-bg, #f4f8fb);
   --lpq-card: var(--pf-surface, #ffffff);
   --lpq-text: var(--pf-text, #0f2540);
-  --lpq-muted: var(--pf-text-muted, #5a7184);
+  --lpq-muted: var(--pf-muted, #5a7184);
   --lpq-border: var(--pf-border, rgba(15, 37, 64, 0.1));
   --lpq-display: 'Outfit', 'Segoe UI', sans-serif;
   --lpq-font: 'Manrope', 'Segoe UI', sans-serif;
@@ -22,7 +22,7 @@
   --lpq-bg: var(--pf-bg, #0a1218);
   --lpq-card: var(--pf-surface, #121c24);
   --lpq-text: var(--pf-text, #e8f0f5);
-  --lpq-muted: var(--pf-text-muted, #8fa3b3);
+  --lpq-muted: var(--pf-muted, #8fa3b3);
   --lpq-border: rgba(255, 255, 255, 0.1);
 }
 
