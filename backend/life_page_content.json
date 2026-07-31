@@ -143,7 +143,7 @@
           "product_id": "prod-pf-27301",
           "public_data": {
             "name": "Apigenin 50 mg",
-            "price": 35.9,
+            "price": 33.09,
             "sale_price": null,
             "tagline": "",
             "brand": "Double Wood Supplements",
@@ -173,8 +173,8 @@
             "variants": [
               {
                 "option_name": "120 капсули",
-                "price": 35.9,
                 "sku": "56071",
+                "price": 33.09,
                 "ean": "850033272017",
                 "image_url": "https://fitness1.bg/products/v3/p31946/apigenin-apigenin-120-kapsuli-e04c4cf-1000x1000.jpg",
                 "available": true
@@ -197,7 +197,8 @@
               "group_id": "27301",
               "category": "Anti-Aging / Против стареене > Флавоноиди",
               "brand_id": "887",
-              "imported_at": "2026-07-10T02:32:35.345Z"
+              "imported_at": "2026-07-10T02:32:35.345Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 0
@@ -206,7 +207,7 @@
           "product_id": "prod-pf-40676",
           "public_data": {
             "name": "Apigenin 50 mg",
-            "price": 23.9,
+            "price": 22.12,
             "sale_price": null,
             "tagline": "",
             "brand": "Osavi",
@@ -236,16 +237,16 @@
             "variants": [
               {
                 "option_name": "120 капсули",
-                "price": 23.9,
                 "sku": "92358",
+                "price": 22.12,
                 "ean": "5904139926949",
                 "image_url": "https://fitness1.bg/products/v3/p47075/pc02720120_apigenin_50_mg_f_uk_bt__1-5d529dd-1000x1000xwhite.jpg",
                 "available": true
               },
               {
                 "option_name": "60 капсули",
-                "price": 13.8,
                 "sku": "82017",
+                "price": 12.92,
                 "ean": "5904139926956",
                 "image_url": "https://fitness1.bg/products/v3/p47074/pc0272060_apigenin_50_mg_f_uk_bt_-bb92289-1000x1000xwhite.jpg",
                 "available": false
@@ -268,7 +269,8 @@
               "group_id": "40676",
               "category": "Anti-Aging / Против стареене > Флавоноиди",
               "brand_id": "866",
-              "imported_at": "2026-07-10T02:32:35.345Z"
+              "imported_at": "2026-07-10T02:32:35.345Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 1
@@ -277,7 +279,7 @@
           "product_id": "prod-pf-18316",
           "public_data": {
             "name": "Apigenin 50 mg",
-            "price": 26.8,
+            "price": 24.63,
             "sale_price": null,
             "tagline": "Подкрепа за клетъчното здраве и дълголетие.",
             "brand": "SWANSON",
@@ -352,8 +354,8 @@
             "variants": [
               {
                 "option_name": "90 капсули",
-                "price": 26.8,
                 "sku": "30263",
+                "price": 24.63,
                 "ean": "087614023755",
                 "image_url": "https://fitness1.bg/products/v3/p21388/Apigenin-ecdad4f-1000x1000.jpg",
                 "available": true
@@ -376,7 +378,8 @@
               "group_id": "18316",
               "category": "Anti-Aging / Против стареене > Флавоноиди",
               "brand_id": "177",
-              "imported_at": "2026-07-10T21:33:07.832Z"
+              "imported_at": "2026-07-10T21:33:07.832Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 2
@@ -385,7 +388,7 @@
           "product_id": "prod-pf-19275",
           "public_data": {
             "name": "Adaptogenic Herbal Complex | with Rhodiola Ashwagandha Ginseng",
-            "price": 16.8,
+            "price": 15.33,
             "sale_price": null,
             "tagline": "Комплекс от адаптогенни билки за цялостна подкрепа и устойчивост на стрес.",
             "brand": "SWANSON",
@@ -500,8 +503,8 @@
             "variants": [
               {
                 "option_name": "60 капсули",
-                "price": 16.8,
                 "sku": "34865",
+                "price": 15.33,
                 "ean": "087614110950",
                 "image_url": "https://fitness1.bg/products/v3/p22523/41F-Guuyx5S._AC_-b15a2e0-1000x1000.jpg",
                 "available": true
@@ -527,7 +530,8 @@
               "group_id": "19275",
               "category": "Билки > Адаптогени > Адаптогенни комплекси",
               "brand_id": "177",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 3
@@ -536,7 +540,7 @@
           "product_id": "prod-pf-28900",
           "public_data": {
             "name": "Acetyl L-Carnitine 1000 mg",
-            "price": 37.8,
+            "price": 34.74,
             "sale_price": null,
             "tagline": "Ацетил L-Карнитин за подобрена мозъчна функция и клетъчна енергия.",
             "brand": "Double Wood Supplements",
@@ -611,8 +615,8 @@
             "variants": [
               {
                 "option_name": "150 капсули",
-                "price": 37.8,
                 "sku": "60462",
+                "price": 34.74,
                 "ean": "8687422207662",
                 "image_url": "https://fitness1.bg/products/v3/p33818/1-96d145a-1000x1000.jpg",
                 "available": true
@@ -637,7 +641,8 @@
               "group_id": "28900",
               "category": "Изгаряне на мазнини > L-Карнитин > Ацетил L-Карнитин / ALCAR",
               "brand_id": "887",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 4
@@ -646,7 +651,7 @@
           "product_id": "prod-pf-17159",
           "public_data": {
             "name": "100% Wild Alaskan Salmon Oil Complete Omega",
-            "price": 35.9,
+            "price": 32.96,
             "sale_price": null,
             "tagline": "Пълноценно масло от дива сьомга за мозъка, сърцето и клетъчното здраве.",
             "brand": "Natural Factors",
@@ -735,8 +740,8 @@
             "variants": [
               {
                 "option_name": "90 Гел капсули",
-                "price": 35.9,
                 "sku": "23552",
+                "price": 32.96,
                 "ean": "627765022650",
                 "image_url": "https://fitness1.bg/products/v3/p20070/ucnvuph0eqitftj6ljvy-d850dd8-1000x1000.jpg",
                 "available": true
@@ -762,7 +767,8 @@
               "group_id": "17159",
               "category": "Мастни киселини > Рибено масло > Масло от сьомга",
               "brand_id": "214",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 5
@@ -771,7 +777,7 @@
           "product_id": "prod-pf-18920",
           "public_data": {
             "name": "ALA / Alpha Lipoic Acid 590 mg",
-            "price": 15.8,
+            "price": 14.86,
             "sale_price": null,
             "tagline": "Алфа-липоева киселина за антиоксидантна защита и енергиен метаболизъм.",
             "brand": "OstroVit",
@@ -850,8 +856,8 @@
             "variants": [
               {
                 "option_name": "90 Таблетки",
-                "price": 15.8,
                 "sku": "32975",
+                "price": 14.86,
                 "ean": "5903246220919",
                 "image_url": "https://fitness1.bg/products/v3/p22079/eng_pm_ostrovit-ala-vege-90-tablets-19895_1-eaf895b-1000x1000.jpg",
                 "available": true
@@ -876,7 +882,8 @@
               "group_id": "18920",
               "category": "Антиоксиданти > Алфа Липоева киселина > Алфа Липоева киселина / S-ALA",
               "brand_id": "769",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 7
@@ -885,7 +892,7 @@
           "product_id": "prod-pf-40331",
           "public_data": {
             "name": "Agewell 40+ TRT | Natural Testosterone Support",
-            "price": 24.9,
+            "price": 23.67,
             "sale_price": null,
             "tagline": "Естествена подкрепа за тестостерона и антиейджинг за мъже над 40 години.",
             "brand": "Applied Nutrition",
@@ -989,26 +996,26 @@
             "variants": [
               {
                 "option_name": "300 грама • Лимон и лайм",
-                "price": 24.8,
                 "sku": "89508",
+                "price": 23.67,
                 "ean": "5056555210048",
                 "image_url": "https://fitness1.bg/products/v3/p46678/trt_professional_300g-lemon_lime1-d0baaca-1000x1000xwhite.jpg",
                 "available": false
               },
               {
                 "option_name": "300 грама • Портокал",
-                "price": 24.9,
                 "sku": "89507",
+                "price": 23.67,
                 "ean": "5056555210055",
                 "image_url": "https://fitness1.bg/products/v3/p46678/trt_professional_300g-orangeburst1-aee5f59-1000x1000xwhite.jpg",
-                "available": true
+                "available": false
               }
             ]
           },
           "system_data": {
             "manufacturer": "Applied Nutrition",
             "application_type": "Oral",
-            "inventory": 10,
+            "inventory": 0,
             "goals": [
               "Антиейджинг",
               "Хормонално здраве",
@@ -1023,7 +1030,8 @@
               "group_id": "40331",
               "category": "Хардкор продукти и стимулатори > Стимулатори на тестостерона > Тестостеронови Бустери",
               "brand_id": "745",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 10
@@ -1032,7 +1040,7 @@
           "product_id": "prod-pf-18222",
           "public_data": {
             "name": "100% Natural Naringin 500 mg",
-            "price": 20.9,
+            "price": 19.24,
             "sale_price": null,
             "tagline": "Натурален Нарингин за антиоксидантна защита и метаболитна подкрепа.",
             "brand": "SWANSON",
@@ -1107,8 +1115,8 @@
             "variants": [
               {
                 "option_name": "60 капсули",
-                "price": 20.9,
                 "sku": "30369",
+                "price": 19.24,
                 "ean": "087614141732",
                 "image_url": "https://fitness1.bg/products/v3/p21288/SWH173-5fc5808-1000x1000.jpg",
                 "available": true
@@ -1132,7 +1140,8 @@
               "group_id": "18222",
               "category": "Антиоксиданти > Цитрусови биофлавоноиди",
               "brand_id": "177",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 13
@@ -1168,7 +1177,7 @@
           "product_id": "prod-pf-19115",
           "public_data": {
             "name": "Albion Chelated Magnesium Bisglycinate",
-            "price": 13.8,
+            "price": 13.86,
             "sale_price": null,
             "tagline": "Магнезиев бисглицинат за оптимално усвояване и подкрепа на нервната система.",
             "brand": "Reflex",
@@ -1243,8 +1252,8 @@
             "variants": [
               {
                 "option_name": "90 капсули",
-                "price": 13.8,
                 "sku": "34090",
+                "price": 13.86,
                 "ean": "5033579035369",
                 "image_url": "https://fitness1.bg/products/v3/p22299/Product_MB_0090_52139029-c0dd-4a4d-bc4b-b9231b5c955e-2f97b30-1000x1000.jpg",
                 "available": true
@@ -1270,7 +1279,8 @@
               "group_id": "19115",
               "category": "Минерали > Магнезий > Магнезиев бисглицинат / Albion",
               "brand_id": "101",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 0
@@ -1279,7 +1289,7 @@
           "product_id": "prod-pf-40457",
           "public_data": {
             "name": "5-HTP 100 mg | 30% Extract from Griffonia simplicifolia",
-            "price": 11.9,
+            "price": 10.62,
             "sale_price": null,
             "tagline": "5-HTP за подкрепа на настроението, съня и емоционалния баланс.",
             "brand": "Osavi",
@@ -1359,24 +1369,24 @@
             "variants": [
               {
                 "option_name": "120 капсули",
-                "price": 19.9,
                 "sku": "90392",
+                "price": 18.67,
                 "ean": "5904139926734",
                 "image_url": "https://fitness1.bg/products/v3/p46816/pc026400120_5-htp_100_mg_griffonia_f_uk_bt__2-d5a75f8-1000x1000xwhite.jpg",
                 "available": true
               },
               {
                 "option_name": "200 капсули",
-                "price": 30.8,
                 "sku": "90393",
+                "price": 29.41,
                 "ean": "5904139926710",
                 "image_url": "https://fitness1.bg/products/v3/p46817/pc026400200_5-htp_100_mg_griffonia_f_uk_bt__2-b1b9992-1000x1000xwhite.jpg",
                 "available": true
               },
               {
                 "option_name": "60 капсули",
-                "price": 11.9,
                 "sku": "90387",
+                "price": 10.62,
                 "ean": "5904139926758",
                 "image_url": "https://fitness1.bg/products/v3/p46815/pc02640060_5-htp_100_mg_griffonia_f_uk_bt__1-0c42d3d-1000x1000xwhite.jpg",
                 "available": true
@@ -1401,7 +1411,8 @@
               "group_id": "40457",
               "category": "Здраве и тонус > 5-HTP / 5-Хидрокситриптофан",
               "brand_id": "866",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 1
@@ -1410,7 +1421,7 @@
           "product_id": "prod-pf-41126",
           "public_data": {
             "name": "Activated B-Complex | High Bioavailability",
-            "price": 24.9,
+            "price": 22.37,
             "sale_price": null,
             "tagline": "Активиран Б-комплекс за максимална бионаличност и енергийна подкрепа.",
             "brand": "SWANSON",
@@ -1524,8 +1535,8 @@
             "variants": [
               {
                 "option_name": "60 капсули",
-                "price": 24.9,
                 "sku": "93764",
+                "price": 22.37,
                 "ean": "087614028156",
                 "image_url": "https://fitness1.bg/products/v3/p47604/screenshot2026-01-22132856-2e9e3d0-1000x1000xwhite.jpg",
                 "available": true
@@ -1551,7 +1562,8 @@
               "group_id": "41126",
               "category": "Витамини > Витамин Б > Б-Комплекс",
               "brand_id": "177",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 2
@@ -1560,7 +1572,7 @@
           "product_id": "prod-pf-32896",
           "public_data": {
             "name": "Adrenal Support | with Eleuthero &amp; Rhodiola",
-            "price": 26.9,
+            "price": 24.35,
             "sale_price": null,
             "tagline": "Подкрепа за надбъбречните жлези с адаптогени за баланс и тонус.",
             "brand": "Double Wood Supplements",
@@ -1656,8 +1668,8 @@
             "variants": [
               {
                 "option_name": "30 мл",
-                "price": 26.9,
                 "sku": "67884",
+                "price": 24.35,
                 "ean": "850033272741",
                 "image_url": "https://fitness1.bg/products/v3/p38359/poddarzha-zdravoslovnata-funkciya-na-nadbabrechnite-zhlezi-adrenal-support-30-ml-25efde9-1000x1000.jpg",
                 "available": true
@@ -1683,7 +1695,8 @@
               "group_id": "32896",
               "category": "Здраве и тонус > Тонус и настроение",
               "brand_id": "887",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 3
@@ -1692,7 +1705,7 @@
           "product_id": "prod-pf-41238",
           "public_data": {
             "name": "AHCC 2000 mg",
-            "price": 53.9,
+            "price": 57.04,
             "sale_price": null,
             "tagline": "AHCC за мощна имунна модулация и клетъчно здраве.",
             "brand": "Biovital",
@@ -1763,11 +1776,11 @@
             "variants": [
               {
                 "option_name": "90 Таблетки",
-                "price": 53.9,
                 "sku": "94129",
+                "price": 57.04,
                 "ean": "4260631683287",
                 "image_url": "https://fitness1.bg/products/v3/p47729/ancc-biovital-1000x1000-700x800w-88de61b-1000x1000xwhite.jpg",
-                "available": true
+                "available": false
               }
             ]
           },
@@ -1775,7 +1788,7 @@
             "show_on_homepage": true,
             "manufacturer": "Biovital",
             "application_type": "Oral",
-            "inventory": 10,
+            "inventory": 0,
             "goals": [
               "Клетъчна регенерация",
               "Антиейджинг",
@@ -1790,7 +1803,8 @@
               "group_id": "41238",
               "category": "Билки > Гъби > Комплекси с гъби",
               "brand_id": "1158",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 4
@@ -1799,7 +1813,7 @@
           "product_id": "prod-pf-25670",
           "public_data": {
             "name": "ADEK Vitamins | A + D + E + K | with Quali-D®",
-            "price": 16.9,
+            "price": 15.22,
             "sale_price": null,
             "tagline": "Комплекс от витамини A, D, E, K с Quali-D® за цялостна подкрепа на здравето.",
             "brand": "Osavi",
@@ -1893,24 +1907,24 @@
             "variants": [
               {
                 "option_name": "120 Гел капсули",
-                "price": 20.8,
                 "sku": "52108",
+                "price": 19.82,
                 "ean": "5904139920206",
                 "image_url": "https://fitness1.bg/products/v3/p30027/witaminy_adek_120_wiz_uk-c9470ad-1000x1000.jpg",
                 "available": true
               },
               {
                 "option_name": "60 Гел капсули",
-                "price": 16.9,
                 "sku": "61147",
+                "price": 15.22,
                 "ean": "5904139920220",
                 "image_url": "https://fitness1.bg/products/v3/p34324/2-a221240-1000x1000.jpg",
                 "available": true
               },
               {
                 "option_name": "90 Гел капсули",
-                "price": 18.8,
                 "sku": "80161",
+                "price": 17.52,
                 "ean": "5904139924709",
                 "image_url": "https://fitness1.bg/products/v3/p44727/image_2024-06-25_667a6c7fb2424-e885b88-1000x1000.jpg",
                 "available": true
@@ -1936,7 +1950,8 @@
               "group_id": "25670",
               "category": "Витамини > ADEK",
               "brand_id": "866",
-              "imported_at": "2026-07-10T23:17:00.693Z"
+              "imported_at": "2026-07-10T23:17:00.693Z",
+              "refreshed_at": "2026-07-31T23:10:36.478Z"
             }
           },
           "display_order": 5
