@@ -5145,7 +5145,10 @@ async function syncPortfolioCatalog() {
         const res = await fetch(`${API_URL}/portfolio/sync`, { method: 'POST' });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Грешка');
-        showNotification(`Синхронизирани ${data.total_groups} групи (${data.total_skus} SKU)`, 'success');
+        const msg = data.warning
+            ? `${data.warning} (${data.total_groups} групи)`
+            : `Синхронизирани ${data.total_groups} групи (${data.total_skus} SKU)`;
+        showNotification(msg, data.warning ? 'warning' : 'success');
         try { localStorage.removeItem('portfolio_bootstrap_v1'); } catch { /* ignore */ }
         await fetchPortfolioSettings();
         renderPortfolioSettings();
