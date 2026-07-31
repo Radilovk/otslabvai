@@ -4,7 +4,7 @@
 
 import { getProductPriceEur } from './protocol-quiz-engine.js';
 import { productSearchText } from './protocol-safety-rules.js';
-import { decodeHtmlEntities } from './portfolio-import.js';
+import { decodeHtmlEntities } from './portfolio-text.js';
 
 export { decodeHtmlEntities };
 

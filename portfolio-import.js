@@ -16,10 +16,13 @@ import {
   migrateLegacyLifeCategories,
   LIFE_CATEGORY_DEFS
 } from './life-category-assign.js';
+import { decodeHtmlEntities, normalizeCatalogText } from './portfolio-text.js';
 
 function decodeName(text) {
-  return decodeHtmlEntities(text || '').replace(/\s+/g, ' ').trim();
+  return normalizeCatalogText(text);
 }
+
+export { decodeHtmlEntities };
 
 export class PortfolioImportError extends Error {
   constructor(message, status = 500) {
@@ -48,17 +51,6 @@ export const IMPORT_PROJECTS = {
 };
 
 /** Премахва HTML тагове и нормализира whitespace (описанията от Fitness1 са HTML). */
-export function decodeHtmlEntities(text) {
-  if (!text) return '';
-  return String(text)
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#0?39;/g, "'")
-    .replace(/&nbsp;/g, ' ');
-}
-
 export function stripHtml(html) {
   if (!html) return '';
   return decodeHtmlEntities(String(html))

@@ -8,7 +8,9 @@ import {
   buildClientCatalogMeta,
   sanitizeIndexEntryForClient,
   summarizeGroupMargin,
-  handlePortfolioRoute
+  handlePortfolioRoute,
+  getFitness1ApiKeyCandidates,
+  fetchFitness1Products,
 } from './portfolio-api.js';
 import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
 
@@ -140,6 +142,54 @@ describe('Portfolio API', () => {
     expect(clientMeta.index.some((i) => i.group_id === '999')).toBe(false);
     expect(clientMeta.index[0].max_margin).toBeUndefined();
     expect(sanitizeIndexEntryForClient(meta.index[0]).max_margin_pct).toBeUndefined();
+  });
+
+  test('groupRawProducts decodes HTML entities in names', () => {
+    const products = [{
+      ...sampleProducts[0],
+      product_name: 'Creatine &amp; Taurine',
+      brand_name: 'Brand &amp; Co',
+    }];
+    const groups = groupRawProducts(products, settings);
+    expect(groups[0].name).toBe('Creatine & Taurine');
+    expect(groups[0].brand).toBe('Brand & Co');
+  });
+
+  test('getFitness1ApiKeyCandidates prefers KV over worker secret', async () => {
+    const env = {
+      FITNESS1_API_KEY: 'secret-key',
+      PAGE_CONTENT: {
+        get: async (key) => (key === 'fitness1_api_key' ? 'kv-key' : null),
+      },
+    };
+    const keys = await getFitness1ApiKeyCandidates(env);
+    expect(keys).toEqual(['kv-key', 'secret-key']);
+  });
+
+  test('fetchFitness1Products retries transient Fitness1 500 errors', async () => {
+    const originalFetch = global.fetch;
+    let attempts = 0;
+    global.fetch = async () => {
+      attempts += 1;
+      if (attempts < 3) {
+        return {
+          ok: false,
+          status: 500,
+          json: async () => ({ status: 'error', error: 'Server error' }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ status: 'ok', products: [{ id: '1', group_id: '1' }] }),
+      };
+    };
+
+    const products = await fetchFitness1Products('test-key');
+    global.fetch = originalFetch;
+
+    expect(attempts).toBe(3);
+    expect(products).toHaveLength(1);
   });
 
   test('handlePortfolioRoute returns 404 when catalog is not synced', async () => {
