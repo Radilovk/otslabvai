@@ -9,6 +9,9 @@ import {
   sanitizeIndexEntryForClient,
   summarizeGroupMargin,
   handlePortfolioRoute,
+  syncPortfolioCatalog,
+  syncPortfolioCatalogFromKv,
+  PortfolioError,
 } from './portfolio-api.js';
 import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
 
@@ -491,5 +494,78 @@ describe('Portfolio Fitness1 order approval', () => {
     expect(res.status).toBe(200);
     expect(data.pending).toBe(2);
     expect(data.total).toBe(3);
+  });
+
+  test('syncPortfolioCatalogFromKv returns cached catalog stats', async () => {
+    const meta = {
+      synced_at: '2026-07-31T22:58:34.000Z',
+      total_groups: 9087,
+      chunk_count: 61,
+    };
+    const env = {
+      PAGE_CONTENT: {
+        get: async (key) => (key === 'portfolio_meta' ? JSON.stringify(meta) : null),
+      },
+    };
+
+    const result = await syncPortfolioCatalogFromKv(env);
+    expect(result.success).toBe(true);
+    expect(result.source).toBe('kv_cached');
+    expect(result.total_groups).toBe(9087);
+    expect(result.warning).toMatch(/KV/);
+  });
+
+  test('syncPortfolioCatalog falls back to KV when Fitness1 fetch fails', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = async () => ({
+      ok: false,
+      status: 500,
+      text: async () => '<html>error</html>',
+    });
+
+    const meta = {
+      synced_at: '2026-07-31T22:58:34.000Z',
+      total_groups: 100,
+      chunk_count: 1,
+    };
+    const env = {
+      FITNESS1_API_KEY: 'a9f3cdec84804149a02701ab0e43b5c3',
+      PAGE_CONTENT: {
+        get: async (key) => {
+          if (key === 'portfolio_meta') return JSON.stringify(meta);
+          return null;
+        },
+      },
+    };
+
+    try {
+      const result = await syncPortfolioCatalog(env, { fallbackToKv: true });
+      expect(result.source).toBe('kv_cached');
+      expect(result.total_groups).toBe(100);
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
+  test('syncPortfolioCatalog throws when Fitness1 fails and KV is empty', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = async () => ({
+      ok: false,
+      status: 500,
+      text: async () => '<html>error</html>',
+    });
+
+    const env = {
+      FITNESS1_API_KEY: 'a9f3cdec84804149a02701ab0e43b5c3',
+      PAGE_CONTENT: {
+        get: async () => null,
+      },
+    };
+
+    try {
+      await expect(syncPortfolioCatalog(env, { fallbackToKv: true })).rejects.toBeInstanceOf(PortfolioError);
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 });

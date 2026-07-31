@@ -500,7 +500,13 @@ async function fetchFitness1Catalog(apiKey, { description = false } = {}) {
   if (description) url += '&description=1';
 
   const response = await fetch(url, {
-    headers: { Accept: 'application/json' },
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'Accept-Encoding': 'identity',
+      'Accept-Language': 'bg-BG,bg;q=0.9,en;q=0.8',
+      'User-Agent': 'Mozilla/5.0 (compatible; BiocodePortfolio/1.0; +https://daotslabna.com)',
+      'Cache-Control': 'no-cache',
+    },
   });
   const text = await response.text();
 
@@ -552,7 +558,29 @@ export async function fetchDescriptionMap(apiKey) {
   }
 }
 
-export async function syncPortfolioCatalog(env, { includeDescriptions = false } = {}) {
+function buildKvCachedSyncResult(meta) {
+  return {
+    success: true,
+    source: 'kv_cached',
+    warning:
+      'Fitness1 API не отговаря директно от Cloudflare Worker. Използван е кешираният каталог в KV. Пълен sync се стартира през GitHub Actions.',
+    synced_at: meta.synced_at,
+    total_groups: meta.total_groups,
+    total_skus: meta.total_skus ?? null,
+    chunk_count: meta.chunk_count,
+  };
+}
+
+/** Returns cached catalog stats when KV already has a synced catalog. */
+export async function syncPortfolioCatalogFromKv(env) {
+  const meta = await getMeta(env);
+  if (!meta?.chunk_count) {
+    throw new PortfolioError('Каталогът не е синхронизиран в KV.', 404);
+  }
+  return buildKvCachedSyncResult(meta);
+}
+
+export async function syncPortfolioCatalog(env, { includeDescriptions = false, fallbackToKv = false } = {}) {
   const keys = await listFitness1ApiKeyCandidates(env);
   if (!keys.length) {
     throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран (Worker secret или KV fitness1_api_key).', 500);
@@ -575,6 +603,13 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = false } 
   }
 
   if (!rawProducts) {
+    if (fallbackToKv) {
+      try {
+        return await syncPortfolioCatalogFromKv(env);
+      } catch {
+        // Fall through to the original Fitness1 error below.
+      }
+    }
     throw lastError || new PortfolioError('Fitness1 API ключът не работи.', 502);
   }
 
