@@ -485,11 +485,18 @@ async function getGroupFromChunks(env, meta, groupId) {
 }
 
 function isFitness1AuthError(message) {
-  return /api\s*key|ключ/i.test(String(message || ''));
+  return /api\s*key|ключ|missing or wrong/i.test(String(message || ''));
 }
 
-async function fetchFitness1Json(apiKey, extraQuery = '') {
-  const url = `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(apiKey)}&format=json${extraQuery}`;
+/** URL по официалната Fitness1 B2B документация (key в query; description=1 по избор). */
+export function buildFitness1ProductsUrl(apiKey, { description = false } = {}) {
+  let url = `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(apiKey)}`;
+  if (description) url += '&description=1';
+  return url;
+}
+
+async function fetchFitness1Json(apiKey, { description = false } = {}) {
+  const url = buildFitness1ProductsUrl(apiKey, { description });
   const retryDelays = [0, 1000, 2500];
   /** @type {PortfolioError | null} */
   let lastError = null;
@@ -498,10 +505,7 @@ async function fetchFitness1Json(apiKey, extraQuery = '') {
     if (delay) await sleep(delay);
 
     const response = await fetch(url, {
-      headers: {
-        'X-Api-Key': apiKey,
-        Accept: 'application/json',
-      },
+      headers: { Accept: 'application/json' },
     });
 
     let data = null;
@@ -546,6 +550,39 @@ export async function fetchFitness1Products(apiKey) {
   return data.products;
 }
 
+export async function checkFitness1ApiConnection(env) {
+  const keys = await getFitness1ApiKeyCandidates(env);
+  if (!keys.length) {
+    return { ok: false, error: 'Липсва API ключ (KV fitness1_api_key или Worker secret FITNESS1_API_KEY).' };
+  }
+
+  /** @type {Array<{source: string, ok: boolean, error?: string}>} */
+  const attempts = [];
+  const kvKey = await env.PAGE_CONTENT?.get(KV_FITNESS1_KEY);
+  const sources = [];
+  if (kvKey) sources.push('kv');
+  if (env.FITNESS1_API_KEY) sources.push('secret');
+
+  for (let i = 0; i < keys.length; i += 1) {
+    const apiKey = keys[i];
+    const source = sources[i] || `key-${i + 1}`;
+    try {
+      const data = await fetchFitness1Json(apiKey);
+      const count = Array.isArray(data.products) ? data.products.length : 0;
+      attempts.push({ source, ok: true });
+      return { ok: true, source, product_count: count, attempts };
+    } catch (e) {
+      attempts.push({ source, ok: false, error: e?.message || String(e) });
+    }
+  }
+
+  return {
+    ok: false,
+    error: 'Нито един конфигуриран Fitness1 ключ не работи.',
+    attempts,
+  };
+}
+
 async function fetchFitness1ProductsForEnv(env) {
   const keys = await getFitness1ApiKeyCandidates(env);
   if (!keys.length) {
@@ -572,7 +609,7 @@ async function fetchFitness1ProductsForEnv(env) {
 
 export async function fetchDescriptionMap(apiKey) {
   try {
-    const data = await fetchFitness1Json(apiKey, '&description=1');
+    const data = await fetchFitness1Json(apiKey, { description: true });
     if (!Array.isArray(data.products)) return new Map();
 
     const map = new Map();
@@ -588,7 +625,7 @@ export async function fetchDescriptionMap(apiKey) {
   }
 }
 
-export async function syncPortfolioCatalog(env, { includeDescriptions = true } = {}) {
+export async function syncPortfolioCatalog(env, { includeDescriptions = false } = {}) {
   const { products: rawProducts, apiKey } = await fetchFitness1ProductsForEnv(env);
 
   const settings = await getSettings(env);
@@ -1120,7 +1157,7 @@ async function handleGetProductDescription(request, env) {
     return jsonResponse({ description: group.description });
   }
 
-  const response = await fetchFitness1Json(apiKey, '&description=1');
+  const response = await fetchFitness1Json(apiKey, { description: true });
   const match = (response.products || []).find((p) => String(p.group_id) === String(groupId) && p.description);
   const description = match ? decodeDescription(match.description) : '';
   return jsonResponse({ description });
@@ -1680,8 +1717,14 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     if (path === '/portfolio/validate-promo' && method === 'POST') {
       return await handleValidatePromo(request, env);
     }
+    if (path === '/portfolio/fitness1-check' && method === 'GET') {
+      const result = await checkFitness1ApiConnection(env);
+      return jsonResponse(result, result.ok ? 200 : 502);
+    }
     if (path === '/portfolio/sync' && method === 'POST') {
-      const result = await withSyncLock(env, () => syncPortfolioCatalog(env));
+      const url = new URL(request.url);
+      const includeDescriptions = url.searchParams.get('descriptions') === '1';
+      const result = await withSyncLock(env, () => syncPortfolioCatalog(env, { includeDescriptions }));
       return jsonResponse(result);
     }
     if (path === '/portfolio/chunk' && method === 'GET') {
