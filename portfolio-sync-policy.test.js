@@ -27,4 +27,9 @@ describe('portfolio-sync-policy', () => {
       { sku_id: '1', quantity: 2 }
     ])).toEqual(['1', '2']);
   });
+
+  test('FITNESS1_CATALOG_FETCH_FROM_WORKER is disabled by default', () => {
+    expect(SYNC_POLICY.FITNESS1_CATALOG_FETCH_FROM_WORKER).toBe(false);
+    expect(SYNC_POLICY.CI_SYNC_DEBOUNCE_MS).toBeGreaterThanOrEqual(30 * 60 * 1000);
+  });
 });

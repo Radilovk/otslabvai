@@ -44,6 +44,13 @@ const KV_PROMO = 'portfolio_promo_codes';
 const chunkKey = (n) => `portfolio_chunk_${n}`;
 const KV_FITNESS1_KEY = 'fitness1_api_key';
 const KV_SYNC_LOCK = 'portfolio_sync_lock';
+const KV_CI_SYNC_LAST = 'portfolio_ci_sync_last';
+const GITHUB_CATALOG_SYNC = {
+  owner: 'Radilovk',
+  repo: 'otslabvai',
+  branch: 'main',
+  workflow: 'sync-portfolio-catalog.yml',
+};
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -580,7 +587,65 @@ export async function syncPortfolioCatalogFromKv(env) {
   return buildKvCachedSyncResult(meta);
 }
 
+/**
+ * Dispatch GitHub Actions catalog sync (debounced). Used when Worker cannot call Fitness1.
+ * @returns {Promise<{ triggered: boolean, reason?: string, retry_after_ms?: number }>}
+ */
+export async function requestPortfolioCatalogCiSync(env) {
+  const token = env.GITHUB_API_TOKEN || await env.PAGE_CONTENT?.get('api_token');
+  if (!token) {
+    return { triggered: false, reason: 'no_github_token' };
+  }
+
+  const lastRaw = await env.PAGE_CONTENT?.get(KV_CI_SYNC_LAST);
+  if (lastRaw) {
+    const last = Number(lastRaw);
+    const debounceMs = SYNC_POLICY.CI_SYNC_DEBOUNCE_MS;
+    if (!Number.isNaN(last) && Date.now() - last < debounceMs) {
+      return {
+        triggered: false,
+        reason: 'debounced',
+        retry_after_ms: debounceMs - (Date.now() - last),
+      };
+    }
+  }
+
+  const { owner, repo, branch, workflow } = GITHUB_CATALOG_SYNC;
+  const res = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+        'User-Agent': 'Cloudflare-Worker',
+      },
+      body: JSON.stringify({ ref: branch }),
+    }
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error('Portfolio CI sync dispatch failed:', res.status, text);
+    return { triggered: false, reason: `http_${res.status}` };
+  }
+
+  await env.PAGE_CONTENT.put(KV_CI_SYNC_LAST, String(Date.now()));
+  return { triggered: true };
+}
+
 export async function syncPortfolioCatalog(env, { includeDescriptions = false, fallbackToKv = false } = {}) {
+  if (!SYNC_POLICY.FITNESS1_CATALOG_FETCH_FROM_WORKER) {
+    if (fallbackToKv) {
+      return syncPortfolioCatalogFromKv(env);
+    }
+    throw new PortfolioError(
+      'Fitness1 каталогът не може да се дърпа директно от Worker. Използвайте админ sync или GitHub Actions.',
+      502
+    );
+  }
+
   const keys = await listFitness1ApiKeyCandidates(env);
   if (!keys.length) {
     throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран (Worker secret или KV fitness1_api_key).', 500);
@@ -722,14 +787,20 @@ async function withSyncLock(env, fn, options = {}) {
 }
 
 /**
- * 1× F1 fetch, patch only cart SKUs in KV chunks + index (must run under sync lock).
+ * Patch cart SKUs in KV from Fitness1 (only when Worker can reach products_v3).
+ * Otherwise request a debounced CI sync and keep serving cached KV data.
  */
 export async function refreshCartStockInKv(env, skuIds) {
-  const uniqueSkus = [...new Set((skuIds || []).map(String).filter(Boolean))];
-  if (!uniqueSkus.length) return null;
-
   const meta = await getMeta(env);
   if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+
+  if (!SYNC_POLICY.FITNESS1_CATALOG_FETCH_FROM_WORKER) {
+    await requestPortfolioCatalogCiSync(env);
+    return meta.synced_at;
+  }
+
+  const uniqueSkus = [...new Set((skuIds || []).map(String).filter(Boolean))];
+  if (!uniqueSkus.length) return null;
 
   const settings = await getSettings(env);
   const apiKey = await getFitness1ApiKey(env);
@@ -852,6 +923,12 @@ function scheduleBrowseSyncIfStale(env, ctx) {
   ctx.waitUntil((async () => {
     const meta = await getMeta(env);
     if (!meta || !isSyncStale(meta.synced_at, SYNC_POLICY.BROWSE_TTL_MS)) return;
+
+    if (!SYNC_POLICY.FITNESS1_CATALOG_FETCH_FROM_WORKER) {
+      await requestPortfolioCatalogCiSync(env);
+      return;
+    }
+
     await withSyncLock(env, async () => {
       const current = await getMeta(env);
       if (!current || !isSyncStale(current.synced_at, SYNC_POLICY.BROWSE_TTL_MS)) return null;
@@ -1187,7 +1264,7 @@ async function handleBootstrap(env, ctx) {
     if (!apiKey) {
       throw new PortfolioError('Каталогът не е синхронизиран.', 404);
     }
-    await syncPortfolioCatalog(env, { includeDescriptions: false });
+    await syncPortfolioCatalog(env, { includeDescriptions: false, fallbackToKv: true });
     meta = await getMeta(env);
     if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
   } else if (isSyncStale(meta.synced_at, SYNC_POLICY.BROWSE_TTL_MS)) {
