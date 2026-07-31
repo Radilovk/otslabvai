@@ -11,6 +11,7 @@ import {
   handlePortfolioRoute,
   getFitness1ApiKeyCandidates,
   fetchFitness1Products,
+  buildFitness1ProductsUrl,
 } from './portfolio-api.js';
 import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
 
@@ -153,6 +154,16 @@ describe('Portfolio API', () => {
     const groups = groupRawProducts(products, settings);
     expect(groups[0].name).toBe('Creatine & Taurine');
     expect(groups[0].brand).toBe('Brand & Co');
+  });
+
+  test('buildFitness1ProductsUrl matches Fitness1 API docs', () => {
+    const key = 'test-key';
+    expect(buildFitness1ProductsUrl(key)).toBe(
+      'https://fitness1.bg/b2b/api/products_v3?key=test-key'
+    );
+    expect(buildFitness1ProductsUrl(key, { description: true })).toBe(
+      'https://fitness1.bg/b2b/api/products_v3?key=test-key&description=1'
+    );
   });
 
   test('getFitness1ApiKeyCandidates prefers KV over worker secret', async () => {

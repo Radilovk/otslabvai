@@ -1565,7 +1565,7 @@ function getPortfolioImportDeps(ctx) {
 async function handlePortfolioSyncWithRefresh(env, ctx) {
     let result;
     try {
-        result = await syncPortfolioCatalog(env);
+        result = await syncPortfolioCatalog(env, { includeDescriptions: false });
     } catch (e) {
         if (e && e.name === 'PortfolioError') {
             return new Response(JSON.stringify({ error: e.message }), {
