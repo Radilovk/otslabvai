@@ -11,6 +11,7 @@ import {
   handlePortfolioRoute,
   syncPortfolioCatalog,
   syncPortfolioCatalogFromKv,
+  requestPortfolioCatalogCiSync,
   PortfolioError,
 } from './portfolio-api.js';
 import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
@@ -515,14 +516,7 @@ describe('Portfolio Fitness1 order approval', () => {
     expect(result.warning).toMatch(/KV/);
   });
 
-  test('syncPortfolioCatalog falls back to KV when Fitness1 fetch fails', async () => {
-    const originalFetch = global.fetch;
-    global.fetch = async () => ({
-      ok: false,
-      status: 500,
-      text: async () => '<html>error</html>',
-    });
-
+  test('syncPortfolioCatalog falls back to KV when Worker cannot fetch Fitness1', async () => {
     const meta = {
       synced_at: '2026-07-31T22:58:34.000Z',
       total_groups: 100,
@@ -538,23 +532,12 @@ describe('Portfolio Fitness1 order approval', () => {
       },
     };
 
-    try {
-      const result = await syncPortfolioCatalog(env, { fallbackToKv: true });
-      expect(result.source).toBe('kv_cached');
-      expect(result.total_groups).toBe(100);
-    } finally {
-      global.fetch = originalFetch;
-    }
+    const result = await syncPortfolioCatalog(env, { fallbackToKv: true });
+    expect(result.source).toBe('kv_cached');
+    expect(result.total_groups).toBe(100);
   });
 
-  test('syncPortfolioCatalog throws when Fitness1 fails and KV is empty', async () => {
-    const originalFetch = global.fetch;
-    global.fetch = async () => ({
-      ok: false,
-      status: 500,
-      text: async () => '<html>error</html>',
-    });
-
+  test('syncPortfolioCatalog throws when KV is empty and Worker cannot fetch Fitness1', async () => {
     const env = {
       FITNESS1_API_KEY: 'a9f3cdec84804149a02701ab0e43b5c3',
       PAGE_CONTENT: {
@@ -562,8 +545,34 @@ describe('Portfolio Fitness1 order approval', () => {
       },
     };
 
+    await expect(syncPortfolioCatalog(env, { fallbackToKv: true })).rejects.toBeInstanceOf(PortfolioError);
+  });
+
+  test('requestPortfolioCatalogCiSync debounces repeated dispatches', async () => {
+    const store = new Map();
+    const env = {
+      GITHUB_API_TOKEN: 'ghp_test',
+      PAGE_CONTENT: {
+        get: async (key) => store.get(key) ?? null,
+        put: async (key, value) => { store.set(key, value); },
+      },
+    };
+
+    let fetchCount = 0;
+    const originalFetch = global.fetch;
+    global.fetch = async () => {
+      fetchCount += 1;
+      return { ok: true };
+    };
+
     try {
-      await expect(syncPortfolioCatalog(env, { fallbackToKv: true })).rejects.toBeInstanceOf(PortfolioError);
+      const first = await requestPortfolioCatalogCiSync(env);
+      const second = await requestPortfolioCatalogCiSync(env);
+
+      expect(first.triggered).toBe(true);
+      expect(second.triggered).toBe(false);
+      expect(second.reason).toBe('debounced');
+      expect(fetchCount).toBe(1);
     } finally {
       global.fetch = originalFetch;
     }

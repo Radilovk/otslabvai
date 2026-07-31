@@ -3,6 +3,7 @@
 import {
   handlePortfolioRoute,
   syncPortfolioCatalog,
+  requestPortfolioCatalogCiSync,
   getPortfolioMeta,
   loadPortfolioGroupsByIds
 } from './portfolio-api.js';
@@ -1562,41 +1563,6 @@ function getPortfolioImportDeps(ctx) {
  * POST /portfolio/sync: синхронизира B2B каталога и след това автоматично
  * опреснява цените/наличностите на импортираните продукти в index и life.
  */
-async function triggerPortfolioCatalogCiSync(env) {
-    try {
-        const token = env.GITHUB_API_TOKEN || await env.PAGE_CONTENT.get('api_token');
-        if (!token) {
-            return { triggered: false, reason: 'no_github_token' };
-        }
-
-        const { owner, repo } = GITHUB_SYNC_CONFIG;
-        const res = await fetch(
-            `https://api.github.com/repos/${owner}/${repo}/actions/workflows/sync-portfolio-catalog.yml/dispatches`,
-            {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    Accept: 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json',
-                    'User-Agent': 'Cloudflare-Worker',
-                },
-                body: JSON.stringify({ ref: 'main' }),
-            }
-        );
-
-        if (!res.ok) {
-            const text = await res.text();
-            console.error('Portfolio CI sync dispatch failed:', res.status, text);
-            return { triggered: false, reason: `http_${res.status}` };
-        }
-
-        return { triggered: true };
-    } catch (e) {
-        console.error('Portfolio CI sync dispatch error:', e);
-        return { triggered: false, reason: e?.message || 'unknown_error' };
-    }
-}
-
 async function handlePortfolioSyncWithRefresh(env, ctx) {
     let result;
     try {
@@ -1613,7 +1579,7 @@ async function handlePortfolioSyncWithRefresh(env, ctx) {
 
     let ciSync = null;
     if (result.source === 'kv_cached') {
-        ciSync = await triggerPortfolioCatalogCiSync(env);
+        ciSync = await requestPortfolioCatalogCiSync(env);
     }
 
     let refresh;
