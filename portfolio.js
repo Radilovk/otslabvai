@@ -1,6 +1,7 @@
 import {
   escapeHtml, debounce, updateCartBadges, initPortfolioPage, applyHeroSettings, icon
 } from './portfolio-shared.js';
+import { formatGroupPriceHtml } from './portfolio-pricing.js';
 import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache } from './portfolio-cache.js';
 import {
   countActiveFilters as countFilters,
@@ -50,14 +51,7 @@ function getFilterParams() {
 }
 
 function formatPrice(item) {
-  const current = item.min_price === item.max_price
-    ? `${item.min_price.toFixed(2)} €`
-    : `<span class="from">от</span> ${item.min_price.toFixed(2)} €`;
-  const compare = Number(item.compare_at_price) || 0;
-  if (item.has_promo && compare > item.min_price) {
-    return `<span class="pf-price-compare">${compare.toFixed(2)} €</span><span class="pf-price-sale">${current}</span>`;
-  }
-  return current;
+  return formatGroupPriceHtml(item);
 }
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect fill='%23eef2f0' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.35em' fill='%235f6f66' font-family='sans-serif' font-size='14'%3EНяма снимка%3C/text%3E%3C/svg%3E";

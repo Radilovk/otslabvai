@@ -349,7 +349,7 @@ export function buildCatalogMeta(groups, settings = null) {
     }
 
     const availableVariants = g.variants.filter((v) => v.available);
-    const priceStats = summarizeGroupPricing(g.variants);
+    const priceStats = summarizeGroupPricing(availableVariants);
     const packs = [...new Set(g.variants.map((v) => v.pack).filter(Boolean))];
     const marginStats = summarizeGroupMargin(g);
 
@@ -719,7 +719,7 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = false, f
 
 function rebuildIndexEntryForGroup(entry, group, settings) {
   const availableVariants = group.variants.filter((v) => v.available);
-  const priceStats = summarizeGroupPricing(group.variants);
+  const priceStats = summarizeGroupPricing(availableVariants);
   const packs = [...new Set(group.variants.map((v) => v.pack).filter(Boolean))];
   const marginStats = summarizeGroupMargin(group);
   const updated = enrichIndexEntry({

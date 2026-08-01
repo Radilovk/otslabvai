@@ -191,24 +191,84 @@ export function applyPromoCodePrice(variant, promo, policy = DEFAULT_PRICING_POL
   return base;
 }
 
-/** Summarize promo/compare fields for a catalog group index row. */
+/** Summarize promo/compare fields for a catalog group index row (available variants only). */
 export function summarizeGroupPricing(variants) {
-  const list = variants || [];
-  const priced = list.filter((v) => (Number(v.retail_price) || 0) > 0);
-  const minPrice = priced.length ? Math.min(...priced.map((v) => v.retail_price)) : 0;
-  const maxPrice = priced.length ? Math.max(...priced.map((v) => v.retail_price)) : 0;
-  const promoPriced = list.filter(
+  const list = (variants || []).filter(
+    (v) => v.available !== false && (Number(v.retail_price) || 0) > 0
+  );
+
+  if (!list.length) {
+    return {
+      min_price: 0,
+      max_price: 0,
+      has_promo: false,
+      compare_at_price: 0
+    };
+  }
+
+  const minPrice = Math.min(...list.map((v) => Number(v.retail_price)));
+  const maxPrice = Math.max(...list.map((v) => Number(v.retail_price)));
+
+  const cheapestAtMin = list.filter((v) => Number(v.retail_price) === minPrice);
+  const anchor = cheapestAtMin.find(
+    (v) => v.is_on_promo && (Number(v.compare_at_price) || 0) > Number(v.retail_price)
+  ) || cheapestAtMin[0];
+
+  const hasPromo = list.some(
     (v) => (v.is_on_promo || v.pricing_mode === 'f1_promo') &&
       (Number(v.compare_at_price) || 0) > (Number(v.retail_price) || 0)
   );
-  const compareAt = promoPriced.length
-    ? Math.max(...promoPriced.map((v) => Number(v.compare_at_price) || 0))
+
+  const compareAt = anchor?.is_on_promo &&
+    (Number(anchor.compare_at_price) || 0) > Number(anchor.retail_price)
+    ? Number(anchor.compare_at_price)
     : 0;
 
   return {
     min_price: minPrice,
     max_price: maxPrice,
-    has_promo: promoPriced.length > 0,
+    has_promo: hasPromo,
     compare_at_price: compareAt
   };
+}
+
+export function formatEur(amount) {
+  return `${(Number(amount) || 0).toFixed(2)} €`;
+}
+
+/** Product page – single selected variant. */
+export function formatVariantPriceHtml(variant) {
+  if (!variant) return '—';
+  const retail = Number(variant.retail_price) || 0;
+  const compare = Number(variant.compare_at_price) || 0;
+  const current = formatEur(retail);
+  if (variant.is_on_promo && compare > retail) {
+    return `<span class="pf-price-compare">${formatEur(compare)}</span><span class="pf-price-sale">${current}</span>`;
+  }
+  return current;
+}
+
+/**
+ * Catalog card – group index row (min/max from available variants).
+ * Strikethrough uses compare only from the cheapest available variant, never a mismatched SKU.
+ */
+export function formatGroupPriceHtml(stats) {
+  const min = Number(stats?.min_price) || 0;
+  const max = Number(stats?.max_price) || 0;
+  const compare = Number(stats?.compare_at_price) || 0;
+  const showCompare = stats?.has_promo && compare > min;
+
+  if (min === max) {
+    const current = formatEur(min);
+    if (showCompare) {
+      return `<span class="pf-price-compare">${formatEur(compare)}</span><span class="pf-price-sale">${current}</span>`;
+    }
+    return current;
+  }
+
+  const fromPrice = `<span class="from">от</span> ${formatEur(min)}`;
+  if (showCompare) {
+    return `<span class="pf-price-compare">${formatEur(compare)}</span><span class="pf-price-sale">${fromPrice}</span>`;
+  }
+  return fromPrice;
 }
