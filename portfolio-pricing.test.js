@@ -5,7 +5,9 @@ import {
   resolveVariantPricing,
   summarizeGroupPricing,
   applyPromoCodePrice,
-  normalizePricingPolicy
+  normalizePricingPolicy,
+  formatGroupPriceHtml,
+  formatVariantPriceHtml,
 } from './portfolio-pricing.js';
 
 const policy = {
@@ -83,10 +85,55 @@ describe('portfolio-pricing', () => {
 
   test('summarizeGroupPricing aggregates promo flags', () => {
     const s = summarizeGroupPricing([
-      { retail_price: 19.8, compare_at_price: 24.9, is_on_promo: true, pricing_mode: 'f1_promo' },
-      { retail_price: 21.9, compare_at_price: 0, is_on_promo: false }
+      { retail_price: 19.8, compare_at_price: 24.9, is_on_promo: true, pricing_mode: 'f1_promo', available: true },
+      { retail_price: 21.9, compare_at_price: 0, is_on_promo: false, available: true }
     ]);
     expect(s.has_promo).toBe(true);
     expect(s.compare_at_price).toBe(24.9);
+    expect(s.min_price).toBe(19.8);
+  });
+
+  test('summarizeGroupPricing ignores unavailable variants', () => {
+    const s = summarizeGroupPricing([
+      { retail_price: 5, compare_at_price: 0, available: false, is_on_promo: false },
+      { retail_price: 19.8, compare_at_price: 24.9, available: true, is_on_promo: true, pricing_mode: 'f1_promo' },
+      { retail_price: 21.9, compare_at_price: 0, available: true, is_on_promo: false }
+    ]);
+    expect(s.min_price).toBe(19.8);
+    expect(s.compare_at_price).toBe(24.9);
+  });
+
+  test('summarizeGroupPricing does not attach expensive variant compare to cheap min', () => {
+    const s = summarizeGroupPricing([
+      { retail_price: 10, compare_at_price: 0, available: true, is_on_promo: false },
+      { retail_price: 50, compare_at_price: 60, available: true, is_on_promo: true, pricing_mode: 'f1_promo' }
+    ]);
+    expect(s.min_price).toBe(10);
+    expect(s.compare_at_price).toBe(0);
+    expect(s.has_promo).toBe(true);
+  });
+
+  test('formatGroupPriceHtml matches formatVariantPriceHtml for single variant', () => {
+    const variant = {
+      retail_price: 19.8,
+      compare_at_price: 24.9,
+      is_on_promo: true,
+      available: true,
+      pricing_mode: 'f1_promo'
+    };
+    const stats = summarizeGroupPricing([variant]);
+    expect(formatGroupPriceHtml(stats)).toBe(formatVariantPriceHtml(variant));
+  });
+
+  test('formatGroupPriceHtml shows range without wrong strikethrough', () => {
+    const html = formatGroupPriceHtml({
+      min_price: 10,
+      max_price: 50,
+      has_promo: true,
+      compare_at_price: 0
+    });
+    expect(html).toContain('от');
+    expect(html).toContain('10.00 €');
+    expect(html).not.toContain('pf-price-compare');
   });
 });

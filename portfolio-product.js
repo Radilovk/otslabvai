@@ -1,6 +1,7 @@
 import {
   escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage, icon
 } from './portfolio-shared.js';
+import { formatGroupPriceHtml, formatVariantPriceHtml } from './portfolio-pricing.js';
 import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
 import { filterIndex } from './portfolio-filter.js';
 
@@ -111,7 +112,7 @@ function renderRelated() {
             <div class="pf-card-body">
               <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
               <h3 class="pf-card-title">${escapeHtml(item.name)}</h3>
-              <div class="pf-card-price">${item.min_price.toFixed(2)} €</div>
+              <div class="pf-card-price">${formatGroupPriceHtml(item)}</div>
             </div>
           </a>`).join('')}
       </div>
@@ -119,13 +120,7 @@ function renderRelated() {
 }
 
 function formatVariantPrice(variant) {
-  if (!variant) return '—';
-  const current = `${variant.retail_price.toFixed(2)} €`;
-  const compare = Number(variant.compare_at_price) || 0;
-  if (variant.is_on_promo && compare > variant.retail_price) {
-    return `<span class="pf-price-compare">${compare.toFixed(2)} €</span><span class="pf-price-sale">${current}</span>`;
-  }
-  return current;
+  return formatVariantPriceHtml(variant);
 }
 
 function render() {
