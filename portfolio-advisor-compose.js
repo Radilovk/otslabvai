@@ -2,7 +2,6 @@
  * Съставяне на пакети / единични продуктови опции за Portfolio AI консултант.
  */
 
-import { composeProtocolStacks } from './protocol-stack-composer.js';
 import {
   filterAdvisorRetailProducts,
   pickSingleModeBasicProduct,
