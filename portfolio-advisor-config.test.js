@@ -7,12 +7,33 @@ import {
   buildActiveAdvisorSteps,
   filterCategoriesForAdvisor,
   splitAdvisorCategories,
+  scoreCategoryForGoal,
   getDefaultAdvisorCategoryNames,
   getRelevantAdvisorCategoryNames,
   pruneAdvisorAnswers,
 } from './portfolio-advisor-config.js';
 import { PORTFOLIO_GOALS } from './portfolio-goals.js';
 import { buildPortfolioAdvisorProfile, normalizeAdvisorCategories } from './portfolio-advisor-engine.js';
+
+/** Реални Fitness1 категории за тестове */
+const REAL_CATALOG = [
+  { name: 'Витамини', count: 287 },
+  { name: 'Изгаряне на мазнини', count: 191 },
+  { name: 'Билки', count: 415 },
+  { name: 'Аминокиселини', count: 248 },
+  { name: 'Протеини', count: 120 },
+  { name: 'Креатин', count: 100 },
+  { name: 'Минерали', count: 237 },
+  { name: 'Мастни киселини', count: 116 },
+  { name: 'Антиоксиданти', count: 174 },
+  { name: 'Здраве и тонус', count: 369 },
+  { name: 'Спортни аксесоари и уреди', count: 210 },
+  { name: 'Качване на маса и възстановяване', count: 86 },
+  { name: 'Предтренировъчни добавки', count: 126 },
+  { name: 'Anti-Aging / Против стареене', count: 37 },
+  { name: 'Стави и сухожилия', count: 151 },
+  { name: 'Хардкор продукти и стимулатори', count: 99 },
+];
 
 describe('portfolio-advisor-config', () => {
   test('priority options match PORTFOLIO_GOALS ids', () => {
@@ -21,48 +42,69 @@ describe('portfolio-advisor-config', () => {
     expect(optionIds).toEqual(PORTFOLIO_GOALS.map((g) => g.id));
   });
 
-  test('buildCategoryStep uses goal-filtered categories without „Всички категории“', () => {
-    const catalog = [
-      { name: 'Протеини', count: 12 },
-      { name: 'Отслабване', count: 8 },
-      { name: 'Аксесоари', count: 20 },
-      { name: 'Гейнъри', count: 5 },
-    ];
-    const step = buildCategoryStep(catalog, { priority: 'otshalvane' });
-    expect(step.id).toBe('product_categories');
-    expect(step.type).toBe('category_multi');
-    expect(step.primaryOptions.some((o) => o.value === 'Отслабване')).toBe(true);
-    expect(step.primaryOptions.some((o) => o.value === 'Аксесоари')).toBe(false);
-    expect(step.moreOptions.some((o) => o.value === 'Гейнъри')).toBe(false);
+  test('scoreCategoryForGoal разпознава „Изгаряне на мазнини“ при отслабване', () => {
+    expect(scoreCategoryForGoal('Изгаряне на мазнини', 'otshalvane')).toBeGreaterThan(
+      scoreCategoryForGoal('Витамини', 'otshalvane')
+    );
+    expect(scoreCategoryForGoal('Билки', 'otshalvane')).toBeGreaterThan(0);
+    expect(scoreCategoryForGoal('Протеини', 'otshalvane')).toBe(-1);
   });
 
-  test('filterCategoriesForAdvisor връща всички релевантни категории', () => {
-    const many = Array.from({ length: 20 }, (_, i) => ({ name: `Витамин ${i}`, count: i + 1 }));
-    const filtered = filterCategoriesForAdvisor(many, 'health');
-    expect(filtered.length).toBe(20);
+  test('filterCategoriesForAdvisor подрежда по релевантност, не само по count', () => {
+    const filtered = filterCategoriesForAdvisor(REAL_CATALOG, 'otshalvane');
+    expect(filtered[0].name).toBe('Изгаряне на мазнини');
+    expect(filtered.some((c) => c.name === 'Протеини')).toBe(false);
+    expect(filtered.some((c) => c.name === 'Спортни аксесоари и уреди')).toBe(false);
+  });
+
+  test('getDefaultAdvisorCategoryNames маркира топ 3 по приоритет при отслабване', () => {
+    const names = getDefaultAdvisorCategoryNames(REAL_CATALOG, 'otshalvane');
+    expect(names).toHaveLength(DEFAULT_ADVISOR_SEARCH_CATEGORIES);
+    expect(names[0]).toBe('Изгаряне на мазнини');
+    expect(names).toContain('Билки');
+    expect(names).toContain('Аминокиселини');
+    expect(names).not.toContain('Витамини');
+    expect(names).not.toContain('Протеини');
+  });
+
+  test('buildCategoryStep uses goal-filtered categories without аксесоари', () => {
+    const step = buildCategoryStep(REAL_CATALOG, { priority: 'otshalvane' });
+    expect(step.id).toBe('product_categories');
+    expect(step.type).toBe('category_multi');
+    expect(step.primaryOptions[0]?.value).toBe('Изгаряне на мазнини');
+    expect(step.primaryOptions.some((o) => o.value === 'Спортни аксесоари и уреди')).toBe(false);
+    expect(step.moreOptions.some((o) => o.value === 'Протеини')).toBe(false);
+  });
+
+  test('filterCategoriesForAdvisor връща всички релевантни категории за здраве', () => {
+    const filtered = filterCategoriesForAdvisor(REAL_CATALOG, 'health');
+    expect(filtered.length).toBeGreaterThan(DEFAULT_ADVISOR_SEARCH_CATEGORIES);
+    expect(filtered.some((c) => c.name === 'Витамини')).toBe(true);
+    expect(filtered.some((c) => c.name === 'Протеини')).toBe(false);
   });
 
   test('splitAdvisorCategories разделя топ 3 и останалите', () => {
-    const catalog = Array.from({ length: 6 }, (_, i) => ({ name: `Категория ${i}`, count: 10 - i }));
+    const catalog = REAL_CATALOG.filter((c) => c.name !== 'Спортни аксесоари и уреди');
     const { all, primary, more } = splitAdvisorCategories(catalog, 'other');
-    expect(all).toHaveLength(6);
+    expect(all.length).toBeGreaterThan(DEFAULT_ADVISOR_SEARCH_CATEGORIES);
     expect(primary).toHaveLength(DEFAULT_ADVISOR_SEARCH_CATEGORIES);
-    expect(more).toHaveLength(3);
-    expect(primary[0].name).toBe('Категория 0');
+    expect(more.length).toBe(all.length - DEFAULT_ADVISOR_SEARCH_CATEGORIES);
   });
 
   test('buildCategoryStep falls back when catalog empty', () => {
     const step = buildCategoryStep([], { priority: 'muscle' });
     expect(step.primaryOptions.length).toBeGreaterThan(0);
-    expect(step.primaryOptions.length).toBeLessThanOrEqual(DEFAULT_ADVISOR_SEARCH_CATEGORIES);
+    const topValues = step.primaryOptions.map((o) => o.value);
+    expect(topValues).toContain('Протеини');
+    expect(topValues).toContain('Креатин');
   });
 
   test('buildCategoryStep single mode е radio без аксесоари', () => {
-    const step = buildCategoryStep([{ name: 'Протеини' }, { name: 'Аксесоари' }], { singleSelect: true, priority: 'muscle' });
+    const step = buildCategoryStep(REAL_CATALOG, { singleSelect: true, priority: 'muscle' });
     expect(step.type).toBe('category_single');
     expect(step.field).toBe('product_category');
     const allOptions = [...step.primaryOptions, ...step.moreOptions];
-    expect(allOptions.some((o) => o.value === 'Аксесоари')).toBe(false);
+    expect(allOptions.some((o) => o.value === 'Спортни аксесоари и уреди')).toBe(false);
     expect(allOptions.some((o) => o.value === 'Протеини')).toBe(true);
   });
 
@@ -127,32 +169,29 @@ describe('portfolio-advisor-config', () => {
     expect(answers.height_cm).toBeUndefined();
   });
 
-  test('getDefaultAdvisorCategoryNames връща топ 3 релевантни', () => {
-    const catalog = [
-      { name: 'Протеини', count: 10 },
-      { name: 'Отслабване', count: 8 },
-      { name: 'Хербални', count: 7 },
-      { name: 'Витамини', count: 6 },
-      { name: 'Аксесоари', count: 5 },
-    ];
-    const names = getDefaultAdvisorCategoryNames(catalog, 'otshalvane');
-    expect(names).toHaveLength(DEFAULT_ADVISOR_SEARCH_CATEGORIES);
-    expect(names).toContain('Отслабване');
-    expect(names).not.toContain('Аксесоари');
+  test('getRelevantAdvisorCategoryNames връща всички релевантни', () => {
+    const names = getRelevantAdvisorCategoryNames(REAL_CATALOG, 'otshalvane');
+    expect(names.length).toBeGreaterThan(DEFAULT_ADVISOR_SEARCH_CATEGORIES);
+    expect(names).not.toContain('Спортни аксесоари и уреди');
     expect(names).not.toContain('Протеини');
+    expect(names[0]).toBe('Изгаряне на мазнини');
   });
 
-  test('getRelevantAdvisorCategoryNames връща всички релевантни', () => {
-    const catalog = [
-      { name: 'Отслабване', count: 10 },
-      { name: 'Хербални', count: 9 },
-      { name: 'Витамини', count: 8 },
-      { name: 'Омега', count: 7 },
-      { name: 'Аминокиселини', count: 6 },
-      { name: 'Аксесоари', count: 5 },
-    ];
-    const names = getRelevantAdvisorCategoryNames(catalog, 'otshalvane');
-    expect(names.length).toBeGreaterThan(DEFAULT_ADVISOR_SEARCH_CATEGORIES);
-    expect(names).not.toContain('Аксесоари');
+  test('muscle goal: топ 3 са Протеини, Креатин, Качване на маса', () => {
+    const names = getDefaultAdvisorCategoryNames(REAL_CATALOG, 'muscle');
+    expect(names[0]).toBe('Протеини');
+    expect(names).toContain('Креатин');
+    expect(names).toContain('Качване на маса и възстановяване');
+    expect(names).not.toContain('Изгаряне на мазнини');
+  });
+
+  test('FALLBACK_CATALOG_CATEGORIES съдържа реални Fitness1 категории', () => {
+    expect(FALLBACK_CATALOG_CATEGORIES).toContain('Изгаряне на мазнини');
+    expect(FALLBACK_CATALOG_CATEGORIES).toContain('Протеини');
+    const fallbackFiltered = filterCategoriesForAdvisor(
+      FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name })),
+      'otshalvane'
+    );
+    expect(fallbackFiltered[0]?.name).toBe('Изгаряне на мазнини');
   });
 });

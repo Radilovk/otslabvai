@@ -3,95 +3,21 @@
  */
 
 import { PORTFOLIO_GOALS } from './portfolio-goals.js';
+import {
+  ADVISOR_EXCLUDED_CATEGORY_PATTERNS,
+  scoreCategoryForGoal,
+  scoreProductForGoal,
+} from './portfolio-goal-relevance.js';
 
-/** Fallback категории ако bootstrap още не е зареден */
-export const FALLBACK_CATALOG_CATEGORIES = [
-  'Протеини',
-  'Витамини и минерали',
-  'Аминокиселини',
-  'Креатин',
-  'Отслабване',
-  'Хербални добавки',
-  'Омега мастни киселини',
-  'Стави и опорно-двигателна система',
-  'Енергия и фокус',
-  'Възстановяване и сън',
-];
+export { scoreCategoryForGoal, scoreProductForGoal, ADVISOR_EXCLUDED_CATEGORY_PATTERNS };
+
+import { FITNESS1_CATALOG_CATEGORIES } from './portfolio-fitness1-categories.js';
+
+/** Fallback категории ако bootstrap още не е зареден (реални Fitness1 имена) */
+export const FALLBACK_CATALOG_CATEGORIES = FITNESS1_CATALOG_CATEGORIES;
 
 /** Брой категории, маркирани по подразбиране за AI търсене */
 export const DEFAULT_ADVISOR_SEARCH_CATEGORIES = 3;
-
-/** Категории, които не се предлагат в консултанта (аксесоари и др.) */
-export const ADVISOR_EXCLUDED_CATEGORY_PATTERNS = [
-  'аксесоар',
-  'accessory',
-  'accessories',
-  'шейкър',
-  'shaker',
-  'шейкер',
-  'облекло',
-  'clothing',
-  'apparel',
-  'тениска',
-  'шорти',
-  'бутилка',
-  'bottle',
-  'чаша',
-  'ръкавиц',
-  'glove',
-  'кърпа',
-  'чанта',
-  'bag',
-];
-
-const GOAL_CATEGORY_MATCHERS = {
-  otshalvane: {
-    include: [
-      'отслаб', 'диета', 'fat', 'burn', 'thermo', 'метабол', 'детокс', 'detox', 'лида', 'lida',
-      'апетит', 'хербал', 'витамин', 'омега', 'амино', 'фибр', 'fiber', 'целулит', 'cellulite',
-    ],
-    exclude: ['гейн', 'gainer', 'mass', 'маса', 'протеин', 'protein', 'whey', 'креатин', 'creatine', 'preworkout', 'предтрен'],
-  },
-  muscle: {
-    include: [
-      'протеин', 'protein', 'креатин', 'creatine', 'амино', 'bcaa', 'гейн', 'gainer', 'mass', 'маса',
-      'предтрен', 'preworkout', 'възстанов', 'recovery',
-    ],
-    exclude: ['отслаб', 'fat burn', 'thermo', 'лида', 'lida', 'диета', 'diet pill', 'appetite'],
-  },
-  health: {
-    include: [
-      'витамин', 'vitamin', 'минерал', 'имун', 'омега', 'omega', 'пробиот', 'колаген', 'collagen',
-      'хербал', 'multi', 'здрав', 'health',
-    ],
-    exclude: ['гейн', 'gainer', 'аксесоар'],
-  },
-  antiaging: {
-    include: [
-      'анти', 'anti', 'колаген', 'collagen', 'коензим', 'coq', 'nad', 'nmn', 'пептид', 'peptide',
-      'хиалурон', 'hyaluronic', 'витамин', 'longevity',
-    ],
-    exclude: ['гейн', 'gainer', 'протеин', 'preworkout', 'предтрен'],
-  },
-  energy: {
-    include: [
-      'енерги', 'energy', 'фокус', 'focus', 'предтрен', 'preworkout', 'ноотроп', 'nootropic',
-      'кофеин', 'caffeine', 'витамин', 'амино', 'guarana',
-    ],
-    exclude: ['гейн', 'gainer', 'сън', 'sleep', 'мелатонин', 'melatonin'],
-  },
-  recovery: {
-    include: [
-      'възстанов', 'recovery', 'сън', 'sleep', 'bcaa', 'глутамин', 'glutamine', 'колаген', 'став',
-      'joint', 'магнезий', 'magnesium', 'релакс', 'протеин', 'zma', 'мелатонин', 'melatonin',
-    ],
-    exclude: ['fat burn', 'отслаб', 'thermo', 'гейн', 'gainer'],
-  },
-  other: {
-    include: [],
-    exclude: ['гейн', 'gainer', 'аксесоар', 'accessory'],
-  },
-};
 
 const FEMALE_ONLY_CONDITIONS = [
   { value: 'pregnancy', label: 'Бременност' },
@@ -100,29 +26,18 @@ const FEMALE_ONLY_CONDITIONS = [
 
 const BODY_GOAL_IDS = new Set(['otshalvane', 'muscle']);
 
-function normalizeCategoryText(value) {
-  return String(value || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
-
-function categoryIsGloballyExcluded(name) {
-  const normalized = normalizeCategoryText(name);
-  return ADVISOR_EXCLUDED_CATEGORY_PATTERNS.some((pattern) => normalized.includes(normalizeCategoryText(pattern)));
-}
-
 function categoryMatchesGoal(name, priority) {
-  if (categoryIsGloballyExcluded(name)) return false;
-  const matchers = GOAL_CATEGORY_MATCHERS[priority] || GOAL_CATEGORY_MATCHERS.other;
-  const normalized = normalizeCategoryText(name);
-  if (matchers.exclude?.some((pattern) => normalized.includes(normalizeCategoryText(pattern)))) return false;
-  if (!matchers.include?.length) return true;
-  return matchers.include.some((pattern) => normalized.includes(normalizeCategoryText(pattern)));
+  return scoreCategoryForGoal(name, priority) > 0;
+}
+
+function compareAdvisorCategories(a, b, priority) {
+  const scoreDiff = scoreCategoryForGoal(b.name, priority) - scoreCategoryForGoal(a.name, priority);
+  if (scoreDiff !== 0) return scoreDiff;
+  return (b.count || 0) - (a.count || 0);
 }
 
 /**
- * Филтрира каталожни категории до релевантните за целта (без аксесоари).
+ * Филтрира и подрежда каталожни категории по релевантност за целта (не само по брой продукти).
  * @param {{ name: string, count?: number }[]} catalogCategories
  * @param {string} [priority]
  */
@@ -131,8 +46,10 @@ export function filterCategoriesForAdvisor(catalogCategories = [], priority = 'o
     ? catalogCategories
     : FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name }));
 
-  const relevant = source.filter((category) => categoryMatchesGoal(category.name, priority || 'other'));
-  return [...relevant].sort((a, b) => (b.count || 0) - (a.count || 0));
+  const goal = priority || 'other';
+  return source
+    .filter((category) => categoryMatchesGoal(category.name, goal))
+    .sort((a, b) => compareAdvisorCategories(a, b, goal));
 }
 
 function mapCategoryOptions(categories) {

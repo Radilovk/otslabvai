@@ -391,8 +391,25 @@ async function loadProduct() {
 async function init() {
   await initPortfolioPage({ showMobileBar: false, settingsOnly: false });
   document.body.classList.add('pf-body--product');
+  initBackButton();
   updateCartBadges();
   await loadProduct();
+}
+
+function initBackButton() {
+  const btn = document.getElementById('pf-product-back');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const cat = product?.category_path?.[0];
+    const fallback = cat
+      ? `portfolio.html?category=${encodeURIComponent(cat)}`
+      : 'portfolio.html';
+    if (window.history.length > 1 && document.referrer) {
+      history.back();
+      return;
+    }
+    window.location.href = fallback;
+  });
 }
 
 init();
