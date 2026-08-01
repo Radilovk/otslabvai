@@ -1,7 +1,7 @@
 import { API_URL } from './config.js';
 import { PortfolioAdvisorAnimator } from './portfolio-advisor-analysis.js';
 import { persistAdvisorResult, DRAFT_KEY, RESULT_KEY, LEAD_KEY } from './portfolio-advisor-store.js';
-import { buildActiveAdvisorSteps, FALLBACK_CATALOG_CATEGORIES } from './portfolio-advisor-config.js';
+import { buildActiveAdvisorSteps, FALLBACK_CATALOG_CATEGORIES, getDefaultAdvisorCategoryNames, pruneAdvisorAnswers } from './portfolio-advisor-config.js';
 
 const form = document.getElementById('lpq-form');
 const progressEl = document.getElementById('lpq-progress');
@@ -65,7 +65,40 @@ function saveDraft() {
   sessionStorage.setItem(DRAFT_KEY, JSON.stringify(answers));
 }
 
+function syncCategoryDefaults() {
+  const defaults = getDefaultAdvisorCategoryNames(catalogCategories, answers.priority || 'other');
+  if (!defaults.length) return;
+
+  if (answers.selection_mode === 'single') {
+    if (!defaults.includes(answers.product_category)) {
+      answers.product_category = defaults[0];
+    }
+    return;
+  }
+
+  const current = Array.isArray(answers.product_categories) ? answers.product_categories : [];
+  const valid = current.filter((name) => defaults.includes(name));
+  answers.product_categories = valid.length ? valid : [...defaults];
+}
+
+function profileFieldsChanged(field) {
+  return ['sex', 'age_band', 'priority'].includes(field);
+}
+
+function handleProfileChange(field) {
+  pruneAdvisorAnswers(answers);
+  if (field === 'priority' || field === 'selection_mode') {
+    delete answers.product_categories;
+    delete answers.product_category;
+  }
+  syncCategoryDefaults();
+  saveDraft();
+  renderSteps();
+  showStep(stepIndex);
+}
+
 function getActiveSteps() {
+  syncCategoryDefaults();
   return buildActiveAdvisorSteps(answers, catalogCategories);
 }
 
@@ -139,8 +172,12 @@ function bindStepEvents() {
             delete answers.product_categories;
             delete answers.product_category;
             saveDraft();
-            renderSteps();
-            showStep(stepIndex);
+            handleProfileChange(field);
+            return;
+          }
+          if (profileFieldsChanged(field)) {
+            saveDraft();
+            handleProfileChange(field);
             return;
           }
           group.querySelectorAll('.lpq-option').forEach((l) => l.classList.remove('selected'));
@@ -286,6 +323,7 @@ function validateCurrentStep() {
 
 async function submitQuiz() {
   syncOtherInputs();
+  syncCategoryDefaults();
   saveDraft();
 
   formCard.hidden = true;

@@ -150,7 +150,10 @@ export function buildClientProfile(raw) {
     symptoms_other: pickOther('symptoms'),
     allergies: Array.isArray(raw.allergies) ? raw.allergies : [],
     allergies_other: pickOther('allergies'),
-    pregnancy: raw.pregnancy || 'no',
+    pregnancy: (
+      (Array.isArray(raw.conditions) && (raw.conditions.includes('pregnancy') || raw.conditions.includes('breastfeeding')))
+      || raw.pregnancy === 'yes'
+    ) ? 'yes' : 'no',
     sun_exposure: raw.sun_exposure || null,
     joint_duration: raw.joint_duration || null,
     menopause_context: menopauseContext,
