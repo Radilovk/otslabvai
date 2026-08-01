@@ -142,6 +142,7 @@ async function runAdvisorMockGeneration(env, rawAnswers) {
   const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedIds);
   const recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedIds, {
     selection_mode: profile.selection_mode,
+    independent_tiers: true,
   });
   return { profile, payload, recommendation };
 }

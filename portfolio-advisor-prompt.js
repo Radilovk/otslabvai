@@ -28,7 +28,15 @@ export function getDefaultPortfolioNarratorPrompt() {
 Върни САМО JSON:
 {"analysis":"2 изречения","recommended_tier":"optimal","tier_copy":{"basic":{"benefits":["..."],"strategy":"кратко"},"optimal":{"benefits":["..."],"strategy":"..."},"premium":{"benefits":["..."],"strategy":"..."}},"product_copy":{"PRODUCT_ID":{"why_for_you":"макс 12 думи","dose":"...","timing":"сутрин|вечер"}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."],"disclaimer":"Информацията не замества лекарска консултация."}
 
-Ползите са кумулативни. БЕЗ синонимно повторение.`;
+ВАЖНО за dose:
+- Пиши САМО дозата от етикета на конкретния продукт (напр. „1 капсула дневно").
+- НИКОГА не увеличавай доза защото има друг продукт в пакета.
+- Не сумирай дози от различни продукти.
+- Ако не знаеш точната доза — пиши „Според етикета".
+
+Ползите са НЕЗАВИСИМИ за всеки tier (не кумулативни). Всеки tier е отделен пакет.
+Обясни ролята на всеки продукт като допълващ другите — без повтарящи се активни вещества.
+БЕЗ синонимно повторение.`;
 }
 
 export function buildPortfolioNarratorPayload(profile, composed, eligibleProducts) {
@@ -74,7 +82,7 @@ export function buildPortfolioNarratorMessages(template, profile, composed, elig
   const dataJson = JSON.stringify(payload);
   const singleModeNote = profile.selection_mode === 'single'
     ? '\n\nSINGLE MODE: Всеки tier съдържа ТОЧНО 1 продукт. Ползите и strategy са САМО за този продукт — без кумулативни пакетни ползи и без други артикули.'
-    : '';
+    : '\n\nPACKAGE MODE: Трите tier-а са НЕЗАВИСИМИ пакети с различни продукти. Ползите НЕ са кумулативни. Всеки продукт има допълваща роля. Dose = само по етикет, без увеличаване заради други продукти в пакета.';
   const system = `${template}${singleModeNote}\n\nВАЖНО: Без chain-of-thought. Само финален JSON. Не променяй product_id.`;
   if (template.includes('{{protocolData}}')) {
     return [{ role: 'user', content: template.replace('{{protocolData}}', () => dataJson) }];
