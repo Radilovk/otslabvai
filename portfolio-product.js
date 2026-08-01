@@ -1,7 +1,7 @@
 import {
   escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage, icon
 } from './portfolio-shared.js';
-import { formatGroupPriceHtml, formatVariantPriceHtml } from './portfolio-pricing.js';
+import { formatGroupPriceHtml, formatVariantPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
 import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
 import { filterIndex } from './portfolio-filter.js';
 
@@ -27,7 +27,41 @@ function getOptionsForPack(pack) {
   return product.variants.filter((v) => v.pack === pack || (!pack && !v.pack));
 }
 
+function renderCardTitleLine(item) {
+  const packsLabel = formatPacksDisplay(item.packs);
+  if (!packsLabel) return escapeHtml(item.name);
+  return `${escapeHtml(item.name)} <span class="pf-card-packs">${escapeHtml(packsLabel)}</span>`;
+}
+
+function productPageUrl(item) {
+  const base = `portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}`;
+  if (!item.default_sku_id) return base;
+  return `${base}&sku=${encodeURIComponent(item.default_sku_id)}`;
+}
+
 function pickDefaultVariant() {
+  const urlSku = new URLSearchParams(location.search).get('sku');
+  if (urlSku) {
+    const match = product.variants.find((v) => String(v.sku_id) === String(urlSku));
+    if (match) {
+      selectedPack = match.pack || '';
+      selectedVariant = match;
+      selectedImage = match.image || product.image;
+      return;
+    }
+  }
+
+  const sorted = [...product.variants].sort(
+    (a, b) => (Number(a.retail_price) || 0) - (Number(b.retail_price) || 0)
+  );
+  const cheapest = sorted[0];
+  if (cheapest) {
+    selectedPack = cheapest.pack || '';
+    selectedVariant = cheapest;
+    selectedImage = cheapest.image || product.image;
+    return;
+  }
+
   const packs = getPacks();
   selectedPack = packs[0] || '';
   const options = getOptionsForPack(selectedPack);
@@ -105,13 +139,13 @@ function renderRelated() {
       <h2>Още от „${escapeHtml(topCat)}"</h2>
       <div class="pf-grid pf-related-grid">
         ${related.map((item) => `
-          <a href="portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}" class="pf-card-link">
+          <a href="${productPageUrl(item)}" class="pf-card-link">
             <div class="pf-card-image">
               <img src="${escapeHtml(item.image || PLACEHOLDER_IMG)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" sizes="(max-width: 640px) 45vw, 160px" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
             </div>
             <div class="pf-card-body">
               <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
-              <h3 class="pf-card-title">${escapeHtml(item.name)}</h3>
+              <h3 class="pf-card-title">${renderCardTitleLine(item)}</h3>
               <div class="pf-card-price">${formatGroupPriceHtml(item)}</div>
             </div>
           </a>`).join('')}

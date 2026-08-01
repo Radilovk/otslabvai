@@ -8,6 +8,7 @@ import {
   normalizePricingPolicy,
   formatGroupPriceHtml,
   formatVariantPriceHtml,
+  formatPacksDisplay,
 } from './portfolio-pricing.js';
 
 const policy = {
@@ -135,5 +136,21 @@ describe('portfolio-pricing', () => {
     expect(html).toContain('от');
     expect(html).toContain('10.00 €');
     expect(html).not.toContain('pf-price-compare');
+  });
+
+  test('formatPacksDisplay compacts same-unit packs', () => {
+    expect(formatPacksDisplay(['0.9 кг', '2.3 кг'])).toBe('0.9 / 2.3 кг');
+    expect(formatPacksDisplay(['60 капс', '90 капс'])).toBe('60 / 90 капс');
+    expect(formatPacksDisplay(['500 ml', '1 кг'])).toBe('500 ml / 1 кг');
+    expect(formatPacksDisplay(['1 кг'])).toBe('1 кг');
+  });
+
+  test('summarizeGroupPricing returns default_sku_id for cheapest variant', () => {
+    const s = summarizeGroupPricing([
+      { sku_id: 'cheap', retail_price: 10, available: true, is_on_promo: false },
+      { sku_id: 'big', retail_price: 50, available: true, is_on_promo: true, compare_at_price: 60, pricing_mode: 'f1_promo' }
+    ]);
+    expect(s.default_sku_id).toBe('cheap');
+    expect(s.min_price).toBe(10);
   });
 });

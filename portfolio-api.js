@@ -20,6 +20,7 @@ import {
   DEFAULT_PRICING_POLICY,
   resolveVariantPricing,
   summarizeGroupPricing,
+  collectAvailablePacks,
   normalizePricingPolicy,
   applyPromoCodePrice
 } from './portfolio-pricing.js';
@@ -350,7 +351,7 @@ export function buildCatalogMeta(groups, settings = null) {
 
     const availableVariants = g.variants.filter((v) => v.available);
     const priceStats = summarizeGroupPricing(availableVariants);
-    const packs = [...new Set(g.variants.map((v) => v.pack).filter(Boolean))];
+    const packs = collectAvailablePacks(availableVariants);
     const marginStats = summarizeGroupMargin(g);
 
     const entry = enrichIndexEntry({
@@ -365,6 +366,7 @@ export function buildCatalogMeta(groups, settings = null) {
       max_price: priceStats.max_price,
       has_promo: priceStats.has_promo,
       compare_at_price: priceStats.compare_at_price,
+      default_sku_id: priceStats.default_sku_id,
       variant_count: g.variants.length,
       available: availableVariants.length > 0,
       image: g.image,
@@ -720,7 +722,7 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = false, f
 function rebuildIndexEntryForGroup(entry, group, settings) {
   const availableVariants = group.variants.filter((v) => v.available);
   const priceStats = summarizeGroupPricing(availableVariants);
-  const packs = [...new Set(group.variants.map((v) => v.pack).filter(Boolean))];
+  const packs = collectAvailablePacks(availableVariants);
   const marginStats = summarizeGroupMargin(group);
   const updated = enrichIndexEntry({
     ...entry,
@@ -728,6 +730,7 @@ function rebuildIndexEntryForGroup(entry, group, settings) {
     max_price: priceStats.max_price,
     has_promo: priceStats.has_promo,
     compare_at_price: priceStats.compare_at_price,
+    default_sku_id: priceStats.default_sku_id,
     variant_count: group.variants.length,
     available: availableVariants.length > 0,
     packs,

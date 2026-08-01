@@ -202,7 +202,8 @@ export function summarizeGroupPricing(variants) {
       min_price: 0,
       max_price: 0,
       has_promo: false,
-      compare_at_price: 0
+      compare_at_price: 0,
+      default_sku_id: null
     };
   }
 
@@ -228,8 +229,50 @@ export function summarizeGroupPricing(variants) {
     min_price: minPrice,
     max_price: maxPrice,
     has_promo: hasPromo,
-    compare_at_price: compareAt
+    compare_at_price: compareAt,
+    default_sku_id: anchor?.sku_id ? String(anchor.sku_id) : null
   };
+}
+
+function packSortKey(pack) {
+  const s = String(pack || '').trim();
+  const m = s.match(/([\d,.]+)/);
+  if (m) {
+    const n = parseFloat(m[1].replace(',', '.'));
+    if (!Number.isNaN(n)) return n;
+  }
+  return Number.POSITIVE_INFINITY;
+}
+
+/** Unique pack labels from available variants, sorted by size. */
+export function collectAvailablePacks(variants) {
+  const packs = [...new Set(
+    (variants || [])
+      .filter((v) => v.available !== false)
+      .map((v) => String(v.pack || '').trim())
+      .filter(Boolean)
+  )];
+  return packs.sort((a, b) => packSortKey(a) - packSortKey(b) || a.localeCompare(b, 'bg'));
+}
+
+/**
+ * Compact pack line for catalog cards, e.g. "0.9 / 2.3 кг" or "60 / 90 капс".
+ * @param {string[]} packs
+ */
+export function formatPacksDisplay(packs) {
+  const list = (packs || []).map((p) => String(p).trim()).filter(Boolean);
+  if (!list.length) return '';
+  if (list.length === 1) return list[0];
+
+  const parsed = list.map((p) => {
+    const m = p.match(/^([\d,.]+)\s*(.*)$/u);
+    return m ? { num: m[1], unit: m[2].trim() } : { num: p, unit: '' };
+  });
+  const unit = parsed[0].unit;
+  if (unit && parsed.every((p) => p.unit === unit)) {
+    return `${parsed.map((p) => p.num).join(' / ')} ${unit}`;
+  }
+  return list.join(' / ');
 }
 
 export function formatEur(amount) {

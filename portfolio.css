@@ -1252,12 +1252,23 @@ img, svg { display: block; max-width: 100%; height: auto; }
   flex: 1;
   transition: color 0.2s;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+.pf-card-title .pf-card-packs {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--pf-text-secondary);
+  line-height: 1.25;
+}
+
 .pf-product-card:hover .pf-card-title { color: var(--pf-primary); }
+
+.pf-product-card:hover .pf-card-title .pf-card-packs { color: var(--pf-muted); }
 
 .pf-card-price {
   font-weight: 700;
