@@ -11,20 +11,10 @@ import {
 
 export { scoreCategoryForGoal, scoreProductForGoal, ADVISOR_EXCLUDED_CATEGORY_PATTERNS };
 
-/** Fallback категории ако bootstrap още не е зареден */
-export const FALLBACK_CATALOG_CATEGORIES = [
-  'Изгаряне на мазнини',
-  'Отслабване',
-  'Протеини',
-  'Витамини и минерали',
-  'Аминокиселини',
-  'Креатин',
-  'Хербални добавки',
-  'Омега мастни киселини',
-  'Стави и опорно-двигателна система',
-  'Енергия и фокус',
-  'Възстановяване и сън',
-];
+import { FITNESS1_CATALOG_CATEGORIES } from './portfolio-fitness1-categories.js';
+
+/** Fallback категории ако bootstrap още не е зареден (реални Fitness1 имена) */
+export const FALLBACK_CATALOG_CATEGORIES = FITNESS1_CATALOG_CATEGORIES;
 
 /** Брой категории, маркирани по подразбиране за AI търсене */
 export const DEFAULT_ADVISOR_SEARCH_CATEGORIES = 3;

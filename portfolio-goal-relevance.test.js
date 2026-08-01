@@ -30,12 +30,12 @@ describe('portfolio-goal-relevance', () => {
   for (const goal of PORTFOLIO_GOALS) {
     test(`${goal.id}: top-tier category outranks supporting category`, () => {
       const samples = {
-        otshalvane: ['Изгаряне на мазнини', 'Витамини и минерали'],
-        muscle: ['Протеини', 'Витамини и минерали'],
-        health: ['Витамини и минерали', 'Протеини'],
-        antiaging: ['Антиейджинг', 'Протеини'],
-        energy: ['Енергия и фокус', 'Възстановяване и сън'],
-        recovery: ['Възстановяване и сън', 'Протеини'],
+        otshalvane: ['Изгаряне на мазнини', 'Витамини'],
+        muscle: ['Протеини', 'Витамини'],
+        health: ['Витамини', 'Здраве и тонус'],
+        antiaging: ['Anti-Aging / Против стареене', 'Витамини'],
+        energy: ['Предтренировъчни добавки', 'Витамини'],
+        recovery: ['Стави и сухожилия', 'Креатин'],
       };
       const [top, low] = samples[goal.id] || ['Категория А', 'Категория Б'];
       expect(scoreCategoryForGoal(top, goal.id)).toBeGreaterThan(scoreCategoryForGoal(low, goal.id));
@@ -49,7 +49,7 @@ describe('portfolio-goal-relevance', () => {
     });
     const vitamin = makeProduct({
       public_data: { name: 'Multivitamin Complex' },
-      portfolio: { category_top: 'Витамини и минерали', category_path: ['Витамини и минерали'] },
+      portfolio: { category_top: 'Мултивитамини', category_path: ['Мултивитамини'] },
     });
     expect(scoreProductForGoal(burner, 'otshalvane')).toBeGreaterThan(scoreProductForGoal(vitamin, 'otshalvane'));
   });
@@ -74,8 +74,15 @@ describe('portfolio-goal-relevance', () => {
   test('melatonin ranks for recovery, not energy', () => {
     const sleep = makeProduct({
       public_data: { name: 'Melatonin 3mg' },
-      portfolio: { category_top: 'Възстановяване и сън' },
+      portfolio: { category_top: 'Билки', category_path: ['Билки'] },
     });
     expect(scoreProductForGoal(sleep, 'recovery')).toBeGreaterThan(scoreProductForGoal(sleep, 'energy'));
+  });
+
+  test('аксесоарите са изключени за всички цели', () => {
+    for (const goal of PORTFOLIO_GOALS) {
+      expect(scoreCategoryForGoal('Спортни аксесоари и уреди', goal.id)).toBe(-1);
+      expect(scoreCategoryForGoal('Тениски и облекло', goal.id)).toBe(-1);
+    }
   });
 });

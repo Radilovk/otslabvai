@@ -2,7 +2,12 @@
  * Споделена логика за релевантност на категории и продукти по цел (portfolio goals).
  */
 
-/** Категории, които не се предлагат в консултанта (аксесоари и др.) */
+import {
+  isFitness1ExcludedCategory,
+  scoreFitness1CategoryForGoal,
+} from './portfolio-fitness1-categories.js';
+
+/** Категории, които не се предлагат в консултанта (keyword fallback за неизвестни имена) */
 export const ADVISOR_EXCLUDED_CATEGORY_PATTERNS = [
   'аксесоар',
   'accessory',
@@ -23,10 +28,14 @@ export const ADVISOR_EXCLUDED_CATEGORY_PATTERNS = [
   'кърпа',
   'чанта',
   'bag',
+  'козметик',
+  'cosmetic',
+  'уред',
 ];
 
 /**
- * Приоритетни нива по цел — tiers[0] е най-релевантно (fat burn при отслабване, протеин при muscle…).
+ * Keyword fallback за категории извън Fitness1 каталога (legacy/тестови имена).
+ * Основният mapping е в portfolio-fitness1-categories.js.
  */
 export const GOAL_CATEGORY_RULES = {
   otshalvane: {
@@ -42,8 +51,8 @@ export const GOAL_CATEGORY_RULES = {
       ['отслаб', 'отслабване', 'диета', 'diet', 'appetite', 'апетит', 'ситост', 'лида', 'lida', 'slim', 'weight'],
       ['детокс', 'detox', 'метабол', 'metabol', 'целулит', 'cellulite', 'берберин', 'berberine'],
       ['карнитин', 'carnitine', 'l-карнитин', 'l-carnitine'],
-      ['хербал', 'herbal', 'fiber', 'фибр', '5-htp', 'garcinia', 'гарциния'],
-      ['витамин', 'vitamin', 'омега', 'omega', 'амино', 'amino'],
+      ['хербал', 'herbal', 'fiber', 'фибр', '5-htp', 'garcinia', 'гарциния', 'билки'],
+      ['витамин', 'vitamin', 'омега', 'omega', 'амино', 'amino', 'минерал', 'мастни киселини'],
     ],
   },
   muscle: {
@@ -54,49 +63,49 @@ export const GOAL_CATEGORY_RULES = {
     tiers: [
       ['протеин', 'protein', 'whey', 'суроват', 'isolate', 'изолат', 'казеин', 'casein', 'mass protein'],
       ['креатин', 'creatine', 'кре-алкалин'],
-      ['гейн', 'gainer', 'mass', 'маса', 'weight gainer'],
+      ['гейн', 'gainer', 'mass', 'маса', 'weight gainer', 'качване на маса'],
       ['bcaa', 'амино', 'amino', 'eaa', 'glutamine', 'глутамин'],
       ['предтрен', 'preworkout', 'pre-workout', 'pump'],
-      ['възстанов', 'recovery', 'zma'],
+      ['възстанов', 'recovery', 'zma', 'витамин', 'минерал'],
     ],
   },
   health: {
-    exclude: ['гейн', 'gainer', 'аксесоар', 'preworkout', 'предтрен', 'fat burn', 'изгар'],
+    exclude: ['гейн', 'gainer', 'аксесоар', 'preworkout', 'предтрен', 'fat burn', 'изгар', 'стимулатор'],
     tiers: [
       ['витамин', 'vitamin', 'минерал', 'mineral', 'multi', 'мултивит'],
-      ['имун', 'immune', 'пробиот', 'probiotic', 'echinacea', 'ехинацея'],
-      ['омега', 'omega', 'рибено масло', 'fish oil'],
-      ['колаген', 'collagen', 'здрав', 'health', 'минерали'],
+      ['имун', 'immune', 'пробиот', 'probiotic', 'echinacea', 'ехинацея', 'здраве и тонус'],
+      ['омега', 'omega', 'рибено масло', 'fish oil', 'мастни киселини'],
+      ['колаген', 'collagen', 'здрав', 'health', 'билки', 'антиоксидант'],
       ['хербал', 'herbal', 'став', 'joint', 'магнезий', 'magnesium', 'цинк', 'zinc', 'd3', 'k2'],
     ],
   },
   antiaging: {
     exclude: ['гейн', 'gainer', 'протеин', 'protein', 'preworkout', 'предтрен', 'аксесоар', 'fat burn'],
     tiers: [
-      ['антиейдж', 'anti-aging', 'antiaging', 'longevity', 'nad', 'nmn', 'ревитал', 'дълголет'],
-      ['колаген', 'collagen', 'хиалурон', 'hyaluronic', 'resveratrol', 'ресвератрол'],
+      ['антиейдж', 'anti-aging', 'antiaging', 'anti-aging / против стареене', 'longevity', 'nad', 'nmn', 'ревитал', 'дълголет'],
+      ['колаген', 'collagen', 'хиалурон', 'hyaluronic', 'resveratrol', 'ресвератрол', 'антиоксидант'],
       ['coq', 'коензим', 'ubiquinol', 'глутатион', 'glutathione'],
-      ['пептид', 'peptide', 'астаксантин', 'astaxanthin'],
-      ['витамин', 'vitamin', 'астрагал', 'astragalus'],
+      ['пептид', 'peptide', 'астаксантин', 'astaxanthin', 'билки', 'здраве и тонус'],
+      ['витамин', 'vitamin', 'астрагал', 'astragalus', 'мастни киселини', 'минерал'],
     ],
   },
   energy: {
     exclude: ['гейн', 'gainer', 'сън', 'sleep', 'мелатонин', 'melatonin', 'аксесоар', 'fat burn'],
     tiers: [
-      ['енерги', 'energy', 'фокус', 'focus', 'stimulant', 'стимул', 'alertness'],
+      ['енерги', 'energy', 'фокус', 'focus', 'stimulant', 'стимул', 'alertness', 'хардкор', 'стимулатор'],
       ['предтрен', 'preworkout', 'pre-workout', 'кофеин', 'caffeine', 'guarana', 'таурин', 'taurine'],
       ['ноотроп', 'nootropic', 'ginkgo', 'rhodiola', 'родиола', 'ашваганда', 'ashwagandha'],
-      ['витамин', 'vitamin', 'амино', 'amino', 'b12', 'b-complex', 'b комплекс'],
+      ['витамин', 'vitamin', 'амино', 'amino', 'b12', 'b-complex', 'b комплекс', 'здраве и тонус'],
     ],
   },
   recovery: {
-    exclude: ['fat burn', 'изгар', 'мазнин', 'отслаб', 'thermo', 'гейн', 'gainer', 'аксесоар'],
+    exclude: ['fat burn', 'изгар', 'мазнин', 'отслаб', 'thermo', 'гейн', 'gainer', 'аксесоар', 'стимулатор', 'предтрен'],
     tiers: [
-      ['възстанов', 'recovery', 'релакс', 'relax', 'stress', 'стрес', 'adaptogen', 'адаптоген'],
+      ['възстанов', 'recovery', 'релакс', 'relax', 'stress', 'стрес', 'adaptogen', 'адаптоген', 'качване на маса'],
       ['сън', 'sleep', 'мелатонин', 'melatonin', 'zma', 'valerian', 'валериана'],
-      ['bcaa', 'глутамин', 'glutamine', 'амино', 'amino', 'eaa'],
-      ['колаген', 'collagen', 'став', 'joint', 'глюкозамин', 'glucosamine', 'магнезий', 'magnesium'],
-      ['протеин', 'protein', 'казеин', 'casein'],
+      ['bcaa', 'глутамин', 'glutamine', 'амино', 'amino', 'eaa', 'став', 'joint', 'сухожили'],
+      ['колаген', 'collagen', 'глюкозамин', 'glucosamine', 'магнезий', 'magnesium', 'билки'],
+      ['протеин', 'protein', 'казеин', 'casein', 'креатин', 'creatine'],
     ],
   },
   other: {
@@ -150,6 +159,7 @@ export function normalizeGoalText(value) {
 }
 
 function categoryIsGloballyExcluded(name) {
+  if (isFitness1ExcludedCategory(name)) return true;
   const normalized = normalizeGoalText(name);
   return ADVISOR_EXCLUDED_CATEGORY_PATTERNS.some((pattern) => normalized.includes(normalizeGoalText(pattern)));
 }
@@ -175,10 +185,15 @@ function scoreTextForGoal(normalizedText, priority = 'other') {
 
 /**
  * Релевантност на каталожна категория за цел (по-висок = по-приоритетна).
+ * Първо explicit Fitness1 mapping, после keyword fallback.
  * @returns {number} -1 ако категорията не е релевантна
  */
 export function scoreCategoryForGoal(name, priority = 'other') {
   if (categoryIsGloballyExcluded(name)) return -1;
+
+  const explicitScore = scoreFitness1CategoryForGoal(name, priority);
+  if (explicitScore != null) return explicitScore;
+
   return scoreTextForGoal(normalizeGoalText(name), priority);
 }
 
@@ -212,10 +227,10 @@ export function scoreProductForGoal(product, priority = 'other') {
     best = Math.max(best, scoreCategoryForGoal(segment, priority));
   }
 
-  const haystack = productGoalHaystack(product);
-  best = Math.max(best, scoreTextForGoal(haystack, priority));
+  if (best > 0) return best;
 
-  return best;
+  const haystack = productGoalHaystack(product);
+  return scoreTextForGoal(haystack, priority);
 }
 
 export function getGoalConflicts(priority) {
