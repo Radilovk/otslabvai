@@ -2264,7 +2264,10 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
   } = prepared;
 
   const composeOptions = getPortfolioComposeOptions(profile);
-  const finalizeOpts = { selection_mode: profile.selection_mode };
+  const finalizeOpts = {
+    selection_mode: profile.selection_mode,
+    independent_tiers: true,
+  };
   let recommendation;
 
   if (compositionMode === 'ai_pick') {
