@@ -3,6 +3,10 @@
  * Used for catalog filters and index enrichment. Margin/pricing logic stays admin-only.
  */
 
+import { GOAL_KEYWORD_HINTS } from './portfolio-goal-relevance.js';
+
+export { GOAL_KEYWORD_HINTS };
+
 export const PORTFOLIO_GOALS = [
   { id: 'otshalvane', label: 'Отслабване' },
   { id: 'muscle', label: 'Мускулна маса' },
@@ -15,33 +19,6 @@ export const PORTFOLIO_GOALS = [
 const GOAL_LABEL_BY_ID = Object.fromEntries(PORTFOLIO_GOALS.map((g) => [g.id, g.label]));
 
 /** Keyword hints per goal – matched against category, name and search text. */
-export const GOAL_KEYWORD_HINTS = {
-  otshalvane: [
-    'отслаб', 'fat burn', 'thermo', 'weight', 'диета', 'слим', 'lida', 'burn', 'appetite',
-    'апетит', 'метабол', 'cellulite', 'целулит', 'detox', 'detox'
-  ],
-  muscle: [
-    'протеин', 'protein', 'whey', 'mass', 'gainer', 'гейн', 'креатин', 'creatine', 'bcaa',
-    'амино', 'amino', 'isolate', 'казеин', 'casein', 'preworkout', 'предтрен', 'anabolic'
-  ],
-  health: [
-    'витамин', 'vitamin', 'минерал', 'mineral', 'имун', 'immune', 'omega', 'омега',
-    'пробиот', 'probiotic', 'колаген', 'collagen', 'joint', 'став', 'multi', 'цинк', 'zinc',
-    'магнезий', 'magnesium', 'd3', 'k2', 'health'
-  ],
-  antiaging: [
-    'anti-aging', 'antiaging', 'антиейдж', 'longevity', 'дълголет', 'nad', 'nmn', 'resveratrol',
-    'coq10', 'hyaluronic', 'хиалурон', 'peptide', 'пептид', 'rejuven'
-  ],
-  energy: [
-    'energy', 'енерги', 'caffeine', 'кофеин', 'focus', 'фокус', 'cognitive', 'коgnitive',
-    'nootropic', 'ноотроп', 'guarana', 'taurine', 'таурин'
-  ],
-  recovery: [
-    'recovery', 'възстанов', 'sleep', 'сън', 'melatonin', 'glutamine',
-    'глутамин', 'zma', 'relax', 'релакс', 'stress', 'стрес', 'adaptogen'
-  ]
-};
 
 function normalizeForMatch(value) {
   return String(value || '')

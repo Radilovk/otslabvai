@@ -5,6 +5,7 @@
 import { getPortfolioMeta } from './portfolio-api.js';
 import { portfolioGroupToSiteProduct, applyProductOverrides } from './portfolio-import.js';
 import { GOAL_KEYWORD_HINTS, inferProductGoals } from './portfolio-goals.js';
+import { getGoalConflicts, scoreProductForGoal } from './portfolio-goal-relevance.js';
 import {
   buildClientProfile,
   buildCandidatePool,
@@ -120,11 +121,20 @@ export function buildPortfolioAdvisorProfile(raw) {
 }
 
 export function scorePortfolioAdvisorProduct(product, profile) {
+  const goalRelevance = scoreProductForGoal(product, profile.priority);
+  if (goalRelevance < 0) return -Infinity;
+
   let score = scoreProduct(product, profile, GOAL_KEYWORD_HINTS);
   const goals = product.system_data?.goals || [];
   const text = productSearchText(product);
 
-  if (goals.includes(profile.priority)) score += 4;
+  score += goalRelevance * 0.12;
+
+  if (goals.includes(profile.priority)) score += 8;
+
+  for (const conflict of getGoalConflicts(profile.priority)) {
+    if (goals.includes(conflict)) score -= 5;
+  }
 
   if (profile.activity === 'regular') {
     if (goals.includes('muscle') || goals.includes('recovery')) score += 2;

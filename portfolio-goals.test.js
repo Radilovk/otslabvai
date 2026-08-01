@@ -23,6 +23,17 @@ describe('portfolio-goals', () => {
     expect(goals).toContain('muscle');
   });
 
+  test('infers weight-loss goal from fat burn category', () => {
+    const goals = inferProductGoals({
+      group_id: '3',
+      name: 'Lipo 6 Black',
+      category: 'Изгаряне на мазнини > Thermo',
+      category_top: 'Изгаряне на мазнини',
+      search_text: 'thermo fat burn lipo'
+    });
+    expect(goals).toContain('otshalvane');
+  });
+
   test('uses override goals from settings when present', () => {
     const goals = inferProductGoals(
       { group_id: '42', name: 'Generic', category: 'Други', search_text: 'test' },

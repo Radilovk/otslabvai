@@ -161,6 +161,7 @@ describe('preparePortfolioAdvisorSubmission', () => {
   test('scorePortfolioAdvisorProduct boost при съвпадение на goal', () => {
     const product = makeProduct();
     product.system_data.goals = ['muscle'];
+    product.system_data.portfolio = { category_top: 'Протеини', category_path: ['Протеини'] };
     const score = scorePortfolioAdvisorProduct(product, buildPortfolioAdvisorProfile({
       priority: 'muscle',
       email: 'a@b.com',
@@ -170,5 +171,17 @@ describe('preparePortfolioAdvisorSubmission', () => {
       email: 'a@b.com',
     }));
     expect(score).toBeGreaterThan(other);
+  });
+
+  test('scorePortfolioAdvisorProduct изключва конфликтни продукти при отслабване', () => {
+    const gainer = makeProduct();
+    gainer.public_data.name = 'Mass Gainer 5000';
+    gainer.system_data.portfolio = { category_top: 'Гейнъри', category_path: ['Гейнъри'] };
+    gainer.system_data.goals = ['muscle'];
+    const score = scorePortfolioAdvisorProduct(gainer, buildPortfolioAdvisorProfile({
+      priority: 'otshalvane',
+      email: 'a@b.com',
+    }));
+    expect(score).toBe(-Infinity);
   });
 });

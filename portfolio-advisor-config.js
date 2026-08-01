@@ -3,6 +3,13 @@
  */
 
 import { PORTFOLIO_GOALS } from './portfolio-goals.js';
+import {
+  ADVISOR_EXCLUDED_CATEGORY_PATTERNS,
+  scoreCategoryForGoal,
+  scoreProductForGoal,
+} from './portfolio-goal-relevance.js';
+
+export { scoreCategoryForGoal, scoreProductForGoal, ADVISOR_EXCLUDED_CATEGORY_PATTERNS };
 
 /** Fallback категории ако bootstrap още не е зареден */
 export const FALLBACK_CATALOG_CATEGORIES = [
@@ -22,155 +29,12 @@ export const FALLBACK_CATALOG_CATEGORIES = [
 /** Брой категории, маркирани по подразбиране за AI търсене */
 export const DEFAULT_ADVISOR_SEARCH_CATEGORIES = 3;
 
-/** Категории, които не се предлагат в консултанта (аксесоари и др.) */
-export const ADVISOR_EXCLUDED_CATEGORY_PATTERNS = [
-  'аксесоар',
-  'accessory',
-  'accessories',
-  'шейкър',
-  'shaker',
-  'шейкер',
-  'облекло',
-  'clothing',
-  'apparel',
-  'тениска',
-  'шорти',
-  'бутилка',
-  'bottle',
-  'чаша',
-  'ръкавиц',
-  'glove',
-  'кърпа',
-  'чанта',
-  'bag',
-];
-
-/**
- * Правила за релевантност на каталожни категории по цел.
- * tiers[0] = най-висок приоритет (напр. „Изгаряне на мазнини“ при отслабване).
- * Всяка следваща стъпка е по-ниска; count се ползва само при равен score.
- */
-const GOAL_CATEGORY_RULES = {
-  otshalvane: {
-    exclude: [
-      'гейн', 'gainer', 'mass', 'маса', 'протеин', 'protein', 'whey', 'суроват', 'казеин', 'casein',
-      'креатин', 'creatine', 'preworkout', 'предтрен', 'аксесоар',
-    ],
-    tiers: [
-      [
-        'изгаряне на мазнини', 'изгар', 'мазнин', 'fat burn', 'fat burner', 'фет бърн', 'фетбърн',
-        'thermo', 'термо', 'thermogenic', 'lipо', 'lipo', 'burner', 'бърнър', 'бърн',
-      ],
-      ['отслаб', 'отслабване', 'диета', 'diet', 'appetite', 'апетит', 'ситост', 'лида', 'lida', 'slim', 'weight'],
-      ['детокс', 'detox', 'метабол', 'metabol', 'целулит', 'cellulite'],
-      ['карнитин', 'carnitine', 'l-карнитин', 'l-carnitine'],
-      ['хербал', 'herbal', 'fiber', 'фибр', 'берберин', 'berberine'],
-      ['витамин', 'vitamin', 'омега', 'omega', 'амино', 'amino'],
-    ],
-  },
-  muscle: {
-    exclude: [
-      'отслаб', 'отслабване', 'fat burn', 'изгар', 'мазнин', 'thermo', 'термо', 'лида', 'lida',
-      'диета', 'diet pill', 'апетит', 'аксесоар',
-    ],
-    tiers: [
-      ['протеин', 'protein', 'whey', 'суроват', 'isolate', 'казеин', 'casein'],
-      ['креатин', 'creatine'],
-      ['гейн', 'gainer', 'mass', 'маса'],
-      ['bcaa', 'амино', 'amino', 'eaa'],
-      ['предтрен', 'preworkout', 'pre-workout'],
-      ['възстанов', 'recovery'],
-    ],
-  },
-  health: {
-    exclude: ['гейн', 'gainer', 'аксесоар', 'preworkout', 'предтрен'],
-    tiers: [
-      ['витамин', 'vitamin', 'минерал', 'mineral', 'multi'],
-      ['имун', 'immune', 'пробиот', 'probiotic'],
-      ['омега', 'omega'],
-      ['колаген', 'collagen', 'здрав', 'health'],
-      ['хербал', 'herbal', 'став', 'joint'],
-    ],
-  },
-  antiaging: {
-    exclude: ['гейн', 'gainer', 'протеин', 'protein', 'preworkout', 'предтрен', 'аксесоар'],
-    tiers: [
-      ['антиейдж', 'anti-aging', 'antiaging', 'longevity', 'nad', 'nmn', 'ревитал'],
-      ['колаген', 'collagen', 'coq', 'коензим', 'ubiquinol'],
-      ['пептид', 'peptide', 'хиалурон', 'hyaluronic', 'resveratrol'],
-      ['витамин', 'vitamin'],
-    ],
-  },
-  energy: {
-    exclude: ['гейн', 'gainer', 'сън', 'sleep', 'мелатонин', 'melatonin', 'аксесоар'],
-    tiers: [
-      ['енерги', 'energy', 'фокус', 'focus', 'stimulant', 'стимул'],
-      ['предтрен', 'preworkout', 'pre-workout', 'кофеин', 'caffeine', 'guarana'],
-      ['ноотроп', 'nootropic', 'ginkgo'],
-      ['витамин', 'vitamin', 'амино', 'amino', 'b12', 'b-complex'],
-    ],
-  },
-  recovery: {
-    exclude: ['fat burn', 'изгар', 'мазнин', 'отслаб', 'thermo', 'гейн', 'gainer', 'аксесоар'],
-    tiers: [
-      ['възстанов', 'recovery', 'релакс', 'relax', 'stress', 'стрес'],
-      ['сън', 'sleep', 'мелатонин', 'melatonin', 'zma'],
-      ['bcaa', 'глутамин', 'glutamine', 'амино', 'amino'],
-      ['колаген', 'collagen', 'став', 'joint', 'магнезий', 'magnesium'],
-      ['протеин', 'protein'],
-    ],
-  },
-  other: {
-    exclude: ['гейн', 'gainer', 'аксесоар', 'accessory'],
-    tiers: [],
-  },
-};
-
 const FEMALE_ONLY_CONDITIONS = [
   { value: 'pregnancy', label: 'Бременност' },
   { value: 'breastfeeding', label: 'Кърмене' },
 ];
 
 const BODY_GOAL_IDS = new Set(['otshalvane', 'muscle']);
-
-function normalizeCategoryText(value) {
-  return String(value || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
-
-function categoryIsGloballyExcluded(name) {
-  const normalized = normalizeCategoryText(name);
-  return ADVISOR_EXCLUDED_CATEGORY_PATTERNS.some((pattern) => normalized.includes(normalizeCategoryText(pattern)));
-}
-
-function matchesAnyPattern(normalizedName, patterns = []) {
-  return patterns.some((pattern) => normalizedName.includes(normalizeCategoryText(pattern)));
-}
-
-/**
- * Релевантност на каталожна категория за цел (по-висок = по-приоритетна).
- * @returns {number} -1 ако категорията не е релевантна
- */
-export function scoreCategoryForGoal(name, priority = 'other') {
-  if (categoryIsGloballyExcluded(name)) return -1;
-
-  const normalized = normalizeCategoryText(name);
-  const rules = GOAL_CATEGORY_RULES[priority] || GOAL_CATEGORY_RULES.other;
-
-  if (matchesAnyPattern(normalized, rules.exclude)) return -1;
-
-  if (!rules.tiers?.length) return 1;
-
-  for (let tierIndex = 0; tierIndex < rules.tiers.length; tierIndex += 1) {
-    if (matchesAnyPattern(normalized, rules.tiers[tierIndex])) {
-      return (rules.tiers.length - tierIndex) * 100;
-    }
-  }
-
-  return -1;
-}
 
 function categoryMatchesGoal(name, priority) {
   return scoreCategoryForGoal(name, priority) > 0;
