@@ -1,7 +1,7 @@
 import {
   escapeHtml, debounce, updateCartBadges, initPortfolioPage, applyHeroSettings, icon
 } from './portfolio-shared.js';
-import { formatGroupPriceHtml } from './portfolio-pricing.js';
+import { formatGroupPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
 import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache } from './portfolio-cache.js';
 import {
   countActiveFilters as countFilters,
@@ -56,18 +56,30 @@ function formatPrice(item) {
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect fill='%23eef2f0' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.35em' fill='%235f6f66' font-family='sans-serif' font-size='14'%3EНяма снимка%3C/text%3E%3C/svg%3E";
 
+function renderCardTitle(item) {
+  const packsLabel = formatPacksDisplay(item.packs);
+  if (!packsLabel) return escapeHtml(item.name);
+  return `${escapeHtml(item.name)} <span class="pf-card-packs">${escapeHtml(packsLabel)}</span>`;
+}
+
+function productCardUrl(item) {
+  const base = `portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}`;
+  if (!item.default_sku_id) return base;
+  return `${base}&sku=${encodeURIComponent(item.default_sku_id)}`;
+}
+
 function renderCard(item) {
   const promoBadge = item.has_promo ? '<span class="pf-badge pf-badge--promo">Промо</span>' : '';
   const img = item.image || PLACEHOLDER_IMG;
   return `
     <div class="pf-product-card">
-      <a href="portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}" class="pf-card-link">
+      <a href="${productCardUrl(item)}" class="pf-card-link">
         <div class="pf-card-image">${promoBadge}
           <img src="${escapeHtml(img)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" sizes="(max-width: 640px) 45vw, 210px" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
         </div>
         <div class="pf-card-body">
           <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
-          <h2 class="pf-card-title">${escapeHtml(item.name)}</h2>
+          <h2 class="pf-card-title">${renderCardTitle(item)}</h2>
           <div class="pf-card-price">${formatPrice(item)}</div>
         </div>
       </a>
