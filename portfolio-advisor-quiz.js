@@ -1,7 +1,13 @@
 import { API_URL } from './config.js';
 import { PortfolioAdvisorAnimator } from './portfolio-advisor-analysis.js';
 import { persistAdvisorResult, DRAFT_KEY, RESULT_KEY, LEAD_KEY } from './portfolio-advisor-store.js';
-import { buildActiveAdvisorSteps, FALLBACK_CATALOG_CATEGORIES, getDefaultAdvisorCategoryNames, pruneAdvisorAnswers } from './portfolio-advisor-config.js';
+import {
+  buildActiveAdvisorSteps,
+  FALLBACK_CATALOG_CATEGORIES,
+  getDefaultAdvisorCategoryNames,
+  getRelevantAdvisorCategoryNames,
+  pruneAdvisorAnswers,
+} from './portfolio-advisor-config.js';
 
 const form = document.getElementById('lpq-form');
 const progressEl = document.getElementById('lpq-progress');
@@ -15,6 +21,7 @@ const OTHER_VALUE = 'other';
 const OTHER_MAX_WORDS = 8;
 let catalogCategories = [];
 let catalogCategoriesReady = false;
+let categoryMoreExpanded = false;
 
 function otherFieldKey(field) {
   return `${field}_other`;
@@ -66,18 +73,19 @@ function saveDraft() {
 }
 
 function syncCategoryDefaults() {
+  const relevant = getRelevantAdvisorCategoryNames(catalogCategories, answers.priority || 'other');
   const defaults = getDefaultAdvisorCategoryNames(catalogCategories, answers.priority || 'other');
-  if (!defaults.length) return;
+  if (!relevant.length) return;
 
   if (answers.selection_mode === 'single') {
-    if (!defaults.includes(answers.product_category)) {
-      answers.product_category = defaults[0];
+    if (!relevant.includes(answers.product_category)) {
+      answers.product_category = defaults[0] || relevant[0];
     }
     return;
   }
 
   const current = Array.isArray(answers.product_categories) ? answers.product_categories : [];
-  const valid = current.filter((name) => defaults.includes(name));
+  const valid = current.filter((name) => relevant.includes(name));
   answers.product_categories = valid.length ? valid : [...defaults];
 }
 
@@ -90,6 +98,7 @@ function handleProfileChange(field) {
   if (field === 'priority' || field === 'selection_mode') {
     delete answers.product_categories;
     delete answers.product_category;
+    categoryMoreExpanded = false;
   }
   syncCategoryDefaults();
   saveDraft();
@@ -113,10 +122,77 @@ function renderSteps() {
   showStep(prevIndex);
 }
 
-function renderStep(step) {
-  let inner = step.hint ? `<p class="lpq-hint">${step.hint}</p>` : '';
+function renderChoiceOptions(step, { inputType, field, options, selected }) {
+  let html = `<div class="lpq-options" data-field="${field}" data-type="${inputType === 'radio' ? 'single' : 'multi'}">`;
+  for (const opt of options) {
+    const checked = selected.includes(opt.value);
+    html += `<label class="lpq-option${checked ? ' selected' : ''}${opt.allowsText ? ' lpq-option-other' : ''}">
+      <input type="${inputType}" name="${field}" value="${opt.value}"${checked ? ' checked' : ''}${opt.exclusive ? ' data-exclusive' : ''}${opt.allowsText ? ' data-allows-text' : ''}>
+      <span>${opt.label}</span>
+    </label>`;
+  }
+  html += '</div>';
+  return html;
+}
 
-  if (step.type === 'single' || step.type === 'multi') {
+function shouldExpandCategoryMore(step) {
+  if (categoryMoreExpanded) return true;
+  const selected = Array.isArray(answers[step.field]) ? answers[step.field] : [];
+  const moreValues = (step.moreOptions || []).map((option) => option.value);
+  return selected.some((value) => moreValues.includes(value));
+}
+
+function renderCategoryStep(step) {
+  const inputType = step.type === 'category_single' ? 'radio' : 'checkbox';
+  const selected = step.type === 'category_single'
+    ? [answers[step.field]]
+    : (Array.isArray(answers[step.field]) ? answers[step.field] : []);
+  const expanded = shouldExpandCategoryMore(step);
+  const moreCount = step.moreOptions?.length || 0;
+
+  let inner = step.hint ? `<p class="lpq-hint">${step.hint}</p>` : '';
+  inner += renderChoiceOptions(step, {
+    inputType,
+    field: step.field,
+    options: step.primaryOptions || [],
+    selected,
+  });
+
+  if (moreCount > 0) {
+    inner += `<button type="button" class="lpq-category-more-toggle${expanded ? ' open' : ''}" data-category-toggle aria-expanded="${expanded ? 'true' : 'false'}">
+      <span class="lpq-category-more-label">${expanded ? 'По-малко категории' : `Още категории (${moreCount})`}</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>`;
+    inner += `<div class="lpq-category-more"${expanded ? '' : ' hidden'}>`;
+    inner += renderChoiceOptions(step, {
+      inputType,
+      field: step.field,
+      options: step.moreOptions || [],
+      selected,
+    });
+    inner += '</div>';
+  }
+
+  return inner;
+}
+
+function getCheckedMultiValues(field) {
+  return [...form.querySelectorAll(`.lpq-options[data-field="${field}"] input:checked`)].map((input) => input.value);
+}
+
+function syncMultiOptionStyles(field) {
+  form.querySelectorAll(`.lpq-options[data-field="${field}"] .lpq-option`).forEach((label) => {
+    label.classList.toggle('selected', label.querySelector('input')?.checked);
+  });
+}
+
+function renderStep(step) {
+  let inner = '';
+
+  if (step.type === 'category_multi' || step.type === 'category_single') {
+    inner = renderCategoryStep(step);
+  } else if (step.type === 'single' || step.type === 'multi') {
+    inner = step.hint ? `<p class="lpq-hint">${step.hint}</p>` : '';
     const inputType = step.type === 'single' ? 'radio' : 'checkbox';
     const current = answers[step.field];
     const selected = step.type === 'single' ? [current] : (Array.isArray(current) ? current : []);
@@ -135,6 +211,7 @@ function renderStep(step) {
         <input type="text" class="lpq-other-text" id="other-${step.field}" data-other-field="${step.field}" maxlength="80" placeholder="До няколко думи" value="${escapeHtml(answers[otherFieldKey(step.field)] || '')}">
       </div>`;
   } else if (step.type === 'body') {
+    inner = step.hint ? `<p class="lpq-hint">${step.hint}</p>` : '';
     inner += `<div class="lpq-grid-2">
       <div class="lpq-field"><label for="height_cm">Ръст (см)</label>
         <input type="number" id="height_cm" min="100" max="250" value="${answers.height_cm || ''}"></div>
@@ -142,6 +219,7 @@ function renderStep(step) {
         <input type="number" id="weight_kg" min="30" max="300" value="${answers.weight_kg || ''}"></div>
     </div>`;
   } else if (step.type === 'contact') {
+    inner = step.hint ? `<p class="lpq-hint">${step.hint}</p>` : '';
     inner += `<div class="lpq-field" style="margin-bottom:1rem">
       <label for="lpq-name">Име (по избор)</label>
       <input type="text" id="lpq-name" value="${answers.name || ''}" autocomplete="name">
@@ -180,8 +258,9 @@ function bindStepEvents() {
             handleProfileChange(field);
             return;
           }
-          group.querySelectorAll('.lpq-option').forEach((l) => l.classList.remove('selected'));
-          input.closest('.lpq-option')?.classList.add('selected');
+          form.querySelectorAll(`.lpq-options[data-field="${field}"] .lpq-option`).forEach((label) => {
+            label.classList.toggle('selected', label.querySelector('input')?.checked);
+          });
           if (input.value === OTHER_VALUE) {
             setOtherInputVisible(field, true);
             form.querySelector(`.lpq-other-text[data-other-field="${field}"]`)?.focus();
@@ -189,25 +268,43 @@ function bindStepEvents() {
             clearOtherField(field);
           }
         } else {
-          let vals = [...group.querySelectorAll('input:checked')].map((i) => i.value);
           if (input.dataset.exclusive && input.checked) {
-            vals = [input.value];
-            group.querySelectorAll('input').forEach((i) => { if (i !== input) i.checked = false; });
+            form.querySelectorAll(`.lpq-options[data-field="${field}"] input`).forEach((item) => {
+              if (item !== input) item.checked = false;
+            });
             if (input.value === 'none' || input.value === 'all') clearOtherField(field);
           } else if (input.checked && input.value !== 'none' && input.value !== 'all') {
-            const exclusive = group.querySelector('input[data-exclusive]');
-            if (exclusive?.checked) exclusive.checked = false;
-            vals = [...group.querySelectorAll('input:checked')].map((i) => i.value);
+            const exclusive = form.querySelector(`.lpq-options[data-field="${field}"] input[data-exclusive]:checked`);
+            if (exclusive) exclusive.checked = false;
           }
           if (input.value === OTHER_VALUE && !input.checked) clearOtherField(field);
+          const vals = getCheckedMultiValues(field);
           answers[field] = vals.filter((v) => v !== 'none' || vals.length === 1);
-          group.querySelectorAll('.lpq-option').forEach((l) => {
-            l.classList.toggle('selected', l.querySelector('input')?.checked);
-          });
+          syncMultiOptionStyles(field);
           setOtherInputVisible(field, answers[field].includes(OTHER_VALUE));
         }
         saveDraft();
       });
+    });
+  });
+
+  form.querySelectorAll('[data-category-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const panel = button.nextElementSibling;
+      const label = button.querySelector('.lpq-category-more-label');
+      const moreCount = panel?.querySelectorAll('.lpq-option').length || 0;
+      categoryMoreExpanded = panel?.hasAttribute('hidden');
+      if (categoryMoreExpanded) {
+        panel?.removeAttribute('hidden');
+        button.setAttribute('aria-expanded', 'true');
+        button.classList.add('open');
+        if (label) label.textContent = 'По-малко категории';
+      } else {
+        panel?.setAttribute('hidden', '');
+        button.setAttribute('aria-expanded', 'false');
+        button.classList.remove('open');
+        if (label) label.textContent = `Още категории (${moreCount})`;
+      }
     });
   });
 
@@ -280,13 +377,18 @@ function validateCurrentStep() {
   clearErrors();
   const step = activeSteps[stepIndex];
 
-  if (step.type === 'single' && !answers[step.field]) {
+  if ((step.type === 'single' || step.type === 'category_single') && !answers[step.field]) {
     showError(step.id, 'Моля, изберете опция.');
     return false;
   }
   if (step.type === 'single' && !validateOtherText(step)) return false;
-  if (step.type === 'multi' && !answers[step.field]?.length) {
-    showError(step.id, 'Моля, изберете поне една опция или „Нищо от изброените“.');
+  if ((step.type === 'multi' || step.type === 'category_multi') && !answers[step.field]?.length) {
+    showError(
+      step.id,
+      step.type === 'category_multi'
+        ? 'Моля, изберете поне една категория.'
+        : 'Моля, изберете поне една опция или „Нищо от изброените“.'
+    );
     return false;
   }
   if ((step.field === 'product_categories' || step.field === 'product_category') && !catalogCategoriesReady) {

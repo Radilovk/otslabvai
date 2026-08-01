@@ -18,8 +18,8 @@ export const FALLBACK_CATALOG_CATEGORIES = [
   'Възстановяване и сън',
 ];
 
-/** Максимум категории, които AI търсенето реално обхваща */
-export const MAX_ADVISOR_CATEGORIES = 8;
+/** Брой категории, маркирани по подразбиране за AI търсене */
+export const DEFAULT_ADVISOR_SEARCH_CATEGORIES = 3;
 
 /** Категории, които не се предлагат в консултанта (аксесоари и др.) */
 export const ADVISOR_EXCLUDED_CATEGORY_PATTERNS = [
@@ -122,7 +122,7 @@ function categoryMatchesGoal(name, priority) {
 }
 
 /**
- * Филтрира каталожни категории до релевантните за целта (без аксесоари, до MAX_ADVISOR_CATEGORIES).
+ * Филтрира каталожни категории до релевантните за целта (без аксесоари).
  * @param {{ name: string, count?: number }[]} catalogCategories
  * @param {string} [priority]
  */
@@ -132,13 +132,41 @@ export function filterCategoriesForAdvisor(catalogCategories = [], priority = 'o
     : FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name }));
 
   const relevant = source.filter((category) => categoryMatchesGoal(category.name, priority || 'other'));
-  const sorted = [...relevant].sort((a, b) => (b.count || 0) - (a.count || 0));
-  return sorted.slice(0, MAX_ADVISOR_CATEGORIES);
+  return [...relevant].sort((a, b) => (b.count || 0) - (a.count || 0));
 }
 
-/** Имена на категориите по подразбиране за дадена цел */
+function mapCategoryOptions(categories) {
+  return categories.map((category) => ({
+    value: category.name,
+    label: category.count != null ? `${category.name} (${category.count})` : category.name,
+  }));
+}
+
+/**
+ * Разделя релевантните категории на основни (топ 3) и допълнителни.
+ * @param {{ name: string, count?: number }[]} catalogCategories
+ * @param {string} [priority]
+ */
+export function splitAdvisorCategories(catalogCategories = [], priority = 'other') {
+  let all = filterCategoriesForAdvisor(catalogCategories, priority);
+  if (!all.length) {
+    all = filterCategoriesForAdvisor(FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name })), priority);
+  }
+  return {
+    all,
+    primary: all.slice(0, DEFAULT_ADVISOR_SEARCH_CATEGORIES),
+    more: all.slice(DEFAULT_ADVISOR_SEARCH_CATEGORIES),
+  };
+}
+
+/** Всички релевантни имена на категории за дадена цел */
+export function getRelevantAdvisorCategoryNames(catalogCategories = [], priority = 'other') {
+  return splitAdvisorCategories(catalogCategories, priority).all.map((category) => category.name);
+}
+
+/** Имена на категориите, маркирани по подразбиране за търсене (топ 3) */
 export function getDefaultAdvisorCategoryNames(catalogCategories = [], priority = 'other') {
-  return filterCategoriesForAdvisor(catalogCategories, priority).map((category) => category.name);
+  return splitAdvisorCategories(catalogCategories, priority).primary.map((category) => category.name);
 }
 
 function shouldShowBodyStep(answers = {}) {
@@ -322,34 +350,30 @@ export const GOAL_IDS = PORTFOLIO_GOALS.map((g) => g.id);
  * @param {{ name: string, count?: number }[]} catalogCategories
  */
 export function buildCategoryStep(catalogCategories = [], { singleSelect = false, priority = 'other' } = {}) {
-  const filtered = filterCategoriesForAdvisor(catalogCategories, priority);
-  const cats = filtered.length
-    ? filtered
-    : filterCategoriesForAdvisor(FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name })), priority);
-
-  const categoryOptions = cats.map((c) => ({
-    value: c.name,
-    label: c.count != null ? `${c.name} (${c.count})` : c.name,
-  }));
+  const { primary, more } = splitAdvisorCategories(catalogCategories, priority);
+  const primaryOptions = mapCategoryOptions(primary);
+  const moreOptions = mapCategoryOptions(more);
 
   if (singleSelect) {
     return {
       id: 'product_category',
       title: 'В коя категория да търсим?',
-      hint: 'Показани са само категории, релевантни за вашата цел.',
-      type: 'single',
+      hint: 'Показани са релевантни категории за вашата цел. По подразбиране е избрана най-приложимата.',
+      type: 'category_single',
       field: 'product_category',
-      options: categoryOptions,
+      primaryOptions,
+      moreOptions,
     };
   }
 
   return {
     id: 'product_categories',
     title: 'В какви категории да търсим?',
-    hint: 'Предложени са релевантни категории за вашата цел. Можете да махнете такива, които не ви интересуват.',
-    type: 'multi',
+    hint: 'По подразбиране са избрани 3-те най-приложими категории. Разгънете „Още категории“, ако искате да добавите още.',
+    type: 'category_multi',
     field: 'product_categories',
-    options: categoryOptions,
+    primaryOptions,
+    moreOptions,
   };
 }
 

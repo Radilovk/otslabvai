@@ -259,6 +259,49 @@
   color: var(--pf-primary, var(--lpq-accent));
 }
 
+.pfa-body .lpq-category-more-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px dashed var(--lpq-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--lpq-muted);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.pfa-body .lpq-category-more-toggle:hover,
+.pfa-body .lpq-category-more-toggle.open {
+  border-color: var(--pf-primary, var(--lpq-accent));
+  color: var(--pf-primary, var(--lpq-accent));
+  background: var(--lpq-accent-dim);
+}
+
+.pfa-body .lpq-category-more-toggle svg {
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.pfa-body .lpq-category-more-toggle.open svg {
+  transform: rotate(180deg);
+}
+
+.pfa-body .lpq-category-more {
+  margin-top: 0.75rem;
+}
+
+.pfa-body .lpq-category-more[hidden] {
+  display: none !important;
+}
+
 @media (max-width: 640px) {
   .pfa-main {
     padding: 1rem 0.75rem 3rem;
