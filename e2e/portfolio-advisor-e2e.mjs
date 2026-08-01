@@ -64,8 +64,13 @@ async function pickCategoryOptions(page, { singleCategory = false, categories = 
     return;
   }
 
-  const picks = categories.length ? categories : ['all'];
-  for (const cat of picks) {
+  if (!categories.length) {
+    const checked = await page.locator('input[name="product_categories"]:checked').count();
+    check(checked > 0, 'At least one relevant category is pre-selected');
+    return;
+  }
+
+  for (const cat of categories) {
     await page.waitForSelector(`input[name="product_categories"][value="${cat}"]`, { timeout: 15000 });
     await selectCheckbox(page, 'product_categories', cat);
   }
@@ -78,11 +83,14 @@ async function completeCommonSteps(page, { priority = 'muscle', categories = [],
   await next();
   await selectRadio(page, 'age_band', '25-34');
   await next();
-  await page.locator('#height_cm').fill('180');
-  await page.locator('#weight_kg').fill('80');
-  await next();
   await selectRadio(page, 'priority', priority);
   await next();
+
+  if (priority === 'muscle' || priority === 'otshalvane') {
+    await page.locator('#height_cm').fill('180');
+    await page.locator('#weight_kg').fill('80');
+    await next();
+  }
 
   await pickCategoryOptions(page, { singleCategory, categories });
   await next();
@@ -118,7 +126,7 @@ async function runPackageFlow(page) {
   await selectRadio(page, 'selection_mode', 'package');
   await page.click('#lpq-next');
 
-  await completeCommonSteps(page, { priority: 'muscle', categories: ['all'] });
+  await completeCommonSteps(page, { priority: 'muscle' });
 
   await page.waitForURL(/portfolio-advisor-result/, { timeout: 45000 });
   check(page.url().includes('portfolio-advisor-result'), 'Package flow redirected to result page');

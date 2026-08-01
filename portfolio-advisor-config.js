@@ -18,6 +18,183 @@ export const FALLBACK_CATALOG_CATEGORIES = [
   'Възстановяване и сън',
 ];
 
+/** Брой категории, маркирани по подразбиране за AI търсене */
+export const DEFAULT_ADVISOR_SEARCH_CATEGORIES = 3;
+
+/** Категории, които не се предлагат в консултанта (аксесоари и др.) */
+export const ADVISOR_EXCLUDED_CATEGORY_PATTERNS = [
+  'аксесоар',
+  'accessory',
+  'accessories',
+  'шейкър',
+  'shaker',
+  'шейкер',
+  'облекло',
+  'clothing',
+  'apparel',
+  'тениска',
+  'шорти',
+  'бутилка',
+  'bottle',
+  'чаша',
+  'ръкавиц',
+  'glove',
+  'кърпа',
+  'чанта',
+  'bag',
+];
+
+const GOAL_CATEGORY_MATCHERS = {
+  otshalvane: {
+    include: [
+      'отслаб', 'диета', 'fat', 'burn', 'thermo', 'метабол', 'детокс', 'detox', 'лида', 'lida',
+      'апетит', 'хербал', 'витамин', 'омега', 'амино', 'фибр', 'fiber', 'целулит', 'cellulite',
+    ],
+    exclude: ['гейн', 'gainer', 'mass', 'маса', 'протеин', 'protein', 'whey', 'креатин', 'creatine', 'preworkout', 'предтрен'],
+  },
+  muscle: {
+    include: [
+      'протеин', 'protein', 'креатин', 'creatine', 'амино', 'bcaa', 'гейн', 'gainer', 'mass', 'маса',
+      'предтрен', 'preworkout', 'възстанов', 'recovery',
+    ],
+    exclude: ['отслаб', 'fat burn', 'thermo', 'лида', 'lida', 'диета', 'diet pill', 'appetite'],
+  },
+  health: {
+    include: [
+      'витамин', 'vitamin', 'минерал', 'имун', 'омега', 'omega', 'пробиот', 'колаген', 'collagen',
+      'хербал', 'multi', 'здрав', 'health',
+    ],
+    exclude: ['гейн', 'gainer', 'аксесоар'],
+  },
+  antiaging: {
+    include: [
+      'анти', 'anti', 'колаген', 'collagen', 'коензим', 'coq', 'nad', 'nmn', 'пептид', 'peptide',
+      'хиалурон', 'hyaluronic', 'витамин', 'longevity',
+    ],
+    exclude: ['гейн', 'gainer', 'протеин', 'preworkout', 'предтрен'],
+  },
+  energy: {
+    include: [
+      'енерги', 'energy', 'фокус', 'focus', 'предтрен', 'preworkout', 'ноотроп', 'nootropic',
+      'кофеин', 'caffeine', 'витамин', 'амино', 'guarana',
+    ],
+    exclude: ['гейн', 'gainer', 'сън', 'sleep', 'мелатонин', 'melatonin'],
+  },
+  recovery: {
+    include: [
+      'възстанов', 'recovery', 'сън', 'sleep', 'bcaa', 'глутамин', 'glutamine', 'колаген', 'став',
+      'joint', 'магнезий', 'magnesium', 'релакс', 'протеин', 'zma', 'мелатонин', 'melatonin',
+    ],
+    exclude: ['fat burn', 'отслаб', 'thermo', 'гейн', 'gainer'],
+  },
+  other: {
+    include: [],
+    exclude: ['гейн', 'gainer', 'аксесоар', 'accessory'],
+  },
+};
+
+const FEMALE_ONLY_CONDITIONS = [
+  { value: 'pregnancy', label: 'Бременност' },
+  { value: 'breastfeeding', label: 'Кърмене' },
+];
+
+const BODY_GOAL_IDS = new Set(['otshalvane', 'muscle']);
+
+function normalizeCategoryText(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function categoryIsGloballyExcluded(name) {
+  const normalized = normalizeCategoryText(name);
+  return ADVISOR_EXCLUDED_CATEGORY_PATTERNS.some((pattern) => normalized.includes(normalizeCategoryText(pattern)));
+}
+
+function categoryMatchesGoal(name, priority) {
+  if (categoryIsGloballyExcluded(name)) return false;
+  const matchers = GOAL_CATEGORY_MATCHERS[priority] || GOAL_CATEGORY_MATCHERS.other;
+  const normalized = normalizeCategoryText(name);
+  if (matchers.exclude?.some((pattern) => normalized.includes(normalizeCategoryText(pattern)))) return false;
+  if (!matchers.include?.length) return true;
+  return matchers.include.some((pattern) => normalized.includes(normalizeCategoryText(pattern)));
+}
+
+/**
+ * Филтрира каталожни категории до релевантните за целта (без аксесоари).
+ * @param {{ name: string, count?: number }[]} catalogCategories
+ * @param {string} [priority]
+ */
+export function filterCategoriesForAdvisor(catalogCategories = [], priority = 'other') {
+  const source = catalogCategories.length
+    ? catalogCategories
+    : FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name }));
+
+  const relevant = source.filter((category) => categoryMatchesGoal(category.name, priority || 'other'));
+  return [...relevant].sort((a, b) => (b.count || 0) - (a.count || 0));
+}
+
+function mapCategoryOptions(categories) {
+  return categories.map((category) => ({
+    value: category.name,
+    label: category.count != null ? `${category.name} (${category.count})` : category.name,
+  }));
+}
+
+/**
+ * Разделя релевантните категории на основни (топ 3) и допълнителни.
+ * @param {{ name: string, count?: number }[]} catalogCategories
+ * @param {string} [priority]
+ */
+export function splitAdvisorCategories(catalogCategories = [], priority = 'other') {
+  let all = filterCategoriesForAdvisor(catalogCategories, priority);
+  if (!all.length) {
+    all = filterCategoriesForAdvisor(FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name })), priority);
+  }
+  return {
+    all,
+    primary: all.slice(0, DEFAULT_ADVISOR_SEARCH_CATEGORIES),
+    more: all.slice(DEFAULT_ADVISOR_SEARCH_CATEGORIES),
+  };
+}
+
+/** Всички релевантни имена на категории за дадена цел */
+export function getRelevantAdvisorCategoryNames(catalogCategories = [], priority = 'other') {
+  return splitAdvisorCategories(catalogCategories, priority).all.map((category) => category.name);
+}
+
+/** Имена на категориите, маркирани по подразбиране за търсене (топ 3) */
+export function getDefaultAdvisorCategoryNames(catalogCategories = [], priority = 'other') {
+  return splitAdvisorCategories(catalogCategories, priority).primary.map((category) => category.name);
+}
+
+function shouldShowBodyStep(answers = {}) {
+  return BODY_GOAL_IDS.has(answers.priority);
+}
+
+function adaptStepForProfile(step, answers = {}) {
+  if (step.id === 'conditions') {
+    const base = step.options.filter((option) => !['pregnancy', 'breastfeeding'].includes(option.value));
+    const insertAt = base.findIndex((option) => option.exclusive);
+    const femaleOptions = answers.sex === 'female' ? FEMALE_ONLY_CONDITIONS : [];
+    const options = insertAt >= 0
+      ? [...base.slice(0, insertAt), ...femaleOptions, ...base.slice(insertAt)]
+      : [...base, ...femaleOptions];
+    return { ...step, options };
+  }
+
+  if (step.id === 'medications') {
+    const options = step.options.filter((option) => {
+      if (option.value === 'hormone_therapy') return answers.sex === 'female';
+      return true;
+    });
+    return { ...step, options };
+  }
+
+  return step;
+}
+
 export const ADVISOR_STEPS = [
   {
     id: 'selection_mode',
@@ -56,21 +233,21 @@ export const ADVISOR_STEPS = [
     ],
   },
   {
-    id: 'body',
-    title: 'Ръст и тегло',
-    hint: 'Използваме ги за ИТМ и дозови насоки (особено при отслабване и мускулна маса).',
-    type: 'body',
-  },
-  {
     id: 'priority',
     title: 'Основна цел',
-    hint: 'За персонализация на ползите и приоритета — не ограничава категориите по-долу.',
+    hint: 'Определя релевантните категории за търсене по-долу.',
     type: 'single',
     field: 'priority',
     options: [
       ...PORTFOLIO_GOALS.map((g) => ({ value: g.id, label: g.label })),
       { value: 'other', label: 'Друго', allowsText: true },
     ],
+  },
+  {
+    id: 'body',
+    title: 'Ръст и тегло',
+    hint: 'Използваме ги за ИТМ и дозови насоки при отслабване и мускулна маса.',
+    type: 'body',
   },
   {
     id: 'activity',
@@ -172,35 +349,52 @@ export const GOAL_IDS = PORTFOLIO_GOALS.map((g) => g.id);
  * Стъпка за избор на продуктови категории (от каталога).
  * @param {{ name: string, count?: number }[]} catalogCategories
  */
-export function buildCategoryStep(catalogCategories = [], { singleSelect = false } = {}) {
-  const cats = catalogCategories.length ? catalogCategories : FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name }));
-  const categoryOptions = cats.map((c) => ({
-    value: c.name,
-    label: c.count != null ? `${c.name} (${c.count})` : c.name,
-  }));
+export function buildCategoryStep(catalogCategories = [], { singleSelect = false, priority = 'other' } = {}) {
+  const { primary, more } = splitAdvisorCategories(catalogCategories, priority);
+  const primaryOptions = mapCategoryOptions(primary);
+  const moreOptions = mapCategoryOptions(more);
 
   if (singleSelect) {
     return {
       id: 'product_category',
       title: 'В коя категория да търсим?',
-      hint: 'Изберете една категория от каталога — независимо от основната цел. При единичен продукт се търси само в нея.',
-      type: 'single',
+      hint: 'Показани са релевантни категории за вашата цел. По подразбиране е избрана най-приложимата.',
+      type: 'category_single',
       field: 'product_category',
-      options: categoryOptions,
+      primaryOptions,
+      moreOptions,
     };
   }
 
   return {
     id: 'product_categories',
     title: 'В какви категории да търсим?',
-    hint: 'Изберете една или повече категории от каталога — независимо от основната цел. Напр. при „мускулна маса“ може да искате витамини или билки, не само протеин.',
-    type: 'multi',
+    hint: 'По подразбиране са избрани 3-те най-приложими категории. Разгънете „Още категории“, ако искате да добавите още.',
+    type: 'category_multi',
     field: 'product_categories',
-    options: [
-      { value: 'all', label: 'Всички категории', exclusive: true },
-      ...categoryOptions,
-    ],
+    primaryOptions,
+    moreOptions,
   };
+}
+
+/**
+ * Премахва отговори, които вече не са валидни след смяна на пол/цел.
+ * @param {object} answers
+ */
+export function pruneAdvisorAnswers(answers = {}) {
+  if (answers.sex !== 'female') {
+    if (Array.isArray(answers.conditions)) {
+      answers.conditions = answers.conditions.filter((value) => !['pregnancy', 'breastfeeding'].includes(value));
+    }
+    if (Array.isArray(answers.medications)) {
+      answers.medications = answers.medications.filter((value) => value !== 'hormone_therapy');
+    }
+  }
+  delete answers.pregnancy;
+  if (!shouldShowBodyStep(answers)) {
+    delete answers.height_cm;
+    delete answers.weight_kg;
+  }
 }
 
 /**
@@ -211,24 +405,14 @@ export function buildActiveAdvisorSteps(answers = {}, catalogCategories = []) {
   const steps = [];
 
   for (const step of ADVISOR_STEPS) {
-    steps.push(step);
+    if (step.id === 'body' && !shouldShowBodyStep(answers)) continue;
+    steps.push(adaptStepForProfile(step, answers));
     if (step.field === 'priority') {
-      steps.push(buildCategoryStep(catalogCategories, { singleSelect: answers.selection_mode === 'single' }));
+      steps.push(buildCategoryStep(catalogCategories, {
+        singleSelect: answers.selection_mode === 'single',
+        priority: answers.priority || 'other',
+      }));
     }
-  }
-
-  if (answers.sex === 'female') {
-    steps.push({
-      id: 'pregnancy',
-      title: 'Бременност / кърмене',
-      type: 'single',
-      field: 'pregnancy',
-      options: [
-        { value: 'no', label: 'Не' },
-        { value: 'yes', label: 'Да' },
-        { value: 'na', label: 'Не е приложимо' },
-      ],
-    });
   }
 
   steps.push({

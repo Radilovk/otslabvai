@@ -88,12 +88,19 @@ export function getExclusionReasons(profile, product) {
   if (dietKws?.length && productMatchesAnyKeyword(text, dietKws)) {
     reasons.push(`изключен поради хранителен модел: ${profile.diet}`);
   }
-  if (profile.pregnancy === 'yes') {
+  if (profileHasPregnancyOrBreastfeeding(profile)) {
     if (productMatchesAnyKeyword(text, ['мелатонин', 'melatonin', 'ашваганда', 'ashwagandha', 'фитоестроген', 'берберин'])) {
       reasons.push('изключен при бременност/кърмене');
     }
   }
   return reasons;
+}
+
+export function profileHasPregnancyOrBreastfeeding(profile) {
+  const conditions = profile.conditions || [];
+  return conditions.includes('pregnancy')
+    || conditions.includes('breastfeeding')
+    || profile.pregnancy === 'yes';
 }
 
 export function getMustIncludeKeywords(profile) {
