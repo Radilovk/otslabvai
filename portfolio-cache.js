@@ -300,6 +300,37 @@ export async function getDescriptionFromCache(groupId) {
   return data;
 }
 
+/** Намира group_id по SKU от кеширания каталог (sku_lookup или chunk scan). */
+export function findGroupIdBySkuFromCache(skuId) {
+  const sku = String(skuId || '').trim();
+  if (!sku) return null;
+  const meta = getCachedMeta();
+  if (meta?.sku_lookup?.[sku]) return meta.sku_lookup[sku];
+  return null;
+}
+
+/** Async fallback ако sku_lookup липсва (стари sync-ове). */
+export async function resolveGroupIdBySku(skuId) {
+  const fromLookup = findGroupIdBySkuFromCache(skuId);
+  if (fromLookup) return fromLookup;
+
+  const sku = String(skuId || '').trim();
+  if (!sku) return null;
+  const meta = getCachedMeta();
+  if (!meta?.chunk_count) return null;
+
+  for (let i = 0; i < meta.chunk_count; i += 1) {
+    const chunk = await loadChunk(i);
+    if (!chunk) continue;
+    for (const group of chunk) {
+      if (group.variants?.some((v) => String(v.sku_id) === sku)) {
+        return group.group_id;
+      }
+    }
+  }
+  return null;
+}
+
 /** Invalidate client cache after admin sync (call from admin). */
 export function invalidatePortfolioCache() {
   memory.bootstrap = null;

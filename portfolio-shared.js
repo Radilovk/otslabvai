@@ -130,6 +130,14 @@ export function formatPrice(amount) {
   return `${Number(amount).toFixed(2)} €`;
 }
 
+/** URL към страницата на продукта (с опционален SKU за избран вариант). */
+export function buildPortfolioProductUrl(groupId, skuId) {
+  if (!groupId) return 'portfolio.html';
+  let url = `portfolio-product.html?group_id=${encodeURIComponent(groupId)}`;
+  if (skuId) url += `&sku=${encodeURIComponent(skuId)}`;
+  return url;
+}
+
 export async function loadSiteSettings({ settingsOnly = false } = {}) {
   try {
     const cache = await import('./portfolio-cache.js');

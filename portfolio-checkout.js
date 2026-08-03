@@ -1,7 +1,9 @@
 import { API_URL } from './config.js';
 import {
-  CART_KEY, getCart, saveCart, updateCartBadges, showToast, formatPrice, initPortfolioPage, icon, escapeHtml
+  CART_KEY, getCart, saveCart, updateCartBadges, showToast, formatPrice, initPortfolioPage, icon, escapeHtml,
+  buildPortfolioProductUrl
 } from './portfolio-shared.js';
+import { ensureBootstrap, resolveGroupIdBySku } from './portfolio-cache.js';
 import {
   validatePortfolioCustomer,
   validateCartHasSku,
@@ -99,6 +101,26 @@ function bindSubmitButtons() {
   });
 }
 
+function renderCartItemMedia(item, productUrl) {
+  const safeName = escapeHtml(item.name);
+  if (item.image) {
+    const img = `<img src="${escapeHtml(item.image)}" alt="" class="pf-summary-img" loading="lazy" decoding="async">`;
+    return productUrl
+      ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link" aria-label="Преглед: ${safeName}">${img}</a>`
+      : img;
+  }
+  const placeholder = '<div class="pf-summary-img pf-summary-img--empty"></div>';
+  return productUrl
+    ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link" aria-label="Преглед: ${safeName}">${placeholder}</a>`
+    : placeholder;
+}
+
+function renderCartItemTitle(item, productUrl) {
+  const safeName = escapeHtml(item.name);
+  if (!productUrl) return `<strong>${safeName}</strong>`;
+  return `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link pf-summary-product-name">${safeName}</a>`;
+}
+
 function renderCart() {
   const list = $('product-list');
   if (!cart.length) {
@@ -109,11 +131,16 @@ function renderCart() {
     return;
   }
 
-  list.innerHTML = cart.map((item, idx) => `
+  list.innerHTML = cart.map((item, idx) => {
+    const productUrl = item.group_id
+      ? buildPortfolioProductUrl(item.group_id, item.sku_id || item.id)
+      : null;
+    return `
     <li class="pf-summary-item" data-idx="${idx}">
-      ${item.image ? `<img src="${item.image}" alt="" class="pf-summary-img" loading="lazy" decoding="async">` : '<div class="pf-summary-img pf-summary-img--empty"></div>'}
+      ${renderCartItemMedia(item, productUrl)}
       <div class="pf-summary-info">
-        <strong>${item.name}</strong>
+        ${renderCartItemTitle(item, productUrl)}
+        ${productUrl ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-view-link">Преглед на продукта</a>` : ''}
         <div class="pf-qty-row">
           <button type="button" class="pf-qty-btn" data-action="minus" data-idx="${idx}" aria-label="Намали">−</button>
           <span>${item.quantity}</span>
@@ -122,7 +149,8 @@ function renderCart() {
       </div>
       <div class="pf-summary-price">${formatPrice(item.price * item.quantity)}</div>
       <button type="button" class="pf-remove-btn" data-action="remove" data-idx="${idx}" aria-label="Премахни">${icon('x', { size: 16 })}</button>
-    </li>`).join('');
+    </li>`;
+  }).join('');
 
   syncSubmitButtons({ disabled: false });
   syncFloatingSubmit(true);
@@ -550,10 +578,25 @@ function setupSpeedy() {
   });
 }
 
+async function enrichCartGroupIds() {
+  await ensureBootstrap();
+  let changed = false;
+  for (const item of cart) {
+    if (item.group_id) continue;
+    const groupId = await resolveGroupIdBySku(item.sku_id || item.id);
+    if (groupId) {
+      item.group_id = groupId;
+      changed = true;
+    }
+  }
+  if (changed) saveCart(cart);
+}
+
 async function init() {
   await initPortfolioPage({ active: 'checkout', settingsOnly: true });
   document.body.classList.add('pf-body--checkout');
   cart = getCart();
+  await enrichCartGroupIds();
   renderCart();
 
   $('apply-promo-btn')?.addEventListener('click', applyPromoCode);
