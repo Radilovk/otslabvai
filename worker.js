@@ -1,5 +1,6 @@
 // ==== ВЕРСИЯ 4.0: ФУНКЦИОНАЛЕН АДМИН ПАНЕЛ ====
 
+import { handleCatalogRoute } from './catalog-api.js';
 import {
   handlePortfolioRoute,
   syncPortfolioCatalog,
@@ -323,7 +324,10 @@ export default {
             } else if (url.pathname === '/portfolio/sync' && request.method === 'POST') {
                 // Sync на каталога + авто-опресняване на импортираните продукти в index/life
                 response = await handlePortfolioSyncWithRefresh(env, ctx);
-            } else             if (url.pathname.startsWith('/portfolio/')) {
+            } else if (url.pathname.startsWith('/c/')) {
+                response = await handleCatalogRoute(request, env, url, ctx);
+                if (!response) throw new UserFacingError('Not Found', 404);
+            } else if (url.pathname.startsWith('/portfolio/')) {
                 response = await handlePortfolioRoute(request, env, url, ctx);
             } else {
                 throw new UserFacingError('Not Found', 404);

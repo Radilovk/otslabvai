@@ -229,7 +229,7 @@ jobs:
             echo "ERROR: settings must return 200"
             fail=1
           fi
-          for path in /portfolio/bootstrap /portfolio/meta-version; do
+          for path in /c/now /portfolio/bootstrap; do
             code=$(curl -s -o /tmp/pf.json -w "%{http_code}" "${BASE}${path}")
             body=$(head -c 120 /tmp/pf.json)
             echo "${path} → HTTP ${code}: ${body}"

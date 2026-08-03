@@ -1,0 +1,43 @@
+name: Catalog Light Sync
+
+on:
+  repository_dispatch:
+    types: [catalog-light-sync]
+  workflow_dispatch:
+
+concurrency:
+  group: catalog-light-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Validate API key format
+        run: |
+          if [ -z "$FITNESS1_API_KEY" ]; then
+            echo "FITNESS1_API_KEY secret is not set"
+            exit 1
+          fi
+          if ! printf '%s' "$FITNESS1_API_KEY" | grep -Eq '^[a-f0-9]{32}$'; then
+            echo "FITNESS1_API_KEY must be exactly 32 hex characters"
+            exit 1
+          fi
+      - name: Light catalog sync to KV
+        run: node catalog-light-sync.mjs
+      - name: Smoke test /c/now
+        run: |
+          sleep 5
+          code=$(curl -s -o /tmp/now.json -w "%{http_code}" "https://port.radilov-k.workers.dev/c/now")
+          echo "/c/now HTTP $code"
+          test "$code" = "200"

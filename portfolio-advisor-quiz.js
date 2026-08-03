@@ -490,11 +490,12 @@ nextBtn.addEventListener('click', async () => {
 async function loadCatalogCategories() {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const res = await fetch(`${API_URL}/portfolio/bootstrap`, { cache: 'no-cache' });
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (Array.isArray(data?.meta?.categories) && data.meta.categories.length) {
-        catalogCategories = data.meta.categories;
+      const { sync } = await import('./portfolio-cache.js');
+      await sync({ force: attempt > 0 });
+      const { getFiltersFromCache } = await import('./portfolio-cache.js');
+      const filters = getFiltersFromCache();
+      if (Array.isArray(filters?.categories) && filters.categories.length) {
+        catalogCategories = filters.categories;
         catalogCategoriesReady = true;
         return true;
       }
