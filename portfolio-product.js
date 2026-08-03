@@ -2,7 +2,7 @@ import {
   escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage, icon
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatVariantPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
-import { getProductFromCache, getDescriptionFromCache, getCachedMeta, fetchProductFromServer, checkSkusAvailability } from './portfolio-cache.js';
+import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
 import { filterIndex } from './portfolio-filter.js';
 
 const DOM = {
@@ -329,23 +329,10 @@ function fixDescriptionImages(container) {
 }
 
 function addToCart() {
-  void addToCartAsync();
-}
-
-async function addToCartAsync() {
   if (!selectedVariant?.available) {
     showToast('Този вариант не е наличен.', 'error');
     return;
   }
-  try {
-    const data = await checkSkusAvailability([selectedVariant.sku_id]);
-    const item = data.items?.[0];
-    if (item && !item.available) {
-      showToast('Този вариант вече не е наличен.', 'error');
-      await reconcileProductAvailability();
-      return;
-    }
-  } catch { /* proceed with cached data */ }
   const v = selectedVariant;
   const label = [product.name, v.pack, v.option].filter(Boolean).join(' – ');
   const cart = getCart();
@@ -370,28 +357,6 @@ async function addToCartAsync() {
   updateCartBadges();
   showToast(`Добавено в количката (${quantity} бр.)!`, 'success');
   quantity = 1;
-}
-
-async function reconcileProductAvailability() {
-  if (!product?.group_id) return;
-  try {
-    const fresh = await fetchProductFromServer(product.group_id);
-    const prevSku = selectedVariant?.sku_id;
-    product = fresh;
-    product.variants = (product.variants || []).filter((v) => v.available);
-    if (!product.variants.length) {
-      DOM.root.innerHTML = '<div class="pf-error">Продуктът не е наличен в момента.</div>';
-      return;
-    }
-    if (prevSku) {
-      const match = product.variants.find((v) => String(v.sku_id) === String(prevSku));
-      if (match) selectedVariant = match;
-      else pickDefaultVariant();
-    } else {
-      pickDefaultVariant();
-    }
-    render();
-  } catch { /* keep cached view */ }
 }
 
 async function loadProduct() {
@@ -419,7 +384,6 @@ async function loadProduct() {
     }
     pickDefaultVariant();
     render();
-    reconcileProductAvailability();
   } catch {
     DOM.root.innerHTML = '<div class="pf-error">Грешка при зареждане.</div>';
   }

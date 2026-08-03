@@ -3,7 +3,7 @@ import {
   CART_KEY, getCart, saveCart, updateCartBadges, showToast, formatPrice, initPortfolioPage, icon, escapeHtml,
   buildPortfolioProductUrl
 } from './portfolio-shared.js';
-import { ensureBootstrap, resolveGroupIdBySku, checkSkusAvailability } from './portfolio-cache.js';
+import { ensureBootstrap, resolveGroupIdBySku } from './portfolio-cache.js';
 import {
   validatePortfolioCustomer,
   validateCartHasSku,
@@ -12,7 +12,6 @@ import {
 
 let cart = getCart();
 let activePromoCode = null;
-let cartValidateTimer = null;
 let cartStockWarning = '';
 
 const els = {};
@@ -190,48 +189,14 @@ function renderCart() {
       } else if (action === 'remove') cart.splice(i, 1);
       saveCart(cart);
       renderCart();
-      scheduleCartStockCheck();
     });
   });
-
-  scheduleCartStockCheck();
-}
-
-async function refreshCartStock({ silent = true } = {}) {
-  if (!cart.length) {
-    cartStockWarning = '';
-    renderStockWarning();
-    return true;
-  }
-
-  try {
-    const skus = cart.map((c) => c.sku_id || c.id);
-    const data = await checkSkusAvailability(skus);
-    const unavailable = (data.items || []).filter((i) => !i.available);
-    if (unavailable.length) {
-      const names = unavailable.map((i) => {
-        const cartItem = cart.find((c) => String(c.sku_id || c.id) === String(i.sku_id));
-        return cartItem?.name || i.name || i.sku_id;
-      });
-      cartStockWarning = `Неналични продукти: ${names.join(', ')}. Премахнете ги, за да продължите.`;
-      renderStockWarning();
-      syncSubmitButtons({ disabled: true });
-      if (!silent) showToast(cartStockWarning, 'error');
-      return false;
-    }
-
-    cartStockWarning = '';
-    renderStockWarning();
-    syncSubmitButtons({ disabled: false });
-    return true;
-  } catch {
-    return true;
-  }
 }
 
 async function validateCartOnServer({ silent = false } = {}) {
   if (!cart.length) {
     cartStockWarning = '';
+    renderStockWarning();
     return true;
   }
 
@@ -279,13 +244,6 @@ async function validateCartOnServer({ silent = false } = {}) {
     if (!silent) showToast(cartStockWarning, 'error');
     return false;
   }
-}
-
-function scheduleCartStockCheck() {
-  if (cartValidateTimer) clearTimeout(cartValidateTimer);
-  cartValidateTimer = setTimeout(() => {
-    refreshCartStock();
-  }, 600);
 }
 
 function toggleDeliveryFields() {
@@ -660,6 +618,7 @@ async function init() {
   cart = getCart();
   await enrichCartGroupIds();
   renderCart();
+  if (cart.length) validateCartOnServer({ silent: true });
 
   $('apply-promo-btn')?.addEventListener('click', applyPromoCode);
   $('apply-promo-btn-summary')?.addEventListener('click', applyPromoCode);

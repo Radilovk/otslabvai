@@ -2,7 +2,7 @@ import {
   escapeHtml, debounce, updateCartBadges, initPortfolioPage, applyHeroSettings, icon
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
-import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, onCatalogUpdated } from './portfolio-cache.js';
+import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache } from './portfolio-cache.js';
 import {
   countActiveFilters as countFilters,
   getRemovableFilterChips,
@@ -372,12 +372,6 @@ async function init() {
     if (filters) populateFilters(filters);
     state.cacheReady = true;
     bindEvents();
-    onCatalogUpdated(() => {
-      const updatedFilters = getFiltersFromCache();
-      if (updatedFilters) populateFilters(updatedFilters);
-      reconcileFacets();
-      loadCatalog();
-    });
     reconcileFacets();
     loadCatalog();
   } catch (err) {

@@ -1199,37 +1199,6 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
   return normalized;
 }
 
-/** Lightweight KV-only availability probe – no pricing, no F1 refresh. */
-async function handleStockCheck(request, env) {
-  const body = await request.json();
-  const skuIds = Array.isArray(body.skus)
-    ? [...new Set(body.skus.map((s) => String(s).trim()).filter(Boolean))]
-    : extractCartSkuIds(body.products || []);
-  if (!skuIds.length) throw new PortfolioError('Липсват SKU.', 400);
-
-  const meta = await getMeta(env);
-  if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
-
-  const items = [];
-  for (const sku of skuIds) {
-    const found = await findVariantInCatalog(env, sku);
-    const available = !!(found?.variant?.available);
-    items.push({
-      sku_id: sku,
-      available,
-      name: found
-        ? [found.group_name, found.variant.pack, found.variant.option].filter(Boolean).join(' – ')
-        : undefined
-    });
-  }
-
-  return jsonResponse({
-    synced_at: meta.synced_at,
-    items,
-    all_available: items.every((i) => i.available)
-  });
-}
-
 async function handleValidateCart(request, env) {
   const body = await request.json();
   if (!Array.isArray(body.products) || !body.products.length) {
@@ -1816,9 +1785,6 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     }
     if (path === '/portfolio/product/description' && method === 'GET') {
       return await handleGetProductDescription(request, env);
-    }
-    if (path === '/portfolio/stock-check' && method === 'POST') {
-      return await handleStockCheck(request, env);
     }
     if (path === '/portfolio/validate-cart' && method === 'POST') {
       return await handleValidateCart(request, env);
