@@ -1,5 +1,5 @@
 /** TTL thresholds for on-demand catalog sync (see portfolio-api.js). */
-/** @type {{ BROWSE_TTL_MS: number, ORDER_FRESHNESS_MS: number, APPROVE_FRESHNESS_MS: number, SYNC_LOCK_TTL_MS: number, SYNC_LOCK_POLL_MS: number, SYNC_LOCK_MAX_WAIT_MS: number, FITNESS1_CATALOG_FETCH_FROM_WORKER: boolean, CI_SYNC_DEBOUNCE_MS: number }} */
+/** @type {{ BROWSE_TTL_MS: number, CLIENT_CATALOG_FRESHNESS_MS: number, ORDER_FRESHNESS_MS: number, APPROVE_FRESHNESS_MS: number, SYNC_LOCK_TTL_MS: number, SYNC_LOCK_POLL_MS: number, SYNC_LOCK_MAX_WAIT_MS: number, FITNESS1_CATALOG_FETCH_FROM_WORKER: boolean, CI_SYNC_DEBOUNCE_MS: number }} */
 export const SYNC_POLICY = {
   BROWSE_TTL_MS: 24 * 60 * 60 * 1000,
   /** Max age of client catalog cache while browsing/searching. */
