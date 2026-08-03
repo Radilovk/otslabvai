@@ -1,9 +1,10 @@
 /**
- * Client-side catalog cache – one bootstrap request per session/day,
- * then zero backend calls for browse/filter/search.
+ * Client-side catalog cache – bootstrap refreshed before browse/search,
+ * then zero backend calls for filter/pagination within the session.
  */
 import { API_URL } from './config.js';
 import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
+import { isClientCatalogStale } from './portfolio-sync-policy.js';
 
 const BOOTSTRAP_KEY = 'portfolio_bootstrap_v1';
 const SETTINGS_KEY = 'portfolio_settings_v1';
@@ -80,6 +81,19 @@ function descriptionStorageKey(groupId) {
   return `portfolio_desc_${groupId}`;
 }
 
+function clearProductSessionCache() {
+  try {
+    const keys = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key?.startsWith('portfolio_product_') || key?.startsWith('portfolio_desc_')) {
+        keys.push(key);
+      }
+    }
+    keys.forEach((k) => sessionStorage.removeItem(k));
+  } catch { /* quota */ }
+}
+
 async function fetchBootstrap() {
   const res = await fetch(`${API_URL}/portfolio/bootstrap`);
   const data = await res.json();
@@ -94,6 +108,7 @@ async function fetchBootstrap() {
   writeSettingsStorage(data.settings);
   memory.bootstrap = cached;
   memory.chunks.clear();
+  clearProductSessionCache();
   return cached;
 }
 
@@ -181,6 +196,35 @@ export async function ensureBootstrap({ force = false } = {}) {
     bootstrapPromise = null;
   });
   return bootstrapPromise;
+}
+
+/**
+ * Fresh catalog for browse/search – refetch if local cache is old or server has newer sync.
+ * Checkout/legal pages should use ensureSettings() instead.
+ */
+export async function ensureFreshCatalog() {
+  const stored = memory.bootstrap || readBootstrapStorage();
+  if (stored) {
+    memory.bootstrap = stored;
+    memory.settings = stored.settings;
+  }
+
+  if (!stored || isClientCatalogStale(stored.fetchedAt)) {
+    return ensureBootstrap({ force: true });
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/portfolio/meta-version`);
+    if (res.ok) {
+      const version = await res.json();
+      lastRevalidateAt = Date.now();
+      if (version.synced_at && version.synced_at !== stored.synced_at) {
+        return ensureBootstrap({ force: true });
+      }
+    }
+  } catch { /* offline – use cache */ }
+
+  return memory.bootstrap;
 }
 
 export function getCachedSettings() {
