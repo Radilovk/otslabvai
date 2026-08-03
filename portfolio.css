@@ -1519,6 +1519,24 @@ img, svg { display: block; max-width: 100%; height: auto; }
   border-bottom: 1px solid #f0d060;
 }
 
+.pf-stock-warning {
+  background: linear-gradient(90deg, #fff0f0, #ffe8e8);
+  color: #8b1a1a;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: var(--pf-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #f0b0b0;
+  line-height: 1.45;
+}
+
+[data-theme="dark"] .pf-stock-warning {
+  background: linear-gradient(90deg, #3a2020, #2d1818);
+  color: #ffb4b4;
+  border-color: #6a3030;
+}
+
 .pf-no-scroll { overflow: hidden; }
 
 .pf-no-scroll .pf-fab-cart { display: none !important; }

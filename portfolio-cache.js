@@ -9,6 +9,8 @@ const BOOTSTRAP_KEY = 'portfolio_bootstrap_v1';
 const SETTINGS_KEY = 'portfolio_settings_v1';
 const TTL_MS = 24 * 60 * 60 * 1000;
 const SETTINGS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+/** After this age, re-check meta-version when tab becomes visible. */
+const SOFT_STALE_MS = 30 * 60 * 1000;
 /** Avoid hammering meta-version on every navigation within a session. */
 const REVALIDATE_COOLDOWN_MS = 10 * 60 * 1000;
 
@@ -22,6 +24,19 @@ let bootstrapPromise = null;
 let settingsPromise = null;
 let revalidatePromise = null;
 let lastRevalidateAt = 0;
+const catalogUpdatedListeners = new Set();
+
+function notifyCatalogUpdated() {
+  for (const listener of catalogUpdatedListeners) {
+    try { listener(); } catch { /* ignore */ }
+  }
+}
+
+/** Subscribe to bootstrap refresh (e.g. catalog page re-render). Returns unsubscribe. */
+export function onCatalogUpdated(listener) {
+  catalogUpdatedListeners.add(listener);
+  return () => catalogUpdatedListeners.delete(listener);
+}
 
 function readBootstrapStorage() {
   try {
@@ -81,6 +96,7 @@ function descriptionStorageKey(groupId) {
 }
 
 async function fetchBootstrap() {
+  const prevSynced = memory.bootstrap?.synced_at;
   const res = await fetch(`${API_URL}/portfolio/bootstrap`);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Грешка при зареждане на каталога');
@@ -94,6 +110,9 @@ async function fetchBootstrap() {
   writeSettingsStorage(data.settings);
   memory.bootstrap = cached;
   memory.chunks.clear();
+  if (prevSynced && cached.synced_at !== prevSynced) {
+    notifyCatalogUpdated();
+  }
   return cached;
 }
 
@@ -105,12 +124,12 @@ async function fetchSettings() {
   return data;
 }
 
-async function revalidateBootstrapIfStale() {
+async function revalidateBootstrapIfStale({ force = false } = {}) {
   const current = memory.bootstrap;
   if (!current?.synced_at) return;
 
   const now = Date.now();
-  if (now - lastRevalidateAt < REVALIDATE_COOLDOWN_MS) return;
+  if (!force && now - lastRevalidateAt < REVALIDATE_COOLDOWN_MS) return;
   if (revalidatePromise) return revalidatePromise;
 
   revalidatePromise = (async () => {
@@ -130,6 +149,14 @@ async function revalidateBootstrapIfStale() {
   })();
 
   return revalidatePromise;
+}
+
+/** Revalidate when cache is soft-stale (e.g. tab focus) without full reload. */
+export async function ensureFreshCatalog() {
+  const bootstrap = memory.bootstrap || readBootstrapStorage();
+  if (!bootstrap?.fetchedAt) return;
+  if (Date.now() - bootstrap.fetchedAt < SOFT_STALE_MS) return;
+  await revalidateBootstrapIfStale({ force: true });
 }
 
 /** Lightweight settings load – no full catalog index (checkout, legal pages). */
@@ -329,6 +356,63 @@ export async function resolveGroupIdBySku(skuId) {
     }
   }
   return null;
+}
+
+/** Fresh product from server (KV) – updates local cache. */
+export async function fetchProductFromServer(groupId) {
+  const res = await fetch(`${API_URL}/portfolio/product?group_id=${encodeURIComponent(groupId)}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Грешка при зареждане на продукта');
+  patchProductInCache(groupId, data);
+  return data;
+}
+
+/** Merge server product into session/chunk/index caches. */
+export function patchProductInCache(groupId, product) {
+  const meta = getCachedMeta();
+  if (!meta) return;
+
+  try {
+    sessionStorage.setItem(productStorageKey(groupId), JSON.stringify(product));
+  } catch { /* quota */ }
+
+  const chunkIndex = meta.lookup?.[groupId];
+  if (chunkIndex != null && memory.chunks.has(chunkIndex)) {
+    const chunk = memory.chunks.get(chunkIndex);
+    const idx = chunk.findIndex((g) => g.group_id === groupId);
+    if (idx >= 0) chunk[idx] = product;
+  }
+
+  const indexItem = meta.index?.find((item) => item.group_id === groupId);
+  if (indexItem) {
+    const hasAvailable = (product.variants || []).some((v) => v.available);
+    indexItem.available = hasAvailable;
+  }
+}
+
+/** Lightweight availability probe – KV only, no pricing validation. */
+export async function checkSkusAvailability(skus) {
+  const unique = [...new Set(
+    (skus || []).map((s) => String(s).trim()).filter(Boolean)
+  )];
+  if (!unique.length) return { all_available: true, items: [] };
+
+  const res = await fetch(`${API_URL}/portfolio/stock-check`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ skus: unique })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Грешка при проверка на наличност');
+  return data;
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      ensureFreshCatalog();
+    }
+  });
 }
 
 /** Invalidate client cache after admin sync (call from admin). */

@@ -3,7 +3,7 @@ import {
   CART_KEY, getCart, saveCart, updateCartBadges, showToast, formatPrice, initPortfolioPage, icon, escapeHtml,
   buildPortfolioProductUrl
 } from './portfolio-shared.js';
-import { ensureBootstrap, resolveGroupIdBySku } from './portfolio-cache.js';
+import { ensureBootstrap, resolveGroupIdBySku, checkSkusAvailability } from './portfolio-cache.js';
 import {
   validatePortfolioCustomer,
   validateCartHasSku,
@@ -121,10 +121,31 @@ function renderCartItemTitle(item, productUrl) {
   return `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link pf-summary-product-name">${safeName}</a>`;
 }
 
+function renderStockWarning() {
+  let banner = $('cart-stock-warning');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'cart-stock-warning';
+    banner.className = 'pf-stock-warning';
+    banner.setAttribute('role', 'alert');
+    const list = $('product-list');
+    list?.parentNode?.insertBefore(banner, list);
+  }
+  if (!cartStockWarning) {
+    banner.hidden = true;
+    banner.textContent = '';
+    return;
+  }
+  banner.hidden = false;
+  banner.textContent = cartStockWarning;
+}
+
 function renderCart() {
   const list = $('product-list');
   if (!cart.length) {
     list.innerHTML = '<li class="pf-empty-cart"><p>Количката е празна.</p><a href="portfolio.html" class="pf-btn pf-btn-outline">Към каталога</a></li>';
+    cartStockWarning = '';
+    renderStockWarning();
     syncSubmitButtons({ disabled: true });
     syncFloatingSubmit(false);
     updateSummary();
@@ -152,10 +173,11 @@ function renderCart() {
     </li>`;
   }).join('');
 
-  syncSubmitButtons({ disabled: false });
+  syncSubmitButtons({ disabled: !!cartStockWarning });
   syncFloatingSubmit(true);
   updateSummary();
   updateCartBadges();
+  renderStockWarning();
 
   list.querySelectorAll('[data-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -173,6 +195,38 @@ function renderCart() {
   });
 
   scheduleCartStockCheck();
+}
+
+async function refreshCartStock({ silent = true } = {}) {
+  if (!cart.length) {
+    cartStockWarning = '';
+    renderStockWarning();
+    return true;
+  }
+
+  try {
+    const skus = cart.map((c) => c.sku_id || c.id);
+    const data = await checkSkusAvailability(skus);
+    const unavailable = (data.items || []).filter((i) => !i.available);
+    if (unavailable.length) {
+      const names = unavailable.map((i) => {
+        const cartItem = cart.find((c) => String(c.sku_id || c.id) === String(i.sku_id));
+        return cartItem?.name || i.name || i.sku_id;
+      });
+      cartStockWarning = `Неналични продукти: ${names.join(', ')}. Премахнете ги, за да продължите.`;
+      renderStockWarning();
+      syncSubmitButtons({ disabled: true });
+      if (!silent) showToast(cartStockWarning, 'error');
+      return false;
+    }
+
+    cartStockWarning = '';
+    renderStockWarning();
+    syncSubmitButtons({ disabled: false });
+    return true;
+  } catch {
+    return true;
+  }
 }
 
 async function validateCartOnServer({ silent = false } = {}) {
@@ -193,6 +247,8 @@ async function validateCartOnServer({ silent = false } = {}) {
     const data = await res.json();
     if (!res.ok) {
       cartStockWarning = data.error || 'Някои продукти вече не са налични.';
+      renderStockWarning();
+      syncSubmitButtons({ disabled: true });
       if (!silent) showToast(cartStockWarning, 'error');
       return false;
     }
@@ -213,16 +269,22 @@ async function validateCartOnServer({ silent = false } = {}) {
     }
 
     cartStockWarning = '';
+    renderStockWarning();
+    syncSubmitButtons({ disabled: false });
     return true;
   } catch {
-    return true;
+    cartStockWarning = 'Неуспешна проверка на наличност. Опитайте отново.';
+    renderStockWarning();
+    syncSubmitButtons({ disabled: true });
+    if (!silent) showToast(cartStockWarning, 'error');
+    return false;
   }
 }
 
 function scheduleCartStockCheck() {
   if (cartValidateTimer) clearTimeout(cartValidateTimer);
   cartValidateTimer = setTimeout(() => {
-    validateCartOnServer();
+    refreshCartStock();
   }, 600);
 }
 
