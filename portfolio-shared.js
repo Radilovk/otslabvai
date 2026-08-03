@@ -144,7 +144,7 @@ export async function loadSiteSettings({ settingsOnly = false } = {}) {
     if (settingsOnly) {
       return await cache.ensureSettings();
     }
-    await cache.ensureBootstrap();
+    await cache.ensureFreshCatalog();
     return cache.getCachedSettings();
   } catch {
     try {

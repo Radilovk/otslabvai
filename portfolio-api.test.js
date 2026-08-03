@@ -158,6 +158,7 @@ describe('Portfolio API', () => {
     const clientMeta = buildClientCatalogMeta(meta);
     expect(clientMeta.index.some((i) => i.group_id === '999')).toBe(false);
     expect(clientMeta.index[0].max_margin).toBeUndefined();
+    expect(clientMeta.sku_lookup['1']).toBe('100');
     expect(sanitizeIndexEntryForClient(meta.index[0]).max_margin_pct).toBeUndefined();
   });
 

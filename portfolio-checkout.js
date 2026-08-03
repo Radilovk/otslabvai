@@ -12,7 +12,6 @@ import {
 
 let cart = getCart();
 let activePromoCode = null;
-let cartValidateTimer = null;
 let cartStockWarning = '';
 
 const els = {};
@@ -121,10 +120,31 @@ function renderCartItemTitle(item, productUrl) {
   return `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link pf-summary-product-name">${safeName}</a>`;
 }
 
+function renderStockWarning() {
+  let banner = $('cart-stock-warning');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'cart-stock-warning';
+    banner.className = 'pf-stock-warning';
+    banner.setAttribute('role', 'alert');
+    const list = $('product-list');
+    list?.parentNode?.insertBefore(banner, list);
+  }
+  if (!cartStockWarning) {
+    banner.hidden = true;
+    banner.textContent = '';
+    return;
+  }
+  banner.hidden = false;
+  banner.textContent = cartStockWarning;
+}
+
 function renderCart() {
   const list = $('product-list');
   if (!cart.length) {
     list.innerHTML = '<li class="pf-empty-cart"><p>Количката е празна.</p><a href="portfolio.html" class="pf-btn pf-btn-outline">Към каталога</a></li>';
+    cartStockWarning = '';
+    renderStockWarning();
     syncSubmitButtons({ disabled: true });
     syncFloatingSubmit(false);
     updateSummary();
@@ -152,10 +172,11 @@ function renderCart() {
     </li>`;
   }).join('');
 
-  syncSubmitButtons({ disabled: false });
+  syncSubmitButtons({ disabled: !!cartStockWarning });
   syncFloatingSubmit(true);
   updateSummary();
   updateCartBadges();
+  renderStockWarning();
 
   list.querySelectorAll('[data-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -168,16 +189,14 @@ function renderCart() {
       } else if (action === 'remove') cart.splice(i, 1);
       saveCart(cart);
       renderCart();
-      scheduleCartStockCheck();
     });
   });
-
-  scheduleCartStockCheck();
 }
 
 async function validateCartOnServer({ silent = false } = {}) {
   if (!cart.length) {
     cartStockWarning = '';
+    renderStockWarning();
     return true;
   }
 
@@ -193,6 +212,8 @@ async function validateCartOnServer({ silent = false } = {}) {
     const data = await res.json();
     if (!res.ok) {
       cartStockWarning = data.error || 'Някои продукти вече не са налични.';
+      renderStockWarning();
+      syncSubmitButtons({ disabled: true });
       if (!silent) showToast(cartStockWarning, 'error');
       return false;
     }
@@ -213,17 +234,16 @@ async function validateCartOnServer({ silent = false } = {}) {
     }
 
     cartStockWarning = '';
+    renderStockWarning();
+    syncSubmitButtons({ disabled: false });
     return true;
   } catch {
-    return true;
+    cartStockWarning = 'Неуспешна проверка на наличност. Опитайте отново.';
+    renderStockWarning();
+    syncSubmitButtons({ disabled: true });
+    if (!silent) showToast(cartStockWarning, 'error');
+    return false;
   }
-}
-
-function scheduleCartStockCheck() {
-  if (cartValidateTimer) clearTimeout(cartValidateTimer);
-  cartValidateTimer = setTimeout(() => {
-    validateCartOnServer();
-  }, 600);
 }
 
 function toggleDeliveryFields() {
@@ -598,6 +618,7 @@ async function init() {
   cart = getCart();
   await enrichCartGroupIds();
   renderCart();
+  if (cart.length) validateCartOnServer({ silent: true });
 
   $('apply-promo-btn')?.addEventListener('click', applyPromoCode);
   $('apply-promo-btn-summary')?.addEventListener('click', applyPromoCode);

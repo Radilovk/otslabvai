@@ -1289,6 +1289,7 @@ async function handleBootstrap(env, ctx) {
       categories: clientMeta.categories,
       goals: clientMeta.goals,
       lookup: clientMeta.lookup,
+      sku_lookup: clientMeta.sku_lookup,
       index: clientMeta.index
     },
     syncing

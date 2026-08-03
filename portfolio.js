@@ -2,7 +2,7 @@ import {
   escapeHtml, debounce, updateCartBadges, initPortfolioPage, applyHeroSettings, icon
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
-import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache } from './portfolio-cache.js';
+import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, ensureFreshCatalog, getCachedMeta } from './portfolio-cache.js';
 import {
   countActiveFilters as countFilters,
   getRemovableFilterChips,
@@ -359,6 +359,22 @@ function bindEvents() {
   if (params.get('category')) DOM.filterCategory.value = params.get('category');
   if (params.get('goal')) DOM.filterGoal.value = params.get('goal');
   if (params.get('brand')) DOM.filterBrand.value = params.get('brand');
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !state.cacheReady) return;
+    void refreshCatalogIfUpdated();
+  });
+}
+
+async function refreshCatalogIfUpdated() {
+  const before = getCachedMeta()?.synced_at;
+  await ensureFreshCatalog();
+  const after = getCachedMeta()?.synced_at;
+  if (before === after) return;
+  const filters = getFiltersFromCache();
+  if (filters) populateFilters(filters);
+  reconcileFacets();
+  loadCatalog();
 }
 
 async function init() {
