@@ -1,9 +1,7 @@
 /** TTL thresholds for on-demand catalog sync (see portfolio-api.js). */
-/** @type {{ BROWSE_TTL_MS: number, CLIENT_CATALOG_FRESHNESS_MS: number, ORDER_FRESHNESS_MS: number, APPROVE_FRESHNESS_MS: number, SYNC_LOCK_TTL_MS: number, SYNC_LOCK_POLL_MS: number, SYNC_LOCK_MAX_WAIT_MS: number, FITNESS1_CATALOG_FETCH_FROM_WORKER: boolean, CI_SYNC_DEBOUNCE_MS: number }} */
+/** @type {{ BROWSE_TTL_MS: number, ORDER_FRESHNESS_MS: number, APPROVE_FRESHNESS_MS: number, SYNC_LOCK_TTL_MS: number, SYNC_LOCK_POLL_MS: number, SYNC_LOCK_MAX_WAIT_MS: number, FITNESS1_CATALOG_FETCH_FROM_WORKER: boolean, CI_SYNC_DEBOUNCE_MS: number }} */
 export const SYNC_POLICY = {
   BROWSE_TTL_MS: 24 * 60 * 60 * 1000,
-  /** Max age of client catalog cache while browsing/searching. */
-  CLIENT_CATALOG_FRESHNESS_MS: 30 * 60 * 1000,
   ORDER_FRESHNESS_MS: 60 * 60 * 1000,
   APPROVE_FRESHNESS_MS: 15 * 60 * 1000,
   SYNC_LOCK_TTL_MS: 5 * 60 * 1000,
@@ -31,7 +29,3 @@ export function extractCartSkuIds(products) {
   )];
 }
 
-export function isClientCatalogStale(fetchedAt, now = Date.now()) {
-  if (!fetchedAt) return true;
-  return now - fetchedAt > SYNC_POLICY.CLIENT_CATALOG_FRESHNESS_MS;
-}

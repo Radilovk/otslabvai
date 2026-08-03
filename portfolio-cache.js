@@ -1,238 +1,230 @@
 /**
- * Client-side catalog cache – bootstrap refreshed before browse/search,
- * then zero backend calls for filter/pagination within the session.
+ * Client catalog sync – pointer + immutable index/stock artifacts.
+ * Replaces bootstrap / meta-version polling.
  */
 import { API_URL } from './config.js';
 import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
-import { isClientCatalogStale } from './portfolio-sync-policy.js';
+import { CATALOG_SYNC_POLICY } from './catalog-sync-policy.js';
 
-const BOOTSTRAP_KEY = 'portfolio_bootstrap_v1';
-const SETTINGS_KEY = 'portfolio_settings_v1';
-const TTL_MS = 24 * 60 * 60 * 1000;
-const SETTINGS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-/** Avoid hammering meta-version on every navigation within a session. */
-const REVALIDATE_COOLDOWN_MS = 10 * 60 * 1000;
+const IDB_NAME = 'portfolio_catalog_v2';
+const IDB_STORE = 'blobs';
+const IDB_VERSION = 1;
 
-const memory = {
-  bootstrap: null,
-  settings: null,
-  chunks: new Map()
+let inflight = null;
+const memory = { groupChunks: new Map() };
+const catalogUpdatedListeners = new Set();
+
+export const catalogState = {
+  index: null,
+  indexV: null,
+  stock: null,
+  stockV: null,
+  lastSync: 0,
+  revision: 0,
+  stale: false
 };
 
-let bootstrapPromise = null;
-let settingsPromise = null;
-let revalidatePromise = null;
-let lastRevalidateAt = 0;
-
-function readBootstrapStorage() {
-  try {
-    const raw = localStorage.getItem(BOOTSTRAP_KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw);
-    if (!data?.meta?.index || !data.fetchedAt) return null;
-    if (Date.now() - data.fetchedAt > TTL_MS) return null;
-    return data;
-  } catch {
-    return null;
+function notifyCatalogUpdated() {
+  catalogState.revision += 1;
+  for (const listener of catalogUpdatedListeners) {
+    try { listener(); } catch { /* ignore */ }
   }
 }
 
-function writeBootstrapStorage(data) {
-  try {
-    localStorage.setItem(BOOTSTRAP_KEY, JSON.stringify(data));
-    return true;
-  } catch {
-    return false;
-  }
+export function onCatalogUpdated(listener) {
+  catalogUpdatedListeners.add(listener);
+  return () => catalogUpdatedListeners.delete(listener);
 }
 
-function readSettingsStorage() {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw);
-    if (!data?.settings || !data.fetchedAt) return null;
-    if (Date.now() - data.fetchedAt > SETTINGS_TTL_MS) return null;
-    return data.settings;
-  } catch {
-    return null;
-  }
+function openDb() {
+  if (typeof indexedDB === 'undefined') return Promise.resolve(null);
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore(IDB_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+  });
 }
 
-function writeSettingsStorage(settings) {
-  try {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ fetchedAt: Date.now(), settings }));
-    memory.settings = settings;
-    return true;
-  } catch {
-    return false;
-  }
+async function idbGet(key) {
+  const db = await openDb();
+  if (!db) return null;
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const req = tx.objectStore(IDB_STORE).get(key);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result ?? null);
+  });
 }
 
-function chunkStorageKey(syncedAt, index) {
-  return `portfolio_chunk_${syncedAt}_${index}`;
+async function idbSet(key, value) {
+  const db = await openDb();
+  if (!db) return;
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    const req = tx.objectStore(IDB_STORE).put(value, key);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve();
+  });
 }
 
-function productStorageKey(groupId) {
-  return `portfolio_product_${groupId}`;
+function skuQty(skuId) {
+  return catalogState.stock?.q?.[String(skuId)] ?? 0;
 }
 
-function descriptionStorageKey(groupId) {
-  return `portfolio_desc_${groupId}`;
+function productAvailable(product) {
+  const skus = product.variant_skus || [];
+  if (!skus.length) return !!product.available;
+  return skus.some((sku) => skuQty(sku) > 0);
 }
 
-function clearProductSessionCache() {
-  try {
-    const keys = [];
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const key = sessionStorage.key(i);
-      if (key?.startsWith('portfolio_product_') || key?.startsWith('portfolio_desc_')) {
-        keys.push(key);
-      }
-    }
-    keys.forEach((k) => sessionStorage.removeItem(k));
-  } catch { /* quota */ }
+function enrichIndexProducts(products) {
+  return (products || []).map((p) => ({
+    ...p,
+    available: productAvailable(p)
+  }));
 }
 
-async function fetchBootstrap() {
-  const res = await fetch(`${API_URL}/portfolio/bootstrap`);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Грешка при зареждане на каталога');
-  const cached = {
-    fetchedAt: Date.now(),
-    synced_at: data.meta.synced_at,
-    settings: data.settings,
-    meta: data.meta
+function buildMetaFromState() {
+  if (!catalogState.index) return null;
+  const index = enrichIndexProducts(catalogState.index.products);
+  const inStock = index.filter((p) => p.available);
+  return {
+    version: 1,
+    synced_at: new Date((catalogState.index.generatedAt || 0) * 1000).toISOString(),
+    total_groups: inStock.length,
+    chunk_size: catalogState.index.chunk_size,
+    chunk_count: catalogState.index.chunk_count,
+    brands: catalogState.index.brands,
+    categories: catalogState.index.categories,
+    goals: catalogState.index.goals || [],
+    lookup: catalogState.index.lookup,
+    sku_lookup: catalogState.index.sku_lookup,
+    index: inStock
   };
-  writeBootstrapStorage(cached);
-  writeSettingsStorage(data.settings);
-  memory.bootstrap = cached;
-  memory.chunks.clear();
-  clearProductSessionCache();
-  return cached;
 }
 
-async function fetchSettings() {
-  const res = await fetch(`${API_URL}/portfolio/settings`);
+async function hydrateFromIdb() {
+  const cached = await idbGet('snapshot');
+  if (!cached?.index) return false;
+  catalogState.index = cached.index;
+  catalogState.indexV = cached.indexV;
+  catalogState.stock = cached.stock;
+  catalogState.stockV = cached.stockV;
+  catalogState.lastSync = cached.lastSync || 0;
+  return true;
+}
+
+async function persistSnapshot() {
+  await idbSet('snapshot', {
+    index: catalogState.index,
+    indexV: catalogState.indexV,
+    stock: catalogState.stock,
+    stockV: catalogState.stockV,
+    lastSync: catalogState.lastSync
+  });
+}
+
+async function fetchJson(url) {
+  const res = await fetch(url);
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Грешка при зареждане на настройки');
-  writeSettingsStorage(data);
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
   return data;
 }
 
-async function revalidateBootstrapIfStale() {
-  const current = memory.bootstrap;
-  if (!current?.synced_at) return;
-
-  const now = Date.now();
-  if (now - lastRevalidateAt < REVALIDATE_COOLDOWN_MS) return;
-  if (revalidatePromise) return revalidatePromise;
-
-  revalidatePromise = (async () => {
-    try {
-      const res = await fetch(`${API_URL}/portfolio/meta-version`);
-      if (!res.ok) return;
-      const version = await res.json();
-      lastRevalidateAt = Date.now();
-      if (version.synced_at && version.synced_at !== current.synced_at) {
-        bootstrapPromise = null;
-        await fetchBootstrap();
-      }
-    } catch { /* offline – keep cache */ }
-    finally {
-      revalidatePromise = null;
-    }
-  })();
-
-  return revalidatePromise;
+async function legacyBootstrapFallback() {
+  const res = await fetch(`${API_URL}/portfolio/bootstrap`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Грешка при зареждане на каталога');
+  const meta = data.meta;
+  catalogState.index = {
+    generatedAt: Math.floor(Date.now() / 1000),
+    chunk_size: meta.chunk_size,
+    chunk_count: meta.chunk_count,
+    brands: meta.brands,
+    categories: meta.categories,
+    goals: meta.goals,
+    products: meta.index.map((p) => ({ ...p, variant_skus: p.default_sku_id ? [p.default_sku_id] : [] })),
+    lookup: meta.lookup,
+    sku_lookup: meta.sku_lookup,
+    settings: data.settings
+  };
+  catalogState.indexV = meta.synced_at || 'legacy';
+  catalogState.stock = { q: Object.fromEntries(meta.index.filter((p) => p.available).map((p) => [p.default_sku_id, 1]).filter(([k]) => k)) };
+  catalogState.stockV = catalogState.indexV;
+  catalogState.lastSync = Date.now();
+  catalogState.stale = false;
+  memory.groupChunks.clear();
+  await persistSnapshot();
+  notifyCatalogUpdated();
+  return catalogState;
 }
 
-/** Lightweight settings load – no full catalog index (checkout, legal pages). */
-export async function ensureSettings({ force = false } = {}) {
-  if (!force && memory.settings) return memory.settings;
-
-  if (!force) {
-    const stored = readSettingsStorage();
-    if (stored) {
-      memory.settings = stored;
-      return stored;
-    }
-    const bootstrapStored = readBootstrapStorage();
-    if (bootstrapStored?.settings) {
-      memory.settings = bootstrapStored.settings;
-      writeSettingsStorage(bootstrapStored.settings);
-      return bootstrapStored.settings;
-    }
-  }
-
-  if (settingsPromise && !force) return settingsPromise;
-
-  settingsPromise = fetchSettings().finally(() => {
-    settingsPromise = null;
-  });
-  return settingsPromise;
-}
-
-/** Load settings + catalog index (1 API call, then cached 24h). */
-export async function ensureBootstrap({ force = false } = {}) {
-  if (!force && memory.bootstrap) {
-    revalidateBootstrapIfStale();
-    return memory.bootstrap;
-  }
-
-  if (!force) {
-    const stored = readBootstrapStorage();
-    if (stored) {
-      memory.bootstrap = stored;
-      memory.settings = stored.settings;
-      revalidateBootstrapIfStale();
-      return stored;
-    }
-  }
-
-  if (bootstrapPromise && !force) return bootstrapPromise;
-
-  bootstrapPromise = fetchBootstrap().finally(() => {
-    bootstrapPromise = null;
-  });
-  return bootstrapPromise;
-}
-
-/**
- * Fresh catalog for browse/search – refetch if local cache is old or server has newer sync.
- * Checkout/legal pages should use ensureSettings() instead.
- */
-export async function ensureFreshCatalog() {
-  const stored = memory.bootstrap || readBootstrapStorage();
-  if (stored) {
-    memory.bootstrap = stored;
-    memory.settings = stored.settings;
-  }
-
-  if (!stored || isClientCatalogStale(stored.fetchedAt)) {
-    return ensureBootstrap({ force: true });
-  }
-
+async function doSync() {
   try {
-    const res = await fetch(`${API_URL}/portfolio/meta-version`);
-    if (res.ok) {
-      const version = await res.json();
-      lastRevalidateAt = Date.now();
-      if (version.synced_at && version.synced_at !== stored.synced_at) {
-        return ensureBootstrap({ force: true });
-      }
-    }
-  } catch { /* offline – use cache */ }
+    const now = await fetchJson(`${API_URL}/c/now`);
+    let changed = false;
 
-  return memory.bootstrap;
+    if (now.i !== catalogState.indexV) {
+      catalogState.index = await fetchJson(`${API_URL}/c/index-${now.i}.json`);
+      catalogState.indexV = now.i;
+      memory.groupChunks.clear();
+      changed = true;
+    }
+    if (now.s !== catalogState.stockV) {
+      catalogState.stock = await fetchJson(`${API_URL}/c/stock-${now.s}.json`);
+      catalogState.stockV = now.s;
+      changed = true;
+    }
+
+    catalogState.lastSync = Date.now();
+    catalogState.stale = false;
+    await persistSnapshot();
+    if (changed) notifyCatalogUpdated();
+  } catch (err) {
+    if (!catalogState.index) {
+      await legacyBootstrapFallback();
+      return catalogState;
+    }
+    catalogState.stale = true;
+    return catalogState;
+  }
+  return catalogState;
+}
+
+/** Main catalog sync – deduped, 60s soft TTL. */
+export function sync({ force = false } = {}) {
+  if (inflight) return inflight;
+  if (!force && catalogState.index && Date.now() - catalogState.lastSync < CATALOG_SYNC_POLICY.SOFT_TTL_MS) {
+    return Promise.resolve(catalogState);
+  }
+  inflight = doSync().finally(() => { inflight = null; });
+  return inflight;
+}
+
+export async function ensureFreshCatalog(opts) {
+  return sync(opts);
+}
+
+export async function ensureBootstrap(opts = {}) {
+  if (!catalogState.index) await hydrateFromIdb();
+  return sync(opts);
+}
+
+export async function ensureSettings({ force = false } = {}) {
+  if (!force && catalogState.index?.settings) return catalogState.index.settings;
+  await ensureBootstrap({ force });
+  return catalogState.index?.settings || null;
 }
 
 export function getCachedSettings() {
-  return memory.bootstrap?.settings || memory.settings || null;
+  return catalogState.index?.settings || null;
 }
 
 export function getCachedMeta() {
-  return memory.bootstrap?.meta || null;
+  return buildMetaFromState();
 }
 
 export function getFiltersFromCache() {
@@ -250,110 +242,84 @@ export function getFiltersFromCache() {
 export function queryCatalogFromCache(params, page = 1, limit = 24) {
   const meta = getCachedMeta();
   if (!meta?.index) return null;
-  const filtered = filterIndex(meta.index, params, meta);
+  const fullIndex = enrichIndexProducts(catalogState.index?.products || meta.index);
+  const filtered = filterIndex(fullIndex, params, meta);
   return {
     ...paginateIndex(filtered, page, limit),
     synced_at: meta.synced_at
   };
 }
 
-/** Category/brand option lists scoped to the currently active filters (0 backend calls). */
 export function getFacetsFromCache(params) {
   const meta = getCachedMeta();
-  if (!meta?.index) return null;
-  return computeFacets(meta.index, params, meta);
+  if (!meta) return null;
+  const fullIndex = enrichIndexProducts(catalogState.index?.products || []);
+  return computeFacets(fullIndex, params, meta);
 }
 
-async function loadChunk(chunkIndex) {
-  const meta = getCachedMeta();
-  if (!meta) return null;
+async function loadGroupChunk(chunkIndex) {
+  const indexV = catalogState.indexV;
+  if (!indexV) return null;
+  const cacheKey = `${indexV}:${chunkIndex}`;
+  if (memory.groupChunks.has(cacheKey)) return memory.groupChunks.get(cacheKey);
 
-  if (memory.chunks.has(chunkIndex)) {
-    return memory.chunks.get(chunkIndex);
+  try {
+    const groups = await fetchJson(`${API_URL}/c/groups-${indexV}-${chunkIndex}.json`);
+    memory.groupChunks.set(cacheKey, groups);
+    return groups;
+  } catch {
+    const res = await fetch(`${API_URL}/portfolio/chunk?index=${chunkIndex}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Грешка при зареждане на продукт');
+    memory.groupChunks.set(cacheKey, data.groups);
+    return data.groups;
   }
+}
 
-  const storageKey = chunkStorageKey(meta.synced_at, chunkIndex);
-  try {
-    const stored = sessionStorage.getItem(storageKey);
-    if (stored) {
-      const groups = JSON.parse(stored);
-      memory.chunks.set(chunkIndex, groups);
-      return groups;
-    }
-  } catch { /* quota */ }
-
-  const res = await fetch(`${API_URL}/portfolio/chunk?index=${chunkIndex}`);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Грешка при зареждане на продукт');
-
-  memory.chunks.set(chunkIndex, data.groups);
-  try {
-    sessionStorage.setItem(storageKey, JSON.stringify(data.groups));
-  } catch { /* quota */ }
-
-  return data.groups;
+function applyStockToGroup(group) {
+  if (!group?.variants) return group;
+  return {
+    ...group,
+    variants: group.variants.map((v) => ({
+      ...v,
+      available: skuQty(v.sku_id) > 0
+    }))
+  };
 }
 
 export async function getProductFromCache(groupId) {
   const meta = getCachedMeta();
   if (!meta?.lookup) return null;
 
-  try {
-    const stored = sessionStorage.getItem(productStorageKey(groupId));
-    if (stored) return JSON.parse(stored);
-  } catch { /* ignore */ }
-
   const chunkIndex = meta.lookup[groupId];
   if (chunkIndex == null) return null;
 
-  const chunk = await loadChunk(chunkIndex);
+  const chunk = await loadGroupChunk(chunkIndex);
   const product = chunk?.find((g) => g.group_id === groupId) || null;
-  if (product) {
-    try {
-      sessionStorage.setItem(productStorageKey(groupId), JSON.stringify(product));
-    } catch { /* ignore */ }
-  }
-  return product;
+  return product ? applyStockToGroup(product) : null;
 }
 
 export async function getDescriptionFromCache(groupId) {
-  try {
-    const stored = sessionStorage.getItem(descriptionStorageKey(groupId));
-    if (stored) return JSON.parse(stored);
-  } catch { /* ignore */ }
-
   const product = await getProductFromCache(groupId);
-  if (product?.description) {
-    const payload = { description: product.description };
-    try {
-      sessionStorage.setItem(descriptionStorageKey(groupId), JSON.stringify(payload));
-    } catch { /* ignore */ }
-    return payload;
-  }
+  if (product?.description) return { description: product.description };
 
   const res = await fetch(
     `${API_URL}/portfolio/product/description?group_id=${encodeURIComponent(groupId)}`
   );
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Грешка при описание');
-
-  try {
-    sessionStorage.setItem(descriptionStorageKey(groupId), JSON.stringify(data));
-  } catch { /* ignore */ }
-
   return data;
 }
 
-/** Намира group_id по SKU от кеширания каталог (sku_lookup или chunk scan). */
 export function findGroupIdBySkuFromCache(skuId) {
   const sku = String(skuId || '').trim();
   if (!sku) return null;
   const meta = getCachedMeta();
   if (meta?.sku_lookup?.[sku]) return meta.sku_lookup[sku];
+  if (catalogState.index?.sku_lookup?.[sku]) return catalogState.index.sku_lookup[sku];
   return null;
 }
 
-/** Async fallback ако sku_lookup липсва (стари sync-ове). */
 export async function resolveGroupIdBySku(skuId) {
   const fromLookup = findGroupIdBySkuFromCache(skuId);
   if (fromLookup) return fromLookup;
@@ -364,7 +330,7 @@ export async function resolveGroupIdBySku(skuId) {
   if (!meta?.chunk_count) return null;
 
   for (let i = 0; i < meta.chunk_count; i += 1) {
-    const chunk = await loadChunk(i);
+    const chunk = await loadGroupChunk(i);
     if (!chunk) continue;
     for (const group of chunk) {
       if (group.variants?.some((v) => String(v.sku_id) === sku)) {
@@ -375,22 +341,27 @@ export async function resolveGroupIdBySku(skuId) {
   return null;
 }
 
-/** Invalidate client cache after admin sync (call from admin). */
 export function invalidatePortfolioCache() {
-  memory.bootstrap = null;
-  memory.settings = null;
-  memory.chunks.clear();
-  bootstrapPromise = null;
-  settingsPromise = null;
-  lastRevalidateAt = 0;
-  try {
-    localStorage.removeItem(BOOTSTRAP_KEY);
-    localStorage.removeItem(SETTINGS_KEY);
-    const keys = [];
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const key = sessionStorage.key(i);
-      if (key?.startsWith('portfolio_')) keys.push(key);
-    }
-    keys.forEach((k) => sessionStorage.removeItem(k));
-  } catch { /* ignore */ }
+  catalogState.index = null;
+  catalogState.indexV = null;
+  catalogState.stock = null;
+  catalogState.stockV = null;
+  catalogState.lastSync = 0;
+  catalogState.stale = false;
+  memory.groupChunks.clear();
+  inflight = null;
+  if (typeof indexedDB !== 'undefined') {
+    indexedDB.deleteDatabase(IDB_NAME);
+  }
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') sync();
+  });
+}
+
+// Hydrate on module load for faster first paint
+if (typeof window !== 'undefined') {
+  hydrateFromIdb().catch(() => {});
 }

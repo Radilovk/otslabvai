@@ -3,7 +3,7 @@ import {
   CART_KEY, getCart, saveCart, updateCartBadges, showToast, formatPrice, initPortfolioPage, icon, escapeHtml,
   buildPortfolioProductUrl
 } from './portfolio-shared.js';
-import { ensureBootstrap, resolveGroupIdBySku } from './portfolio-cache.js';
+import { sync, resolveGroupIdBySku } from './portfolio-cache.js';
 import {
   validatePortfolioCustomer,
   validateCartHasSku,
@@ -466,6 +466,10 @@ async function submitOrder(e) {
 
   syncSubmitButtons({ disabled: true, label: 'Проверка на наличност...' });
 
+  try {
+    await sync({ force: true });
+  } catch { /* validate-cart uses server snapshot */ }
+
   const stockOk = await validateCartOnServer();
   if (!stockOk) {
     syncSubmitButtons({ disabled: false });
@@ -599,7 +603,7 @@ function setupSpeedy() {
 }
 
 async function enrichCartGroupIds() {
-  await ensureBootstrap();
+  await sync();
   let changed = false;
   for (const item of cart) {
     if (item.group_id) continue;
