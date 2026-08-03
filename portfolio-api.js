@@ -440,6 +440,7 @@ export function buildClientCatalogMeta(meta) {
       .sort((a, b) => a.name.localeCompare(b.name, 'bg')),
     goals: buildGoalFacetCounts(index),
     lookup: meta.lookup,
+    sku_lookup: meta.sku_lookup || {},
     index
   };
 }

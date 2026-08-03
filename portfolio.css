@@ -2362,6 +2362,50 @@ img, svg { display: block; max-width: 100%; height: auto; }
 .pf-summary-info { grid-column: 2; min-width: 0; }
 .pf-summary-info strong { display: block; font-size: 0.85rem; line-height: 1.35; }
 
+.pf-summary-product-link {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+
+.pf-summary-product-link:focus-visible {
+  outline: 2px solid var(--pf-primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.pf-summary-product-name {
+  display: block;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--pf-text);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+
+.pf-summary-product-name:hover {
+  color: var(--pf-primary);
+  text-decoration-color: var(--pf-primary);
+}
+
+.pf-summary-view-link {
+  display: inline-block;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  color: var(--pf-primary);
+  text-decoration: none;
+}
+
+.pf-summary-view-link:hover {
+  text-decoration: underline;
+}
+
+.pf-summary-product-link:hover .pf-summary-img {
+  border-color: var(--pf-primary);
+}
+
 .pf-qty-row { display: flex; align-items: center; gap: 0.35rem; margin-top: 0.3rem; }
 
 .pf-qty-btn {

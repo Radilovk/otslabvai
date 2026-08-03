@@ -341,6 +341,7 @@ function addToCart() {
   else {
     cart.push({
       sku_id: v.sku_id,
+      group_id: product.group_id,
       barcode: v.barcode,
       id: v.sku_id,
       name: label,
