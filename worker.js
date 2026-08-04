@@ -90,7 +90,7 @@ export default {
   async fetch(request, env, ctx) {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS', // Добавяме PUT
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type'
     };
 
@@ -252,27 +252,27 @@ export default {
               }
               break;
 
-          case '/promo-codes':
-              if (request.method === 'GET') {
-                  response = await handleGetPromoCodes(request, env);
-              } else if (request.method === 'POST') {
-                  response = await handleCreatePromoCode(request, env, ctx);
-              } else if (request.method === 'PUT') {
-                  response = await handleUpdatePromoCode(request, env, ctx);
-              } else if (request.method === 'DELETE') {
-                  response = await handleDeletePromoCode(request, env, ctx);
-              } else {
-                  throw new UserFacingError('Method Not Allowed.', 405);
-              }
+          case '/promo-codes': {
+              const promoUrl = new URL('/portfolio/promo-codes' + url.search, 'https://worker.local');
+              const promoRequest = new Request(promoUrl, {
+                  method: request.method,
+                  headers: request.headers,
+                  body: request.method === 'POST' || request.method === 'PUT' ? request.body : undefined
+              });
+              response = await handlePortfolioRoute(promoRequest, env, promoUrl, ctx);
               break;
-          
-          case '/validate-promo':
-              if (request.method === 'POST') {
-                  response = await handleValidatePromo(request, env, ctx);
-              } else {
-                  throw new UserFacingError('Method Not Allowed.', 405);
-              }
+          }
+
+          case '/validate-promo': {
+              const validateUrl = new URL('/portfolio/validate-promo', 'https://worker.local');
+              const validateRequest = new Request(validateUrl, {
+                  method: 'POST',
+                  headers: request.headers,
+                  body: request.body
+              });
+              response = await handlePortfolioRoute(validateRequest, env, validateUrl, ctx);
               break;
+          }
           
           case '/ai-assistant':
               if (request.method === 'POST') {
