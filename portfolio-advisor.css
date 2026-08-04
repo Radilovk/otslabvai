@@ -200,7 +200,14 @@
 }
 
 [data-theme="dark"] .pfa-body .lpr-product-img {
-  background: color-mix(in srgb, var(--lpq-card) 70%, #fff 8%);
+  background: radial-gradient(ellipse 80% 65% at 50% 40%, rgba(61, 232, 236, 0.06) 0%, transparent 55%),
+              linear-gradient(165deg, #0e1828 0%, #121f32 50%, #0a121f 100%);
+  padding: 0.65rem;
+}
+
+[data-theme="dark"] .pfa-body .lpr-product-img img {
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .pfa-body .lpr-product-card {

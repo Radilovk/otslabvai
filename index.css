@@ -169,6 +169,9 @@
     --hero-bg-start: var(--hero-bg-start-dark);
     --hero-bg-end: var(--hero-bg-end-dark);
     --theme-gradient: var(--theme-gradient-dark);
+    --product-image-well: radial-gradient(ellipse 80% 65% at 50% 40%, rgba(0, 169, 157, 0.07) 0%, transparent 55%),
+                          linear-gradient(165deg, #10141a 0%, #161b22 48%, #0d1015 100%);
+    --product-image-stage-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 /* Basic Reset */
@@ -1899,6 +1902,17 @@ main {
     object-fit: contain;
     object-position: center;
     max-height: 250px;
+}
+
+[data-theme="dark"] .product-image {
+    background: var(--product-image-well);
+    padding: 1rem 1.15rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .product-image img {
+    border-radius: 10px;
+    box-shadow: var(--product-image-stage-shadow);
 }
 
 .card-content { 
