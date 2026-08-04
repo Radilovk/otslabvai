@@ -14,10 +14,9 @@ const PROXY_BASE = 'https://wsrv.nl/?url=';
  * Връща зареждаем URL за изображение — проксира блокирани хостове.
  * @param {string} url
  * @param {number} [width] - по избор: макс. ширина за оптимизация
- * @param {{ trim?: number|string }} [options]
  * @returns {string}
  */
-export function resolveImageUrl(url, width = 800, options = {}) {
+export function resolveImageUrl(url, width = 800) {
   const raw = String(url || '').trim();
   if (!raw) return '';
   if (raw.startsWith(PROXY_BASE)) return raw;
@@ -25,11 +24,7 @@ export function resolveImageUrl(url, width = 800, options = {}) {
     const parsed = new URL(raw, window.location.href);
     if (!BLOCKED_IMAGE_HOSTS.includes(parsed.hostname)) return raw;
     const stripped = parsed.host + parsed.pathname + parsed.search;
-    const params = [`w=${width}`, 'fit=inside', 'q=85'];
-    if (options.trim) {
-      params.push(`trim=${options.trim}`, 'tbg=ffffff');
-    }
-    return `${PROXY_BASE}${encodeURIComponent(stripped)}&${params.join('&')}`;
+    return `${PROXY_BASE}${encodeURIComponent(stripped)}&w=${width}&fit=inside&q=85`;
   } catch {
     return raw;
   }
