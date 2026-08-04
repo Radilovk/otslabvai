@@ -2203,17 +2203,17 @@ function setupEventListeners() {
     }
 
     // Promo Codes event listeners
-    DOM.refreshPromoBtn.addEventListener('click', async () => {
+    DOM.refreshPromoBtn?.addEventListener('click', async () => {
         showNotification('Опресняване на промо кодовете...', 'info');
         await fetchPromoCodes();
         filterPromoCodes();
     });
     
-    DOM.addPromoBtn.addEventListener('click', () => {
+    DOM.addPromoBtn?.addEventListener('click', () => {
         openPromoCodeModal('add', null, 'main');
     });
     
-    DOM.promoSearchInput.addEventListener('input', filterPromoCodes);
+    DOM.promoSearchInput?.addEventListener('input', filterPromoCodes);
     
     // Promo codes table actions
     DOM.promoCodesTableBody.addEventListener('click', async (e) => {
@@ -4844,16 +4844,19 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
         if (isEdit) {
             promoPayload.id = promoData.id;
             promoPayload.usedCount = parseInt(document.getElementById('promo-used-count').value);
-            await updatePromoCode(promoPayload);
+            const ok = await updatePromoCode(promoPayload);
+            if (ok) closeModal();
         } else {
-            await createPromoCode(promoPayload);
+            const ok = await createPromoCode(promoPayload);
+            if (ok) closeModal();
         }
         
-        return true;
+        return false;
     };
     
-    DOM.modal.container.classList.add('open');
-    DOM.modal.backdrop.classList.add('open');
+    DOM.modal.saveBtn.style.display = '';
+    DOM.modal.container.classList.add('show');
+    DOM.modal.backdrop.classList.add('show');
 }
 
 async function createPromoCode(promoData) {
@@ -4878,9 +4881,11 @@ async function createPromoCode(promoData) {
             await fetchPromoCodes();
             filterPromoCodes();
         }
+        return true;
     } catch (error) {
         showNotification(error.message, 'error');
         console.error('Грешка при създаване на промо код:', error);
+        return false;
     }
 }
 
@@ -4906,9 +4911,11 @@ async function updatePromoCode(promoData) {
             await fetchPromoCodes();
             filterPromoCodes();
         }
+        return true;
     } catch (error) {
         showNotification(error.message, 'error');
         console.error('Грешка при актуализация на промо код:', error);
+        return false;
     }
 }
 
