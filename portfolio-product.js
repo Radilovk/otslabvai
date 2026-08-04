@@ -15,7 +15,7 @@ const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000
 
 function catalogImageUrl(url) {
   if (!url || url.startsWith('data:')) return url;
-  return resolveImageUrl(url, 800, { trim: 12 });
+  return resolveImageUrl(url, 800);
 }
 
 let product = null;

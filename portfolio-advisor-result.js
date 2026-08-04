@@ -46,7 +46,7 @@ function renderBenefits(benefits, inheritedCount = 0) {
 }
 
 function renderProductCard(product) {
-  const imgUrl = resolveImageUrl(product.image_url, 400, { trim: 12 });
+  const imgUrl = resolveImageUrl(product.image_url, 400);
   const img = imgUrl
     ? `<img src="${escapeHtml(imgUrl)}" alt="" class="lpr-product-img" loading="lazy">`
     : '<div class="lpr-product-img lpr-product-img--placeholder" aria-hidden="true"></div>';
@@ -266,7 +266,7 @@ function addTierToCart(tier, btn) {
       name: item.name,
       price: item.price_eur || 0,
       quantity: 1,
-      image: resolveImageUrl(item.image_url, 400, { trim: 12 }) || '',
+      image: resolveImageUrl(item.image_url, 400) || '',
       group_id: item.group_id || '',
     });
     existingSkus.add(skuId);
