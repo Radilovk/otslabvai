@@ -115,6 +115,8 @@ let portfolioOrdersData = [];
 let portfolioPromoCodesData = [];
 let filteredPortfolioPromoCodesData = [];
 let filteredPortfolioOrdersData = [];
+let portfolioOrderSortField = 'timestamp';
+let portfolioOrderSortDir = 'desc';
 let portfolioPendingCount = 0;
 let portfolioPollTimer = null;
 let switchToPortfolioOrdersAfterLoad = false;
@@ -544,8 +546,7 @@ function applyBiocodeInquiryStatusOverrides() {
 
 async function fetchPromoCodes() {
     try {
-        // For dynamic data like promo codes, use no-cache to always get fresh data
-        const response = await fetch(`${API_URL}/promo-codes`, {
+        const response = await fetch(`${API_URL}/portfolio/promo-codes`, {
             cache: 'no-cache'
         });
         if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
@@ -981,6 +982,12 @@ function renderBiocodeInquiries() {
     });
 }
 
+function decoratePromoRowForMobile(rowTemplate) {
+    rowTemplate.querySelector('.promo-code')?.classList.add('mobile-key');
+    rowTemplate.querySelector('.promo-discount')?.classList.add('mobile-key');
+    rowTemplate.querySelector('.promo-validity')?.classList.add('mobile-key');
+}
+
 function renderPromoCodes() {
     DOM.promoCodesTableBody.innerHTML = '';
     filteredPromoCodesData.forEach((promo) => {
@@ -1013,6 +1020,7 @@ function renderPromoCodes() {
         const activeToggle = rowTemplate.querySelector('.promo-active-toggle');
         activeToggle.checked = promo.active;
         
+        decoratePromoRowForMobile(rowTemplate);
         DOM.promoCodesTableBody.appendChild(rowTemplate);
     });
 }
@@ -2048,9 +2056,10 @@ function setupEventListeners() {
         });
     }
     if (ordersMobileSortDir) {
+        ordersMobileSortDir.textContent = orderSortDir === 'asc' ? '↑' : '↓';
         ordersMobileSortDir.addEventListener('click', () => {
             orderSortDir = orderSortDir === 'asc' ? 'desc' : 'asc';
-            ordersMobileSortDir.textContent = orderSortDir === 'asc' ? '' : '';
+            ordersMobileSortDir.textContent = orderSortDir === 'asc' ? '↑' : '↓';
             filterOrders();
         });
     }
@@ -4848,7 +4857,7 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
 }
 
 async function createPromoCode(promoData) {
-    const endpoint = promoApiScope === 'portfolio' ? `${API_URL}/portfolio/promo-codes` : `${API_URL}/promo-codes`;
+    const endpoint = `${API_URL}/portfolio/promo-codes`;
     try {
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -4876,7 +4885,7 @@ async function createPromoCode(promoData) {
 }
 
 async function updatePromoCode(promoData) {
-    const endpoint = promoApiScope === 'portfolio' ? `${API_URL}/portfolio/promo-codes` : `${API_URL}/promo-codes`;
+    const endpoint = `${API_URL}/portfolio/promo-codes`;
     try {
         const response = await fetch(endpoint, {
             method: 'PUT',
@@ -4904,9 +4913,7 @@ async function updatePromoCode(promoData) {
 }
 
 async function deletePromoCode(promoId) {
-    const endpoint = promoApiScope === 'portfolio'
-        ? `${API_URL}/portfolio/promo-codes?id=${promoId}`
-        : `${API_URL}/promo-codes?id=${promoId}`;
+    const endpoint = `${API_URL}/portfolio/promo-codes?id=${promoId}`;
     try {
         const response = await fetch(endpoint, {
             method: 'DELETE'
@@ -4932,7 +4939,7 @@ async function deletePromoCode(promoId) {
 }
 
 async function updatePromoCodeStatus(promoId, isActive, scope = 'main') {
-    const endpoint = scope === 'portfolio' ? `${API_URL}/portfolio/promo-codes` : `${API_URL}/promo-codes`;
+    const endpoint = `${API_URL}/portfolio/promo-codes`;
     const dataSource = scope === 'portfolio' ? portfolioPromoCodesData : promoCodesData;
     try {
         const promo = dataSource.find(p => p.id === promoId);
@@ -5206,13 +5213,35 @@ async function savePortfolioSettings() {
     }
 }
 
+function sortPortfolioOrders(data) {
+    const field = portfolioOrderSortField;
+    const dir = portfolioOrderSortDir === 'asc' ? 1 : -1;
+    return [...data].sort((a, b) => {
+        if (field === 'timestamp') {
+            const aVal = new Date(a.timestamp).getTime() || 0;
+            const bVal = new Date(b.timestamp).getTime() || 0;
+            return dir * (aVal - bVal);
+        }
+        if (field === 'customer') {
+            const aName = `${a.customer?.firstName || ''} ${a.customer?.lastName || ''}`.trim();
+            const bName = `${b.customer?.firstName || ''} ${b.customer?.lastName || ''}`.trim();
+            return dir * aName.localeCompare(bName, 'bg');
+        }
+        if (field === 'status') {
+            return dir * String(a.status || '').localeCompare(String(b.status || ''), 'bg');
+        }
+        return 0;
+    });
+}
+
 function filterPortfolioOrders() {
     const q = (document.getElementById('portfolio-order-search')?.value || '').toLowerCase();
-    filteredPortfolioOrdersData = portfolioOrdersData.filter((o) => {
+    const base = portfolioOrdersData.filter((o) => {
         const c = o.customer || {};
         const hay = `${c.firstName || ''} ${c.lastName || ''} ${c.phone || ''} ${o.id}`.toLowerCase();
         return !q || hay.includes(q);
     });
+    filteredPortfolioOrdersData = sortPortfolioOrders(base);
     renderPortfolioOrders();
 }
 
@@ -5225,7 +5254,7 @@ function renderPortfolioOrders() {
     if (selectAll) selectAll.checked = false;
 
     if (!filteredPortfolioOrdersData.length) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--text-secondary);">
+        tbody.innerHTML = `<tr><td colspan="11" class="mobile-empty" style="text-align:center;padding:2rem;color:var(--text-secondary);">
             Няма portfolio поръчки. След успешно изпращане от checkout те се появяват тук автоматично.
         </td></tr>`;
         updatePortfolioBatchApproveButton();
@@ -5235,38 +5264,48 @@ function renderPortfolioOrders() {
     filteredPortfolioOrdersData.forEach((order) => {
         const c = order.customer || {};
         const products = (order.products || []).map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join('<br>');
+        const productsSummary = (order.products || []).map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join(', ');
         const summary = order.summary || {};
         const canSendToF1 = isPortfolioOrderSendable(order);
         const delivery = formatPortfolioDelivery(c);
+        const status = order.status || 'Чака одобрение';
+        const dateText = order.timestamp
+            ? new Date(order.timestamp).toLocaleString('bg-BG', {
+                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            })
+            : '—';
 
         const tr = document.createElement('tr');
         tr.dataset.orderId = order.id;
         tr.style.cursor = 'pointer';
         tr.innerHTML = `
-            <td data-label="Избор" onclick="event.stopPropagation()">
+            <td data-label="Избор" class="portfolio-order-select-cell" onclick="event.stopPropagation()">
                 ${canSendToF1 ? `<input type="checkbox" class="portfolio-order-select" data-id="${escAdminHtml(order.id)}">` : ''}
             </td>
-            <td data-label="Клиент">${escAdminHtml(`${c.firstName || ''} ${c.lastName || ''}`.trim())}</td>
-            <td data-label="Телефон">${escAdminHtml(c.phone || '')}</td>
-            <td data-label="Доставка">${delivery}</td>
-            <td data-label="Продукти">${products}</td>
+            <td data-label="Клиент" class="order-customer mobile-key">${escAdminHtml(`${c.firstName || ''} ${c.lastName || ''}`.trim())}</td>
+            <td data-label="Телефон" class="order-phone">${escAdminHtml(c.phone || '')}</td>
+            <td data-label="Доставка" class="order-delivery">${delivery}</td>
+            <td data-label="Продукти" class="order-products mobile-key" data-summary="${escAdminHtml(productsSummary)}">${products}</td>
             <td data-label="Продажна">${Number(summary.retail_total || 0).toFixed(2)} €</td>
             <td data-label="B2B">${Number(summary.b2b_total || 0).toFixed(2)} €</td>
             <td data-label="Марж">${Number(summary.margin || 0).toFixed(2)} €</td>
-            <td data-label="Дата">${order.timestamp ? new Date(order.timestamp).toLocaleString('bg-BG') : '—'}</td>
-            <td data-label="Статус" onclick="event.stopPropagation()">
+            <td data-label="Дата" class="order-date mobile-key">${dateText}</td>
+            <td data-label="Статус" class="order-status-cell" onclick="event.stopPropagation()">
                 <select class="portfolio-order-status" data-id="${escAdminHtml(order.id)}">
-                    <option value="Чака одобрение" ${order.status === 'Чака одобрение' ? 'selected' : ''}>Чака одобрение</option>
-                    <option value="Обработва се" ${order.status === 'Обработва се' ? 'selected' : ''}>Обработва се</option>
-                    <option value="Изпратена към Fitness1" ${order.status === 'Изпратена към Fitness1' ? 'selected' : ''}>Изпратена към Fitness1</option>
-                    <option value="Отказана" ${order.status === 'Отказана' ? 'selected' : ''}>Отказана</option>
+                    <option value="Чака одобрение" ${status === 'Чака одобрение' ? 'selected' : ''}>Чака одобрение</option>
+                    <option value="Обработва се" ${status === 'Обработва се' ? 'selected' : ''}>Обработва се</option>
+                    <option value="Изпратена към Fitness1" ${status === 'Изпратена към Fitness1' ? 'selected' : ''}>Изпратена към Fitness1</option>
+                    <option value="Отказана" ${status === 'Отказана' ? 'selected' : ''}>Отказана</option>
                 </select>
+                <span class="mobile-status-badge"></span>
                 ${order.fitness1_order?.id ? `<br><small>F1 #${escAdminHtml(order.fitness1_order.id)}${order.fitness1_order.batch ? ' (обобщена)' : ''}</small>` : ''}
             </td>
-            <td data-label="Действия" onclick="event.stopPropagation()">
+            <td data-label="Действия" class="portfolio-order-actions" onclick="event.stopPropagation()">
                 <button type="button" class="btn btn-sm btn-secondary portfolio-detail-btn" data-id="${escAdminHtml(order.id)}">Детайли</button>
                 ${canSendToF1 ? ` <button type="button" class="btn btn-sm btn-success portfolio-approve-btn" data-id="${escAdminHtml(order.id)}">Изпрати → F1</button>` : ''}
             </td>`;
+        const badge = tr.querySelector('.mobile-status-badge');
+        if (badge) applyOrderStatusBadge(badge, status);
         tbody.appendChild(tr);
     });
 
@@ -5488,6 +5527,23 @@ function setupPortfolioEventListeners() {
         showNotification('Поръчките са опреснени.', 'success');
     });
     document.getElementById('portfolio-order-search')?.addEventListener('input', filterPortfolioOrders);
+    const portfolioOrdersMobileSortField = document.getElementById('portfolio-orders-mobile-sort-field');
+    const portfolioOrdersMobileSortDir = document.getElementById('portfolio-orders-mobile-sort-dir');
+    if (portfolioOrdersMobileSortField) {
+        portfolioOrdersMobileSortField.value = portfolioOrderSortField;
+        portfolioOrdersMobileSortField.addEventListener('change', () => {
+            portfolioOrderSortField = portfolioOrdersMobileSortField.value;
+            filterPortfolioOrders();
+        });
+    }
+    if (portfolioOrdersMobileSortDir) {
+        portfolioOrdersMobileSortDir.textContent = portfolioOrderSortDir === 'asc' ? '↑' : '↓';
+        portfolioOrdersMobileSortDir.addEventListener('click', () => {
+            portfolioOrderSortDir = portfolioOrderSortDir === 'asc' ? 'desc' : 'asc';
+            portfolioOrdersMobileSortDir.textContent = portfolioOrderSortDir === 'asc' ? '↑' : '↓';
+            filterPortfolioOrders();
+        });
+    }
     document.getElementById('portfolio-batch-approve-btn')?.addEventListener('click', approvePortfolioOrdersBatch);
     document.getElementById('portfolio-select-all')?.addEventListener('change', (e) => {
         const checked = e.target.checked;
@@ -5586,6 +5642,7 @@ function renderPortfolioPromoCodes() {
             : `${promo.usedCount}/∞`;
         rowTemplate.querySelector('.promo-usage').textContent = usageText;
         rowTemplate.querySelector('.promo-active-toggle').checked = promo.active;
+        decoratePromoRowForMobile(rowTemplate);
         tbody.appendChild(rowTemplate);
     });
 }

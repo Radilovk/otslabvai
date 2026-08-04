@@ -1347,7 +1347,29 @@ async function handleGetChunk(request, env) {
 
 async function getPromoCodes(env) {
   const raw = await env.PAGE_CONTENT.get(KV_PROMO);
-  return raw ? JSON.parse(raw) : [];
+  let codes = raw ? JSON.parse(raw) : [];
+
+  const legacyRaw = await env.PAGE_CONTENT.get('promo_codes');
+  if (!legacyRaw) return codes;
+
+  const legacyCodes = JSON.parse(legacyRaw);
+  const existing = new Set(codes.map((p) => p.code));
+  let merged = false;
+  for (const legacy of legacyCodes) {
+    const code = String(legacy.code || '').toUpperCase().trim();
+    if (!code || existing.has(code)) continue;
+    codes.push({
+      ...legacy,
+      id: legacy.id || `pf-promo-mig-${code}`,
+      code,
+      pricing_mode: legacy.pricing_mode || 'none',
+      pricing_percent: legacy.pricing_percent ?? null
+    });
+    existing.add(code);
+    merged = true;
+  }
+  if (merged) await savePromoCodes(env, codes);
+  return codes;
 }
 
 async function savePromoCodes(env, codes) {
@@ -1430,6 +1452,7 @@ async function handleUpdatePromoCode(request, env) {
     validFrom: data.validFrom ?? codes[idx].validFrom,
     validUntil: data.validUntil ?? codes[idx].validUntil,
     maxUses: data.maxUses !== undefined ? (data.maxUses ? parseInt(data.maxUses, 10) : null) : codes[idx].maxUses,
+    usedCount: data.usedCount !== undefined ? parseInt(data.usedCount, 10) : codes[idx].usedCount,
     active: data.active !== undefined ? data.active : codes[idx].active,
     pricing_mode: data.pricing_mode ?? codes[idx].pricing_mode ?? 'none',
     pricing_percent: data.pricing_percent !== undefined

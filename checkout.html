@@ -1616,7 +1616,7 @@
             }
             
             try {
-                const response = await fetch(`${API_URL}/validate-promo`, {
+                const response = await fetch(`${API_URL}/portfolio/validate-promo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ code })

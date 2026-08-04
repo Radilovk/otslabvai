@@ -445,6 +445,17 @@ h2 {
     display: block;
 }
 
+.orders-table td.mobile-empty {
+    display: block !important;
+    grid-column: 1 / -1;
+    width: 100%;
+}
+
+.orders-table td.portfolio-order-select-cell,
+.orders-table td.portfolio-order-actions {
+    display: none;
+}
+
 /* Клиент / Контакт – заглавие на картата */
 .orders-table td.order-customer,
 .orders-table td.contact-name {
@@ -1013,8 +1024,11 @@ h2 {
     /* Показваме всички клетки на десктоп */
     .orders-table td.mobile-key,
     .orders-table td.mobile-hidden,
+    .orders-table td.mobile-empty,
     .orders-table td.order-status-cell,
-    .orders-table td.contact-status-cell { display: table-cell; }
+    .orders-table td.contact-status-cell,
+    .orders-table td.portfolio-order-select-cell,
+    .orders-table td.portfolio-order-actions { display: table-cell; }
     /* Скриваме мобилния бейдж, показваме select-а */
     .orders-table td.order-status-cell select,
     .orders-table td.contact-status-cell select { display: inline-block; }

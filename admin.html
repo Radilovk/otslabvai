@@ -529,6 +529,18 @@
                     получавате F1 номер и вие разпределяте пратките към клиентите според адреса/офиса във всяка поръчка.
                 </div>
                 <div id="portfolio-pending-banner" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;color:#664d03;"></div>
+                <div class="mobile-sort-bar" id="portfolio-orders-mobile-sort-bar">
+                    <label class="mobile-sort-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                        Сортирай:
+                    </label>
+                    <select id="portfolio-orders-mobile-sort-field">
+                        <option value="timestamp">Дата</option>
+                        <option value="customer">Клиент</option>
+                        <option value="status">Статус</option>
+                    </select>
+                    <button id="portfolio-orders-mobile-sort-dir" class="btn btn-sm btn-secondary mobile-sort-dir-btn" title="Посока на сортиране" aria-label="Посока на сортиране">↓</button>
+                </div>
                 <div class="table-wrapper">
                     <table id="portfolio-orders-table" class="orders-table">
                         <thead>
