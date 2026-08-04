@@ -2,7 +2,6 @@ import {
   escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage, icon
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatVariantPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
-import { resolveImageUrl } from './life-img.js';
 import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
 import { filterIndex } from './portfolio-filter.js';
 
@@ -12,11 +11,6 @@ const DOM = {
 };
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23eef2f0' width='300' height='300'/%3E%3C/svg%3E";
-
-function catalogImageUrl(url) {
-  if (!url || url.startsWith('data:')) return url;
-  return resolveImageUrl(url, 800, { trim: 12 });
-}
 
 let product = null;
 let selectedPack = '';
@@ -97,16 +91,12 @@ function renderBreadcrumb() {
 
 function renderGallery() {
   const images = getGalleryImages();
-  const displaySelected = catalogImageUrl(selectedImage) || PLACEHOLDER_IMG;
   return `
     <div class="pf-gallery">
-      <img id="product-image" src="${escapeHtml(displaySelected)}" alt="${escapeHtml(product.name)}" sizes="(max-width: 900px) 100vw, 50vw" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+      <img id="product-image" src="${escapeHtml(selectedImage)}" alt="${escapeHtml(product.name)}" sizes="(max-width: 900px) 100vw, 50vw" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
       ${images.length > 1 ? `
       <div class="pf-gallery-thumbs">
-        ${images.map((img) => {
-          const displayImg = catalogImageUrl(img) || PLACEHOLDER_IMG;
-          return `<button type="button" class="pf-gallery-thumb ${img === selectedImage ? 'active' : ''}" data-img="${escapeHtml(img)}"><img src="${escapeHtml(displayImg)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"></button>`;
-        }).join('')}
+        ${images.map((img) => `<button type="button" class="pf-gallery-thumb ${img === selectedImage ? 'active' : ''}" data-img="${escapeHtml(img)}"><img src="${escapeHtml(img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"></button>`).join('')}
       </div>` : ''}
       ${product.label ? `<p class="pf-label-link"><a href="${escapeHtml(product.label)}" target="_blank" rel="noopener noreferrer" class="pf-btn pf-btn-outline">Етикет / състав</a></p>` : ''}
     </div>`;
@@ -151,7 +141,7 @@ function renderRelated() {
         ${related.map((item) => `
           <a href="${productPageUrl(item)}" class="pf-card-link">
             <div class="pf-card-image">
-              <img src="${escapeHtml(catalogImageUrl(item.image) || PLACEHOLDER_IMG)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" sizes="(max-width: 640px) 45vw, 160px" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+              <img src="${escapeHtml(item.image || PLACEHOLDER_IMG)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" sizes="(max-width: 640px) 45vw, 160px" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
             </div>
             <div class="pf-card-body">
               <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
@@ -275,7 +265,7 @@ function bindPageEvents() {
     btn.addEventListener('click', () => {
       selectedImage = btn.dataset.img;
       const img = document.getElementById('product-image');
-      if (img) img.src = catalogImageUrl(selectedImage) || PLACEHOLDER_IMG;
+      if (img) img.src = selectedImage;
       document.querySelectorAll('.pf-gallery-thumb').forEach((t) => t.classList.toggle('active', t === btn));
     });
   });
