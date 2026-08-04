@@ -5,6 +5,10 @@ import {
   resolveVariantPricing,
   summarizeGroupPricing,
   applyPromoCodePrice,
+  applyMarginSharePrice,
+  promoUsesLinePricing,
+  resolvePromoLinePrice,
+  sumLinePricingSavings,
   normalizePricingPolicy,
   formatGroupPriceHtml,
   formatVariantPriceHtml,
@@ -77,6 +81,39 @@ describe('portfolio-pricing', () => {
     const variant = { b2b_price: 10, regular_price: 20, retail_price: 19.4 };
     const price = applyPromoCodePrice(variant, { pricing_mode: 'below_regular', pricing_percent: 10 }, policy);
     expect(price).toBe(18);
+  });
+
+  test('applyMarginSharePrice gives full margin at 100%', () => {
+    expect(applyMarginSharePrice(50, 20, 100)).toBe(20);
+  });
+
+  test('applyMarginSharePrice gives half margin at 50%', () => {
+    expect(applyMarginSharePrice(50, 20, 50)).toBe(35);
+  });
+
+  test('applyMarginSharePrice leaves retail when no margin', () => {
+    expect(applyMarginSharePrice(20, 20, 100)).toBe(20);
+    expect(applyMarginSharePrice(50, 0, 100)).toBe(50);
+  });
+
+  test('promoUsesLinePricing detects margin_percentage', () => {
+    expect(promoUsesLinePricing({ discountType: 'margin_percentage' })).toBe(true);
+    expect(promoUsesLinePricing({ discountType: 'percentage' })).toBe(false);
+    expect(promoUsesLinePricing({ pricing_mode: 'above_b2b' })).toBe(true);
+  });
+
+  test('resolvePromoLinePrice applies margin share', () => {
+    const variant = { b2b_price: 20, retail_price: 50 };
+    const price = resolvePromoLinePrice(variant, { discountType: 'margin_percentage', discount: 100 });
+    expect(price).toBe(20);
+  });
+
+  test('sumLinePricingSavings totals catalog vs promo line prices', () => {
+    const savings = sumLinePricingSavings([
+      { catalog_retail_price: 50, retail_price: 20, quantity: 2 },
+      { catalog_retail_price: 30, retail_price: 30, quantity: 1 }
+    ]);
+    expect(savings).toBe(60);
   });
 
   test('normalizePricingPolicy falls back to global markup', () => {

@@ -191,7 +191,57 @@ export function applyPromoCodePrice(variant, promo, policy = DEFAULT_PRICING_POL
   return base;
 }
 
-/** Summarize promo/compare fields for a catalog group index row (available variants only). */
+/**
+ * Promo: give away a share of the margin (retail − b2b) as discount.
+ * @param {number} retail - catalog retail price
+ * @param {number} b2b - delivery / B2B cost
+ * @param {number} marginPercent - 0–100, share of margin discounted (100 → price = b2b)
+ */
+export function applyMarginSharePrice(retail, b2b, marginPercent) {
+  const retailPrice = Number(retail) || 0;
+  const wholesale = Number(b2b) || 0;
+  if (!(retailPrice > wholesale) || !(wholesale > 0)) return roundPrice(retailPrice);
+
+  const margin = retailPrice - wholesale;
+  const share = Math.max(0, Math.min(100, Number(marginPercent) || 0));
+  return roundPrice(Math.max(wholesale, retailPrice - margin * (share / 100)));
+}
+
+/** True when promo changes per-line prices instead of a cart-level discount. */
+export function promoUsesLinePricing(promo) {
+  if (!promo) return false;
+  if (promo.pricing_mode && promo.pricing_mode !== 'none') return true;
+  return promo.discountType === 'margin_percentage';
+}
+
+/**
+ * Apply promo to a catalog variant (personal pricing or margin share).
+ * @param {object} variant
+ * @param {object|null} promo
+ * @param {object} [policy]
+ */
+export function resolvePromoLinePrice(variant, promo, policy = DEFAULT_PRICING_POLICY) {
+  const catalogRetail = Number(variant?.retail_price) || 0;
+  if (!promo) return catalogRetail;
+
+  if (promo.discountType === 'margin_percentage') {
+    return applyMarginSharePrice(catalogRetail, variant?.b2b_price, promo.discount);
+  }
+  return applyPromoCodePrice(variant, promo, policy);
+}
+
+/** Summarize promo savings when line prices were adjusted. */
+export function sumLinePricingSavings(items) {
+  if (!Array.isArray(items)) return 0;
+  return roundPrice(items.reduce((sum, item) => {
+    const catalog = Number(item.catalog_retail_price ?? item.retail_price) || 0;
+    const current = Number(item.retail_price) || 0;
+    const qty = Number(item.quantity) || 1;
+    return sum + Math.max(0, catalog - current) * qty;
+  }, 0));
+}
+
+/** Product page – single selected variant. */
 export function summarizeGroupPricing(variants) {
   const list = (variants || []).filter(
     (v) => v.available !== false && (Number(v.retail_price) || 0) > 0

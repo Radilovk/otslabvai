@@ -22,7 +22,10 @@ import {
   summarizeGroupPricing,
   collectAvailablePacks,
   normalizePricingPolicy,
-  applyPromoCodePrice
+  applyPromoCodePrice,
+  promoUsesLinePricing,
+  resolvePromoLinePrice,
+  sumLinePricingSavings
 } from './portfolio-pricing.js';
 import { decodeHtmlEntities, normalizeCatalogText } from './portfolio-text.js';
 import {
@@ -1196,10 +1199,9 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
     }
 
     const catalogRetail = Number(found.variant.retail_price) || 0;
-    const promoRetail = promoRecord
-      ? applyPromoCodePrice(found.variant, promoRecord, policy)
+    const retailPrice = promoRecord
+      ? resolvePromoLinePrice(found.variant, promoRecord, policy)
       : catalogRetail;
-    const retailPrice = promoRecord ? promoRetail : catalogRetail;
 
     const label = [found.group_name, found.variant.pack, found.variant.option].filter(Boolean).join(' – ');
     normalized.push({
@@ -1213,9 +1215,11 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
       retail_price: retailPrice,
       catalog_retail_price: catalogRetail,
       compare_at_price: found.variant.compare_at_price || 0,
-      pricing_mode: promoRecord?.pricing_mode && promoRecord.pricing_mode !== 'none'
-        ? `promo_${promoRecord.pricing_mode}`
-        : (found.variant.pricing_mode || 'catalog'),
+      pricing_mode: promoRecord?.discountType === 'margin_percentage'
+        ? 'promo_margin_percentage'
+        : (promoRecord?.pricing_mode && promoRecord.pricing_mode !== 'none'
+          ? `promo_${promoRecord.pricing_mode}`
+          : (found.variant.pricing_mode || 'catalog')),
       image: found.image
     });
   }
@@ -1560,11 +1564,19 @@ async function handleCreateOrder(request, env) {
   }
 
   let promoDiscount = 0;
-  if (appliedPromo && (!appliedPromo.pricing_mode || appliedPromo.pricing_mode === 'none')) {
-    promoDiscount = applyPromoDiscount(retailTotal, appliedPromo);
+  if (appliedPromo) {
+    if (promoUsesLinePricing(appliedPromo)) {
+      promoDiscount = sumLinePricingSavings(items);
+    } else {
+      promoDiscount = applyPromoDiscount(retailTotal, appliedPromo);
+    }
   }
 
   const orderPrefix = project === 'life' ? 'life' : (project === 'main' ? 'main' : 'pf');
+
+  const chargeTotal = appliedPromo && promoUsesLinePricing(appliedPromo)
+    ? retailTotal
+    : retailTotal - promoDiscount;
 
   const newOrder = {
     id: `${orderPrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -1580,7 +1592,7 @@ async function handleCreateOrder(request, env) {
       margin: roundPrice(retailTotal - b2bTotal),
       promo_discount: promoDiscount,
       shipping: body.summary?.shipping ?? null,
-      total: body.summary?.total ?? `${roundPrice(retailTotal - promoDiscount)} €`
+      total: body.summary?.total ?? `${roundPrice(chargeTotal)} €`
     },
     fitness1_order: null,
     admin_note: '',

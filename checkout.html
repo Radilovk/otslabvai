@@ -1109,7 +1109,8 @@
     import {
       validateCartOnServer as sharedValidateCart,
       setStockWarningBanner,
-      syncCartPricesFromServer
+      syncCartPricesFromServer,
+      promoUsesLinePricing
     } from './portfolio-checkout-shared.js';
     
     document.addEventListener('DOMContentLoaded', () => {
@@ -1545,12 +1546,11 @@
             
             // Calculate discount based on type
             let discountAmount = 0;
-            if (activePromoCode) {
+            if (activePromoCode && !promoUsesLinePricing(activePromoCode)) {
                 if (activePromoCode.discountType === 'percentage') {
                     discountAmount = subtotal * activeDiscount;
-                } else {
-                    // Fixed amount discount
-                    discountAmount = Math.min(activeDiscount, subtotal); // Don't exceed subtotal
+                } else if (activePromoCode.discountType === 'fixed') {
+                    discountAmount = Math.min(activeDiscount, subtotal);
                 }
             }
             
@@ -1562,7 +1562,7 @@
             } else {
                 shippingEl.textContent = `${shipping.toFixed(2)} €`;
             }
-            if (activeDiscount > 0) {
+            if (activeDiscount > 0 && activePromoCode && !promoUsesLinePricing(activePromoCode)) {
                 discountRow.style.display = 'flex';
                 discountEl.textContent = `- ${discountAmount.toFixed(2)} €`;
             } else {
@@ -1626,14 +1626,29 @@
                 
                 if (result.valid) {
                     activePromoCode = result.promoCode;
-                    if (result.promoCode.discountType === 'percentage') {
+                    if (promoUsesLinePricing(result.promoCode)) {
+                        activeDiscount = 0;
+                        let modeLabel;
+                        if (result.promoCode.discountType === 'margin_percentage') {
+                            modeLabel = `${result.promoCode.discount}% от маржа`;
+                        } else {
+                            const pct = result.promoCode.pricing_percent ?? 0;
+                            modeLabel = result.promoCode.pricing_mode === 'below_regular'
+                                ? `${pct}% под препоръчителна`
+                                : `${pct}% над доставна`;
+                        }
+                        await validateCartOnServer({ silent: true });
+                        updateSummary();
+                        alert(`Промо кодът е приложен! Персонални цени (${modeLabel}).`);
+                    } else if (result.promoCode.discountType === 'percentage') {
                         activeDiscount = result.promoCode.discount / 100;
+                        updateSummary();
+                        alert(`Промо кодът е приложен! ${result.promoCode.description || ''}`);
                     } else {
-                        // For future fixed amount discounts
                         activeDiscount = result.promoCode.discount;
+                        updateSummary();
+                        alert(`Промо кодът е приложен! ${result.promoCode.description || ''}`);
                     }
-                    updateSummary();
-                    alert(`Промо кодът е приложен! ${result.promoCode.description || ''}`);
                     promoInput.disabled = true;
                     applyPromoBtn.disabled = true;
                 } else {

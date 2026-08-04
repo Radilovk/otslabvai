@@ -988,6 +988,12 @@ function decoratePromoRowForMobile(rowTemplate) {
     rowTemplate.querySelector('.promo-validity')?.classList.add('mobile-key');
 }
 
+function formatPromoDiscountLabel(promo) {
+    if (promo.discountType === 'margin_percentage') return `${promo.discount}% от маржа`;
+    if (promo.discountType === 'percentage') return `${promo.discount}%`;
+    return `${promo.discount} €`;
+}
+
 function renderPromoCodes() {
     DOM.promoCodesTableBody.innerHTML = '';
     filteredPromoCodesData.forEach((promo) => {
@@ -998,9 +1004,7 @@ function renderPromoCodes() {
         rowTemplate.querySelector('.promo-code').textContent = promo.code || '';
         
         // Format discount
-        const discountText = promo.discountType === 'percentage' 
-            ? `${promo.discount}%` 
-            : `${promo.discount} €`;
+        const discountText = formatPromoDiscountLabel(promo);
         rowTemplate.querySelector('.promo-discount').textContent = discountText;
         
         rowTemplate.querySelector('.promo-description').textContent = promo.description || '';
@@ -4730,7 +4734,11 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
             <select id="promo-discount-type">
                 <option value="percentage" ${isEdit && promoData.discountType === 'percentage' ? 'selected' : ''}>Процент (%)</option>
                 <option value="fixed" ${isEdit && promoData.discountType === 'fixed' ? 'selected' : ''}>Фиксирана сума (€)</option>
+                <option value="margin_percentage" ${isEdit && promoData.discountType === 'margin_percentage' ? 'selected' : ''}>% от маржа (надценка)</option>
             </select>
+            <small id="promo-discount-type-hint" style="display:block;margin-top:0.35rem;color:var(--text-secondary);">
+                При „% от маржа“: 100% дава доставна цена (напр. крайна 50€, доставна 20€ → 20€).
+            </small>
         </div>
         <div class="form-group">
             <label for="promo-description">Описание</label>
@@ -4761,7 +4769,7 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
             </label>
         </div>
         ${scope === 'portfolio' ? `
-        <fieldset style="margin-top:1rem;border:1px solid var(--border-color);border-radius:8px;padding:1rem;">
+        <fieldset id="promo-pricing-fieldset" style="margin-top:1rem;border:1px solid var(--border-color);border-radius:8px;padding:1rem;">
             <legend>Персонални цени (по избор)</legend>
             <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0;">
                 Ако е зададено, кодът променя цените в количката вместо (или в допълнение към) отстъпката при плащане.
@@ -4785,6 +4793,30 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
     
     DOM.modal.body.innerHTML = '';
     DOM.modal.body.appendChild(form);
+
+    const discountTypeEl = document.getElementById('promo-discount-type');
+    const discountEl = document.getElementById('promo-discount');
+    const pricingFieldset = document.getElementById('promo-pricing-fieldset');
+    const typeHint = document.getElementById('promo-discount-type-hint');
+
+    function syncPromoDiscountTypeUi() {
+        const type = discountTypeEl?.value || 'percentage';
+        const isMargin = type === 'margin_percentage';
+        const isPercent = type === 'percentage' || isMargin;
+        if (discountEl) {
+            discountEl.max = isPercent ? '100' : '';
+            discountEl.placeholder = isMargin ? 'напр. 100' : '';
+        }
+        if (pricingFieldset) {
+            pricingFieldset.disabled = isMargin;
+            pricingFieldset.style.opacity = isMargin ? '0.5' : '1';
+        }
+        if (typeHint) {
+            typeHint.style.display = isMargin ? 'block' : 'none';
+        }
+    }
+    discountTypeEl?.addEventListener('change', syncPromoDiscountTypeUi);
+    syncPromoDiscountTypeUi();
     
     currentModalSaveCallback = async () => {
         const code = document.getElementById('promo-code-input').value.trim().toUpperCase();
@@ -4812,7 +4844,7 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
             return false;
         }
         
-        if (discountType === 'percentage' && discount > 100) {
+        if ((discountType === 'percentage' || discountType === 'margin_percentage') && discount > 100) {
             alert('Процентната отстъпка не може да е повече от 100%.');
             return false;
         }
@@ -4829,7 +4861,9 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
         };
 
         if (promoApiScope === 'portfolio') {
-            const pricingMode = document.getElementById('promo-pricing-mode')?.value || 'none';
+            const pricingMode = discountType === 'margin_percentage'
+                ? 'none'
+                : (document.getElementById('promo-pricing-mode')?.value || 'none');
             const pricingPercentRaw = document.getElementById('promo-pricing-percent')?.value;
             promoPayload.pricing_mode = pricingMode;
             promoPayload.pricing_percent = pricingMode === 'none' || pricingPercentRaw === ''
@@ -5633,13 +5667,13 @@ function renderPortfolioPromoCodes() {
         const row = rowTemplate.querySelector('tr');
         row.dataset.promoId = promo.id;
         rowTemplate.querySelector('.promo-code').textContent = promo.code || '';
-        const discountText = promo.discountType === 'percentage'
-            ? `${promo.discount}%`
-            : `${promo.discount} €`;
+        const discountText = formatPromoDiscountLabel(promo);
         rowTemplate.querySelector('.promo-discount').textContent = discountText;
-        const pricingExtra = promo.pricing_mode && promo.pricing_mode !== 'none'
-            ? ` · цени: ${promo.pricing_percent}% ${promo.pricing_mode === 'below_regular' ? 'под regular' : 'над b2b'}`
-            : '';
+        const pricingExtra = promo.discountType === 'margin_percentage'
+            ? ' · цени: % от маржа'
+            : (promo.pricing_mode && promo.pricing_mode !== 'none'
+                ? ` · цени: ${promo.pricing_percent}% ${promo.pricing_mode === 'below_regular' ? 'под regular' : 'над b2b'}`
+                : '');
         rowTemplate.querySelector('.promo-description').textContent = `${promo.description || ''}${pricingExtra}`.trim();
         const validFrom = promo.validFrom ? new Date(promo.validFrom).toLocaleDateString('bg-BG') : '';
         const validUntil = promo.validUntil ? new Date(promo.validUntil).toLocaleDateString('bg-BG') : 'Безсрочен';
