@@ -149,6 +149,16 @@
             font-size: 2rem;
             margin-bottom: 0.25rem;
         }
+        .pf-stock-warning {
+            margin: 0 0 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            background: rgba(228, 0, 124, 0.08);
+            border: 1px solid rgba(228, 0, 124, 0.35);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
         @media (max-width: 900px) {
             .checkout-container { flex-direction: column-reverse; }
             .summary-section { position: static; width: 100%; flex: 1 1 auto; }
@@ -1096,6 +1106,11 @@
 
     <script type="module">
     import { API_URL } from './config.js';
+    import {
+      validateCartOnServer as sharedValidateCart,
+      setStockWarningBanner,
+      syncCartPricesFromServer
+    } from './portfolio-checkout-shared.js';
     
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -1396,6 +1411,39 @@
         const cartCountEl = document.getElementById('cart-count');
 
         const saveCart = () => localStorage.setItem('cart', JSON.stringify(cartData));
+
+        function cartForApi() {
+            return cartData.map((p) => {
+                const sku_id = p.sku_id || p.id;
+                return { ...p, sku_id, id: sku_id };
+            });
+        }
+
+        function hasStockWarning() {
+            const banner = document.getElementById('cart-stock-warning');
+            return banner && !banner.hidden && banner.textContent;
+        }
+
+        async function validateCartOnServer({ silent = false } = {}) {
+            const ok = await sharedValidateCart({
+                apiUrl: API_URL,
+                products: cartForApi(),
+                promoCode: activePromoCode?.code,
+                project: 'main',
+                silent,
+                showToast: (msg) => alert(msg),
+                onPriceSync: (serverProducts) => {
+                    if (syncCartPricesFromServer(cartData, serverProducts)) {
+                        saveCart();
+                        renderProducts();
+                        updateSummary();
+                    }
+                }
+            });
+            const submitBtn = form.querySelector('.btn-submit');
+            if (submitBtn) submitBtn.disabled = !ok || !!hasStockWarning();
+            return ok;
+        }
 
         const updateCartCount = () => {
             if (cartCountEl) {
@@ -1822,87 +1870,96 @@
         }
         
         // --- 5. ВАЛИДАЦИЯ И ИЗПРАЩАНЕ НА ФОРМАТА ---
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (validateForm()) {
-                const formData = new FormData(form);
-                const orderData = Object.fromEntries(formData.entries());
-                
-                // Add delivery details based on selected method
-                if (deliveryCourierRadio.checked) {
-                    orderData.deliveryMethod = 'courier';
-                    if (speedyRadio.checked) {
-                        orderData.courierCompany = 'Speedy';
-                        orderData.courierOfficeId = document.getElementById('final-speedy-id').value;
-                        const selName = document.getElementById('speedy-selected-name');
-                        const selAddr = document.getElementById('speedy-selected-addr');
-                        if (selName && selName.textContent) {
-                            orderData.courierOfficeName = selName.textContent;
-                            orderData.courierOfficeAddress = selAddr ? selAddr.textContent : '';
-                        }
-                    } else if (ekontRadio.checked) {
-                        orderData.courierCompany = 'Econt';
-                        orderData.courierOfficeId = document.getElementById('final-office-id').value;
-                        // Use the actual office name from the selected office object
-                        if (selectedEcontOffice) {
-                            let officeName = selectedEcontOffice.name;
-                            if (selectedEcontOffice.isAPS === true) {
-                                officeName += " (ЕКОНТОМАТ)";
-                            } else if (selectedEcontOffice.isMPS === true) {
-                                officeName += " (МОБИЛЕН)";
-                            }
-                            orderData.courierOfficeName = officeName;
-                            orderData.courierOfficeAddress = (selectedEcontOffice.address && selectedEcontOffice.address.fullAddress) ? selectedEcontOffice.address.fullAddress : '';
-                        }
-                    }
-                } else {
-                    orderData.deliveryMethod = 'address';
-                }
-                
-                const fullOrder = {
-                    customer: orderData,
-                    products: cartData,
-                    summary: {
-                        subtotal: subtotalEl.textContent,
-                        shipping: shippingEl.textContent,
-                        discount: activePromoCode ? discountEl.textContent : null,
-                        total: totalEl.textContent
-                    },
-                    promoCode: activePromoCode ? activePromoCode.code : null,
-                    status: 'Нова'
-                };
+            if (!validateForm()) return;
 
-                // If promo code is applied, increment usage count
-                const orderPromise = fetch(`${API_URL}/orders`, {
+            const submitBtn = form.querySelector('.btn-submit');
+            const originalLabel = submitBtn ? submitBtn.textContent : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Проверка на наличност...';
+            }
+
+            const stockOk = await validateCartOnServer();
+            if (!stockOk) {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalLabel;
+                }
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.textContent = 'Изпращане...';
+            }
+
+            const formData = new FormData(form);
+            const orderData = Object.fromEntries(formData.entries());
+            
+            // Add delivery details based on selected method
+            if (deliveryCourierRadio.checked) {
+                orderData.deliveryMethod = 'courier';
+                if (speedyRadio.checked) {
+                    orderData.courierCompany = 'Speedy';
+                    orderData.courierOfficeId = document.getElementById('final-speedy-id').value;
+                    const selName = document.getElementById('speedy-selected-name');
+                    const selAddr = document.getElementById('speedy-selected-addr');
+                    if (selName && selName.textContent) {
+                        orderData.courierOfficeName = selName.textContent;
+                        orderData.courierOfficeAddress = selAddr ? selAddr.textContent : '';
+                    }
+                } else if (ekontRadio.checked) {
+                    orderData.courierCompany = 'Econt';
+                    orderData.courierOfficeId = document.getElementById('final-office-id').value;
+                    // Use the actual office name from the selected office object
+                    if (selectedEcontOffice) {
+                        let officeName = selectedEcontOffice.name;
+                        if (selectedEcontOffice.isAPS === true) {
+                            officeName += " (ЕКОНТОМАТ)";
+                        } else if (selectedEcontOffice.isMPS === true) {
+                            officeName += " (МОБИЛЕН)";
+                        }
+                        orderData.courierOfficeName = officeName;
+                        orderData.courierOfficeAddress = (selectedEcontOffice.address && selectedEcontOffice.address.fullAddress) ? selectedEcontOffice.address.fullAddress : '';
+                    }
+                }
+            } else {
+                orderData.deliveryMethod = 'address';
+            }
+            
+            const fullOrder = {
+                project: 'main',
+                customer: orderData,
+                products: cartForApi(),
+                summary: {
+                    subtotal: subtotalEl.textContent,
+                    shipping: shippingEl.textContent,
+                    discount: activePromoCode ? discountEl.textContent : null,
+                    total: totalEl.textContent
+                },
+                promoCode: activePromoCode ? activePromoCode.code : null
+            };
+
+            try {
+                const orderRes = await fetch(`${API_URL}/portfolio/orders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(fullOrder)
                 });
-                
-                const promoPromise = activePromoCode ? fetch(`${API_URL}/validate-promo`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: activePromoCode.code, incrementUsage: true })
-                }) : Promise.resolve({ ok: true });
-
-                Promise.all([orderPromise, promoPromise])
-                .then(([orderRes, promoRes]) => {
-                    if (!orderRes.ok) throw new Error('Server error');
-                    // Log promo response issue but don't fail order if promo increment fails
-                    if (activePromoCode && !promoRes.ok) {
-                        console.warn('Warning: Promo code usage count may not have been updated');
-                    }
-                    return orderRes.json();
-                })
-                .then(() => {
-                    localStorage.removeItem('cart');
-                    // Show success modal instead of alert
-                    showSuccessModal();
-                })
-                .catch(err => {
-                    console.error('Грешка при изпращане на поръчката:', err);
-                    alert('Възникна грешка. Опитайте по-късно.');
-                });
+                if (!orderRes.ok) {
+                    const errData = await orderRes.json().catch(() => ({}));
+                    throw new Error(errData.error || 'Server error');
+                }
+                localStorage.removeItem('cart');
+                showSuccessModal();
+            } catch (err) {
+                console.error('Грешка при изпращане на поръчката:', err);
+                alert(err.message || 'Възникна грешка. Опитайте по-късно.');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalLabel;
+                }
             }
         });
         
@@ -1981,6 +2038,7 @@
         updateCartCount();
         toggleDeliveryFields(); // Initialize delivery method visibility
         toggleCourierWidgets(); // Initialize courier widget visibility (Speedy is default)
+        if (cartData.length) validateCartOnServer({ silent: true });
         
         // --- Success Modal Functions ---
         const successModal = document.getElementById('success-modal');

@@ -25,6 +25,12 @@ import {
   applyPromoCodePrice
 } from './portfolio-pricing.js';
 import { decodeHtmlEntities, normalizeCatalogText } from './portfolio-text.js';
+import {
+  resolveSiteCartSku,
+  cartRequiresCatalogMeta,
+  parseSiteCartRef,
+  isCatalogBackedCartId
+} from './portfolio-site-products.js';
 
 export {
   filterIndex,
@@ -1104,6 +1110,26 @@ async function resolveCartSku(env, rawId) {
   return null;
 }
 
+async function resolveCartSkuForProject(env, rawId, project) {
+  const catalog = await resolveCartSku(env, rawId);
+  if (catalog) return catalog;
+  return await resolveSiteCartSku(env, project, rawId);
+}
+
+function extractCatalogSkuIdsForStock(products) {
+  const ids = new Set();
+  for (const p of products || []) {
+    const raw = String(p.sku_id || p.id || '').trim();
+    if (!raw || !isCatalogBackedCartId(raw)) continue;
+    const { variantSku } = parseSiteCartRef(raw);
+    if (variantSku && /^\d+$/.test(variantSku)) ids.add(variantSku);
+    const pf = raw.match(/^prod-pf-\d+_(.+)$/);
+    if (pf?.[1]) ids.add(pf[1]);
+    if (/^\d+$/.test(raw)) ids.add(raw);
+  }
+  return [...ids];
+}
+
 async function findVariantInCatalog(env, skuId) {
   const meta = await getMeta(env);
   if (!meta) return null;
@@ -1145,7 +1171,7 @@ async function findVariantInCatalog(env, skuId) {
   return null;
 }
 
-async function validateAndNormalizeCartItems(env, products, { promoRecord = null } = {}) {
+async function validateAndNormalizeCartItems(env, products, { promoRecord = null, project = 'portfolio' } = {}) {
   const settings = await getSettings(env);
   const policy = pricingPolicyFromSettings(settings);
   const normalized = [];
@@ -1159,7 +1185,7 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
       continue;
     }
 
-    const found = await resolveCartSku(env, skuId);
+    const found = await resolveCartSkuForProject(env, skuId, project);
     if (!found) {
       errors.push(`Продукт ${skuId} не е намерен в каталога.`);
       continue;
@@ -1204,8 +1230,12 @@ async function handleValidateCart(request, env) {
   if (!Array.isArray(body.products) || !body.products.length) {
     throw new PortfolioError('Липсват продукти.', 400);
   }
-  const skuIds = extractCartSkuIds(body.products);
-  const stockCheckedAt = await ensureStockFresh(env, skuIds, SYNC_POLICY.ORDER_FRESHNESS_MS);
+  const project = String(body.project || 'portfolio').trim() || 'portfolio';
+  const catalogSkuIds = extractCatalogSkuIdsForStock(body.products);
+  let stockCheckedAt = null;
+  if (catalogSkuIds.length) {
+    stockCheckedAt = await ensureStockFresh(env, catalogSkuIds, SYNC_POLICY.ORDER_FRESHNESS_MS);
+  }
 
   let promoRecord = null;
   if (body.promoCode) {
@@ -1216,7 +1246,7 @@ async function handleValidateCart(request, env) {
     promoRecord = promo;
   }
 
-  const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord });
+  const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord, project });
   const retailTotal = items.reduce((s, i) => s + i.retail_price * i.quantity, 0);
   return jsonResponse({
     valid: true,
@@ -1459,9 +1489,13 @@ async function handleCreateOrder(request, env) {
     throw new PortfolioError('Липсват данни за клиент или продукти.', 400);
   }
 
-  const meta = await getMeta(env);
-  if (!meta) {
-    throw new PortfolioError('Каталогът не е синхронизиран. Поръчката не може да бъде приета.', 503);
+  const project = String(body.project || 'portfolio').trim() || 'portfolio';
+
+  if (cartRequiresCatalogMeta(body.products)) {
+    const meta = await getMeta(env);
+    if (!meta) {
+      throw new PortfolioError('Каталогът не е синхронизиран. Поръчката не може да бъде приета.', 503);
+    }
   }
 
   const cartCheck = validateCartHasSku(body.products);
@@ -1475,8 +1509,11 @@ async function handleCreateOrder(request, env) {
   }
 
   const customer = sanitizePortfolioCustomer(body.customer);
-  const skuIds = extractCartSkuIds(body.products);
-  const stockCheckedAt = await ensureStockFresh(env, skuIds, SYNC_POLICY.ORDER_FRESHNESS_MS);
+  const catalogSkuIds = extractCatalogSkuIdsForStock(body.products);
+  let stockCheckedAt = null;
+  if (catalogSkuIds.length) {
+    stockCheckedAt = await ensureStockFresh(env, catalogSkuIds, SYNC_POLICY.ORDER_FRESHNESS_MS);
+  }
 
   let promoRecord = null;
   let appliedPromo = null;
@@ -1490,7 +1527,7 @@ async function handleCreateOrder(request, env) {
     await savePromoCodes(env, codes);
   }
 
-  const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord });
+  const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord, project });
 
   let b2bTotal = 0;
   let retailTotal = 0;
@@ -1504,8 +1541,7 @@ async function handleCreateOrder(request, env) {
     promoDiscount = applyPromoDiscount(retailTotal, appliedPromo);
   }
 
-  const project = String(body.project || 'portfolio').trim() || 'portfolio';
-  const orderPrefix = project === 'life' ? 'life' : 'pf';
+  const orderPrefix = project === 'life' ? 'life' : (project === 'main' ? 'main' : 'pf');
 
   const newOrder = {
     id: `${orderPrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,

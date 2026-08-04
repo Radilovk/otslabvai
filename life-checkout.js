@@ -5,6 +5,11 @@ import {
   validateCartHasSku,
   isValidBgPhone
 } from './portfolio-order-validation.js';
+import {
+  validateCartOnServer as sharedValidateCart,
+  setStockWarningBanner,
+  syncCartPricesFromServer
+} from './portfolio-checkout-shared.js';
 
 const CART_KEY = 'lifeCart';
 const LAST_ORDER_KEY = 'life_last_order';
@@ -127,10 +132,35 @@ function bindSubmitButtons() {
   });
 }
 
+function hasStockWarning() {
+  const banner = document.getElementById('cart-stock-warning');
+  return banner && !banner.hidden && banner.textContent;
+}
+
+async function validateCartOnServer({ silent = false } = {}) {
+  const ok = await sharedValidateCart({
+    apiUrl: API_URL,
+    products: cartForApi(),
+    promoCode: activePromoCode?.code,
+    project: 'life',
+    silent,
+    showToast,
+    onPriceSync: (serverProducts) => {
+      if (syncCartPricesFromServer(cart, serverProducts)) {
+        saveCart(cart);
+        renderCart();
+      }
+    }
+  });
+  syncSubmitButtons({ disabled: !ok || !!hasStockWarning() });
+  return ok;
+}
+
 function renderCart() {
   const list = $('product-list');
   if (!cart.length) {
     list.innerHTML = '<li class="pf-empty-cart"><p>Количката е празна.</p><a href="life.html" class="pf-btn pf-btn-outline">Към каталога</a></li>';
+    setStockWarningBanner('');
     syncSubmitButtons({ disabled: true });
     syncFloatingSubmit(false);
     updateSummary();
@@ -152,7 +182,7 @@ function renderCart() {
       <button type="button" class="pf-remove-btn" data-action="remove" data-idx="${idx}" aria-label="Премахни">${icon('x', { size: 16 })}</button>
     </li>`).join('');
 
-  syncSubmitButtons({ disabled: false });
+  syncSubmitButtons({ disabled: !!hasStockWarning() });
   syncFloatingSubmit(true);
   updateSummary();
   updateCartBadges();
@@ -447,6 +477,13 @@ async function submitOrder(e) {
   e.preventDefault();
   if (!cart.length || !validateForm()) return;
 
+  syncSubmitButtons({ disabled: true, label: 'Проверка на наличност...' });
+  const stockOk = await validateCartOnServer();
+  if (!stockOk) {
+    syncSubmitButtons({ disabled: false });
+    return;
+  }
+
   syncSubmitButtons({ disabled: true, label: 'Изпращане...' });
 
   const customer = buildCustomerPayload();
@@ -586,6 +623,8 @@ function init() {
   $('courier-speedy')?.addEventListener('change', toggleCourierWidgets);
   $('courier-ekont')?.addEventListener('change', toggleCourierWidgets);
   bindSubmitButtons();
+
+  if (cart.length) validateCartOnServer({ silent: true });
 
   ['first-name', 'last-name', 'phone', 'email', 'address', 'city', 'postcode'].forEach((id) => {
     $(id)?.addEventListener('input', () => $(id)?.classList.remove('is-invalid'));

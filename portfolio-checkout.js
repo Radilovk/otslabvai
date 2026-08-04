@@ -9,10 +9,14 @@ import {
   validateCartHasSku,
   isValidBgPhone
 } from './portfolio-order-validation.js';
+import {
+  validateCartOnServer as sharedValidateCart,
+  setStockWarningBanner,
+  syncCartPricesFromServer
+} from './portfolio-checkout-shared.js';
 
 let cart = getCart();
 let activePromoCode = null;
-let cartStockWarning = '';
 
 const els = {};
 
@@ -120,31 +124,16 @@ function renderCartItemTitle(item, productUrl) {
   return `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link pf-summary-product-name">${safeName}</a>`;
 }
 
-function renderStockWarning() {
-  let banner = $('cart-stock-warning');
-  if (!banner) {
-    banner = document.createElement('div');
-    banner.id = 'cart-stock-warning';
-    banner.className = 'pf-stock-warning';
-    banner.setAttribute('role', 'alert');
-    const list = $('product-list');
-    list?.parentNode?.insertBefore(banner, list);
-  }
-  if (!cartStockWarning) {
-    banner.hidden = true;
-    banner.textContent = '';
-    return;
-  }
-  banner.hidden = false;
-  banner.textContent = cartStockWarning;
+function hasStockWarning() {
+  const banner = document.getElementById('cart-stock-warning');
+  return banner && !banner.hidden && banner.textContent;
 }
 
 function renderCart() {
   const list = $('product-list');
   if (!cart.length) {
     list.innerHTML = '<li class="pf-empty-cart"><p>Количката е празна.</p><a href="portfolio.html" class="pf-btn pf-btn-outline">Към каталога</a></li>';
-    cartStockWarning = '';
-    renderStockWarning();
+    setStockWarningBanner('');
     syncSubmitButtons({ disabled: true });
     syncFloatingSubmit(false);
     updateSummary();
@@ -172,11 +161,10 @@ function renderCart() {
     </li>`;
   }).join('');
 
-  syncSubmitButtons({ disabled: !!cartStockWarning });
+  syncSubmitButtons({ disabled: !!hasStockWarning() });
   syncFloatingSubmit(true);
   updateSummary();
   updateCartBadges();
-  renderStockWarning();
 
   list.querySelectorAll('[data-action]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -194,56 +182,22 @@ function renderCart() {
 }
 
 async function validateCartOnServer({ silent = false } = {}) {
-  if (!cart.length) {
-    cartStockWarning = '';
-    renderStockWarning();
-    return true;
-  }
-
-  try {
-    const res = await fetch(`${API_URL}/portfolio/validate-cart`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        products: cart,
-        promoCode: activePromoCode?.code || undefined
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      cartStockWarning = data.error || 'Някои продукти вече не са налични.';
-      renderStockWarning();
-      syncSubmitButtons({ disabled: true });
-      if (!silent) showToast(cartStockWarning, 'error');
-      return false;
-    }
-
-    if (Array.isArray(data.products)) {
-      let pricesChanged = false;
-      for (const item of data.products) {
-        const idx = cart.findIndex((c) => String(c.sku_id || c.id) === String(item.sku_id));
-        if (idx >= 0 && item.retail_price != null && cart[idx].price !== item.retail_price) {
-          cart[idx].price = item.retail_price;
-          pricesChanged = true;
-        }
-      }
-      if (pricesChanged) {
+  const ok = await sharedValidateCart({
+    apiUrl: API_URL,
+    products: cart,
+    promoCode: activePromoCode?.code,
+    project: 'portfolio',
+    silent,
+    showToast,
+    onPriceSync: (serverProducts) => {
+      if (syncCartPricesFromServer(cart, serverProducts)) {
         saveCart(cart);
         renderCart();
       }
     }
-
-    cartStockWarning = '';
-    renderStockWarning();
-    syncSubmitButtons({ disabled: false });
-    return true;
-  } catch {
-    cartStockWarning = 'Неуспешна проверка на наличност. Опитайте отново.';
-    renderStockWarning();
-    syncSubmitButtons({ disabled: true });
-    if (!silent) showToast(cartStockWarning, 'error');
-    return false;
-  }
+  });
+  syncSubmitButtons({ disabled: !ok || !!hasStockWarning() });
+  return ok;
 }
 
 function toggleDeliveryFields() {

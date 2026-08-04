@@ -224,7 +224,7 @@ export default {
               if (request.method === 'GET') {
                   response = await handleGetOrders(request, env);
               } else if (request.method === 'POST') {
-                  response = await handleCreateOrder(request, env);
+                  response = await handleCreateOrder(request, env, ctx);
               } else if (request.method === 'PUT') {
                   response = await handleUpdateOrderStatus(request, env);
               } else {
@@ -765,46 +765,39 @@ async function handleGetOrders(request, env) {
 }
 
 /**
- * --- НОВА ФУНКЦИЯ ---
- * Handles POST /orders (създаване на нова поръчка от checkout)
+ * POST /orders – legacy checkout path; stores in portfolio_orders as project main.
  */
-async function handleCreateOrder(request, env) {
+async function handleCreateOrder(request, env, ctx) {
     let orderData;
     try {
         orderData = await request.json();
     } catch (e) {
         throw new UserFacingError("Невалиден JSON формат на заявката.", 400);
     }
-    
+
     if (!orderData || !orderData.customer || !orderData.products) {
         throw new UserFacingError("Липсват задължителни данни за поръчката.", 400);
     }
-    
-    // Генерираме уникален ID и timestamp за поръчката
-    const newOrder = {
-        id: `order-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
-        timestamp: new Date().toISOString(),
+
+    const portfolioBody = {
+        project: 'main',
         customer: orderData.customer,
-        products: orderData.products,
-        summary: orderData.summary || {},
-        status: orderData.status || 'Нова'
+        products: (orderData.products || []).map((p) => ({
+            sku_id: p.sku_id || p.id,
+            id: p.sku_id || p.id,
+            quantity: p.quantity
+        })),
+        promoCode: orderData.promoCode || undefined,
+        summary: orderData.summary || {}
     };
-    
-    // Четем съществуващите поръчки
-    const ordersJson = await env.PAGE_CONTENT.get('orders');
-    let orders = ordersJson ? JSON.parse(ordersJson) : [];
-    
-    // Добавяме новата поръчка
-    orders.push(newOrder);
-    
-    // Запазваме обратно в KV – await гарантира, че записът е завършен преди да върнем 201,
-    // така поръчката не може да бъде изгубена дори при нестандартно прекратяване на Worker-а.
-    await env.PAGE_CONTENT.put('orders', JSON.stringify(orders, null, 2));
-    
-    return new Response(JSON.stringify({ success: true, order: newOrder }), {
-        status: 201,
-        headers: { 'Content-Type': 'application/json' }
+
+    const portfolioRequest = new Request('https://worker.local/portfolio/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(portfolioBody)
     });
+
+    return await handlePortfolioRoute(portfolioRequest, env, new URL(portfolioRequest.url), ctx);
 }
 
 /**

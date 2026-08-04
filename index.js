@@ -5,6 +5,9 @@
 import { API_URL } from './config.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import { isOnHomepage, isCatalogOnly, sortByOrder, catalogLink } from './product-visibility.js';
+import { attachSitePageVisibilitySync } from './site-page-sync.js';
+
+let pageContentLoadedAt = 0;
 
 const DOM = {
     mainContainer: document.getElementById('main-content-container'),
@@ -1682,6 +1685,8 @@ async function main() {
             data = await response.json();
         }
 
+        pageContentLoadedAt = Date.now();
+
         // Check if this is the index page (has main-content-container)
         const isIndexPage = DOM.mainContainer !== null;
         
@@ -2475,3 +2480,8 @@ function initPremiumEffects() {
 
 // Старт на приложението
 main();
+
+attachSitePageVisibilitySync({
+    getLoadedAt: () => pageContentLoadedAt,
+    onStale: () => main()
+});
