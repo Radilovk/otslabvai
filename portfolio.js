@@ -71,7 +71,7 @@ function productCardUrl(item) {
 
 function catalogImageUrl(url) {
   if (!url || url.startsWith('data:')) return url;
-  return resolveImageUrl(url, 420);
+  return resolveImageUrl(url, 420, { trim: 12 });
 }
 
 function renderCard(item) {
