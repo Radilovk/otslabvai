@@ -179,4 +179,61 @@ describe('Portfolio order creation rejects invalid orders', () => {
     const data = await res.json();
     expect(data.id).toBe(id);
   });
+
+  test('POST /portfolio/orders accepts manual main site product without catalog meta', async () => {
+    env.PAGE_CONTENT.data.set('page_content', JSON.stringify({
+      page_content: [{
+        type: 'product_category',
+        products: [{
+          product_id: 'prod-lida-green',
+          public_data: { name: 'Lida Green', price: 38 },
+          system_data: { inventory: 3 }
+        }]
+      }]
+    }));
+    env.PAGE_CONTENT.data.delete('portfolio_meta');
+
+    const request = new Request('https://example.com/portfolio/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...validBody,
+        project: 'main',
+        products: [{ sku_id: 'prod-lida-green', quantity: 1 }]
+      })
+    });
+    const res = await handlePortfolioRoute(request, env, new URL(request.url));
+    expect(res.status).toBe(201);
+    const data = await res.json();
+    expect(data.order.id).toMatch(/^main-/);
+    expect(data.order.products[0].sku_id).toBe('prod-lida-green');
+    expect(data.order.products[0].retail_price).toBe(38);
+  });
+
+  test('POST /portfolio/validate-cart resolves main site manual product', async () => {
+    env.PAGE_CONTENT.data.set('page_content', JSON.stringify({
+      page_content: [{
+        type: 'product_category',
+        products: [{
+          product_id: 'prod-lida-green',
+          public_data: { name: 'Lida Green', price: 38 },
+          system_data: { inventory: 3 }
+        }]
+      }]
+    }));
+
+    const request = new Request('https://example.com/portfolio/validate-cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project: 'main',
+        products: [{ sku_id: 'prod-lida-green', quantity: 1 }]
+      })
+    });
+    const res = await handlePortfolioRoute(request, env, new URL(request.url));
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.valid).toBe(true);
+    expect(data.products[0].sku_id).toBe('prod-lida-green');
+  });
 });

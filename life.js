@@ -15,6 +15,9 @@ import {
 import { LIFE_CATEGORY_DEFS } from './life-category-assign.js';
 import { rewriteAllProductImages } from './life-img.js';
 import { isOnHomepage, isCatalogOnly, sortByOrder, catalogLink } from './product-visibility.js';
+import { attachSitePageVisibilitySync } from './site-page-sync.js';
+
+let pageContentLoadedAt = 0;
 
 const LOGO_FALLBACK = 'images/life-icons/logo.png';
 const LOGO_FALLBACK_ALT = 'images/lifelogo3.png';
@@ -1864,6 +1867,8 @@ async function main() {
             data = await response.json();
         }
 
+        pageContentLoadedAt = Date.now();
+
         // Check if this is the index page (has main-content-container)
         const isIndexPage = DOM.mainContainer !== null;
         
@@ -2892,3 +2897,8 @@ initPremiumEffects();
 
 // Старт на приложението
 main();
+
+attachSitePageVisibilitySync({
+    getLoadedAt: () => pageContentLoadedAt,
+    onStale: () => main()
+});
