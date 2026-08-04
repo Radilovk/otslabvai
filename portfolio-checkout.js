@@ -12,7 +12,8 @@ import {
 import {
   validateCartOnServer as sharedValidateCart,
   setStockWarningBanner,
-  syncCartPricesFromServer
+  syncCartPricesFromServer,
+  promoUsesLinePricing
 } from './portfolio-checkout-shared.js';
 
 let cart = getCart();
@@ -47,7 +48,7 @@ function getSubtotal() {
 
 function getPromoDiscount(subtotal) {
   if (!activePromoCode) return 0;
-  if (activePromoCode.pricing_mode && activePromoCode.pricing_mode !== 'none') return 0;
+  if (promoUsesLinePricing(activePromoCode)) return 0;
   if (activePromoCode.discountType === 'percentage') {
     return subtotal * (activePromoCode.discount / 100);
   }
@@ -506,11 +507,16 @@ async function applyPromoCode() {
       return;
     }
     activePromoCode = data.promoCode;
-    if (data.promoCode.pricing_mode && data.promoCode.pricing_mode !== 'none') {
-      const pct = data.promoCode.pricing_percent ?? 0;
-      const modeLabel = data.promoCode.pricing_mode === 'below_regular'
-        ? `${pct}% под препоръчителна цена`
-        : `${pct}% над доставна`;
+    if (promoUsesLinePricing(data.promoCode)) {
+      let modeLabel;
+      if (data.promoCode.discountType === 'margin_percentage') {
+        modeLabel = `${data.promoCode.discount}% от маржа (надценка)`;
+      } else {
+        const pct = data.promoCode.pricing_percent ?? 0;
+        modeLabel = data.promoCode.pricing_mode === 'below_regular'
+          ? `${pct}% под препоръчителна цена`
+          : `${pct}% над доставна`;
+      }
       setPromoMessage(`Промо кодът е приложен: персонални цени (${modeLabel}).`, 'success');
       await validateCartOnServer({ silent: true });
     } else {

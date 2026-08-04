@@ -8,7 +8,8 @@ import {
 import {
   validateCartOnServer as sharedValidateCart,
   setStockWarningBanner,
-  syncCartPricesFromServer
+  syncCartPricesFromServer,
+  promoUsesLinePricing
 } from './portfolio-checkout-shared.js';
 
 const CART_KEY = 'lifeCart';
@@ -76,6 +77,7 @@ function getSubtotal() {
 
 function getPromoDiscount(subtotal) {
   if (!activePromoCode) return 0;
+  if (promoUsesLinePricing(activePromoCode)) return 0;
   if (activePromoCode.discountType === 'percentage') {
     return subtotal * (activePromoCode.discount / 100);
   }
@@ -562,10 +564,24 @@ async function applyPromoCode() {
       return;
     }
     activePromoCode = data.promoCode;
-    const discountLabel = data.promoCode.discountType === 'percentage'
-      ? `${data.promoCode.discount}%`
-      : formatPrice(data.promoCode.discount);
-    setPromoMessage(`Промо кодът е приложен: −${discountLabel}`, 'success');
+    if (promoUsesLinePricing(data.promoCode)) {
+      let modeLabel;
+      if (data.promoCode.discountType === 'margin_percentage') {
+        modeLabel = `${data.promoCode.discount}% от маржа (надценка)`;
+      } else {
+        const pct = data.promoCode.pricing_percent ?? 0;
+        modeLabel = data.promoCode.pricing_mode === 'below_regular'
+          ? `${pct}% под препоръчителна цена`
+          : `${pct}% над доставна`;
+      }
+      setPromoMessage(`Промо кодът е приложен: персонални цени (${modeLabel}).`, 'success');
+      await validateCartOnServer({ silent: true });
+    } else {
+      const discountLabel = data.promoCode.discountType === 'percentage'
+        ? `${data.promoCode.discount}%`
+        : formatPrice(data.promoCode.discount);
+      setPromoMessage(`Промо кодът е приложен: −${discountLabel}`, 'success');
+    }
     if ($('promo-code-input')) $('promo-code-input').value = data.promoCode.code;
     if ($('promo-code-input-summary')) $('promo-code-input-summary').value = data.promoCode.code;
     updateSummary();

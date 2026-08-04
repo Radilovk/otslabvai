@@ -106,3 +106,10 @@ export function syncCartPricesFromServer(cart, serverProducts) {
   }
   return changed;
 }
+
+/** True when promo adjusts per-line prices (not a cart-level discount). */
+export function promoUsesLinePricing(promo) {
+  if (!promo) return false;
+  if (promo.pricing_mode && promo.pricing_mode !== 'none') return true;
+  return promo.discountType === 'margin_percentage';
+}
