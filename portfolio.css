@@ -111,9 +111,8 @@
 
   --pf-input-bg: #0e1a2b;
   --pf-input-focus-bg: #15263b;
-  --pf-image-bg: radial-gradient(ellipse 85% 70% at 50% 38%, rgba(61, 232, 236, 0.07) 0%, transparent 55%),
-                 linear-gradient(165deg, #0e1828 0%, #121f32 48%, #0a121f 100%);
-  --pf-image-stage-shadow: 0 6px 20px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --pf-image-bg: #eaedf1;
+  --pf-image-fade: #eaedf1;
   --pf-dropdown-bg: #15263b;
   --pf-modal-bg: #121f32;
   --pf-scroll-top-bg: #1e3554;
@@ -180,36 +179,25 @@
 [data-theme="dark"] .pf-card-image,
 [data-theme="dark"] .pf-gallery {
   background: var(--pf-image-bg);
+  position: relative;
 }
 
-[data-theme="dark"] .pf-card-image {
-  padding: clamp(0.85rem, 4vw, 1.35rem);
-}
-
-[data-theme="dark"] .pf-card-image img,
-[data-theme="dark"] .pf-gallery > img {
-  border-radius: 10px;
-  box-shadow: var(--pf-image-stage-shadow);
-}
-
-[data-theme="dark"] .pf-gallery {
-  padding: clamp(1rem, 4vw, 2rem);
-}
-
-[data-theme="dark"] .pf-gallery-thumb {
-  background: var(--pf-input-bg);
-  border-color: var(--pf-border);
-}
-
-[data-theme="dark"] .pf-gallery-thumb img {
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+[data-theme="dark"] .pf-card-image::after,
+[data-theme="dark"] .pf-gallery::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1.75rem;
+  background: linear-gradient(to bottom, rgba(234, 237, 241, 0), var(--pf-surface));
+  pointer-events: none;
+  z-index: 2;
 }
 
 [data-theme="dark"] .pf-summary-img {
-  background: var(--pf-input-bg);
-  border-color: var(--pf-border);
-  box-shadow: var(--pf-image-stage-shadow);
+  background: var(--pf-image-bg);
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 [data-theme="dark"] .pf-filters-toggle,

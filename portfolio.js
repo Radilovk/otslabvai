@@ -2,6 +2,7 @@ import {
   escapeHtml, debounce, updateCartBadges, initPortfolioPage, applyHeroSettings, icon
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
+import { resolveImageUrl } from './life-img.js';
 import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, onCatalogUpdated } from './portfolio-cache.js';
 import {
   countActiveFilters as countFilters,
@@ -68,9 +69,14 @@ function productCardUrl(item) {
   return `${base}&sku=${encodeURIComponent(item.default_sku_id)}`;
 }
 
+function catalogImageUrl(url) {
+  if (!url || url.startsWith('data:')) return url;
+  return resolveImageUrl(url, 420, { trim: 12 });
+}
+
 function renderCard(item) {
   const promoBadge = item.has_promo ? '<span class="pf-badge pf-badge--promo">Промо</span>' : '';
-  const img = item.image || PLACEHOLDER_IMG;
+  const img = catalogImageUrl(item.image) || PLACEHOLDER_IMG;
   return `
     <div class="pf-product-card">
       <a href="${productCardUrl(item)}" class="pf-card-link">
