@@ -167,6 +167,12 @@ function render() {
   const maxQty = selectedVariant?.available ? 99 : 1;
 
   document.title = `${product.name} – BIOCODE`;
+  const ogTitle = document.getElementById('og-title');
+  const ogDesc = document.getElementById('og-description');
+  const ogImage = document.getElementById('og-image');
+  if (ogTitle) ogTitle.setAttribute('content', document.title);
+  if (ogDesc) ogDesc.setAttribute('content', `${product.name} – ${product.brand || 'BIOCODE'}`);
+  if (ogImage && product.image) ogImage.setAttribute('content', product.image);
 
   DOM.root.innerHTML = `
     ${renderBreadcrumb()}
@@ -348,7 +354,6 @@ function addToCart() {
       pack: v.pack,
       option: v.option,
       price: v.retail_price,
-      b2b_price: v.b2b_price,
       quantity,
       image: v.image || product.image
     });

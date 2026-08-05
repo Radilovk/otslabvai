@@ -11,6 +11,7 @@ import {
   syncCartPricesFromServer,
   promoUsesLinePricing
 } from './portfolio-checkout-shared.js';
+import { calculateCheckoutShipping } from './checkout-shipping.js';
 
 const CART_KEY = 'lifeCart';
 const LAST_ORDER_KEY = 'life_last_order';
@@ -53,22 +54,12 @@ function cartForApi() {
 }
 
 function calculateShipping(subtotal) {
-  if (subtotal >= 100) return 0;
   const deliveryCourier = $('delivery-courier')?.checked;
   const deliveryAddress = $('delivery-address')?.checked;
-  let basePrice = 1.52;
-  let codRate = 0.0096;
-
-  if (deliveryCourier) {
-    if ($('courier-ekont')?.checked) {
-      basePrice = 3.1;
-      codRate = 0.0298;
-    }
-  } else if (deliveryAddress) {
-    basePrice = 4.55;
-    codRate = 0.0298;
-  }
-  return basePrice + subtotal * codRate;
+  return calculateCheckoutShipping(subtotal, {
+    deliveryMethod: deliveryCourier ? 'courier' : (deliveryAddress ? 'address' : 'courier'),
+    courierCompany: $('courier-ekont')?.checked ? 'Econt' : 'Speedy'
+  });
 }
 
 function getSubtotal() {
@@ -169,11 +160,16 @@ function renderCart() {
     return;
   }
 
-  list.innerHTML = cart.map((item, idx) => `
+  list.innerHTML = cart.map((item, idx) => {
+    const productId = String(item.product_id || item.id || '').split('_')[0];
+    const nameHtml = productId
+      ? `<a href="life-product.html?id=${encodeURIComponent(productId)}">${escapeHtml(item.name)}</a>`
+      : escapeHtml(item.name);
+    return `
     <li class="pf-summary-item" data-idx="${idx}">
       ${item.image ? `<img src="${escapeHtml(item.image)}" alt="" class="pf-summary-img" loading="lazy" decoding="async">` : '<div class="pf-summary-img pf-summary-img--empty"></div>'}
       <div class="pf-summary-info">
-        <strong>${escapeHtml(item.name)}</strong>
+        <strong>${nameHtml}</strong>
         <div class="pf-qty-row">
           <button type="button" class="pf-qty-btn" data-action="minus" data-idx="${idx}" aria-label="Намали">−</button>
           <span>${item.quantity}</span>
@@ -182,7 +178,8 @@ function renderCart() {
       </div>
       <div class="pf-summary-price">${formatPrice(item.price * item.quantity)}</div>
       <button type="button" class="pf-remove-btn" data-action="remove" data-idx="${idx}" aria-label="Премахни">${icon('x', { size: 16 })}</button>
-    </li>`).join('');
+    </li>`;
+  }).join('');
 
   syncSubmitButtons({ disabled: !!hasStockWarning() });
   syncFloatingSubmit(true);
@@ -540,6 +537,24 @@ function setPromoMessage(text, type = '') {
   });
 }
 
+function syncPromoRemoveButtons() {
+  const show = !!activePromoCode;
+  ['remove-promo-btn', 'remove-promo-btn-summary'].forEach((id) => {
+    const el = $(id);
+    if (el) el.hidden = !show;
+  });
+}
+
+async function removePromoCode() {
+  activePromoCode = null;
+  $('promo-code-input') && ($('promo-code-input').value = '');
+  $('promo-code-input-summary') && ($('promo-code-input-summary').value = '');
+  setPromoMessage('Промо кодът е премахнат.', 'success');
+  syncPromoRemoveButtons();
+  await validateCartOnServer({ silent: true });
+  updateSummary();
+}
+
 async function applyPromoCode() {
   const code = ($('promo-code-input')?.value || $('promo-code-input-summary')?.value || '').trim();
   if (!code) {
@@ -584,6 +599,7 @@ async function applyPromoCode() {
     }
     if ($('promo-code-input')) $('promo-code-input').value = data.promoCode.code;
     if ($('promo-code-input-summary')) $('promo-code-input-summary').value = data.promoCode.code;
+    syncPromoRemoveButtons();
     updateSummary();
   } catch {
     setPromoMessage('Грешка при проверка на промо кода.', 'error');
@@ -627,6 +643,8 @@ function init() {
 
   $('apply-promo-btn')?.addEventListener('click', applyPromoCode);
   $('apply-promo-btn-summary')?.addEventListener('click', applyPromoCode);
+  $('remove-promo-btn')?.addEventListener('click', removePromoCode);
+  $('remove-promo-btn-summary')?.addEventListener('click', removePromoCode);
   $('promo-code-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); applyPromoCode(); }
   });

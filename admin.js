@@ -5,6 +5,88 @@
 // API Endpoint
 import { API_URL } from './config.js';
 
+const ADMIN_TOKEN_KEY = 'admin_auth_token';
+const nativeFetch = window.fetch.bind(window);
+
+window.fetch = function patchedAdminFetch(input, init = {}) {
+    let url = typeof input === 'string' ? input : (input instanceof Request ? input.url : '');
+    if (url.startsWith(API_URL) && !url.includes('/admin/login')) {
+        const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+        if (token) {
+            const headers = new Headers(init.headers || (input instanceof Request ? input.headers : undefined));
+            if (!headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
+            init = { ...init, headers };
+        }
+    }
+    return nativeFetch(input, init);
+};
+
+function showAdminLoginOverlay() {
+    const overlay = document.getElementById('admin-login-overlay');
+    if (overlay) overlay.hidden = false;
+    document.querySelector('.admin-container')?.setAttribute('aria-hidden', 'true');
+}
+
+function hideAdminLoginOverlay() {
+    const overlay = document.getElementById('admin-login-overlay');
+    if (overlay) overlay.hidden = true;
+    document.querySelector('.admin-container')?.removeAttribute('aria-hidden');
+}
+
+async function adminLogin(password) {
+    const res = await nativeFetch(`${API_URL}/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Грешка при вход');
+    sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+    return data.token;
+}
+
+async function ensureAdminSession() {
+    const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+    if (token) {
+        const res = await nativeFetch(`${API_URL}/admin/session`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+            hideAdminLoginOverlay();
+            return true;
+        }
+        sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    }
+    showAdminLoginOverlay();
+    return false;
+}
+
+function setupAdminLoginForm() {
+    const form = document.getElementById('admin-login-form');
+    const input = document.getElementById('admin-login-password');
+    const errEl = document.getElementById('admin-login-error');
+    const logoutBtn = document.getElementById('admin-logout-btn');
+    if (!form || !input) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (errEl) errEl.textContent = '';
+        try {
+            await adminLogin(input.value);
+            input.value = '';
+            hideAdminLoginOverlay();
+            await init();
+        } catch (err) {
+            if (errEl) errEl.textContent = err.message || 'Грешна парола';
+        }
+    });
+
+    logoutBtn?.addEventListener('click', () => {
+        sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+        location.reload();
+    });
+}
+
 function escapeAdminHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
@@ -287,17 +369,7 @@ function updatePortfolioPendingUI() {
     }
 
     const mainAlert = document.getElementById('main-portfolio-orders-alert');
-    const mainAlertText = document.getElementById('main-portfolio-orders-alert-text');
-    if (mainAlert && mainAlertText && !isPortfolioProject()) {
-        if (portfolioPendingCount > 0) {
-            mainAlert.style.display = 'block';
-            mainAlertText.textContent = `Имате ${portfolioPendingCount} portfolio поръчки, чакащи одобрение. Те не се показват в този таб — portfolio има отделен раздел.`;
-        } else {
-            mainAlert.style.display = 'none';
-        }
-    } else if (mainAlert) {
-        mainAlert.style.display = 'none';
-    }
+    if (mainAlert) mainAlert.style.display = 'none';
 
     // Брояч върху таба „Поръчки" в portfolio режим
     const pfTabBadge = document.getElementById('portfolio-orders-tab-badge');
@@ -379,14 +451,18 @@ function startPortfolioOrdersPolling() {
 }
 
 async function fetchOrders() {
+    const project = currentProject === 'life' ? 'life' : 'main';
     try {
-        // For dynamic data like orders, use no-cache to always get fresh data
-        const response = await fetch(`${API_URL}/orders`, {
+        const response = await fetch(`${API_URL}/portfolio/orders?project=${project}`, {
             cache: 'no-cache'
         });
         if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
         const rawOrders = await response.json();
-        ordersData = rawOrders.map((order, index) => ({ ...order, id: order.id || `order_${index}_${Date.now()}` }));
+        ordersData = rawOrders.map((order, index) => ({
+            ...order,
+            id: order.id || `order_${index}_${Date.now()}`,
+            status: order.status || 'Чака одобрение'
+        }));
         applyOrderStatusOverrides();
         filteredOrdersData = [...ordersData];
     } catch (error) {
@@ -775,7 +851,10 @@ function applyOrderStatusBadge(badge, status) {
 function updateOrdersTabBadge() {
     const badge = document.getElementById('orders-tab-badge');
     if (!badge) return;
-    const newCount = ordersData.filter(o => (o.status || 'Нова') === 'Нова').length;
+    const newCount = ordersData.filter((o) => {
+        const s = o.status || 'Чака одобрение';
+        return s === 'Нова' || s === 'Чака одобрение';
+    }).length;
     badge.hidden = newCount === 0;
     badge.textContent = String(newCount);
 }
@@ -2006,7 +2085,7 @@ function setupEventListeners() {
         if (badge) applyOrderStatusBadge(badge, newStatus);
         updateOrdersTabBadge();
         try {
-            await fetch(`${API_URL}/orders`, {
+            await fetch(`${API_URL}/portfolio/orders`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: ordersData[index].id, status: newStatus })
@@ -5277,7 +5356,9 @@ function sortPortfolioOrders(data) {
 
 function filterPortfolioOrders() {
     const q = (document.getElementById('portfolio-order-search')?.value || '').toLowerCase();
+    const projectFilter = document.getElementById('portfolio-orders-project-filter')?.value || '';
     const base = portfolioOrdersData.filter((o) => {
+        if (projectFilter && String(o.project || 'portfolio') !== projectFilter) return false;
         const c = o.customer || {};
         const hay = `${c.firstName || ''} ${c.lastName || ''} ${c.phone || ''} ${o.id}`.toLowerCase();
         return !q || hay.includes(q);
@@ -5310,6 +5391,7 @@ function renderPortfolioOrders() {
         const canSendToF1 = isPortfolioOrderSendable(order);
         const delivery = formatPortfolioDelivery(c);
         const status = order.status || 'Чака одобрение';
+        const projectLabel = { main: 'Main', life: 'Life', portfolio: 'PF' }[order.project || 'portfolio'] || order.project;
         const dateText = order.timestamp
             ? new Date(order.timestamp).toLocaleString('bg-BG', {
                 year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -5323,7 +5405,7 @@ function renderPortfolioOrders() {
             <td data-label="Избор" class="portfolio-order-select-cell" onclick="event.stopPropagation()">
                 ${canSendToF1 ? `<input type="checkbox" class="portfolio-order-select" data-id="${escAdminHtml(order.id)}">` : ''}
             </td>
-            <td data-label="Клиент" class="order-customer mobile-key">${escAdminHtml(`${c.firstName || ''} ${c.lastName || ''}`.trim())}</td>
+            <td data-label="Клиент" class="order-customer mobile-key">${escAdminHtml(`${c.firstName || ''} ${c.lastName || ''}`.trim())}<br><small class="pf-order-project-badge">${escAdminHtml(projectLabel)}</small></td>
             <td data-label="Телефон" class="order-phone">${escAdminHtml(c.phone || '')}</td>
             <td data-label="Доставка" class="order-delivery">${delivery}</td>
             <td data-label="Продукти" class="order-products mobile-key" data-summary="${escAdminHtml(productsSummary)}">${products}</td>
@@ -5568,6 +5650,7 @@ function setupPortfolioEventListeners() {
         showNotification('Поръчките са опреснени.', 'success');
     });
     document.getElementById('portfolio-order-search')?.addEventListener('input', filterPortfolioOrders);
+    document.getElementById('portfolio-orders-project-filter')?.addEventListener('change', filterPortfolioOrders);
     const portfolioOrdersMobileSortField = document.getElementById('portfolio-orders-mobile-sort-field');
     const portfolioOrdersMobileSortDir = document.getElementById('portfolio-orders-mobile-sort-dir');
     if (portfolioOrdersMobileSortField) {
@@ -6204,6 +6287,10 @@ function setupPortfolioAdvisorAdminListeners() {
 }
 
 async function init() {
+    setupAdminLoginForm();
+    const authed = await ensureAdminSession();
+    if (!authed) return;
+
     initThemeToggle();
     setupEventListeners();
     setupPortfolioEventListeners();

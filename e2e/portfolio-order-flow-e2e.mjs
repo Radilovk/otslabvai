@@ -6,6 +6,7 @@ import { spawn } from 'child_process';
 import { chromium } from 'playwright';
 import { setTimeout as sleep } from 'timers/promises';
 import { seedPortfolioFixture } from './seed-portfolio-fixture.mjs';
+import { adminLogin, adminFetchOrders } from './admin-api.mjs';
 
 const PORT = 8791;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -43,8 +44,9 @@ async function fillCheckout(page) {
   });
 }
 
-async function getOrderFromList(request, orderId) {
-  const orders = await (await request.get(`${BASE}/portfolio/orders`)).json();
+async function getOrderFromList(base, orderId) {
+  const token = await adminLogin(base);
+  const orders = await adminFetchOrders(base, token);
   return orders.find((o) => o.id === orderId);
 }
 
@@ -93,7 +95,7 @@ async function run() {
       throw new Error(`Order POST failed: HTTP ${orderRes.status()}`);
     }
 
-    const found = await getOrderFromList(page.request, orderId);
+    const found = await getOrderFromList(BASE, orderId);
     if (!found) throw new Error(`Order ${orderId} not in GET /portfolio/orders`);
     if (found.customer?.firstName !== 'E2E' || found.customer?.lastName !== 'Order Flow') {
       throw new Error('Order customer mismatch');
@@ -105,6 +107,9 @@ async function run() {
       localStorage.setItem('adminActiveTab', 'tab-portfolio-orders');
     });
     await page.goto(`${BASE}/admin.html`, { waitUntil: 'networkidle' });
+    await page.fill('#admin-login-password', 'kakadu1234');
+    await page.locator('#admin-login-form button[type="submit"]').click();
+    await page.waitForSelector('#admin-login-overlay[hidden]', { timeout: 10000 });
     await page.waitForSelector('#project-selector', { timeout: 10000 });
     await page.waitForSelector('[data-tab="tab-portfolio-orders"]', { state: 'visible', timeout: 10000 });
     await page.click('[data-tab="tab-portfolio-orders"]');
@@ -122,7 +127,7 @@ async function run() {
     await page.click('#portfolio-save-note-btn');
     await sleep(600);
 
-    const withNote = await getOrderFromList(page.request, orderId);
+    const withNote = await getOrderFromList(BASE, orderId);
     if (withNote?.admin_note !== 'E2E admin note') throw new Error('Admin note not saved');
 
     await page.click('#close-modal-btn');
@@ -131,14 +136,14 @@ async function run() {
     await page.selectOption(`select.portfolio-order-status[data-id="${orderId}"]`, 'Обработва се');
     await sleep(600);
 
-    const processing = await getOrderFromList(page.request, orderId);
+    const processing = await getOrderFromList(BASE, orderId);
     if (processing?.status !== 'Обработва се') throw new Error('Status not updated to Обработва се');
 
     page.once('dialog', (d) => d.accept());
     await page.click(`button.portfolio-approve-btn[data-id="${orderId}"]`);
     await sleep(1200);
 
-    const final = await getOrderFromList(page.request, orderId);
+    const final = await getOrderFromList(BASE, orderId);
     if (final?.status !== 'Изпратена към Fitness1') {
       throw new Error(`Expected Изпратена към Fitness1, got ${final?.status}`);
     }

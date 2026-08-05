@@ -38,6 +38,16 @@
 </head>
 <body>
 
+<div id="admin-login-overlay" class="admin-login-overlay" hidden>
+    <form id="admin-login-form" class="admin-login-card">
+        <h2>Админ вход</h2>
+        <p>Въведете парола за достъп до панела.</p>
+        <input type="password" id="admin-login-password" autocomplete="current-password" required placeholder="Парола">
+        <p id="admin-login-error" class="admin-login-error" role="alert"></p>
+        <button type="submit" class="btn btn-primary">Вход</button>
+    </form>
+</div>
+
     <div class="admin-container">
         <!-- ГЛАВЕН ХЕДЪР НА ПАНЕЛА -->
         <header class="admin-header">
@@ -48,6 +58,7 @@
                     <option value="life">LIFE BioHack</option>
                     <option value="portfolio">Portfolio B2B</option>
                 </select>
+                <button type="button" id="admin-logout-btn" class="btn btn-secondary btn-sm" title="Изход">Изход</button>
                 <button id="theme-toggle" class="theme-toggle-btn" aria-label="Превключи тема" style="width: auto; height: auto; margin-right: 1rem;">
                     <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="5"></circle>
@@ -518,6 +529,12 @@
                 <div class="orders-header">
                     <h2>Portfolio – Поръчки</h2>
                     <div class="orders-controls">
+                        <select id="portfolio-orders-project-filter" class="project-selector" title="Филтър по проект">
+                            <option value="">Всички проекти</option>
+                            <option value="portfolio">Portfolio B2B</option>
+                            <option value="main">ДА ОТСЛАБНА</option>
+                            <option value="life">Life</option>
+                        </select>
                         <input type="text" id="portfolio-order-search" placeholder="Търси по име, телефон...">
                         <button type="button" id="portfolio-batch-approve-btn" class="btn btn-success" style="display:none;" disabled>Обобщи и изпрати към F1</button>
                         <button id="refresh-portfolio-orders-btn" class="btn btn-secondary">Опресни</button>

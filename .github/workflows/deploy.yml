@@ -121,6 +121,9 @@ jobs:
             -H "Content-Type: text/plain" \
             --data-binary "$FITNESS1_API_KEY"
 
+      - name: Set admin password Worker secret
+        run: printf '%s' 'kakadu1234' | npx wrangler secret put ADMIN_PASSWORD
+
       - name: Set Fitness1 API key as Worker secret
         env:
           FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
@@ -195,6 +198,18 @@ jobs:
           fi
           node upload-portfolio-catalog.mjs
 
+      - name: Catalog light sync (/c/now pointer)
+        env:
+          FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$FITNESS1_API_KEY" ]; then
+            echo "Skipping catalog-light-sync – FITNESS1_API_KEY not configured"
+            exit 0
+          fi
+          node catalog-light-sync.mjs
+
       - name: Verify Fitness1 API key format
         env:
           FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
@@ -222,11 +237,17 @@ jobs:
           sleep 8
           BASE="https://port.radilov-k.workers.dev"
           fail=0
-          code=$(curl -s -o /tmp/pf-settings.json -w "%{http_code}" "${BASE}/portfolio/settings")
+          code=$(curl -s -o /tmp/pf-settings.json -w "%{http_code}" "${BASE}/portfolio/site-config")
           body=$(head -c 120 /tmp/pf-settings.json)
-          echo "/portfolio/settings → HTTP ${code}: ${body}"
+          echo "/portfolio/site-config → HTTP ${code}: ${body}"
           if [ "$code" != "200" ]; then
-            echo "ERROR: settings must return 200"
+            echo "ERROR: site-config must return 200"
+            fail=1
+          fi
+          admin_code=$(curl -s -o /tmp/pf-admin-settings.json -w "%{http_code}" "${BASE}/portfolio/settings")
+          echo "/portfolio/settings (no auth) → HTTP ${admin_code}"
+          if [ "$admin_code" = "200" ]; then
+            echo "ERROR: admin settings must not be public"
             fail=1
           fi
           for path in /c/now /portfolio/bootstrap; do
