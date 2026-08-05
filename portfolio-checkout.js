@@ -15,6 +15,7 @@ import {
   syncCartPricesFromServer,
   promoUsesLinePricing
 } from './portfolio-checkout-shared.js';
+import { calculateCheckoutShipping } from './checkout-shipping.js';
 
 let cart = getCart();
 let activePromoCode = null;
@@ -23,23 +24,17 @@ const els = {};
 
 function $(id) { return document.getElementById(id); }
 
-function calculateShipping(subtotal) {
-  if (subtotal >= 100) return 0;
+function deliveryCustomerForShipping() {
   const deliveryCourier = $('delivery-courier')?.checked;
   const deliveryAddress = $('delivery-address')?.checked;
-  let basePrice = 1.52;
-  let codRate = 0.0096;
+  return {
+    deliveryMethod: deliveryCourier ? 'courier' : (deliveryAddress ? 'address' : 'courier'),
+    courierCompany: $('courier-ekont')?.checked ? 'Econt' : 'Speedy'
+  };
+}
 
-  if (deliveryCourier) {
-    if ($('courier-ekont')?.checked) {
-      basePrice = 3.1;
-      codRate = 0.0298;
-    }
-  } else if (deliveryAddress) {
-    basePrice = 4.55;
-    codRate = 0.0298;
-  }
-  return basePrice + subtotal * codRate;
+function calculateShipping(subtotal) {
+  return calculateCheckoutShipping(subtotal, deliveryCustomerForShipping());
 }
 
 function getSubtotal() {
@@ -483,6 +478,24 @@ function setPromoMessage(text, type = '') {
   });
 }
 
+function syncPromoRemoveButtons() {
+  const show = !!activePromoCode;
+  ['remove-promo-btn', 'remove-promo-btn-summary'].forEach((id) => {
+    const el = $(id);
+    if (el) el.hidden = !show;
+  });
+}
+
+async function removePromoCode() {
+  activePromoCode = null;
+  $('promo-code-input') && ($('promo-code-input').value = '');
+  $('promo-code-input-summary') && ($('promo-code-input-summary').value = '');
+  setPromoMessage('Промо кодът е премахнат.', 'success');
+  syncPromoRemoveButtons();
+  await validateCartOnServer({ silent: true });
+  updateSummary();
+}
+
 async function applyPromoCode() {
   const code = ($('promo-code-input')?.value || $('promo-code-input-summary')?.value || '').trim();
   if (!code) {
@@ -527,6 +540,7 @@ async function applyPromoCode() {
     }
     if ($('promo-code-input')) $('promo-code-input').value = data.promoCode.code;
     if ($('promo-code-input-summary')) $('promo-code-input-summary').value = data.promoCode.code;
+    syncPromoRemoveButtons();
     updateSummary();
   } catch {
     setPromoMessage('Грешка при проверка на промо кода.', 'error');
@@ -586,6 +600,8 @@ async function init() {
 
   $('apply-promo-btn')?.addEventListener('click', applyPromoCode);
   $('apply-promo-btn-summary')?.addEventListener('click', applyPromoCode);
+  $('remove-promo-btn')?.addEventListener('click', removePromoCode);
+  $('remove-promo-btn-summary')?.addEventListener('click', removePromoCode);
   $('promo-code-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); applyPromoCode(); }
   });

@@ -1011,6 +1011,7 @@
             <div class="promo-code-form">
                 <input type="text" id="promo-code" placeholder="Промо код">
                 <button id="apply-promo">Приложи</button>
+                <button type="button" id="remove-promo" hidden>Премахни</button>
             </div>
             <div class="summary-details">
                 <div class="summary-row">
@@ -1112,6 +1113,7 @@
       syncCartPricesFromServer,
       promoUsesLinePricing
     } from './portfolio-checkout-shared.js';
+    import { calculateCheckoutShipping } from './checkout-shipping.js';
     
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -1407,6 +1409,7 @@
         const form = document.getElementById('checkout-form');
         const promoInput = document.getElementById('promo-code');
         const applyPromoBtn = document.getElementById('apply-promo');
+        const removePromoBtn = document.getElementById('remove-promo');
         const discountRow = document.getElementById('discount-row');
         const discountEl = document.getElementById('summary-discount');
         const cartCountEl = document.getElementById('cart-count');
@@ -1490,54 +1493,15 @@
 
         function calculateShipping() {
             const subtotal = cartData.reduce((acc, p) => acc + (p.price * p.quantity), 0);
-            
-            // Free shipping for orders over 100 EUR
-            if (subtotal >= 100) {
-                return 0;
-            }
-            
-            // Get delivery method
             const deliveryCourierRadio = document.getElementById('delivery-courier');
             const deliveryAddressRadio = document.getElementById('delivery-address');
             const isToAddress = deliveryAddressRadio && deliveryAddressRadio.checked;
             const isToCourier = deliveryCourierRadio && deliveryCourierRadio.checked;
-            
-            let basePrice = 0;
-            let codRate = 0;
-            
-            // Determine courier method
-            if (isToCourier) {
-                const speedyRadio = document.getElementById('courier-speedy');
-                const ekontRadio = document.getElementById('courier-ekont');
-                
-                if (ekontRadio && ekontRadio.checked) {
-                    // Econt office/automat
-                    basePrice = 3.10;
-                    codRate = 0.0298;
-                } else if (speedyRadio && speedyRadio.checked) {
-                    // Speedy office/automat
-                    basePrice = 1.52;
-                    codRate = 0.0096;
-                } else {
-                    // Default to Speedy if courier selected but no specific courier chosen yet
-                    basePrice = 1.52;
-                    codRate = 0.0096;
-                }
-            } else if (isToAddress) {
-                // Address delivery - use Econt door pricing by default (most common/economical)
-                // Users can contact if they prefer Speedy door delivery
-                basePrice = 4.55;
-                codRate = 0.0298;
-            } else {
-                // Default case - Speedy office
-                basePrice = 1.52;
-                codRate = 0.0096;
-            }
-            
-            // Calculate delivery cost using the formula: basePrice + (totalProductAmount * codRate)
-            const deliveryCost = basePrice + (subtotal * codRate);
-            
-            return deliveryCost;
+            const ekontRadio = document.getElementById('courier-ekont');
+            return calculateCheckoutShipping(subtotal, {
+                deliveryMethod: isToCourier ? 'courier' : (isToAddress ? 'address' : 'courier'),
+                courierCompany: ekontRadio && ekontRadio.checked ? 'Econt' : 'Speedy'
+            });
         }
 
         function updateSummary() {
@@ -1651,6 +1615,7 @@
                     }
                     promoInput.disabled = true;
                     applyPromoBtn.disabled = true;
+                    if (removePromoBtn) removePromoBtn.hidden = false;
                 } else {
                     alert(result.error || 'Невалиден промо код.');
                     activeDiscount = 0;
@@ -1661,6 +1626,17 @@
                 console.error('Грешка при валидация на промо код:', err);
                 alert('Възникна грешка при валидация на промо кода.');
             }
+        });
+
+        removePromoBtn?.addEventListener('click', async () => {
+            activePromoCode = null;
+            activeDiscount = 0;
+            promoInput.value = '';
+            promoInput.disabled = false;
+            applyPromoBtn.disabled = false;
+            removePromoBtn.hidden = true;
+            await validateCartOnServer({ silent: true });
+            updateSummary();
         });
 
         // Toggle delivery method fields

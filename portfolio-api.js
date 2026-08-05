@@ -27,6 +27,8 @@ import {
   resolvePromoLinePrice,
   sumLinePricingSavings
 } from './portfolio-pricing.js';
+import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipping.js';
+import { assertOrderRateLimit } from './order-rate-limit.js';
 import { decodeHtmlEntities, normalizeCatalogText } from './portfolio-text.js';
 import {
   resolveSiteCartSku,
@@ -979,6 +981,25 @@ async function handleGetSettings(env) {
   return cachedResponse(settings, 300);
 }
 
+/** Public site branding only — no markup / B2B fields. */
+export function buildPublicSiteSettings(settings) {
+  const s = settings || {};
+  return {
+    site_name: s.site_name,
+    site_slogan: s.site_slogan,
+    hero_image: s.hero_image,
+    hero_title: s.hero_title,
+    footer: s.footer,
+    last_sync: s.last_sync,
+    last_sync_count: s.last_sync_count
+  };
+}
+
+async function handleGetSiteConfig(env) {
+  const settings = await getSettings(env);
+  return cachedResponse(buildPublicSiteSettings(settings), 300);
+}
+
 async function handleSaveSettings(request, env) {
   const incoming = await request.json();
   const current = await getSettings(env);
@@ -1312,7 +1333,7 @@ async function handleBootstrap(env, ctx) {
   const clientMeta = buildClientCatalogMeta(meta);
   const syncing = await isSyncInProgress(env);
   return cachedResponse({
-    settings,
+    settings: buildPublicSiteSettings(settings),
     meta: {
       version: clientMeta.version,
       synced_at: clientMeta.synced_at,
@@ -1505,6 +1526,13 @@ function applyPromoDiscount(subtotal, promo) {
 }
 
 async function handleCreateOrder(request, env) {
+  try {
+    await assertOrderRateLimit(request, env);
+  } catch (e) {
+    if (e?.name === 'RateLimitError') throw new PortfolioError(e.message, e.status || 429);
+    throw e;
+  }
+
   let body;
   try {
     body = await request.json();
@@ -1578,6 +1606,16 @@ async function handleCreateOrder(request, env) {
     ? retailTotal
     : retailTotal - promoDiscount;
 
+  const shippingAmount = calculateCheckoutShipping(chargeTotal, customer);
+  const serverTotal = roundPrice(chargeTotal + shippingAmount);
+
+  if (body.summary?.total) {
+    const parsed = parseFloat(String(body.summary.total).replace(/[^\d.,]/g, '').replace(',', '.'));
+    if (!Number.isNaN(parsed) && Math.abs(parsed - serverTotal) > 0.05) {
+      throw new PortfolioError('Общата сума не съвпада. Презаредете checkout и опитайте отново.', 400);
+    }
+  }
+
   const newOrder = {
     id: `${orderPrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     project,
@@ -1591,8 +1629,9 @@ async function handleCreateOrder(request, env) {
       b2b_total: roundPrice(b2bTotal),
       margin: roundPrice(retailTotal - b2bTotal),
       promo_discount: promoDiscount,
-      shipping: body.summary?.shipping ?? null,
-      total: body.summary?.total ?? `${roundPrice(chargeTotal)} €`
+      shipping: formatShippingLabel(shippingAmount),
+      shipping_amount: shippingAmount,
+      total: `${serverTotal.toFixed(2)} €`
     },
     fitness1_order: null,
     admin_note: '',
@@ -1607,15 +1646,23 @@ async function handleCreateOrder(request, env) {
   return jsonResponse({ success: true, order: newOrder }, 201);
 }
 
-async function handleGetOrders(env) {
+async function handleGetOrders(request, env) {
   const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
+  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
+  const project = new URL(request.url).searchParams.get('project')?.trim();
+  if (project) {
+    orders = orders.filter((o) => String(o.project || 'portfolio') === project);
+  }
   return jsonResponse(orders);
 }
 
-async function handleGetOrdersSummary(env) {
+async function handleGetOrdersSummary(request, env) {
   const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
+  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
+  const project = new URL(request.url).searchParams.get('project')?.trim();
+  if (project) {
+    orders = orders.filter((o) => String(o.project || 'portfolio') === project);
+  }
   const pending = orders.filter(
     (o) => !o.fitness1_order?.id && o.status !== 'Отказана'
   ).length;
@@ -1841,6 +1888,9 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
   const method = request.method;
 
   try {
+    if (path === '/portfolio/site-config' && method === 'GET') {
+      return await handleGetSiteConfig(env);
+    }
     if (path === '/portfolio/settings') {
       if (method === 'GET') return await handleGetSettings(env);
       if (method === 'POST') return await handleSaveSettings(request, env);
@@ -1886,7 +1936,7 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
       return await handleGetChunk(request, env);
     }
     if (path === '/portfolio/orders') {
-      if (method === 'GET') return await handleGetOrders(env);
+      if (method === 'GET') return await handleGetOrders(request, env);
       if (method === 'POST') return await handleCreateOrder(request, env);
       if (method === 'PUT') return await handleUpdateOrder(request, env);
     }
@@ -1897,7 +1947,7 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
       return await handleApproveBatchOrder(request, env);
     }
     if (path === '/portfolio/orders/summary' && method === 'GET') {
-      return await handleGetOrdersSummary(env);
+      return await handleGetOrdersSummary(request, env);
     }
     if (path === '/portfolio/order' && method === 'GET') {
       return await handleGetOrder(request, env);

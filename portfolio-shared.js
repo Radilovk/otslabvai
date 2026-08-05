@@ -148,7 +148,7 @@ export async function loadSiteSettings({ settingsOnly = false } = {}) {
     return cache.getCachedSettings();
   } catch {
     try {
-      const res = await fetch(`${API_URL}/portfolio/settings`);
+      const res = await fetch(`${API_URL}/portfolio/site-config`);
       if (!res.ok) return null;
       return await res.json();
     } catch {

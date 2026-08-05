@@ -55,6 +55,12 @@ import {
   buildPortfolioNarratorMessages,
 } from './portfolio-advisor-prompt.js';
 import { buildPortfolioAdvisorNarration } from './portfolio-advisor-narration.js';
+import {
+  routeRequiresAdmin,
+  assertAdminAuthorized,
+  handleAdminLogin,
+  handleAdminSession
+} from './admin-auth.js';
 
 // Cache configuration constants
 const CACHE_CONFIG = {
@@ -91,7 +97,7 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Token'
     };
 
     if (request.method === 'OPTIONS') {
@@ -99,11 +105,31 @@ export default {
     }
 
     const url = new URL(request.url);
+    const pathname = url.pathname;
+
+    if (pathname === '/admin/login' && request.method === 'POST') {
+      const loginResponse = await handleAdminLogin(request, env);
+      Object.keys(corsHeaders).forEach((key) => loginResponse.headers.set(key, corsHeaders[key]));
+      return loginResponse;
+    }
+    if (pathname === '/admin/session' && request.method === 'GET') {
+      const sessionResponse = await handleAdminSession(request, env);
+      Object.keys(corsHeaders).forEach((key) => sessionResponse.headers.set(key, corsHeaders[key]));
+      return sessionResponse;
+    }
+
+    if (routeRequiresAdmin(pathname, request.method)) {
+      try {
+        await assertAdminAuthorized(request, env);
+      } catch (authErr) {
+        throw new UserFacingError(authErr.message || 'Неоторизиран достъп.', authErr.status || 401);
+      }
+    }
     
     try {
       let response;
       
-      switch (url.pathname) {
+      switch (pathname) {
           case '/life-protocol-submit':
             if (request.method === 'POST') {
               response = await handleLifeProtocolSubmit(request, env, ctx);

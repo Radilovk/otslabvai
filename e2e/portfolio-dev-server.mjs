@@ -20,6 +20,12 @@ import {
 } from '../protocol-stack-composer.js';
 import { buildPortfolioAdvisorNarration } from '../portfolio-advisor-narration.js';
 import { buildMockProtocolResponse } from '../protocol-quiz-engine.js';
+import {
+  routeRequiresAdmin,
+  assertAdminAuthorized,
+  handleAdminLogin,
+  handleAdminSession
+} from '../admin-auth.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -104,6 +110,7 @@ function createEnv() {
   return {
     FITNESS1_API_KEY: process.env.FITNESS1_API_KEY || 'mock-dev-key',
     MOCK_FITNESS1: process.env.MOCK_FITNESS1 !== '0' ? '1' : null,
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'kakadu1234',
     PAGE_CONTENT: {
       get: async (key) => kvStore.get(key) ?? null,
       put: async (key, val) => { kvStore.set(key, val); },
@@ -203,17 +210,30 @@ app.post('/portfolio-advisor/simulate', async (req, res) => {
   }
 });
 
+app.post('/admin/login', async (req, res) => {
+  const response = await handleAdminLogin(await toWebRequest(req), createEnv());
+  await sendWebResponse(response, res);
+});
+
+app.get('/admin/session', async (req, res) => {
+  const response = await handleAdminSession(await toWebRequest(req), createEnv());
+  await sendWebResponse(response, res);
+});
+
 app.use(async (req, res, next) => {
   if (!req.path.startsWith('/portfolio/')) return next();
   try {
+    if (routeRequiresAdmin(req.path, req.method)) {
+      await assertAdminAuthorized(await toWebRequest(req), createEnv());
+    }
     const env = createEnv();
     const request = await toWebRequest(req);
     const url = new URL(request.url);
     const response = await handlePortfolioRoute(request, env, url);
     await sendWebResponse(response, res);
   } catch (e) {
-    console.error('Portfolio route error:', e);
-    res.status(500).json({ error: e.message });
+    const status = e?.status || 500;
+    res.status(status).json({ error: e.message || 'Portfolio route error' });
   }
 });
 
