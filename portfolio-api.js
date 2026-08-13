@@ -438,6 +438,29 @@ export function buildCatalogMeta(groups, settings = null) {
   };
 }
 
+/** Strip admin-only / internal fields before sending product data to the client. */
+export function sanitizeVariantForClient(variant) {
+  if (!variant) return variant;
+  const {
+    b2b_price,
+    markup_percent,
+    f1_reference_price,
+    distributor,
+    distributor_ids,
+    ...client
+  } = variant;
+  return client;
+}
+
+export function sanitizeGroupForClient(group) {
+  if (!group) return group;
+  const { distributor, ...rest } = group;
+  return {
+    ...rest,
+    variants: (rest.variants || []).map(sanitizeVariantForClient),
+  };
+}
+
 /** Strip admin-only pricing fields before sending catalog index to the client. */
 export function sanitizeIndexEntryForClient(entry) {
   if (!entry) return entry;
@@ -1140,18 +1163,8 @@ function filterProductsByDistributor(products, distributor) {
 }
 
 function buildOrderStatusLabel(order) {
-  const f1Done = Boolean(order.fitness1_order?.id);
-  const silaDone = Boolean(order.sila_order?.id);
-  const hasF1 = filterProductsByDistributor(order.products, DISTRIBUTOR_FITNESS1).length > 0;
-  const hasSila = filterProductsByDistributor(order.products, DISTRIBUTOR_SILA).length > 0;
-
-  if (hasF1 && hasSila) {
-    if (f1Done && silaDone) return 'Изпратена към дистрибуторите';
-    if (f1Done || silaDone) return 'Частично изпратена';
-    return order.status;
-  }
-  if (hasSila && silaDone) return 'Изпратена към Sila BG';
-  if (hasF1 && f1Done) return 'Изпратена към Fitness1';
+  if (isOrderFullySubmitted(order)) return 'Изпратена към доставчик';
+  if (order.fitness1_order?.id || order.sila_order?.id) return 'Обработва се';
   return order.status;
 }
 
@@ -1267,7 +1280,7 @@ async function handleGetProduct(request, env) {
   const group = await getGroupFromChunks(env, meta, groupId);
   if (!group) throw new PortfolioError('Продуктът не е намерен.', 404);
 
-  return cachedResponse(group, 1800);
+  return cachedResponse(sanitizeGroupForClient(group), 1800);
 }
 
 function parseLifeCartRef(rawId) {
@@ -1546,7 +1559,8 @@ async function handleGetChunk(request, env) {
   const chunkRaw = await env.PAGE_CONTENT.get(chunkKey(index));
   if (!chunkRaw) throw new PortfolioError('Chunk не е намерен.', 404);
 
-  return cachedResponse({ index, groups: JSON.parse(chunkRaw), synced_at: meta.synced_at }, 86400);
+  const groups = JSON.parse(chunkRaw).map(sanitizeGroupForClient);
+  return cachedResponse({ index, groups, synced_at: meta.synced_at }, 86400);
 }
 
 // --- Portfolio promo codes ---
@@ -1929,7 +1943,7 @@ async function submitProductsToSila(env, products) {
     return await submitSilaOrder(apiToken, products);
   } catch (e) {
     if (e instanceof SilaError) {
-      throw new PortfolioError(`Sila BG отказа поръчката: ${e.message}`, e.status >= 400 ? e.status : 400);
+      throw new PortfolioError(`Доставчикът отказа поръчката: ${e.message}`, e.status >= 400 ? e.status : 400);
     }
     throw e;
   }

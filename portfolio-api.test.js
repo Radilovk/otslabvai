@@ -427,7 +427,7 @@ describe('Portfolio Fitness1 order approval', () => {
 
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data.order.status).toBe('Изпратена към Fitness1');
+    expect(data.order.status).toBe('Изпратена към доставчик');
     expect(data.order.fitness1_order.id).toBe(99999);
   });
 

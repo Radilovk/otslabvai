@@ -1,16 +1,12 @@
 import {
   normalizeSilaProduct,
   normalizeSilaProducts,
-  fetchSilaProducts,
   submitSilaOrder,
   mergeCatalogProducts,
-  getSilaApiToken,
   isSilaDistributor,
   isFitness1Distributor,
-  KV_SILA_TOKEN,
-  DISTRIBUTOR_SILA,
-  DISTRIBUTOR_FITNESS1,
-  SilaError,
+  SILA_GROUP_ID_OFFSET,
+  SILA_BRAND_ID_OFFSET,
 } from './sila-api.js';
 
 describe('Sila API', () => {
@@ -32,14 +28,14 @@ describe('Sila API', () => {
     category: 'Протеини',
   };
 
-  test('normalizeSilaProduct maps to Fitness1-compatible raw SKU', () => {
+  test('normalizeSilaProduct maps to unified catalog raw SKU', () => {
     const raw = normalizeSilaProduct(sampleSilaRow);
     expect(raw).toMatchObject({
       id: '748627026123',
-      group_id: 'sila-42',
+      group_id: String(SILA_GROUP_ID_OFFSET + 42),
       product_id: '42',
       product_name: 'Gold Standard Whey',
-      brand_id: 'sila-7',
+      brand_id: String(SILA_BRAND_ID_OFFSET + 7),
       brand_name: 'Optimum Nutrition',
       pack: '2.27 кг',
       option: 'Шоколад',
@@ -52,10 +48,15 @@ describe('Sila API', () => {
     });
   });
 
-  test('normalizeSilaProduct uses synthetic sku when no barcode', () => {
+  test('normalizeSilaProduct uses numeric sku when no barcode', () => {
     const raw = normalizeSilaProduct({ ...sampleSilaRow, barcode_ean: '', qty: 0 });
-    expect(raw.id).toBe('sila-42-3-2');
+    expect(raw.id).toMatch(/^9\d+$/);
     expect(raw.available).toBe(false);
+  });
+
+  test('normalizeSilaProduct defaults unknown category to Други', () => {
+    const raw = normalizeSilaProduct({ ...sampleSilaRow, category: 'Sila BG' });
+    expect(raw.category).toBe('Други');
   });
 
   test('normalizeSilaProducts filters invalid rows', () => {
@@ -63,14 +64,34 @@ describe('Sila API', () => {
     expect(list).toHaveLength(1);
   });
 
-  test('mergeCatalogProducts tags Fitness1 and appends Sila', () => {
+  test('mergeCatalogProducts dedupes by barcode and unifies brand names', () => {
     const merged = mergeCatalogProducts(
-      [{ id: '1', group_id: '100' }],
-      [{ id: 'sila-1', group_id: 'sila-42', distributor: 'sila' }]
+      [{
+        id: '1',
+        group_id: '100',
+        brand_id: '749',
+        brand_name: 'Optimum Nutrition',
+        barcode: '748627026123',
+        distributor: 'fitness1',
+      }],
+      [normalizeSilaProduct(sampleSilaRow)]
+    );
+    expect(merged).toHaveLength(1);
+    expect(merged[0].barcode).toBe('748627026123');
+  });
+
+  test('mergeCatalogProducts appends sila-only products with unified brand id', () => {
+    const silaOnly = normalizeSilaProduct({
+      ...sampleSilaRow,
+      barcode_ean: '999888777',
+      brand_name: 'Optimum Nutrition',
+    });
+    const merged = mergeCatalogProducts(
+      [{ id: '1', group_id: '100', brand_id: '749', brand_name: 'Optimum Nutrition', barcode: '111' }],
+      [silaOnly]
     );
     expect(merged).toHaveLength(2);
-    expect(merged[0].distributor).toBe('fitness1');
-    expect(merged[1].distributor).toBe('sila');
+    expect(merged[1].brand_id).toBe('749');
   });
 
   test('isSilaDistributor and isFitness1Distributor', () => {

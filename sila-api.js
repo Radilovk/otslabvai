@@ -8,6 +8,32 @@ export const KV_SILA_TOKEN = 'sila_api_token';
 export const DISTRIBUTOR_SILA = 'sila';
 export const DISTRIBUTOR_FITNESS1 = 'fitness1';
 
+/** Numeric namespace for Sila-only catalog rows (avoids collisions with Fitness1 ids). */
+export const SILA_GROUP_ID_OFFSET = 90000000;
+export const SILA_BRAND_ID_OFFSET = 9000000;
+export const SILA_SKU_ID_OFFSET = 9000000000;
+
+function normalizeBrandKey(name) {
+  return String(name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function silaGroupId(modelId) {
+  const n = parseInt(String(modelId), 10) || 0;
+  return String(SILA_GROUP_ID_OFFSET + n);
+}
+
+function silaBrandId(brandId) {
+  const n = parseInt(String(brandId), 10) || 0;
+  return String(SILA_BRAND_ID_OFFSET + n);
+}
+
+function silaSkuId(modelId, tasteId, sizeId) {
+  const m = parseInt(String(modelId), 10) || 0;
+  const t = parseInt(String(tasteId), 10) || 0;
+  const s = parseInt(String(sizeId), 10) || 0;
+  return String(SILA_SKU_ID_OFFSET + m * 100000 + t * 1000 + s);
+}
+
 function normalizeSilaApiToken(raw) {
   if (!raw) return '';
   let token = String(raw).trim();
@@ -115,7 +141,7 @@ export function normalizeSilaProduct(item) {
 
   const brandId = String(pickFirst(item, ['brand_id'], '0')).trim() || '0';
   const barcode = String(pickFirst(item, ['barcode_ean', 'ean', 'barcode'], '')).trim();
-  const skuId = barcode || `sila-${modelId}-${tasteId}-${sizeId}`;
+  const skuId = barcode || silaSkuId(modelId, tasteId, sizeId);
 
   const b2b = parsePrice(pickFirst(item, ['price', 'b2b_price', 'dealer_price', 'wholesale_price'], 0));
   const regular = parsePrice(pickFirst(item, ['price_retail', 'regular_price', 'retail_price', 'rrp'], 0)) || b2b;
@@ -125,14 +151,15 @@ export function normalizeSilaProduct(item) {
   const brandName = pickFirst(item, ['brand_name', 'brand'], '');
   const tasteName = pickFirst(item, ['taste_name', 'taste', 'flavor_name', 'flavor'], '');
   const sizeName = pickFirst(item, ['size_name', 'size', 'pack', 'packaging'], '');
-  const category = pickFirst(item, ['category', 'category_name', 'group'], 'Sila BG');
+  const rawCategory = pickFirst(item, ['category', 'category_name', 'group'], '');
+  const category = rawCategory && !/^sila\b/i.test(rawCategory) ? rawCategory : 'Други';
 
   return {
     id: skuId,
-    group_id: `sila-${modelId}`,
+    group_id: silaGroupId(modelId),
     product_id: modelId,
     product_name: productName,
-    brand_id: `sila-${brandId}`,
+    brand_id: silaBrandId(brandId),
     brand_name: brandName,
     pack: sizeName,
     option: tasteName,
@@ -228,11 +255,38 @@ export async function submitSilaOrder(apiToken, products, options = {}) {
   return data;
 }
 
-/** Merge Fitness1 and Sila raw products (Sila SKUs appended). */
+/** Merge catalogs: Fitness1 first, then Sila-only rows (deduped by barcode, brands unified by name). */
 export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
   const f1 = (fitness1Products || []).map((p) => ({ ...p, distributor: DISTRIBUTOR_FITNESS1 }));
-  const sila = silaProducts || [];
-  return [...f1, ...sila];
+
+  const seenBarcodes = new Set();
+  const brandByName = new Map();
+  for (const p of f1) {
+    const bc = String(p.barcode || '').trim();
+    if (bc) seenBarcodes.add(bc);
+    const bk = normalizeBrandKey(p.brand_name);
+    if (bk && p.brand_id) brandByName.set(bk, String(p.brand_id));
+  }
+
+  const merged = [...f1];
+  for (const raw of silaProducts || []) {
+    const bc = String(raw.barcode || '').trim();
+    if (bc && seenBarcodes.has(bc)) continue;
+
+    const item = { ...raw, distributor: raw.distributor || DISTRIBUTOR_SILA };
+    const bk = normalizeBrandKey(item.brand_name);
+    if (bk && brandByName.has(bk)) {
+      item.brand_id = brandByName.get(bk);
+    }
+    if (!item.category || /^sila\b/i.test(item.category)) {
+      item.category = 'Други';
+    }
+
+    merged.push(item);
+    if (bc) seenBarcodes.add(bc);
+  }
+
+  return merged;
 }
 
 export function isSilaDistributor(distributor) {
