@@ -17,8 +17,13 @@ export const ADVISOR_COMMERCE_DEFAULTS = {
 
 /** Merge saved KV settings with defaults and clamp to safe ranges. */
 export function normalizeAdvisorCommerceSettings(raw = {}) {
-  const input = raw && typeof raw === 'object' ? raw : {};
-  const src = input.commerce && typeof input.commerce === 'object' ? input.commerce : input;
+  const input = /** @type {Record<string, unknown>} */ (
+    raw && typeof raw === 'object' ? raw : {}
+  );
+  const nested = input.commerce;
+  const src = nested && typeof nested === 'object'
+    ? /** @type {Record<string, unknown>} */ (nested)
+    : input;
   const clamp = (value, min, max, fallback) => {
     const n = Number(value);
     if (!Number.isFinite(n)) return fallback;
