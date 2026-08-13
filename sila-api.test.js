@@ -6,6 +6,9 @@ import {
   isSilaDistributor,
   isFitness1Distributor,
   mapSilaCategoryToCatalogTaxonomy,
+  normalizeSilaApiToken,
+  isValidSilaApiToken,
+  fetchSilaProductsWithFallback,
   SILA_GROUP_ID_OFFSET,
   SILA_BRAND_ID_OFFSET,
 } from './sila-api.js';
@@ -109,6 +112,33 @@ describe('Sila API', () => {
     expect(isSilaDistributor('sila')).toBe(true);
     expect(isFitness1Distributor('fitness1')).toBe(true);
     expect(isFitness1Distributor(undefined)).toBe(true);
+  });
+
+  test('normalizeSilaApiToken extracts api_token from URL', () => {
+    expect(normalizeSilaApiToken('https://distro.silabg.com/api/v1/product?api_token=abc123XYZ')).toBe('abc123XYZ');
+    expect(normalizeSilaApiToken('Bearer myToken123')).toBe('myToken123');
+    expect(isValidSilaApiToken('8ysXfJbcf6e6YzyEhcgAaxWk4CEN9rD3')).toBe(true);
+    expect(isValidSilaApiToken('x'.repeat(80))).toBe(false);
+  });
+
+  test('fetchSilaProductsWithFallback tries next token after 403', async () => {
+    const originalFetch = global.fetch;
+    let call = 0;
+    global.fetch = async () => {
+      call += 1;
+      if (call === 1) {
+        return { ok: false, status: 403, text: async () => JSON.stringify({ message: 'Forbidden' }) };
+      }
+      return {
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ status: 200, data: [sampleSilaRow] }),
+      };
+    };
+    const { products, token_used } = await fetchSilaProductsWithFallback(['bad-token', 'good-token']);
+    expect(products).toHaveLength(1);
+    expect(token_used).toBe('good-token');
+    global.fetch = originalFetch;
   });
 
   test('submitSilaOrder sends model_id/taste_id payload', async () => {

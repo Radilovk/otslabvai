@@ -15,7 +15,7 @@ import {
   fetchFitness1Products,
   mergeCatalogProducts,
 } from './portfolio-api.js';
-import { fetchSilaProducts } from './sila-api.js';
+import { fetchSilaProductsWithFallback } from './sila-api.js';
 
 const F1_KEY = process.env.FITNESS1_API_KEY;
 const SILA_TOKEN = process.env.SILA_API_TOKEN;
@@ -39,8 +39,13 @@ async function fetchAllProducts() {
 
   if (SILA_TOKEN) {
     console.log('Fetching catalog from Sila BG...');
-    silaProducts = await fetchSilaProducts(SILA_TOKEN);
-    console.log(`  Sila BG: ${silaProducts.length} SKUs`);
+    const { products, error } = await fetchSilaProductsWithFallback([SILA_TOKEN]);
+    silaProducts = products;
+    if (error) {
+      console.warn(`  Sila BG: skipped — ${error.message}`);
+    } else {
+      console.log(`  Sila BG: ${silaProducts.length} SKUs`);
+    }
   }
 
   return mergeCatalogProducts(f1Products, silaProducts);

@@ -6,7 +6,7 @@ import { buildCatalogArtifacts } from './catalog-build.js';
 import { CATALOG_KV } from './catalog-kv-keys.js';
 import { CATALOG_SYNC_POLICY } from './catalog-sync-policy.js';
 import { DEFAULT_SETTINGS, fetchFitness1Products, mergeCatalogProducts } from './portfolio-api.js';
-import { fetchSilaProducts, KV_SILA_TOKEN } from './sila-api.js';
+import { fetchSilaProductsWithFallback, normalizeSilaApiToken, KV_SILA_TOKEN } from './sila-api.js';
 import {
   refreshImportedProductsInContent,
   collectImportedGroupIds
@@ -56,8 +56,13 @@ async function fetchProducts() {
 
   if (SILA_TOKEN) {
     console.log('Fetching products from Sila BG...');
-    silaProducts = await fetchSilaProducts(SILA_TOKEN);
-    console.log(`  Sila BG: ${silaProducts.length} SKUs`);
+    const { products, error } = await fetchSilaProductsWithFallback([SILA_TOKEN]);
+    silaProducts = products;
+    if (error) {
+      console.warn(`  Sila BG: skipped — ${error.message}`);
+    } else {
+      console.log(`  Sila BG: ${silaProducts.length} SKUs`);
+    }
   }
 
   if (!f1Products.length && !silaProducts.length) {
@@ -150,7 +155,7 @@ async function main() {
   // Legacy KV for validate-cart, admin, advisor engine
   console.log('Updating legacy portfolio_* keys...');
   if (API_KEY) await kvPut('fitness1_api_key', API_KEY, 'text/plain');
-  if (SILA_TOKEN) await kvPut(KV_SILA_TOKEN, SILA_TOKEN, 'text/plain');
+  if (SILA_TOKEN) await kvPut(KV_SILA_TOKEN, normalizeSilaApiToken(SILA_TOKEN), 'text/plain');
   await kvPut('portfolio_settings', JSON.stringify(built.legacySettings, null, 2));
   await kvPut('portfolio_meta', JSON.stringify(built.legacyMeta));
   for (let i = 0; i < built.chunks.length; i += 1) {
