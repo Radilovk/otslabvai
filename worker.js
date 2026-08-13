@@ -122,7 +122,12 @@ export default {
       try {
         await assertAdminAuthorized(request, env);
       } catch (authErr) {
-        throw new UserFacingError(authErr.message || 'Неоторизиран достъп.', authErr.status || 401);
+        return new Response(JSON.stringify({
+          error: authErr.message || 'Неоторизиран достъп. Влезте в админ панела.',
+        }), {
+          status: authErr.status || 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
     
