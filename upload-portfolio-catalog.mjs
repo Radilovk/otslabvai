@@ -39,7 +39,7 @@ async function fetchAllProducts() {
     silaProducts = products;
     if (error) {
       console.warn(`  Sila BG: skipped — ${error.message}`);
-      console.warn('  Check SILA_API_TOKEN in GitHub Secrets (B2B profile → API tab, ~32 chars).');
+      console.warn('  Check SILA_API_TOKEN in GitHub Secrets (B2B profile → API tab, 24–96 alphanumeric chars).');
     } else {
       console.log(`  Sila BG: ${silaProducts.length} SKUs`);
     }

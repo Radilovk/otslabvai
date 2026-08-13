@@ -1150,7 +1150,7 @@ async function handleSilaKeyStatus(env) {
       ? 'worker_secret'
       : (kv && active === kv ? 'kv' : (active ? 'fallback' : null)),
     hint: (!isValidSilaApiToken(secret) && secret)
-      ? 'Worker secret изглежда невалиден (очаква се ~32 символа от Sila B2B → API). Проверете GitHub Secret SILA_API_TOKEN.'
+      ? 'Worker secret изглежда невалиден (очаква се 24–96 буквено-цифрени символа от Sila B2B → API). Проверете GitHub Secret SILA_API_TOKEN.'
       : null,
   });
 }

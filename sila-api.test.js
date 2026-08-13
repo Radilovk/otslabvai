@@ -13,6 +13,7 @@ import {
   extractSilaImageFromItem,
   buildSilaImageLookup,
   enrichSilaProductRow,
+  isSilaRawProductAvailable,
   SILA_GROUP_ID_OFFSET,
   SILA_BRAND_ID_OFFSET,
 } from './sila-api.js';
@@ -82,6 +83,42 @@ describe('Sila API', () => {
     expect(list).toHaveLength(1);
   });
 
+  test('isSilaRawProductAvailable respects qty and flags', () => {
+    expect(isSilaRawProductAvailable({ qty: 3 })).toBe(true);
+    expect(isSilaRawProductAvailable({ qty: 0 })).toBe(false);
+    expect(isSilaRawProductAvailable({ available: false })).toBe(false);
+    expect(isSilaRawProductAvailable({ status: 'неналичен' })).toBe(false);
+  });
+
+  test('fetchSilaProducts returns only available SKUs', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = async (url) => {
+      const u = String(url);
+      if (u.includes('/product') && !u.includes('/product/')) {
+        return {
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({
+            status: 200,
+            data: [
+              { ...sampleSilaRow, model_id: '1', qty: 2 },
+              { ...sampleSilaRow, model_id: '2', qty: 0 },
+              { ...sampleSilaRow, model_id: '3', qty: 0, available: false },
+            ],
+          }),
+        };
+      }
+      return { ok: true, status: 200, text: async () => JSON.stringify({ status: 200, data: [] }) };
+    };
+
+    const { fetchSilaProducts } = await import('./sila-api.js');
+    const products = await fetchSilaProducts('test-token');
+    expect(products).toHaveLength(1);
+    expect(products[0].product_id).toBe('1');
+
+    global.fetch = originalFetch;
+  });
+
   test('mergeCatalogProducts dedupes by barcode and unifies brand names', () => {
     const merged = mergeCatalogProducts(
       [{
@@ -122,7 +159,8 @@ describe('Sila API', () => {
     expect(normalizeSilaApiToken('https://distro.silabg.com/api/v1/product?api_token=abc123XYZ')).toBe('abc123XYZ');
     expect(normalizeSilaApiToken('Bearer myToken123')).toBe('myToken123');
     expect(isValidSilaApiToken('8ysXfJbcf6e6YzyEhcgAaxWk4CEN9rD3')).toBe(true);
-    expect(isValidSilaApiToken('x'.repeat(80))).toBe(false);
+    expect(isValidSilaApiToken('A'.repeat(80))).toBe(true);
+    expect(isValidSilaApiToken('x'.repeat(20))).toBe(false);
   });
 
   test('resolveSilaImageUrl makes relative Sila paths absolute', () => {
