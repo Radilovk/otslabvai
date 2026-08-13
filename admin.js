@@ -6134,7 +6134,7 @@ async function savePortfolioAdvisorSettingsAdmin() {
     const narrator_prompt = document.getElementById('pfa-narrator-prompt')?.value || '';
     const commerce = {
         enabled: document.getElementById('pfa-commerce-enabled')?.checked !== false,
-        min_distributor_discount_pct: Number(document.getElementById('pfa-commerce-min-discount')?.value) || 30,
+        min_distributor_discount_pct: Number(document.getElementById('pfa-commerce-min-discount')?.value) || 35,
         margin_eur_weight: Number(document.getElementById('pfa-commerce-margin-weight')?.value) || 0.12,
         discount_pct_weight: Number(document.getElementById('pfa-commerce-discount-weight')?.value) || 0.10,
     };

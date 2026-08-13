@@ -6,7 +6,7 @@
 export const ADVISOR_COMMERCE_DEFAULTS = {
   enabled: true,
   /** Min discount vs RRP (regular vs b2b) to stay in the advisor pool. */
-  min_distributor_discount_pct: 30,
+  min_distributor_discount_pct: 35,
   /** Fallback min markup % (retail vs b2b) when RRP is missing. */
   min_markup_pct: 15,
   /** Score boost per EUR absolute margin (best available variant). */
