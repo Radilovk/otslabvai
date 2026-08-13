@@ -9,6 +9,10 @@ import {
   normalizeSilaApiToken,
   isValidSilaApiToken,
   fetchSilaProductsWithFallback,
+  resolveSilaImageUrl,
+  extractSilaImageFromItem,
+  buildSilaImageLookup,
+  enrichSilaProductRow,
   SILA_GROUP_ID_OFFSET,
   SILA_BRAND_ID_OFFSET,
 } from './sila-api.js';
@@ -121,12 +125,85 @@ describe('Sila API', () => {
     expect(isValidSilaApiToken('x'.repeat(80))).toBe(false);
   });
 
+  test('resolveSilaImageUrl makes relative Sila paths absolute', () => {
+    expect(resolveSilaImageUrl('/uf/product/123_small.jpg')).toBe(
+      'https://www.silabg.com/uf/product/123_small.jpg'
+    );
+    expect(resolveSilaImageUrl('https://cdn.example/img.jpg')).toBe('https://cdn.example/img.jpg');
+  });
+
+  test('buildSilaImageLookup indexes brandfeed models by model_id', () => {
+    const lookup = buildSilaImageLookup({
+      data: {
+        models: [
+          { model_id: '42', thumb: '/uf/product/whey_small.jpg' },
+          { model_id: '99', product_image: 'https://cdn.example/other.jpg' },
+        ],
+      },
+    });
+    expect(lookup.byModel.get('42')).toBe('https://www.silabg.com/uf/product/whey_small.jpg');
+    expect(lookup.byModel.get('99')).toBe('https://cdn.example/other.jpg');
+  });
+
+  test('enrichSilaProductRow fills image from brandfeed lookup', () => {
+    const lookup = buildSilaImageLookup({
+      data: [{ model_id: '42', image: '/uf/product/whey_small.jpg' }],
+    });
+    const enriched = enrichSilaProductRow({ model_id: '42', product_name: 'Whey' }, lookup);
+    expect(extractSilaImageFromItem(enriched)).toContain('/uf/product/whey_small.jpg');
+    const normalized = normalizeSilaProduct(enriched);
+    expect(normalized.image).toContain('silabg.com');
+  });
+
+  test('fetchSilaProducts loads brandfeed images when product list has none', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = async (url) => {
+      const u = String(url);
+      if (u.includes('/brandfeed')) {
+        return {
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({
+            status: 200,
+            data: [{ model_id: '42', thumb: '/uf/product/whey_small.jpg' }],
+          }),
+        };
+      }
+      if (u.includes('/product') && !u.includes('/product/')) {
+        return {
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({
+            status: 200,
+            data: [{
+              model_id: '42',
+              brand_id: '7',
+              product_name: 'Gold Standard Whey',
+              taste_id: '3',
+              size_id: '2',
+              barcode_ean: '748627026123',
+              price: '10.00',
+              qty: 1,
+            }],
+          }),
+        };
+      }
+      return { ok: true, status: 200, text: async () => JSON.stringify({ status: 200, data: [] }) };
+    };
+
+    const { fetchSilaProducts } = await import('./sila-api.js');
+    const products = await fetchSilaProducts('test-token');
+    expect(products).toHaveLength(1);
+    expect(products[0].image).toBe('https://www.silabg.com/uf/product/whey_small.jpg');
+
+    global.fetch = originalFetch;
+  });
+
   test('fetchSilaProductsWithFallback tries next token after 403', async () => {
     const originalFetch = global.fetch;
-    let call = 0;
-    global.fetch = async () => {
-      call += 1;
-      if (call === 1) {
+    global.fetch = async (url) => {
+      const u = String(url);
+      if (u.includes('api_token=bad-token')) {
         return { ok: false, status: 403, text: async () => JSON.stringify({ message: 'Forbidden' }) };
       }
       return {
