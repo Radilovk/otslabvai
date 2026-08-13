@@ -1,14 +1,15 @@
 /**
- * Sync Fitness1 catalog and upload to Cloudflare KV.
- * Requires: FITNESS1_API_KEY, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+ * Sync Fitness1 + Sila BG catalog and upload to Cloudflare KV.
+ * Requires: FITNESS1_API_KEY and/or SILA_API_TOKEN, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
  */
-import { readFileSync, readdirSync, existsSync } from 'fs';
-import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS, fetchDescriptionMap } from './portfolio-api.js';
+import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS, fetchDescriptionMap, fetchFitness1Products, mergeCatalogProducts } from './portfolio-api.js';
+import { fetchSilaProducts, KV_SILA_TOKEN } from './sila-api.js';
 
 const KV_NS = process.env.CLOUDFLARE_KV_NAMESPACE_ID || 'd220db696e414b7cb3da2b19abd53d0f';
 const ACCOUNT = process.env.CLOUDFLARE_ACCOUNT_ID;
 const TOKEN = process.env.CLOUDFLARE_API_TOKEN;
-const API_KEY = process.env.FITNESS1_API_KEY;
+const F1_KEY = process.env.FITNESS1_API_KEY;
+const SILA_TOKEN = process.env.SILA_API_TOKEN;
 const CHUNK_SIZE = 150;
 
 async function kvPut(key, body, contentType = 'application/json') {
@@ -22,29 +23,50 @@ async function kvPut(key, body, contentType = 'application/json') {
   if (!data.success) throw new Error(`KV put ${key} failed: ${JSON.stringify(data.errors)}`);
 }
 
-async function fetchProducts() {
-  const url = `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(API_KEY)}`;
-  console.log('Fetching products from Fitness1...');
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Fitness1 API: ${res.status}`);
-  const data = await res.json();
-  return data.products;
+async function fetchAllProducts() {
+  let f1Products = [];
+  let silaProducts = [];
+
+  if (F1_KEY) {
+    console.log('Fetching products from Fitness1...');
+    f1Products = await fetchFitness1Products(F1_KEY);
+    console.log(`  Fitness1: ${f1Products.length} SKUs`);
+  }
+
+  if (SILA_TOKEN) {
+    console.log('Fetching products from Sila BG...');
+    silaProducts = await fetchSilaProducts(SILA_TOKEN);
+    console.log(`  Sila BG: ${silaProducts.length} SKUs`);
+  }
+
+  if (!f1Products.length && !silaProducts.length) {
+    throw new Error('No products fetched — configure FITNESS1_API_KEY and/or SILA_API_TOKEN');
+  }
+
+  return mergeCatalogProducts(f1Products, silaProducts);
 }
 
 async function main() {
-  if (!API_KEY) throw new Error('FITNESS1_API_KEY required');
+  if (!F1_KEY && !SILA_TOKEN) throw new Error('FITNESS1_API_KEY and/or SILA_API_TOKEN required');
   const uploadKv = TOKEN && ACCOUNT;
 
-  const products = await fetchProducts();
-  console.log(`Got ${products.length} SKUs`);
+  const products = await fetchAllProducts();
+  console.log(`Got ${products.length} merged SKUs`);
 
-  console.log('Fetching descriptions from Fitness1...');
-  const descriptionMap = await fetchDescriptionMap(API_KEY);
+  let descriptionMap = null;
+  if (F1_KEY) {
+    console.log('Fetching descriptions from Fitness1...');
+    descriptionMap = await fetchDescriptionMap(F1_KEY);
+  }
 
   const settings = { ...DEFAULT_SETTINGS, global_markup_percent: 30 };
   const groups = groupRawProducts(products, settings, descriptionMap);
   const meta = buildCatalogMeta(groups);
   meta.synced_at = new Date().toISOString();
+  meta.distributors = {
+    fitness1_skus: products.filter((p) => p.distributor !== 'sila').length,
+    sila_skus: products.filter((p) => p.distributor === 'sila').length,
+  };
   settings.last_sync = meta.synced_at;
   settings.last_sync_count = groups.length;
 
@@ -54,8 +76,14 @@ async function main() {
     return;
   }
 
-  console.log('Uploading fitness1_api_key...');
-  await kvPut('fitness1_api_key', API_KEY, 'text/plain');
+  if (F1_KEY) {
+    console.log('Uploading fitness1_api_key...');
+    await kvPut('fitness1_api_key', F1_KEY, 'text/plain');
+  }
+  if (SILA_TOKEN) {
+    console.log('Uploading sila_api_token...');
+    await kvPut(KV_SILA_TOKEN, SILA_TOKEN, 'text/plain');
+  }
 
   console.log('Uploading portfolio_settings...');
   await kvPut('portfolio_settings', JSON.stringify(settings, null, 2), 'application/json');

@@ -36,6 +36,28 @@ import {
   parseSiteCartRef,
   isCatalogBackedCartId
 } from './portfolio-site-products.js';
+import {
+  fetchSilaProducts,
+  submitSilaOrder,
+  mergeCatalogProducts,
+  getSilaApiToken,
+  isSilaDistributor,
+  isFitness1Distributor,
+  KV_SILA_TOKEN,
+  DISTRIBUTOR_SILA,
+  DISTRIBUTOR_FITNESS1,
+  SilaError,
+} from './sila-api.js';
+
+export {
+  fetchSilaProducts,
+  mergeCatalogProducts,
+  getSilaApiToken,
+  isSilaDistributor,
+  isFitness1Distributor,
+  DISTRIBUTOR_SILA,
+  DISTRIBUTOR_FITNESS1,
+};
 
 export {
   filterIndex,
@@ -290,6 +312,8 @@ function buildVariantPricing(raw, settings, gid) {
     markupRetail: () => calculateRetailPrice(b2b, markup, overrides[gid], skuId)
   });
 
+  const distributor = raw.distributor || DISTRIBUTOR_FITNESS1;
+
   return {
     sku_id: skuId,
     barcode: raw.barcode || '',
@@ -305,7 +329,9 @@ function buildVariantPricing(raw, settings, gid) {
     f1_reference_price: resolved.f1_reference_price,
     pricing_mode: resolved.pricing_mode,
     available: raw.available === true,
-    image: raw.image || ''
+    image: raw.image || '',
+    distributor,
+    distributor_ids: raw.distributor_ids || null,
   };
 }
 
@@ -326,6 +352,7 @@ export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
         image: p.image || '',
         label: p.label || '',
         description: decodeDescription(p.description || descriptionMap?.get(gid) || ''),
+        distributor: p.distributor || DISTRIBUTOR_FITNESS1,
         variants: []
       });
     }
@@ -408,6 +435,29 @@ export function buildCatalogMeta(groups, settings = null) {
     lookup,
     sku_lookup,
     index
+  };
+}
+
+/** Strip admin-only / internal fields before sending product data to the client. */
+export function sanitizeVariantForClient(variant) {
+  if (!variant) return variant;
+  const {
+    b2b_price,
+    markup_percent,
+    f1_reference_price,
+    distributor,
+    distributor_ids,
+    ...client
+  } = variant;
+  return client;
+}
+
+export function sanitizeGroupForClient(group) {
+  if (!group) return group;
+  const { distributor, ...rest } = group;
+  return {
+    ...rest,
+    variants: (rest.variants || []).map(sanitizeVariantForClient),
   };
 }
 
@@ -563,6 +613,60 @@ export async function fetchFitness1Products(apiKey) {
   return data.products;
 }
 
+/**
+ * Fetch raw SKUs from all configured distributors (Fitness1 + Sila).
+ * @returns {Promise<{ products: object[], fitness1_count: number, sila_count: number, fitness1_error: string|null, sila_error: string|null }>}
+ */
+export async function fetchAllCatalogRawProducts(env) {
+  let fitness1Products = [];
+  let silaProducts = [];
+  let fitness1Error = null;
+  let silaError = null;
+
+  const f1Key = await getFitness1ApiKey(env);
+  if (f1Key) {
+    try {
+      fitness1Products = await fetchFitness1Products(f1Key);
+    } catch (e) {
+      fitness1Error = e;
+    }
+  }
+
+  const silaToken = await getSilaApiToken(env);
+  if (silaToken) {
+    try {
+      silaProducts = await fetchSilaProducts(silaToken);
+    } catch (e) {
+      silaError = e;
+    }
+  }
+
+  if (!f1Key && !silaToken) {
+    throw new PortfolioError(
+      'Няма конфигуриран API ключ (FITNESS1_API_KEY или SILA_API_TOKEN).',
+      500
+    );
+  }
+
+  if (!fitness1Products.length && !silaProducts.length) {
+    const parts = [];
+    if (fitness1Error) parts.push(`Fitness1: ${fitness1Error.message}`);
+    if (silaError) parts.push(`Sila: ${silaError.message}`);
+    throw new PortfolioError(
+      parts.join(' | ') || 'Неуспешно зареждане на каталог от дистрибуторите.',
+      502
+    );
+  }
+
+  return {
+    products: mergeCatalogProducts(fitness1Products, silaProducts),
+    fitness1_count: fitness1Products.length,
+    sila_count: silaProducts.length,
+    fitness1_error: fitness1Error?.message || null,
+    sila_error: silaError?.message || null,
+  };
+}
+
 export async function fetchDescriptionMap(apiKey) {
   try {
     const data = await fetchFitness1Catalog(apiKey, { description: true });
@@ -661,23 +765,48 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = false, f
   }
 
   const keys = await listFitness1ApiKeyCandidates(env);
-  if (!keys.length) {
-    throw new PortfolioError('FITNESS1_API_KEY не е конфигуриран (Worker secret или KV fitness1_api_key).', 500);
+  const silaToken = await getSilaApiToken(env);
+  if (!keys.length && !silaToken) {
+    throw new PortfolioError(
+      'Няма конфигуриран API ключ (FITNESS1_API_KEY или SILA_API_TOKEN).',
+      500
+    );
   }
 
-  let apiKey = keys[0];
   let rawProducts;
+  let fitness1_count = 0;
+  let sila_count = 0;
   /** @type {PortfolioError | null} */
   let lastError = null;
 
-  for (const candidate of keys) {
+  if (keys.length) {
+    let apiKey = keys[0];
+    for (const candidate of keys) {
+      try {
+        const f1Products = await fetchFitness1Products(candidate);
+        fitness1_count = f1Products.length;
+        apiKey = candidate;
+        const silaProducts = silaToken ? await fetchSilaProducts(silaToken).catch(() => []) : [];
+        sila_count = silaProducts.length;
+        rawProducts = mergeCatalogProducts(f1Products, silaProducts);
+        lastError = null;
+        break;
+      } catch (e) {
+        lastError = e instanceof PortfolioError ? e : new PortfolioError(e?.message || String(e), 502);
+      }
+    }
+  }
+
+  if (!rawProducts && silaToken) {
     try {
-      rawProducts = await fetchFitness1Products(candidate);
-      apiKey = candidate;
+      const silaProducts = await fetchSilaProducts(silaToken);
+      sila_count = silaProducts.length;
+      rawProducts = mergeCatalogProducts([], silaProducts);
       lastError = null;
-      break;
     } catch (e) {
-      lastError = e instanceof PortfolioError ? e : new PortfolioError(e?.message || String(e), 502);
+      lastError = e instanceof SilaError
+        ? new PortfolioError(e.message, e.status)
+        : new PortfolioError(e?.message || String(e), 502);
     }
   }
 
@@ -693,11 +822,17 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = false, f
   }
 
   const settings = await getSettings(env);
-  const descriptionMap = includeDescriptions ? await fetchDescriptionMap(apiKey) : null;
+  const descriptionMap = includeDescriptions && keys.length
+    ? await fetchDescriptionMap(keys[0])
+    : null;
 
   const groups = groupRawProducts(rawProducts, settings, descriptionMap);
   const meta = buildCatalogMeta(groups, settings);
   meta.synced_at = new Date().toISOString();
+  meta.distributors = {
+    fitness1_skus: fitness1_count,
+    sila_skus: sila_count,
+  };
 
   const chunkCount = meta.chunk_count;
   const puts = [];
@@ -727,6 +862,8 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = false, f
     synced_at: meta.synced_at,
     total_groups: groups.length,
     total_skus: rawProducts.length,
+    fitness1_skus: fitness1_count,
+    sila_skus: sila_count,
     chunk_count: chunkCount
   };
 }
@@ -976,6 +1113,61 @@ async function handleFitness1KeyStatus(env) {
   });
 }
 
+async function handleSilaKeyStatus(env) {
+  const secret = (env.SILA_API_TOKEN || '').trim();
+  const kv = (await env.PAGE_CONTENT?.get(KV_SILA_TOKEN) || '').trim();
+  const mask = (key) => (key ? `${key.slice(0, 4)}…${key.slice(-4)} (${key.length})` : null);
+  return jsonResponse({
+    worker_secret: {
+      present: Boolean(secret),
+      preview: mask(secret),
+    },
+    kv: {
+      present: Boolean(kv),
+      preview: mask(kv),
+    },
+    active_key_preview: mask(await getSilaApiToken(env)),
+  });
+}
+
+function getOrderDistributors(order) {
+  const dists = new Set();
+  for (const p of order.products || []) {
+    dists.add(p.distributor || DISTRIBUTOR_FITNESS1);
+  }
+  return [...dists];
+}
+
+function isOrderFullySubmitted(order) {
+  const distributors = getOrderDistributors(order);
+  if (!distributors.length) {
+    return Boolean(order.fitness1_order?.id);
+  }
+  for (const d of distributors) {
+    if (isSilaDistributor(d)) {
+      if (!order.sila_order?.id) return false;
+    } else if (!order.fitness1_order?.id) {
+      return false;
+    }
+  }
+  return distributors.length > 0;
+}
+
+function filterProductsByDistributor(products, distributor) {
+  return (products || []).filter((p) => {
+    const d = p.distributor || DISTRIBUTOR_FITNESS1;
+    return isSilaDistributor(distributor)
+      ? isSilaDistributor(d)
+      : isFitness1Distributor(d);
+  });
+}
+
+function buildOrderStatusLabel(order) {
+  if (isOrderFullySubmitted(order)) return 'Изпратена към доставчик';
+  if (order.fitness1_order?.id || order.sila_order?.id) return 'Обработва се';
+  return order.status;
+}
+
 async function handleGetSettings(env) {
   const settings = await getSettings(env);
   return cachedResponse(settings, 300);
@@ -1088,7 +1280,7 @@ async function handleGetProduct(request, env) {
   const group = await getGroupFromChunks(env, meta, groupId);
   if (!group) throw new PortfolioError('Продуктът не е намерен.', 404);
 
-  return cachedResponse(group, 1800);
+  return cachedResponse(sanitizeGroupForClient(group), 1800);
 }
 
 function parseLifeCartRef(rawId) {
@@ -1241,7 +1433,9 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
         : (promoRecord?.pricing_mode && promoRecord.pricing_mode !== 'none'
           ? `promo_${promoRecord.pricing_mode}`
           : (found.variant.pricing_mode || 'catalog')),
-      image: found.image
+      image: found.image,
+      distributor: found.variant.distributor || DISTRIBUTOR_FITNESS1,
+      distributor_ids: found.variant.distributor_ids || null,
     });
   }
 
@@ -1365,7 +1559,8 @@ async function handleGetChunk(request, env) {
   const chunkRaw = await env.PAGE_CONTENT.get(chunkKey(index));
   if (!chunkRaw) throw new PortfolioError('Chunk не е намерен.', 404);
 
-  return cachedResponse({ index, groups: JSON.parse(chunkRaw), synced_at: meta.synced_at }, 86400);
+  const groups = JSON.parse(chunkRaw).map(sanitizeGroupForClient);
+  return cachedResponse({ index, groups, synced_at: meta.synced_at }, 86400);
 }
 
 // --- Portfolio promo codes ---
@@ -1634,6 +1829,7 @@ async function handleCreateOrder(request, env) {
       total: `${serverTotal.toFixed(2)} €`
     },
     fitness1_order: null,
+    sila_order: null,
     admin_note: '',
     stock_checked_at: stockCheckedAt
   };
@@ -1664,7 +1860,7 @@ async function handleGetOrdersSummary(request, env) {
     orders = orders.filter((o) => String(o.project || 'portfolio') === project);
   }
   const pending = orders.filter(
-    (o) => !o.fitness1_order?.id && o.status !== 'Отказана'
+    (o) => !isOrderFullySubmitted(o) && o.status !== 'Отказана'
   ).length;
   return jsonResponse({ pending, total: orders.length });
 }
@@ -1690,16 +1886,21 @@ async function handleGetOrder(request, env) {
   });
 }
 
-async function validateOrderProductsForF1(env, order) {
+async function validateOrderProducts(env, order) {
   for (const p of order.products) {
     const found = await findVariantInCatalog(env, p.sku_id);
     if (!found?.variant.available) {
       throw new PortfolioError(`„${p.name}" вече не е наличен. Актуализирайте поръчката.`, 400);
     }
-    if (!p.barcode && !found.variant.barcode) {
+    const isSila = isSilaDistributor(p.distributor || found.variant.distributor);
+    if (!isSila && !p.barcode && !found.variant.barcode) {
       throw new PortfolioError(`Липсва баркод за „${p.name}".`, 400);
     }
     if (!p.barcode) p.barcode = found.variant.barcode;
+    if (!p.distributor) p.distributor = found.variant.distributor || DISTRIBUTOR_FITNESS1;
+    if (!p.distributor_ids && found.variant.distributor_ids) {
+      p.distributor_ids = found.variant.distributor_ids;
+    }
   }
 }
 
@@ -1724,6 +1925,82 @@ function aggregateProductLines(productLists) {
     }
   }
   return productsToF1Payload(Array.from(map.values()));
+}
+
+async function submitProductsToSila(env, products) {
+  if (env.MOCK_SILA === '1' || env.MOCK_SILA === true) {
+    return {
+      status: 200,
+      message: 'Ok',
+      data: { order_id: 800000 + Math.floor(Math.random() * 99999) },
+    };
+  }
+
+  const apiToken = await getSilaApiToken(env);
+  if (!apiToken) throw new PortfolioError('SILA_API_TOKEN не е конфигуриран.', 500);
+
+  try {
+    return await submitSilaOrder(apiToken, products);
+  } catch (e) {
+    if (e instanceof SilaError) {
+      throw new PortfolioError(`Доставчикът отказа поръчката: ${e.message}`, e.status >= 400 ? e.status : 400);
+    }
+    throw e;
+  }
+}
+
+function aggregateProductLinesByDistributor(productLists, distributor) {
+  const map = new Map();
+  for (const products of productLists) {
+    for (const p of filterProductsByDistributor(products, distributor)) {
+      const key = isSilaDistributor(distributor)
+        ? `${p.distributor_ids?.model_id || ''}-${p.distributor_ids?.taste_id || ''}-${p.barcode || p.sku_id}`
+        : (p.barcode || String(p.sku_id));
+      const existing = map.get(key);
+      if (existing) {
+        existing.quantity += p.quantity;
+      } else {
+        map.set(key, { ...p });
+      }
+    }
+  }
+  return Array.from(map.values());
+}
+
+async function submitDistributorOrders(env, products, { sourceOrderIds = [] } = {}) {
+  const productLists = Array.isArray(products) && products.length && Array.isArray(products[0])
+    ? products
+    : [products];
+  const f1Products = aggregateProductLinesByDistributor(productLists, DISTRIBUTOR_FITNESS1);
+  const silaProducts = aggregateProductLinesByDistributor(productLists, DISTRIBUTOR_SILA);
+  const result = { fitness1: null, sila: null };
+
+  if (f1Products.length) {
+    const payload = productsToF1Payload(f1Products);
+    const f1Data = await submitProductsToFitness1(env, payload);
+    result.fitness1 = {
+      id: f1Data.order?.id,
+      price: f1Data.order?.price,
+      submitted_at: new Date().toISOString(),
+      batch: sourceOrderIds.length > 1,
+      source_order_ids: sourceOrderIds,
+      raw: f1Data,
+    };
+  }
+
+  if (silaProducts.length) {
+    const silaData = await submitProductsToSila(env, silaProducts);
+    result.sila = {
+      id: silaData.data?.order_id ?? silaData.order_id ?? silaData.data?.id,
+      price: silaData.data?.total ?? silaData.data?.price ?? null,
+      submitted_at: new Date().toISOString(),
+      batch: sourceOrderIds.length > 1,
+      source_order_ids: sourceOrderIds,
+      raw: silaData,
+    };
+  }
+
+  return result;
 }
 
 async function submitProductsToFitness1(env, products) {
@@ -1794,8 +2071,8 @@ async function handleApproveOrder(request, env) {
 
   const order = orders[idx];
 
-  if (order.fitness1_order?.id) {
-    throw new PortfolioError(`Поръчката вече е изпратена (F1 #${order.fitness1_order.id}).`, 409);
+  if (isOrderFullySubmitted(order)) {
+    throw new PortfolioError('Поръчката вече е изпратена към дистрибуторите.', 409);
   }
 
   const skuIds = extractCartSkuIds(order.products);
@@ -1804,22 +2081,30 @@ async function handleApproveOrder(request, env) {
     await ensureStockFresh(env, skuIds, SYNC_POLICY.APPROVE_FRESHNESS_MS);
   }
 
-  await validateOrderProductsForF1(env, order);
-  const products = productsToF1Payload(order.products);
-  const f1Data = await submitProductsToFitness1(env, products);
+  await validateOrderProducts(env, order);
 
-  orders[idx].status = 'Изпратена към Fitness1';
-  orders[idx].fitness1_order = {
-    id: f1Data.order?.id,
-    price: f1Data.order?.price,
-    submitted_at: new Date().toISOString(),
-    batch: false,
-    source_order_ids: [order.id]
-  };
+  const pendingProducts = (order.products || []).filter((p) => {
+    const d = p.distributor || DISTRIBUTOR_FITNESS1;
+    if (isSilaDistributor(d)) return !order.sila_order?.id;
+    return !order.fitness1_order?.id;
+  });
+
+  const submitted = await submitDistributorOrders(env, pendingProducts, {
+    sourceOrderIds: [order.id],
+  });
+
+  if (submitted.fitness1) orders[idx].fitness1_order = submitted.fitness1;
+  if (submitted.sila) orders[idx].sila_order = submitted.sila;
+  orders[idx].status = buildOrderStatusLabel(orders[idx]);
   if (body.admin_note) orders[idx].admin_note = body.admin_note;
 
   await env.PAGE_CONTENT.put(KV_ORDERS, JSON.stringify(orders, null, 2));
-  return jsonResponse({ success: true, order: orders[idx], fitness1: f1Data });
+  return jsonResponse({
+    success: true,
+    order: orders[idx],
+    fitness1: submitted.fitness1?.raw || null,
+    sila: submitted.sila?.raw || null,
+  });
 }
 
 async function handleApproveBatchOrder(request, env) {
@@ -1837,8 +2122,8 @@ async function handleApproveBatchOrder(request, env) {
     const idx = orders.findIndex((o) => o.id === id);
     if (idx === -1) throw new PortfolioError(`Поръчка ${id} не е намерена.`, 404);
     const order = orders[idx];
-    if (order.fitness1_order?.id) {
-      throw new PortfolioError(`Поръчка ${id} вече е изпратена (F1 #${order.fitness1_order.id}).`, 409);
+    if (isOrderFullySubmitted(order)) {
+      throw new PortfolioError(`Поръчка ${id} вече е изпратена към дистрибуторите.`, 409);
     }
     selected.push({ idx, order });
   }
@@ -1852,22 +2137,16 @@ async function handleApproveBatchOrder(request, env) {
   }
 
   for (const { order } of selected) {
-    await validateOrderProductsForF1(env, order);
+    await validateOrderProducts(env, order);
   }
 
-  const aggregated = aggregateProductLines(selected.map((s) => s.order.products));
-  const f1Data = await submitProductsToFitness1(env, aggregated);
-  const f1OrderMeta = {
-    id: f1Data.order?.id,
-    price: f1Data.order?.price,
-    submitted_at: new Date().toISOString(),
-    batch: true,
-    source_order_ids: ids
-  };
+  const allProducts = selected.map((s) => s.order.products);
+  const submitted = await submitDistributorOrders(env, allProducts, { sourceOrderIds: ids });
 
   for (const { idx } of selected) {
-    orders[idx].status = 'Изпратена към Fitness1';
-    orders[idx].fitness1_order = { ...f1OrderMeta };
+    if (submitted.fitness1) orders[idx].fitness1_order = { ...submitted.fitness1 };
+    if (submitted.sila) orders[idx].sila_order = { ...submitted.sila };
+    orders[idx].status = buildOrderStatusLabel(orders[idx]);
     if (body.admin_note) orders[idx].admin_note = body.admin_note;
   }
 
@@ -1875,8 +2154,8 @@ async function handleApproveBatchOrder(request, env) {
   return jsonResponse({
     success: true,
     orders: selected.map((s) => orders[s.idx]),
-    fitness1: f1Data,
-    aggregated_products: aggregated
+    fitness1: submitted.fitness1?.raw || null,
+    sila: submitted.sila?.raw || null,
   });
 }
 
@@ -1927,6 +2206,9 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     }
     if (path === '/portfolio/fitness1-key-status' && method === 'GET') {
       return await handleFitness1KeyStatus(env);
+    }
+    if (path === '/portfolio/sila-key-status' && method === 'GET') {
+      return await handleSilaKeyStatus(env);
     }
     if (path === '/portfolio/sync' && method === 'POST') {
       const result = await syncPortfolioCatalog(env);

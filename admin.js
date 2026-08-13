@@ -349,7 +349,29 @@ async function fetchPortfolioOrdersSummary() {
 }
 
 function isPortfolioOrderSendable(order) {
-    return Boolean(order) && !order.fitness1_order?.id && order.status !== 'Отказана';
+    if (!order || order.status === 'Отказана') return false;
+    const products = order.products || [];
+    if (!products.length) return false;
+    for (const p of products) {
+        const d = p.distributor || 'fitness1';
+        if (d === 'sila') {
+            if (!order.sila_order?.id) return true;
+        } else if (!order.fitness1_order?.id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function formatDistributorOrderRefs(order) {
+    const parts = [];
+    if (order.fitness1_order?.id) {
+        parts.push(`#${order.fitness1_order.id}${order.fitness1_order.batch ? ' (обобщена)' : ''}`);
+    }
+    if (order.sila_order?.id) {
+        parts.push(`#${order.sila_order.id}${order.sila_order.batch ? ' (обобщена)' : ''}`);
+    }
+    return parts.join(', ');
 }
 
 function updatePortfolioPendingFromData() {
@@ -383,8 +405,8 @@ function updatePortfolioPendingUI() {
         if (portfolioPendingCount > 0) {
             pfBanner.style.display = 'block';
             pfBanner.textContent = portfolioPendingCount === 1
-                ? '1 поръчка е готова за изпращане към Fitness1. Маркирайте я (или няколко) и натиснете „Обобщи и изпрати към F1“ — продуктите се сумират в една B2B поръчка към вашия F1 профил, а вие разпределяте доставката до клиентите.'
-                : `${portfolioPendingCount} поръчки са готови за изпращане към Fitness1. Маркирайте няколко и натиснете „Обобщи и изпрати към F1“ — продуктите се сумират в една B2B поръчка към вашия F1 профил, а вие разпределяте доставката до клиентите.`;
+                ? '1 поръчка е готова за изпращане към доставчик. Маркирайте я (или няколко) и натиснете „Обобщи и изпрати“ — продуктите се сумират в една B2B поръчка, а вие разпределяте доставката до клиентите.'
+                : `${portfolioPendingCount} поръчки са готови за изпращане към доставчик. Маркирайте няколко и натиснете „Обобщи и изпрати“ — продуктите се сумират в една B2B поръчка, а вие разпределяте доставката до клиентите.`;
         } else {
             pfBanner.style.display = 'none';
         }
@@ -424,12 +446,12 @@ function updatePortfolioBatchApproveButton() {
     if (selected.length === 0) {
         btn.textContent = sendable > 1
             ? `Маркирайте поръчки за обобщено изпращане (${sendable} готови)`
-            : 'Обобщи и изпрати към F1';
+            : 'Обобщи и изпрати';
         return;
     }
     btn.textContent = selected.length > 1
-        ? `Обобщи ${selected.length} поръчки Fitness1`
-        : 'Изпрати маркираната поръчка Fitness1';
+        ? `Обобщи ${selected.length} поръчки`
+        : 'Изпрати маркираната поръчка';
 }
 
 function switchToPortfolioOrdersTab() {
@@ -5122,7 +5144,7 @@ function renderPortfolioSettings() {
 
     container.innerHTML = `
         <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
-            <h3 style="margin-top:0;">Каталог Fitness1</h3>
+            <h3 style="margin-top:0;">Каталог</h3>
             <p><strong>Последна синхронизация:</strong> ${escAdminHtml(lastSync)}</p>
             <p><strong>Брой продуктови групи:</strong> ${escAdminHtml(count)}</p>
             <button type="button" class="btn btn-primary" id="portfolio-sync-btn" style="margin-top:1rem;">🔄 Синхронизирай каталога</button>
@@ -5177,7 +5199,7 @@ function renderPortfolioSettings() {
         <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
             <h3 style="margin-top:0;">Дистрибутор (вашата B2B доставка)</h3>
             <p style="font-size:0.9rem;color:var(--text-secondary);margin-top:0;">
-                Fitness1 B2B изпраща обобщената поръчка към адреса във вашия F1 профил. Тук записвайте данните си за справка при разпределяне към клиенти.
+                B2B доставчикът получава обобщената поръчка към адреса във вашия профил. Тук записвайте данните си за справка при разпределяне към клиенти.
             </p>
             <div class="form-group" style="margin-top:1rem;">
                 <label for="pf-reseller-name">Име / фирма</label>
@@ -5388,7 +5410,7 @@ function renderPortfolioOrders() {
         const products = (order.products || []).map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join('<br>');
         const productsSummary = (order.products || []).map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join(', ');
         const summary = order.summary || {};
-        const canSendToF1 = isPortfolioOrderSendable(order);
+        const canSendToDistributor = isPortfolioOrderSendable(order);
         const delivery = formatPortfolioDelivery(c);
         const status = order.status || 'Чака одобрение';
         const projectLabel = { main: 'Main', life: 'Life', portfolio: 'PF' }[order.project || 'portfolio'] || order.project;
@@ -5403,7 +5425,7 @@ function renderPortfolioOrders() {
         tr.style.cursor = 'pointer';
         tr.innerHTML = `
             <td data-label="Избор" class="portfolio-order-select-cell" onclick="event.stopPropagation()">
-                ${canSendToF1 ? `<input type="checkbox" class="portfolio-order-select" data-id="${escAdminHtml(order.id)}">` : ''}
+                ${canSendToDistributor ? `<input type="checkbox" class="portfolio-order-select" data-id="${escAdminHtml(order.id)}">` : ''}
             </td>
             <td data-label="Клиент" class="order-customer mobile-key">${escAdminHtml(`${c.firstName || ''} ${c.lastName || ''}`.trim())}<br><small class="pf-order-project-badge">${escAdminHtml(projectLabel)}</small></td>
             <td data-label="Телефон" class="order-phone">${escAdminHtml(c.phone || '')}</td>
@@ -5417,15 +5439,15 @@ function renderPortfolioOrders() {
                 <select class="portfolio-order-status" data-id="${escAdminHtml(order.id)}">
                     <option value="Чака одобрение" ${status === 'Чака одобрение' ? 'selected' : ''}>Чака одобрение</option>
                     <option value="Обработва се" ${status === 'Обработва се' ? 'selected' : ''}>Обработва се</option>
-                    <option value="Изпратена към Fitness1" ${status === 'Изпратена към Fitness1' ? 'selected' : ''}>Изпратена към Fitness1</option>
+                    <option value="Изпратена към доставчик" ${status === 'Изпратена към доставчик' || status === 'Изпратена към Fitness1' ? 'selected' : ''}>Изпратена към доставчик</option>
                     <option value="Отказана" ${status === 'Отказана' ? 'selected' : ''}>Отказана</option>
                 </select>
                 <span class="mobile-status-badge"></span>
-                ${order.fitness1_order?.id ? `<br><small>F1 #${escAdminHtml(order.fitness1_order.id)}${order.fitness1_order.batch ? ' (обобщена)' : ''}</small>` : ''}
+                ${formatDistributorOrderRefs(order) ? `<br><small>B2B ${escAdminHtml(formatDistributorOrderRefs(order))}</small>` : ''}
             </td>
             <td data-label="Действия" class="portfolio-order-actions" onclick="event.stopPropagation()">
                 <button type="button" class="btn btn-sm btn-secondary portfolio-detail-btn" data-id="${escAdminHtml(order.id)}">Детайли</button>
-                ${canSendToF1 ? ` <button type="button" class="btn btn-sm btn-success portfolio-approve-btn" data-id="${escAdminHtml(order.id)}">Изпрати → F1</button>` : ''}
+                ${canSendToDistributor ? ` <button type="button" class="btn btn-sm btn-success portfolio-approve-btn" data-id="${escAdminHtml(order.id)}">Изпрати → B2B</button>` : ''}
             </td>`;
         const badge = tr.querySelector('.mobile-status-badge');
         if (badge) applyOrderStatusBadge(badge, status);
@@ -5507,11 +5529,13 @@ function showPortfolioOrderDetailModal(order) {
         ? `<p><strong>Общо за клиента:</strong> ${escAdminHtml(String(summary.total))}</p>`
         : '';
 
-    const f1Info = order.fitness1_order?.id
-        ? `<p><strong>Fitness1 поръчка:</strong> #${escAdminHtml(order.fitness1_order.id)}${order.fitness1_order.batch ? ' (обобщена от няколко клиентски поръчки)' : ''}</p>`
-        : '<p><strong>Fitness1:</strong> още не е изпратена — използвайте „Изпрати → Fitness1“ или груповото изпращане.</p>';
+    const distributorInfo = (() => {
+        const refs = formatDistributorOrderRefs(order);
+        if (refs) return `<p><strong>B2B поръчка:</strong> ${escAdminHtml(refs)}</p>`;
+        return '<p><strong>B2B:</strong> още не е изпратена — използвайте „Изпрати → B2B“ или груповото изпращане.</p>';
+    })();
 
-    const canSendToF1 = isPortfolioOrderSendable(order);
+    const canSendToDistributor = isPortfolioOrderSendable(order);
 
     const html = `
         <div class="detail-modal-section">
@@ -5529,7 +5553,7 @@ function showPortfolioOrderDetailModal(order) {
             <h4>Доставка до клиент</h4>
             <div>${formatPortfolioDelivery(customer)}</div>
             <p style="margin-top:0.75rem;font-size:0.9rem;color:var(--text-secondary);">
-                След одобрение продуктите отиват към Fitness1 от вашия B2B профил. Вие разпределяте пратката към този клиент.
+                След одобрение продуктите отиват към B2B доставчика. Вие разпределяте пратката към този клиент.
             </p>
         </div>
         <div class="detail-modal-section">
@@ -5549,14 +5573,14 @@ function showPortfolioOrderDetailModal(order) {
             ${promoLine}
             ${shippingLine}
             ${totalLine}
-            ${f1Info}
+            ${distributorInfo}
         </div>
         <div class="detail-modal-section">
             <h4>Бележка (админ)</h4>
             <textarea id="portfolio-order-admin-note" rows="3" style="width:100%;padding:0.65rem;border:1px solid var(--border-color);border-radius:6px;font:inherit;">${escAdminHtml(order.admin_note || '')}</textarea>
             <div style="margin-top:0.65rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
                 <button type="button" class="btn btn-secondary" id="portfolio-save-note-btn" data-id="${escAdminHtml(order.id)}">Запази бележка</button>
-                ${canSendToF1 ? `<button type="button" class="btn btn-success" id="portfolio-modal-approve-btn" data-id="${escAdminHtml(order.id)}">Изпрати → Fitness1</button>` : ''}
+                ${canSendToDistributor ? `<button type="button" class="btn btn-success" id="portfolio-modal-approve-btn" data-id="${escAdminHtml(order.id)}">Изпрати → B2B</button>` : ''}
             </div>
         </div>`;
 
@@ -5589,7 +5613,7 @@ async function savePortfolioOrderNote(orderId, note) {
 }
 
 async function approvePortfolioOrder(orderId) {
-    if (!confirm('Изпращане на поръчката към Fitness1 B2B? Продуктите отиват към вашия F1 профил; доставката до клиента остава ваша отговорност.')) return;
+    if (!confirm('Изпращане на поръчката към B2B доставчик? Продуктите отиват към вашия дистрибуторски профил; доставката до клиента остава ваша отговорност.')) return;
     try {
         const res = await fetch(`${API_URL}/portfolio/orders/approve`, {
             method: 'POST',
@@ -5598,7 +5622,10 @@ async function approvePortfolioOrder(orderId) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Грешка');
-        showNotification(`Поръчката е изпратена! Fitness1 #${data.order?.fitness1_order?.id}`, 'success');
+        const refs = [];
+        if (data.order?.fitness1_order?.id) refs.push(`#${data.order.fitness1_order.id}`);
+        if (data.order?.sila_order?.id) refs.push(`#${data.order.sila_order.id}`);
+        showNotification(`Поръчката е изпратена!${refs.length ? ` B2B ${refs.join(', ')}` : ''}`, 'success');
         await fetchPortfolioOrders();
         filterPortfolioOrders();
     } catch (e) {
@@ -5609,12 +5636,12 @@ async function approvePortfolioOrder(orderId) {
 async function approvePortfolioOrdersBatch() {
     const ids = getSelectedPortfolioOrderIds();
     if (ids.length === 0) {
-        showNotification('Маркирайте поне една поръчка за изпращане към Fitness1.', 'info');
+        showNotification('Маркирайте поне една поръчка за изпращане към доставчик.', 'info');
         return;
     }
     const msg = ids.length === 1
-        ? 'Изпращане на поръчката към Fitness1 B2B?'
-        : `Обобщаване на ${ids.length} поръчки в една B2B поръчка към Fitness1? Продуктите ще се сумират по баркод. Данните за доставка до всеки клиент остават в админ панела за ваше разпределение.`;
+        ? 'Изпращане на поръчката към B2B доставчик?'
+        : `Обобщаване на ${ids.length} поръчки в една B2B поръчка? Продуктите ще се сумират по баркод. Данните за доставка до всеки клиент остават в админ панела за ваше разпределение.`;
     if (!confirm(msg)) return;
 
     try {
@@ -5629,17 +5656,20 @@ async function approvePortfolioOrdersBatch() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Грешка');
-        const f1Id = data.order?.fitness1_order?.id || data.orders?.[0]?.fitness1_order?.id;
+        const sample = data.order || data.orders?.[0];
+        const refs = [];
+        if (sample?.fitness1_order?.id) refs.push(`#${sample.fitness1_order.id}`);
+        if (sample?.sila_order?.id) refs.push(`#${sample.sila_order.id}`);
         showNotification(
             ids.length === 1
-                ? `Поръчката е изпратена към Fitness1${f1Id ? ` #${f1Id}` : ''}!`
-                : `Обобщената поръчка е изпратена към Fitness1${f1Id ? ` #${f1Id}` : ''}!`,
+                ? `Поръчката е изпратена${refs.length ? ` (B2B ${refs.join(', ')})` : ''}!`
+                : `Обобщената поръчка е изпратена${refs.length ? ` (B2B ${refs.join(', ')})` : ''}!`,
             'success'
         );
         await fetchPortfolioOrders();
         filterPortfolioOrders();
     } catch (e) {
-        showNotification(e.message || 'Грешка при изпращане към Fitness1', 'error');
+        showNotification(e.message || 'Грешка при изпращане към доставчик', 'error');
     }
 }
 

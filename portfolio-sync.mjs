@@ -1,41 +1,69 @@
 /**
- * Sync Fitness1 B2B catalog to local JSON chunks (for upload to KV).
- * Usage: FITNESS1_API_KEY=xxx node portfolio-sync.mjs
- *        node portfolio-sync.mjs --upload  (requires CLOUDFLARE_API_TOKEN)
+ * Sync Fitness1 + Sila BG catalogs to local JSON chunks (for upload to KV).
+ * Usage:
+ *   FITNESS1_API_KEY=xxx node portfolio-sync.mjs
+ *   SILA_API_TOKEN=xxx node portfolio-sync.mjs
+ *   node portfolio-sync.mjs --upload  (requires CLOUDFLARE_API_TOKEN)
  */
 
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS, fetchDescriptionMap } from './portfolio-api.js';
+import {
+  groupRawProducts,
+  buildCatalogMeta,
+  DEFAULT_SETTINGS,
+  fetchDescriptionMap,
+  fetchFitness1Products,
+  mergeCatalogProducts,
+} from './portfolio-api.js';
+import { fetchSilaProducts } from './sila-api.js';
 
-const API_KEY = process.env.FITNESS1_API_KEY;
+const F1_KEY = process.env.FITNESS1_API_KEY;
+const SILA_TOKEN = process.env.SILA_API_TOKEN;
 const OUT_DIR = 'backend/portfolio';
 const CHUNK_SIZE = 150;
 
-async function fetchProducts() {
-  if (!API_KEY) {
-    console.error('Set FITNESS1_API_KEY environment variable.');
+async function fetchAllProducts() {
+  if (!F1_KEY && !SILA_TOKEN) {
+    console.error('Set FITNESS1_API_KEY and/or SILA_API_TOKEN.');
     process.exit(1);
   }
-  const url = `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(API_KEY)}&format=json`;
-  console.log('Fetching catalog from Fitness1...');
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  const data = await res.json();
-  if (data.status !== 'ok') throw new Error('Invalid API response');
-  return data.products;
+
+  let f1Products = [];
+  let silaProducts = [];
+
+  if (F1_KEY) {
+    console.log('Fetching catalog from Fitness1...');
+    f1Products = await fetchFitness1Products(F1_KEY);
+    console.log(`  Fitness1: ${f1Products.length} SKUs`);
+  }
+
+  if (SILA_TOKEN) {
+    console.log('Fetching catalog from Sila BG...');
+    silaProducts = await fetchSilaProducts(SILA_TOKEN);
+    console.log(`  Sila BG: ${silaProducts.length} SKUs`);
+  }
+
+  return mergeCatalogProducts(f1Products, silaProducts);
 }
 
 async function main() {
-  const products = await fetchProducts();
-  console.log(`Received ${products.length} SKUs`);
+  const products = await fetchAllProducts();
+  console.log(`Total merged SKUs: ${products.length}`);
 
-  console.log('Fetching descriptions from Fitness1...');
-  const descriptionMap = await fetchDescriptionMap(API_KEY);
+  let descriptionMap = null;
+  if (F1_KEY) {
+    console.log('Fetching descriptions from Fitness1...');
+    descriptionMap = await fetchDescriptionMap(F1_KEY);
+  }
 
   const settings = { ...DEFAULT_SETTINGS, global_markup_percent: 30 };
   const groups = groupRawProducts(products, settings, descriptionMap);
   const meta = buildCatalogMeta(groups);
   meta.synced_at = new Date().toISOString();
+  meta.distributors = {
+    fitness1_skus: products.filter((p) => p.distributor !== 'sila').length,
+    sila_skus: products.filter((p) => p.distributor === 'sila').length,
+  };
 
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
 
