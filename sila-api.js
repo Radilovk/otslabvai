@@ -92,22 +92,104 @@ function silaSkuId(modelId, tasteId, sizeId) {
   return String(SILA_SKU_ID_OFFSET + m * 100000 + t * 1000 + s);
 }
 
-function normalizeSilaApiToken(raw) {
+export function normalizeSilaApiToken(raw) {
   if (!raw) return '';
   let token = String(raw).trim();
   if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
     token = token.slice(1, -1).trim();
   }
-  return token;
+  if (/^bearer\s+/i.test(token)) {
+    token = token.replace(/^bearer\s+/i, '').trim();
+  }
+  const apiTokenMatch = token.match(/(?:^|[?&])api_token=([^&\s#]+)/i);
+  if (apiTokenMatch) {
+    try {
+      token = decodeURIComponent(apiTokenMatch[1]);
+    } catch {
+      token = apiTokenMatch[1];
+    }
+  }
+  if (token.includes('\n')) {
+    const line = token.split('\n').map((l) => l.trim()).find((l) => l.length >= 20);
+    if (line) token = line;
+  }
+  return token.trim();
 }
 
-/** Worker secret first, then KV. */
+/** Sila distro API tokens are typically ~32 alphanumeric characters (B2B profile → API tab). */
+export function isValidSilaApiToken(token) {
+  const normalized = normalizeSilaApiToken(token);
+  return /^[A-Za-z0-9]{24,48}$/.test(normalized);
+}
+
+/**
+ * All configured Sila tokens, preferring valid-format KV over invalid worker secret.
+ * @param {object} env
+ * @returns {Promise<string[]>}
+ */
+export async function listSilaApiTokenCandidates(env) {
+  /** @type {{ source: string, token: string }[]} */
+  const entries = [
+    { source: 'worker_secret', token: normalizeSilaApiToken(env.SILA_API_TOKEN) },
+    { source: 'kv', token: normalizeSilaApiToken(await env.PAGE_CONTENT?.get(KV_SILA_TOKEN)) },
+  ].filter((entry) => entry.token);
+
+  const seen = new Set();
+  const unique = [];
+  for (const entry of entries) {
+    if (seen.has(entry.token)) continue;
+    seen.add(entry.token);
+    unique.push(entry);
+  }
+
+  unique.sort((a, b) => {
+    const aValid = isValidSilaApiToken(a.token) ? 1 : 0;
+    const bValid = isValidSilaApiToken(b.token) ? 1 : 0;
+    if (bValid !== aValid) return bValid - aValid;
+    const aKv = a.source === 'kv' ? 1 : 0;
+    const bKv = b.source === 'kv' ? 1 : 0;
+    return bKv - aKv;
+  });
+
+  return unique.map((entry) => entry.token);
+}
+
+/** Best Sila token for API calls (valid KV preferred over invalid worker secret). */
 export async function getSilaApiToken(env) {
-  const candidates = [
-    normalizeSilaApiToken(env.SILA_API_TOKEN),
-    normalizeSilaApiToken(await env.PAGE_CONTENT?.get(KV_SILA_TOKEN)),
-  ].filter((key, index, all) => key && all.indexOf(key) === index);
+  const candidates = await listSilaApiTokenCandidates(env);
   return candidates[0] || null;
+}
+
+/**
+ * Fetch Sila catalog, trying each token until one succeeds.
+ * @param {string[]} tokens
+ * @returns {Promise<{ products: object[], error: Error|null, token_used: string|null }>}
+ */
+export async function fetchSilaProductsWithFallback(tokens) {
+  const list = [...new Set((tokens || []).map(normalizeSilaApiToken).filter(Boolean))];
+  if (!list.length) return { products: [], error: null, token_used: null };
+
+  /** @type {Error|null} */
+  let lastError = null;
+  for (const token of list) {
+    try {
+      const products = await fetchSilaProducts(token);
+      return { products, error: null, token_used: token };
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error(String(e));
+      if (e instanceof SilaError && (e.status === 401 || e.status === 403)) {
+        continue;
+      }
+      throw e;
+    }
+  }
+  return { products: [], error: lastError, token_used: null };
+}
+
+/** @param {object} env */
+export async function fetchSilaProductsForEnv(env) {
+  const tokens = await listSilaApiTokenCandidates(env);
+  return fetchSilaProductsWithFallback(tokens);
 }
 
 export class SilaError extends Error {

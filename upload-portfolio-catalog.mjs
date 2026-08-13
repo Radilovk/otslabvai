@@ -3,7 +3,7 @@
  * Requires: FITNESS1_API_KEY and/or SILA_API_TOKEN, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
  */
 import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS, fetchDescriptionMap, fetchFitness1Products, mergeCatalogProducts } from './portfolio-api.js';
-import { fetchSilaProducts, KV_SILA_TOKEN } from './sila-api.js';
+import { fetchSilaProductsWithFallback, normalizeSilaApiToken, KV_SILA_TOKEN } from './sila-api.js';
 
 const KV_NS = process.env.CLOUDFLARE_KV_NAMESPACE_ID || 'd220db696e414b7cb3da2b19abd53d0f';
 const ACCOUNT = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -35,8 +35,14 @@ async function fetchAllProducts() {
 
   if (SILA_TOKEN) {
     console.log('Fetching products from Sila BG...');
-    silaProducts = await fetchSilaProducts(SILA_TOKEN);
-    console.log(`  Sila BG: ${silaProducts.length} SKUs`);
+    const { products, error } = await fetchSilaProductsWithFallback([SILA_TOKEN]);
+    silaProducts = products;
+    if (error) {
+      console.warn(`  Sila BG: skipped — ${error.message}`);
+      console.warn('  Check SILA_API_TOKEN in GitHub Secrets (B2B profile → API tab, ~32 chars).');
+    } else {
+      console.log(`  Sila BG: ${silaProducts.length} SKUs`);
+    }
   }
 
   if (!f1Products.length && !silaProducts.length) {
@@ -82,7 +88,7 @@ async function main() {
   }
   if (SILA_TOKEN) {
     console.log('Uploading sila_api_token...');
-    await kvPut(KV_SILA_TOKEN, SILA_TOKEN, 'text/plain');
+    await kvPut(KV_SILA_TOKEN, normalizeSilaApiToken(SILA_TOKEN), 'text/plain');
   }
 
   console.log('Uploading portfolio_settings...');

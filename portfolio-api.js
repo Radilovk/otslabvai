@@ -38,9 +38,13 @@ import {
 } from './portfolio-site-products.js';
 import {
   fetchSilaProducts,
+  fetchSilaProductsForEnv,
   submitSilaOrder,
   mergeCatalogProducts,
   getSilaApiToken,
+  listSilaApiTokenCandidates,
+  isValidSilaApiToken,
+  normalizeSilaApiToken,
   isSilaDistributor,
   isFitness1Distributor,
   KV_SILA_TOKEN,
@@ -635,7 +639,9 @@ export async function fetchAllCatalogRawProducts(env) {
   const silaToken = await getSilaApiToken(env);
   if (silaToken) {
     try {
-      silaProducts = await fetchSilaProducts(silaToken);
+      const { products, error } = await fetchSilaProductsForEnv(env);
+      silaProducts = products;
+      if (error) silaError = error;
     } catch (e) {
       silaError = e;
     }
@@ -786,9 +792,11 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = false, f
         const f1Products = await fetchFitness1Products(candidate);
         fitness1_count = f1Products.length;
         apiKey = candidate;
-        const silaProducts = silaToken ? await fetchSilaProducts(silaToken).catch(() => []) : [];
-        sila_count = silaProducts.length;
-        rawProducts = mergeCatalogProducts(f1Products, silaProducts);
+        const { products: silaFetched } = silaToken
+          ? await fetchSilaProductsForEnv(env).catch(() => ({ products: [] }))
+          : { products: [] };
+        sila_count = silaFetched.length;
+        rawProducts = mergeCatalogProducts(f1Products, silaFetched);
         lastError = null;
         break;
       } catch (e) {
@@ -799,10 +807,16 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = false, f
 
   if (!rawProducts && silaToken) {
     try {
-      const silaProducts = await fetchSilaProducts(silaToken);
-      sila_count = silaProducts.length;
-      rawProducts = mergeCatalogProducts([], silaProducts);
-      lastError = null;
+      const { products: silaFetched, error } = await fetchSilaProductsForEnv(env);
+      sila_count = silaFetched.length;
+      if (silaFetched.length) {
+        rawProducts = mergeCatalogProducts([], silaFetched);
+        lastError = null;
+      } else if (error) {
+        lastError = error instanceof SilaError
+          ? new PortfolioError(error.message, error.status)
+          : new PortfolioError(error.message || String(error), 502);
+      }
     } catch (e) {
       lastError = e instanceof SilaError
         ? new PortfolioError(e.message, e.status)
@@ -1114,19 +1128,29 @@ async function handleFitness1KeyStatus(env) {
 }
 
 async function handleSilaKeyStatus(env) {
-  const secret = (env.SILA_API_TOKEN || '').trim();
-  const kv = (await env.PAGE_CONTENT?.get(KV_SILA_TOKEN) || '').trim();
+  const secret = normalizeSilaApiToken(env.SILA_API_TOKEN);
+  const kv = normalizeSilaApiToken(await env.PAGE_CONTENT?.get(KV_SILA_TOKEN));
   const mask = (key) => (key ? `${key.slice(0, 4)}…${key.slice(-4)} (${key.length})` : null);
+  const candidates = await listSilaApiTokenCandidates(env);
+  const active = await getSilaApiToken(env);
   return jsonResponse({
     worker_secret: {
       present: Boolean(secret),
+      valid_format: isValidSilaApiToken(secret),
       preview: mask(secret),
     },
     kv: {
       present: Boolean(kv),
+      valid_format: isValidSilaApiToken(kv),
       preview: mask(kv),
     },
-    active_key_preview: mask(await getSilaApiToken(env)),
+    active_key_preview: mask(active),
+    active_source: secret && active === secret
+      ? 'worker_secret'
+      : (kv && active === kv ? 'kv' : (active ? 'fallback' : null)),
+    hint: (!isValidSilaApiToken(secret) && secret)
+      ? 'Worker secret изглежда невалиден (очаква се ~32 символа от Sila B2B → API). Проверете GitHub Secret SILA_API_TOKEN.'
+      : null,
   });
 }
 
