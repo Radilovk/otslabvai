@@ -437,9 +437,14 @@ function isSilaProductAvailable(item) {
   if (flag === true || flag === 1 || flag === '1') return true;
   if (flag === false || flag === 0 || flag === '0') return false;
   const status = String(pickFirst(item, ['status', 'availability'], '')).toLowerCase();
-  if (status.includes('налич') || status === 'available' || status === 'in_stock') return true;
   if (status.includes('неналич') || status === 'out_of_stock' || status === 'unavailable') return false;
+  if (status.includes('налич') || status === 'available' || status === 'in_stock') return true;
   return true;
+}
+
+/** Raw Sila API row availability (before normalization). */
+export function isSilaRawProductAvailable(item) {
+  return isSilaProductAvailable(item);
 }
 
 /**
@@ -506,14 +511,17 @@ export function normalizeSilaProducts(items) {
   return items.map(normalizeSilaProduct).filter(Boolean);
 }
 
-/** Fetch all products from Sila Distro API (product list + brandfeed images). */
+/** Fetch in-stock Sila products (product list + brandfeed images for gaps). */
 export async function fetchSilaProducts(apiToken) {
   const rawItems = await fetchSilaProductListRaw(apiToken);
   if (!rawItems.length) return [];
 
-  const imageLookup = await loadSilaImageLookup(apiToken, rawItems);
-  const enriched = rawItems.map((item) => enrichSilaProductRow(item, imageLookup));
-  return normalizeSilaProducts(enriched);
+  const availableItems = rawItems.filter(isSilaProductAvailable);
+  if (!availableItems.length) return [];
+
+  const imageLookup = await loadSilaImageLookup(apiToken, availableItems);
+  const enriched = availableItems.map((item) => enrichSilaProductRow(item, imageLookup));
+  return normalizeSilaProducts(enriched).filter((p) => p.available);
 }
 
 /** Fetch brand list (optional, for diagnostics). */
