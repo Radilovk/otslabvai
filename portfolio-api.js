@@ -367,6 +367,7 @@ export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
       if (desc) g.description = decodeDescription(desc);
     }
     if (p.label && !g.label) g.label = p.label;
+    if (!g.image && p.image) g.image = p.image;
 
     const variant = buildVariantPricing(p, settings, gid);
     variant.image = variant.image || g.image;

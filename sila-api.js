@@ -6,6 +6,8 @@
 import { FITNESS1_CATALOG_CATEGORIES } from './portfolio-fitness1-categories.js';
 
 const SILA_BASE_URL = 'https://distro.silabg.com/api/v1';
+const SILA_PUBLIC_ORIGIN = 'https://www.silabg.com';
+const SILA_BRANDFEED_CONCURRENCY = 6;
 export const KV_SILA_TOKEN = 'sila_api_token';
 export const DISTRIBUTOR_SILA = 'sila';
 export const DISTRIBUTOR_FITNESS1 = 'fitness1';
@@ -245,6 +247,182 @@ function pickFirst(obj, keys, fallback = '') {
   return fallback;
 }
 
+const SILA_IMAGE_FIELD_KEYS = [
+  'image', 'image_url', 'img', 'thumb', 'thumbnail',
+  'product_image', 'model_image', 'photo', 'picture',
+  'img_url', 'image_small', 'image_large', 'image_path',
+  'small_image', 'large_image', 'product_thumb', 'model_thumb',
+];
+
+/** Normalize Sila image paths to absolute URLs (often /uf/product/... on silabg.com). */
+export function resolveSilaImageUrl(url) {
+  const raw = String(url || '').trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith('//')) return `https:${raw}`;
+  if (raw.startsWith('/')) return `${SILA_PUBLIC_ORIGIN}${raw}`;
+  return `${SILA_PUBLIC_ORIGIN}/${raw.replace(/^\//, '')}`;
+}
+
+/** Extract image URL from a Sila API row (product list, brandfeed, or barcode detail). */
+export function extractSilaImageFromItem(item) {
+  return resolveSilaImageUrl(pickFirst(item, SILA_IMAGE_FIELD_KEYS, ''));
+}
+
+function productRowNeedsImage(item) {
+  return !extractSilaImageFromItem(item);
+}
+
+function collectSilaFeedRows(data) {
+  /** @type {object[]} */
+  const rows = [];
+  const visit = (node) => {
+    if (node == null) return;
+    if (Array.isArray(node)) {
+      node.forEach(visit);
+      return;
+    }
+    if (typeof node !== 'object') return;
+    rows.push(node);
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) visit(value);
+    }
+  };
+  visit(data?.data ?? data);
+  return rows;
+}
+
+/**
+ * Build model_id / barcode → image lookup from brandfeed payload.
+ * @param {object[]|object} feedPayload
+ */
+export function buildSilaImageLookup(feedPayload) {
+  const byModel = new Map();
+  const byBarcode = new Map();
+  for (const item of collectSilaFeedRows(feedPayload)) {
+    const image = extractSilaImageFromItem(item);
+    if (!image) continue;
+    const modelId = String(pickFirst(item, ['model_id', 'product_model_id', 'id'], '')).trim();
+    const barcode = String(pickFirst(item, ['barcode_ean', 'ean', 'barcode'], '')).trim();
+    if (modelId) byModel.set(modelId, image);
+    if (barcode) byBarcode.set(barcode, image);
+  }
+  return { byModel, byBarcode };
+}
+
+/**
+ * @param {object} item
+ * @param {{ byModel: Map<string, string>, byBarcode: Map<string, string> }} lookup
+ */
+export function enrichSilaProductRow(item, lookup) {
+  if (!item || typeof item !== 'object') return item;
+  if (extractSilaImageFromItem(item)) return item;
+
+  const modelId = String(pickFirst(item, ['model_id', 'product_model_id', 'id'], '')).trim();
+  const barcode = String(pickFirst(item, ['barcode_ean', 'ean', 'barcode'], '')).trim();
+  const image = (modelId && lookup.byModel.get(modelId))
+    || (barcode && lookup.byBarcode.get(barcode))
+    || '';
+  return image ? { ...item, image } : item;
+}
+
+async function mapPool(items, limit, fn) {
+  if (!items.length) return [];
+  const results = new Array(items.length);
+  let cursor = 0;
+  const workerCount = Math.min(limit, items.length);
+  await Promise.all(Array.from({ length: workerCount }, async () => {
+    while (cursor < items.length) {
+      const index = cursor++;
+      results[index] = await fn(items[index], index);
+    }
+  }));
+  return results;
+}
+
+function extractSilaProductList(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.products)) return data.products;
+  if (Array.isArray(data?.data?.products)) return data.data.products;
+  return [];
+}
+
+/** Product list – docs: GET /product; PHP client: POST with brand/model filters. */
+async function fetchSilaProductListRaw(apiToken) {
+  try {
+    const getData = await silaRequest(apiToken, 'product', { method: 'GET' });
+    const getItems = extractSilaProductList(getData);
+    if (getItems.length) return getItems;
+  } catch {
+    // Fall through to POST list used by the official PHP consumer.
+  }
+
+  const postData = await silaRequest(apiToken, 'product', {
+    method: 'POST',
+    body: { brand_id: 0, model_id: 0, taste_id: 0, size_id: 0 },
+  });
+  return extractSilaProductList(postData);
+}
+
+/**
+ * Brand feed – docs: GET /brandfeed with brand_id filter (images + model metadata).
+ * @param {string} apiToken
+ * @param {string|number} brandId
+ */
+export async function fetchSilaBrandFeed(apiToken, brandId) {
+  const body = { brand_id: String(brandId) };
+  try {
+    return await silaRequest(apiToken, 'brandfeed', { method: 'POST', body });
+  } catch {
+    return silaRequest(apiToken, 'brandfeed', { method: 'GET', body });
+  }
+}
+
+/** Product detail by EAN – docs: GET /product/{barcode}. */
+export async function fetchSilaProductByBarcode(apiToken, barcode) {
+  const ean = String(barcode || '').trim();
+  if (!ean) throw new SilaError('Липсва баркод за Sila product detail.', 400);
+  return silaRequest(apiToken, `product/${encodeURIComponent(ean)}`, { method: 'GET' });
+}
+
+async function loadSilaImageLookup(apiToken, rawItems) {
+  const lookup = { byModel: new Map(), byBarcode: new Map() };
+  if (!rawItems.some(productRowNeedsImage)) return lookup;
+
+  const brandIds = new Set();
+  for (const item of rawItems) {
+    const brandId = String(pickFirst(item, ['brand_id'], '')).trim();
+    if (brandId && brandId !== '0') brandIds.add(brandId);
+  }
+
+  if (!brandIds.size) {
+    const brands = await fetchSilaBrands(apiToken);
+    for (const brand of brands) {
+      const brandId = String(pickFirst(brand, ['brand_id', 'id'], '')).trim();
+      if (brandId && brandId !== '0') brandIds.add(brandId);
+    }
+  }
+
+  const feeds = await mapPool([...brandIds], SILA_BRANDFEED_CONCURRENCY, async (brandId) => {
+    try {
+      return await fetchSilaBrandFeed(apiToken, brandId);
+    } catch (e) {
+      console.warn(`Sila brandfeed ${brandId}: ${e?.message || e}`);
+      return null;
+    }
+  });
+
+  for (const feed of feeds) {
+    if (!feed) continue;
+    const partial = buildSilaImageLookup(feed);
+    for (const [key, value] of partial.byModel) lookup.byModel.set(key, value);
+    for (const [key, value] of partial.byBarcode) lookup.byBarcode.set(key, value);
+  }
+
+  return lookup;
+}
+
 function parsePrice(value) {
   if (value == null || value === '') return 0;
   const n = parseFloat(String(value).replace(',', '.'));
@@ -304,8 +482,8 @@ export function normalizeSilaProduct(item) {
     pack: sizeName,
     option: tasteName,
     category,
-    image: pickFirst(item, ['image', 'image_url', 'img'], ''),
-    label: pickFirst(item, ['label', 'label_url'], ''),
+    image: extractSilaImageFromItem(item),
+    label: resolveSilaImageUrl(pickFirst(item, ['label', 'label_url'], '')),
     barcode,
     b2b_price: b2b > 0 ? b2b.toFixed(2) : '0.00',
     regular_price: regular > 0 ? regular.toFixed(2) : (b2b > 0 ? b2b.toFixed(2) : '0.00'),
@@ -330,25 +508,14 @@ export function normalizeSilaProducts(items) {
   return items.map(normalizeSilaProduct).filter(Boolean);
 }
 
-function extractSilaProductList(data) {
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.data)) return data.data;
-  if (Array.isArray(data?.products)) return data.products;
-  if (Array.isArray(data?.data?.products)) return data.data.products;
-  return [];
-}
-
-/** Fetch all products from Sila Distro API. */
+/** Fetch all products from Sila Distro API (product list + brandfeed images). */
 export async function fetchSilaProducts(apiToken) {
-  const data = await silaRequest(apiToken, 'product', {
-    method: 'POST',
-    body: { brand_id: 0, model_id: 0, taste_id: 0, size_id: 0 },
-  });
-  const items = extractSilaProductList(data);
-  if (!items.length && data?.status === 200) {
-    return [];
-  }
-  return normalizeSilaProducts(items);
+  const rawItems = await fetchSilaProductListRaw(apiToken);
+  if (!rawItems.length) return [];
+
+  const imageLookup = await loadSilaImageLookup(apiToken, rawItems);
+  const enriched = rawItems.map((item) => enrichSilaProductRow(item, imageLookup));
+  return normalizeSilaProducts(enriched);
 }
 
 /** Fetch brand list (optional, for diagnostics). */
