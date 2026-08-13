@@ -6113,6 +6113,14 @@ async function fetchPortfolioAdvisorSettings() {
         if (promptEl && data.prompt) promptEl.value = data.prompt;
         const narrEl = document.getElementById('pfa-narrator-prompt');
         if (narrEl && data.narrator_prompt) narrEl.value = data.narrator_prompt;
+        const commerce = data.commerce || {};
+        document.getElementById('pfa-commerce-enabled') && (document.getElementById('pfa-commerce-enabled').checked = commerce.enabled !== false);
+        const minDisc = document.getElementById('pfa-commerce-min-discount');
+        if (minDisc && commerce.min_distributor_discount_pct != null) minDisc.value = commerce.min_distributor_discount_pct;
+        const marginW = document.getElementById('pfa-commerce-margin-weight');
+        if (marginW && commerce.margin_eur_weight != null) marginW.value = commerce.margin_eur_weight;
+        const discW = document.getElementById('pfa-commerce-discount-weight');
+        if (discW && commerce.discount_pct_weight != null) discW.value = commerce.discount_pct_weight;
     } catch (e) {
         console.error('Portfolio advisor settings:', e);
         showNotification('Грешка при зареждане на настройките за AI консултант.', 'error');
@@ -6124,11 +6132,17 @@ async function savePortfolioAdvisorSettingsAdmin() {
     const composition_mode = document.getElementById('pfa-composition-mode')?.value || 'compose_narrate';
     const prompt = document.getElementById('pfa-prompt')?.value || '';
     const narrator_prompt = document.getElementById('pfa-narrator-prompt')?.value || '';
+    const commerce = {
+        enabled: document.getElementById('pfa-commerce-enabled')?.checked !== false,
+        min_distributor_discount_pct: Number(document.getElementById('pfa-commerce-min-discount')?.value) || 35,
+        margin_eur_weight: Number(document.getElementById('pfa-commerce-margin-weight')?.value) || 0.12,
+        discount_pct_weight: Number(document.getElementById('pfa-commerce-discount-weight')?.value) || 0.10,
+    };
     try {
         const res = await fetch(`${API_URL}/portfolio-advisor/settings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ enabled, composition_mode, prompt, narrator_prompt }),
+            body: JSON.stringify({ enabled, composition_mode, prompt, narrator_prompt, commerce }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         showNotification('Настройките за AI консултант са запазени.', 'success');

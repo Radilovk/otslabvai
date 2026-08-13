@@ -184,4 +184,17 @@ describe('preparePortfolioAdvisorSubmission', () => {
     }));
     expect(score).toBe(-Infinity);
   });
+
+  test('scorePortfolioAdvisorProduct предпочита по-висок марж при равна релевантност', () => {
+    const profile = buildPortfolioAdvisorProfile({ priority: 'muscle', email: 'a@b.com' });
+    const low = makeProduct();
+    low.system_data.portfolio.commerce = {
+      margin_eur: 5, margin_pct: 20, distributor_discount_pct: 30, has_end_user_promo: false,
+    };
+    const high = makeProduct({ product_id: 'prod-pf-999' });
+    high.system_data.portfolio.commerce = {
+      margin_eur: 25, margin_pct: 40, distributor_discount_pct: 40, has_end_user_promo: false,
+    };
+    expect(scorePortfolioAdvisorProduct(high, profile)).toBeGreaterThan(scorePortfolioAdvisorProduct(low, profile));
+  });
 });
