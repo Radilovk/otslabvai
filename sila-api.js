@@ -3,6 +3,8 @@
  * API docs: https://distro.silabg.com (B2B profile → API tab)
  */
 
+import { FITNESS1_CATALOG_CATEGORIES } from './portfolio-fitness1-categories.js';
+
 const SILA_BASE_URL = 'https://distro.silabg.com/api/v1';
 export const KV_SILA_TOKEN = 'sila_api_token';
 export const DISTRIBUTOR_SILA = 'sila';
@@ -14,7 +16,63 @@ export const SILA_BRAND_ID_OFFSET = 9000000;
 export const SILA_SKU_ID_OFFSET = 9000000000;
 
 function normalizeBrandKey(name) {
-  return String(name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  return String(name || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[™®©]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+/** Map Sila category strings into the same taxonomy as the main catalog (for filters/goals). */
+export function mapSilaCategoryToCatalogTaxonomy(rawCategory) {
+  const raw = String(rawCategory || '').trim();
+  if (!raw || /^sila\b/i.test(raw)) return 'Други';
+
+  const parts = raw.split('>').map((p) => p.trim()).filter(Boolean);
+  const top = parts[0] || '';
+  const lowerTop = top.toLowerCase();
+
+  for (const cat of FITNESS1_CATALOG_CATEGORIES) {
+    if (top === cat) {
+      return parts.length > 1 ? parts.join(' > ') : cat;
+    }
+    if (lowerTop === cat.toLowerCase()) {
+      parts[0] = cat;
+      return parts.join(' > ');
+    }
+  }
+
+  const lowerRaw = raw.toLowerCase();
+  for (const cat of FITNESS1_CATALOG_CATEGORIES) {
+    if (lowerRaw.includes(cat.toLowerCase())) {
+      const idx = lowerRaw.indexOf(cat.toLowerCase());
+      const tail = raw.slice(idx + cat.length).replace(/^[>\s/|-]+/, '').trim();
+      return tail ? `${cat} > ${tail}` : cat;
+    }
+  }
+
+  /** @type {[RegExp, string][]} */
+  const SYNONYMS = [
+    [/протеин|whey|casein|изолат/i, 'Протеини'],
+    [/креатин/i, 'Креатин'],
+    [/витамин/i, 'Витамини'],
+    [/минерал|магнезий|цинк|калций/i, 'Минерали'],
+    [/аминокиселин|bcaa|eaa|glutamine|глутамин/i, 'Аминокиселини'],
+    [/мазнин|fat\s*burn|термо|липо/i, 'Изгаряне на мазнини'],
+    [/предтрен|pre.?workout/i, 'Предтренировъчни добавки'],
+    [/став|колаген|глюкозамин/i, 'Стави и сухожилия'],
+    [/билк|herb/i, 'Билки'],
+    [/анти.?ейдж|anti.?aging/i, 'Anti-Aging / Против стареене'],
+    [/маса|gainer|bulk/i, 'Качване на маса и възстановяване'],
+    [/аксесоар|шейкър|belt|колан/i, 'Спортни аксесоари и уреди'],
+  ];
+  for (const [pattern, cat] of SYNONYMS) {
+    if (pattern.test(raw)) return cat;
+  }
+
+  return 'Други';
 }
 
 function silaGroupId(modelId) {
@@ -152,7 +210,7 @@ export function normalizeSilaProduct(item) {
   const tasteName = pickFirst(item, ['taste_name', 'taste', 'flavor_name', 'flavor'], '');
   const sizeName = pickFirst(item, ['size_name', 'size', 'pack', 'packaging'], '');
   const rawCategory = pickFirst(item, ['category', 'category_name', 'group'], '');
-  const category = rawCategory && !/^sila\b/i.test(rawCategory) ? rawCategory : 'Други';
+  const category = mapSilaCategoryToCatalogTaxonomy(rawCategory);
 
   return {
     id: skuId,
@@ -280,6 +338,8 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
     }
     if (!item.category || /^sila\b/i.test(item.category)) {
       item.category = 'Други';
+    } else {
+      item.category = mapSilaCategoryToCatalogTaxonomy(item.category);
     }
 
     merged.push(item);
