@@ -118,10 +118,10 @@ export function normalizeSilaApiToken(raw) {
   return token.trim();
 }
 
-/** Sila distro API tokens are typically ~32 alphanumeric characters (B2B profile → API tab). */
+/** Sila distro API tokens are alphanumeric (often ~32 or ~80 chars from B2B profile → API tab). */
 export function isValidSilaApiToken(token) {
   const normalized = normalizeSilaApiToken(token);
-  return /^[A-Za-z0-9]{24,48}$/.test(normalized);
+  return /^[A-Za-z0-9]{24,96}$/.test(normalized);
 }
 
 /**
@@ -366,17 +366,15 @@ async function fetchSilaProductListRaw(apiToken) {
 }
 
 /**
- * Brand feed – docs: GET /brandfeed with brand_id filter (images + model metadata).
+ * Brand feed – POST with brand_id (official PHP client); images + model metadata.
  * @param {string} apiToken
  * @param {string|number} brandId
  */
 export async function fetchSilaBrandFeed(apiToken, brandId) {
-  const body = { brand_id: String(brandId) };
-  try {
-    return await silaRequest(apiToken, 'brandfeed', { method: 'POST', body });
-  } catch {
-    return silaRequest(apiToken, 'brandfeed', { method: 'GET', body });
-  }
+  return silaRequest(apiToken, 'brandfeed', {
+    method: 'POST',
+    body: { brand_id: String(brandId) },
+  });
 }
 
 /** Product detail by EAN – docs: GET /product/{barcode}. */

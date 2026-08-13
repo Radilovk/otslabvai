@@ -253,8 +253,8 @@ jobs:
         run: |
           if [ -z "$SILA_API_TOKEN" ]; then exit 0; fi
           len=$(printf '%s' "$SILA_API_TOKEN" | wc -c | tr -d ' ')
-          if ! printf '%s' "$SILA_API_TOKEN" | grep -Eq '^[A-Za-z0-9]{24,48}$'; then
-            echo "::warning::SILA_API_TOKEN format looks invalid (length=${len}, expected ~32 alphanumeric from Sila B2B → API tab). Catalog sync will skip Sila products."
+          if ! printf '%s' "$SILA_API_TOKEN" | grep -Eq '^[A-Za-z0-9]{24,96}$'; then
+            echo "::warning::SILA_API_TOKEN format looks invalid (length=${len}, expected 24–96 alphanumeric from Sila B2B → API tab). Catalog sync will skip Sila products."
           fi
 
       - name: Verify Portfolio catalog bootstrap

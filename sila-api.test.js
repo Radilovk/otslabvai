@@ -122,7 +122,8 @@ describe('Sila API', () => {
     expect(normalizeSilaApiToken('https://distro.silabg.com/api/v1/product?api_token=abc123XYZ')).toBe('abc123XYZ');
     expect(normalizeSilaApiToken('Bearer myToken123')).toBe('myToken123');
     expect(isValidSilaApiToken('8ysXfJbcf6e6YzyEhcgAaxWk4CEN9rD3')).toBe(true);
-    expect(isValidSilaApiToken('x'.repeat(80))).toBe(false);
+    expect(isValidSilaApiToken('A'.repeat(80))).toBe(true);
+    expect(isValidSilaApiToken('x'.repeat(20))).toBe(false);
   });
 
   test('resolveSilaImageUrl makes relative Sila paths absolute', () => {
