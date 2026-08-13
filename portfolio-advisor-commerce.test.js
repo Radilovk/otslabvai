@@ -3,6 +3,7 @@ import {
   attachAdvisorCommercialStats,
   filterAdvisorCommercialProducts,
   isExcludedByAdvisorCommerce,
+  normalizeAdvisorCommerceSettings,
   scoreAdvisorCommercialBoost,
 } from './portfolio-advisor-commerce.js';
 import { portfolioGroupToSiteProduct } from './portfolio-import.js';
@@ -97,5 +98,37 @@ describe('portfolio-advisor-commerce', () => {
       })
     );
     expect(scoreAdvisorCommercialBoost(high)).toBeGreaterThan(scoreAdvisorCommercialBoost(low));
+  });
+
+  test('normalizeAdvisorCommerceSettings clamps invalid values', () => {
+    const opts = normalizeAdvisorCommerceSettings({
+      min_distributor_discount_pct: 999,
+      margin_eur_weight: -1,
+    });
+    expect(opts.min_distributor_discount_pct).toBe(80);
+    expect(opts.margin_eur_weight).toBe(0);
+  });
+
+  test('commerce filter can be disabled', () => {
+    const product = attachAdvisorCommercialStats(portfolioGroupToSiteProduct(makeGroup({
+      variants: [{
+        sku_id: '1',
+        b2b_price: 85,
+        regular_price: 100,
+        retail_price: 95,
+        sale_price: 0,
+        available: true,
+      }],
+    })), makeGroup({
+      variants: [{
+        sku_id: '1',
+        b2b_price: 85,
+        regular_price: 100,
+        retail_price: 95,
+        sale_price: 0,
+        available: true,
+      }],
+    }));
+    expect(filterAdvisorCommercialProducts([product], { enabled: false })).toHaveLength(1);
   });
 });

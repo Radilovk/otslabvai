@@ -4,15 +4,54 @@
  */
 
 export const ADVISOR_COMMERCE_DEFAULTS = {
+  enabled: true,
   /** Min discount vs RRP (regular vs b2b) to stay in the advisor pool. */
-  min_distributor_discount_pct: 25,
+  min_distributor_discount_pct: 30,
   /** Fallback min markup % (retail vs b2b) when RRP is missing. */
   min_markup_pct: 15,
   /** Score boost per EUR absolute margin (best available variant). */
-  margin_eur_weight: 0.08,
+  margin_eur_weight: 0.12,
   /** Score boost per 10 percentage points of distributor discount. */
-  discount_pct_weight: 0.15,
+  discount_pct_weight: 0.10,
 };
+
+/** Merge saved KV settings with defaults and clamp to safe ranges. */
+export function normalizeAdvisorCommerceSettings(raw = {}) {
+  const input = raw && typeof raw === 'object' ? raw : {};
+  const src = input.commerce && typeof input.commerce === 'object' ? input.commerce : input;
+  const clamp = (value, min, max, fallback) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(max, Math.max(min, n));
+  };
+  return {
+    enabled: src.enabled !== false,
+    min_distributor_discount_pct: clamp(
+      src.min_distributor_discount_pct,
+      0,
+      80,
+      ADVISOR_COMMERCE_DEFAULTS.min_distributor_discount_pct
+    ),
+    min_markup_pct: clamp(
+      src.min_markup_pct,
+      0,
+      80,
+      ADVISOR_COMMERCE_DEFAULTS.min_markup_pct
+    ),
+    margin_eur_weight: clamp(
+      src.margin_eur_weight,
+      0,
+      1,
+      ADVISOR_COMMERCE_DEFAULTS.margin_eur_weight
+    ),
+    discount_pct_weight: clamp(
+      src.discount_pct_weight,
+      0,
+      1,
+      ADVISOR_COMMERCE_DEFAULTS.discount_pct_weight
+    ),
+  };
+}
 
 function round1(n) {
   return Math.round(n * 10) / 10;
@@ -88,6 +127,9 @@ export function getAdvisorCommercialStats(product) {
 }
 
 export function isExcludedByAdvisorCommerce(product, options = ADVISOR_COMMERCE_DEFAULTS) {
+  const opts = normalizeAdvisorCommerceSettings(options);
+  if (!opts.enabled) return false;
+
   const stats = getAdvisorCommercialStats(product);
   if (!stats) return false;
 
@@ -96,24 +138,29 @@ export function isExcludedByAdvisorCommerce(product, options = ADVISOR_COMMERCE_
   const dist = stats.distributor_discount_pct || 0;
   const markup = stats.margin_pct || 0;
 
-  if (dist > 0 && dist < options.min_distributor_discount_pct) return true;
-  if (dist <= 0 && markup > 0 && markup < options.min_markup_pct) return true;
+  if (dist > 0 && dist < opts.min_distributor_discount_pct) return true;
+  if (dist <= 0 && markup > 0 && markup < opts.min_markup_pct) return true;
 
   return false;
 }
 
 export function filterAdvisorCommercialProducts(products, options = ADVISOR_COMMERCE_DEFAULTS) {
-  return products.filter((p) => !isExcludedByAdvisorCommerce(p, options));
+  const opts = normalizeAdvisorCommerceSettings(options);
+  if (!opts.enabled) return products;
+  return products.filter((p) => !isExcludedByAdvisorCommerce(p, opts));
 }
 
 /** Small additive boost on top of health/goal relevance score. */
 export function scoreAdvisorCommercialBoost(product, options = ADVISOR_COMMERCE_DEFAULTS) {
+  const opts = normalizeAdvisorCommerceSettings(options);
+  if (!opts.enabled) return 0;
+
   const stats = getAdvisorCommercialStats(product);
   if (!stats || stats.has_end_user_promo) return 0;
 
-  const marginBoost = (stats.margin_eur || 0) * options.margin_eur_weight;
+  const marginBoost = (stats.margin_eur || 0) * opts.margin_eur_weight;
   const discountPct = stats.distributor_discount_pct || stats.margin_pct || 0;
-  const discountBoost = (discountPct / 10) * options.discount_pct_weight;
+  const discountBoost = (discountPct / 10) * opts.discount_pct_weight;
 
   return marginBoost + discountBoost;
 }

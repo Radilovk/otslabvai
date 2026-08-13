@@ -631,6 +631,28 @@
                             <option value="ai_pick">AI избира продукти</option>
                         </select>
                     </div>
+                    <div class="list-item" style="background:var(--bg-primary);padding:1rem;border-radius:10px;margin-bottom:1rem;border:1px solid var(--border-color);">
+                        <h4 style="margin:0 0 0.75rem;">Търговски приоритет (без AI)</h4>
+                        <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;cursor:pointer;">
+                            <input type="checkbox" id="pfa-commerce-enabled" checked>
+                            <span>Филтрирай и приоритизирай по марж (изключва крайни промо и ниска дистриб. отстъпка)</span>
+                        </label>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;">
+                            <div>
+                                <label for="pfa-commerce-min-discount" style="font-size:0.85rem;display:block;margin-bottom:0.35rem;">Мин. дистриб. отстъпка %</label>
+                                <input type="number" id="pfa-commerce-min-discount" min="0" max="80" step="1" value="30" style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);">
+                            </div>
+                            <div>
+                                <label for="pfa-commerce-margin-weight" style="font-size:0.85rem;display:block;margin-bottom:0.35rem;">Тегло марж €</label>
+                                <input type="number" id="pfa-commerce-margin-weight" min="0" max="1" step="0.01" value="0.12" style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);">
+                            </div>
+                            <div>
+                                <label for="pfa-commerce-discount-weight" style="font-size:0.85rem;display:block;margin-bottom:0.35rem;">Тегло отстъпка %</label>
+                                <input type="number" id="pfa-commerce-discount-weight" min="0" max="1" step="0.01" value="0.10" style="width:100%;padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);">
+                            </div>
+                        </div>
+                        <p style="margin:0.75rem 0 0;font-size:0.82rem;color:var(--text-secondary);">Пример: при 30% праг — продукти с 40% дистриб. отстъпка минават, с 20% — не. Продукти с крайна промо (sale) се изключват винаги.</p>
+                    </div>
                     <div class="form-group" style="margin-bottom:1rem;">
                         <label for="pfa-prompt" style="font-weight:600;display:block;margin-bottom:0.5rem;">AI промпт (ai_pick режим)</label>
                         <textarea id="pfa-prompt" rows="6" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);"></textarea>

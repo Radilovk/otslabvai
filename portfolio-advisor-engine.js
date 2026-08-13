@@ -27,8 +27,10 @@ import {
 import {
   attachAdvisorCommercialStats,
   filterAdvisorCommercialProducts,
+  normalizeAdvisorCommerceSettings,
   scoreAdvisorCommercialBoost,
 } from './portfolio-advisor-commerce.js';
+import { loadPortfolioAdvisorSettings } from './portfolio-advisor-settings.js';
 
 export { composePortfolioAdvisorStacks };
 
@@ -125,7 +127,8 @@ export function buildPortfolioAdvisorProfile(raw) {
   return profile;
 }
 
-export function scorePortfolioAdvisorProduct(product, profile) {
+export function scorePortfolioAdvisorProduct(product, profile, commerceOptions = null) {
+  const commerce = normalizeAdvisorCommerceSettings(commerceOptions);
   const goalRelevance = scoreProductForGoal(product, profile.priority);
   if (goalRelevance < 0) return -Infinity;
 
@@ -160,12 +163,13 @@ export function scorePortfolioAdvisorProduct(product, profile) {
     if (price > 80) score -= 0.3;
   }
 
-  score += scoreAdvisorCommercialBoost(product);
+  score += scoreAdvisorCommercialBoost(product, commerce);
 
   return score;
 }
 
-export function rankPortfolioAdvisorProducts(profile, products) {
+export function rankPortfolioAdvisorProducts(profile, products, commerceOptions = null) {
+  const commerce = normalizeAdvisorCommerceSettings(commerceOptions);
   const excluded = new Map();
   const ranked = [];
 
@@ -175,7 +179,7 @@ export function rankPortfolioAdvisorProducts(profile, products) {
       excluded.set(product.product_id, reasons);
       continue;
     }
-    ranked.push({ product, score: scorePortfolioAdvisorProduct(product, profile) });
+    ranked.push({ product, score: scorePortfolioAdvisorProduct(product, profile, commerce) });
   }
 
   const finiteRanked = ranked.filter((entry) => Number.isFinite(entry.score));
@@ -323,6 +327,8 @@ export function getPortfolioComposeOptions(profile) {
 }
 
 export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compositionMode = 'compose_narrate' } = {}) {
+  const advisorSettings = await loadPortfolioAdvisorSettings(env);
+  const commerceOptions = normalizeAdvisorCommerceSettings(advisorSettings);
   const profile = buildPortfolioAdvisorProfile(rawAnswers);
   if (!profile.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
     throw new Error('Невалиден имейл адрес.');
@@ -346,10 +352,10 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     throw new Error('Няма достатъчно продукти в избраните категории. Добавете още категории или изберете „Всички категории“.');
   }
 
-  const commercialPool = filterAdvisorCommercialProducts(categoryPool);
+  const commercialPool = filterAdvisorCommercialProducts(categoryPool, commerceOptions);
   const advisorPool = commercialPool.length >= 3 ? commercialPool : categoryPool;
 
-  const rankedResult = rankPortfolioAdvisorProducts(profile, advisorPool);
+  const rankedResult = rankPortfolioAdvisorProducts(profile, advisorPool, commerceOptions);
 
   if (rankedResult.ranked.length < 3) {
     throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
@@ -390,6 +396,8 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
         eligible_available: categoryPool.length,
         commercial_eligible: commercialPool.length,
         advisor_pool_size: advisorPool.length,
+        commerce_enabled: commerceOptions.enabled,
+        commerce_min_discount_pct: commerceOptions.min_distributor_discount_pct,
         ranked_pool_size: rankedResult.ranked.length,
         candidates_sent_to_ai: candidates.length,
       },
@@ -424,6 +432,8 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       eligible_available: categoryPool.length,
       commercial_eligible: commercialPool.length,
       advisor_pool_size: advisorPool.length,
+      commerce_enabled: commerceOptions.enabled,
+      commerce_min_discount_pct: commerceOptions.min_distributor_discount_pct,
       ranked_pool_size: rankedResult.ranked.length,
       candidates_sent_to_ai: 0,
     },
