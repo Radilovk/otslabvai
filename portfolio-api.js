@@ -615,7 +615,7 @@ export async function fetchFitness1Products(apiKey) {
 
 /**
  * Fetch raw SKUs from all configured distributors (Fitness1 + Sila).
- * @returns {Promise<{ products: object[], fitness1_count: number, sila_count: number }>}
+ * @returns {Promise<{ products: object[], fitness1_count: number, sila_count: number, fitness1_error: string|null, sila_error: string|null }>}
  */
 export async function fetchAllCatalogRawProducts(env) {
   let fitness1Products = [];

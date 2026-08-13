@@ -143,9 +143,9 @@ export function normalizeSilaProduct(item) {
   const barcode = String(pickFirst(item, ['barcode_ean', 'ean', 'barcode'], '')).trim();
   const skuId = barcode || silaSkuId(modelId, tasteId, sizeId);
 
-  const b2b = parsePrice(pickFirst(item, ['price', 'b2b_price', 'dealer_price', 'wholesale_price'], 0));
-  const regular = parsePrice(pickFirst(item, ['price_retail', 'regular_price', 'retail_price', 'rrp'], 0)) || b2b;
-  const sale = parsePrice(pickFirst(item, ['price_promo', 'sale_price', 'promo_price'], 0));
+  const b2b = parsePrice(pickFirst(item, ['price', 'b2b_price', 'dealer_price', 'wholesale_price'], ''));
+  const regular = parsePrice(pickFirst(item, ['price_retail', 'regular_price', 'retail_price', 'rrp'], '')) || b2b;
+  const sale = parsePrice(pickFirst(item, ['price_promo', 'sale_price', 'promo_price'], ''));
 
   const productName = pickFirst(item, ['product_name', 'model_name', 'name', 'title'], 'Без име');
   const brandName = pickFirst(item, ['brand_name', 'brand'], '');
