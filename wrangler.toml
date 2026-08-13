@@ -8,7 +8,8 @@ compatibility_date = "2024-04-05"
 # Wrangler uploads the full worker bundle from this directory.
 
 # Set via: npx wrangler secret put FITNESS1_API_KEY
-# Or KV key fitness1_api_key (see upload-portfolio-catalog.mjs)
+# Set via: npx wrangler secret put SILA_API_TOKEN
+# Or KV keys fitness1_api_key / sila_api_token (see upload-portfolio-catalog.mjs)
 # directly by the Cloudflare edge — they never touch the Worker or KV.
 # Only API routes (/page_content.json, /orders, /contacts, etc.) hit the Worker.
 [assets]
