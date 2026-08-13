@@ -5,6 +5,7 @@ import {
   mergeCatalogProducts,
   isSilaDistributor,
   isFitness1Distributor,
+  mapSilaCategoryToCatalogTaxonomy,
   SILA_GROUP_ID_OFFSET,
   SILA_BRAND_ID_OFFSET,
 } from './sila-api.js';
@@ -57,6 +58,16 @@ describe('Sila API', () => {
   test('normalizeSilaProduct defaults unknown category to Други', () => {
     const raw = normalizeSilaProduct({ ...sampleSilaRow, category: 'Sila BG' });
     expect(raw.category).toBe('Други');
+  });
+
+  test('normalizeSilaProduct maps protein category to Протеини', () => {
+    const raw = normalizeSilaProduct({ ...sampleSilaRow, category: 'Whey Protein' });
+    expect(raw.category).toBe('Протеини');
+  });
+
+  test('mapSilaCategoryToCatalogTaxonomy aligns with Fitness1 top-level names', () => {
+    expect(mapSilaCategoryToCatalogTaxonomy('Витамини > Витамин C')).toBe('Витамини > Витамин C');
+    expect(mapSilaCategoryToCatalogTaxonomy('протеини')).toBe('Протеини');
   });
 
   test('normalizeSilaProducts filters invalid rows', () => {

@@ -1,0 +1,5 @@
+{
+  "name": "otslabvai",
+  "install": "npm ci",
+  "terminals": []
+}

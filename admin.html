@@ -520,7 +520,7 @@
             <!-- Portfolio: Настройки и синхронизация -->
             <section id="tab-portfolio-settings" class="tab-pane tab-portfolio-only">
                 <h2>Portfolio – Настройки</h2>
-                <p class="instructions">Глобална надценка, синхронизация с Fitness1 B2B API и статус на каталога.</p>
+                <p class="instructions">Глобална надценка, синхронизация с B2B каталога и статус.</p>
                 <div id="portfolio-settings-container" class="item-list"></div>
             </section>
 
@@ -536,14 +536,14 @@
                             <option value="life">Life</option>
                         </select>
                         <input type="text" id="portfolio-order-search" placeholder="Търси по име, телефон...">
-                        <button type="button" id="portfolio-batch-approve-btn" class="btn btn-success" style="display:none;" disabled>Обобщи и изпрати към F1</button>
+                        <button type="button" id="portfolio-batch-approve-btn" class="btn btn-success" style="display:none;" disabled>Обобщи и изпрати</button>
                         <button id="refresh-portfolio-orders-btn" class="btn btn-secondary">Опресни</button>
                     </div>
                 </div>
                 <div id="portfolio-orders-workflow-hint" class="instructions" style="margin-bottom:1rem;padding:1rem;background:var(--bg-secondary);border-radius:8px;">
                     <strong>Как работи:</strong> Клиентите поръчват от portfolio сайта поръчките се записват тук с данни за доставка до всеки клиент 
-                    маркирате една или повече поръчки продуктите се <strong>обобщават по баркод</strong> и изпращат като една B2B поръчка към Fitness1 от вашия профил 
-                    получавате F1 номер и вие разпределяте пратките към клиентите според адреса/офиса във всяка поръчка.
+                    маркирате една или повече поръчки продуктите се <strong>обобщават по баркод</strong> и изпращат като една B2B поръчка към вашия дистрибуторски профил.
+                    Получавате B2B номер и вие разпределяте пратките към клиентите според адреса/офиса във всяка поръчка.
                 </div>
                 <div id="portfolio-pending-banner" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;color:#664d03;"></div>
                 <div class="mobile-sort-bar" id="portfolio-orders-mobile-sort-bar">
@@ -562,7 +562,7 @@
                     <table id="portfolio-orders-table" class="orders-table">
                         <thead>
                             <tr>
-                                <th style="width:2rem;"><input type="checkbox" id="portfolio-select-all" title="Избери всички готови за изпращане към F1"></th>
+                                <th style="width:2rem;"><input type="checkbox" id="portfolio-select-all" title="Избери всички готови за изпращане"></th>
                                 <th>Клиент</th>
                                 <th>Телефон</th>
                                 <th>Доставка</th>
@@ -711,7 +711,7 @@
     <div id="pf-import-overlay" class="pf-import-overlay" hidden>
         <div class="pf-import-dialog" role="dialog" aria-modal="true" aria-labelledby="pf-import-title">
             <header class="pf-import-header">
-                <h3 id="pf-import-title">Импорт от Portfolio каталога (Fitness1 API)</h3>
+                <h3 id="pf-import-title">Импорт от Portfolio каталога</h3>
                 <button type="button" class="close-modal-btn" data-action="pf-import-close" aria-label="Затвори">×</button>
             </header>
             <div class="pf-import-body">
@@ -1447,7 +1447,7 @@
                         <button type="button" class="btn btn-primary" data-action="import-product">Импортирай продукт (JSON)</button>
                         <button type="button" class="btn btn-secondary btn-with-icon" data-action="import-products-csv" title="Импортирай продукти от CSV файл" aria-label="Импортирай продукти от CSV файл"><svg class="ui-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M12 11v6"/><path d="m9 14 3 3 3-3"/></svg>Импортирай CSV</button>
                         <button type="button" class="btn btn-secondary btn-with-icon" data-action="import-products-xlsx" title="Импортирай продукти от B2B XLSX файл (формат fitness1.bg)" aria-label="Импортирай продукти от XLSX файл"><svg class="ui-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>Импортирай B2B XLSX</button>
-                        <button type="button" class="btn btn-primary btn-with-icon" data-action="import-products-portfolio" title="Импортирай продукти директно от Portfolio B2B каталога (Fitness1 API) с ръчен или AI подбор" aria-label="Импортирай продукти от Portfolio каталога"><svg class="ui-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Импорт от Portfolio</button>
+                        <button type="button" class="btn btn-primary btn-with-icon" data-action="import-products-portfolio" title="Импортирай продукти директно от Portfolio B2B каталога с ръчен или AI подбор" aria-label="Импортирай продукти от Portfolio каталога"><svg class="ui-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Импорт от Portfolio</button>
                         <button type="button" class="btn btn-secondary btn-with-icon" data-action="export-products-csv" title="Експортирай всички продукти от категорията в CSV" aria-label="Експортирай продукти в CSV"><svg class="ui-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M12 11V5"/><path d="m9 8 3-3 3 3"/></svg>Експортирай CSV</button>
                         <button type="button" class="btn btn-secondary btn-with-icon" data-action="download-csv-template" title="Изтегли шаблон за импорт на продукти в CSV формат" aria-label="Изтегли CSV шаблон"><svg class="ui-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M8 9h3"/></svg>CSV шаблон</button>
                         <input type="file" id="product-import-input" style="display: none;" accept=".json">
