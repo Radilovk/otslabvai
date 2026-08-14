@@ -1,11 +1,13 @@
 import { API_URL } from './config.js';
-import {
-  HERO_BRANDING_CACHE_KEY,
-  buildHeroImageSrc,
-  persistHeroBranding
-} from './portfolio-branding.js';
 
-export { HERO_BRANDING_CACHE_KEY, buildHeroImageSrc } from './portfolio-branding.js';
+export const CART_KEY = 'portfolioCart';
+
+export const BRAND_NAME = 'BIOCODE';
+export const BRAND_FULL = 'BIOCODE - Nutrition Science';
+export const BRAND_SLOGAN = 'Протеини, витамини, аминокиселини';
+export const BRAND_LOGO = 'images/biocode-logo.png';
+export const BRAND_FAVICON = 'images/biocode-favicon.png';
+export const BRAND_HERO_IMAGE = 'images/portfolio-hero.jpg';
 
 const DEFAULT_FOOTER = {
   contact_email: 'office@biocode.com',
@@ -153,39 +155,18 @@ export async function mergeLiveSiteBranding(settings) {
   return { ...(settings || {}), ...live };
 }
 
-function mergeBrandingSettings(cached, live) {
-  return { ...(cached || {}), ...(live || {}) };
-}
-
 export async function loadSiteSettings({ settingsOnly = false } = {}) {
-  let cache = null;
   try {
-    cache = await import('./portfolio-cache.js');
-  } catch { /* ignore */ }
-
-  const livePromise = fetchLiveSiteBranding();
-  const syncPromise = cache && !settingsOnly ? cache.sync().catch(() => {}) : null;
-
-  let cached = null;
-  if (cache) {
+    const cache = await import('./portfolio-cache.js');
     if (settingsOnly) {
-      cached = await cache.ensureSettings().catch(() => null);
-    } else {
-      cached = cache.getCachedSettings();
+      const cached = await cache.ensureSettings();
+      return mergeLiveSiteBranding(cached);
     }
+    await cache.sync();
+    return mergeLiveSiteBranding(cache.getCachedSettings());
+  } catch {
+    return fetchLiveSiteBranding();
   }
-
-  const live = await livePromise;
-  let settings = mergeBrandingSettings(cached, live);
-  applyHeroSettings(settings);
-
-  if (syncPromise) {
-    await syncPromise;
-    settings = mergeBrandingSettings(cache.getCachedSettings(), live);
-    applyHeroSettings(settings);
-  }
-
-  return settings;
 }
 
 export function applySiteSettings(settings) {
@@ -210,9 +191,9 @@ export function applyHeroSettings(settings) {
   if (!settings) return;
   const img = document.getElementById('hero-image');
   if (img && settings.hero_image) {
-    const nextSrc = buildHeroImageSrc(settings);
-    if (img.getAttribute('src') !== nextSrc) img.src = nextSrc;
-    persistHeroBranding(settings);
+    const raw = String(settings.hero_image);
+    const bust = settings.last_sync ? `v=${encodeURIComponent(settings.last_sync)}` : `t=${Date.now()}`;
+    img.src = raw.includes('?') ? `${raw}&${bust}` : `${raw}?${bust}`;
   }
   const title = document.getElementById('hero-title');
   if (title && settings.hero_title) title.textContent = settings.hero_title;

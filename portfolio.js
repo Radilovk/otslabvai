@@ -362,7 +362,7 @@ function bindEvents() {
 }
 
 async function init() {
-  await initPortfolioPage({ active: 'catalog', showMobileBar: true });
+  const { settings } = await initPortfolioPage({ active: 'catalog', showMobileBar: true });
   showSkeletons();
 
   try {
