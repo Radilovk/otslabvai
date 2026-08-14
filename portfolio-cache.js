@@ -117,6 +117,20 @@ async function hydrateFromIdb() {
   return true;
 }
 
+/** Load catalog snapshot from IndexedDB without network. */
+export async function hydrateLocalCache() {
+  if (catalogState.index) return true;
+  return hydrateFromIdb();
+}
+
+function applyBrandingSettings(branding) {
+  if (!branding || !catalogState.index) return;
+  catalogState.index = {
+    ...catalogState.index,
+    settings: { ...(catalogState.index.settings || {}), ...branding }
+  };
+}
+
 async function persistSnapshot() {
   await idbSet('snapshot', {
     index: catalogState.index,
@@ -165,7 +179,8 @@ async function legacyBootstrapFallback() {
 async function doSync() {
   try {
     const now = await fetchJson(`${API_URL}/c/now`);
-    let changed = false;
+    if (now.branding) applyBrandingSettings(now.branding);
+    let changed = Boolean(now.branding);
 
     if (now.i !== catalogState.indexV) {
       catalogState.index = await fetchJson(`${API_URL}/c/index-${now.i}.json`);

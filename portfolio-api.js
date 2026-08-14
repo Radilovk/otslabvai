@@ -2177,9 +2177,6 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
   const method = request.method;
 
   try {
-    if (path === '/portfolio/site-config' && method === 'GET') {
-      return await handleGetSiteConfig(env);
-    }
     if (path === '/portfolio/settings') {
       if (method === 'GET') return await handleGetSettings(env);
       if (method === 'POST') return await handleSaveSettings(request, env);
