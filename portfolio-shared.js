@@ -1,11 +1,11 @@
 import { API_URL } from './config.js';
 import {
   HERO_BRANDING_CACHE_KEY,
-  buildHeroImageSrc,
-  persistHeroBranding
+  applyHeroImageElement,
+  readCachedHeroBranding
 } from './portfolio-branding.js';
 
-export { HERO_BRANDING_CACHE_KEY, buildHeroImageSrc } from './portfolio-branding.js';
+export { HERO_BRANDING_CACHE_KEY, buildHeroImageSrc, heroImageBase } from './portfolio-branding.js';
 
 const DEFAULT_FOOTER = {
   contact_email: 'office@biocode.com',
@@ -154,7 +154,8 @@ export async function mergeLiveSiteBranding(settings) {
 }
 
 function mergeBrandingSettings(cached, live) {
-  return { ...(cached || {}), ...(live || {}) };
+  const persisted = readCachedHeroBranding();
+  return { ...(cached || {}), ...(persisted || {}), ...(live || {}) };
 }
 
 export async function loadSiteSettings({ settingsOnly = false } = {}) {
@@ -177,12 +178,10 @@ export async function loadSiteSettings({ settingsOnly = false } = {}) {
 
   const live = await livePromise;
   let settings = mergeBrandingSettings(cached, live);
-  applyHeroSettings(settings);
 
   if (syncPromise) {
     await syncPromise;
     settings = mergeBrandingSettings(cache.getCachedSettings(), live);
-    applyHeroSettings(settings);
   }
 
   return settings;
@@ -209,11 +208,7 @@ export function applySiteSettings(settings) {
 export function applyHeroSettings(settings) {
   if (!settings) return;
   const img = document.getElementById('hero-image');
-  if (img && settings.hero_image) {
-    const nextSrc = buildHeroImageSrc(settings);
-    if (img.getAttribute('src') !== nextSrc) img.src = nextSrc;
-    persistHeroBranding(settings);
-  }
+  if (img) applyHeroImageElement(img, settings);
   const title = document.getElementById('hero-title');
   if (title && settings.hero_title) title.textContent = settings.hero_title;
   const sub = document.getElementById('hero-subtitle');
