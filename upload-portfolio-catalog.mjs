@@ -12,15 +12,6 @@ const F1_KEY = process.env.FITNESS1_API_KEY;
 const SILA_TOKEN = process.env.SILA_API_TOKEN;
 const CHUNK_SIZE = 150;
 
-async function kvGet(key) {
-  const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/storage/kv/namespaces/${KV_NS}/values/${encodeURIComponent(key)}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`KV get ${key}: ${res.status}`);
-  const text = await res.text();
-  try { return JSON.parse(text); } catch { return text; }
-}
-
 async function kvPut(key, body, contentType = 'application/json') {
   const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/storage/kv/namespaces/${KV_NS}/values/${encodeURIComponent(key)}`;
   const res = await fetch(url, {
@@ -74,8 +65,7 @@ async function main() {
     descriptionMap = await fetchDescriptionMap(F1_KEY);
   }
 
-  const existingSettings = uploadKv ? await kvGet('portfolio_settings') : null;
-  const settings = { ...DEFAULT_SETTINGS, ...(existingSettings || {}), global_markup_percent: 30 };
+  const settings = { ...DEFAULT_SETTINGS, global_markup_percent: 30 };
   const groups = groupRawProducts(products, settings, descriptionMap);
   const meta = buildCatalogMeta(groups);
   meta.synced_at = new Date().toISOString();

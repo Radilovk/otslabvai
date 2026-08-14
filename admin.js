@@ -2721,11 +2721,6 @@ function handleAction(action, target, id) {
                     
                     // Update the input field with the URL
                     inputElement.value = imageUrl;
-                    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-                    if (targetFieldPath === 'hero_image') {
-                        const preview = document.getElementById('pf-hero-preview');
-                        if (preview) preview.src = imageUrl;
-                    }
                     
                     showNotification('Изображението е качено успешно!', 'success');
                 } catch (error) {
