@@ -148,25 +148,14 @@ function heroImagePath(url) {
   }
 }
 
-/** Overlay live KV branding (hero, title, footer) on cached catalog settings. */
-export async function mergeLiveSiteBranding(settings) {
-  const live = await fetchLiveSiteBranding();
-  if (!live) return settings || null;
-  return { ...(settings || {}), ...live };
+function setTextIfChanged(el, text) {
+  if (el && text != null && el.textContent !== text) el.textContent = text;
 }
 
-export async function loadSiteSettings({ settingsOnly = false } = {}) {
-  try {
-    const cache = await import('./portfolio-cache.js');
-    if (settingsOnly) {
-      const cached = await cache.ensureSettings();
-      return mergeLiveSiteBranding(cached);
-    }
-    await cache.sync();
-    return mergeLiveSiteBranding(cache.getCachedSettings());
-  } catch {
-    return fetchLiveSiteBranding();
-  }
+export function applyBrandingFromSettings(settings) {
+  if (!settings) return;
+  applySiteSettings(settings);
+  applyHeroSettings(settings);
 }
 
 export function applySiteSettings(settings) {
@@ -191,14 +180,16 @@ export function applyHeroSettings(settings) {
   if (!settings) return;
   const img = document.getElementById('hero-image');
   if (img && settings.hero_image) {
-    const raw = String(settings.hero_image);
-    const bust = settings.last_sync ? `v=${encodeURIComponent(settings.last_sync)}` : `t=${Date.now()}`;
-    img.src = raw.includes('?') ? `${raw}&${bust}` : `${raw}?${bust}`;
+    const next = String(settings.hero_image);
+    const currentPath = heroImagePath(img.dataset.heroSrc || img.currentSrc || img.getAttribute('src') || '');
+    const nextPath = heroImagePath(next);
+    if (currentPath !== nextPath) {
+      img.dataset.heroSrc = next;
+      img.src = next;
+    }
   }
-  const title = document.getElementById('hero-title');
-  if (title && settings.hero_title) title.textContent = settings.hero_title;
-  const sub = document.getElementById('hero-subtitle');
-  if (sub && settings.site_slogan) sub.textContent = settings.site_slogan;
+  setTextIfChanged(document.getElementById('hero-title'), settings.hero_title || null);
+  setTextIfChanged(document.getElementById('hero-subtitle'), settings.site_slogan || null);
 }
 
 const THEME_TOGGLE_SVG = `
@@ -396,19 +387,8 @@ export async function initPortfolioPage({
       if (footerSlot) footerSlot.innerHTML = renderFooter(settings);
       applyBrandingFromSettings(settings);
     }
-    void cache.ensureSettings().then(() => {
-      const fresh = cache.getCachedSettings();
-      if (!fresh) return;
-      applyBrandingFromSettings(fresh);
-    });
     return { settings };
   }
-
-  void cache.sync().then(() => {
-    const fresh = cache.getCachedSettings();
-    if (!fresh) return;
-    applyBrandingFromSettings(fresh);
-  });
 
   return { settings };
 }
