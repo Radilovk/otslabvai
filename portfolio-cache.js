@@ -123,12 +123,26 @@ export async function hydrateLocalCache() {
   return hydrateFromIdb();
 }
 
+function brandingFingerprint(settings) {
+  return JSON.stringify({
+    site_name: settings?.site_name,
+    site_slogan: settings?.site_slogan,
+    hero_image: settings?.hero_image,
+    hero_title: settings?.hero_title,
+    footer: settings?.footer
+  });
+}
+
 function applyBrandingSettings(branding) {
-  if (!branding || !catalogState.index) return;
+  if (!branding || !catalogState.index) return false;
+  const prev = catalogState.index.settings || {};
+  const merged = { ...prev, ...branding };
+  if (brandingFingerprint(prev) === brandingFingerprint(merged)) return false;
   catalogState.index = {
     ...catalogState.index,
-    settings: { ...(catalogState.index.settings || {}), ...branding }
+    settings: merged
   };
+  return true;
 }
 
 async function persistSnapshot() {
@@ -179,25 +193,28 @@ async function legacyBootstrapFallback() {
 async function doSync() {
   try {
     const now = await fetchJson(`${API_URL}/c/now`);
-    if (now.branding) applyBrandingSettings(now.branding);
-    let changed = Boolean(now.branding);
+    let catalogChanged = false;
 
     if (now.i !== catalogState.indexV) {
       catalogState.index = await fetchJson(`${API_URL}/c/index-${now.i}.json`);
       catalogState.indexV = now.i;
       memory.groupChunks.clear();
-      changed = true;
+      catalogChanged = true;
     }
     if (now.s !== catalogState.stockV) {
       catalogState.stock = await fetchJson(`${API_URL}/c/stock-${now.s}.json`);
       catalogState.stockV = now.s;
-      changed = true;
+      catalogChanged = true;
     }
+
+    const brandingChanged = applyBrandingSettings(now.branding);
 
     catalogState.lastSync = Date.now();
     catalogState.stale = false;
-    await persistSnapshot();
-    if (changed) notifyCatalogUpdated();
+    if (brandingChanged || catalogChanged) {
+      await persistSnapshot();
+    }
+    if (catalogChanged) notifyCatalogUpdated();
   } catch (err) {
     if (!catalogState.index) {
       await legacyBootstrapFallback();

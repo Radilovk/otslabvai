@@ -1,6 +1,6 @@
 import {
   escapeHtml, debounce, updateCartBadges, initPortfolioPage,
-  applySiteSettings, applyHeroSettings, icon
+  applyBrandingFromSettings, icon
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
 import { getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, onCatalogUpdated } from './portfolio-cache.js';
@@ -363,20 +363,12 @@ function bindEvents() {
 }
 
 async function init() {
-  const { settings } = await initPortfolioPage({ active: 'catalog', showMobileBar: true });
+  await initPortfolioPage({ active: 'catalog', showMobileBar: true });
   showSkeletons();
 
   const cache = await import('./portfolio-cache.js');
-  if (!getFiltersFromCache()) {
-    await cache.sync();
-    const settings = cache.getCachedSettings();
-    if (settings) {
-      applySiteSettings(settings);
-      applyHeroSettings(settings);
-    }
-  } else {
-    void cache.sync();
-  }
+  await cache.sync();
+  applyBrandingFromSettings(cache.getCachedSettings());
 
   try {
     const filters = getFiltersFromCache();
