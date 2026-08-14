@@ -1197,8 +1197,9 @@ export function buildPublicSiteSettings(settings) {
   };
 }
 
-export async function getPublicSiteSettings(env) {
-  return buildPublicSiteSettings(await getSettings(env));
+async function handleGetSiteConfig(env) {
+  const settings = await getSettings(env);
+  return cachedResponse(buildPublicSiteSettings(settings), 300);
 }
 
 async function handleSaveSettings(request, env) {
