@@ -15,6 +15,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="images/biocode-favicon.png">
     <link rel="stylesheet" href="portfolio.css">
+    <script>
+    (function(){try{var r=localStorage.getItem('portfolio_hero_branding_v1');if(!r)return;var d=JSON.parse(r);if(!d.hero_image)return;var u=d.hero_image;if(d.branding_updated_at)u+=(u.indexOf('?')>=0?'&':'?')+'v='+encodeURIComponent(d.branding_updated_at);document.documentElement.setAttribute('data-hero-src',u);}catch(e){}})();
+    </script>
 </head>
 <body class="pf-body">
     <div id="sync-banner" class="pf-sync-banner" style="display:none;" role="alert"></div>
@@ -23,7 +26,10 @@
 
     <section class="pf-hero" id="pf-hero">
         <div class="pf-hero-media" aria-hidden="true">
-            <img id="hero-image" src="images/portfolio-hero.jpg" alt="" width="1400" height="666" loading="eager" decoding="async" fetchpriority="high">
+            <img id="hero-image" alt="" width="1400" height="666" loading="eager" decoding="sync" fetchpriority="high">
+            <script>
+            (function(){var u=document.documentElement.getAttribute('data-hero-src')||'images/portfolio-hero.jpg';var el=document.getElementById('hero-image');if(el)el.src=u;})();
+            </script>
         </div>
         <div class="pf-hero-overlay" aria-hidden="true"></div>
         <div class="pf-hero-inner">
