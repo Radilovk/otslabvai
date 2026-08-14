@@ -1192,6 +1192,7 @@ export function buildPublicSiteSettings(settings) {
     hero_image: s.hero_image,
     hero_title: s.hero_title,
     footer: s.footer,
+    branding_updated_at: s.branding_updated_at || null,
     last_sync: s.last_sync,
     last_sync_count: s.last_sync_count
   };
@@ -1199,7 +1200,20 @@ export function buildPublicSiteSettings(settings) {
 
 async function handleGetSiteConfig(env) {
   const settings = await getSettings(env);
-  return cachedResponse(buildPublicSiteSettings(settings), 300);
+  return jsonResponse(buildPublicSiteSettings(settings), 200, {
+    'Cache-Control': 'no-store'
+  });
+}
+
+function brandingFieldsChanged(incoming, current) {
+  if (incoming.site_name !== undefined && incoming.site_name !== current.site_name) return true;
+  if (incoming.site_slogan !== undefined && incoming.site_slogan !== current.site_slogan) return true;
+  if (incoming.hero_image !== undefined && incoming.hero_image !== current.hero_image) return true;
+  if (incoming.hero_title !== undefined && incoming.hero_title !== current.hero_title) return true;
+  if (incoming.footer !== undefined && JSON.stringify(incoming.footer) !== JSON.stringify(current.footer)) {
+    return true;
+  }
+  return false;
 }
 
 async function handleSaveSettings(request, env) {
@@ -1224,6 +1238,9 @@ async function handleSaveSettings(request, env) {
       ? { ...current.pricing_policy, ...incoming.pricing_policy }
       : current.pricing_policy
   };
+  if (brandingFieldsChanged(incoming, current)) {
+    merged.branding_updated_at = new Date().toISOString();
+  }
   await saveSettings(env, merged);
   return jsonResponse({ success: true, settings: merged });
 }
