@@ -68,15 +68,15 @@ describe('Portfolio API', () => {
     expect(pct).toBe(25);
   });
 
-  test('calculateRetailPrice applies markup and charm rounding', () => {
-    expect(calculateRetailPrice(10, 30)).toBe(13.8);
-    expect(calculateRetailPrice(10, 30, null, '99')).toBeGreaterThanOrEqual(13);
+  test('calculateRetailPrice applies markup and rounds up to first decimal', () => {
+    expect(calculateRetailPrice(10, 30)).toBe(13);
+    expect(calculateRetailPrice(10.26, 30)).toBe(13.4);
   });
 
-  test('charmRoundRetailPrice rounds up to .80 or .90', () => {
-    expect(charmRoundRetailPrice(21.1, 0)).toBe(21.8);
-    expect(charmRoundRetailPrice(21.1, 1)).toBe(21.9);
-    expect(charmRoundRetailPrice(21.91, 0)).toBe(22.8);
+  test('charmRoundRetailPrice rounds up to first decimal', () => {
+    expect(charmRoundRetailPrice(14.52)).toBe(14.6);
+    expect(charmRoundRetailPrice(14.56)).toBe(14.6);
+    expect(charmRoundRetailPrice(21.01)).toBe(21.1);
   });
 
   test('charmEndingSeed is stable per SKU', () => {

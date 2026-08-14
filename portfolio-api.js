@@ -25,7 +25,8 @@ import {
   applyPromoCodePrice,
   promoUsesLinePricing,
   resolvePromoLinePrice,
-  sumLinePricingSavings
+  sumLinePricingSavings,
+  ceilRetailPrice,
 } from './portfolio-pricing.js';
 import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipping.js';
 import { assertOrderRateLimit } from './order-rate-limit.js';
@@ -238,33 +239,17 @@ export function charmEndingSeed(skuId) {
   return Math.abs(hash) % 2;
 }
 
-/** Round retail price up to x.80 or x.90 (deterministic per SKU). */
-export function charmRoundRetailPrice(price, seed = 0) {
-  const p = Number(price);
-  if (!(p > 0)) return 0;
-
-  const endings = [0.8, 0.9];
-  let euros = Math.floor(p);
-  let candidates = endings
-    .map((ending) => roundPrice(euros + ending))
-    .filter((candidate) => candidate + 0.001 >= p);
-
-  while (!candidates.length) {
-    euros += 1;
-    candidates = endings.map((ending) => roundPrice(euros + ending));
-  }
-
-  if (candidates.length === 1) return candidates[0];
-  const idx = seed % 2;
-  return candidates[idx] ?? candidates[0];
+/** Round retail prices up to the first decimal place (14.52 → 14.60). */
+export function charmRoundRetailPrice(price, _seed = 0) {
+  return ceilRetailPrice(price);
 }
 
 export function calculateRetailPrice(b2bPrice, markupPercent, override, skuId) {
   if (override && typeof override.fixed_price === 'number') {
-    return charmRoundRetailPrice(override.fixed_price, charmEndingSeed(skuId));
+    return ceilRetailPrice(override.fixed_price);
   }
   const raw = b2bPrice * (1 + markupPercent / 100);
-  return charmRoundRetailPrice(raw, charmEndingSeed(skuId));
+  return ceilRetailPrice(raw);
 }
 
 /** Margin stats for a catalog group – used for recommendation ranking. */

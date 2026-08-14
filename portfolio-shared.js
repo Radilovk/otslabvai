@@ -138,22 +138,34 @@ export function buildPortfolioProductUrl(groupId, skuId) {
   return url;
 }
 
+async function fetchLiveSiteBranding() {
+  try {
+    const res = await fetch(`${API_URL}/portfolio/site-config`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/** Overlay live KV branding (hero, title, footer) on cached catalog settings. */
+export async function mergeLiveSiteBranding(settings) {
+  const live = await fetchLiveSiteBranding();
+  if (!live) return settings || null;
+  return { ...(settings || {}), ...live };
+}
+
 export async function loadSiteSettings({ settingsOnly = false } = {}) {
   try {
     const cache = await import('./portfolio-cache.js');
     if (settingsOnly) {
-      return await cache.ensureSettings();
+      const cached = await cache.ensureSettings();
+      return mergeLiveSiteBranding(cached);
     }
     await cache.sync();
-    return cache.getCachedSettings();
+    return mergeLiveSiteBranding(cache.getCachedSettings());
   } catch {
-    try {
-      const res = await fetch(`${API_URL}/portfolio/site-config`);
-      if (!res.ok) return null;
-      return await res.json();
-    } catch {
-      return null;
-    }
+    return fetchLiveSiteBranding();
   }
 }
 
@@ -179,7 +191,9 @@ export function applyHeroSettings(settings) {
   if (!settings) return;
   const img = document.getElementById('hero-image');
   if (img && settings.hero_image) {
-    img.src = settings.hero_image;
+    const raw = String(settings.hero_image);
+    const bust = settings.last_sync ? `v=${encodeURIComponent(settings.last_sync)}` : `t=${Date.now()}`;
+    img.src = raw.includes('?') ? `${raw}&${bust}` : `${raw}?${bust}`;
   }
   const title = document.getElementById('hero-title');
   if (title && settings.hero_title) title.textContent = settings.hero_title;
@@ -367,6 +381,7 @@ export async function initPortfolioPage({
   if (footerSlot) footerSlot.innerHTML = renderFooter(settings);
   if (showMobileBar && mobileBarSlot) mobileBarSlot.innerHTML = renderFloatingCartFab();
   applySiteSettings(settings);
+  applyHeroSettings(settings);
   initPortfolioTheme();
   updateCartBadges();
   initScrollEffects();
