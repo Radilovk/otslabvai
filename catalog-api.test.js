@@ -8,6 +8,10 @@ describe('catalog-api', () => {
     if (!store.has(CATALOG_KV.POINTER)) {
       store.set(CATALOG_KV.POINTER, JSON.stringify(pointer));
     }
+    store.set('portfolio_settings', JSON.stringify({
+      site_name: 'Test',
+      hero_image: 'images/hero.jpg'
+    }));
     store.set(CATALOG_KV.index('abc12345'), JSON.stringify({ v: 'abc12345', products: [] }));
     store.set(CATALOG_KV.stock('def67890'), JSON.stringify({ v: 'def67890', q: {} }));
     return {
@@ -32,6 +36,7 @@ describe('catalog-api', () => {
     const data = await res.json();
     expect(data.i).toBe('abc12345');
     expect(data.s).toBe('def67890');
+    expect(data.branding.hero_image).toBe('images/hero.jpg');
   });
 
   test('GET /c/index-{v}.json is immutable cached', async () => {

@@ -274,11 +274,11 @@ jobs:
           sleep 8
           BASE="https://port.radilov-k.workers.dev"
           fail=0
-          code=$(curl -s -o /tmp/pf-settings.json -w "%{http_code}" "${BASE}/portfolio/site-config")
-          body=$(head -c 120 /tmp/pf-settings.json)
-          echo "/portfolio/site-config → HTTP ${code}: ${body}"
+          code=$(curl -s -o /tmp/pf-now.json -w "%{http_code}" "${BASE}/c/now")
+          body=$(head -c 120 /tmp/pf-now.json)
+          echo "/c/now → HTTP ${code}: ${body}"
           if [ "$code" != "200" ]; then
-            echo "ERROR: site-config must return 200"
+            echo "ERROR: /c/now must return 200"
             fail=1
           fi
           admin_code=$(curl -s -o /tmp/pf-admin-settings.json -w "%{http_code}" "${BASE}/portfolio/settings")

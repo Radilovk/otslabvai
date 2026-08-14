@@ -1,4 +1,4 @@
-import { sanitizeGroupForClient } from './portfolio-api.js';
+import { sanitizeGroupForClient, getPublicSiteSettings } from './portfolio-api.js';
 import { CATALOG_KV } from './catalog-kv-keys.js';
 import { CATALOG_SYNC_POLICY } from './catalog-sync-policy.js';
 
@@ -85,7 +85,8 @@ async function handleCatalogNow(env, ctx) {
     return jsonResponse({ error: 'Каталогът не е синхронизиран.' }, 404, POINTER_HEADERS);
   }
   await maybeDispatchRefresh(env, pointer, ctx);
-  return jsonResponse({ i: pointer.i, s: pointer.s, t: pointer.t }, 200, POINTER_HEADERS);
+  const branding = await getPublicSiteSettings(env);
+  return jsonResponse({ i: pointer.i, s: pointer.s, t: pointer.t, branding }, 200, POINTER_HEADERS);
 }
 
 async function serveArtifact(env, key) {

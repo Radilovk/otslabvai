@@ -1,11 +1,12 @@
-import { API_URL } from './config.js';
-import {
-  HERO_BRANDING_CACHE_KEY,
-  applyHeroImageElement,
-  readCachedHeroBranding
-} from './portfolio-branding.js';
 
-export { HERO_BRANDING_CACHE_KEY, buildHeroImageSrc, heroImageBase } from './portfolio-branding.js';
+export const CART_KEY = 'portfolioCart';
+
+export const BRAND_NAME = 'BIOCODE';
+export const BRAND_FULL = 'BIOCODE - Nutrition Science';
+export const BRAND_SLOGAN = 'Протеини, витамини, аминокиселини';
+export const BRAND_LOGO = 'images/biocode-logo.png';
+export const BRAND_FAVICON = 'images/biocode-favicon.png';
+export const BRAND_HERO_IMAGE = 'images/portfolio-hero.jpg';
 
 const DEFAULT_FOOTER = {
   contact_email: 'office@biocode.com',
@@ -136,55 +137,35 @@ export function buildPortfolioProductUrl(groupId, skuId) {
   return url;
 }
 
-async function fetchLiveSiteBranding() {
+function heroImagePath(url) {
+  const raw = String(url || '').trim();
+  if (!raw) return '';
   try {
-    const res = await fetch(`${API_URL}/portfolio/site-config`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return await res.json();
+    return new URL(raw, typeof window !== 'undefined' ? window.location.href : 'https://example.com/').pathname;
   } catch {
-    return null;
+    return raw.split('?')[0].split('#')[0];
   }
 }
 
-/** Overlay live KV branding (hero, title, footer) on cached catalog settings. */
-export async function mergeLiveSiteBranding(settings) {
-  const live = await fetchLiveSiteBranding();
-  if (!live) return settings || null;
-  return { ...(settings || {}), ...live };
-}
-
-function mergeBrandingSettings(cached, live) {
-  const persisted = readCachedHeroBranding();
-  return { ...(cached || {}), ...(persisted || {}), ...(live || {}) };
+function setTextIfChanged(el, text) {
+  if (el && text != null && el.textContent !== text) el.textContent = text;
 }
 
 export async function loadSiteSettings({ settingsOnly = false } = {}) {
-  let cache = null;
-  try {
-    cache = await import('./portfolio-cache.js');
-  } catch { /* ignore */ }
-
-  const livePromise = fetchLiveSiteBranding();
-  const syncPromise = cache && !settingsOnly ? cache.sync().catch(() => {}) : null;
-
-  let cached = null;
-  if (cache) {
-    if (settingsOnly) {
-      cached = await cache.ensureSettings().catch(() => null);
-    } else {
-      cached = cache.getCachedSettings();
-    }
+  const cache = await import('./portfolio-cache.js');
+  await cache.hydrateLocalCache();
+  if (cache.getCachedSettings()) return cache.getCachedSettings();
+  if (settingsOnly) {
+    await cache.ensureSettings();
+    return cache.getCachedSettings();
   }
+  return cache.getCachedSettings();
+}
 
-  const live = await livePromise;
-  let settings = mergeBrandingSettings(cached, live);
-
-  if (syncPromise) {
-    await syncPromise;
-    settings = mergeBrandingSettings(cache.getCachedSettings(), live);
-  }
-
-  return settings;
+function applyBrandingFromSettings(settings) {
+  if (!settings) return;
+  applySiteSettings(settings);
+  applyHeroSettings(settings);
 }
 
 export function applySiteSettings(settings) {
@@ -194,25 +175,31 @@ export function applySiteSettings(settings) {
   const sloganEl = document.getElementById('site-slogan');
   if (nameEl && settings.site_name) {
     const parts = String(settings.site_name).split(' - ');
-    nameEl.textContent = parts[0] || settings.site_name;
-    if (taglineEl && parts[1]) taglineEl.textContent = parts[1];
+    setTextIfChanged(nameEl, parts[0] || settings.site_name);
+    if (taglineEl && parts[1]) setTextIfChanged(taglineEl, parts[1]);
   }
-  if (sloganEl && settings.site_slogan) sloganEl.textContent = settings.site_slogan;
+  if (sloganEl && settings.site_slogan) setTextIfChanged(sloganEl, settings.site_slogan);
 
   const footerBrand = document.getElementById('footer-brand-name');
   if (footerBrand && settings.site_name) {
-    footerBrand.textContent = String(settings.site_name).split(' - ')[0] || settings.site_name;
+    setTextIfChanged(footerBrand, String(settings.site_name).split(' - ')[0] || settings.site_name);
   }
 }
 
 export function applyHeroSettings(settings) {
   if (!settings) return;
   const img = document.getElementById('hero-image');
-  if (img) applyHeroImageElement(img, settings);
-  const title = document.getElementById('hero-title');
-  if (title && settings.hero_title) title.textContent = settings.hero_title;
-  const sub = document.getElementById('hero-subtitle');
-  if (sub && settings.site_slogan) sub.textContent = settings.site_slogan;
+  if (img && settings.hero_image) {
+    const next = String(settings.hero_image);
+    const currentPath = heroImagePath(img.dataset.heroSrc || img.currentSrc || img.getAttribute('src') || '');
+    const nextPath = heroImagePath(next);
+    if (currentPath !== nextPath) {
+      img.dataset.heroSrc = next;
+      img.src = next;
+    }
+  }
+  setTextIfChanged(document.getElementById('hero-title'), settings.hero_title || null);
+  setTextIfChanged(document.getElementById('hero-subtitle'), settings.site_slogan || null);
 }
 
 const THEME_TOGGLE_SVG = `
@@ -390,15 +377,40 @@ export async function initPortfolioPage({
   const headerSlot = document.getElementById('pf-header-slot');
   const footerSlot = document.getElementById('pf-footer-slot');
   const mobileBarSlot = document.getElementById('pf-mobile-cart-slot');
-  const settings = await loadSiteSettings({ settingsOnly });
+  const cache = await import('./portfolio-cache.js');
+
   if (headerSlot) headerSlot.innerHTML = renderHeader(active);
-  if (footerSlot) footerSlot.innerHTML = renderFooter(settings);
   if (showMobileBar && mobileBarSlot) mobileBarSlot.innerHTML = renderFloatingCartFab();
-  applySiteSettings(settings);
-  applyHeroSettings(settings);
   initPortfolioTheme();
   updateCartBadges();
   initScrollEffects();
+
+  await cache.hydrateLocalCache();
+  let settings = cache.getCachedSettings();
+  if (footerSlot) footerSlot.innerHTML = renderFooter(settings);
+  applyBrandingFromSettings(settings);
+
+  if (settingsOnly) {
+    if (!settings) {
+      await cache.ensureSettings();
+      settings = cache.getCachedSettings();
+      if (footerSlot) footerSlot.innerHTML = renderFooter(settings);
+      applyBrandingFromSettings(settings);
+    }
+    void cache.ensureSettings().then(() => {
+      const fresh = cache.getCachedSettings();
+      if (!fresh) return;
+      applyBrandingFromSettings(fresh);
+    });
+    return { settings };
+  }
+
+  void cache.sync().then(() => {
+    const fresh = cache.getCachedSettings();
+    if (!fresh) return;
+    applyBrandingFromSettings(fresh);
+  });
+
   return { settings };
 }
 

@@ -1192,28 +1192,13 @@ export function buildPublicSiteSettings(settings) {
     hero_image: s.hero_image,
     hero_title: s.hero_title,
     footer: s.footer,
-    branding_updated_at: s.branding_updated_at || null,
     last_sync: s.last_sync,
     last_sync_count: s.last_sync_count
   };
 }
 
-async function handleGetSiteConfig(env) {
-  const settings = await getSettings(env);
-  return jsonResponse(buildPublicSiteSettings(settings), 200, {
-    'Cache-Control': 'no-store'
-  });
-}
-
-function brandingFieldsChanged(incoming, current) {
-  if (incoming.site_name !== undefined && incoming.site_name !== current.site_name) return true;
-  if (incoming.site_slogan !== undefined && incoming.site_slogan !== current.site_slogan) return true;
-  if (incoming.hero_image !== undefined && incoming.hero_image !== current.hero_image) return true;
-  if (incoming.hero_title !== undefined && incoming.hero_title !== current.hero_title) return true;
-  if (incoming.footer !== undefined && JSON.stringify(incoming.footer) !== JSON.stringify(current.footer)) {
-    return true;
-  }
-  return false;
+export async function getPublicSiteSettings(env) {
+  return buildPublicSiteSettings(await getSettings(env));
 }
 
 async function handleSaveSettings(request, env) {
@@ -1238,9 +1223,6 @@ async function handleSaveSettings(request, env) {
       ? { ...current.pricing_policy, ...incoming.pricing_policy }
       : current.pricing_policy
   };
-  if (brandingFieldsChanged(incoming, current)) {
-    merged.branding_updated_at = new Date().toISOString();
-  }
   await saveSettings(env, merged);
   return jsonResponse({ success: true, settings: merged });
 }
@@ -2194,9 +2176,6 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
   const method = request.method;
 
   try {
-    if (path === '/portfolio/site-config' && method === 'GET') {
-      return await handleGetSiteConfig(env);
-    }
     if (path === '/portfolio/settings') {
       if (method === 'GET') return await handleGetSettings(env);
       if (method === 'POST') return await handleSaveSettings(request, env);
