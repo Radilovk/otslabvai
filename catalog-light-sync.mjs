@@ -99,7 +99,7 @@ async function main() {
   if (!API_KEY && !SILA_TOKEN) throw new Error('FITNESS1_API_KEY and/or SILA_API_TOKEN required');
   if (!TOKEN || !ACCOUNT) throw new Error('Cloudflare credentials required');
 
-  const settings = { ...DEFAULT_SETTINGS, global_markup_percent: 30 };
+  const settings = { ...DEFAULT_SETTINGS, ...(await kvGet('portfolio_settings') || {}), global_markup_percent: 30 };
   const products = await fetchProducts();
   console.log(`Got ${products.length} SKUs`);
 

@@ -6,6 +6,13 @@ function roundPrice(value) {
   return Math.round(value * 100) / 100;
 }
 
+/** Round retail prices up to the first decimal (14.52 → 14.60, 14.56 → 14.60). */
+export function ceilRetailPrice(value) {
+  const n = Number(value);
+  if (!(n > 0)) return 0;
+  return Math.ceil(n * 10) / 10;
+}
+
 /** @type {{ min_profit_eur: number, f1_promo_undercut_eur: number, standard_mode: string, below_regular_percent: number, above_b2b_percent: number }} */
 export const DEFAULT_PRICING_POLICY = {
   min_profit_eur: 0.01,
@@ -80,7 +87,7 @@ function resolveF1PromoPrice(b2b, regular, sale, policy) {
   const compareAt = Number(regular) > competitive ? Number(regular) : f1Ref;
 
   return {
-    retail_price: competitive,
+    retail_price: ceilRetailPrice(competitive),
     compare_at_price: belowF1 ? compareAt : 0,
     is_on_promo: true,
     f1_reference_price: f1Ref,
@@ -95,7 +102,7 @@ function resolveStandardPrice(b2b, regular, policy, markupRetail) {
   if (policy.standard_mode === 'below_regular' && regularPrice > floor) {
     const retail = priceBelowRegular(regularPrice, policy.below_regular_percent, floor);
     return {
-      retail_price: retail,
+      retail_price: ceilRetailPrice(retail),
       compare_at_price: retail < regularPrice ? regularPrice : 0,
       is_on_promo: retail < regularPrice,
       f1_reference_price: regularPrice,
@@ -111,7 +118,7 @@ function resolveStandardPrice(b2b, regular, policy, markupRetail) {
   retail = Math.max(floor, retail);
 
   return {
-    retail_price: retail,
+    retail_price: ceilRetailPrice(retail),
     compare_at_price: regularPrice > retail ? regularPrice : 0,
     is_on_promo: false,
     f1_reference_price: regularPrice,
@@ -151,7 +158,7 @@ export function resolveVariantPricing(input) {
     const fixed = roundPrice(input.override.fixed_price);
     const onPromo = isF1PromoActive(regular, sale);
     return {
-      retail_price: Math.max(floor, fixed),
+      retail_price: ceilRetailPrice(Math.max(floor, fixed)),
       compare_at_price: onPromo && regular > fixed ? regular : (regular > fixed ? regular : 0),
       is_on_promo: onPromo || (regular > fixed),
       f1_reference_price: getF1CustomerPrice(regular, sale),
@@ -173,7 +180,7 @@ export function resolveVariantPricing(input) {
  * @param {object} [policy]
  */
 export function applyPromoCodePrice(variant, promo, policy = DEFAULT_PRICING_POLICY) {
-  const base = roundPrice(Number(variant?.retail_price) || 0);
+  const base = ceilRetailPrice(Number(variant?.retail_price) || 0);
   if (!promo?.pricing_mode || promo.pricing_mode === 'none') return base;
 
   const normalized = normalizePricingPolicy(policy);
@@ -183,10 +190,10 @@ export function applyPromoCodePrice(variant, promo, policy = DEFAULT_PRICING_POL
   const pct = Math.max(0, Number(promo.pricing_percent) || 0);
 
   if (promo.pricing_mode === 'below_regular' && regular > floor) {
-    return priceBelowRegular(regular, pct, floor);
+    return ceilRetailPrice(priceBelowRegular(regular, pct, floor));
   }
   if (promo.pricing_mode === 'above_b2b') {
-    return Math.max(floor, roundPrice(b2b * (1 + pct / 100)));
+    return ceilRetailPrice(Math.max(floor, roundPrice(b2b * (1 + pct / 100))));
   }
   return base;
 }
@@ -200,11 +207,11 @@ export function applyPromoCodePrice(variant, promo, policy = DEFAULT_PRICING_POL
 export function applyMarginSharePrice(retail, b2b, marginPercent) {
   const retailPrice = Number(retail) || 0;
   const wholesale = Number(b2b) || 0;
-  if (!(retailPrice > wholesale) || !(wholesale > 0)) return roundPrice(retailPrice);
+  if (!(retailPrice > wholesale) || !(wholesale > 0)) return ceilRetailPrice(retailPrice);
 
   const margin = retailPrice - wholesale;
   const share = Math.max(0, Math.min(100, Number(marginPercent) || 0));
-  return roundPrice(Math.max(wholesale, retailPrice - margin * (share / 100)));
+  return ceilRetailPrice(Math.max(wholesale, retailPrice - margin * (share / 100)));
 }
 
 /** True when promo changes per-line prices instead of a cart-level discount. */

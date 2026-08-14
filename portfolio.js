@@ -1,8 +1,8 @@
 import {
-  escapeHtml, debounce, updateCartBadges, initPortfolioPage, applyHeroSettings, icon
+  escapeHtml, debounce, updateCartBadges, initPortfolioPage, icon
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
-import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, onCatalogUpdated } from './portfolio-cache.js';
+import { getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, onCatalogUpdated } from './portfolio-cache.js';
 import {
   countActiveFilters as countFilters,
   getRemovableFilterChips,
@@ -362,12 +362,10 @@ function bindEvents() {
 }
 
 async function init() {
-  await initPortfolioPage({ active: 'catalog', showMobileBar: true });
+  const { settings } = await initPortfolioPage({ active: 'catalog', showMobileBar: true });
   showSkeletons();
 
   try {
-    const settings = getCachedSettings();
-    applyHeroSettings(settings);
     const filters = getFiltersFromCache();
     if (filters) populateFilters(filters);
     state.cacheReady = true;

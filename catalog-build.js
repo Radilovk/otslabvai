@@ -62,6 +62,16 @@ function groupContentHash(entry) {
   });
 }
 
+function brandingFingerprint(settings) {
+  return catalogHash({
+    site_name: settings.site_name,
+    site_slogan: settings.site_slogan,
+    hero_image: settings.hero_image,
+    hero_title: settings.hero_title,
+    footer: settings.footer,
+  });
+}
+
 /**
  * @param {object[]} rawProducts
  * @param {object} [settings]
@@ -93,7 +103,8 @@ export function buildCatalogArtifacts(rawProducts, settings = DEFAULT_SETTINGS, 
   const indexContentHash = catalogHash({
     perGroupHashes,
     pricingVersion,
-    transformVersion
+    transformVersion,
+    branding: brandingFingerprint(settings),
   });
   const indexVersion = catalogHash({ indexContentHash, pricingVersion, transformVersion });
 

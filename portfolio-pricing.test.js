@@ -13,6 +13,7 @@ import {
   formatGroupPriceHtml,
   formatVariantPriceHtml,
   formatPacksDisplay,
+  ceilRetailPrice,
 } from './portfolio-pricing.js';
 
 const policy = {
@@ -24,6 +25,13 @@ const policy = {
 };
 
 describe('portfolio-pricing', () => {
+  test('ceilRetailPrice rounds up to first decimal', () => {
+    expect(ceilRetailPrice(14.52)).toBe(14.6);
+    expect(ceilRetailPrice(14.56)).toBe(14.6);
+    expect(ceilRetailPrice(14.5)).toBe(14.5);
+    expect(ceilRetailPrice(0)).toBe(0);
+  });
+
   test('getF1CustomerPrice prefers active sale', () => {
     expect(getF1CustomerPrice(24.9, 19.9)).toBe(19.9);
     expect(getF1CustomerPrice(20, 0)).toBe(20);
