@@ -6115,8 +6115,12 @@ async function fetchPortfolioAdvisorSettings() {
         if (narrEl && data.narrator_prompt) narrEl.value = data.narrator_prompt;
         const commerce = data.commerce || {};
         document.getElementById('pfa-commerce-enabled') && (document.getElementById('pfa-commerce-enabled').checked = commerce.enabled !== false);
+        const minProfit = document.getElementById('pfa-commerce-min-profit');
+        if (minProfit && commerce.min_profit_pct_on_retail != null) minProfit.value = commerce.min_profit_pct_on_retail;
         const minDisc = document.getElementById('pfa-commerce-min-discount');
         if (minDisc && commerce.min_distributor_discount_pct != null) minDisc.value = commerce.min_distributor_discount_pct;
+        const profitW = document.getElementById('pfa-commerce-profit-weight');
+        if (profitW && commerce.profit_pct_weight != null) profitW.value = commerce.profit_pct_weight;
         const marginW = document.getElementById('pfa-commerce-margin-weight');
         if (marginW && commerce.margin_eur_weight != null) marginW.value = commerce.margin_eur_weight;
         const discW = document.getElementById('pfa-commerce-discount-weight');
@@ -6134,9 +6138,11 @@ async function savePortfolioAdvisorSettingsAdmin() {
     const narrator_prompt = document.getElementById('pfa-narrator-prompt')?.value || '';
     const commerce = {
         enabled: document.getElementById('pfa-commerce-enabled')?.checked !== false,
+        min_profit_pct_on_retail: Number(document.getElementById('pfa-commerce-min-profit')?.value) || 15,
         min_distributor_discount_pct: Number(document.getElementById('pfa-commerce-min-discount')?.value) || 35,
+        profit_pct_weight: Number(document.getElementById('pfa-commerce-profit-weight')?.value) || 0.18,
         margin_eur_weight: Number(document.getElementById('pfa-commerce-margin-weight')?.value) || 0.12,
-        discount_pct_weight: Number(document.getElementById('pfa-commerce-discount-weight')?.value) || 0.10,
+        discount_pct_weight: Number(document.getElementById('pfa-commerce-discount-weight')?.value) || 0.06,
     };
     try {
         const res = await fetch(`${API_URL}/portfolio-advisor/settings`, {

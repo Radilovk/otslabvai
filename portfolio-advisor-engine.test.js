@@ -10,6 +10,7 @@ import {
   normalizeAdvisorCategories,
   scorePortfolioAdvisorProduct,
   rankPortfolioAdvisorProducts,
+  selectAdvisorCandidatesByProfit,
   PORTFOLIO_PACKAGE_TIER_LIMITS,
   PORTFOLIO_SINGLE_TIER_LIMITS,
 } from './portfolio-advisor-engine.js';
@@ -185,16 +186,48 @@ describe('preparePortfolioAdvisorSubmission', () => {
     expect(score).toBe(-Infinity);
   });
 
-  test('scorePortfolioAdvisorProduct предпочита по-висок марж при равна релевантност', () => {
+  test('scorePortfolioAdvisorProduct предпочита по-висока печалба при равна релевантност', () => {
     const profile = buildPortfolioAdvisorProfile({ priority: 'muscle', email: 'a@b.com' });
     const low = makeProduct();
     low.system_data.portfolio.commerce = {
-      margin_eur: 5, margin_pct: 20, distributor_discount_pct: 30, has_end_user_promo: false,
+      profit_eur: 5, profit_pct: 10, margin_eur: 5, margin_pct: 20, distributor_discount_pct: 30, has_end_user_promo: false,
     };
     const high = makeProduct({ product_id: 'prod-pf-999' });
     high.system_data.portfolio.commerce = {
-      margin_eur: 25, margin_pct: 40, distributor_discount_pct: 40, has_end_user_promo: false,
+      profit_eur: 25, profit_pct: 35, margin_eur: 25, margin_pct: 40, distributor_discount_pct: 40, has_end_user_promo: false,
     };
     expect(scorePortfolioAdvisorProduct(high, profile)).toBeGreaterThan(scorePortfolioAdvisorProduct(low, profile));
+  });
+
+  test('selectAdvisorCandidatesByProfit предпочита високопечеливши и допълва при нужда', () => {
+    const makeRanked = (id, profitPct, categoryTop) => ({
+      product: {
+        product_id: `prod-pf-${id}`,
+        system_data: {
+          portfolio: {
+            category_top: categoryTop,
+            commerce: { profit_pct: profitPct, profit_eur: profitPct, has_end_user_promo: false },
+          },
+        },
+      },
+      score: profitPct,
+    });
+
+    const ranked = [
+      makeRanked(1, 30, 'Протеини'),
+      makeRanked(2, 28, 'Протеини'),
+      makeRanked(3, 26, 'Витамини'),
+      makeRanked(4, 8, 'Протеини'),
+      makeRanked(5, 6, 'Витамини'),
+    ];
+
+    const result = selectAdvisorCandidatesByProfit(ranked, { min_profit_pct_on_retail: 15 }, {
+      maxCandidates: 4,
+      maxPerCategory: 1,
+    });
+
+    expect(result.candidates).toHaveLength(4);
+    expect(result.selected_high_profit).toBeGreaterThanOrEqual(2);
+    expect(result.candidates.some((p) => (p.system_data.portfolio.commerce.profit_pct || 0) < 15)).toBe(true);
   });
 });

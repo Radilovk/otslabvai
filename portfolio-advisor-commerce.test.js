@@ -3,6 +3,7 @@ import {
   attachAdvisorCommercialStats,
   filterAdvisorCommercialProducts,
   isExcludedByAdvisorCommerce,
+  isHighProfitAdvisorProduct,
   normalizeAdvisorCommerceSettings,
   scoreAdvisorCommercialBoost,
 } from './portfolio-advisor-commerce.js';
@@ -31,10 +32,12 @@ function makeGroup(overrides = {}) {
 }
 
 describe('portfolio-advisor-commerce', () => {
-  test('summarizeAdvisorCommercialStats computes distributor discount and margin', () => {
+  test('summarizeAdvisorCommercialStats computes profit on retail price', () => {
     const stats = summarizeAdvisorCommercialStats(makeGroup());
+    expect(stats.profit_eur).toBe(20);
+    expect(stats.profit_pct).toBe(25);
+    expect(stats.margin_pct).toBeCloseTo(33.3, 1);
     expect(stats.distributor_discount_pct).toBe(40);
-    expect(stats.margin_eur).toBe(20);
     expect(stats.has_end_user_promo).toBe(false);
     expect(stats.distributor).toBe('sila');
   });
@@ -73,15 +76,15 @@ describe('portfolio-advisor-commerce', () => {
     expect(filterAdvisorCommercialProducts([product])).toHaveLength(0);
   });
 
-  test('scoreAdvisorCommercialBoost prefers higher margin', () => {
+  test('isHighProfitAdvisorProduct uses profit_pct threshold', () => {
     const high = attachAdvisorCommercialStats(portfolioGroupToSiteProduct(makeGroup()), makeGroup());
     const low = attachAdvisorCommercialStats(
       portfolioGroupToSiteProduct(makeGroup({
         variants: [{
           sku_id: '2',
-          b2b_price: 80,
+          b2b_price: 74,
           regular_price: 100,
-          retail_price: 90,
+          retail_price: 80,
           sale_price: 0,
           available: true,
         }],
@@ -89,9 +92,37 @@ describe('portfolio-advisor-commerce', () => {
       makeGroup({
         variants: [{
           sku_id: '2',
-          b2b_price: 80,
+          b2b_price: 74,
           regular_price: 100,
-          retail_price: 90,
+          retail_price: 80,
+          sale_price: 0,
+          available: true,
+        }],
+      })
+    );
+    expect(isHighProfitAdvisorProduct(high)).toBe(true);
+    expect(isHighProfitAdvisorProduct(low)).toBe(false);
+  });
+
+  test('scoreAdvisorCommercialBoost prefers higher profit_pct', () => {
+    const high = attachAdvisorCommercialStats(portfolioGroupToSiteProduct(makeGroup()), makeGroup());
+    const low = attachAdvisorCommercialStats(
+      portfolioGroupToSiteProduct(makeGroup({
+        variants: [{
+          sku_id: '2',
+          b2b_price: 74,
+          regular_price: 100,
+          retail_price: 80,
+          sale_price: 0,
+          available: true,
+        }],
+      })),
+      makeGroup({
+        variants: [{
+          sku_id: '2',
+          b2b_price: 74,
+          regular_price: 100,
+          retail_price: 80,
           sale_price: 0,
           available: true,
         }],
@@ -103,9 +134,13 @@ describe('portfolio-advisor-commerce', () => {
   test('normalizeAdvisorCommerceSettings clamps invalid values', () => {
     const opts = normalizeAdvisorCommerceSettings({
       min_distributor_discount_pct: 999,
+      min_profit_pct_on_retail: -5,
+      profit_pct_weight: 2,
       margin_eur_weight: -1,
     });
     expect(opts.min_distributor_discount_pct).toBe(80);
+    expect(opts.min_profit_pct_on_retail).toBe(0);
+    expect(opts.profit_pct_weight).toBe(1);
     expect(opts.margin_eur_weight).toBe(0);
   });
 

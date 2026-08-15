@@ -8,7 +8,6 @@ import { GOAL_KEYWORD_HINTS, inferProductGoals } from './portfolio-goals.js';
 import { getGoalConflicts, scoreProductForGoal } from './portfolio-goal-relevance.js';
 import {
   buildClientProfile,
-  buildCandidatePool,
   getProductPriceEur,
   eurToBgn,
   isProductAvailable,
@@ -27,6 +26,7 @@ import {
 import {
   attachAdvisorCommercialStats,
   filterAdvisorCommercialProducts,
+  getAdvisorCommercialStats,
   normalizeAdvisorCommerceSettings,
   scoreAdvisorCommercialBoost,
 } from './portfolio-advisor-commerce.js';
@@ -313,6 +313,67 @@ export async function loadPortfolioCatalogProducts(env) {
   return products;
 }
 
+const ADVISOR_MAX_CANDIDATES = 18;
+const ADVISOR_MAX_PER_CATEGORY = 2;
+
+/**
+ * Избира кандидати за AI: първо високопечеливши, после fallback с разнообразие по категории.
+ */
+export function selectAdvisorCandidatesByProfit(rankedEntries, commerceOptions, {
+  maxCandidates = ADVISOR_MAX_CANDIDATES,
+  maxPerCategory = ADVISOR_MAX_PER_CATEGORY,
+} = {}) {
+  const opts = normalizeAdvisorCommerceSettings(commerceOptions);
+  const highProfit = [];
+  const lowProfit = [];
+
+  for (const entry of rankedEntries) {
+    const profitPct = getAdvisorCommercialStats(entry.product)?.profit_pct || 0;
+    if (profitPct >= opts.min_profit_pct_on_retail) highProfit.push(entry);
+    else lowProfit.push(entry);
+  }
+
+  const selected = [];
+  const seenIds = new Set();
+  const categoryCounts = new Map();
+
+  const getCategory = (product) => product.system_data?.portfolio?.category_top
+    || product.system_data?.portfolio?.category
+    || 'other';
+
+  const addEntry = (entry, respectCategoryCap) => {
+    if (selected.length >= maxCandidates) return;
+    if (seenIds.has(entry.product.product_id)) return;
+    const cat = getCategory(entry.product);
+    const count = categoryCounts.get(cat) || 0;
+    if (respectCategoryCap && count >= maxPerCategory) return;
+    selected.push(entry.product);
+    seenIds.add(entry.product.product_id);
+    categoryCounts.set(cat, count + 1);
+  };
+
+  const fillFromPool = (pool, respectCategoryCap) => {
+    for (const entry of pool) addEntry(entry, respectCategoryCap);
+  };
+
+  fillFromPool(highProfit, true);
+  if (selected.length < maxCandidates) fillFromPool(highProfit, false);
+  if (selected.length < maxCandidates) fillFromPool(lowProfit, true);
+  if (selected.length < maxCandidates) fillFromPool(lowProfit, false);
+
+  const selectedHighProfit = selected.filter((product) => {
+    const profitPct = getAdvisorCommercialStats(product)?.profit_pct || 0;
+    return profitPct >= opts.min_profit_pct_on_retail;
+  }).length;
+
+  return {
+    candidates: selected,
+    high_profit_pool_size: highProfit.length,
+    low_profit_pool_size: lowProfit.length,
+    selected_high_profit: selectedHighProfit,
+  };
+}
+
 export function getPortfolioComposeOptions(profile) {
   if (profile.selection_mode === 'single') {
     return {
@@ -371,9 +432,19 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     : { basic: '2-3', optimal: '3-5', premium: '4-6' };
 
   if (compositionMode === 'ai_pick') {
-    const { candidates, excluded_product_ids, exclusion_map } = buildCandidatePool(profile, advisorPool, {
-      priorityKeywords: GOAL_KEYWORD_HINTS,
-    });
+    const candidateSelection = selectAdvisorCandidatesByProfit(rankedResult.ranked, commerceOptions);
+    const candidates = [...candidateSelection.candidates];
+    const candidateIds = new Set(candidates.map((p) => p.product_id));
+
+    for (const entry of rankedResult.ranked) {
+      if (candidateIds.has(entry.product.product_id)) continue;
+      const text = productSearchText(entry.product);
+      if (mustIncludeKws.some((kw) => productMatchesAnyKeyword(text, [kw]))) {
+        candidates.push(entry.product);
+        candidateIds.add(entry.product.product_id);
+      }
+    }
+
     if (candidates.length < 3) {
       throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
     }
@@ -383,14 +454,14 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       composition_mode: 'ai_pick',
       candidate_products: candidates.map(transformProductForAI),
       constraints: {
-        excluded_product_ids,
+        excluded_product_ids: rankedResult.excluded_product_ids,
         must_include_keywords: mustIncludeKws,
         oral_only: false,
         selection_mode: profile.selection_mode,
         price_ceiling_eur: priceCeiling,
         tier_product_counts: tierCounts,
       },
-      exclusion_map,
+      exclusion_map: rankedResult.exclusion_map,
       catalog_stats: {
         total_in_catalog: allProducts.length,
         eligible_available: categoryPool.length,
@@ -398,8 +469,11 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
         advisor_pool_size: advisorPool.length,
         commerce_enabled: commerceOptions.enabled,
         commerce_min_discount_pct: commerceOptions.min_distributor_discount_pct,
+        commerce_min_profit_pct: commerceOptions.min_profit_pct_on_retail,
+        high_profit_pool_size: candidateSelection.high_profit_pool_size,
         ranked_pool_size: rankedResult.ranked.length,
         candidates_sent_to_ai: candidates.length,
+        candidates_high_profit: candidateSelection.selected_high_profit,
       },
     };
     return {
@@ -408,8 +482,8 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       candidates,
       eligible: advisorPool,
       ranked: rankedResult.ranked,
-      excluded_product_ids,
-      exclusion_map,
+      excluded_product_ids: rankedResult.excluded_product_ids,
+      exclusion_map: rankedResult.exclusion_map,
       compositionMode,
     };
   }
@@ -434,6 +508,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       advisor_pool_size: advisorPool.length,
       commerce_enabled: commerceOptions.enabled,
       commerce_min_discount_pct: commerceOptions.min_distributor_discount_pct,
+      commerce_min_profit_pct: commerceOptions.min_profit_pct_on_retail,
       ranked_pool_size: rankedResult.ranked.length,
       candidates_sent_to_ai: 0,
     },
