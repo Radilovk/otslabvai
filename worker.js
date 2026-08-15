@@ -61,6 +61,7 @@ import {
   handleAdminLogin,
   handleAdminSession
 } from './admin-auth.js';
+import { isWorkerApiPath, serveMappedAsset } from './hostname-routing.js';
 
 // Cache configuration constants
 const CACHE_CONFIG = {
@@ -128,6 +129,14 @@ export default {
           status: authErr.status || 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
+      }
+    }
+
+    if (!isWorkerApiPath(pathname)) {
+      const assetResponse = await serveMappedAsset(request, env, url);
+      if (assetResponse) {
+        Object.keys(corsHeaders).forEach((key) => assetResponse.headers.set(key, corsHeaders[key]));
+        return assetResponse;
       }
     }
     
