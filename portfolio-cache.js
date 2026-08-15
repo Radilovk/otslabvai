@@ -228,6 +228,15 @@ async function doSync() {
 
 /** Always fetch live branding from KV (ignores catalog soft TTL). */
 export async function refreshBranding() {
+  if (typeof window !== 'undefined' && window.__pfBranding) {
+    const branding = window.__pfBranding;
+    delete window.__pfBranding;
+    if (branding && catalogState.index) {
+      const changed = applyBrandingSettings(branding);
+      if (changed) await persistSnapshot();
+    }
+    return branding ? { ...(catalogState.index?.settings || {}), ...branding } : getCachedSettings();
+  }
   try {
     const now = await fetchJson(`${API_URL}/c/now`);
     if (now.branding) {
