@@ -61,6 +61,7 @@ import {
   handleAdminLogin,
   handleAdminSession
 } from './admin-auth.js';
+import { isWorkerApiPath, serveMappedAsset } from './hostname-routing.js';
 
 // Cache configuration constants
 const CACHE_CONFIG = {
@@ -123,6 +124,14 @@ export default {
         await assertAdminAuthorized(request, env);
       } catch (authErr) {
         throw new UserFacingError(authErr.message || 'Неоторизиран достъп.', authErr.status || 401);
+      }
+    }
+
+    if (!isWorkerApiPath(pathname)) {
+      const assetResponse = await serveMappedAsset(request, env, url);
+      if (assetResponse) {
+        Object.keys(corsHeaders).forEach((key) => assetResponse.headers.set(key, corsHeaders[key]));
+        return assetResponse;
       }
     }
     
