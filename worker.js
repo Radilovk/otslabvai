@@ -2302,9 +2302,16 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
   const composeOptions = getPortfolioComposeOptions(profile);
   const finalizeOpts = {
     selection_mode: profile.selection_mode,
-    independent_tiers: true,
+    independent_tiers: profile.selection_mode === 'single'
+      || (compositionMode === 'ai_pick' && profile.selection_mode === 'package'),
   };
   let recommendation;
+
+  const applyIndependentTierMode = (composed) => {
+    if (profile.selection_mode !== 'single' && composed?.meta?.mode === 'complementary_independent') {
+      finalizeOpts.independent_tiers = true;
+    }
+  };
 
   if (compositionMode === 'ai_pick') {
     if (useMockAi) {
@@ -2327,6 +2334,7 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
     }
   } else if (useMockAi) {
     const composed = composePortfolioAdvisorStacks(profile, ranked, composeOptions);
+    applyIndependentTierMode(composed);
     const productMap = new Map(eligible.map((p) => [p.product_id, p]));
     payload.composed_meta = composed.meta;
     const narration = buildPortfolioAdvisorNarration(composed, profile, productMap);
@@ -2334,6 +2342,7 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
     recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts);
   } else {
     const composed = composePortfolioAdvisorStacks(profile, ranked, composeOptions);
+    applyIndependentTierMode(composed);
     const productMap = new Map(eligible.map((p) => [p.product_id, p]));
     payload.composed_meta = composed.meta;
     const promptTemplate = settings.narrator_prompt || getDefaultPortfolioNarratorPrompt();
