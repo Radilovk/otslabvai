@@ -446,12 +446,17 @@ async function submitQuiz() {
       body: JSON.stringify(answers),
     });
 
+    const rawText = await res.text();
+    let data = {};
+    try { data = rawText ? JSON.parse(rawText) : {}; } catch { data = {}; }
+
     animator.notifyApiComplete();
     await animator.waitUntilReady();
 
-    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const msg = data.error || data.message || 'Грешка при генериране.';
+      const msg = data.error || data.message
+        || (rawText && !rawText.trim().startsWith('{') ? `Сървърът върна грешка (${res.status}).` : null)
+        || `Грешка при генериране (${res.status}).`;
       if (res.status === 503) throw new Error('Консултантът е временно изключен. Опитайте по-късно.');
       throw new Error(msg);
     }
