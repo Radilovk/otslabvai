@@ -1,6 +1,17 @@
 /**
  * Commercial prioritization for the Portfolio AI advisor.
- * Prefers in-stock SKUs with strong profit % on retail price and no end-user promo.
+ *
+ * Global logic (pricing → advisor):
+ * 1. `portfolio-pricing.js` resolves our actual selling price (`retail_price`) from b2b,
+ *    regular, F1 sale, below_regular %, fixed overrides, etc.
+ * 2. This module scores products by profit on that selling price:
+ *      profit € = retail_price − b2b_price
+ *      profit % = profit € / retail_price × 100
+ * 3. Higher profit % → higher rank in the advisor pool; fallback to lower profit when needed.
+ *
+ * Promo/sale flags are NOT blanket exclusions — a product with ≤10% visible client
+ * discount (or F1 competitive promo) stays eligible if profit % is acceptable.
+ * Deep unprofitable pricing is handled naturally via low profit %, not promo heuristics.
  */
 
 export const ADVISOR_COMMERCE_DEFAULTS = {
@@ -14,6 +25,11 @@ export const ADVISOR_COMMERCE_DEFAULTS = {
    * Products at or above this threshold are preferred before lower-profit fallbacks.
    */
   min_profit_pct_on_retail: 15,
+  /**
+   * Hard exclude only when visible client discount exceeds this AND profit % is below
+   * min_profit_pct_on_retail (deep promo that erodes margin).
+   */
+  max_end_user_discount_pct: 10,
   /** Score boost per EUR absolute profit (best available variant). */
   margin_eur_weight: 0.12,
   /** Score boost per 10 percentage points of profit on retail price. */
@@ -56,6 +72,12 @@ export function normalizeAdvisorCommerceSettings(raw = {}) {
       80,
       ADVISOR_COMMERCE_DEFAULTS.min_profit_pct_on_retail
     ),
+    max_end_user_discount_pct: clamp(
+      src.max_end_user_discount_pct,
+      0,
+      80,
+      ADVISOR_COMMERCE_DEFAULTS.max_end_user_discount_pct
+    ),
     margin_eur_weight: clamp(
       src.margin_eur_weight,
       0,
@@ -85,6 +107,23 @@ function round2(n) {
   return Math.round(n * 100) / 100;
 }
 
+/** Visible client discount — only when variant is marked on promo (not standard below-RRP pricing). */
+export function customerDiscountPctFromVariant(variant) {
+  const retail = Number(variant?.retail_price) || 0;
+  if (!(retail > 0)) return 0;
+
+  const isPromo = variant?.is_on_promo === true
+    || variant?.pricing_mode === 'f1_promo';
+
+  if (!isPromo) return 0;
+
+  const compareAt = Number(variant?.compare_at_price) || 0;
+  const regular = Number(variant?.regular_price) || 0;
+  const reference = compareAt > retail ? compareAt : (regular > retail ? regular : 0);
+  if (!(reference > retail)) return 0;
+  return ((reference - retail) / reference) * 100;
+}
+
 /**
  * Best available variant commercial stats for a catalog group.
  * @param {object} group
@@ -98,23 +137,24 @@ export function summarizeAdvisorCommercialStats(group) {
       margin_eur: 0,
       margin_pct: 0,
       distributor_discount_pct: 0,
-      has_end_user_promo: false,
+      customer_discount_pct: 0,
+      is_on_promo: false,
       distributor: String(group?.distributor || '').toLowerCase(),
     };
   }
 
   let best = null;
-  let hasEndUserPromo = false;
+  let maxCustomerDiscount = 0;
+  let anyOnPromo = false;
 
   for (const v of variants) {
     const b2b = Number(v.b2b_price) || 0;
     const regular = Number(v.regular_price) || 0;
     const retail = Number(v.retail_price) || 0;
-    const sale = Number(v.sale_price) || 0;
 
-    if (sale > 0 || v.is_on_promo === true || v.pricing_mode === 'f1_promo') {
-      hasEndUserPromo = true;
-    }
+    const customerDiscount = customerDiscountPctFromVariant(v);
+    if (customerDiscount > maxCustomerDiscount) maxCustomerDiscount = customerDiscount;
+    if (v.is_on_promo === true || customerDiscount > 0) anyOnPromo = true;
 
     const profitEur = b2b > 0 && retail > b2b ? retail - b2b : 0;
     const profitPct = retail > 0 && profitEur > 0 ? (profitEur / retail) * 100 : 0;
@@ -122,7 +162,7 @@ export function summarizeAdvisorCommercialStats(group) {
     const marginPct = b2b > 0 && marginEur > 0 ? (marginEur / b2b) * 100 : 0;
     const distDiscount = regular > b2b ? ((regular - b2b) / regular) * 100 : marginPct;
 
-    const candidate = { profitEur, profitPct, marginEur, marginPct, distDiscount };
+    const candidate = { profitEur, profitPct, marginEur, marginPct, distDiscount, customerDiscount };
     if (
       !best
       || candidate.profitPct > best.profitPct
@@ -143,7 +183,8 @@ export function summarizeAdvisorCommercialStats(group) {
     margin_eur: round2(best?.marginEur || 0),
     margin_pct: round1(best?.marginPct || 0),
     distributor_discount_pct: round1(best?.distDiscount || 0),
-    has_end_user_promo: hasEndUserPromo,
+    customer_discount_pct: round1(maxCustomerDiscount),
+    is_on_promo: anyOnPromo,
     distributor: String(group?.distributor || variants[0]?.distributor || '').toLowerCase(),
   };
 }
@@ -168,6 +209,18 @@ export function isHighProfitAdvisorProduct(product, options = ADVISOR_COMMERCE_D
   return (stats.profit_pct || 0) >= opts.min_profit_pct_on_retail;
 }
 
+/**
+ * Deep client promo that also fails the profit threshold — only case we hard-exclude promos.
+ */
+export function isDeepUnprofitablePromo(stats, options = ADVISOR_COMMERCE_DEFAULTS) {
+  const opts = normalizeAdvisorCommerceSettings(options);
+  if (!stats) return false;
+  const clientDiscount = stats.customer_discount_pct || 0;
+  const profitPct = stats.profit_pct || 0;
+  return clientDiscount > opts.max_end_user_discount_pct
+    && profitPct < opts.min_profit_pct_on_retail;
+}
+
 export function isExcludedByAdvisorCommerce(product, options = ADVISOR_COMMERCE_DEFAULTS) {
   const opts = normalizeAdvisorCommerceSettings(options);
   if (!opts.enabled) return false;
@@ -175,7 +228,7 @@ export function isExcludedByAdvisorCommerce(product, options = ADVISOR_COMMERCE_
   const stats = getAdvisorCommercialStats(product);
   if (!stats) return false;
 
-  if (stats.has_end_user_promo) return true;
+  if (isDeepUnprofitablePromo(stats, opts)) return true;
 
   const dist = stats.distributor_discount_pct || 0;
   const markup = stats.margin_pct || 0;
@@ -198,7 +251,7 @@ export function scoreAdvisorCommercialBoost(product, options = ADVISOR_COMMERCE_
   if (!opts.enabled) return 0;
 
   const stats = getAdvisorCommercialStats(product);
-  if (!stats || stats.has_end_user_promo) return 0;
+  if (!stats) return 0;
 
   const profitPct = stats.profit_pct || 0;
   const profitBoost = (profitPct / 10) * opts.profit_pct_weight;
@@ -206,5 +259,13 @@ export function scoreAdvisorCommercialBoost(product, options = ADVISOR_COMMERCE_
   const discountPct = stats.distributor_discount_pct || stats.margin_pct || 0;
   const discountBoost = (discountPct / 10) * opts.discount_pct_weight;
 
-  return profitBoost + marginBoost + discountBoost;
+  let boost = profitBoost + marginBoost + discountBoost;
+
+  const clientDiscount = stats.customer_discount_pct || 0;
+  if (clientDiscount > opts.max_end_user_discount_pct) {
+    const excess = (clientDiscount - opts.max_end_user_discount_pct) / 10;
+    boost -= excess * opts.profit_pct_weight * 0.5;
+  }
+
+  return Math.max(0, boost);
 }

@@ -6117,6 +6117,8 @@ async function fetchPortfolioAdvisorSettings() {
         document.getElementById('pfa-commerce-enabled') && (document.getElementById('pfa-commerce-enabled').checked = commerce.enabled !== false);
         const minProfit = document.getElementById('pfa-commerce-min-profit');
         if (minProfit && commerce.min_profit_pct_on_retail != null) minProfit.value = commerce.min_profit_pct_on_retail;
+        const maxClientDisc = document.getElementById('pfa-commerce-max-client-discount');
+        if (maxClientDisc && commerce.max_end_user_discount_pct != null) maxClientDisc.value = commerce.max_end_user_discount_pct;
         const minDisc = document.getElementById('pfa-commerce-min-discount');
         if (minDisc && commerce.min_distributor_discount_pct != null) minDisc.value = commerce.min_distributor_discount_pct;
         const profitW = document.getElementById('pfa-commerce-profit-weight');
@@ -6139,6 +6141,7 @@ async function savePortfolioAdvisorSettingsAdmin() {
     const commerce = {
         enabled: document.getElementById('pfa-commerce-enabled')?.checked !== false,
         min_profit_pct_on_retail: Number(document.getElementById('pfa-commerce-min-profit')?.value) || 15,
+        max_end_user_discount_pct: Number(document.getElementById('pfa-commerce-max-client-discount')?.value) || 10,
         min_distributor_discount_pct: Number(document.getElementById('pfa-commerce-min-discount')?.value) || 35,
         profit_pct_weight: Number(document.getElementById('pfa-commerce-profit-weight')?.value) || 0.18,
         margin_eur_weight: Number(document.getElementById('pfa-commerce-margin-weight')?.value) || 0.12,
