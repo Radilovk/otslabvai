@@ -226,6 +226,21 @@ async function doSync() {
   return catalogState;
 }
 
+/** Always fetch live branding from KV (ignores catalog soft TTL). */
+export async function refreshBranding() {
+  try {
+    const now = await fetchJson(`${API_URL}/c/now`);
+    if (now.branding) {
+      if (catalogState.index) {
+        const changed = applyBrandingSettings(now.branding);
+        if (changed) await persistSnapshot();
+      }
+      return { ...(catalogState.index?.settings || {}), ...now.branding };
+    }
+  } catch { /* offline – use cache */ }
+  return getCachedSettings();
+}
+
 /** Main catalog sync – deduped, 60s soft TTL. */
 export function sync({ force = false } = {}) {
   if (inflight) return inflight;

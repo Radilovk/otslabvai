@@ -1584,6 +1584,9 @@ img, svg { display: block; max-width: 100%; height: auto; }
 
 .pf-floating-btn.pf-visible { display: grid; }
 
+html[data-pf-cart] .pf-cart-badge[data-pf-cart-count] { display: inline-flex; }
+html[data-pf-cart] .pf-fab-cart { display: grid; }
+
 .pf-floating-btn:not(:disabled):hover {
   box-shadow: var(--pf-shadow-glow);
   transform: translateY(-2px);
