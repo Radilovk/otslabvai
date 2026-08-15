@@ -142,9 +142,10 @@ function heroImagePath(url) {
   const raw = String(url || '').trim();
   if (!raw) return '';
   try {
-    return new URL(raw, typeof window !== 'undefined' ? window.location.href : 'https://example.com/').pathname;
+    const u = new URL(raw, typeof window !== 'undefined' ? window.location.href : 'https://example.com/');
+    return u.pathname + u.search;
   } catch {
-    return raw.split('?')[0].split('#')[0];
+    return raw.split('#')[0];
   }
 }
 
@@ -181,9 +182,8 @@ export function applyHeroSettings(settings) {
   const img = document.getElementById('hero-image');
   if (img && settings.hero_image) {
     const next = String(settings.hero_image);
-    const currentPath = heroImagePath(img.dataset.heroSrc || img.currentSrc || img.getAttribute('src') || '');
-    const nextPath = heroImagePath(next);
-    if (currentPath !== nextPath) {
+    const current = img.dataset.heroSrc || img.getAttribute('src') || '';
+    if (heroImagePath(current) !== heroImagePath(next)) {
       img.dataset.heroSrc = next;
       img.src = next;
     } else if (!img.dataset.heroSrc) {
@@ -394,14 +394,14 @@ export async function initPortfolioPage({
   initScrollEffects();
 
   await cache.hydrateLocalCache();
-  const settings = cache.getCachedSettings();
+  const settings = await cache.refreshBranding();
   if (footerSlot && !footerSlot.querySelector('.pf-footer')) {
     footerSlot.innerHTML = renderFooter(settings);
   }
   applyBrandingFromSettings(settings);
 
   if (settingsOnly && !settings) {
-    await cache.ensureSettings();
+    await cache.ensureSettings({ force: true });
     const fresh = cache.getCachedSettings();
     if (footerSlot && !footerSlot.querySelector('.pf-footer')) {
       footerSlot.innerHTML = renderFooter(fresh);

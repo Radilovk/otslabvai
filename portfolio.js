@@ -1,6 +1,5 @@
 import {
-  escapeHtml, debounce, updateCartBadges, initPortfolioPage,
-  applyBrandingFromSettings, icon
+  escapeHtml, debounce, initPortfolioPage, icon
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
 import { getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, onCatalogUpdated } from './portfolio-cache.js';
@@ -377,9 +376,8 @@ async function init() {
   if (!hasCatalog) {
     showSkeletons();
     await cache.sync();
-    applyBrandingFromSettings(cache.getCachedSettings());
   } else {
-    void cache.sync().then(() => applyBrandingFromSettings(cache.getCachedSettings()));
+    void cache.sync();
   }
 
   try {
@@ -404,7 +402,6 @@ async function init() {
     DOM.resultsMeta.textContent = '';
   }
 
-  updateCartBadges();
 }
 
 init();
