@@ -5,7 +5,8 @@
 import { buildCatalogArtifacts } from './catalog-build.js';
 import { CATALOG_KV } from './catalog-kv-keys.js';
 import { CATALOG_SYNC_POLICY } from './catalog-sync-policy.js';
-import { DEFAULT_SETTINGS } from './portfolio-api.js';
+import { DEFAULT_SETTINGS, fetchFitness1Products, mergeCatalogProducts } from './portfolio-api.js';
+import { fetchSilaProductsWithFallback, normalizeSilaApiToken, KV_SILA_TOKEN } from './sila-api.js';
 import {
   refreshImportedProductsInContent,
   collectImportedGroupIds
@@ -16,6 +17,7 @@ const KV_NS = process.env.CLOUDFLARE_KV_NAMESPACE_ID || 'd220db696e414b7cb3da2b1
 const ACCOUNT = process.env.CLOUDFLARE_ACCOUNT_ID;
 const TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 const API_KEY = process.env.FITNESS1_API_KEY;
+const SILA_TOKEN = process.env.SILA_API_TOKEN;
 
 async function kvGet(key) {
   const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/storage/kv/namespaces/${KV_NS}/values/${encodeURIComponent(key)}`;
@@ -43,12 +45,31 @@ async function kvDelete(key) {
 }
 
 async function fetchProducts() {
-  const url = `https://fitness1.bg/b2b/api/products_v3?key=${encodeURIComponent(API_KEY)}`;
-  console.log('Fetching products from Fitness1 (light, no descriptions)...');
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Fitness1 API: ${res.status}`);
-  const data = await res.json();
-  return data.products;
+  let f1Products = [];
+  let silaProducts = [];
+
+  if (API_KEY) {
+    console.log('Fetching products from Fitness1 (light, no descriptions)...');
+    f1Products = await fetchFitness1Products(API_KEY);
+    console.log(`  Fitness1: ${f1Products.length} SKUs`);
+  }
+
+  if (SILA_TOKEN) {
+    console.log('Fetching products from Sila BG...');
+    const { products, error } = await fetchSilaProductsWithFallback([SILA_TOKEN]);
+    silaProducts = products;
+    if (error) {
+      console.warn(`  Sila BG: skipped — ${error.message}`);
+    } else {
+      console.log(`  Sila BG: ${silaProducts.length} SKUs`);
+    }
+  }
+
+  if (!f1Products.length && !silaProducts.length) {
+    throw new Error('No products fetched — configure FITNESS1_API_KEY and/or SILA_API_TOKEN');
+  }
+
+  return mergeCatalogProducts(f1Products, silaProducts);
 }
 
 function gzipJson(obj) {
@@ -75,10 +96,10 @@ async function pruneOldVersions(pointer, keep = CATALOG_SYNC_POLICY.RETAIN_VERSI
 }
 
 async function main() {
-  if (!API_KEY) throw new Error('FITNESS1_API_KEY required');
+  if (!API_KEY && !SILA_TOKEN) throw new Error('FITNESS1_API_KEY and/or SILA_API_TOKEN required');
   if (!TOKEN || !ACCOUNT) throw new Error('Cloudflare credentials required');
 
-  const settings = { ...DEFAULT_SETTINGS, global_markup_percent: 30 };
+  const settings = { ...DEFAULT_SETTINGS, ...(await kvGet('portfolio_settings') || {}), global_markup_percent: 30 };
   const products = await fetchProducts();
   console.log(`Got ${products.length} SKUs`);
 
@@ -133,7 +154,8 @@ async function main() {
 
   // Legacy KV for validate-cart, admin, advisor engine
   console.log('Updating legacy portfolio_* keys...');
-  await kvPut('fitness1_api_key', API_KEY, 'text/plain');
+  if (API_KEY) await kvPut('fitness1_api_key', API_KEY, 'text/plain');
+  if (SILA_TOKEN) await kvPut(KV_SILA_TOKEN, normalizeSilaApiToken(SILA_TOKEN), 'text/plain');
   await kvPut('portfolio_settings', JSON.stringify(built.legacySettings, null, 2));
   await kvPut('portfolio_meta', JSON.stringify(built.legacyMeta));
   for (let i = 0; i < built.chunks.length; i += 1) {

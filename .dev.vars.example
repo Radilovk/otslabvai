@@ -1,2 +1,3 @@
 ADMIN_PASSWORD=your-admin-password-here
 FITNESS1_API_KEY=your-fitness1-api-key-here
+SILA_API_TOKEN=your-sila-bg-api-token-here

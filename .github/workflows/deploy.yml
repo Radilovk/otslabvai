@@ -121,6 +121,21 @@ jobs:
             -H "Content-Type: text/plain" \
             --data-binary "$FITNESS1_API_KEY"
 
+      - name: Set Sila API token in KV
+        env:
+          SILA_API_TOKEN: ${{ secrets.SILA_API_TOKEN }}
+        run: |
+          if [ -z "$SILA_API_TOKEN" ]; then
+            echo "Skipping Sila API token – SILA_API_TOKEN GitHub secret not configured"
+            exit 0
+          fi
+          curl -s -X PUT \
+            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/d220db696e414b7cb3da2b19abd53d0f/values/sila_api_token" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: text/plain" \
+            --data-binary "$SILA_API_TOKEN"
+          echo "sila_api_token synced to KV"
+
       - name: Set admin password Worker secret
         run: printf '%s' 'kakadu1234' | npx wrangler secret put ADMIN_PASSWORD
 
@@ -133,6 +148,16 @@ jobs:
             exit 0
           fi
           printf '%s' "$FITNESS1_API_KEY" | npx wrangler secret put FITNESS1_API_KEY
+
+      - name: Set Sila API token as Worker secret
+        env:
+          SILA_API_TOKEN: ${{ secrets.SILA_API_TOKEN }}
+        run: |
+          if [ -z "$SILA_API_TOKEN" ]; then
+            echo "Skipping Worker secret – SILA_API_TOKEN not configured"
+            exit 0
+          fi
+          printf '%s' "$SILA_API_TOKEN" | npx wrangler secret put SILA_API_TOKEN
 
       - name: Set AI API keys in KV
         env:
@@ -186,14 +211,15 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Sync Portfolio catalog to KV (Fitness1 → KV)
+      - name: Sync Portfolio catalog to KV
         env:
           FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
+          SILA_API_TOKEN: ${{ secrets.SILA_API_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          if [ -z "$FITNESS1_API_KEY" ]; then
-            echo "::warning::Skipping catalog sync – FITNESS1_API_KEY GitHub secret not set"
+          if [ -z "$FITNESS1_API_KEY" ] && [ -z "$SILA_API_TOKEN" ]; then
+            echo "::warning::Skipping catalog sync – FITNESS1_API_KEY and SILA_API_TOKEN not set"
             exit 0
           fi
           node upload-portfolio-catalog.mjs
@@ -201,11 +227,12 @@ jobs:
       - name: Catalog light sync (/c/now pointer)
         env:
           FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
+          SILA_API_TOKEN: ${{ secrets.SILA_API_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          if [ -z "$FITNESS1_API_KEY" ]; then
-            echo "Skipping catalog-light-sync – FITNESS1_API_KEY not configured"
+          if [ -z "$FITNESS1_API_KEY" ] && [ -z "$SILA_API_TOKEN" ]; then
+            echo "Skipping catalog-light-sync – no distributor API keys configured"
             exit 0
           fi
           node catalog-light-sync.mjs
@@ -218,6 +245,16 @@ jobs:
           if ! printf '%s' "$FITNESS1_API_KEY" | grep -Eq '^[a-f0-9]{32}$'; then
             echo "::error::FITNESS1_API_KEY must be 32 hex characters (see Fitness1 B2B docs)"
             exit 1
+          fi
+
+      - name: Verify Sila API token format
+        env:
+          SILA_API_TOKEN: ${{ secrets.SILA_API_TOKEN }}
+        run: |
+          if [ -z "$SILA_API_TOKEN" ]; then exit 0; fi
+          len=$(printf '%s' "$SILA_API_TOKEN" | wc -c | tr -d ' ')
+          if ! printf '%s' "$SILA_API_TOKEN" | grep -Eq '^[A-Za-z0-9]{24,96}$'; then
+            echo "::warning::SILA_API_TOKEN format looks invalid (length=${len}, expected 24–96 alphanumeric from Sila B2B → API tab). Catalog sync will skip Sila products."
           fi
 
       - name: Verify Portfolio catalog bootstrap
@@ -237,11 +274,11 @@ jobs:
           sleep 8
           BASE="https://port.radilov-k.workers.dev"
           fail=0
-          code=$(curl -s -o /tmp/pf-settings.json -w "%{http_code}" "${BASE}/portfolio/site-config")
-          body=$(head -c 120 /tmp/pf-settings.json)
-          echo "/portfolio/site-config → HTTP ${code}: ${body}"
+          code=$(curl -s -o /tmp/pf-now.json -w "%{http_code}" "${BASE}/c/now")
+          body=$(head -c 120 /tmp/pf-now.json)
+          echo "/c/now → HTTP ${code}: ${body}"
           if [ "$code" != "200" ]; then
-            echo "ERROR: site-config must return 200"
+            echo "ERROR: /c/now must return 200"
             fail=1
           fi
           admin_code=$(curl -s -o /tmp/pf-admin-settings.json -w "%{http_code}" "${BASE}/portfolio/settings")

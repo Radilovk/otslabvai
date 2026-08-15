@@ -711,6 +711,7 @@ img, svg { display: block; max-width: 100%; height: auto; }
   position: absolute;
   inset: 0;
   z-index: 0;
+  background: linear-gradient(135deg, #0f2540 0%, #1a3a5c 100%);
 }
 
 .pf-hero-media img {

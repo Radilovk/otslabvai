@@ -138,23 +138,24 @@ export function buildPortfolioProductUrl(groupId, skuId) {
   return url;
 }
 
-export async function loadSiteSettings({ settingsOnly = false } = {}) {
+function heroImagePath(url) {
+  const raw = String(url || '').trim();
+  if (!raw) return '';
   try {
-    const cache = await import('./portfolio-cache.js');
-    if (settingsOnly) {
-      return await cache.ensureSettings();
-    }
-    await cache.sync();
-    return cache.getCachedSettings();
+    return new URL(raw, typeof window !== 'undefined' ? window.location.href : 'https://example.com/').pathname;
   } catch {
-    try {
-      const res = await fetch(`${API_URL}/portfolio/site-config`);
-      if (!res.ok) return null;
-      return await res.json();
-    } catch {
-      return null;
-    }
+    return raw.split('?')[0].split('#')[0];
   }
+}
+
+function setTextIfChanged(el, text) {
+  if (el && text != null && el.textContent !== text) el.textContent = text;
+}
+
+export function applyBrandingFromSettings(settings) {
+  if (!settings) return;
+  applySiteSettings(settings);
+  applyHeroSettings(settings);
 }
 
 export function applySiteSettings(settings) {
@@ -164,14 +165,14 @@ export function applySiteSettings(settings) {
   const sloganEl = document.getElementById('site-slogan');
   if (nameEl && settings.site_name) {
     const parts = String(settings.site_name).split(' - ');
-    nameEl.textContent = parts[0] || settings.site_name;
-    if (taglineEl && parts[1]) taglineEl.textContent = parts[1];
+    setTextIfChanged(nameEl, parts[0] || settings.site_name);
+    if (taglineEl && parts[1]) setTextIfChanged(taglineEl, parts[1]);
   }
-  if (sloganEl && settings.site_slogan) sloganEl.textContent = settings.site_slogan;
+  if (sloganEl && settings.site_slogan) setTextIfChanged(sloganEl, settings.site_slogan);
 
   const footerBrand = document.getElementById('footer-brand-name');
   if (footerBrand && settings.site_name) {
-    footerBrand.textContent = String(settings.site_name).split(' - ')[0] || settings.site_name;
+    setTextIfChanged(footerBrand, String(settings.site_name).split(' - ')[0] || settings.site_name);
   }
 }
 
@@ -179,12 +180,18 @@ export function applyHeroSettings(settings) {
   if (!settings) return;
   const img = document.getElementById('hero-image');
   if (img && settings.hero_image) {
-    img.src = settings.hero_image;
+    const next = String(settings.hero_image);
+    const currentPath = heroImagePath(img.dataset.heroSrc || img.currentSrc || img.getAttribute('src') || '');
+    const nextPath = heroImagePath(next);
+    if (currentPath !== nextPath) {
+      img.dataset.heroSrc = next;
+      img.src = next;
+    } else if (!img.dataset.heroSrc) {
+      img.dataset.heroSrc = next;
+    }
   }
-  const title = document.getElementById('hero-title');
-  if (title && settings.hero_title) title.textContent = settings.hero_title;
-  const sub = document.getElementById('hero-subtitle');
-  if (sub && settings.site_slogan) sub.textContent = settings.site_slogan;
+  setTextIfChanged(document.getElementById('hero-title'), settings.hero_title || null);
+  setTextIfChanged(document.getElementById('hero-subtitle'), settings.site_slogan || null);
 }
 
 const THEME_TOGGLE_SVG = `
@@ -354,6 +361,16 @@ function initScrollEffects() {
   onScroll();
 }
 
+function setActiveNav(headerSlot, active) {
+  headerSlot?.querySelectorAll('.pf-nav-link').forEach((link) => {
+    const href = link.getAttribute('href') || '';
+    const isCatalog = active === 'catalog' && href.includes('portfolio.html') && !href.includes('advisor');
+    const isAdvisor = active === 'advisor' && href.includes('advisor');
+    const isCheckout = active === 'checkout' && href.includes('checkout');
+    link.classList.toggle('active', isCatalog || isAdvisor || isCheckout);
+  });
+}
+
 export async function initPortfolioPage({
   active = 'catalog',
   showMobileBar = false,
@@ -362,14 +379,37 @@ export async function initPortfolioPage({
   const headerSlot = document.getElementById('pf-header-slot');
   const footerSlot = document.getElementById('pf-footer-slot');
   const mobileBarSlot = document.getElementById('pf-mobile-cart-slot');
-  const settings = await loadSiteSettings({ settingsOnly });
-  if (headerSlot) headerSlot.innerHTML = renderHeader(active);
-  if (footerSlot) footerSlot.innerHTML = renderFooter(settings);
-  if (showMobileBar && mobileBarSlot) mobileBarSlot.innerHTML = renderFloatingCartFab();
-  applySiteSettings(settings);
+  const cache = await import('./portfolio-cache.js');
+
+  if (headerSlot?.querySelector('.pf-header')) {
+    setActiveNav(headerSlot, active);
+  } else if (headerSlot) {
+    headerSlot.innerHTML = renderHeader(active);
+  }
+  if (showMobileBar && mobileBarSlot && !mobileBarSlot.querySelector('.pf-fab-cart')) {
+    mobileBarSlot.innerHTML = renderFloatingCartFab();
+  }
   initPortfolioTheme();
   updateCartBadges();
   initScrollEffects();
+
+  await cache.hydrateLocalCache();
+  const settings = cache.getCachedSettings();
+  if (footerSlot && !footerSlot.querySelector('.pf-footer')) {
+    footerSlot.innerHTML = renderFooter(settings);
+  }
+  applyBrandingFromSettings(settings);
+
+  if (settingsOnly && !settings) {
+    await cache.ensureSettings();
+    const fresh = cache.getCachedSettings();
+    if (footerSlot && !footerSlot.querySelector('.pf-footer')) {
+      footerSlot.innerHTML = renderFooter(fresh);
+    }
+    applyBrandingFromSettings(fresh);
+    return { settings: fresh };
+  }
+
   return { settings };
 }
 

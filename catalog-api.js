@@ -1,6 +1,4 @@
-/**
- * Cost-constant catalog delivery – /c/now pointer + immutable KV artifacts.
- */
+import { sanitizeGroupForClient, getPublicSiteSettings } from './portfolio-api.js';
 import { CATALOG_KV } from './catalog-kv-keys.js';
 import { CATALOG_SYNC_POLICY } from './catalog-sync-policy.js';
 
@@ -87,7 +85,8 @@ async function handleCatalogNow(env, ctx) {
     return jsonResponse({ error: 'Каталогът не е синхронизиран.' }, 404, POINTER_HEADERS);
   }
   await maybeDispatchRefresh(env, pointer, ctx);
-  return jsonResponse({ i: pointer.i, s: pointer.s, t: pointer.t }, 200, POINTER_HEADERS);
+  const branding = await getPublicSiteSettings(env);
+  return jsonResponse({ i: pointer.i, s: pointer.s, t: pointer.t, branding }, 200, POINTER_HEADERS);
 }
 
 async function serveArtifact(env, key) {
@@ -121,7 +120,11 @@ export async function handleCatalogRoute(request, env, url, ctx) {
 
   const groupsMatch = path.match(/^\/c\/groups-([a-f0-9]+)-(\d+)\.json$/);
   if (groupsMatch && request.method === 'GET') {
-    return serveArtifact(env, CATALOG_KV.groups(groupsMatch[1], Number(groupsMatch[2])));
+    const key = CATALOG_KV.groups(groupsMatch[1], Number(groupsMatch[2]));
+    const raw = await env.PAGE_CONTENT.get(key);
+    if (!raw) return jsonResponse({ error: 'Not found' }, 404, IMMUTABLE_HEADERS);
+    const groups = JSON.parse(raw).map(sanitizeGroupForClient);
+    return jsonResponse(groups, 200, IMMUTABLE_HEADERS);
   }
 
   return null;

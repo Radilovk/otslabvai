@@ -8,7 +8,8 @@ compatibility_date = "2024-04-05"
 # Wrangler uploads the full worker bundle from this directory.
 
 # Set via: npx wrangler secret put FITNESS1_API_KEY
-# Or KV key fitness1_api_key (see upload-portfolio-catalog.mjs)
+# Set via: npx wrangler secret put SILA_API_TOKEN
+# Or KV keys fitness1_api_key / sila_api_token (see upload-portfolio-catalog.mjs)
 # Worker runs first: API/KV routes in worker.js; static assets via env.ASSETS with hostname routing.
 [assets]
 directory = "."
@@ -26,4 +27,3 @@ preview_id = "b2891ffe523048ae87cf9c4549d6ab49"
 binding = "PAGE_CONTENT"
 id = "d220db696e414b7cb3da2b19abd53d0f"
 preview_id = "d220db696e414b7cb3da2b19abd53d0f"
-

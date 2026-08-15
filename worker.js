@@ -123,7 +123,12 @@ export default {
       try {
         await assertAdminAuthorized(request, env);
       } catch (authErr) {
-        throw new UserFacingError(authErr.message || 'Неоторизиран достъп.', authErr.status || 401);
+        return new Response(JSON.stringify({
+          error: authErr.message || 'Неоторизиран достъп. Влезте в админ панела.',
+        }), {
+          status: authErr.status || 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
 
@@ -1600,13 +1605,12 @@ async function handlePortfolioSyncWithRefresh(env, ctx) {
     try {
         result = await syncPortfolioCatalog(env, { includeDescriptions: false, fallbackToKv: true });
     } catch (e) {
-        if (e && e.name === 'PortfolioError') {
-            return new Response(JSON.stringify({ error: e.message }), {
-                status: e.status || 500,
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
-        throw e;
+        const message = e?.message || String(e);
+        const status = e?.status || 500;
+        return new Response(JSON.stringify({ error: message }), {
+            status,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 
     let ciSync = null;

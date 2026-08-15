@@ -1,8 +1,9 @@
 import {
-  escapeHtml, debounce, updateCartBadges, initPortfolioPage, applyHeroSettings, icon
+  escapeHtml, debounce, updateCartBadges, initPortfolioPage,
+  applyBrandingFromSettings, icon
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
-import { getCachedSettings, getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, onCatalogUpdated } from './portfolio-cache.js';
+import { getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, onCatalogUpdated } from './portfolio-cache.js';
 import {
   countActiveFilters as countFilters,
   getRemovableFilterChips,
@@ -250,10 +251,15 @@ function populateFilters(filters) {
     DOM.filterBrand.appendChild(opt);
   });
 
-  if (DOM.heroStats) {
-    DOM.heroStats.style.display = 'flex';
-    DOM.statProducts.textContent = filters.total_groups.toLocaleString('bg-BG');
-    DOM.statBrands.textContent = filters.brands.length.toLocaleString('bg-BG');
+  if (DOM.heroStats && filters.total_groups) {
+    const showStats = filters.total_groups > 0;
+    if (showStats) {
+      DOM.heroStats.style.display = 'flex';
+      const products = filters.total_groups.toLocaleString('bg-BG');
+      const brands = filters.brands.length.toLocaleString('bg-BG');
+      if (DOM.statProducts.textContent !== products) DOM.statProducts.textContent = products;
+      if (DOM.statBrands.textContent !== brands) DOM.statBrands.textContent = brands;
+    }
   }
 }
 
@@ -362,12 +368,21 @@ function bindEvents() {
 }
 
 async function init() {
+  const cache = await import('./portfolio-cache.js');
+  await cache.hydrateLocalCache();
+  const hasCatalog = !!getFiltersFromCache();
+
   await initPortfolioPage({ active: 'catalog', showMobileBar: true });
-  showSkeletons();
+
+  if (!hasCatalog) {
+    showSkeletons();
+    await cache.sync();
+    applyBrandingFromSettings(cache.getCachedSettings());
+  } else {
+    void cache.sync().then(() => applyBrandingFromSettings(cache.getCachedSettings()));
+  }
 
   try {
-    const settings = getCachedSettings();
-    applyHeroSettings(settings);
     const filters = getFiltersFromCache();
     if (filters) populateFilters(filters);
     state.cacheReady = true;
