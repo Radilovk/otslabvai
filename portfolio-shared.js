@@ -186,6 +186,8 @@ export function applyHeroSettings(settings) {
     if (currentPath !== nextPath) {
       img.dataset.heroSrc = next;
       img.src = next;
+    } else if (!img.dataset.heroSrc) {
+      img.dataset.heroSrc = next;
     }
   }
   setTextIfChanged(document.getElementById('hero-title'), settings.hero_title || null);
@@ -359,6 +361,16 @@ function initScrollEffects() {
   onScroll();
 }
 
+function setActiveNav(headerSlot, active) {
+  headerSlot?.querySelectorAll('.pf-nav-link').forEach((link) => {
+    const href = link.getAttribute('href') || '';
+    const isCatalog = active === 'catalog' && href.includes('portfolio.html') && !href.includes('advisor');
+    const isAdvisor = active === 'advisor' && href.includes('advisor');
+    const isCheckout = active === 'checkout' && href.includes('checkout');
+    link.classList.toggle('active', isCatalog || isAdvisor || isCheckout);
+  });
+}
+
 export async function initPortfolioPage({
   active = 'catalog',
   showMobileBar = false,
@@ -369,25 +381,33 @@ export async function initPortfolioPage({
   const mobileBarSlot = document.getElementById('pf-mobile-cart-slot');
   const cache = await import('./portfolio-cache.js');
 
-  if (headerSlot) headerSlot.innerHTML = renderHeader(active);
-  if (showMobileBar && mobileBarSlot) mobileBarSlot.innerHTML = renderFloatingCartFab();
+  if (headerSlot?.querySelector('.pf-header')) {
+    setActiveNav(headerSlot, active);
+  } else if (headerSlot) {
+    headerSlot.innerHTML = renderHeader(active);
+  }
+  if (showMobileBar && mobileBarSlot && !mobileBarSlot.querySelector('.pf-fab-cart')) {
+    mobileBarSlot.innerHTML = renderFloatingCartFab();
+  }
   initPortfolioTheme();
   updateCartBadges();
   initScrollEffects();
 
   await cache.hydrateLocalCache();
-  let settings = cache.getCachedSettings();
-  if (footerSlot) footerSlot.innerHTML = renderFooter(settings);
+  const settings = cache.getCachedSettings();
+  if (footerSlot && !footerSlot.querySelector('.pf-footer')) {
+    footerSlot.innerHTML = renderFooter(settings);
+  }
   applyBrandingFromSettings(settings);
 
-  if (settingsOnly) {
-    if (!settings) {
-      await cache.ensureSettings();
-      settings = cache.getCachedSettings();
-      if (footerSlot) footerSlot.innerHTML = renderFooter(settings);
-      applyBrandingFromSettings(settings);
+  if (settingsOnly && !settings) {
+    await cache.ensureSettings();
+    const fresh = cache.getCachedSettings();
+    if (footerSlot && !footerSlot.querySelector('.pf-footer')) {
+      footerSlot.innerHTML = renderFooter(fresh);
     }
-    return { settings };
+    applyBrandingFromSettings(fresh);
+    return { settings: fresh };
   }
 
   return { settings };
