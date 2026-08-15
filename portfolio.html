@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0f2540">
-    <script>
-    (function(){try{var s=localStorage.getItem('theme');var t=s||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();
-    (function(){try{var c=JSON.parse(localStorage.getItem('portfolioCart')||'[]');var n=c.reduce(function(s,i){return s+(i.quantity||0);},0);if(n>0)document.documentElement.setAttribute('data-pf-cart',String(n));}catch(e){}})();
-    </script>
+    <script src="portfolio-head-preinit.js"></script>
     <title>BIOCODE – Nutrition Science | Каталог хранителни добавки</title>
     <meta name="description" content="BIOCODE Nutrition Science – протеини, витамини, аминокиселини с доставка до офис.">
     <meta name="robots" content="index, follow">
@@ -54,7 +51,8 @@
 
     <section class="pf-hero" id="pf-hero">
         <div class="pf-hero-media" aria-hidden="true">
-            <img id="hero-image" src="images/portfolio-hero.jpg" alt="" width="1400" height="666" loading="eager" decoding="async" fetchpriority="high">
+            <img id="hero-image" alt="" width="1400" height="666" loading="eager" decoding="async" fetchpriority="high">
+            <script>!function(){var h=document.documentElement.getAttribute('data-pf-hero')||'images/portfolio-hero.jpg',img=document.getElementById('hero-image');if(img){img.src=h;img.dataset.heroSrc=h;}}();</script>
         </div>
         <div class="pf-hero-overlay" aria-hidden="true"></div>
         <div class="pf-hero-inner">

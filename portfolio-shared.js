@@ -186,6 +186,7 @@ export function applyHeroSettings(settings) {
     if (heroImagePath(current) !== heroImagePath(next)) {
       img.dataset.heroSrc = next;
       img.src = next;
+      try { localStorage.setItem('pf-hero-src', next); } catch { /* ignore */ }
     } else if (!img.dataset.heroSrc) {
       img.dataset.heroSrc = next;
     }
