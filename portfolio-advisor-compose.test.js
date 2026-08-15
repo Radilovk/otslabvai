@@ -49,9 +49,16 @@ describe('composeComplementaryPackageStacks', () => {
   ];
 
   test('връща независими tier-ове без повтарящи се product_id', () => {
+    const widePool = Array.from({ length: 12 }, (_, i) => makeRanked(
+      i + 1,
+      `Supplement ${i + 1}`,
+      'Витамини',
+      12 + i,
+      50 - i
+    ));
     const composed = composeComplementaryPackageStacks(
-      { priority: 'otshalvane', selection_mode: 'package' },
-      ranked,
+      { priority: 'health', selection_mode: 'package' },
+      widePool,
       { tierLimits: PORTFOLIO_PACKAGE_TIER_LIMITS, tierMeta: PORTFOLIO_PACKAGE_TIER_META }
     );
 
@@ -78,6 +85,20 @@ describe('composeComplementaryPackageStacks', () => {
           expect(productsConflictInStack(products[i], products[j])).toBe(false);
         }
       }
+    }
+  });
+
+  test('малък pool попълва и трите tier-а (shared pool)', () => {
+    const small = ranked.slice(0, 3);
+    const composed = composeComplementaryPackageStacks(
+      { priority: 'muscle', selection_mode: 'package' },
+      small,
+      { tierLimits: PORTFOLIO_PACKAGE_TIER_LIMITS, tierMeta: PORTFOLIO_PACKAGE_TIER_META }
+    );
+
+    expect(composed.meta.mode).toBe('complementary_shared_pool');
+    for (const tier of ['basic', 'optimal', 'premium']) {
+      expect(composed.tiers[tier].products.length).toBeGreaterThan(0);
     }
   });
 
@@ -154,17 +175,15 @@ describe('composeSingleProductOptions', () => {
 });
 
 describe('composePortfolioAdvisorStacks', () => {
-  test('package mode използва complementary independent stacks', () => {
-    const ranked = [
-      makeRanked(1, 'Thermo Burn', 'Изгаряне на мазнини', 25),
-      makeRanked(2, 'L-Carnitine', 'Аминокиселини', 18),
-      makeRanked(3, 'Herbal Slim', 'Билки', 15),
-      makeRanked(4, 'Vitamin C', 'Витамини', 12),
-      makeRanked(5, 'Omega 3', 'Мастни киселини', 20),
-      makeRanked(6, 'Green Tea', 'Билки', 14),
-    ];
+  test('package mode използва complementary stacks', () => {
+    const ranked = Array.from({ length: 12 }, (_, i) => makeRanked(
+      i + 1,
+      `Stack Product ${i + 1}`,
+      'Витамини',
+      14 + i
+    ));
     const composed = composePortfolioAdvisorStacks(
-      { selection_mode: 'package', priority: 'otshalvane' },
+      { selection_mode: 'package', priority: 'health' },
       ranked,
       { tierLimits: PORTFOLIO_PACKAGE_TIER_LIMITS, tierMeta: PORTFOLIO_PACKAGE_TIER_META }
     );
