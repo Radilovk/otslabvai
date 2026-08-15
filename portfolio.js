@@ -209,7 +209,10 @@ function loadCatalog() {
   state.total = data.total;
   state.totalPages = data.total_pages;
   state.page = data.page;
-  DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
+  if (DOM.resultsMeta) {
+    DOM.resultsMeta.hidden = false;
+    DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
+  }
   DOM.grid.innerHTML = data.items.length
     ? data.items.map(renderCard).join('')
     : `<div class="pf-empty">
@@ -371,20 +374,28 @@ async function init() {
   await cache.hydrateLocalCache();
   const hasCatalog = !!getFiltersFromCache();
 
-  await initPortfolioPage({ active: 'catalog', showMobileBar: true });
+  const pageInit = initPortfolioPage({ active: 'catalog', showMobileBar: true });
 
-  if (!hasCatalog) {
-    showSkeletons();
-    await cache.sync();
-  } else {
-    void cache.sync();
-  }
-
-  try {
+  if (hasCatalog) {
     const filters = getFiltersFromCache();
     if (filters) populateFilters(filters);
     state.cacheReady = true;
     bindEvents();
+    loadCatalog();
+    void cache.sync();
+  } else {
+    showSkeletons();
+    await cache.sync();
+    const filters = getFiltersFromCache();
+    if (filters) populateFilters(filters);
+    state.cacheReady = true;
+    bindEvents();
+    loadCatalog();
+  }
+
+  await pageInit;
+
+  try {
     onCatalogUpdated(() => {
       const updatedFilters = getFiltersFromCache();
       if (updatedFilters) populateFilters(updatedFilters);
@@ -392,7 +403,6 @@ async function init() {
       loadCatalog();
     });
     reconcileFacets();
-    loadCatalog();
   } catch (err) {
     if (DOM.syncBanner) {
       DOM.syncBanner.style.display = 'block';

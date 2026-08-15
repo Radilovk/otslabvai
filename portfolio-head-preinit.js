@@ -1,4 +1,15 @@
 (function () {
+  var WORKER_API = 'https://port.radilov-k.workers.dev';
+
+  function apiUrl() {
+    var host = location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return location.port === '8080' ? 'http://localhost:8080/backend' : location.origin;
+    }
+    if (host.endsWith('.workers.dev')) return location.origin;
+    return WORKER_API;
+  }
+
   try {
     var s = localStorage.getItem('theme');
     var t = s || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -13,14 +24,10 @@
     if (n > 0) document.documentElement.setAttribute('data-pf-cart', String(n));
   } catch (e) { /* ignore */ }
 
-  var api = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-    ? (location.port === '8080' ? 'http://localhost:8080/backend' : location.origin)
-    : location.origin;
-
   var branding = null;
   try {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', api + '/c/now', false);
+    xhr.open('GET', apiUrl() + '/c/now', false);
     xhr.send(null);
     if (xhr.status >= 200 && xhr.status < 300) {
       branding = JSON.parse(xhr.responseText).branding || null;

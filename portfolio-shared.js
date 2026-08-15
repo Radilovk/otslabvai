@@ -153,10 +153,10 @@ function setTextIfChanged(el, text) {
   if (el && text != null && el.textContent !== text) el.textContent = text;
 }
 
-export function applyBrandingFromSettings(settings) {
+export function applyBrandingFromSettings(settings, { skipHero = false } = {}) {
   if (!settings) return;
   applySiteSettings(settings);
-  applyHeroSettings(settings);
+  if (!skipHero) applyHeroSettings(settings);
 }
 
 export function applySiteSettings(settings) {
@@ -399,7 +399,9 @@ export async function initPortfolioPage({
   if (footerSlot && !footerSlot.querySelector('.pf-footer')) {
     footerSlot.innerHTML = renderFooter(settings);
   }
-  applyBrandingFromSettings(settings);
+  applyBrandingFromSettings(settings, {
+    skipHero: document.documentElement.hasAttribute('data-pf-hero')
+  });
 
   if (settingsOnly && !settings) {
     await cache.ensureSettings({ force: true });
@@ -407,7 +409,9 @@ export async function initPortfolioPage({
     if (footerSlot && !footerSlot.querySelector('.pf-footer')) {
       footerSlot.innerHTML = renderFooter(fresh);
     }
-    applyBrandingFromSettings(fresh);
+    applyBrandingFromSettings(fresh, {
+      skipHero: document.documentElement.hasAttribute('data-pf-hero')
+    });
     return { settings: fresh };
   }
 

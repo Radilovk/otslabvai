@@ -47,12 +47,13 @@
                 </div>
             </div>
         </header>
+        <script>!function(){var b=window.__pfBranding;if(!b)return;var p=String(b.site_name||'').split(' - ');var n=document.getElementById('site-name');if(n&&p[0])n.textContent=p[0];var tg=document.getElementById('site-tagline');if(tg&&p[1])tg.textContent=p[1];var sl=document.getElementById('site-slogan');if(sl&&b.site_slogan)sl.textContent=b.site_slogan;}();</script>
     </div>
 
     <section class="pf-hero" id="pf-hero">
         <div class="pf-hero-media" aria-hidden="true">
-            <img id="hero-image" alt="" width="1400" height="666" loading="eager" decoding="async" fetchpriority="high">
-            <script>!function(){var h=document.documentElement.getAttribute('data-pf-hero')||'images/portfolio-hero.jpg',img=document.getElementById('hero-image');if(img){img.src=h;img.dataset.heroSrc=h;}}();</script>
+            <img id="hero-image" alt="" width="1400" height="666" loading="eager" decoding="sync" fetchpriority="high">
+            <script>!function(){var b=window.__pfBranding,h=document.documentElement.getAttribute('data-pf-hero')||(b&&b.hero_image)||'images/portfolio-hero.jpg',img=document.getElementById('hero-image');if(img){img.src=h;img.dataset.heroSrc=h;function ready(){img.classList.add('pf-hero-ready');}img.onload=ready;if(img.complete)ready();}if(b){var t=document.getElementById('hero-title');if(t&&b.hero_title)t.textContent=b.hero_title;var s=document.getElementById('hero-subtitle');if(s&&b.site_slogan)s.textContent=b.site_slogan;}}();</script>
         </div>
         <div class="pf-hero-overlay" aria-hidden="true"></div>
         <div class="pf-hero-inner">
@@ -100,7 +101,7 @@
             <div class="pf-toolbar">
                 <div>
                     <h2>Каталог</h2>
-                    <p class="pf-results-meta" id="results-meta">Зареждане...</p>
+                    <p class="pf-results-meta" id="results-meta" hidden></p>
                 </div>
                 <div class="pf-sort">
                     <select id="sort-select" aria-label="Сортиране">
