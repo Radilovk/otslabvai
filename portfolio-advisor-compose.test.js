@@ -46,7 +46,31 @@ describe('composeComplementaryPackageStacks', () => {
     makeRanked(8, 'Green Tea Extract', 'Билки', 14, 55),
     makeRanked(9, 'Berberine Complex', 'Билки', 22, 50),
     makeRanked(10, 'Magnesium Citrate', 'Минерали', 16, 45),
+    makeRanked(11, 'Zinc Picolinate', 'Минерали', 11, 44),
+    makeRanked(12, 'Ashwagandha', 'Билки', 19, 43),
+    makeRanked(13, 'BCAA Powder', 'Аминокиселини', 21, 42),
+    makeRanked(14, 'Creatine Mono', 'Креатин', 17, 41),
+    makeRanked(15, 'Multivitamin', 'Мултивитамини', 22, 40),
   ];
+
+  test('малък pool използва shared pool вместо празни tier-ове', () => {
+    const ranked = [
+      makeRanked(1, 'Thermo Burn', 'Изгаряне на мазнини', 25),
+      makeRanked(2, 'L-Carnitine', 'Аминокиселини', 18),
+      makeRanked(3, 'Herbal Slim', 'Билки', 15),
+      makeRanked(4, 'Vitamin C', 'Витамини', 12),
+      makeRanked(5, 'Omega 3', 'Мастни киселини', 20),
+      makeRanked(6, 'Green Tea', 'Билки', 14),
+    ];
+    const composed = composeComplementaryPackageStacks(
+      { priority: 'otshalvane', selection_mode: 'package' },
+      ranked,
+      { tierLimits: PORTFOLIO_PACKAGE_TIER_LIMITS, tierMeta: PORTFOLIO_PACKAGE_TIER_META }
+    );
+    expect(composed.meta.mode).toBe('complementary_shared_pool');
+    expect(composed.tiers.premium.products.length).toBeGreaterThan(0);
+    expect(composed.tiers.basic.products.length).toBeGreaterThan(0);
+  });
 
   test('връща независими tier-ове без повтарящи се product_id', () => {
     const composed = composeComplementaryPackageStacks(
@@ -154,7 +178,7 @@ describe('composeSingleProductOptions', () => {
 });
 
 describe('composePortfolioAdvisorStacks', () => {
-  test('package mode използва complementary independent stacks', () => {
+  test('package mode използва complementary independent stacks при достатъчен pool', () => {
     const ranked = [
       makeRanked(1, 'Thermo Burn', 'Изгаряне на мазнини', 25),
       makeRanked(2, 'L-Carnitine', 'Аминокиселини', 18),
@@ -162,6 +186,12 @@ describe('composePortfolioAdvisorStacks', () => {
       makeRanked(4, 'Vitamin C', 'Витамини', 12),
       makeRanked(5, 'Omega 3', 'Мастни киселини', 20),
       makeRanked(6, 'Green Tea', 'Билки', 14),
+      makeRanked(7, 'Berberine', 'Билки', 22),
+      makeRanked(8, 'Green Coffee', 'Изгаряне на мазнини', 17),
+      makeRanked(9, 'BCAA', 'Аминокиселини', 21),
+      makeRanked(10, 'Zinc', 'Минерали', 11),
+      makeRanked(11, 'Ashwagandha', 'Билки', 19),
+      makeRanked(12, 'Magnesium', 'Минерали', 16),
     ];
     const composed = composePortfolioAdvisorStacks(
       { selection_mode: 'package', priority: 'otshalvane' },

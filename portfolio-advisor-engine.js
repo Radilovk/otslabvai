@@ -18,6 +18,7 @@ import {
 } from './protocol-quiz-engine.js';
 import { getMustIncludeKeywords, getExclusionReasons, productSearchText, productMatchesAnyKeyword } from './protocol-safety-rules.js';
 import { composePortfolioAdvisorStacks } from './portfolio-advisor-compose.js';
+import { classifyProductSlot, getGoalSlotOrder } from './portfolio-stack-slots.js';
 import {
   filterAdvisorRetailProducts,
   isAdvisorExcludedProduct,
@@ -313,20 +314,49 @@ export async function loadPortfolioCatalogProducts(env) {
   return products;
 }
 
-const ADVISOR_MAX_CANDIDATES = 18;
-const ADVISOR_MAX_PER_CATEGORY = 2;
+/**
+ * Работен пул за AI консултант — баланс между „твърде много за AI“ и „твърде малко за стек“.
+ *
+ * | Режим           | Лимит | Защо |
+ * |-----------------|-------|------|
+ * | ai_pick         | 18    | AI избира продукти — фокусиран списък |
+ * | compose_narrate | 36    | Кодът съставя стекове — нужни слотове + tier-ове |
+ *
+ * Минимум 12 продукта (ако има), до 4 категории в първи проход, до 2 на категория.
+ */
+export const ADVISOR_POOL_DEFAULTS = {
+  ai_pick_max: 18,
+  compose_working_max: 36,
+  min_working_pool: 12,
+  max_per_category: 2,
+  min_categories: 4,
+};
+
+const ADVISOR_MAX_CANDIDATES = ADVISOR_POOL_DEFAULTS.ai_pick_max;
+const ADVISOR_MAX_PER_CATEGORY = ADVISOR_POOL_DEFAULTS.max_per_category;
+
+function getProductCategory(product) {
+  return product.system_data?.portfolio?.category_top
+    || product.system_data?.portfolio?.category
+    || 'other';
+}
 
 /**
- * Избира кандидати за AI: първо високопечеливши, после fallback с разнообразие по категории.
+ * Сглобява работен пул: печалба → разнообразие (слотове/категории) → fallback.
+ * @returns {{ workingRanked: object[], stats: object }}
  */
-export function selectAdvisorCandidatesByProfit(rankedEntries, commerceOptions, {
-  maxCandidates = ADVISOR_MAX_CANDIDATES,
-  maxPerCategory = ADVISOR_MAX_PER_CATEGORY,
+export function buildAdvisorWorkingPool(rankedEntries, commerceOptions, profile = {}, {
+  purpose = 'compose',
+  poolDefaults = ADVISOR_POOL_DEFAULTS,
 } = {}) {
   const opts = normalizeAdvisorCommerceSettings(commerceOptions);
+  const maxSize = purpose === 'ai_pick'
+    ? poolDefaults.ai_pick_max
+    : poolDefaults.compose_working_max;
+  const minTarget = Math.min(poolDefaults.min_working_pool, maxSize, rankedEntries.length);
+
   const highProfit = [];
   const lowProfit = [];
-
   for (const entry of rankedEntries) {
     const profitPct = getAdvisorCommercialStats(entry.product)?.profit_pct || 0;
     if (profitPct >= opts.min_profit_pct_on_retail) highProfit.push(entry);
@@ -336,41 +366,110 @@ export function selectAdvisorCandidatesByProfit(rankedEntries, commerceOptions, 
   const selected = [];
   const seenIds = new Set();
   const categoryCounts = new Map();
-
-  const getCategory = (product) => product.system_data?.portfolio?.category_top
-    || product.system_data?.portfolio?.category
-    || 'other';
+  const coveredSlots = new Set();
 
   const addEntry = (entry, respectCategoryCap) => {
-    if (selected.length >= maxCandidates) return;
-    if (seenIds.has(entry.product.product_id)) return;
-    const cat = getCategory(entry.product);
+    if (selected.length >= maxSize) return false;
+    if (seenIds.has(entry.product.product_id)) return false;
+    const cat = getProductCategory(entry.product);
     const count = categoryCounts.get(cat) || 0;
-    if (respectCategoryCap && count >= maxPerCategory) return;
-    selected.push(entry.product);
+    if (respectCategoryCap && count >= poolDefaults.max_per_category) return false;
+    selected.push(entry);
     seenIds.add(entry.product.product_id);
     categoryCounts.set(cat, count + 1);
+    coveredSlots.add(classifyProductSlot(entry.product));
+    return true;
   };
 
-  const fillFromPool = (pool, respectCategoryCap) => {
+  const seedFunctionalSlots = (pool, respectCategoryCap) => {
+    if (purpose !== 'compose' || profile.selection_mode === 'single' || !pool.length) return;
+    const slotOrder = getGoalSlotOrder(profile.priority || 'health', profile);
+    const bySlot = new Map();
+    for (const entry of pool) {
+      const slot = classifyProductSlot(entry.product);
+      if (!bySlot.has(slot)) bySlot.set(slot, []);
+      bySlot.get(slot).push(entry);
+    }
+    for (const slot of slotOrder) {
+      const entries = bySlot.get(slot) || [];
+      for (const entry of entries) {
+        if (addEntry(entry, respectCategoryCap)) break;
+      }
+    }
+  };
+
+  const roundRobinCategories = (pool, respectCategoryCap) => {
+    const byCategory = new Map();
+    for (const entry of pool) {
+      const cat = getProductCategory(entry.product);
+      if (!byCategory.has(cat)) byCategory.set(cat, []);
+      byCategory.get(cat).push(entry);
+    }
+    const categories = [...byCategory.keys()];
+    let round = 0;
+    let progressed = true;
+    while (progressed && selected.length < maxSize && categories.length) {
+      progressed = false;
+      for (const cat of categories) {
+        const entries = byCategory.get(cat) || [];
+        if (round < entries.length && addEntry(entries[round], respectCategoryCap)) {
+          progressed = true;
+        }
+      }
+      round += 1;
+    }
+  };
+
+  const fillLinear = (pool, respectCategoryCap) => {
     for (const entry of pool) addEntry(entry, respectCategoryCap);
   };
 
-  fillFromPool(highProfit, true);
-  if (selected.length < maxCandidates) fillFromPool(highProfit, false);
-  if (selected.length < maxCandidates) fillFromPool(lowProfit, true);
-  if (selected.length < maxCandidates) fillFromPool(lowProfit, false);
+  const runPhases = (pool) => {
+    seedFunctionalSlots(pool, true);
+    roundRobinCategories(pool, true);
+    fillLinear(pool, true);
+    if (selected.length < minTarget) fillLinear(pool, false);
+  };
 
-  const selectedHighProfit = selected.filter((product) => {
-    const profitPct = getAdvisorCommercialStats(product)?.profit_pct || 0;
+  runPhases(highProfit);
+  if (selected.length < minTarget) runPhases(lowProfit);
+
+  const selectedHighProfit = selected.filter((entry) => {
+    const profitPct = getAdvisorCommercialStats(entry.product)?.profit_pct || 0;
     return profitPct >= opts.min_profit_pct_on_retail;
   }).length;
 
   return {
-    candidates: selected,
-    high_profit_pool_size: highProfit.length,
-    low_profit_pool_size: lowProfit.length,
-    selected_high_profit: selectedHighProfit,
+    workingRanked: selected,
+    stats: {
+      purpose,
+      pool_max: maxSize,
+      pool_size: selected.length,
+      high_profit_pool_size: highProfit.length,
+      low_profit_pool_size: lowProfit.length,
+      selected_high_profit: selectedHighProfit,
+      categories_represented: categoryCounts.size,
+      slots_covered: coveredSlots.size,
+    },
+  };
+}
+
+/** @deprecated Use buildAdvisorWorkingPool */
+export function selectAdvisorCandidatesByProfit(rankedEntries, commerceOptions, options = {}) {
+  const purpose = options.purpose || 'ai_pick';
+  const { workingRanked, stats } = buildAdvisorWorkingPool(rankedEntries, commerceOptions, {}, {
+    purpose,
+    poolDefaults: {
+      ...ADVISOR_POOL_DEFAULTS,
+      ai_pick_max: options.maxCandidates ?? ADVISOR_POOL_DEFAULTS.ai_pick_max,
+      max_per_category: options.maxPerCategory ?? ADVISOR_POOL_DEFAULTS.max_per_category,
+    },
+  });
+  return {
+    candidates: workingRanked.map((e) => e.product),
+    high_profit_pool_size: stats.high_profit_pool_size,
+    low_profit_pool_size: stats.low_profit_pool_size,
+    selected_high_profit: stats.selected_high_profit,
   };
 }
 
@@ -422,6 +521,14 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
   }
 
+  const poolPurpose = compositionMode === 'ai_pick' ? 'ai_pick' : 'compose';
+  const { workingRanked, stats: poolStats } = buildAdvisorWorkingPool(
+    rankedResult.ranked,
+    commerceOptions,
+    profile,
+    { purpose: poolPurpose }
+  );
+
   const mustIncludeKws = getMustIncludeKeywords(profile);
   const isSingle = profile.selection_mode === 'single';
   const priceCeiling = isSingle
@@ -432,8 +539,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     : { basic: '2-3', optimal: '3-5', premium: '4-6' };
 
   if (compositionMode === 'ai_pick') {
-    const candidateSelection = selectAdvisorCandidatesByProfit(rankedResult.ranked, commerceOptions);
-    const candidates = [...candidateSelection.candidates];
+    const candidates = workingRanked.map((e) => e.product);
     const candidateIds = new Set(candidates.map((p) => p.product_id));
 
     for (const entry of rankedResult.ranked) {
@@ -470,10 +576,14 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
         commerce_enabled: commerceOptions.enabled,
         commerce_min_discount_pct: commerceOptions.min_distributor_discount_pct,
         commerce_min_profit_pct: commerceOptions.min_profit_pct_on_retail,
-        high_profit_pool_size: candidateSelection.high_profit_pool_size,
         ranked_pool_size: rankedResult.ranked.length,
+        working_pool_size: poolStats.pool_size,
+        working_pool_max: poolStats.pool_max,
+        categories_in_working_pool: poolStats.categories_represented,
+        slots_in_working_pool: poolStats.slots_covered,
+        high_profit_pool_size: poolStats.high_profit_pool_size,
         candidates_sent_to_ai: candidates.length,
-        candidates_high_profit: candidateSelection.selected_high_profit,
+        candidates_high_profit: poolStats.selected_high_profit,
       },
     };
     return {
@@ -481,7 +591,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       payload,
       candidates,
       eligible: advisorPool,
-      ranked: rankedResult.ranked,
+      ranked: workingRanked,
       excluded_product_ids: rankedResult.excluded_product_ids,
       exclusion_map: rankedResult.exclusion_map,
       compositionMode,
@@ -510,6 +620,10 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       commerce_min_discount_pct: commerceOptions.min_distributor_discount_pct,
       commerce_min_profit_pct: commerceOptions.min_profit_pct_on_retail,
       ranked_pool_size: rankedResult.ranked.length,
+      working_pool_size: poolStats.pool_size,
+      working_pool_max: poolStats.pool_max,
+      categories_in_working_pool: poolStats.categories_represented,
+      slots_in_working_pool: poolStats.slots_covered,
       candidates_sent_to_ai: 0,
     },
   };
@@ -518,7 +632,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     profile,
     payload,
     eligible: advisorPool,
-    ranked: rankedResult.ranked,
+    ranked: workingRanked,
     excluded_product_ids: rankedResult.excluded_product_ids,
     exclusion_map: rankedResult.exclusion_map,
     compositionMode,

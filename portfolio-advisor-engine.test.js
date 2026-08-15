@@ -10,7 +10,9 @@ import {
   normalizeAdvisorCategories,
   scorePortfolioAdvisorProduct,
   rankPortfolioAdvisorProducts,
+  buildAdvisorWorkingPool,
   selectAdvisorCandidatesByProfit,
+  ADVISOR_POOL_DEFAULTS,
   PORTFOLIO_PACKAGE_TIER_LIMITS,
   PORTFOLIO_SINGLE_TIER_LIMITS,
 } from './portfolio-advisor-engine.js';
@@ -197,6 +199,40 @@ describe('preparePortfolioAdvisorSubmission', () => {
       profit_eur: 25, profit_pct: 35, margin_eur: 25, margin_pct: 40, distributor_discount_pct: 40, customer_discount_pct: 0, is_on_promo: false,
     };
     expect(scorePortfolioAdvisorProduct(high, profile)).toBeGreaterThan(scorePortfolioAdvisorProduct(low, profile));
+  });
+
+  test('buildAdvisorWorkingPool балансира размер, печалба и категории', () => {
+    const makeRanked = (id, profitPct, categoryTop) => ({
+      product: {
+        product_id: `prod-pf-${id}`,
+        public_data: { name: `Product ${id}` },
+        system_data: {
+          portfolio: {
+            category_top: categoryTop,
+            commerce: { profit_pct: profitPct, profit_eur: profitPct, customer_discount_pct: 0, is_on_promo: false },
+          },
+        },
+      },
+      score: profitPct,
+    });
+
+    const ranked = Array.from({ length: 30 }, (_, i) => makeRanked(
+      i + 1,
+      i < 20 ? 25 : 8,
+      ['Протеини', 'Витамини', 'Билки', 'Мастни киселини', 'Минерали'][i % 5]
+    ));
+
+    const aiPool = buildAdvisorWorkingPool(ranked, {}, { selection_mode: 'package', priority: 'health' }, {
+      purpose: 'ai_pick',
+    });
+    expect(aiPool.workingRanked.length).toBeLessThanOrEqual(ADVISOR_POOL_DEFAULTS.ai_pick_max);
+    expect(aiPool.stats.categories_represented).toBeGreaterThanOrEqual(4);
+
+    const composePool = buildAdvisorWorkingPool(ranked, {}, { selection_mode: 'package', priority: 'health' }, {
+      purpose: 'compose',
+    });
+    expect(composePool.workingRanked.length).toBeGreaterThanOrEqual(12);
+    expect(composePool.workingRanked.length).toBeLessThanOrEqual(ADVISOR_POOL_DEFAULTS.compose_working_max);
   });
 
   test('selectAdvisorCandidatesByProfit предпочита високопечеливши и допълва при нужда', () => {
