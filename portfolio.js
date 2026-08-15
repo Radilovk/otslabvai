@@ -251,10 +251,15 @@ function populateFilters(filters) {
     DOM.filterBrand.appendChild(opt);
   });
 
-  if (DOM.heroStats) {
-    DOM.heroStats.style.display = 'flex';
-    DOM.statProducts.textContent = filters.total_groups.toLocaleString('bg-BG');
-    DOM.statBrands.textContent = filters.brands.length.toLocaleString('bg-BG');
+  if (DOM.heroStats && filters.total_groups) {
+    const showStats = filters.total_groups > 0;
+    if (showStats) {
+      DOM.heroStats.style.display = 'flex';
+      const products = filters.total_groups.toLocaleString('bg-BG');
+      const brands = filters.brands.length.toLocaleString('bg-BG');
+      if (DOM.statProducts.textContent !== products) DOM.statProducts.textContent = products;
+      if (DOM.statBrands.textContent !== brands) DOM.statBrands.textContent = brands;
+    }
   }
 }
 
@@ -363,12 +368,19 @@ function bindEvents() {
 }
 
 async function init() {
-  await initPortfolioPage({ active: 'catalog', showMobileBar: true });
-  showSkeletons();
-
   const cache = await import('./portfolio-cache.js');
-  await cache.sync();
-  applyBrandingFromSettings(cache.getCachedSettings());
+  await cache.hydrateLocalCache();
+  const hasCatalog = !!getFiltersFromCache();
+
+  await initPortfolioPage({ active: 'catalog', showMobileBar: true });
+
+  if (!hasCatalog) {
+    showSkeletons();
+    await cache.sync();
+    applyBrandingFromSettings(cache.getCachedSettings());
+  } else {
+    void cache.sync().then(() => applyBrandingFromSettings(cache.getCachedSettings()));
+  }
 
   try {
     const filters = getFiltersFromCache();

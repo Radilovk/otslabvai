@@ -19,11 +19,40 @@
 <body class="pf-body">
     <div id="sync-banner" class="pf-sync-banner" style="display:none;" role="alert"></div>
 
-    <div id="pf-header-slot"></div>
+    <div id="pf-header-slot">
+        <div class="pf-scroll-progress" id="pf-scroll-progress" aria-hidden="true"></div>
+        <header class="pf-header">
+            <div class="pf-header-inner">
+                <a href="portfolio.html" class="pf-logo" aria-label="BIOCODE - Nutrition Science – начало">
+                    <img src="images/biocode-logo.png" alt="" class="pf-logo-img" width="46" height="46" decoding="async">
+                    <div class="pf-logo-text-wrap">
+                        <span class="pf-logo-text" id="site-name">BIOCODE</span>
+                        <span class="pf-logo-tagline" id="site-tagline">Nutrition Science</span>
+                        <span class="pf-logo-slogan" id="site-slogan">Протеини, витамини, аминокиселини</span>
+                    </div>
+                </a>
+                <nav class="pf-nav" aria-label="Основна навигация">
+                    <a href="portfolio.html" class="pf-nav-link active">Каталог</a>
+                    <a href="portfolio-advisor-quiz.html" class="pf-nav-link">AI консултант</a>
+                </nav>
+                <div class="pf-header-actions">
+                    <button type="button" class="pf-theme-toggle" id="pf-theme-toggle" aria-label="Тъмна тема">
+                        <svg class="pf-theme-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                        <svg class="pf-theme-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </button>
+                    <a href="portfolio-checkout.html" class="pf-cart-btn" aria-label="Количка">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        <span class="pf-cart-btn-label">Количка</span>
+                        <span class="pf-cart-badge" data-pf-cart-count style="display:none">0</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+    </div>
 
     <section class="pf-hero" id="pf-hero">
         <div class="pf-hero-media" aria-hidden="true">
-            <img id="hero-image" alt="" width="1400" height="666" loading="eager" decoding="async" fetchpriority="high">
+            <img id="hero-image" src="images/portfolio-hero.jpg" alt="" width="1400" height="666" loading="eager" decoding="async" fetchpriority="high">
         </div>
         <div class="pf-hero-overlay" aria-hidden="true"></div>
         <div class="pf-hero-inner">
