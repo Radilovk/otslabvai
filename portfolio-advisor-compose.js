@@ -124,7 +124,7 @@ function pickComplementaryStack({
 }
 
 /**
- * Три НЕЗАВИСИМИ комплементарни стека — различни продукти, без кумулативно натрупване.
+ * Три комплементарни стека — независими при достатъчен pool, иначе споделен pool (без празни tier-ове).
  */
 export function composeComplementaryPackageStacks(profile, rankedEntries, options = {}) {
   const limits = options.tierLimits;
@@ -134,28 +134,50 @@ export function composeComplementaryPackageStacks(profile, rankedEntries, option
   const eligibleRanked = filterRankedForGoal(rankedEntries, slotOrder);
   const pool = eligibleRanked.length >= 3 ? eligibleRanked : rankedEntries;
   const slotPools = groupRankedBySlot(pool);
-  const globallyUsed = new Set();
+  const tierKeys = ['basic', 'optimal', 'premium'];
+  const minDistinctNeeded = tierKeys.reduce((sum, k) => sum + limits[k].min, 0);
+  const strictIndependent = pool.length >= minDistinctNeeded;
+  const globallyUsed = strictIndependent ? new Set() : null;
   const mustInclude = findMustIncludeProducts(profile, pool);
 
-  const tierKeys = ['basic', 'optimal', 'premium'];
   const tiers = {};
 
   for (let tierIdx = 0; tierIdx < tierKeys.length; tierIdx += 1) {
     const tierKey = tierKeys[tierIdx];
     const limit = limits[tierKey];
-    const products = pickComplementaryStack({
+    const excludeIds = strictIndependent ? globallyUsed : new Set();
+    const remaining = strictIndependent ? pool.length - globallyUsed.size : limit.max;
+    const tierMax = strictIndependent ? Math.min(limit.max, remaining) : limit.max;
+    const tierMin = strictIndependent ? Math.min(limit.min, Math.max(remaining, 1)) : 1;
+    let products = pickComplementaryStack({
       rankedEntries: pool,
       slotPools,
       slotOrder,
-      count: limit.max,
-      minCount: limit.min,
+      count: tierMax,
+      minCount: strictIndependent ? tierMin : 1,
       budgetEur: limit.budgetEur,
-      excludeIds: globallyUsed,
+      excludeIds,
       rankOffset: tierIdx,
       mustInclude: tierIdx === 0 ? mustInclude : [],
     });
 
-    for (const product of products) globallyUsed.add(product.product_id);
+    if (!products.length) {
+      products = pickComplementaryStack({
+        rankedEntries: pool,
+        slotPools,
+        slotOrder,
+        count: Math.max(1, limit.min),
+        minCount: 1,
+        budgetEur: limit.budgetEur,
+        excludeIds: new Set(),
+        rankOffset: tierIdx,
+        mustInclude: [],
+      });
+    }
+
+    if (strictIndependent) {
+      for (const product of products) globallyUsed.add(product.product_id);
+    }
 
     tiers[tierKey] = {
       ...meta[tierKey],
@@ -170,10 +192,12 @@ export function composeComplementaryPackageStacks(profile, rankedEntries, option
     recommended_tier: 'optimal',
     tiers,
     meta: {
-      mode: 'complementary_independent',
+      mode: strictIndependent ? 'complementary_independent' : 'complementary_shared_pool',
       ranked_pool_size: pool.length,
       slot_order: slotOrder,
-      distinct_products: globallyUsed.size,
+      distinct_products: strictIndependent
+        ? globallyUsed.size
+        : new Set(tierKeys.flatMap((k) => tiers[k].products.map((p) => p.product_id))).size,
       tier_counts: {
         basic: tiers.basic.products.length,
         optimal: tiers.optimal.products.length,

@@ -8,7 +8,6 @@ import { GOAL_KEYWORD_HINTS, inferProductGoals } from './portfolio-goals.js';
 import { getGoalConflicts, scoreProductForGoal } from './portfolio-goal-relevance.js';
 import {
   buildClientProfile,
-  buildCandidatePool,
   getProductPriceEur,
   eurToBgn,
   isProductAvailable,
@@ -19,6 +18,7 @@ import {
 } from './protocol-quiz-engine.js';
 import { getMustIncludeKeywords, getExclusionReasons, productSearchText, productMatchesAnyKeyword } from './protocol-safety-rules.js';
 import { composePortfolioAdvisorStacks } from './portfolio-advisor-compose.js';
+import { classifyProductSlot, getGoalSlotOrder } from './portfolio-stack-slots.js';
 import {
   filterAdvisorRetailProducts,
   isAdvisorExcludedProduct,
@@ -27,6 +27,7 @@ import {
 import {
   attachAdvisorCommercialStats,
   filterAdvisorCommercialProducts,
+  getAdvisorCommercialStats,
   normalizeAdvisorCommerceSettings,
   scoreAdvisorCommercialBoost,
 } from './portfolio-advisor-commerce.js';
@@ -313,6 +314,165 @@ export async function loadPortfolioCatalogProducts(env) {
   return products;
 }
 
+/**
+ * Работен пул за AI консултант — баланс между „твърде много за AI“ и „твърде малко за стек“.
+ *
+ * | Режим           | Лимит | Защо |
+ * |-----------------|-------|------|
+ * | ai_pick         | 18    | AI избира продукти — фокусиран списък |
+ * | compose_narrate | 36    | Кодът съставя стекове — нужни слотове + tier-ове |
+ *
+ * Минимум 12 продукта (ако има), до 4 категории в първи проход, до 2 на категория.
+ */
+export const ADVISOR_POOL_DEFAULTS = {
+  ai_pick_max: 18,
+  compose_working_max: 36,
+  min_working_pool: 12,
+  max_per_category: 2,
+  min_categories: 4,
+};
+
+const ADVISOR_MAX_CANDIDATES = ADVISOR_POOL_DEFAULTS.ai_pick_max;
+const ADVISOR_MAX_PER_CATEGORY = ADVISOR_POOL_DEFAULTS.max_per_category;
+
+function getProductCategory(product) {
+  return product.system_data?.portfolio?.category_top
+    || product.system_data?.portfolio?.category
+    || 'other';
+}
+
+/**
+ * Сглобява работен пул: печалба → разнообразие (слотове/категории) → fallback.
+ * @returns {{ workingRanked: object[], stats: object }}
+ */
+export function buildAdvisorWorkingPool(rankedEntries, commerceOptions, profile = {}, {
+  purpose = 'compose',
+  poolDefaults = ADVISOR_POOL_DEFAULTS,
+} = {}) {
+  const opts = normalizeAdvisorCommerceSettings(commerceOptions);
+  const maxSize = purpose === 'ai_pick'
+    ? poolDefaults.ai_pick_max
+    : poolDefaults.compose_working_max;
+  const minTarget = Math.min(poolDefaults.min_working_pool, maxSize, rankedEntries.length);
+
+  const highProfit = [];
+  const lowProfit = [];
+  for (const entry of rankedEntries) {
+    const profitPct = getAdvisorCommercialStats(entry.product)?.profit_pct || 0;
+    if (profitPct >= opts.min_profit_pct_on_retail) highProfit.push(entry);
+    else lowProfit.push(entry);
+  }
+
+  const selected = [];
+  const seenIds = new Set();
+  const categoryCounts = new Map();
+  const coveredSlots = new Set();
+
+  const addEntry = (entry, respectCategoryCap) => {
+    if (selected.length >= maxSize) return false;
+    if (seenIds.has(entry.product.product_id)) return false;
+    const cat = getProductCategory(entry.product);
+    const count = categoryCounts.get(cat) || 0;
+    if (respectCategoryCap && count >= poolDefaults.max_per_category) return false;
+    selected.push(entry);
+    seenIds.add(entry.product.product_id);
+    categoryCounts.set(cat, count + 1);
+    coveredSlots.add(classifyProductSlot(entry.product));
+    return true;
+  };
+
+  const seedFunctionalSlots = (pool, respectCategoryCap) => {
+    if (purpose !== 'compose' || profile.selection_mode === 'single' || !pool.length) return;
+    const slotOrder = getGoalSlotOrder(profile.priority || 'health', profile);
+    const bySlot = new Map();
+    for (const entry of pool) {
+      const slot = classifyProductSlot(entry.product);
+      if (!bySlot.has(slot)) bySlot.set(slot, []);
+      bySlot.get(slot).push(entry);
+    }
+    for (const slot of slotOrder) {
+      const entries = bySlot.get(slot) || [];
+      for (const entry of entries) {
+        if (addEntry(entry, respectCategoryCap)) break;
+      }
+    }
+  };
+
+  const roundRobinCategories = (pool, respectCategoryCap) => {
+    const byCategory = new Map();
+    for (const entry of pool) {
+      const cat = getProductCategory(entry.product);
+      if (!byCategory.has(cat)) byCategory.set(cat, []);
+      byCategory.get(cat).push(entry);
+    }
+    const categories = [...byCategory.keys()];
+    let round = 0;
+    let progressed = true;
+    while (progressed && selected.length < maxSize && categories.length) {
+      progressed = false;
+      for (const cat of categories) {
+        const entries = byCategory.get(cat) || [];
+        if (round < entries.length && addEntry(entries[round], respectCategoryCap)) {
+          progressed = true;
+        }
+      }
+      round += 1;
+    }
+  };
+
+  const fillLinear = (pool, respectCategoryCap) => {
+    for (const entry of pool) addEntry(entry, respectCategoryCap);
+  };
+
+  const runPhases = (pool) => {
+    seedFunctionalSlots(pool, true);
+    roundRobinCategories(pool, true);
+    fillLinear(pool, true);
+    if (selected.length < minTarget) fillLinear(pool, false);
+  };
+
+  runPhases(highProfit);
+  if (selected.length < minTarget) runPhases(lowProfit);
+
+  const selectedHighProfit = selected.filter((entry) => {
+    const profitPct = getAdvisorCommercialStats(entry.product)?.profit_pct || 0;
+    return profitPct >= opts.min_profit_pct_on_retail;
+  }).length;
+
+  return {
+    workingRanked: selected,
+    stats: {
+      purpose,
+      pool_max: maxSize,
+      pool_size: selected.length,
+      high_profit_pool_size: highProfit.length,
+      low_profit_pool_size: lowProfit.length,
+      selected_high_profit: selectedHighProfit,
+      categories_represented: categoryCounts.size,
+      slots_covered: coveredSlots.size,
+    },
+  };
+}
+
+/** @deprecated Use buildAdvisorWorkingPool */
+export function selectAdvisorCandidatesByProfit(rankedEntries, commerceOptions, options = {}) {
+  const purpose = options.purpose || 'ai_pick';
+  const { workingRanked, stats } = buildAdvisorWorkingPool(rankedEntries, commerceOptions, {}, {
+    purpose,
+    poolDefaults: {
+      ...ADVISOR_POOL_DEFAULTS,
+      ai_pick_max: options.maxCandidates ?? ADVISOR_POOL_DEFAULTS.ai_pick_max,
+      max_per_category: options.maxPerCategory ?? ADVISOR_POOL_DEFAULTS.max_per_category,
+    },
+  });
+  return {
+    candidates: workingRanked.map((e) => e.product),
+    high_profit_pool_size: stats.high_profit_pool_size,
+    low_profit_pool_size: stats.low_profit_pool_size,
+    selected_high_profit: stats.selected_high_profit,
+  };
+}
+
 export function getPortfolioComposeOptions(profile) {
   if (profile.selection_mode === 'single') {
     return {
@@ -361,6 +521,14 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
   }
 
+  const poolPurpose = compositionMode === 'ai_pick' ? 'ai_pick' : 'compose';
+  const { workingRanked, stats: poolStats } = buildAdvisorWorkingPool(
+    rankedResult.ranked,
+    commerceOptions,
+    profile,
+    { purpose: poolPurpose }
+  );
+
   const mustIncludeKws = getMustIncludeKeywords(profile);
   const isSingle = profile.selection_mode === 'single';
   const priceCeiling = isSingle
@@ -371,9 +539,18 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     : { basic: '2-3', optimal: '3-5', premium: '4-6' };
 
   if (compositionMode === 'ai_pick') {
-    const { candidates, excluded_product_ids, exclusion_map } = buildCandidatePool(profile, advisorPool, {
-      priorityKeywords: GOAL_KEYWORD_HINTS,
-    });
+    const candidates = workingRanked.map((e) => e.product);
+    const candidateIds = new Set(candidates.map((p) => p.product_id));
+
+    for (const entry of rankedResult.ranked) {
+      if (candidateIds.has(entry.product.product_id)) continue;
+      const text = productSearchText(entry.product);
+      if (mustIncludeKws.some((kw) => productMatchesAnyKeyword(text, [kw]))) {
+        candidates.push(entry.product);
+        candidateIds.add(entry.product.product_id);
+      }
+    }
+
     if (candidates.length < 3) {
       throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
     }
@@ -383,14 +560,14 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       composition_mode: 'ai_pick',
       candidate_products: candidates.map(transformProductForAI),
       constraints: {
-        excluded_product_ids,
+        excluded_product_ids: rankedResult.excluded_product_ids,
         must_include_keywords: mustIncludeKws,
         oral_only: false,
         selection_mode: profile.selection_mode,
         price_ceiling_eur: priceCeiling,
         tier_product_counts: tierCounts,
       },
-      exclusion_map,
+      exclusion_map: rankedResult.exclusion_map,
       catalog_stats: {
         total_in_catalog: allProducts.length,
         eligible_available: categoryPool.length,
@@ -398,8 +575,15 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
         advisor_pool_size: advisorPool.length,
         commerce_enabled: commerceOptions.enabled,
         commerce_min_discount_pct: commerceOptions.min_distributor_discount_pct,
+        commerce_min_profit_pct: commerceOptions.min_profit_pct_on_retail,
         ranked_pool_size: rankedResult.ranked.length,
+        working_pool_size: poolStats.pool_size,
+        working_pool_max: poolStats.pool_max,
+        categories_in_working_pool: poolStats.categories_represented,
+        slots_in_working_pool: poolStats.slots_covered,
+        high_profit_pool_size: poolStats.high_profit_pool_size,
         candidates_sent_to_ai: candidates.length,
+        candidates_high_profit: poolStats.selected_high_profit,
       },
     };
     return {
@@ -407,9 +591,9 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       payload,
       candidates,
       eligible: advisorPool,
-      ranked: rankedResult.ranked,
-      excluded_product_ids,
-      exclusion_map,
+      ranked: workingRanked,
+      excluded_product_ids: rankedResult.excluded_product_ids,
+      exclusion_map: rankedResult.exclusion_map,
       compositionMode,
     };
   }
@@ -434,7 +618,12 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       advisor_pool_size: advisorPool.length,
       commerce_enabled: commerceOptions.enabled,
       commerce_min_discount_pct: commerceOptions.min_distributor_discount_pct,
+      commerce_min_profit_pct: commerceOptions.min_profit_pct_on_retail,
       ranked_pool_size: rankedResult.ranked.length,
+      working_pool_size: poolStats.pool_size,
+      working_pool_max: poolStats.pool_max,
+      categories_in_working_pool: poolStats.categories_represented,
+      slots_in_working_pool: poolStats.slots_covered,
       candidates_sent_to_ai: 0,
     },
   };
@@ -443,7 +632,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     profile,
     payload,
     eligible: advisorPool,
-    ranked: rankedResult.ranked,
+    ranked: workingRanked,
     excluded_product_ids: rankedResult.excluded_product_ids,
     exclusion_map: rankedResult.exclusion_map,
     compositionMode,
