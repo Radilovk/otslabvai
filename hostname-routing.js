@@ -151,7 +151,24 @@ export function mapAssetPath(site, pathname) {
 }
 
 /**
+ * Build a fetch init for ASSETS without reusing a consumed request body.
+ * @param {Request} request
+ * @returns {RequestInit}
+ */
+function assetFetchInit(request) {
+  const init = {
+    method: request.method,
+    headers: request.headers,
+  };
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    init.body = request.body;
+  }
+  return init;
+}
+
+/**
  * Serve a static asset with hostname path mapping via env.ASSETS.
+ * Returns the asset response as-is (do not mutate headers — ASSETS responses are immutable).
  * @param {Request} request
  * @param {{ ASSETS?: { fetch: (req: Request) => Promise<Response> } }} env
  * @param {URL} url
@@ -163,14 +180,15 @@ export async function serveMappedAsset(request, env, url) {
   const site = getSiteForHost(url.hostname);
   const pathname = url.pathname;
   const mappedPath = mapAssetPath(site, pathname);
+  const fetchInit = assetFetchInit(request);
 
   const assetUrl = new URL(request.url);
   assetUrl.pathname = mappedPath;
-  let response = await env.ASSETS.fetch(new Request(assetUrl, request));
+  let response = await env.ASSETS.fetch(new Request(assetUrl.toString(), fetchInit));
 
   if (response.status === 404 && mappedPath !== pathname) {
     assetUrl.pathname = pathname;
-    response = await env.ASSETS.fetch(new Request(assetUrl, request));
+    response = await env.ASSETS.fetch(new Request(assetUrl.toString(), fetchInit));
   }
 
   return response;
