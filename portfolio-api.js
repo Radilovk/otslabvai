@@ -143,6 +143,9 @@ export const DEFAULT_SETTINGS = {
   reseller_delivery_note: 'Доставка до дистрибутор — разпределяне към клиенти от админ панела.',
   hero_image: 'images/portfolio-hero.jpg',
   hero_title: 'Каталог добавки',
+  hero_mode: 'single',
+  hero_slides: [],
+  hero_carousel_interval: 6000,
   pricing_policy: { ...DEFAULT_PRICING_POLICY },
   footer: {
     contact_email: 'office@biocode.com',
@@ -1191,6 +1194,9 @@ export function buildPublicSiteSettings(settings) {
     site_slogan: s.site_slogan,
     hero_image: s.hero_image,
     hero_title: s.hero_title,
+    hero_mode: s.hero_mode || 'single',
+    hero_slides: Array.isArray(s.hero_slides) ? s.hero_slides : [],
+    hero_carousel_interval: Number(s.hero_carousel_interval) || 6000,
     footer: s.footer,
     last_sync: s.last_sync,
     last_sync_count: s.last_sync_count
@@ -1218,6 +1224,9 @@ async function handleSaveSettings(request, env) {
     reseller_delivery_note: incoming.reseller_delivery_note ?? current.reseller_delivery_note,
     hero_image: incoming.hero_image ?? current.hero_image,
     hero_title: incoming.hero_title ?? current.hero_title,
+    hero_mode: incoming.hero_mode ?? current.hero_mode ?? 'single',
+    hero_slides: Array.isArray(incoming.hero_slides) ? incoming.hero_slides : (current.hero_slides || []),
+    hero_carousel_interval: Number(incoming.hero_carousel_interval ?? current.hero_carousel_interval) || 6000,
     footer: incoming.footer ?? current.footer,
     pricing_policy: incoming.pricing_policy
       ? { ...current.pricing_policy, ...incoming.pricing_policy }

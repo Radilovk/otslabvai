@@ -138,25 +138,18 @@ export function buildPortfolioProductUrl(groupId, skuId) {
   return url;
 }
 
-function heroImagePath(url) {
-  const raw = String(url || '').trim();
-  if (!raw) return '';
-  try {
-    const u = new URL(raw, typeof window !== 'undefined' ? window.location.href : 'https://example.com/');
-    return u.pathname + u.search;
-  } catch {
-    return raw.split('#')[0];
-  }
-}
+import { applyHeroSettings } from './portfolio-hero.js';
+
+export { applyHeroSettings };
 
 function setTextIfChanged(el, text) {
   if (el && text != null && el.textContent !== text) el.textContent = text;
 }
 
-export function applyBrandingFromSettings(settings, { skipHero = false } = {}) {
+export function applyBrandingFromSettings(settings) {
   if (!settings) return;
   applySiteSettings(settings);
-  if (!skipHero) applyHeroSettings(settings);
+  applyHeroSettings(settings);
 }
 
 export function applySiteSettings(settings) {
@@ -175,24 +168,6 @@ export function applySiteSettings(settings) {
   if (footerBrand && settings.site_name) {
     setTextIfChanged(footerBrand, String(settings.site_name).split(' - ')[0] || settings.site_name);
   }
-}
-
-export function applyHeroSettings(settings) {
-  if (!settings) return;
-  const img = document.getElementById('hero-image');
-  if (img && settings.hero_image) {
-    const next = String(settings.hero_image);
-    const current = img.dataset.heroSrc || img.getAttribute('src') || '';
-    if (heroImagePath(current) !== heroImagePath(next)) {
-      img.dataset.heroSrc = next;
-      img.src = next;
-      try { localStorage.setItem('pf-hero-src', next); } catch { /* ignore */ }
-    } else if (!img.dataset.heroSrc) {
-      img.dataset.heroSrc = next;
-    }
-  }
-  setTextIfChanged(document.getElementById('hero-title'), settings.hero_title || null);
-  setTextIfChanged(document.getElementById('hero-subtitle'), settings.site_slogan || null);
 }
 
 const THEME_TOGGLE_SVG = `
@@ -399,8 +374,10 @@ export async function initPortfolioPage({
   if (footerSlot && !footerSlot.querySelector('.pf-footer')) {
     footerSlot.innerHTML = renderFooter(settings);
   }
-  applyBrandingFromSettings(settings, {
-    skipHero: document.documentElement.hasAttribute('data-pf-hero')
+  applyBrandingFromSettings(settings);
+
+  cache.onCatalogUpdated(() => {
+    applyHeroSettings(cache.getCachedSettings());
   });
 
   if (settingsOnly && !settings) {
@@ -409,9 +386,7 @@ export async function initPortfolioPage({
     if (footerSlot && !footerSlot.querySelector('.pf-footer')) {
       footerSlot.innerHTML = renderFooter(fresh);
     }
-    applyBrandingFromSettings(fresh, {
-      skipHero: document.documentElement.hasAttribute('data-pf-hero')
-    });
+    applyBrandingFromSettings(fresh);
     return { settings: fresh };
   }
 
