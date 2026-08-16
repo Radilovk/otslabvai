@@ -129,6 +129,9 @@ function brandingFingerprint(settings) {
     site_slogan: settings?.site_slogan,
     hero_image: settings?.hero_image,
     hero_title: settings?.hero_title,
+    hero_mode: settings?.hero_mode,
+    hero_slides: settings?.hero_slides,
+    hero_carousel_interval: settings?.hero_carousel_interval,
     footer: settings?.footer
   });
 }
