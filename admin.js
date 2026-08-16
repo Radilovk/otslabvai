@@ -1195,6 +1195,7 @@ function openModal(title, formTemplateId, data, onSave) {
     // Special handlers for hero banner background type
     if (formTemplateId === 'form-hero-banner-template') {
         initHeroBackgroundControls();
+        initHeroSlidesManager(data);
     }
     
     // Special handlers for global settings theme gradients
@@ -1204,6 +1205,113 @@ function openModal(title, formTemplateId, data, onSave) {
     
     DOM.modal.container.classList.add('show');
     DOM.modal.backdrop.classList.add('show');
+}
+
+function migrateHeroSlidesData(data) {
+    if (!data) return [];
+    if (Array.isArray(data.hero_slides) && data.hero_slides.length) {
+        return data.hero_slides.map((slide) => ({
+            url: slide?.url || '',
+            alt: slide?.alt || '',
+            caption: slide?.caption || ''
+        }));
+    }
+
+    const slides = [];
+    const seen = new Set();
+    const push = (url, alt = '') => {
+        const trimmed = String(url || '').trim();
+        if (!trimmed || seen.has(trimmed)) return;
+        seen.add(trimmed);
+        slides.push({ url: trimmed, alt, caption: '' });
+    };
+
+    push(data.hero_image);
+    const heroImages = data.hero_images || {};
+    push(heroImages.visual_bg);
+    push(heroImages.vial, 'Биологичен флакон');
+    push(heroImages.lab, 'Лабораторно изследване');
+    push(heroImages.face, 'Клетъчно подмладяване');
+    return slides;
+}
+
+function updateHeroSlidePreview(slideItem) {
+    if (!slideItem) return;
+    const preview = slideItem.querySelector('.hero-slide-preview');
+    const urlInput = slideItem.querySelector('[data-field="url"]');
+    if (!preview || !urlInput) return;
+    const url = urlInput.value.trim();
+    if (url) {
+        preview.src = url;
+        preview.style.display = 'block';
+        slideItem.classList.add('has-image');
+    } else {
+        preview.removeAttribute('src');
+        preview.style.display = 'none';
+        slideItem.classList.remove('has-image');
+    }
+}
+
+function updateHeroSlidesCount() {
+    const countEl = DOM.modal.body?.querySelector('#hero-slides-count');
+    const container = DOM.modal.body?.querySelector('[data-sub-container="hero-slides"]');
+    if (!countEl || !container) return;
+    const count = container.querySelectorAll(':scope > .nested-sub-item[data-type="hero-slide"]').length;
+    countEl.textContent = `(${count})`;
+}
+
+function refreshAllHeroSlidePreviews() {
+    const container = DOM.modal.body?.querySelector('[data-sub-container="hero-slides"]');
+    if (!container) return;
+    container.querySelectorAll(':scope > .nested-sub-item[data-type="hero-slide"]').forEach(updateHeroSlidePreview);
+    updateHeroSlidesCount();
+}
+
+function initHeroSlidesManager(data) {
+    const slidesContainer = DOM.modal.body.querySelector('[data-sub-container="hero-slides"]');
+    const modeSelect = DOM.modal.body.querySelector('#hero_banner_mode');
+    const carouselSettings = DOM.modal.body.querySelector('#hero-carousel-settings');
+    const intervalInput = DOM.modal.body.querySelector('#hero_carousel_interval');
+    const autoplayInput = DOM.modal.body.querySelector('#hero_carousel_autoplay');
+    if (!slidesContainer) return;
+
+    const slides = migrateHeroSlidesData(data);
+    slidesContainer.innerHTML = '';
+    slides.forEach((slide) => addNestedItem(slidesContainer, 'hero-slide-editor-template', slide));
+    refreshAllHeroSlidePreviews();
+
+    if (!data?.banner_mode) {
+        modeSelect.value = slides.length > 1 ? 'carousel' : 'single';
+    }
+
+    const intervalMs = Number(data?.carousel_settings?.interval_ms) || 5000;
+    if (intervalInput) intervalInput.value = Math.round(intervalMs / 1000);
+    if (autoplayInput) autoplayInput.checked = data?.carousel_settings?.autoplay !== false;
+
+    const updateCarouselSettingsVisibility = () => {
+        const slideCount = slidesContainer.querySelectorAll(':scope > .nested-sub-item[data-type="hero-slide"]').length;
+        const showCarousel = modeSelect?.value === 'carousel' && slideCount > 1;
+        if (carouselSettings) carouselSettings.style.display = showCarousel ? 'block' : 'none';
+    };
+
+    modeSelect?.addEventListener('change', updateCarouselSettingsVisibility);
+    slidesContainer.addEventListener('input', (e) => {
+        if (e.target.matches('[data-field="url"]')) {
+            updateHeroSlidePreview(e.target.closest('.hero-slide-item'));
+        }
+        updateCarouselSettingsVisibility();
+    });
+
+    if (typeof Sortable !== 'undefined') {
+        new Sortable(slidesContainer, {
+            handle: '.hero-slide-handle',
+            animation: 150,
+            onEnd: updateHeroSlidesCount
+        });
+    }
+
+    updateCarouselSettingsVisibility();
+    updateHeroSlidesCount();
 }
 
 function initHeroBackgroundControls() {
@@ -1812,6 +1920,15 @@ function populateForm(form, data) {
             });
         }
     }
+
+    const heroSlides = migrateHeroSlidesData(data);
+    if (heroSlides.length) {
+        const slidesContainer = form.querySelector('[data-sub-container="hero-slides"]');
+        if (slidesContainer && !slidesContainer.children.length) {
+            slidesContainer.innerHTML = '';
+            heroSlides.forEach((slide) => addNestedItem(slidesContainer, 'hero-slide-editor-template', slide));
+        }
+    }
 }
 
 function serializeForm(form) {
@@ -1948,6 +2065,26 @@ function serializeForm(form) {
             });
             data.trust_badges.push(badgeData);
         });
+    }
+
+    const heroSlidesContainer = form.querySelector('[data-sub-container="hero-slides"]');
+    if (heroSlidesContainer) {
+        data.hero_slides = [];
+        heroSlidesContainer.querySelectorAll(':scope > .nested-sub-item[data-type="hero-slide"]').forEach(slideNode => {
+            const slideData = {};
+            slideNode.querySelectorAll('[data-field]').forEach(input => {
+                slideData[input.dataset.field] = input.value;
+            });
+            if (slideData.url?.trim()) data.hero_slides.push(slideData);
+        });
+        data.banner_mode = form.querySelector('#hero_banner_mode')?.value || 'single';
+        const intervalSeconds = Number(form.querySelector('#hero_carousel_interval')?.value) || 5;
+        data.carousel_settings = {
+            interval_ms: Math.max(3000, Math.min(15000, intervalSeconds * 1000)),
+            autoplay: form.querySelector('#hero_carousel_autoplay')?.checked !== false
+        };
+        delete data.hero_image;
+        delete data.hero_images;
     }
     
     return data;
@@ -2518,13 +2655,35 @@ function handleAction(action, target, id) {
             const container = target.closest('.modal-body, .nested-item').querySelector(target.dataset.container);
             if (container) {
                 addNestedItem(container, target.dataset.template, null);
+                if (target.dataset.template === 'hero-slide-editor-template') {
+                    const newSlide = container.querySelector(':scope > .nested-sub-item[data-type="hero-slide"]:last-child');
+                    updateHeroSlidePreview(newSlide);
+                    updateHeroSlidesCount();
+                    const carouselSettings = DOM.modal.body?.querySelector('#hero-carousel-settings');
+                    const modeSelect = DOM.modal.body?.querySelector('#hero_banner_mode');
+                    const slideCount = container.querySelectorAll(':scope > .nested-sub-item[data-type="hero-slide"]').length;
+                    if (carouselSettings && modeSelect) {
+                        carouselSettings.style.display = modeSelect.value === 'carousel' && slideCount > 1 ? 'block' : 'none';
+                    }
+                }
             }
             break;
         }
         case 'delete-nested-item': {
             const itemToDelete = target.closest('.nested-item, .nested-sub-item');
             if (itemToDelete) {
+                const isHeroSlide = itemToDelete.matches('[data-type="hero-slide"]');
                 itemToDelete.remove();
+                if (isHeroSlide) {
+                    updateHeroSlidesCount();
+                    const carouselSettings = DOM.modal.body?.querySelector('#hero-carousel-settings');
+                    const modeSelect = DOM.modal.body?.querySelector('#hero_banner_mode');
+                    const slidesContainer = DOM.modal.body?.querySelector('[data-sub-container="hero-slides"]');
+                    const slideCount = slidesContainer?.querySelectorAll(':scope > .nested-sub-item[data-type="hero-slide"]').length || 0;
+                    if (carouselSettings && modeSelect) {
+                        carouselSettings.style.display = modeSelect.value === 'carousel' && slideCount > 1 ? 'block' : 'none';
+                    }
+                }
             }
             break;
         }
@@ -2721,6 +2880,8 @@ function handleAction(action, target, id) {
                     
                     // Update the input field with the URL
                     inputElement.value = imageUrl;
+                    const heroSlideItem = inputElement.closest('.hero-slide-item');
+                    if (heroSlideItem) updateHeroSlidePreview(heroSlideItem);
                     
                     showNotification('Изображението е качено успешно!', 'success');
                 } catch (error) {
@@ -2729,12 +2890,61 @@ function handleAction(action, target, id) {
                 } finally {
                     // Reset button state
                     target.disabled = false;
-                    target.textContent = 'Upload';
+                    target.textContent = target.dataset.originalLabel || 'Качи';
                     // Clear file input
                     fileInput.value = '';
                 }
             };
             
+            if (!target.dataset.originalLabel) target.dataset.originalLabel = target.textContent.trim();
+            fileInput.click();
+            break;
+        }
+        case 'hero-upload-slide': {
+            const fileInput = document.getElementById('image-upload-input');
+            const slidesContainer = DOM.modal.body?.querySelector('[data-sub-container="hero-slides"]');
+            if (!fileInput || !slidesContainer) {
+                showNotification('Грешка: Елементът за качване не е намерен', 'error');
+                break;
+            }
+
+            fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!file.type.startsWith('image/')) {
+                    showNotification('Моля изберете изображение', 'error');
+                    return;
+                }
+                if (file.size > 2 * 1024 * 1024) {
+                    showNotification('Изображението е твърде голямо. Максимален размер: 2MB', 'error');
+                    return;
+                }
+
+                try {
+                    target.disabled = true;
+                    target.textContent = 'Качване...';
+                    const imageUrl = await uploadImageToGitHub(file);
+                    addNestedItem(slidesContainer, 'hero-slide-editor-template', { url: imageUrl, alt: '', caption: '' });
+                    const newSlide = slidesContainer.querySelector(':scope > .nested-sub-item[data-type="hero-slide"]:last-child');
+                    updateHeroSlidePreview(newSlide);
+                    updateHeroSlidesCount();
+                    const modeSelect = DOM.modal.body?.querySelector('#hero_banner_mode');
+                    const carouselSettings = DOM.modal.body?.querySelector('#hero-carousel-settings');
+                    const slideCount = slidesContainer.querySelectorAll(':scope > .nested-sub-item[data-type="hero-slide"]').length;
+                    if (carouselSettings && modeSelect) {
+                        carouselSettings.style.display = modeSelect.value === 'carousel' && slideCount > 1 ? 'block' : 'none';
+                    }
+                    showNotification('Банерът е качен успешно!', 'success');
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showNotification(`Грешка при качване: ${error.message}`, 'error');
+                } finally {
+                    target.disabled = false;
+                    target.textContent = 'Качи изображение';
+                    fileInput.value = '';
+                }
+            };
+
             fileInput.click();
             break;
         }

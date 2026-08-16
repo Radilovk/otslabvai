@@ -1164,60 +1164,45 @@
             </fieldset>
             
             <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
-            <h4 style="margin-bottom: 1rem; color: var(--accent);">Банер изображение (десктоп)</h4>
+            <h4 style="margin-bottom: 1rem; color: var(--accent);">Hero банери</h4>
+            <p class="form-hint" style="margin-bottom: 1rem;">Качете един или повече банера за дясната колона на hero секцията. При един банер — статичен изглед; при няколко — автоматична ротация с интерактивни контроли.</p>
+
             <div class="form-group">
-                <label for="hero_image">Банер изображение (дясна колона на hero секцията)</label>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input type="text" id="hero_image" data-field="hero_image" placeholder="https://example.com/banner.jpg" style="flex: 1;">
-                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_image">
-                        Качи
-                    </button>
-                </div>
-                <small class="form-hint">Изображението се показва само на десктоп в дясната колона на hero секцията. Препоръчителен размер: 800×600px. Оставете празно, ако не желаете банер.</small>
+                <label for="hero_banner_mode">Режим на показване</label>
+                <select id="hero_banner_mode" data-field="banner_mode">
+                    <option value="single">Един банер (статичен)</option>
+                    <option value="carousel">Карусел (ротация)</option>
+                </select>
             </div>
 
-            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
-            <h4 style="margin-bottom: 1rem; color: var(--accent);">Изображения на хексагоналните рамки (Hero Visual)</h4>
-            <div class="form-group">
-                <label>Фоново изображение на hero-visual панела</label>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input type="text" data-field="hero_images.visual_bg" placeholder="https://example.com/visual-bg.jpg" style="flex: 1;">
-                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_images.visual_bg">
-                        Качи
-                    </button>
+            <div id="hero-carousel-settings" class="hero-carousel-settings" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hero_carousel_interval">Интервал (секунди)</label>
+                        <input type="number" id="hero_carousel_interval" min="3" max="15" step="1" value="5">
+                        <small class="form-hint">Време между слайдовете (3–15 сек.)</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label" style="margin-top: 1.75rem;">
+                            <input type="checkbox" id="hero_carousel_autoplay" data-field="carousel_settings.autoplay" checked>
+                            Автоматична ротация
+                        </label>
+                    </div>
                 </div>
-                <small class="form-hint">Фоново изображение за дясната (hero-visual) секция. Оставете празно за прозрачен фон.</small>
             </div>
-            <div class="form-group">
-                <label>Изображение — Флакон (hex-vial)</label>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input type="text" data-field="hero_images.vial" placeholder="https://example.com/vial.png" style="flex: 1;">
-                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_images.vial">
-                        Качи
-                    </button>
+
+            <fieldset>
+                <legend>Банери <span id="hero-slides-count" class="hero-slides-count">(0)</span></legend>
+                <div class="hero-slides-manager">
+                    <div class="nested-sublist-container hero-slides-list" data-sub-container="hero-slides">
+                        <!-- Слайдовете се генерират от JS -->
+                    </div>
+                    <div class="hero-slides-actions">
+                        <button type="button" class="btn btn-sm btn-secondary" data-action="add-nested-item" data-template="hero-slide-editor-template" data-container="[data-sub-container='hero-slides']">+ Добави банер</button>
+                        <button type="button" class="btn btn-sm btn-secondary" data-action="hero-upload-slide">Качи изображение</button>
+                    </div>
                 </div>
-                <small class="form-hint">Изображение за горния хексагон (флакон). Препоръчителен размер: 300×300px.</small>
-            </div>
-            <div class="form-group">
-                <label>Изображение — Лаборатория (hex-lab)</label>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input type="text" data-field="hero_images.lab" placeholder="https://example.com/lab.png" style="flex: 1;">
-                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_images.lab">
-                        Качи
-                    </button>
-                </div>
-                <small class="form-hint">Изображение за средния хексагон (лаборатория). Препоръчителен размер: 300×300px.</small>
-            </div>
-            <div class="form-group">
-                <label>Изображение — Лице (hex-face)</label>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input type="text" data-field="hero_images.face" placeholder="https://example.com/face.png" style="flex: 1;">
-                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_images.face">
-                        Качи
-                    </button>
-                </div>
-                <small class="form-hint">Изображение за долния хексагон (лице). Препоръчителен размер: 300×300px.</small>
-            </div>
+            </fieldset>
 
             <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
             <h4 style="margin-bottom: 1rem; color: var(--accent);">Фон на Hero секция</h4>
@@ -1900,6 +1885,36 @@
                 <small class="form-hint">Качете SVG, PNG, JPG или ICO. Ако не е попълнен, се показва стандартна отметка.</small>
             </div>
             <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий badge">×</button>
+        </div>
+    </template>
+
+    <!-- Вложен шаблон за редактор на HERO БАНЕР (слайд) -->
+    <template id="hero-slide-editor-template">
+        <div class="nested-sub-item hero-slide-item" data-type="hero-slide">
+            <span class="handle hero-slide-handle" title="Премести">⠿</span>
+            <div class="hero-slide-preview-wrap">
+                <img class="hero-slide-preview" src="" alt="" width="96" height="72">
+            </div>
+            <div class="hero-slide-fields">
+                <div class="form-group">
+                    <label>URL на изображение</label>
+                    <div class="hero-slide-url-row">
+                        <input type="text" data-field="url" placeholder="https://example.com/banner.jpg">
+                        <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="url">Качи</button>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Alt текст</label>
+                        <input type="text" data-field="alt" placeholder="Описание за достъпност">
+                    </div>
+                    <div class="form-group">
+                        <label>Надпис (по избор)</label>
+                        <input type="text" data-field="caption" placeholder="Кратък текст върху банера">
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-icon delete-nested-btn" data-action="delete-nested-item" title="Изтрий банер">×</button>
         </div>
     </template>
     
