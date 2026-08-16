@@ -133,10 +133,18 @@ export default {
     }
 
     if (!isWorkerApiPath(pathname)) {
-      const assetResponse = await serveMappedAsset(request, env, url);
-      if (assetResponse) {
-        Object.keys(corsHeaders).forEach((key) => assetResponse.headers.set(key, corsHeaders[key]));
-        return assetResponse;
+      try {
+        const assetResponse = await serveMappedAsset(request, env, url);
+        if (assetResponse) {
+          // ASSETS responses have immutable headers — return without CORS mutation.
+          return assetResponse;
+        }
+      } catch (assetErr) {
+        console.error('Asset serve error:', assetErr?.stack || assetErr);
+        return new Response('Internal error serving static asset.', {
+          status: 500,
+          headers: { 'Content-Type': 'text/plain' },
+        });
       }
     }
     
@@ -2300,13 +2308,13 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
   } = prepared;
 
   const composeOptions = getPortfolioComposeOptions(profile);
+  const finalizeOpts = {
+    selection_mode: profile.selection_mode,
+    independent_tiers: true,
+  };
   let recommendation;
 
   if (compositionMode === 'ai_pick') {
-    const finalizeOpts = {
-      selection_mode: profile.selection_mode,
-      independent_tiers: ranked.length >= 9,
-    };
     if (useMockAi) {
       const mock = buildMockProtocolResponse(candidates, profile, { ranked });
       recommendation = finalizePortfolioAdvisorResponse(mock, eligible, excludedProductIds, finalizeOpts);
@@ -2327,10 +2335,6 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
     }
   } else if (useMockAi) {
     const composed = composePortfolioAdvisorStacks(profile, ranked, composeOptions);
-    const finalizeOpts = {
-      selection_mode: profile.selection_mode,
-      independent_tiers: composed.meta?.mode === 'complementary_independent',
-    };
     const productMap = new Map(eligible.map((p) => [p.product_id, p]));
     payload.composed_meta = composed.meta;
     const narration = buildPortfolioAdvisorNarration(composed, profile, productMap);
@@ -2338,10 +2342,6 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
     recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts);
   } else {
     const composed = composePortfolioAdvisorStacks(profile, ranked, composeOptions);
-    const finalizeOpts = {
-      selection_mode: profile.selection_mode,
-      independent_tiers: composed.meta?.mode === 'complementary_independent',
-    };
     const productMap = new Map(eligible.map((p) => [p.product_id, p]));
     payload.composed_meta = composed.meta;
     const promptTemplate = settings.narrator_prompt || getDefaultPortfolioNarratorPrompt();
