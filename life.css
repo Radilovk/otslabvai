@@ -6037,6 +6037,157 @@ section[id="scientific"] {
     transform: scale(1.03);
 }
 
+/* ── 3b. HERO BANNER CAROUSEL ── */
+[data-theme] .hero-banner-carousel {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    min-height: 420px;
+    align-self: stretch;
+    flex-shrink: 0;
+    box-shadow:
+        0 24px 64px rgba(15, 37, 64, 0.16),
+        0 4px 16px rgba(0, 196, 200, 0.12);
+    isolation: isolate;
+}
+
+[data-theme] .hero-carousel-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+}
+
+[data-theme] .hero-carousel-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transform: scale(1.04);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+[data-theme] .hero-carousel-slide.is-active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+    z-index: 1;
+}
+
+[data-theme] .hero-carousel-slide .hero-banner-img {
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+    object-fit: cover;
+    display: block;
+}
+
+[data-theme] .hero-banner-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(transparent, rgba(2, 8, 23, 0.72));
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    z-index: 2;
+}
+
+[data-theme] .hero-carousel-controls {
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    z-index: 3;
+}
+
+[data-theme] .hero-carousel-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+[data-theme] .hero-carousel-btn:hover {
+    background: rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.45);
+    transform: scale(1.05);
+}
+
+[data-theme] .hero-carousel-dots {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(2, 8, 23, 0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+[data-theme] .hero-carousel-dot {
+    width: 8px;
+    height: 8px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.45);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.2s ease, background 0.2s ease, width 0.2s ease;
+}
+
+[data-theme] .hero-carousel-dot.is-active {
+    width: 22px;
+    border-radius: 999px;
+    background: #00c4c8;
+}
+
+[data-theme] .hero-carousel-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.15);
+    z-index: 4;
+}
+
+[data-theme] .hero-carousel-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00c4c8, #7dd3fc);
+    transition: width 0.1s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-theme] .hero-carousel-slide {
+        transition: opacity 0.3s ease;
+        transform: none;
+    }
+    [data-theme] .hero-carousel-slide.is-active {
+        transform: none;
+    }
+    [data-theme] .hero-banner-panel:hover .hero-banner-img {
+        transform: none;
+    }
+}
+
 /* No-banner: collapse to single-column centered layout */
 [data-theme] .hero-section .container.hero-grid.no-banner {
     grid-template-columns: 1fr;

@@ -107,14 +107,93 @@ function escapeHtml(unsafe) {
 function validateImageUrl(url) {
     if (!url) return '';
     const lower = url.toLowerCase().trim();
-    if (lower.startsWith('data:') || lower.startsWith('javascript:') || lower.startsWith('vbscript:')) {
+    if (lower.startsWith('data:') || lower.startsWith('javascript:') || lower.startsWith('vbscript:') || lower.startsWith('blob:')) {
         return '';
     }
     if (lower.startsWith('https://') || lower.startsWith('http://') ||
-        lower.startsWith('/images/') || lower.startsWith('/assets/')) {
+        lower.startsWith('/images/') || lower.startsWith('/assets/') ||
+        lower.startsWith('images/')) {
         return escapeHtml(url);
     }
     return '';
+}
+
+/** Нормализира hero банерите от новия hero_slides[] или legacy hero_image / hero_images */
+function getHeroSlides(component) {
+    if (!component) return [];
+    if (Array.isArray(component.hero_slides) && component.hero_slides.length) {
+        return component.hero_slides
+            .map((slide) => ({
+                url: String(slide?.url || '').trim(),
+                alt: String(slide?.alt || '').trim(),
+                caption: String(slide?.caption || '').trim()
+            }))
+            .filter((slide) => slide.url && validateImageUrl(slide.url));
+    }
+
+    const slides = [];
+    const seen = new Set();
+    const pushSlide = (url, alt = '') => {
+        const trimmed = String(url || '').trim();
+        if (!trimmed || seen.has(trimmed) || !validateImageUrl(trimmed)) return;
+        seen.add(trimmed);
+        slides.push({ url: trimmed, alt, caption: '' });
+    };
+
+    pushSlide(component.hero_image);
+    const heroImages = component.hero_images || {};
+    pushSlide(heroImages.visual_bg);
+    pushSlide(heroImages.vial, 'Биологичен флакон');
+    pushSlide(heroImages.lab, 'Лабораторно изследване');
+    pushSlide(heroImages.face, 'Клетъчно подмладяване');
+    return slides;
+}
+
+function generateHeroSidePanelHTML(component) {
+    const slides = getHeroSlides(component);
+    if (!slides.length) return '';
+
+    const bannerMode = component.banner_mode === 'carousel' ? 'carousel' : 'single';
+    const carouselSettings = component.carousel_settings || {};
+    const useCarousel = bannerMode === 'carousel' && slides.length > 1;
+    const displaySlides = useCarousel ? slides : [slides[0]];
+    const intervalMs = Math.max(3000, Math.min(15000, Number(carouselSettings.interval_ms) || 5000));
+    const autoplay = carouselSettings.autoplay !== false;
+
+    if (!useCarousel) {
+        const slide = displaySlides[0];
+        return `
+    <div class="hero-banner-panel" aria-hidden="true">
+        <img src="${validateImageUrl(slide.url)}" alt="${escapeHtml(slide.alt)}" class="hero-banner-img" loading="eager">
+        ${slide.caption ? `<div class="hero-banner-caption">${escapeHtml(slide.caption)}</div>` : ''}
+    </div>`;
+    }
+
+    const slidesHTML = displaySlides.map((slide, index) => `
+        <div class="hero-carousel-slide${index === 0 ? ' is-active' : ''}" data-index="${index}" aria-hidden="${index === 0 ? 'false' : 'true'}">
+            <img src="${validateImageUrl(slide.url)}" alt="${escapeHtml(slide.alt)}" class="hero-banner-img" loading="${index === 0 ? 'eager' : 'lazy'}">
+            ${slide.caption ? `<div class="hero-banner-caption">${escapeHtml(slide.caption)}</div>` : ''}
+        </div>`).join('');
+
+    const dotsHTML = displaySlides.map((_, index) => `
+        <button type="button" class="hero-carousel-dot${index === 0 ? ' is-active' : ''}" data-index="${index}" aria-label="Банер ${index + 1}"></button>`).join('');
+
+    return `
+    <div class="hero-banner-carousel" data-autoplay="${autoplay ? 'true' : 'false'}" data-interval="${intervalMs}" aria-roledescription="carousel" aria-label="Hero банери">
+        <div class="hero-carousel-track">
+            ${slidesHTML}
+        </div>
+        <div class="hero-carousel-controls">
+            <button type="button" class="hero-carousel-btn hero-carousel-prev" aria-label="Предишен банер">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <div class="hero-carousel-dots" role="tablist">${dotsHTML}</div>
+            <button type="button" class="hero-carousel-btn hero-carousel-next" aria-label="Следващ банер">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+        </div>
+        <div class="hero-carousel-progress" aria-hidden="true"><div class="hero-carousel-progress-bar"></div></div>
+    </div>`;
 }
 
 
@@ -372,76 +451,7 @@ const generateHeroHTML = (component, pageContent = []) => {
         </div>
     </section>`;
 
-    // Hero side panel: hex visual cluster or single banner image
-    const heroImages = component.hero_images || {};
-    const vialImg = heroImages.vial || '';
-    const labImg = heroImages.lab || '';
-    const faceImg = heroImages.face || '';
-    const visualBgRaw = heroImages.visual_bg || '';
-    let heroVisualStyle = '';
-    if (visualBgRaw) {
-        const vbUrl = escapeHtml(visualBgRaw);
-        const vbUrlLower = vbUrl.toLowerCase();
-        const vbSafe = !vbUrlLower.startsWith('data:') &&
-                       !vbUrlLower.startsWith('javascript:') &&
-                       !vbUrlLower.startsWith('vbscript:') &&
-                       (vbUrlLower.startsWith('https://') || vbUrlLower.startsWith('http://') ||
-                        vbUrlLower.startsWith('/images/') || vbUrlLower.startsWith('/assets/'));
-        if (vbSafe) {
-            heroVisualStyle = ` style="background-image: url('${vbUrl}'); background-size: cover; background-position: center;"`;
-        }
-    }
-
-    const makeHexFrame = (imgUrl, cls, altText) => {
-        if (imgUrl) {
-            const rawUrl = String(imgUrl);
-            const lowerUrl = rawUrl.toLowerCase();
-            const isDangerous = lowerUrl.startsWith('data:') ||
-                                lowerUrl.startsWith('javascript:') ||
-                                lowerUrl.startsWith('vbscript:') ||
-                                lowerUrl.startsWith('blob:');
-            const isSafe = !isDangerous && (
-                rawUrl.startsWith('https://') ||
-                (rawUrl.startsWith('/') && (rawUrl.startsWith('/images/') || rawUrl.startsWith('/assets/')))
-            );
-            if (isSafe) {
-                return `<div class="hex-frame ${cls}"><img src="${escapeHtml(rawUrl)}" alt="${escapeHtml(altText)}" loading="lazy"></div>`;
-            }
-        }
-        // Без fallback икони: hero показва само реално зададени изображения
-        return '';
-    };
-
-    let heroSideHTML = '';
-    const hasHexVisual = vialImg || labImg || faceImg || visualBgRaw;
-    if (hasHexVisual) {
-        heroSideHTML = `
-    <div class="hero-visual" aria-hidden="true"${heroVisualStyle}>
-        ${makeHexFrame(vialImg, 'hex-vial', 'Биологичен флакон')}
-        ${makeHexFrame(labImg, 'hex-lab', 'Лабораторно изследване')}
-        ${makeHexFrame(faceImg, 'hex-face', 'Клетъчно подмладяване')}
-        <div class="molecule-node node-1"></div>
-        <div class="molecule-node node-2"></div>
-        <div class="molecule-node node-3"></div>
-    </div>`;
-    } else if (component.hero_image) {
-        const rawUrl = String(component.hero_image);
-        const lowerUrl = rawUrl.toLowerCase();
-        const isDangerous = lowerUrl.startsWith('data:') ||
-                            lowerUrl.startsWith('javascript:') ||
-                            lowerUrl.startsWith('vbscript:') ||
-                            lowerUrl.startsWith('blob:');
-        const isSafe = !isDangerous && (
-            rawUrl.startsWith('https://') ||
-            (rawUrl.startsWith('/') && (rawUrl.startsWith('/images/') || rawUrl.startsWith('/assets/')))
-        );
-        if (isSafe) {
-            heroSideHTML = `
-    <div class="hero-banner-panel" aria-hidden="true">
-        <img src="${escapeHtml(rawUrl)}" alt="" class="hero-banner-img" loading="eager">
-    </div>`;
-        }
-    }
+    const heroSideHTML = generateHeroSidePanelHTML(component);
     const hasSidePanel = heroSideHTML !== '';
 
     return `
@@ -2875,6 +2885,102 @@ function initHeroParallax() {
 // Some effects use event delegation (safe to call early), others need DOM content.
 let _premiumInitialized = false;
 
+function initHeroBannerCarousels() {
+    const carousels = document.querySelectorAll('.hero-banner-carousel');
+    if (!carousels.length) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    carousels.forEach((carousel) => {
+        if (carousel.dataset.initialized === 'true') return;
+        carousel.dataset.initialized = 'true';
+
+        const slides = Array.from(carousel.querySelectorAll('.hero-carousel-slide'));
+        const dots = Array.from(carousel.querySelectorAll('.hero-carousel-dot'));
+        const prevBtn = carousel.querySelector('.hero-carousel-prev');
+        const nextBtn = carousel.querySelector('.hero-carousel-next');
+        const progressBar = carousel.querySelector('.hero-carousel-progress-bar');
+        if (!slides.length) return;
+
+        let current = slides.findIndex((slide) => slide.classList.contains('is-active'));
+        if (current < 0) current = 0;
+
+        const intervalMs = Math.max(3000, Number(carousel.dataset.interval) || 5000);
+        const autoplayEnabled = carousel.dataset.autoplay !== 'false' && !prefersReducedMotion;
+        let timer = null;
+        let progressRaf = null;
+        let progressStart = 0;
+
+        const setActive = (index) => {
+            current = (index + slides.length) % slides.length;
+            slides.forEach((slide, i) => {
+                const active = i === current;
+                slide.classList.toggle('is-active', active);
+                slide.setAttribute('aria-hidden', active ? 'false' : 'true');
+            });
+            dots.forEach((dot, i) => dot.classList.toggle('is-active', i === current));
+            restartProgress();
+        };
+
+        const stopAutoplay = () => {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+            if (progressRaf) {
+                cancelAnimationFrame(progressRaf);
+                progressRaf = null;
+            }
+            if (progressBar) progressBar.style.width = '0%';
+        };
+
+        const restartProgress = () => {
+            if (!autoplayEnabled || !progressBar) return;
+            if (progressRaf) cancelAnimationFrame(progressRaf);
+            progressStart = performance.now();
+            const tick = (now) => {
+                const elapsed = now - progressStart;
+                const pct = Math.min(100, (elapsed / intervalMs) * 100);
+                progressBar.style.width = `${pct}%`;
+                if (pct < 100) progressRaf = requestAnimationFrame(tick);
+            };
+            progressRaf = requestAnimationFrame(tick);
+        };
+
+        const startAutoplay = () => {
+            stopAutoplay();
+            if (!autoplayEnabled || slides.length < 2) return;
+            restartProgress();
+            timer = setInterval(() => setActive(current + 1), intervalMs);
+        };
+
+        prevBtn?.addEventListener('click', () => {
+            setActive(current - 1);
+            startAutoplay();
+        });
+        nextBtn?.addEventListener('click', () => {
+            setActive(current + 1);
+            startAutoplay();
+        });
+        dots.forEach((dot) => {
+            dot.addEventListener('click', () => {
+                const index = Number(dot.dataset.index);
+                if (!Number.isNaN(index)) {
+                    setActive(index);
+                    startAutoplay();
+                }
+            });
+        });
+
+        carousel.addEventListener('mouseenter', stopAutoplay);
+        carousel.addEventListener('mouseleave', startAutoplay);
+        carousel.addEventListener('focusin', stopAutoplay);
+        carousel.addEventListener('focusout', startAutoplay);
+
+        startAutoplay();
+    });
+}
+
 function initPremiumEffects() {
     // Event-delegation effects: safe to init once early
     if (!_premiumInitialized) {
@@ -2890,6 +2996,7 @@ function initPremiumEffects() {
     initCounterAnimation();
     initHeroGradientWord();
     initSectionGlowLines();
+    initHeroBannerCarousels();
 }
 
 // Early init for event-delegation effects (cursor, tilt, magnetic)
