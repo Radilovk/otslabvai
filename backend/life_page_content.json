@@ -121,7 +121,7 @@
         }
       ],
       "background_image": "",
-      "background_gradient": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      "background_gradient": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
     },
     {
       "type": "info_card",

@@ -6571,7 +6571,13 @@ a.hex-feature-card--link .btn-learn-more {
         gap: 28px;
     }
 
-    [data-theme] .hero-banner-panel {
+    [data-theme] .hero-banner-panel,
+    [data-theme] .hero-banner-carousel {
+        min-height: 320px;
+    }
+
+    [data-theme] .hero-carousel-track,
+    [data-theme] .hero-carousel-slide .hero-banner-img {
         min-height: 320px;
     }
 
@@ -6591,7 +6597,8 @@ a.hex-feature-card--link .btn-learn-more {
         grid-template-columns: 1fr;
     }
 
-    [data-theme] .hero-banner-panel {
+    [data-theme] .hero-banner-panel,
+    [data-theme] .hero-banner-carousel {
         display: none;
     }
 
