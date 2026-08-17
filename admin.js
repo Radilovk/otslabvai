@@ -56,6 +56,7 @@ async function ensureAdminSession() {
             return true;
         }
         sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+        sessionStorage.removeItem('github_upload_token');
     }
     showAdminLoginOverlay();
     return false;
@@ -83,6 +84,7 @@ function setupAdminLoginForm() {
 
     logoutBtn?.addEventListener('click', () => {
         sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+        sessionStorage.removeItem('github_upload_token');
         location.reload();
     });
 }
@@ -2675,68 +2677,68 @@ function handleAction(action, target, id) {
             const fileInput = document.getElementById('image-upload-input');
             if (!fileInput) {
                 showNotification('Грешка: Елементът за качване не е намерен', 'error');
-                console.error('File input #image-upload-input not found');
                 break;
             }
-            
+
             const targetFieldPath = target.dataset.targetField;
             const container = target.closest('.form-group, .nested-sub-item, .modal-form, .pf-hero-slide-url-row');
-            const inputElement = container?.querySelector(`[data-field="${targetFieldPath}"]`);
-            
+            const inputElement = container?.querySelector(`[data-field="${targetFieldPath}"]`)
+                || container?.querySelector('.pf-hero-slide-image');
+
             if (!inputElement) {
                 showNotification('Грешка: Полето за изображение не е намерено', 'error');
-                console.error(`Input field with data-field="${targetFieldPath}" not found`);
                 break;
             }
-            
+
+            const uploadFolder = uploadFolderForAdminField(targetFieldPath);
+
             fileInput.onchange = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-                
-                // Validate file type
+
                 if (!file.type.startsWith('image/')) {
                     showNotification('Моля изберете изображение', 'error');
                     return;
                 }
-                
-                // Validate file size (max 2MB)
                 if (file.size > 2 * 1024 * 1024) {
                     showNotification('Изображението е твърде голямо. Максимален размер: 2MB', 'error');
                     return;
                 }
-                
+
+                const defaultLabel = target.dataset.defaultLabel || target.textContent;
+                target.dataset.defaultLabel = defaultLabel;
+
                 try {
-                    // Show loading state
                     target.disabled = true;
                     target.textContent = 'Качване...';
-                    
-                    // Upload the file
-                    const imageUrl = await uploadImageToGitHub(file);
-                    
-                    // Update the input field with the URL
-                    inputElement.value = imageUrl;
+
+                    const { url, previewUrl } = await uploadAdminImage(file, { folder: uploadFolder });
+                    inputElement.value = url;
                     inputElement.dispatchEvent(new Event('input', { bubbles: true }));
 
                     const slideRow = inputElement.closest('.pf-hero-slide-row');
                     if (slideRow) {
                         const thumb = slideRow.querySelector('.pf-hero-slide-thumb img');
-                        if (thumb) thumb.src = imageUrl;
-                        if (typeof refreshPfHeroAdminPreview === 'function') refreshPfHeroAdminPreview();
+                        if (thumb) thumb.src = previewUrl;
+                        refreshPfHeroAdminPreview();
                     }
-                    
-                    showNotification('Изображението е качено успешно!', 'success');
+
+                    showNotification(
+                        uploadFolder === 'hero'
+                            ? 'Банерът е качен. Ще се появи на сайта след deploy (~2 мин).'
+                            : 'Изображението е качено успешно!',
+                        'success'
+                    );
                 } catch (error) {
                     console.error('Upload error:', error);
                     showNotification(`Грешка при качване: ${error.message}`, 'error');
                 } finally {
-                    // Reset button state
                     target.disabled = false;
-                    target.textContent = target.dataset.defaultLabel || 'Качи';
-                    // Clear file input
+                    target.textContent = defaultLabel;
                     fileInput.value = '';
                 }
             };
-            
+
             fileInput.click();
             break;
         }
@@ -4024,111 +4026,99 @@ function setProperty(obj, path, value) {
 }
 
 // =======================================================
-//          8. IMAGE UPLOAD TO GITHUB
+//          8. IMAGE UPLOAD (direct to GitHub — no Worker proxy)
 // =======================================================
+// Admin uploads go browser → GitHub API. Worker only serves GET /api-token
+// (tiny JSON) after admin auth — avoids billing CPU/memory for image bytes.
 
-/**
- * Uploads an image file to GitHub repository
- * @param {File} file - The image file to upload
- * @returns {Promise<string>} - The URL of the uploaded image
- */
-async function uploadImageToGitHub(file) {
-    // Configuration for GitHub upload
-    const GITHUB_OWNER = 'Radilovk';  // Repository owner
-    const GITHUB_REPO = 'otslabvai';  // Repository name
-    const GITHUB_BRANCH = 'main';      // Branch to upload to
-    
-    // Try to get token from sessionStorage first (temporary storage for session)
-    let GITHUB_TOKEN = sessionStorage.getItem('github_upload_token');
-    
-    // If not in sessionStorage, try to fetch from backend KV storage
-    if (!GITHUB_TOKEN) {
-        try {
-            const response = await fetch(`${API_URL}/api-token`);
-            if (response.ok) {
-                const data = await response.json();
-                if (data.api_token) {
-                    GITHUB_TOKEN = data.api_token;
-                    // Cache in sessionStorage for subsequent uploads
-                    sessionStorage.setItem('github_upload_token', GITHUB_TOKEN);
-                }
-            }
-        } catch (error) {
-            console.warn('Failed to fetch API token from backend:', error);
-        }
-    }
-    
-    // If still no token, prompt the user
-    if (!GITHUB_TOKEN) {
-        GITHUB_TOKEN = prompt(
-            'Моля въведете GitHub Personal Access Token:\n\n' +
-            '(Token трябва да има \'repo\' permissions)\n' +
-            'Token-ът ще бъде запазен само за тази сесия.'
-        );
-        
-        if (!GITHUB_TOKEN) {
-            throw new Error('GitHub token е необходим за качване на изображения');
-        }
-        
-        // Store token in sessionStorage (cleared when browser closes)
-        sessionStorage.setItem('github_upload_token', GITHUB_TOKEN);
-    }
-    
-    // Generate unique filename
-    const timestamp = Date.now();
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filename = `product-${timestamp}-${sanitizedName}`;
-    const filepath = `images/products/${filename}`;
-    
-    // Convert file to base64
-    const fileContent = await new Promise((resolve, reject) => {
+const GITHUB_IMAGE_REPO = { owner: 'Radilovk', repo: 'otslabvai', branch: 'main' };
+const GITHUB_UPLOAD_TOKEN_KEY = 'github_upload_token';
+
+function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
-            // Remove the data:image/...;base64, prefix
-            const base64 = reader.result.split(',')[1];
-            resolve(base64);
+            const result = reader.result;
+            if (typeof result !== 'string') {
+                reject(new Error('Грешка при четене на файл'));
+                return;
+            }
+            resolve(result.split(',')[1]);
         };
-        reader.onerror = reject;
+        reader.onerror = () => reject(reader.error || new Error('Грешка при четене на файл'));
         reader.readAsDataURL(file);
     });
-    
-    // Prepare the API request
-    const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${filepath}`;
-    
-    const payload = {
-        message: `Upload product image: ${filename}`,
-        content: fileContent,
-        branch: GITHUB_BRANCH
-    };
-    
-    // Make the API request
-    const response = await fetch(apiUrl, {
+}
+
+async function getGithubUploadTokenForAdmin() {
+    const cached = sessionStorage.getItem(GITHUB_UPLOAD_TOKEN_KEY);
+    if (cached) return cached;
+
+    const res = await fetch(`${API_URL}/api-token`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+        if (res.status === 401) throw new Error('Влезте в админ панела отново');
+        throw new Error(data.error || 'Грешка при получаване на upload credentials');
+    }
+    if (!data.api_token) {
+        throw new Error('GitHub token не е конфигуриран на сървъра (GITHUB_API_TOKEN)');
+    }
+    sessionStorage.setItem(GITHUB_UPLOAD_TOKEN_KEY, data.api_token);
+    return data.api_token;
+}
+
+/**
+ * Upload image directly to GitHub (admin token from Worker; file bytes never hit CF Worker).
+ * @param {File} file
+ * @param {{ folder?: 'hero' | 'products' }} options
+ * @returns {Promise<{ url: string, previewUrl: string }>}
+ */
+async function uploadAdminImage(file, options = {}) {
+    const kind = options.folder === 'products' ? 'products' : 'hero';
+    const folder = kind === 'products' ? 'images/products' : 'images';
+    const prefix = kind === 'products' ? 'product' : 'hero';
+
+    const rawName = String(file.name || 'image.jpg');
+    const extMatch = rawName.match(/\.(jpe?g|png|webp|gif)$/i);
+    const ext = extMatch ? extMatch[1].toLowerCase().replace('jpeg', 'jpg') : 'jpg';
+    const sanitized = rawName.replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 80);
+    const filename = `${prefix}-${Date.now()}-${sanitized || `upload.${ext}`}`;
+    const finalName = filename.includes('.') ? filename : `${filename}.${ext}`;
+    const filepath = `${folder}/${finalName}`;
+
+    const token = await getGithubUploadTokenForAdmin();
+    const content = await readFileAsBase64(file);
+    const { owner, repo, branch } = GITHUB_IMAGE_REPO;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filepath}`;
+
+    const response = await nativeFetch(apiUrl, {
         method: 'PUT',
         headers: {
-            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
-            'Accept': 'application/vnd.github.v3+json'
+            Accept: 'application/vnd.github.v3+json',
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+            message: `Upload image: ${finalName}`,
+            content,
+            branch,
+        }),
     });
-    
+
     if (!response.ok) {
-        const error = await response.json();
-        
-        // If token is invalid, clear it from storage
-        if (response.status === 401 || response.status === 403) {
-            sessionStorage.removeItem('github_upload_token');
-        }
-        
-        throw new Error(error.message || `GitHub API error: ${response.status}`);
+        const err = await response.json().catch(() => ({}));
+        if (response.status === 401) sessionStorage.removeItem(GITHUB_UPLOAD_TOKEN_KEY);
+        throw new Error(err.message || `Грешка при качване в GitHub (${response.status})`);
     }
-    
-    const result = await response.json();
-    
-    // Return the raw GitHub URL for the image
-    const imageUrl = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${filepath}`;
-    
-    return imageUrl;
+
+    const previewUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filepath}`;
+    return { url: filepath, previewUrl };
+}
+
+/** @deprecated Use uploadAdminImage — kept as alias for product editors */
+async function uploadImageToGitHub(file, options = {}) {
+    const { url, previewUrl } = await uploadAdminImage(file, options);
+    return previewUrl || url;
 }
 
 /**
@@ -5136,6 +5126,28 @@ function pfHeroSlideId() {
     return `slide-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+const PORTFOLIO_REPO_RAW_BASE = 'https://raw.githubusercontent.com/Radilovk/otslabvai/main';
+
+function portfolioImageUrl(path) {
+    const p = String(path || '').trim();
+    if (!p) return '';
+    if (/^https?:\/\//i.test(p)) return p;
+    const rel = p.replace(/^\//, '');
+    // Newly uploaded repo images are on GitHub before the next worker deploy.
+    if (rel.startsWith('images/')) return `${PORTFOLIO_REPO_RAW_BASE}/${rel}`;
+    const base = String(API_URL || '').replace(/\/$/, '');
+    return `${base}/${rel}`;
+}
+
+function uploadFolderForAdminField(fieldPath) {
+    if (fieldPath === 'hero_slide_image' || fieldPath === 'hero_image' || fieldPath === 'background_image') {
+        return 'hero';
+    }
+    if (fieldPath.startsWith('hero_images.') || fieldPath.startsWith('logo_url')) return 'hero';
+    if (fieldPath === 'about_us_page.main_image' || fieldPath === 'icon_url') return 'hero';
+    return 'products';
+}
+
 function normalizePortfolioHeroSlides(settings) {
     const s = settings || {};
     const slides = Array.isArray(s.hero_slides)
@@ -5155,18 +5167,19 @@ function normalizePortfolioHeroSlides(settings) {
 
 function renderPfHeroSlideRow(slide, index, total) {
     const img = escAdminHtml(slide.image || 'images/portfolio-hero.jpg');
+    const imgSrc = escAdminHtml(portfolioImageUrl(slide.image || 'images/portfolio-hero.jpg'));
     const title = escAdminHtml(slide.title || '');
     const subtitle = escAdminHtml(slide.subtitle || '');
     return `
         <div class="pf-hero-slide-row" data-slide-id="${escAdminHtml(slide.id)}" draggable="true">
             <div class="pf-hero-slide-grip" title="Премести">⋮⋮</div>
             <div class="pf-hero-slide-thumb">
-                <img src="${img}" alt="" loading="lazy">
+                <img src="${imgSrc}" alt="" loading="lazy">
                 <span class="pf-hero-slide-num">${index + 1}</span>
             </div>
             <div class="pf-hero-slide-fields">
                 <div class="pf-hero-slide-url-row">
-                    <input type="url" class="pf-hero-slide-image" data-field="hero_slide_image" value="${img}" placeholder="URL на изображение">
+                    <input type="text" class="pf-hero-slide-image" data-field="hero_slide_image" value="${img}" placeholder="images/hero.jpg или URL">
                     <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_slide_image">Качи</button>
                 </div>
                 <input type="text" class="pf-hero-slide-title" placeholder="Заглавие (по избор — празно = глобално)" value="${title}">
@@ -5201,31 +5214,27 @@ function refreshPfHeroAdminPreview() {
         return;
     }
     if (mode === 'carousel' && valid.length > 1) {
-        preview.innerHTML = `
-            ${valid.map((s, i) => `
-                <div class="pf-hero-preview-slide${i === 0 ? ' is-active' : ''}" style="background-image:url('${escAdminHtml(s.image)}')">
+        preview.innerHTML = valid.map((s, i) => `
+                <div class="pf-hero-preview-slide${i === 0 ? ' is-active' : ''}" style="background-image:url('${escAdminHtml(portfolioImageUrl(s.image))}')">
                     <div class="pf-hero-preview-caption">
                         <strong>${escAdminHtml(s.title || document.getElementById('pf-hero-title')?.value || 'Каталог добавки')}</strong>
                         <span>${escAdminHtml(s.subtitle || document.getElementById('pf-site-slogan')?.value || '')}</span>
                     </div>
-                </div>`).join('')}
-            <div class="pf-hero-preview-dots">${valid.map((_, j) => `<span class="${j === 0 ? 'is-active' : ''}"></span>`).join('')}</div>`;
+                </div>`).join('');
         let idx = 0;
         clearInterval(preview._carouselTimer);
         preview._carouselTimer = setInterval(() => {
             const slideEls = preview.querySelectorAll('.pf-hero-preview-slide');
-            const dots = preview.querySelectorAll('.pf-hero-preview-dots span');
             if (!slideEls.length) return;
             idx = (idx + 1) % slideEls.length;
             slideEls.forEach((el, j) => el.classList.toggle('is-active', j === idx));
-            dots.forEach((el, j) => el.classList.toggle('is-active', j === idx));
         }, 3500);
         return;
     }
     clearInterval(preview._carouselTimer);
     const s = valid[0];
     preview.innerHTML = `
-        <div class="pf-hero-preview-slide is-active" style="background-image:url('${escAdminHtml(s.image)}')">
+        <div class="pf-hero-preview-slide is-active" style="background-image:url('${escAdminHtml(portfolioImageUrl(s.image))}')">
             <div class="pf-hero-preview-caption">
                 <strong>${escAdminHtml(s.title || document.getElementById('pf-hero-title')?.value || 'Каталог добавки')}</strong>
                 <span>${escAdminHtml(s.subtitle || document.getElementById('pf-site-slogan')?.value || '')}</span>
@@ -5251,7 +5260,7 @@ function initPortfolioHeroAdminHandlers() {
     list.addEventListener('input', (e) => {
         if (e.target.matches('.pf-hero-slide-image')) {
             const thumb = e.target.closest('.pf-hero-slide-row')?.querySelector('.pf-hero-slide-thumb img');
-            if (thumb && e.target.value) thumb.src = e.target.value;
+            if (thumb && e.target.value) thumb.src = portfolioImageUrl(e.target.value);
         }
         refreshPfHeroAdminPreview();
     });
