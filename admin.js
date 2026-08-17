@@ -2723,9 +2723,11 @@ function handleAction(action, target, id) {
                         refreshPfHeroAdminPreview();
                     }
 
+                    setUnsavedChanges(true);
+
                     showNotification(
                         uploadFolder === 'hero'
-                            ? 'Банерът е качен. Ще се появи на сайта след deploy (~2 мин).'
+                            ? 'Банерът е качен. Натиснете „Запази настройките“.'
                             : 'Изображението е качено успешно!',
                         'success'
                     );
