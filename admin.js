@@ -5214,24 +5214,20 @@ function refreshPfHeroAdminPreview() {
         return;
     }
     if (mode === 'carousel' && valid.length > 1) {
-        preview.innerHTML = `
-            ${valid.map((s, i) => `
+        preview.innerHTML = valid.map((s, i) => `
                 <div class="pf-hero-preview-slide${i === 0 ? ' is-active' : ''}" style="background-image:url('${escAdminHtml(portfolioImageUrl(s.image))}')">
                     <div class="pf-hero-preview-caption">
                         <strong>${escAdminHtml(s.title || document.getElementById('pf-hero-title')?.value || 'Каталог добавки')}</strong>
                         <span>${escAdminHtml(s.subtitle || document.getElementById('pf-site-slogan')?.value || '')}</span>
                     </div>
-                </div>`).join('')}
-            <div class="pf-hero-preview-dots">${valid.map((_, j) => `<span class="${j === 0 ? 'is-active' : ''}"></span>`).join('')}</div>`;
+                </div>`).join('');
         let idx = 0;
         clearInterval(preview._carouselTimer);
         preview._carouselTimer = setInterval(() => {
             const slideEls = preview.querySelectorAll('.pf-hero-preview-slide');
-            const dots = preview.querySelectorAll('.pf-hero-preview-dots span');
             if (!slideEls.length) return;
             idx = (idx + 1) % slideEls.length;
             slideEls.forEach((el, j) => el.classList.toggle('is-active', j === idx));
-            dots.forEach((el, j) => el.classList.toggle('is-active', j === idx));
         }, 3500);
         return;
     }

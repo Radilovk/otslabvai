@@ -760,116 +760,14 @@ img, svg { display: block; max-width: 100%; height: auto; }
   transform: scale(1);
 }
 
-.pf-hero-carousel-ui {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.pf-hero-carousel-ui[hidden] {
-  display: none !important;
-}
-
-.pf-hero-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 50%;
-  background: rgba(15, 37, 64, 0.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-  opacity: 0;
-  transition: opacity 0.25s ease, background 0.2s ease, transform 0.2s ease;
-}
-
-.pf-hero--carousel:hover .pf-hero-nav,
-.pf-hero-nav:focus-visible {
-  opacity: 1;
-}
-
-.pf-hero-nav:hover {
-  background: rgba(0, 196, 200, 0.35);
-  border-color: rgba(0, 196, 200, 0.5);
-}
-
-.pf-hero-nav--prev { left: max(0.75rem, env(safe-area-inset-left, 0px)); }
-.pf-hero-nav--next { right: max(0.75rem, env(safe-area-inset-right, 0px)); }
-
-.pf-hero-dots {
-  position: absolute;
-  bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0.45rem;
-  pointer-events: auto;
-}
-
-.pf-hero-dot {
-  width: 2rem;
-  height: 0.22rem;
-  padding: 0;
-  border: none;
-  border-radius: var(--pf-radius-pill);
-  background: rgba(255, 255, 255, 0.35);
-  cursor: pointer;
-  transition: background 0.25s ease, width 0.25s ease, transform 0.2s ease;
-}
-
-.pf-hero-dot.is-active {
-  width: 2.75rem;
-  background: var(--pf-accent, #00c4c8);
-}
-
-.pf-hero-dot:hover {
-  background: rgba(255, 255, 255, 0.65);
-}
-
-.pf-hero-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.12);
-  pointer-events: none;
-}
-
-.pf-hero-progress-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--pf-accent, #00c4c8), #5eead4);
-  border-radius: 0 2px 2px 0;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .pf-hero-slide,
-  .pf-hero-slide img,
-  .pf-hero-progress-bar {
+  .pf-hero-slide img {
     transition: none !important;
   }
   .pf-hero-slide img {
     transform: none !important;
   }
-}
-
-@media (max-width: 640px) {
-  .pf-hero-nav {
-    width: 2.1rem;
-    height: 2.1rem;
-    opacity: 0.85;
-  }
-  .pf-hero-dots { bottom: 0.65rem; }
 }
 
 #pf-footer-slot:empty {

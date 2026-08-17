@@ -166,111 +166,39 @@ function renderSingleHero(media, config) {
   updateHeroCopy(config, 0);
 }
 
-function createCarouselController(hero, media, config) {
+function createCarouselController(media, config) {
   const slides = [...media.querySelectorAll('.pf-hero-slide')];
-  const dotsWrap = hero.querySelector('.pf-hero-dots');
-  const progress = hero.querySelector('.pf-hero-progress-bar');
-  const prevBtn = hero.querySelector('.pf-hero-nav--prev');
-  const nextBtn = hero.querySelector('.pf-hero-nav--next');
   let index = 0;
   let timer = null;
-  let progressRaf = null;
-  let progressStart = 0;
-  let paused = false;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const interval = reducedMotion ? 0 : config.interval;
 
-  const dots = slides.map((_, i) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'pf-hero-dot';
-    btn.setAttribute('aria-label', `Банер ${i + 1}`);
-    btn.addEventListener('click', () => goTo(i, true));
-    dotsWrap?.appendChild(btn);
-    return btn;
-  });
-
   function setActive(i) {
     slides.forEach((s, j) => s.classList.toggle('is-active', j === i));
-    dots.forEach((d, j) => {
-      d.classList.toggle('is-active', j === i);
-      d.setAttribute('aria-current', j === i ? 'true' : 'false');
-    });
     updateHeroCopy(config, i);
     cacheHeroSrc(config.slides[i]?.image || config.primaryImage);
   }
 
-  function resetProgress() {
-    if (!progress || !interval) return;
-    progress.style.transition = 'none';
-    progress.style.width = '0%';
-    progress.offsetHeight; // reflow
-    progress.style.transition = `width ${interval}ms linear`;
-    progress.style.width = '100%';
-    progressStart = performance.now();
-  }
-
   function clearTimer() {
     if (timer) { clearTimeout(timer); timer = null; }
-    if (progressRaf) { cancelAnimationFrame(progressRaf); progressRaf = null; }
   }
 
   function schedule() {
     clearTimer();
-    if (!interval || slides.length < 2 || paused) return;
-    resetProgress();
+    if (!interval || slides.length < 2) return;
     timer = setTimeout(() => goTo((index + 1) % slides.length), interval);
   }
 
-  function goTo(i, userAction = false) {
+  function goTo(i) {
     index = ((i % slides.length) + slides.length) % slides.length;
     setActive(index);
-    if (userAction) schedule();
-    else schedule();
-  }
-
-  function pause() {
-    paused = true;
-    clearTimer();
-    if (progress) {
-      const w = progress.getBoundingClientRect().width;
-      const parent = progress.parentElement?.getBoundingClientRect().width || 1;
-      progress.style.transition = 'none';
-      progress.style.width = `${(w / parent) * 100}%`;
-    }
-  }
-
-  function resume() {
-    paused = false;
     schedule();
   }
-
-  prevBtn?.addEventListener('click', () => goTo(index - 1, true));
-  nextBtn?.addEventListener('click', () => goTo(index + 1, true));
-  hero.addEventListener('mouseenter', pause);
-  hero.addEventListener('mouseleave', resume);
-  hero.addEventListener('focusin', pause);
-  hero.addEventListener('focusout', (e) => {
-    if (!hero.contains(e.relatedTarget)) resume();
-  });
-
-  let touchX = 0;
-  hero.addEventListener('touchstart', (e) => { touchX = e.changedTouches[0]?.clientX || 0; }, { passive: true });
-  hero.addEventListener('touchend', (e) => {
-    const dx = (e.changedTouches[0]?.clientX || 0) - touchX;
-    if (Math.abs(dx) > 48) goTo(dx < 0 ? index + 1 : index - 1, true);
-  }, { passive: true });
 
   setActive(0);
   if (slides.length > 1 && interval) schedule();
 
-  return {
-    destroy() {
-      clearTimer();
-      prevBtn?.replaceWith(prevBtn.cloneNode(true));
-      nextBtn?.replaceWith(nextBtn.cloneNode(true));
-    }
-  };
+  return { destroy: clearTimer };
 }
 
 function renderCarouselHero(hero, media, config) {
@@ -282,7 +210,7 @@ function renderCarouselHero(hero, media, config) {
     media.appendChild(buildSlideEl(slide, { active: i === 0, eager: i === 0 }));
   });
 
-  carouselController = createCarouselController(hero, media, config);
+  carouselController = createCarouselController(media, config);
   cacheHeroSrc(config.primaryImage);
 }
 
@@ -298,16 +226,13 @@ export function applyHeroSettings(settings) {
   const config = normalizeHeroConfig(settings);
   document.documentElement.setAttribute('data-pf-hero-mode', config.mode);
 
-  const nav = hero.querySelector('.pf-hero-carousel-ui');
-  const showCarouselUi = config.mode === 'carousel' && config.slides.length > 1;
-  if (nav) nav.hidden = !showCarouselUi;
-  hero.classList.toggle('pf-hero--carousel', showCarouselUi);
+  const showCarousel = config.mode === 'carousel' && config.slides.length > 1;
+  hero.classList.toggle('pf-hero--carousel', showCarousel);
 
-  if (config.mode === 'carousel' && config.slides.length > 1) {
+  if (showCarousel) {
     const currentKey = [...media.querySelectorAll('.pf-hero-slide img')].map((i) => heroImagePath(i.dataset.heroSrc)).join('|');
     const nextKey = config.slides.map((s) => heroImagePath(s.image)).join('|');
     if (currentKey !== nextKey) {
-      if (nav) nav.querySelector('.pf-hero-dots').innerHTML = '';
       renderCarouselHero(hero, media, config);
     } else {
       updateHeroCopy(config, 0);

@@ -56,16 +56,6 @@
             <script>!function(){function f(b){if(!b)return null;if(b.hero_mode==='carousel'&&Array.isArray(b.hero_slides)){for(var i=0;i<b.hero_slides.length;i++){var s=b.hero_slides[i];if(s&&s.image)return s.image;}}return b.hero_image||null;}var b=window.__pfBranding,h=document.documentElement.getAttribute('data-pf-hero')||f(b)||'images/portfolio-hero.jpg',img=document.getElementById('hero-image');if(img){img.src=h;img.dataset.heroSrc=h;function ready(){img.classList.add('pf-hero-ready');}img.onload=ready;if(img.complete)ready();}if(b){var t=document.getElementById('hero-title');if(t&&b.hero_title)t.textContent=b.hero_title;var el=document.getElementById('hero-subtitle');if(el&&b.site_slogan)el.textContent=b.site_slogan;}}();</script>
         </div>
         <div class="pf-hero-overlay" aria-hidden="true"></div>
-        <div class="pf-hero-carousel-ui" hidden>
-            <button type="button" class="pf-hero-nav pf-hero-nav--prev" aria-label="Предишен банер">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-            <button type="button" class="pf-hero-nav pf-hero-nav--next" aria-label="Следващ банер">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-            <div class="pf-hero-dots" role="tablist" aria-label="Банери"></div>
-            <div class="pf-hero-progress" aria-hidden="true"><div class="pf-hero-progress-bar"></div></div>
-        </div>
         <div class="pf-hero-inner">
             <div class="pf-hero-badges">
                 <span class="pf-hero-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="4.5" width="21" height="15" rx="2.5"/><path d="M1.5 9.5h21"/><path d="M5 15h4"/></svg>Наложен платеж</span>
