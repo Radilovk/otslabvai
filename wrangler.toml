@@ -1,6 +1,7 @@
 name = "port"
 main = "worker.js"
 compatibility_date = "2024-04-05"
+workers_dev = true
 
 # Deploy: npm run deploy  (or GitHub Actions on push to main / cursor/*)
 # Do NOT paste only worker.js in the Cloudflare dashboard — this project imports
@@ -28,12 +29,8 @@ binding = "PAGE_CONTENT"
 id = "d220db696e414b7cb3da2b19abd53d0f"
 preview_id = "d220db696e414b7cb3da2b19abd53d0f"
 
-# Custom domains — wrangler creates DNS + TLS on deploy (zone must be on this CF account).
-# www.biocode-bg.com was added manually; apex biocode-bg.com returned 522 without this entry.
+# Route apex to the Worker (www was configured manually; apex returned 522 without this).
+# Uses zone routes instead of custom_domain to avoid DNS record conflicts on @.
 [[routes]]
-pattern = "biocode-bg.com"
-custom_domain = true
-
-[[routes]]
-pattern = "www.biocode-bg.com"
-custom_domain = true
+pattern = "biocode-bg.com/*"
+zone_name = "biocode-bg.com"
