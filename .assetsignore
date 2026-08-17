@@ -17,9 +17,11 @@ jest.config.js
 # Binary and media files
 *.zip
 *.pdf
-*.jpg
 *.webm
 *.xlsx
+
+# Product image scans (served from CDN/GitHub); keep hero/banner JPGs deployable
+images/products/
 
 # Documentation and notes
 *.md
