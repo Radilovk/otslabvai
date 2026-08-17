@@ -1813,10 +1813,19 @@ input:checked + .slider:before {
     background-size: cover;
     background-position: center;
     opacity: 0;
-    transition: opacity 0.8s ease;
+    transform: scale(1.04);
+    transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1), transform 8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.pf-hero-preview-slide.is-active { opacity: 1; }
+.pf-hero-preview-slide.is-active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.pf-hero-preview-caption strong,
+.pf-hero-preview-caption span {
+    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1), transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
 
 .pf-hero-preview-caption {
     position: absolute;
