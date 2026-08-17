@@ -1,6 +1,5 @@
 (function () {
   var WORKER_API = 'https://port.radilov-k.workers.dev';
-  var GITHUB_RAW = 'https://raw.githubusercontent.com/Radilovk/otslabvai/main';
 
   function apiUrl() {
     var host = location.hostname;
@@ -11,13 +10,11 @@
     return WORKER_API;
   }
 
-  function resolveHero(path) {
+  function heroPath(path) {
     var p = String(path || '').trim();
-    if (!p) return '';
+    if (!p) return '/images/portfolio-hero.jpg';
     if (/^https?:\/\//i.test(p)) return p;
-    if (p.charAt(0) === '/') p = p.slice(1);
-    if (p.indexOf('images/') === 0) return GITHUB_RAW + '/' + p;
-    return p;
+    return p.charAt(0) === '/' ? p : '/' + p;
   }
 
   try {
@@ -46,11 +43,11 @@
 
   if (branding) {
     window.__pfBranding = branding;
-    var heroImg = resolveHero(branding.hero_image);
+    var heroImg = heroPath(branding.hero_image);
     if (Array.isArray(branding.hero_slides)) {
       for (var i = 0; i < branding.hero_slides.length; i++) {
         var slide = branding.hero_slides[i];
-        if (slide && slide.image) { heroImg = resolveHero(slide.image); break; }
+        if (slide && slide.image) { heroImg = heroPath(slide.image); break; }
       }
     }
     if (heroImg) {

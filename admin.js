@@ -2726,7 +2726,7 @@ function handleAction(action, target, id) {
 
                     showNotification(
                         uploadFolder === 'hero'
-                            ? 'Банерът е качен. Натиснете „Запази настройките“.'
+                            ? 'Банерът е в репото (images/). Запази настройките. На сайта — след deploy.'
                             : 'Изображението е качено успешно!',
                         'success'
                     );
@@ -4113,7 +4113,7 @@ async function uploadAdminImage(file, options = {}) {
     }
 
     const previewUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filepath}`;
-    return { url: previewUrl, previewUrl };
+    return { url: filepath, previewUrl };
 }
 
 /** @deprecated Use uploadAdminImage — kept as alias for product editors */
@@ -5133,12 +5133,13 @@ function pfHeroSlideId() {
 
 const HERO_RAW = 'https://raw.githubusercontent.com/Radilovk/otslabvai/main';
 
-function heroImgUrl(path) {
+/** Admin thumb before deploy: raw GitHub. Saved value stays repo path (images/...). */
+function heroAdminPreviewUrl(path) {
     const p = String(path || '').trim();
     if (!p) return '';
     if (/^https?:\/\//i.test(p)) return p;
     const rel = p.replace(/^\//, '');
-    return rel.startsWith('images/') ? `${HERO_RAW}/${rel}` : p;
+    return rel.startsWith('images/') ? `${HERO_RAW}/${rel}` : (p.startsWith('/') ? p : `/${rel}`);
 }
 
 function heroSlidesFromSettings(s) {
@@ -5152,7 +5153,7 @@ function heroSlidesFromSettings(s) {
 function renderPfHeroSlideRow(slide, total) {
     return `
         <div class="pf-hero-slide-row" data-slide-id="${escAdminHtml(slide.id)}">
-            <div class="pf-hero-slide-thumb"><img src="${escAdminHtml(heroImgUrl(slide.image))}" alt=""></div>
+            <div class="pf-hero-slide-thumb"><img src="${escAdminHtml(heroAdminPreviewUrl(slide.image))}" alt=""></div>
             <input type="text" class="pf-hero-slide-image" data-field="hero_slide_image" value="${escAdminHtml(slide.image)}" placeholder="URL">
             <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_slide_image">Качи</button>
             <button type="button" class="btn btn-sm btn-danger" data-action="pf-hero-slide-remove" ${total <= 1 ? 'disabled' : ''}>✕</button>
@@ -5173,7 +5174,7 @@ function initPortfolioHeroAdminHandlers() {
     list.addEventListener('input', (e) => {
         if (!e.target.matches('.pf-hero-slide-image')) return;
         const thumb = e.target.closest('.pf-hero-slide-row')?.querySelector('.pf-hero-slide-thumb img');
-        if (thumb && e.target.value) thumb.src = heroImgUrl(e.target.value);
+        if (thumb && e.target.value) thumb.src = heroAdminPreviewUrl(e.target.value);
     });
     list.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-action="pf-hero-slide-remove"]');
