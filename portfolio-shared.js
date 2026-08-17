@@ -376,9 +376,7 @@ export async function initPortfolioPage({
   }
   applyBrandingFromSettings(settings);
 
-  cache.onCatalogUpdated(() => {
-    applyHeroSettings(cache.getCachedSettings());
-  });
+  // Hero uses live KV branding from refreshBranding(); catalog sync must not override it.
 
   if (settingsOnly && !settings) {
     await cache.ensureSettings({ force: true });

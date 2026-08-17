@@ -219,6 +219,8 @@ function renderCarouselHero(hero, media, config) {
  * @param {object} settings
  */
 export function applyHeroSettings(settings) {
+  if (!settings) return;
+
   const hero = document.getElementById('pf-hero');
   const media = hero?.querySelector('.pf-hero-media');
   if (!hero || !media) return;
@@ -228,6 +230,15 @@ export function applyHeroSettings(settings) {
 
   const showCarousel = config.mode === 'carousel' && config.slides.length > 1;
   hero.classList.toggle('pf-hero--carousel', showCarousel);
+
+  const hasCarouselDom = media.classList.contains('pf-hero-media--carousel')
+    && media.querySelectorAll('.pf-hero-slide').length > 1;
+
+  if (!showCarousel && hasCarouselDom) {
+    const incomingCount = (Array.isArray(settings.hero_slides) ? settings.hero_slides : [])
+      .filter((s) => s?.image?.trim()).length;
+    if (incomingCount < 2) return;
+  }
 
   if (showCarousel) {
     const currentKey = [...media.querySelectorAll('.pf-hero-slide img')].map((i) => heroImagePath(i.dataset.heroSrc)).join('|');

@@ -21,7 +21,9 @@ export const catalogState = {
   stockV: null,
   lastSync: 0,
   revision: 0,
-  stale: false
+  stale: false,
+  /** Live KV branding from /c/now — never let stale catalog index override hero. */
+  liveBranding: null
 };
 
 function notifyCatalogUpdated() {
@@ -114,6 +116,7 @@ async function hydrateFromIdb() {
   catalogState.stock = cached.stock;
   catalogState.stockV = cached.stockV;
   catalogState.lastSync = cached.lastSync || 0;
+  catalogState.liveBranding = cached.liveBranding || null;
   return true;
 }
 
@@ -137,7 +140,9 @@ function brandingFingerprint(settings) {
 }
 
 function applyBrandingSettings(branding) {
-  if (!branding || !catalogState.index) return false;
+  if (!branding) return false;
+  catalogState.liveBranding = branding;
+  if (!catalogState.index) return true;
   const prev = catalogState.index.settings || {};
   const merged = { ...prev, ...branding };
   if (brandingFingerprint(prev) === brandingFingerprint(merged)) return false;
@@ -154,7 +159,8 @@ async function persistSnapshot() {
     indexV: catalogState.indexV,
     stock: catalogState.stock,
     stockV: catalogState.stockV,
-    lastSync: catalogState.lastSync
+    lastSync: catalogState.lastSync,
+    liveBranding: catalogState.liveBranding
   });
 }
 
@@ -234,6 +240,7 @@ export async function refreshBranding() {
   if (typeof window !== 'undefined' && window.__pfBranding) {
     const branding = window.__pfBranding;
     delete window.__pfBranding;
+    catalogState.liveBranding = branding;
     if (branding && catalogState.index) {
       const changed = applyBrandingSettings(branding);
       if (changed) await persistSnapshot();
@@ -279,7 +286,10 @@ export async function ensureSettings({ force = false } = {}) {
 }
 
 export function getCachedSettings() {
-  return catalogState.index?.settings || null;
+  const base = catalogState.index?.settings;
+  const live = catalogState.liveBranding;
+  if (live) return { ...(base || {}), ...live };
+  return base || null;
 }
 
 export function getCachedMeta() {

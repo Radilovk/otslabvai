@@ -374,7 +374,8 @@ async function init() {
   await cache.hydrateLocalCache();
   const hasCatalog = !!getFiltersFromCache();
 
-  const pageInit = initPortfolioPage({ active: 'catalog', showMobileBar: true });
+  // Apply live hero branding before catalog sync can load stale index.settings.
+  await initPortfolioPage({ active: 'catalog', showMobileBar: true });
 
   if (hasCatalog) {
     const filters = getFiltersFromCache();
@@ -392,8 +393,6 @@ async function init() {
     bindEvents();
     loadCatalog();
   }
-
-  await pageInit;
 
   try {
     onCatalogUpdated(() => {

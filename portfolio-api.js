@@ -1183,7 +1183,7 @@ function buildOrderStatusLabel(order) {
 
 async function handleGetSettings(env) {
   const settings = await getSettings(env);
-  return cachedResponse(settings, 300);
+  return jsonResponse(settings, 200, { 'Cache-Control': 'private, no-store' });
 }
 
 /** Public site branding only — no markup / B2B fields. */
