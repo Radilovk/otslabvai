@@ -29,8 +29,7 @@ binding = "PAGE_CONTENT"
 id = "d220db696e414b7cb3da2b19abd53d0f"
 preview_id = "d220db696e414b7cb3da2b19abd53d0f"
 
-# Route apex to the Worker (www was configured manually; apex returned 522 without this).
-# Uses zone routes instead of custom_domain to avoid DNS record conflicts on @.
+# Apex custom domain — creates DNS + TLS (required after prior deploy removed @ records).
 [[routes]]
-pattern = "biocode-bg.com/*"
-zone_name = "biocode-bg.com"
+pattern = "biocode-bg.com"
+custom_domain = true
