@@ -300,5 +300,19 @@ jobs:
               fail=1
             fi
           done
+          hero_code=$(curl -s -o /dev/null -w "%{http_code}" "${BASE}/images/portfolio-hero.jpg")
+          echo "/images/portfolio-hero.jpg → HTTP ${hero_code}"
+          if [ "$hero_code" != "200" ]; then
+            echo "ERROR: portfolio hero image must be served as a static asset"
+            fail=1
+          fi
+          for host in biocode-bg.com www.biocode-bg.com; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 "https://${host}/")
+            echo "https://${host}/ → HTTP ${code}"
+            if [ "$code" != "200" ]; then
+              echo "ERROR: ${host} must return 200 (522 = apex custom domain missing in wrangler.toml)"
+              fail=1
+            fi
+          done
           if [ "$fail" -ne 0 ]; then exit 1; fi
           echo "Portfolio API routes are live on ${BASE}"

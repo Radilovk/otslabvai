@@ -27,3 +27,13 @@ preview_id = "b2891ffe523048ae87cf9c4549d6ab49"
 binding = "PAGE_CONTENT"
 id = "d220db696e414b7cb3da2b19abd53d0f"
 preview_id = "d220db696e414b7cb3da2b19abd53d0f"
+
+# Custom domains — wrangler creates DNS + TLS on deploy (zone must be on this CF account).
+# www.biocode-bg.com was added manually; apex biocode-bg.com returned 522 without this entry.
+[[routes]]
+pattern = "biocode-bg.com"
+custom_domain = true
+
+[[routes]]
+pattern = "www.biocode-bg.com"
+custom_domain = true

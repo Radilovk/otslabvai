@@ -17,9 +17,13 @@ jest.config.js
 # Binary and media files
 *.zip
 *.pdf
-*.jpg
 *.webm
 *.xlsx
+
+# JPGs: exclude bulk product uploads, but allow site hero/banner assets in images/
+*.jpg
+!images/
+images/products/
 
 # Documentation and notes
 *.md
