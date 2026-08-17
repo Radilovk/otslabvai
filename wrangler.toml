@@ -29,7 +29,29 @@ binding = "PAGE_CONTENT"
 id = "d220db696e414b7cb3da2b19abd53d0f"
 preview_id = "d220db696e414b7cb3da2b19abd53d0f"
 
-# Apex custom domain — creates DNS + TLS (required after prior deploy removed @ records).
+# Wrangler REPLACES the full worker trigger set on deploy — list every host here.
+# custom_domain = wrangler manages DNS (only where records were lost).
+# zone routes = attach worker without touching existing DNS records.
+[[routes]]
+pattern = "daotslabna.com"
+custom_domain = true
+
+[[routes]]
+pattern = "www.daotslabna.com"
+custom_domain = true
+
 [[routes]]
 pattern = "biocode-bg.com"
 custom_domain = true
+
+[[routes]]
+pattern = "www.biocode-bg.com"
+custom_domain = true
+
+[[routes]]
+pattern = "life-protocols.com/*"
+zone_name = "life-protocols.com"
+
+[[routes]]
+pattern = "www.life-protocols.com/*"
+zone_name = "life-protocols.com"
