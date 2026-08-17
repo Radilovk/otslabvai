@@ -20,9 +20,7 @@ jest.config.js
 *.webm
 *.xlsx
 
-# JPGs: exclude bulk product uploads, but allow site hero/banner assets in images/
-*.jpg
-!images/
+# Product image scans (served from CDN/GitHub); keep hero/banner JPGs deployable
 images/products/
 
 # Documentation and notes
