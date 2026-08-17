@@ -127,8 +127,22 @@ function destroyCarousel() {
 
 function updateHeroCopy(config, slideIndex = 0) {
   const slide = config.slides[slideIndex] || config.slides[0];
-  setTextIfChanged(document.getElementById('hero-title'), slide?.title || config.title);
-  setTextIfChanged(document.getElementById('hero-subtitle'), slide?.subtitle || config.subtitle);
+  const title = slide?.title || config.title;
+  const subtitle = slide?.subtitle || config.subtitle;
+  const inner = document.querySelector('.pf-hero-inner');
+  const apply = () => {
+    setTextIfChanged(document.getElementById('hero-title'), title);
+    setTextIfChanged(document.getElementById('hero-subtitle'), subtitle);
+  };
+  if (!inner || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    apply();
+    return;
+  }
+  inner.classList.add('pf-hero-copy--fade');
+  window.setTimeout(() => {
+    apply();
+    inner.classList.remove('pf-hero-copy--fade');
+  }, 220);
 }
 
 function renderSingleHero(media, config) {

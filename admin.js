@@ -2596,7 +2596,7 @@ function handleAction(action, target, id) {
                 } finally {
                     // Reset button state
                     target.disabled = false;
-                    target.textContent = 'Upload';
+                    target.textContent = target.dataset.defaultLabel || 'Качи';
                     // Clear file input
                     fileInput.value = '';
                 }
@@ -2662,7 +2662,7 @@ function handleAction(action, target, id) {
                 } finally {
                     // Reset button state
                     target.disabled = false;
-                    target.textContent = 'Upload';
+                    target.textContent = target.dataset.defaultLabel || 'Качи';
                     // Clear file input
                     fileInput.value = '';
                 }
@@ -2680,14 +2680,8 @@ function handleAction(action, target, id) {
             }
             
             const targetFieldPath = target.dataset.targetField;
-            // Try to find the input in the same form-group first, then the closest
-            // nested-sub-item (for dynamic templates), then the modal form
-            const formGroup = target.closest('.form-group');
-            const nestedSubItem = target.closest('.nested-sub-item');
-            const modalForm = target.closest('.modal-form');
-            const inputElement = (formGroup && formGroup.querySelector(`[data-field="${targetFieldPath}"]`)) ||
-                                (nestedSubItem && nestedSubItem.querySelector(`[data-field="${targetFieldPath}"]`)) ||
-                                (modalForm && modalForm.querySelector(`[data-field="${targetFieldPath}"]`));
+            const container = target.closest('.form-group, .nested-sub-item, .modal-form, .pf-hero-slide-url-row');
+            const inputElement = container?.querySelector(`[data-field="${targetFieldPath}"]`);
             
             if (!inputElement) {
                 showNotification('Грешка: Полето за изображение не е намерено', 'error');
@@ -2737,7 +2731,7 @@ function handleAction(action, target, id) {
                 } finally {
                     // Reset button state
                     target.disabled = false;
-                    target.textContent = 'Upload';
+                    target.textContent = target.dataset.defaultLabel || 'Качи';
                     // Clear file input
                     fileInput.value = '';
                 }
@@ -5266,6 +5260,7 @@ function initPortfolioHeroAdminHandlers() {
         const btn = e.target.closest('[data-action]');
         if (!btn || !list.contains(btn)) return;
         const action = btn.dataset.action;
+        if (!['pf-hero-slide-remove', 'pf-hero-slide-up', 'pf-hero-slide-down'].includes(action)) return;
         const row = btn.closest('.pf-hero-slide-row');
         if (!row) return;
         const slides = readPortfolioHeroSlidesFromDom();
@@ -5342,7 +5337,7 @@ function renderPortfolioSettings() {
     const standardMode = pp.standard_mode || 'below_regular';
     const heroMode = s.hero_mode === 'carousel' ? 'carousel' : 'single';
     const heroSlides = normalizePortfolioHeroSlides(s);
-    const heroInterval = Number(s.hero_carousel_interval) || 6;
+    const heroInterval = Math.round((Number(s.hero_carousel_interval) || 6000) / 1000);
 
     container.innerHTML = `
         <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
