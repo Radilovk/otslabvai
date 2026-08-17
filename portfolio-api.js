@@ -1207,9 +1207,26 @@ export async function getPublicSiteSettings(env) {
   return buildPublicSiteSettings(await getSettings(env));
 }
 
+function normalizeHeroImagePath(url) {
+  const p = String(url || '').trim();
+  if (!p) return '';
+  const raw = p.match(/raw\.githubusercontent\.com\/Radilovk\/otslabvai\/main\/(images\/[^?#]+)/i);
+  if (raw) return raw[1];
+  if (p.startsWith('/images/')) return p.slice(1);
+  return p;
+}
+
 async function handleSaveSettings(request, env) {
   const incoming = await request.json();
   const current = await getSettings(env);
+  const heroSlides = Array.isArray(incoming.hero_slides)
+    ? incoming.hero_slides
+      .map((s, i) => ({
+        id: s?.id || `slide-${i}`,
+        image: normalizeHeroImagePath(s?.image)
+      }))
+      .filter((s) => s.image)
+    : (current.hero_slides || []);
   const merged = {
     ...current,
     site_name: incoming.site_name ?? current.site_name,
@@ -1222,10 +1239,10 @@ async function handleSaveSettings(request, env) {
     reseller_phone: incoming.reseller_phone ?? current.reseller_phone,
     reseller_address: incoming.reseller_address ?? current.reseller_address,
     reseller_delivery_note: incoming.reseller_delivery_note ?? current.reseller_delivery_note,
-    hero_image: incoming.hero_image ?? current.hero_image,
+    hero_image: normalizeHeroImagePath(heroSlides[0]?.image ?? incoming.hero_image ?? current.hero_image),
     hero_title: incoming.hero_title ?? current.hero_title,
-    hero_mode: incoming.hero_mode ?? current.hero_mode ?? 'single',
-    hero_slides: Array.isArray(incoming.hero_slides) ? incoming.hero_slides : (current.hero_slides || []),
+    hero_mode: heroSlides.length > 1 ? 'carousel' : 'single',
+    hero_slides: heroSlides,
     hero_carousel_interval: Number(incoming.hero_carousel_interval ?? current.hero_carousel_interval) || 6000,
     footer: incoming.footer ?? current.footer,
     pricing_policy: incoming.pricing_policy

@@ -2681,7 +2681,7 @@ function handleAction(action, target, id) {
             }
 
             const targetFieldPath = target.dataset.targetField;
-            const container = target.closest('.form-group, .nested-sub-item, .modal-form, .pf-hero-slide-url-row');
+            const container = target.closest('.form-group, .nested-sub-item, .modal-form, .pf-hero-slide-row');
             const inputElement = container?.querySelector(`[data-field="${targetFieldPath}"]`)
                 || container?.querySelector('.pf-hero-slide-image');
 
@@ -2720,14 +2720,13 @@ function handleAction(action, target, id) {
                     if (slideRow) {
                         const thumb = slideRow.querySelector('.pf-hero-slide-thumb img');
                         if (thumb) thumb.src = previewUrl;
-                        refreshPfHeroAdminPreview();
                     }
 
                     setUnsavedChanges(true);
 
                     showNotification(
                         uploadFolder === 'hero'
-                            ? 'Банерът е качен. Натиснете „Запази настройките“.'
+                            ? 'Банерът е в репото (images/). Запази настройките. На сайта — след deploy.'
                             : 'Изображението е качено успешно!',
                         'success'
                     );
@@ -4101,7 +4100,7 @@ async function uploadAdminImage(file, options = {}) {
             Accept: 'application/vnd.github.v3+json',
         },
         body: JSON.stringify({
-            message: `Upload image: ${finalName}`,
+            message: `[skip ci] Upload image: ${finalName}`,
             content,
             branch,
         }),
@@ -5120,218 +5119,68 @@ async function updatePromoCodeStatus(promoId, isActive, scope = 'main') {
 //          9. ИНИЦИАЛИЗАЦИЯ НА ПРИЛОЖЕНИЕТО
 // =======================================================
 
+function uploadFolderForAdminField(fieldPath) {
+    return fieldPath === 'hero_slide_image' || fieldPath === 'hero_image' ? 'hero' : 'products';
+}
+
 // =======================================================
 //          PORTFOLIO ADMIN
 // =======================================================
 
 function pfHeroSlideId() {
-    return `slide-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    return `slide-${Date.now().toString(36)}`;
 }
 
-const PORTFOLIO_REPO_RAW_BASE = 'https://raw.githubusercontent.com/Radilovk/otslabvai/main';
+const HERO_RAW = 'https://raw.githubusercontent.com/Radilovk/otslabvai/main';
 
-function portfolioImageUrl(path) {
+/** Admin thumb before deploy: raw GitHub. Saved value stays repo path (images/...). */
+function heroAdminPreviewUrl(path) {
     const p = String(path || '').trim();
     if (!p) return '';
     if (/^https?:\/\//i.test(p)) return p;
     const rel = p.replace(/^\//, '');
-    // Newly uploaded repo images are on GitHub before the next worker deploy.
-    if (rel.startsWith('images/')) return `${PORTFOLIO_REPO_RAW_BASE}/${rel}`;
-    const base = String(API_URL || '').replace(/\/$/, '');
-    return `${base}/${rel}`;
+    return rel.startsWith('images/') ? `${HERO_RAW}/${rel}` : (p.startsWith('/') ? p : `/${rel}`);
 }
 
-function uploadFolderForAdminField(fieldPath) {
-    if (fieldPath === 'hero_slide_image' || fieldPath === 'hero_image' || fieldPath === 'background_image') {
-        return 'hero';
-    }
-    if (fieldPath.startsWith('hero_images.') || fieldPath.startsWith('logo_url')) return 'hero';
-    if (fieldPath === 'about_us_page.main_image' || fieldPath === 'icon_url') return 'hero';
-    return 'products';
+function heroSlidesFromSettings(s) {
+    const slides = (Array.isArray(s?.hero_slides) ? s.hero_slides : [])
+        .map((sl, i) => ({ id: sl?.id || `slide-${i}`, image: String(sl?.image || '').trim() }))
+        .filter((sl) => sl.image);
+    if (slides.length) return slides;
+    return [{ id: 'default', image: String(s?.hero_image || 'images/portfolio-hero.jpg').trim() }];
 }
 
-function normalizePortfolioHeroSlides(settings) {
-    const s = settings || {};
-    const slides = Array.isArray(s.hero_slides)
-        ? s.hero_slides.filter((sl) => sl && String(sl.image || '').trim())
-        : [];
-    if (slides.length) {
-        return slides.map((sl, i) => ({
-            id: sl.id || `slide-${i}`,
-            image: String(sl.image).trim(),
-            title: String(sl.title || '').trim(),
-            subtitle: String(sl.subtitle || '').trim()
-        }));
-    }
-    const fallback = String(s.hero_image || 'images/portfolio-hero.jpg').trim();
-    return [{ id: pfHeroSlideId(), image: fallback, title: '', subtitle: '' }];
-}
-
-function renderPfHeroSlideRow(slide, index, total) {
-    const img = escAdminHtml(slide.image || 'images/portfolio-hero.jpg');
-    const imgSrc = escAdminHtml(portfolioImageUrl(slide.image || 'images/portfolio-hero.jpg'));
-    const title = escAdminHtml(slide.title || '');
-    const subtitle = escAdminHtml(slide.subtitle || '');
+function renderPfHeroSlideRow(slide, total) {
     return `
-        <div class="pf-hero-slide-row" data-slide-id="${escAdminHtml(slide.id)}" draggable="true">
-            <div class="pf-hero-slide-grip" title="Премести">⋮⋮</div>
-            <div class="pf-hero-slide-thumb">
-                <img src="${imgSrc}" alt="" loading="lazy">
-                <span class="pf-hero-slide-num">${index + 1}</span>
-            </div>
-            <div class="pf-hero-slide-fields">
-                <div class="pf-hero-slide-url-row">
-                    <input type="text" class="pf-hero-slide-image" data-field="hero_slide_image" value="${img}" placeholder="images/hero.jpg или URL">
-                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_slide_image">Качи</button>
-                </div>
-                <input type="text" class="pf-hero-slide-title" placeholder="Заглавие (по избор — празно = глобално)" value="${title}">
-                <input type="text" class="pf-hero-slide-subtitle" placeholder="Подзаглавие (по избор)" value="${subtitle}">
-            </div>
-            <div class="pf-hero-slide-actions">
-                <button type="button" class="btn btn-sm btn-secondary" data-action="pf-hero-slide-up" ${index === 0 ? 'disabled' : ''} title="Нагоре">↑</button>
-                <button type="button" class="btn btn-sm btn-secondary" data-action="pf-hero-slide-down" ${index >= total - 1 ? 'disabled' : ''} title="Надолу">↓</button>
-                <button type="button" class="btn btn-sm btn-danger" data-action="pf-hero-slide-remove" ${total <= 1 ? 'disabled' : ''} title="Премахни">✕</button>
-            </div>
+        <div class="pf-hero-slide-row" data-slide-id="${escAdminHtml(slide.id)}">
+            <div class="pf-hero-slide-thumb"><img src="${escAdminHtml(heroAdminPreviewUrl(slide.image))}" alt=""></div>
+            <input type="text" class="pf-hero-slide-image" data-field="hero_slide_image" value="${escAdminHtml(slide.image)}" placeholder="URL">
+            <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="hero_slide_image">Качи</button>
+            <button type="button" class="btn btn-sm btn-danger" data-action="pf-hero-slide-remove" ${total <= 1 ? 'disabled' : ''}>✕</button>
         </div>`;
 }
 
 function readPortfolioHeroSlidesFromDom() {
     return [...document.querySelectorAll('.pf-hero-slide-row')].map((row) => ({
         id: row.dataset.slideId || pfHeroSlideId(),
-        image: row.querySelector('.pf-hero-slide-image')?.value?.trim() || '',
-        title: row.querySelector('.pf-hero-slide-title')?.value?.trim() || '',
-        subtitle: row.querySelector('.pf-hero-slide-subtitle')?.value?.trim() || ''
+        image: row.querySelector('.pf-hero-slide-image')?.value?.trim() || ''
     })).filter((s) => s.image);
-}
-
-function refreshPfHeroAdminPreview() {
-    const preview = document.getElementById('pf-hero-live-preview');
-    if (!preview) return;
-    const mode = document.querySelector('input[name="pf-hero-mode"]:checked')?.value || 'single';
-    const slides = readPortfolioHeroSlidesFromDom();
-    const valid = slides.filter((s) => s.image);
-    preview.classList.toggle('pf-hero-preview--carousel', mode === 'carousel' && valid.length > 1);
-    if (!valid.length) {
-        preview.innerHTML = '<div class="pf-hero-preview-empty">Добавете поне едно изображение</div>';
-        return;
-    }
-    if (mode === 'carousel' && valid.length > 1) {
-        preview.innerHTML = valid.map((s, i) => `
-                <div class="pf-hero-preview-slide${i === 0 ? ' is-active' : ''}" style="background-image:url('${escAdminHtml(portfolioImageUrl(s.image))}')">
-                    <div class="pf-hero-preview-caption">
-                        <strong>${escAdminHtml(s.title || document.getElementById('pf-hero-title')?.value || 'Каталог добавки')}</strong>
-                        <span>${escAdminHtml(s.subtitle || document.getElementById('pf-site-slogan')?.value || '')}</span>
-                    </div>
-                </div>`).join('');
-        let idx = 0;
-        clearInterval(preview._carouselTimer);
-        preview._carouselTimer = setInterval(() => {
-            const slideEls = preview.querySelectorAll('.pf-hero-preview-slide');
-            if (!slideEls.length) return;
-            idx = (idx + 1) % slideEls.length;
-            slideEls.forEach((el, j) => el.classList.toggle('is-active', j === idx));
-        }, 3500);
-        return;
-    }
-    clearInterval(preview._carouselTimer);
-    const s = valid[0];
-    preview.innerHTML = `
-        <div class="pf-hero-preview-slide is-active" style="background-image:url('${escAdminHtml(portfolioImageUrl(s.image))}')">
-            <div class="pf-hero-preview-caption">
-                <strong>${escAdminHtml(s.title || document.getElementById('pf-hero-title')?.value || 'Каталог добавки')}</strong>
-                <span>${escAdminHtml(s.subtitle || document.getElementById('pf-site-slogan')?.value || '')}</span>
-            </div>
-        </div>`;
-}
-
-function rerenderPfHeroSlidesList() {
-    const list = document.getElementById('pf-hero-slides-list');
-    if (!list) return;
-    const slides = readPortfolioHeroSlidesFromDom();
-    if (!slides.length) slides.push({ id: pfHeroSlideId(), image: '', title: '', subtitle: '' });
-    list.innerHTML = slides.map((s, i) => renderPfHeroSlideRow(s, i, slides.length)).join('');
-    initPortfolioHeroAdminHandlers();
-    refreshPfHeroAdminPreview();
 }
 
 function initPortfolioHeroAdminHandlers() {
     const list = document.getElementById('pf-hero-slides-list');
     if (!list || list.dataset.bound === '1') return;
     list.dataset.bound = '1';
-
     list.addEventListener('input', (e) => {
-        if (e.target.matches('.pf-hero-slide-image')) {
-            const thumb = e.target.closest('.pf-hero-slide-row')?.querySelector('.pf-hero-slide-thumb img');
-            if (thumb && e.target.value) thumb.src = portfolioImageUrl(e.target.value);
-        }
-        refreshPfHeroAdminPreview();
+        if (!e.target.matches('.pf-hero-slide-image')) return;
+        const thumb = e.target.closest('.pf-hero-slide-row')?.querySelector('.pf-hero-slide-thumb img');
+        if (thumb && e.target.value) thumb.src = heroAdminPreviewUrl(e.target.value);
     });
-
     list.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-action]');
-        if (!btn || !list.contains(btn)) return;
-        const action = btn.dataset.action;
-        if (!['pf-hero-slide-remove', 'pf-hero-slide-up', 'pf-hero-slide-down'].includes(action)) return;
-        const row = btn.closest('.pf-hero-slide-row');
-        if (!row) return;
-        const slides = readPortfolioHeroSlidesFromDom();
-        const idx = slides.findIndex((s) => s.id === row.dataset.slideId);
-        if (action === 'pf-hero-slide-remove' && slides.length > 1) {
-            slides.splice(idx, 1);
-            list.innerHTML = slides.map((s, i) => renderPfHeroSlideRow(s, i, slides.length)).join('');
-            list.dataset.bound = '0';
-            initPortfolioHeroAdminHandlers();
-            refreshPfHeroAdminPreview();
-        } else if (action === 'pf-hero-slide-up' && idx > 0) {
-            [slides[idx - 1], slides[idx]] = [slides[idx], slides[idx - 1]];
-            list.innerHTML = slides.map((s, i) => renderPfHeroSlideRow(s, i, slides.length)).join('');
-            list.dataset.bound = '0';
-            initPortfolioHeroAdminHandlers();
-            refreshPfHeroAdminPreview();
-        } else if (action === 'pf-hero-slide-down' && idx < slides.length - 1) {
-            [slides[idx], slides[idx + 1]] = [slides[idx + 1], slides[idx]];
-            list.innerHTML = slides.map((s, i) => renderPfHeroSlideRow(s, i, slides.length)).join('');
-            list.dataset.bound = '0';
-            initPortfolioHeroAdminHandlers();
-            refreshPfHeroAdminPreview();
-        }
-    });
-
-    let dragId = null;
-    list.addEventListener('dragstart', (e) => {
-        const row = e.target.closest('.pf-hero-slide-row');
-        if (!row) return;
-        dragId = row.dataset.slideId;
-        row.classList.add('is-dragging');
-        e.dataTransfer.effectAllowed = 'move';
-    });
-    list.addEventListener('dragend', (e) => {
-        e.target.closest('.pf-hero-slide-row')?.classList.remove('is-dragging');
-        dragId = null;
-    });
-    list.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const row = e.target.closest('.pf-hero-slide-row');
-        if (row) row.classList.add('is-drag-over');
-    });
-    list.addEventListener('dragleave', (e) => {
-        e.target.closest('.pf-hero-slide-row')?.classList.remove('is-drag-over');
-    });
-    list.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const targetRow = e.target.closest('.pf-hero-slide-row');
-        if (!targetRow || !dragId || targetRow.dataset.slideId === dragId) return;
-        targetRow.classList.remove('is-drag-over');
-        const slides = readPortfolioHeroSlidesFromDom();
-        const from = slides.findIndex((s) => s.id === dragId);
-        const to = slides.findIndex((s) => s.id === targetRow.dataset.slideId);
-        if (from < 0 || to < 0) return;
-        const [moved] = slides.splice(from, 1);
-        slides.splice(to, 0, moved);
-        list.innerHTML = slides.map((s, i) => renderPfHeroSlideRow(s, i, slides.length)).join('');
-        list.dataset.bound = '0';
-        initPortfolioHeroAdminHandlers();
-        refreshPfHeroAdminPreview();
+        const btn = e.target.closest('[data-action="pf-hero-slide-remove"]');
+        if (!btn || btn.disabled) return;
+        if (readPortfolioHeroSlidesFromDom().length <= 1) return;
+        btn.closest('.pf-hero-slide-row')?.remove();
     });
 }
 
@@ -5346,8 +5195,7 @@ function renderPortfolioSettings() {
         : 'Никога';
     const count = s.last_sync_count ? s.last_sync_count.toLocaleString('bg-BG') : '—';
     const standardMode = pp.standard_mode || 'below_regular';
-    const heroMode = s.hero_mode === 'carousel' ? 'carousel' : 'single';
-    const heroSlides = normalizePortfolioHeroSlides(s);
+    const heroSlides = heroSlidesFromSettings(s);
     const heroInterval = Math.round((Number(s.hero_carousel_interval) || 6000) / 1000);
 
     container.innerHTML = `
@@ -5426,47 +5274,25 @@ function renderPortfolioSettings() {
                 <input type="text" id="pf-reseller-note" value="${escAdminHtml(s.reseller_delivery_note || '')}" style="width:100%;max-width:500px;padding:0.5rem;">
             </div>
         </div>
-        <div class="list-item pf-hero-admin-panel" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
-            <h3 style="margin-top:0;">Hero банер (каталог)</h3>
+        <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
+            <h3 style="margin-top:0;">Hero банер</h3>
             <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1rem;">
-                Единичен постоянен банер или няколко сменящи се с плавен преход. Качете снимки и вижте live преглед преди запис.
+                1 снимка = постоянен банер. 2+ = автоматична смяна. След качване натиснете „Запази настройките“.
             </p>
-            <div class="pf-hero-admin-grid">
-                <div class="pf-hero-admin-form">
-                    <fieldset class="pf-hero-mode-fieldset">
-                        <legend>Режим</legend>
-                        <label class="pf-hero-mode-opt">
-                            <input type="radio" name="pf-hero-mode" value="single" ${heroMode === 'single' ? 'checked' : ''}>
-                            <span>Единичен банер</span>
-                        </label>
-                        <label class="pf-hero-mode-opt">
-                            <input type="radio" name="pf-hero-mode" value="carousel" ${heroMode === 'carousel' ? 'checked' : ''}>
-                            <span>Сменящи се банери</span>
-                        </label>
-                    </fieldset>
-                    <div class="form-group" style="margin-top:1rem;">
-                        <label for="pf-hero-title">Глобално заглавие</label>
-                        <input type="text" id="pf-hero-title" value="${escAdminHtml(s.hero_title || 'Каталог добавки')}" style="width:100%;padding:0.5rem;">
-                    </div>
-                    <div class="form-group pf-hero-interval-wrap" style="margin-top:0.75rem;${heroMode === 'single' ? 'display:none' : ''}">
-                        <label for="pf-hero-interval">Интервал на смяна (секунди)</label>
-                        <input type="number" id="pf-hero-interval" min="3" max="30" step="1" value="${heroInterval}" style="width:100px;padding:0.5rem;">
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;margin-bottom:0.5rem;">
-                        <strong>Банери</strong>
-                        <button type="button" class="btn btn-sm btn-primary" id="pf-hero-add-slide">+ Добави банер</button>
-                    </div>
-                    <div id="pf-hero-slides-list" class="pf-hero-slides-list">
-                        ${heroSlides.map((sl, i) => renderPfHeroSlideRow(sl, i, heroSlides.length)).join('')}
-                    </div>
-                    <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:0.75rem;">
-                        При единичен режим се използва първият банер. При carousel — минимум 2 снимки. Влачете ⋮⋮ за пренареждане.
-                    </p>
-                </div>
-                <div class="pf-hero-admin-preview-wrap">
-                    <label>Live преглед</label>
-                    <div id="pf-hero-live-preview" class="pf-hero-live-preview"></div>
-                </div>
+            <div class="form-group">
+                <label for="pf-hero-title">Заглавие</label>
+                <input type="text" id="pf-hero-title" value="${escAdminHtml(s.hero_title || 'Каталог добавки')}" style="width:100%;padding:0.5rem;">
+            </div>
+            <div class="form-group" style="margin-top:0.75rem;">
+                <label for="pf-hero-interval">Интервал (секунди, при 2+ банера)</label>
+                <input type="number" id="pf-hero-interval" min="3" max="30" step="1" value="${heroInterval}" style="width:100px;padding:0.5rem;">
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin:1rem 0 0.5rem;">
+                <strong>Банери</strong>
+                <button type="button" class="btn btn-sm btn-primary" id="pf-hero-add-slide">+ Банер</button>
+            </div>
+            <div id="pf-hero-slides-list" class="pf-hero-slides-list">
+                ${heroSlides.map((sl) => renderPfHeroSlideRow(sl, heroSlides.length)).join('')}
             </div>
         </div>
         <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
@@ -5521,23 +5347,12 @@ function renderPortfolioSettings() {
         initPortfolioHeroAdminHandlers();
     }
     document.getElementById('pf-hero-add-slide')?.addEventListener('click', () => {
-        const slides = readPortfolioHeroSlidesFromDom();
-        slides.push({ id: pfHeroSlideId(), image: '', title: '', subtitle: '' });
-        slidesList.innerHTML = slides.map((s, i) => renderPfHeroSlideRow(s, i, slides.length)).join('');
-        slidesList.dataset.bound = '0';
-        initPortfolioHeroAdminHandlers();
-        refreshPfHeroAdminPreview();
+        const list = document.getElementById('pf-hero-slides-list');
+        if (!list) return;
+        const row = document.createElement('div');
+        row.innerHTML = renderPfHeroSlideRow({ id: pfHeroSlideId(), image: '' }, readPortfolioHeroSlidesFromDom().length + 1);
+        list.appendChild(row.firstElementChild);
     });
-    document.querySelectorAll('input[name="pf-hero-mode"]').forEach((radio) => {
-        radio.addEventListener('change', () => {
-            const wrap = document.querySelector('.pf-hero-interval-wrap');
-            if (wrap) wrap.style.display = radio.value === 'carousel' ? '' : 'none';
-            refreshPfHeroAdminPreview();
-        });
-    });
-    document.getElementById('pf-hero-title')?.addEventListener('input', refreshPfHeroAdminPreview);
-    document.getElementById('pf-site-slogan')?.addEventListener('input', refreshPfHeroAdminPreview);
-    refreshPfHeroAdminPreview();
 }
 
 async function syncPortfolioCatalog() {
@@ -5568,15 +5383,12 @@ async function savePortfolioSettings() {
     const current = portfolioSettingsData || {};
     const standardMode = document.querySelector('input[name="pf-standard-mode"]:checked')?.value || 'below_regular';
     const heroSlides = readPortfolioHeroSlidesFromDom();
-    const heroMode = document.querySelector('input[name="pf-hero-mode"]:checked')?.value || 'single';
-    const primaryImage = heroSlides[0]?.image || current.hero_image || 'images/portfolio-hero.jpg';
     const payload = {
         global_markup_percent: Number(document.getElementById('pf-global-markup')?.value) || 30,
         site_name: document.getElementById('pf-site-name')?.value || 'Portfolio',
         site_slogan: document.getElementById('pf-site-slogan')?.value || '',
-        hero_image: primaryImage,
+        hero_image: heroSlides[0]?.image || current.hero_image || 'images/portfolio-hero.jpg',
         hero_title: document.getElementById('pf-hero-title')?.value || 'Каталог добавки',
-        hero_mode: heroMode,
         hero_slides: heroSlides,
         hero_carousel_interval: (Number(document.getElementById('pf-hero-interval')?.value) || 6) * 1000,
         reseller_name: document.getElementById('pf-reseller-name')?.value || '',
