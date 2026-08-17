@@ -25,4 +25,9 @@ describe('admin-auth', () => {
     expect(routeRequiresAdmin('/portfolio/validate-cart', 'POST')).toBe(false);
     expect(routeRequiresAdmin('/admin/login', 'POST')).toBe(false);
   });
+
+  test('routeRequiresAdmin protects portfolio image upload', () => {
+    expect(routeRequiresAdmin('/portfolio/upload-image', 'POST')).toBe(true);
+    expect(routeRequiresAdmin('/portfolio/upload-image', 'GET')).toBe(false);
+  });
 });

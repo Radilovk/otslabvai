@@ -2177,6 +2177,93 @@ async function handleApproveBatchOrder(request, env) {
   });
 }
 
+const GITHUB_IMAGE_REPO = { owner: 'Radilovk', repo: 'otslabvai', branch: 'main' };
+
+async function getGithubUploadToken(env) {
+  return env.GITHUB_API_TOKEN || await env.PAGE_CONTENT.get('api_token');
+}
+
+function bytesToBase64(bytes) {
+  const arr = new Uint8Array(bytes);
+  let binary = '';
+  for (let i = 0; i < arr.length; i += 1) binary += String.fromCharCode(arr[i]);
+  return btoa(binary);
+}
+
+/**
+ * Upload image bytes to GitHub repo (images/ or images/products/).
+ * @returns {Promise<{ url: string, preview_url: string }>}
+ */
+async function commitImageToGithub(env, bytes, folder, filename) {
+  const token = await getGithubUploadToken(env);
+  if (!token) throw new PortfolioError('GitHub token не е конфигуриран на сървъра.', 503);
+
+  const filepath = `${folder}/${filename}`.replace(/\/+/g, '/');
+  const apiUrl = `https://api.github.com/repos/${GITHUB_IMAGE_REPO.owner}/${GITHUB_IMAGE_REPO.repo}/contents/${filepath}`;
+
+  const response = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/vnd.github.v3+json',
+      'User-Agent': 'BiocodePortfolio/1.0',
+    },
+    body: JSON.stringify({
+      message: `Upload image: ${filename}`,
+      content: bytesToBase64(bytes),
+      branch: GITHUB_IMAGE_REPO.branch,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new PortfolioError(err.message || `GitHub upload failed (${response.status})`, 502);
+  }
+
+  const url = filepath;
+  const preview_url = `https://raw.githubusercontent.com/${GITHUB_IMAGE_REPO.owner}/${GITHUB_IMAGE_REPO.repo}/${GITHUB_IMAGE_REPO.branch}/${filepath}`;
+  return { url, preview_url };
+}
+
+/** POST /portfolio/upload-image — admin-only multipart upload (no client GitHub token). */
+async function handleUploadImage(request, env) {
+  const contentType = request.headers.get('content-type') || '';
+  if (!contentType.includes('multipart/form-data')) {
+    throw new PortfolioError('Очаква се multipart/form-data.', 400);
+  }
+
+  const form = await request.formData();
+  const file = form.get('file');
+  if (!file || typeof file.arrayBuffer !== 'function') {
+    throw new PortfolioError('Липсва файл.', 400);
+  }
+
+  const kind = String(form.get('folder') || 'hero').toLowerCase();
+  const folder = kind === 'products' ? 'images/products' : 'images';
+  const prefix = kind === 'products' ? 'product' : 'hero';
+
+  const bytes = await file.arrayBuffer();
+  if (bytes.byteLength > 2 * 1024 * 1024) {
+    throw new PortfolioError('Изображението е твърде голямо (макс. 2MB).', 400);
+  }
+
+  const mime = String(file.type || '');
+  if (!mime.startsWith('image/')) {
+    throw new PortfolioError('Моля изберете изображение.', 400);
+  }
+
+  const rawName = String(file.name || 'image.jpg');
+  const extMatch = rawName.match(/\.(jpe?g|png|webp|gif)$/i);
+  const ext = extMatch ? extMatch[1].toLowerCase().replace('jpeg', 'jpg') : 'jpg';
+  const sanitized = rawName.replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 80);
+  const filename = `${prefix}-${Date.now()}-${sanitized || `upload.${ext}`}`;
+  const finalName = filename.includes('.') ? filename : `${filename}.${ext}`;
+
+  const result = await commitImageToGithub(env, bytes, folder, finalName);
+  return jsonResponse({ success: true, ...result });
+}
+
 /**
  * Main router for /portfolio/* paths.
  */
@@ -2188,6 +2275,9 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     if (path === '/portfolio/settings') {
       if (method === 'GET') return await handleGetSettings(env);
       if (method === 'POST') return await handleSaveSettings(request, env);
+    }
+    if (path === '/portfolio/upload-image' && method === 'POST') {
+      return await handleUploadImage(request, env);
     }
     if (path === '/portfolio/filters' && method === 'GET') {
       return await handleGetFilters(env);

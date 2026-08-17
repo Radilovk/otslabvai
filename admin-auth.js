@@ -131,6 +131,7 @@ export function routeRequiresAdmin(pathname, method) {
   if (path === '/portfolio/orders' && m === 'PUT') return true;
   if (path === '/portfolio/promo-codes' && (m === 'POST' || m === 'PUT' || m === 'DELETE')) return true;
   if (path === '/portfolio/settings' && m === 'POST') return true;
+  if (path === '/portfolio/upload-image' && m === 'POST') return true;
   if (path === '/contacts' && m === 'GET') return true;
   if (path === '/api/biocode-inquiries' && m === 'GET') return true;
   if (path === '/ai-settings' && (m === 'GET' || m === 'POST')) return true;

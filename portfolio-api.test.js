@@ -593,4 +593,53 @@ describe('Portfolio Fitness1 order approval', () => {
       global.fetch = originalFetch;
     }
   });
+
+  test('POST /portfolio/upload-image commits hero image to GitHub', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = async (url, opts) => {
+      if (String(url).includes('api.github.com/repos/')) {
+        expect(opts?.method).toBe('PUT');
+        const body = JSON.parse(opts.body);
+        expect(body.branch).toBe('main');
+        expect(body.content).toBeTruthy();
+        return {
+          ok: true,
+          json: async () => ({ content: { path: 'images/hero-test.jpg' } }),
+        };
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    };
+
+    try {
+      const env = { GITHUB_API_TOKEN: 'ghp_test' };
+      const form = new FormData();
+      form.append('file', new Blob(['fake-image'], { type: 'image/jpeg' }), 'banner.jpg');
+      form.append('folder', 'hero');
+      const request = new Request('https://example.com/portfolio/upload-image', {
+        method: 'POST',
+        body: form,
+      });
+      const res = await handlePortfolioRoute(request, env, new URL(request.url));
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.url).toMatch(/^images\/hero-/);
+      expect(data.preview_url).toContain('raw.githubusercontent.com/Radilovk/otslabvai/main/');
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
+  test('POST /portfolio/upload-image rejects missing GitHub token', async () => {
+    const form = new FormData();
+    form.append('file', new Blob(['x'], { type: 'image/png' }), 'x.png');
+    const request = new Request('https://example.com/portfolio/upload-image', {
+      method: 'POST',
+      body: form,
+    });
+    const res = await handlePortfolioRoute(request, { PAGE_CONTENT: { get: async () => null } }, new URL(request.url));
+    expect(res.status).toBe(503);
+    const data = await res.json();
+    expect(data.error).toMatch(/GitHub token/i);
+  });
 });
