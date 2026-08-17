@@ -1,5 +1,6 @@
 (function () {
   var WORKER_API = 'https://port.radilov-k.workers.dev';
+  var GITHUB_RAW = 'https://raw.githubusercontent.com/Radilovk/otslabvai/main';
 
   function apiUrl() {
     var host = location.hostname;
@@ -8,6 +9,15 @@
     }
     if (host.endsWith('.workers.dev')) return location.origin;
     return WORKER_API;
+  }
+
+  function resolveHero(path) {
+    var p = String(path || '').trim();
+    if (!p) return '';
+    if (/^https?:\/\//i.test(p)) return p;
+    if (p.charAt(0) === '/') p = p.slice(1);
+    if (p.indexOf('images/') === 0) return GITHUB_RAW + '/' + p;
+    return p;
   }
 
   try {
@@ -36,26 +46,20 @@
 
   if (branding) {
     window.__pfBranding = branding;
-    var heroImg = branding.hero_image;
+    var heroImg = resolveHero(branding.hero_image);
     if (branding.hero_mode === 'carousel' && Array.isArray(branding.hero_slides)) {
       for (var i = 0; i < branding.hero_slides.length; i++) {
         var slide = branding.hero_slides[i];
-        if (slide && slide.image) { heroImg = slide.image; break; }
+        if (slide && slide.image) { heroImg = resolveHero(slide.image); break; }
       }
     }
     if (heroImg) {
       document.documentElement.setAttribute('data-pf-hero', heroImg);
-      try { localStorage.setItem('pf-hero-src', heroImg); } catch (e) { /* ignore */ }
       var link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'image';
       link.href = heroImg;
       document.head.appendChild(link);
     }
-  } else {
-    try {
-      var cached = localStorage.getItem('pf-hero-src');
-      if (cached) document.documentElement.setAttribute('data-pf-hero', cached);
-    } catch (e) { /* ignore */ }
   }
 })();

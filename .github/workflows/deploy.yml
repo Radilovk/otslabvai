@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - 'cursor/**'
+    paths-ignore:
+      - 'images/**'
   workflow_dispatch:
 
 env:

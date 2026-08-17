@@ -4,6 +4,7 @@
 
 // API Endpoint
 import { API_URL } from './config.js';
+import { resolveHeroImageUrl } from './hero-image-url.js';
 
 const ADMIN_TOKEN_KEY = 'admin_auth_token';
 const nativeFetch = window.fetch.bind(window);
@@ -4101,7 +4102,7 @@ async function uploadAdminImage(file, options = {}) {
             Accept: 'application/vnd.github.v3+json',
         },
         body: JSON.stringify({
-            message: `Upload image: ${finalName}`,
+            message: `[skip ci] Upload image: ${finalName}`,
             content,
             branch,
         }),
@@ -4114,7 +4115,7 @@ async function uploadAdminImage(file, options = {}) {
     }
 
     const previewUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filepath}`;
-    return { url: filepath, previewUrl };
+    return { url: previewUrl, previewUrl };
 }
 
 /** @deprecated Use uploadAdminImage — kept as alias for product editors */
@@ -5128,17 +5129,8 @@ function pfHeroSlideId() {
     return `slide-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-const PORTFOLIO_REPO_RAW_BASE = 'https://raw.githubusercontent.com/Radilovk/otslabvai/main';
-
 function portfolioImageUrl(path) {
-    const p = String(path || '').trim();
-    if (!p) return '';
-    if (/^https?:\/\//i.test(p)) return p;
-    const rel = p.replace(/^\//, '');
-    // Newly uploaded repo images are on GitHub before the next worker deploy.
-    if (rel.startsWith('images/')) return `${PORTFOLIO_REPO_RAW_BASE}/${rel}`;
-    const base = String(API_URL || '').replace(/\/$/, '');
-    return `${base}/${rel}`;
+    return resolveHeroImageUrl(path);
 }
 
 function uploadFolderForAdminField(fieldPath) {

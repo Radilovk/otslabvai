@@ -1,7 +1,8 @@
 import { normalizeHeroConfig, getHeroPreloadImage } from './portfolio-hero.js';
+import { GITHUB_RAW_BASE } from './hero-image-url.js';
 
 describe('portfolio-hero', () => {
-  test('single mode uses hero_image when no slides', () => {
+  test('single mode resolves hero_image to raw GitHub URL', () => {
     const cfg = normalizeHeroConfig({
       hero_image: 'images/a.jpg',
       hero_title: 'Test',
@@ -9,8 +10,8 @@ describe('portfolio-hero', () => {
     });
     expect(cfg.mode).toBe('single');
     expect(cfg.slides).toHaveLength(1);
-    expect(cfg.slides[0].image).toBe('images/a.jpg');
-    expect(cfg.primaryImage).toBe('images/a.jpg');
+    expect(cfg.slides[0].image).toBe(`${GITHUB_RAW_BASE}/images/a.jpg`);
+    expect(cfg.primaryImage).toBe(`${GITHUB_RAW_BASE}/images/a.jpg`);
   });
 
   test('carousel mode requires 2+ slides', () => {
@@ -40,11 +41,11 @@ describe('portfolio-hero', () => {
     const url = getHeroPreloadImage({
       hero_mode: 'carousel',
       hero_slides: [
-        { image: 'first.jpg' },
-        { image: 'second.jpg' }
+        { image: 'images/first.jpg' },
+        { image: 'images/second.jpg' }
       ]
     });
-    expect(url).toBe('first.jpg');
+    expect(url).toBe(`${GITHUB_RAW_BASE}/images/first.jpg`);
   });
 
   test('clamps carousel interval', () => {
