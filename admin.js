@@ -56,6 +56,7 @@ async function ensureAdminSession() {
             return true;
         }
         sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+        sessionStorage.removeItem('github_upload_token');
     }
     showAdminLoginOverlay();
     return false;
@@ -83,6 +84,7 @@ function setupAdminLoginForm() {
 
     logoutBtn?.addEventListener('click', () => {
         sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+        sessionStorage.removeItem('github_upload_token');
         location.reload();
     });
 }
@@ -4024,31 +4026,93 @@ function setProperty(obj, path, value) {
 }
 
 // =======================================================
-//          8. IMAGE UPLOAD TO GITHUB
+//          8. IMAGE UPLOAD (direct to GitHub — no Worker proxy)
 // =======================================================
+// Admin uploads go browser → GitHub API. Worker only serves GET /api-token
+// (tiny JSON) after admin auth — avoids billing CPU/memory for image bytes.
+
+const GITHUB_IMAGE_REPO = { owner: 'Radilovk', repo: 'otslabvai', branch: 'main' };
+const GITHUB_UPLOAD_TOKEN_KEY = 'github_upload_token';
+
+function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result;
+            if (typeof result !== 'string') {
+                reject(new Error('Грешка при четене на файл'));
+                return;
+            }
+            resolve(result.split(',')[1]);
+        };
+        reader.onerror = () => reject(reader.error || new Error('Грешка при четене на файл'));
+        reader.readAsDataURL(file);
+    });
+}
+
+async function getGithubUploadTokenForAdmin() {
+    const cached = sessionStorage.getItem(GITHUB_UPLOAD_TOKEN_KEY);
+    if (cached) return cached;
+
+    const res = await fetch(`${API_URL}/api-token`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+        if (res.status === 401) throw new Error('Влезте в админ панела отново');
+        throw new Error(data.error || 'Грешка при получаване на upload credentials');
+    }
+    if (!data.api_token) {
+        throw new Error('GitHub token не е конфигуриран на сървъра (GITHUB_API_TOKEN)');
+    }
+    sessionStorage.setItem(GITHUB_UPLOAD_TOKEN_KEY, data.api_token);
+    return data.api_token;
+}
 
 /**
- * Upload image via Worker (admin auth + server GitHub token).
+ * Upload image directly to GitHub (admin token from Worker; file bytes never hit CF Worker).
  * @param {File} file
  * @param {{ folder?: 'hero' | 'products' }} options
  * @returns {Promise<{ url: string, previewUrl: string }>}
  */
 async function uploadAdminImage(file, options = {}) {
-    const folder = options.folder === 'products' ? 'products' : 'hero';
-    const form = new FormData();
-    form.append('file', file);
-    form.append('folder', folder);
+    const kind = options.folder === 'products' ? 'products' : 'hero';
+    const folder = kind === 'products' ? 'images/products' : 'images';
+    const prefix = kind === 'products' ? 'product' : 'hero';
 
-    const res = await fetch(`${API_URL}/portfolio/upload-image`, { method: 'POST', body: form });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-        throw new Error(data.error || `Грешка при качване (HTTP ${res.status})`);
+    const rawName = String(file.name || 'image.jpg');
+    const extMatch = rawName.match(/\.(jpe?g|png|webp|gif)$/i);
+    const ext = extMatch ? extMatch[1].toLowerCase().replace('jpeg', 'jpg') : 'jpg';
+    const sanitized = rawName.replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 80);
+    const filename = `${prefix}-${Date.now()}-${sanitized || `upload.${ext}`}`;
+    const finalName = filename.includes('.') ? filename : `${filename}.${ext}`;
+    const filepath = `${folder}/${finalName}`;
+
+    const token = await getGithubUploadTokenForAdmin();
+    const content = await readFileAsBase64(file);
+    const { owner, repo, branch } = GITHUB_IMAGE_REPO;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filepath}`;
+
+    const response = await nativeFetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/vnd.github.v3+json',
+        },
+        body: JSON.stringify({
+            message: `Upload image: ${finalName}`,
+            content,
+            branch,
+        }),
+    });
+
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        if (response.status === 401) sessionStorage.removeItem(GITHUB_UPLOAD_TOKEN_KEY);
+        throw new Error(err.message || `Грешка при качване в GitHub (${response.status})`);
     }
 
-    const url = data.url || '';
-    const previewUrl = data.preview_url || url;
-    if (!url) throw new Error('Сървърът не върна URL на изображението');
-    return { url, previewUrl };
+    const previewUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filepath}`;
+    return { url: filepath, previewUrl };
 }
 
 /** @deprecated Use uploadAdminImage — kept as alias for product editors */
