@@ -6,7 +6,6 @@
 import { filterIndex } from './portfolio-filter.js';
 import { enrichIndexEntry } from './portfolio-search.js';
 import { inferProductGoals, buildGoalFacetCounts } from './portfolio-goals.js';
-import { canonicalHeroImageUrl } from './hero-image-url.js';
 import {
   validatePortfolioCustomer,
   sanitizePortfolioCustomer,
@@ -1208,25 +1207,12 @@ export async function getPublicSiteSettings(env) {
   return buildPublicSiteSettings(await getSettings(env));
 }
 
-function normalizeStoredHeroSlides(slides) {
-  if (!Array.isArray(slides)) return [];
-  return slides
-    .map((s, i) => ({
-      id: s?.id || `slide-${i}`,
-      image: canonicalHeroImageUrl(s?.image),
-      title: String(s?.title || '').trim(),
-      subtitle: String(s?.subtitle || '').trim()
-    }))
-    .filter((s) => s.image);
-}
-
 async function handleSaveSettings(request, env) {
   const incoming = await request.json();
   const current = await getSettings(env);
   const heroSlides = Array.isArray(incoming.hero_slides)
-    ? normalizeStoredHeroSlides(incoming.hero_slides)
+    ? incoming.hero_slides.filter((s) => s?.image?.trim())
     : (current.hero_slides || []);
-  const heroImage = canonicalHeroImageUrl(incoming.hero_image ?? heroSlides[0]?.image ?? current.hero_image);
   const merged = {
     ...current,
     site_name: incoming.site_name ?? current.site_name,
@@ -1239,9 +1225,9 @@ async function handleSaveSettings(request, env) {
     reseller_phone: incoming.reseller_phone ?? current.reseller_phone,
     reseller_address: incoming.reseller_address ?? current.reseller_address,
     reseller_delivery_note: incoming.reseller_delivery_note ?? current.reseller_delivery_note,
-    hero_image: heroImage,
+    hero_image: heroSlides[0]?.image ?? incoming.hero_image ?? current.hero_image,
     hero_title: incoming.hero_title ?? current.hero_title,
-    hero_mode: incoming.hero_mode ?? current.hero_mode ?? 'single',
+    hero_mode: heroSlides.length > 1 ? 'carousel' : 'single',
     hero_slides: heroSlides,
     hero_carousel_interval: Number(incoming.hero_carousel_interval ?? current.hero_carousel_interval) || 6000,
     footer: incoming.footer ?? current.footer,

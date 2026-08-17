@@ -10,7 +10,7 @@
     "upload-static": "./upload-static-to-kv.sh",
     "upload-static-node": "node upload-static-files.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "test:portfolio": "node --experimental-vm-modules node_modules/.bin/jest hostname-routing.test.js hero-image-url.test.js portfolio-hero.test.js portfolio-api.test.js portfolio-sync-policy.test.js portfolio-pricing.test.js portfolio-order-validation.test.js portfolio-site-products.test.js portfolio-catalog-ui.test.js portfolio-goals.test.js portfolio-import.test.js portfolio-advisor-engine.test.js portfolio-advisor-config.test.js portfolio-advisor-compose.test.js portfolio-advisor-narration.test.js portfolio-advisor-catalog.test.js catalog-build.test.js catalog-api.test.js admin-auth.test.js checkout-shipping.test.js",
+    "test:portfolio": "node --experimental-vm-modules node_modules/.bin/jest hostname-routing.test.js portfolio-hero.test.js portfolio-api.test.js portfolio-sync-policy.test.js portfolio-pricing.test.js portfolio-order-validation.test.js portfolio-site-products.test.js portfolio-catalog-ui.test.js portfolio-goals.test.js portfolio-import.test.js portfolio-advisor-engine.test.js portfolio-advisor-config.test.js portfolio-advisor-compose.test.js portfolio-advisor-narration.test.js portfolio-advisor-catalog.test.js catalog-build.test.js catalog-api.test.js admin-auth.test.js checkout-shipping.test.js",
     "validate:worker": "npm run typecheck && npm run test:portfolio",
     "test:portfolio-e2e": "node e2e/portfolio-e2e.mjs",
     "test:portfolio-full": "node e2e/portfolio-full-e2e.mjs",

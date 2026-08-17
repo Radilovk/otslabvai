@@ -47,7 +47,7 @@
   if (branding) {
     window.__pfBranding = branding;
     var heroImg = resolveHero(branding.hero_image);
-    if (branding.hero_mode === 'carousel' && Array.isArray(branding.hero_slides)) {
+    if (Array.isArray(branding.hero_slides)) {
       for (var i = 0; i < branding.hero_slides.length; i++) {
         var slide = branding.hero_slides[i];
         if (slide && slide.image) { heroImg = resolveHero(slide.image); break; }
