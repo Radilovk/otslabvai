@@ -3,7 +3,7 @@
  * Предотвратява повтарящи се/аналогични продукти и опасно натрупване на дози.
  */
 
-import { productSearchText, productMatchesAnyKeyword } from './protocol-safety-rules.js';
+import { productSearchText, productMatchesAnyKeyword, profileHasPregnancyOrBreastfeeding } from './protocol-safety-rules.js';
 
 /** Групи, от които е позволен само 1 продукт в един стек */
 export const STACK_CONFLICT_GROUPS = {
@@ -223,8 +223,26 @@ export function getSlotMeta(slotId) {
 }
 
 export function getGoalSlotOrder(goalId, profile = {}) {
-  const base = GOAL_SLOT_ORDER[goalId] || GOAL_SLOT_ORDER.other;
-  const order = [...base];
+  let order = [...(GOAL_SLOT_ORDER[goalId] || GOAL_SLOT_ORDER.other)];
+
+  const cardioRisk = (profile.conditions || []).some((c) =>
+    ['hypertension', 'cardiovascular'].includes(c));
+  if (cardioRisk) {
+    order = order.filter((s) => s !== 'stimulant' && s !== 'fat_burner');
+    if (goalId === 'otshalvane' && !order.includes('metabolism')) {
+      order.unshift('metabolism');
+    }
+  }
+
+  const thyroidRisk = (profile.conditions || []).includes('thyroid')
+    || (profile.medications || []).includes('thyroid_meds');
+  if (thyroidRisk) {
+    order = order.filter((s) => s !== 'stimulant');
+  }
+
+  if (profileHasPregnancyOrBreastfeeding(profile)) {
+    order = order.filter((s) => s !== 'stimulant' && s !== 'fat_burner');
+  }
 
   if (profile.symptoms?.includes('joint_pain') && !order.includes('joint')) {
     order.splice(2, 0, 'joint');

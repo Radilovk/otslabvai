@@ -4,17 +4,31 @@
  */
 
 export const CONDITION_EXCLUSIONS = {
-  hypertension: ['йохимбин', 'yohimbine', 'ефедра', 'ephedra'],
+  hypertension: [
+    'йохимбин', 'yohimbine', 'ефедра', 'ephedra',
+    'thermogenic', 'термоген', 'fat burn', 'fat burner', 'изгар', 'бърн', 'burner',
+    'preworkout', 'pre-workout', 'предтрен', 'синефрин', 'synephrine',
+  ],
   diabetes: ['берберин', 'berberine', 'хром пиколинат', 'chromium'],
   thyroid: ['йод', 'iodine', 'келп', 'kelp', 'благородна ламинария'],
   autoimmune: ['ехинацея', 'echinacea', 'астрагал', 'astragalus'],
-  kidney: ['креатин', 'creatine', 'протеин', 'whey', 'казеин'],
+  kidney: [
+    'креатин', 'creatine', 'протеин', 'protein', 'whey', 'суроватк', 'казеин', 'casein',
+    'mrp', 'meal replacement', 'gainer', 'гейн', 'mass gainer',
+  ],
   liver: ['ниацин', 'niacin', 'желязо', 'iron'],
-  cardiovascular: ['йохимбин', 'yohimbine', 'ефедра'],
+  cardiovascular: [
+    'йохимбин', 'yohimbine', 'ефедра', 'ephedra',
+    'thermogenic', 'термоген', 'fat burn', 'fat burner', 'изгар', 'бърн', 'burner',
+    'preworkout', 'pre-workout', 'предтрен',
+  ],
 };
 
 export const MEDICATION_EXCLUSIONS = {
-  anticoagulants: ['омега-3', 'omega-3', 'рибено масло', 'fish oil', 'витамин e', 'vitamin e', 'куркумин', 'curcumin'],
+  anticoagulants: [
+    'омега-3', 'omega-3', 'omega 3', 'рибено масло', 'fish oil', 'krill', 'скарид',
+    'витамин e', 'vitamin e', 'куркумин', 'curcumin',
+  ],
   ssri: ['5-htp', 'триптофан', 'tryptophan'],
   hormone_therapy: ['фитоестроген', 'phytoestrogen', 'изофлавон', 'isoflavone', 'червена детелина', 'red clover'],
   thyroid_meds: ['йод', 'iodine', 'келп', 'kelp'],
@@ -62,6 +76,13 @@ export function productMatchesAnyKeyword(text, keywords) {
   });
 }
 
+const PREGNANCY_EXCLUSIONS = [
+  'мелатонин', 'melatonin', 'ашваганда', 'ashwagandha', 'фитоестроген', 'берберин', 'berberine',
+  'ехинацея', 'echinacea', 'saw palmetto', 'palmetto', 'триптофан', 'tryptophan', '5-htp',
+  'for men', 'for man', ' men ', ' man ', 'за мъже', 'ecdysterone', 'екдистерон',
+  'retinol', 'vitamin a', 'витамин а',
+];
+
 export function getExclusionReasons(profile, product) {
   const text = productSearchText(product);
   const reasons = [];
@@ -89,8 +110,13 @@ export function getExclusionReasons(profile, product) {
     reasons.push(`изключен поради хранителен модел: ${profile.diet}`);
   }
   if (profileHasPregnancyOrBreastfeeding(profile)) {
-    if (productMatchesAnyKeyword(text, ['мелатонин', 'melatonin', 'ашваганда', 'ashwagandha', 'фитоестроген', 'берберин'])) {
+    if (productMatchesAnyKeyword(text, PREGNANCY_EXCLUSIONS)) {
       reasons.push('изключен при бременност/кърмене');
+    }
+  }
+  if (profile.sex === 'female' && profileHasPregnancyOrBreastfeeding(profile)) {
+    if (productMatchesAnyKeyword(text, ['for men', 'for man', ' men ', ' man ', 'за мъже', 'multivitamins & minerals man'])) {
+      reasons.push('изключен при бременност — не е за жени');
     }
   }
   return reasons;

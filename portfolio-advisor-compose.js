@@ -158,7 +158,7 @@ export function composeComplementaryPackageStacks(profile, rankedEntries, option
       budgetEur: limit.budgetEur,
       excludeIds,
       rankOffset: tierIdx,
-      mustInclude: tierIdx === 0 ? mustInclude : [],
+      mustInclude: mustInclude,
     });
 
     if (!products.length) {

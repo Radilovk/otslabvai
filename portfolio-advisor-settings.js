@@ -10,7 +10,6 @@ import {
 export function getDefaultPortfolioAdvisorSettings() {
   return {
     enabled: true,
-    composition_mode: 'compose_narrate',
     prompt: getDefaultPortfolioAdvisorPrompt(),
     narrator_prompt: getDefaultPortfolioNarratorPrompt(),
     commerce: { ...ADVISOR_COMMERCE_DEFAULTS },
@@ -27,7 +26,6 @@ export async function loadPortfolioAdvisorSettings(env) {
     const defaults = getDefaultPortfolioAdvisorSettings();
     return {
       enabled: parsed.enabled !== false,
-      composition_mode: parsed.composition_mode === 'ai_pick' ? 'ai_pick' : 'compose_narrate',
       prompt: typeof parsed.prompt === 'string' && parsed.prompt.trim()
         ? parsed.prompt
         : defaults.prompt,
@@ -44,7 +42,6 @@ export async function loadPortfolioAdvisorSettings(env) {
 export async function savePortfolioAdvisorSettings(env, settings, ctx) {
   const toSave = {
     enabled: settings.enabled !== false,
-    composition_mode: settings.composition_mode === 'ai_pick' ? 'ai_pick' : 'compose_narrate',
     prompt: String(settings.prompt || getDefaultPortfolioAdvisorPrompt()),
     narrator_prompt: String(settings.narrator_prompt || getDefaultPortfolioNarratorPrompt()),
     commerce: normalizeAdvisorCommerceSettings(settings),

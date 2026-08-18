@@ -43,6 +43,7 @@ import {
   finalizePortfolioAdvisorResponse,
   getPortfolioComposeOptions,
   composePortfolioAdvisorStacks,
+  buildPortfolioAdvisorProfile,
 } from './portfolio-advisor-engine.js';
 import {
   loadPortfolioAdvisorSettings,
@@ -53,6 +54,7 @@ import {
   getDefaultPortfolioNarratorPrompt,
   buildPortfolioAdvisorMessages,
   buildPortfolioNarratorMessages,
+  resolveAdvisorCompositionStrategy,
 } from './portfolio-advisor-prompt.js';
 import { buildPortfolioAdvisorNarration } from './portfolio-advisor-narration.js';
 import {
@@ -2296,7 +2298,9 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
     throw new UserFacingError('AI консултантът е временно изключен.', 503);
   }
 
-  const compositionMode = settings.composition_mode === 'ai_pick' ? 'ai_pick' : 'compose_narrate';
+  const compositionMode = resolveAdvisorCompositionStrategy(
+    buildPortfolioAdvisorProfile(rawAnswers),
+  );
   const prepared = await preparePortfolioAdvisorSubmission(env, rawAnswers, { compositionMode });
   const {
     profile,
@@ -2320,7 +2324,7 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
       recommendation = finalizePortfolioAdvisorResponse(mock, eligible, excludedProductIds, finalizeOpts);
     } else {
       const promptTemplate = settings.prompt || getDefaultPortfolioAdvisorPrompt();
-      const messages = buildPortfolioAdvisorMessages(promptTemplate, payload);
+      const messages = buildPortfolioAdvisorMessages(promptTemplate, payload, profile);
 
       try {
         const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);

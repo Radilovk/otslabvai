@@ -6180,8 +6180,6 @@ async function fetchPortfolioAdvisorSettings() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         document.getElementById('pfa-enabled') && (document.getElementById('pfa-enabled').checked = data.enabled !== false);
-        const modeEl = document.getElementById('pfa-composition-mode');
-        if (modeEl) modeEl.value = data.composition_mode === 'ai_pick' ? 'ai_pick' : 'compose_narrate';
         const promptEl = document.getElementById('pfa-prompt');
         if (promptEl && data.prompt) promptEl.value = data.prompt;
         const narrEl = document.getElementById('pfa-narrator-prompt');
@@ -6208,7 +6206,6 @@ async function fetchPortfolioAdvisorSettings() {
 
 async function savePortfolioAdvisorSettingsAdmin() {
     const enabled = document.getElementById('pfa-enabled')?.checked !== false;
-    const composition_mode = document.getElementById('pfa-composition-mode')?.value || 'compose_narrate';
     const prompt = document.getElementById('pfa-prompt')?.value || '';
     const narrator_prompt = document.getElementById('pfa-narrator-prompt')?.value || '';
     const commerce = {
@@ -6224,7 +6221,7 @@ async function savePortfolioAdvisorSettingsAdmin() {
         const res = await fetch(`${API_URL}/portfolio-advisor/settings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ enabled, composition_mode, prompt, narrator_prompt, commerce }),
+            body: JSON.stringify({ enabled, prompt, narrator_prompt, commerce }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         showNotification('Настройките за AI консултант са запазени.', 'success');
