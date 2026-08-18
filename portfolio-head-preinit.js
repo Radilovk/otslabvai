@@ -1,5 +1,14 @@
 (function () {
   var WORKER_API = 'https://port.radilov-k.workers.dev';
+  var heroSrc = window.pfHeroSrc || function (path) {
+    var p = String(path || '').trim();
+    if (!p) return '/images/portfolio-hero.jpg';
+    var m = p.match(/raw\.githubusercontent\.com\/Radilovk\/otslabvai\/main\/(images\/[^?#]+)/i);
+    if (m) return '/' + m[1];
+    if (p.indexOf('/images/') === 0) return p;
+    if (p.indexOf('images/') === 0) return '/' + p;
+    return '/images/portfolio-hero.jpg';
+  };
 
   function apiUrl() {
     var host = location.hostname;
@@ -8,13 +17,6 @@
     }
     if (host.endsWith('.workers.dev')) return location.origin;
     return WORKER_API;
-  }
-
-  function heroPath(path) {
-    var p = String(path || '').trim();
-    if (!p) return '/images/portfolio-hero.jpg';
-    if (/^https?:\/\//i.test(p)) return p;
-    return p.charAt(0) === '/' ? p : '/' + p;
   }
 
   try {
@@ -43,11 +45,11 @@
 
   if (branding) {
     window.__pfBranding = branding;
-    var heroImg = heroPath(branding.hero_image);
+    var heroImg = heroSrc(branding.hero_image);
     if (Array.isArray(branding.hero_slides)) {
       for (var i = 0; i < branding.hero_slides.length; i++) {
         var slide = branding.hero_slides[i];
-        if (slide && slide.image) { heroImg = heroPath(slide.image); break; }
+        if (slide && slide.image) { heroImg = heroSrc(slide.image); break; }
       }
     }
     if (heroImg) {

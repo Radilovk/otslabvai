@@ -1,23 +1,30 @@
 /** Hero banners from repo static assets (images/*). KV stores paths only. */
 
-const DEFAULT = '/images/portfolio-hero.jpg';
+import { heroSrc } from './portfolio-hero-path.js';
 
-/** Repo-relative path → same-origin static URL (Worker ASSETS). */
-export function heroSrc(path) {
-  const p = String(path || '').trim();
-  if (!p) return DEFAULT;
-  const raw = p.match(/raw\.githubusercontent\.com\/Radilovk\/otslabvai\/main\/(images\/[^?#]+)/i);
-  if (raw) return `/${raw[1]}`;
-  if (/^https?:\/\//i.test(p)) return p;
-  return p.startsWith('/') ? p : `/${p.replace(/^\//, '')}`;
-}
+export { heroSrc } from './portfolio-hero-path.js';
 
 function pathsFromSettings(settings = {}) {
   const slides = (Array.isArray(settings.hero_slides) ? settings.hero_slides : [])
     .map((s) => heroSrc(s?.image))
     .filter(Boolean);
   if (slides.length) return slides;
-  return [heroSrc(settings.hero_image || DEFAULT)];
+  return [heroSrc(settings.hero_image)];
+}
+
+function imgPathname(img) {
+  try {
+    return new URL(img.src, location.origin).pathname;
+  } catch {
+    return '';
+  }
+}
+
+function applyHeroText(settings) {
+  const title = document.getElementById('hero-title');
+  const subtitle = document.getElementById('hero-subtitle');
+  if (title) title.textContent = settings.hero_title || 'Каталог добавки';
+  if (subtitle) subtitle.textContent = settings.site_slogan || '';
 }
 
 let rotateTimer = null;
@@ -28,13 +35,27 @@ export function applyHeroSettings(settings) {
 
   const urls = pathsFromSettings(settings);
   const key = urls.join('|');
-  if (media.dataset.heroKey === key && media.childElementCount) return;
-  media.dataset.heroKey = key;
+  if (media.dataset.heroKey === key && media.childElementCount) {
+    applyHeroText(settings);
+    return;
+  }
 
+  const multi = urls.length > 1;
+  if (!multi && urls.length === 1) {
+    const lone = media.querySelector('#hero-image');
+    if (lone && media.childElementCount === 1 && imgPathname(lone) === urls[0]) {
+      media.dataset.heroKey = key;
+      document.getElementById('pf-hero')?.classList.remove('pf-hero--carousel');
+      media.classList.remove('pf-hero-media--carousel');
+      applyHeroText(settings);
+      return;
+    }
+  }
+
+  media.dataset.heroKey = key;
   if (rotateTimer) clearTimeout(rotateTimer);
   rotateTimer = null;
 
-  const multi = urls.length > 1;
   document.getElementById('pf-hero')?.classList.toggle('pf-hero--carousel', multi);
   media.classList.toggle('pf-hero-media--carousel', multi);
   media.innerHTML = urls.map((src, i) => `
@@ -47,10 +68,7 @@ export function applyHeroSettings(settings) {
     if (img.complete) img.classList.add('pf-hero-ready');
   });
 
-  const title = document.getElementById('hero-title');
-  const subtitle = document.getElementById('hero-subtitle');
-  if (title) title.textContent = settings.hero_title || 'Каталог добавки';
-  if (subtitle) subtitle.textContent = settings.site_slogan || '';
+  applyHeroText(settings);
 
   if (!multi) return;
   const ms = Math.max(3000, Math.min(30000, Number(settings.hero_carousel_interval) || 6000));

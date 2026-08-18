@@ -28,6 +28,7 @@ import {
   sumLinePricingSavings,
   ceilRetailPrice,
 } from './portfolio-pricing.js';
+import { normalizeHeroImagePath } from './portfolio-hero-path.js';
 import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipping.js';
 import { assertOrderRateLimit } from './order-rate-limit.js';
 import { decodeHtmlEntities, normalizeCatalogText } from './portfolio-text.js';
@@ -1189,13 +1190,21 @@ async function handleGetSettings(env) {
 /** Public site branding only — no markup / B2B fields. */
 export function buildPublicSiteSettings(settings) {
   const s = settings || {};
+  const slides = Array.isArray(s.hero_slides)
+    ? s.hero_slides
+      .map((sl, i) => ({
+        id: sl?.id || `slide-${i}`,
+        image: normalizeHeroImagePath(sl?.image)
+      }))
+      .filter((sl) => sl.image)
+    : [];
   return {
     site_name: s.site_name,
     site_slogan: s.site_slogan,
-    hero_image: s.hero_image,
+    hero_image: normalizeHeroImagePath(slides[0]?.image ?? s.hero_image),
     hero_title: s.hero_title,
     hero_mode: s.hero_mode || 'single',
-    hero_slides: Array.isArray(s.hero_slides) ? s.hero_slides : [],
+    hero_slides: slides,
     hero_carousel_interval: Number(s.hero_carousel_interval) || 6000,
     footer: s.footer,
     last_sync: s.last_sync,
@@ -1205,15 +1214,6 @@ export function buildPublicSiteSettings(settings) {
 
 export async function getPublicSiteSettings(env) {
   return buildPublicSiteSettings(await getSettings(env));
-}
-
-function normalizeHeroImagePath(url) {
-  const p = String(url || '').trim();
-  if (!p) return '';
-  const raw = p.match(/raw\.githubusercontent\.com\/Radilovk\/otslabvai\/main\/(images\/[^?#]+)/i);
-  if (raw) return raw[1];
-  if (p.startsWith('/images/')) return p.slice(1);
-  return p;
 }
 
 async function handleSaveSettings(request, env) {

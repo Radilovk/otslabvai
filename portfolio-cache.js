@@ -280,9 +280,12 @@ export async function ensureBootstrap(opts = {}) {
 }
 
 export async function ensureSettings({ force = false } = {}) {
-  if (!force && catalogState.index?.settings) return catalogState.index.settings;
+  if (!force) {
+    const cached = getCachedSettings();
+    if (cached) return cached;
+  }
   await ensureBootstrap({ force });
-  return catalogState.index?.settings || null;
+  return getCachedSettings();
 }
 
 export function getCachedSettings() {

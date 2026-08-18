@@ -2726,7 +2726,7 @@ function handleAction(action, target, id) {
 
                     showNotification(
                         uploadFolder === 'hero'
-                            ? 'Банерът е в репото (images/). Запази настройките. На сайта — след deploy.'
+                            ? 'Банерът е в репото (images/). Запази настройките — deploy е автоматичен.'
                             : 'Изображението е качено успешно!',
                         'success'
                     );
@@ -4100,7 +4100,7 @@ async function uploadAdminImage(file, options = {}) {
             Accept: 'application/vnd.github.v3+json',
         },
         body: JSON.stringify({
-            message: `[skip ci] Upload image: ${finalName}`,
+            message: `Upload image: ${finalName}`,
             content,
             branch,
         }),

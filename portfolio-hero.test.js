@@ -11,6 +11,10 @@ describe('portfolio-hero', () => {
       .toBe('/images/x.jpg');
   });
 
+  test('heroSrc rejects external https URLs', () => {
+    expect(heroSrc('https://cdn.example.com/x.jpg')).toBe('/images/portfolio-hero.jpg');
+  });
+
   test('getHeroPreloadImage uses first slide path', () => {
     expect(getHeroPreloadImage({
       hero_slides: [{ image: 'images/first.jpg' }, { image: 'images/second.jpg' }]
