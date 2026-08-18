@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="bg" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="icon" type="image/png" href="https://radilovk.github.io/face/assets/logo.png">
+  <title>AI Консултант за отслабване | ДА ОТСЛАБНА</title>
+  <meta name="description" content="Кратък въпросник и персонална програма с хранителни добавки в 3 ценови варианта.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="life-protocol-quiz.css?v=20260818a">
+  <link rel="stylesheet" href="main-advisor.css?v=20260818a">
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('theme');
+        document.documentElement.setAttribute('data-theme', t || 'light');
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="lpq-body maa-body">
+  <div class="lpq-wrap">
+    <a href="index.html" class="lpq-back-link">← Обратно към ДА ОТСЛАБНА</a>
+    <header class="lpq-header">
+      <h1>Вашата персонална програма</h1>
+      <p>Кратък профил → индивидуален стак за отслабване</p>
+    </header>
+    <div class="lpq-progress" aria-hidden="true"><div class="lpq-progress-fill" id="lpq-progress"></div></div>
+
+    <div class="lpq-card" id="lpq-form-card">
+      <form id="lpq-form" novalidate></form>
+      <div class="lpq-nav">
+        <button type="button" class="lpq-btn lpq-btn-ghost" id="lpq-prev" hidden>Назад</button>
+        <button type="button" class="lpq-btn lpq-btn-primary" id="lpq-next">Напред</button>
+      </div>
+    </div>
+
+    <div class="lpq-card lpq-loading" id="lpq-loading" hidden>
+      <div class="lpq-loading-header">
+        <div class="lpq-spinner"></div>
+        <div>
+          <p><strong id="lpq-loading-title">Анализираме профила ви...</strong></p>
+          <p class="lpq-hint" id="lpq-loading-status">Инициализиране на AI консултант</p>
+        </div>
+      </div>
+      <div class="lpq-analysis-progress" aria-hidden="true">
+        <div class="lpq-analysis-progress-fill" id="lpq-analysis-progress"></div>
+      </div>
+      <div class="lpq-analysis-terminal" id="lpq-analysis-log" role="log" aria-live="polite" aria-label="Ход на анализа"></div>
+    </div>
+  </div>
+  <script type="module" src="main-advisor-quiz.js"></script>
+</body>
+</html>

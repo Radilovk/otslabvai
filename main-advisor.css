@@ -1,0 +1,71 @@
+/**
+ * Main site advisor branding — extends life-protocol-quiz.css tokens.
+ */
+
+.maa-body {
+  --lpq-accent: var(--color-primary, #E4007C);
+  --lpq-accent-dim: rgba(228, 0, 124, 0.12);
+  --lpq-bg: var(--color-light, #F8F9FA);
+  --lpq-card: var(--color-white, #ffffff);
+  --lpq-text: var(--color-dark, #212529);
+  --lpq-muted: var(--color-gray, #6c757d);
+  --lpq-border: rgba(33, 37, 41, 0.1);
+  --lpq-display: var(--font-primary, 'Poppins', sans-serif);
+  --lpq-font: var(--font-secondary, 'Montserrat', sans-serif);
+}
+
+[data-theme="dark"] .maa-body {
+  --lpq-bg: var(--bg-primary-dark, #0D0F12);
+  --lpq-card: var(--bg-secondary-dark, #12151A);
+  --lpq-text: var(--text-primary-dark, #E9ECEF);
+  --lpq-muted: var(--text-secondary-dark, #A0AEC0);
+  --lpq-border: rgba(255, 255, 255, 0.1);
+}
+
+.maa-body .lpq-header h1 {
+  font-family: var(--lpq-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.maa-body .lpq-btn-primary {
+  background: var(--btn-gradient-primary, linear-gradient(135deg, #E4007C, #C2006A));
+  border: none;
+  font-weight: 600;
+  box-shadow: var(--glow-primary-sm, 0 4px 20px rgba(228, 0, 124, 0.35));
+}
+
+.maa-body .lpq-btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.maa-body .lpq-progress-fill {
+  background: var(--btn-gradient-primary, linear-gradient(90deg, #E4007C, #FF2D9B));
+}
+
+.maa-body .lpq-option.selected {
+  border-color: var(--color-primary, #E4007C);
+  background: var(--lpq-accent-dim);
+}
+
+.maa-body .lpq-back-link {
+  color: var(--color-primary, #E4007C);
+}
+
+.maa-body .lpr-tier.recommended {
+  border-color: var(--color-primary, #E4007C);
+}
+
+.maa-body .lpr-tier-badge {
+  background: var(--color-primary, #E4007C);
+  color: #fff;
+}
+
+.maa-body .lpq-info-text {
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  background: rgba(0, 169, 157, 0.08);
+  border: 1px solid rgba(0, 169, 157, 0.2);
+  color: var(--lpq-text);
+  margin: 0;
+}

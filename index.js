@@ -1507,7 +1507,7 @@ function initializeGlobalScripts() {
     // Only initialize quest modal if elements exist
     if (DOM.questModal.backdrop && DOM.questModal.container && DOM.questModal.iframe) {
         function openQuestModal(url) {
-            DOM.questModal.iframe.src = url || 'quest.html';
+            DOM.questModal.iframe.src = url || 'main-advisor-quiz.html';
             DOM.questModal.container.classList.add('show');
             DOM.questModal.backdrop.classList.add('show');
             DOM.body.classList.add('modal-open');
@@ -1520,7 +1520,7 @@ function initializeGlobalScripts() {
         }
         DOM.questModal.backdrop.addEventListener('click', closeQuestModal);
         document.addEventListener('click', e => {
-            const questLink = e.target.closest('a[href$="quest.html"]');
+            const questLink = e.target.closest('a[href$="quest.html"], a[href$="main-advisor-quiz.html"]');
             if (questLink) {
                 e.preventDefault();
                 openQuestModal(questLink.getAttribute('href'));
