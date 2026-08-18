@@ -120,6 +120,9 @@ export function routeRequiresAdmin(pathname, method) {
     '/portfolio-advisor/settings',
     '/portfolio-advisor/leads',
     '/portfolio-advisor/results',
+    '/main-advisor/settings',
+    '/main-advisor/leads',
+    '/main-advisor/results',
   ]);
 
   if (adminExact.has(path) && m === 'GET') return true;
@@ -139,12 +142,17 @@ export function routeRequiresAdmin(pathname, method) {
   if (path.startsWith('/life-protocol/') && m !== 'GET' && path !== '/life-protocol-submit') return true;
   if (path.startsWith('/portfolio-advisor/') && path.includes('/settings') && (m === 'GET' || m === 'POST')) return true;
   if (path.startsWith('/portfolio-advisor/') && (path.endsWith('/leads') || path.endsWith('/results')) && m === 'GET') return true;
+  if (path.startsWith('/main-advisor/') && m !== 'GET' && path !== '/main-advisor-submit') return true;
+  if (path.startsWith('/main-advisor/') && path.includes('/settings') && (m === 'GET' || m === 'POST')) return true;
+  if (path.startsWith('/main-advisor/') && (path.endsWith('/leads') || path.endsWith('/results')) && m === 'GET') return true;
   if (path.startsWith('/portfolio/import/')) return true;
   if (path === '/promo-codes' && m !== 'GET') return true;
   if (path === '/promo-codes' && m === 'GET') return true;
   if (path === '/ai-assistant' && m === 'POST') return true;
   if (path === '/life-protocol/simulate' && m === 'POST') return true;
   if (path === '/portfolio-advisor/simulate' && m === 'POST') return true;
+  if (path === '/main-advisor/simulate' && m === 'POST') return true;
+  if (path === '/main-advisor/settings' && m === 'POST') return true;
   if (path === '/life-protocol/settings' && m === 'POST') return true;
   if (path === '/portfolio-advisor/settings' && m === 'POST') return true;
 

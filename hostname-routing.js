@@ -65,6 +65,9 @@ export function isWorkerApiPath(pathname) {
   if (path === '/life-protocol-submit') return true;
   if (path.startsWith('/life-protocol/')) return true;
 
+  if (path === '/main-advisor-submit') return true;
+  if (path.startsWith('/main-advisor/')) return true;
+
   if (path === '/portfolio-advisor-submit') return true;
   if (path.startsWith('/portfolio-advisor/')) return true;
 

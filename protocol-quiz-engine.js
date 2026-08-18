@@ -34,6 +34,7 @@ const PRIORITY_GOAL_KEYWORDS = {
   sleep: ['сън', 'sleep', 'мелатонин', 'melatonin', 'възстанов', 'recovery', 'магнезий'],
   cognition: ['когнитив', 'cognit', 'памет', 'memory', 'фокус', 'focus', 'мозък', 'brain', 'невро'],
   longevity: ['дълголет', 'longevity', 'антиейджинг', 'anti-aging', 'регенера', 'telomer', 'теломер', 'nad'],
+  otshalvane: ['отслаб', 'slim', 'fat', 'burn', 'thermo', 'апетит', 'appetite', 'метабол', 'l-carnitine', 'карнитин', 'лида', 'protein', 'протеин', 'ситост', 'weight'],
 };
 
 const SYMPTOM_KEYWORDS = {
@@ -41,6 +42,10 @@ const SYMPTOM_KEYWORDS = {
   fatigue: ['желязо', 'iron', 'b12', 'b-12', 'коензим', 'coq10', 'енерги', 'ашваганда', 'rhodiola'],
   hair_nails: ['биотин', 'biotin', 'цинк', 'zinc', 'колаген', 'collagen', 'силиций', 'silicon'],
   concentration: ['омега', 'omega', 'dha', 'фосфатидил', 'phosphatidyl', 'ginkgo', 'гинко', 'bacopa'],
+  joint_pain: ['joint', 'став', 'глюкозамин', 'glucosamine', 'колаген', 'collagen', 'хондро', 'chondro'],
+  poor_sleep: ['sleep', 'сън', 'melatonin', 'мелатонин', 'магнезий', 'magnesium'],
+  cravings: ['appetite', 'апетит', 'ситост', 'craving', 'fiber', 'фибри', 'garcinia', 'гарциния', 'chromium', 'хром'],
+  low_appetite: ['mass', 'гейн', 'gainer', 'протеин', 'protein'],
 };
 
 const PEPTIDE_KEYWORDS = [
@@ -277,9 +282,12 @@ function getCheapestVariant(product) {
   return variants.reduce((min, v) => (Number(v.price) < Number(min.price) ? v : min));
 }
 
-export function enrichProtocolProductItem(item, product) {
+export function enrichProtocolProductItem(item, product, siteId = 'life') {
   const priceEur = getProductPriceEur(product);
   const variant = getCheapestVariant(product);
+  const productPath = siteId === 'main'
+    ? `product.html?id=${encodeURIComponent(product.product_id)}`
+    : `life-product.html?id=${encodeURIComponent(product.product_id)}`;
   return {
     ...item,
     name: product.public_data?.name,
@@ -288,7 +296,8 @@ export function enrichProtocolProductItem(item, product) {
     price_bgn: eurToBgn(priceEur),
     image_url: variant?.image_url || product.public_data?.image_url || '',
     variant_name: variant?.option_name || '',
-    product_url: `life-product.html?id=${encodeURIComponent(product.product_id)}`,
+    sku_id: variant?.sku || product.product_id,
+    product_url: productPath,
   };
 }
 

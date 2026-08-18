@@ -240,6 +240,7 @@ function updateProjectUI() {
     const mainLifeTabs = document.querySelectorAll('.tab-main-life');
     const portfolioTabs = document.querySelectorAll('.tab-portfolio-only');
     const lifeOnlyTabs = document.querySelectorAll('.tab-life-only');
+    const mainOnlyTabs = document.querySelectorAll('.tab-main-only');
     const saveBtn = DOM.saveBtn;
     const saveStatus = DOM.saveStatus;
 
@@ -249,10 +250,18 @@ function updateProjectUI() {
     });
 
     const showLifeOnly = currentProject === 'life';
+    const showMainOnly = currentProject === 'main';
     lifeOnlyTabs.forEach((el) => {
         if (el.classList.contains('tab-btn')) {
             el.style.display = showLifeOnly ? '' : 'none';
         } else if (!showLifeOnly) {
+            el.classList.remove('active');
+        }
+    });
+    mainOnlyTabs.forEach((el) => {
+        if (el.classList.contains('tab-btn')) {
+            el.style.display = showMainOnly ? '' : 'none';
+        } else if (!showMainOnly) {
             el.classList.remove('active');
         }
     });
@@ -5897,6 +5906,8 @@ async function fetchLifeProtocolSettings() {
         const promptEl = document.getElementById('lp-prompt');
         if (enabledEl) enabledEl.checked = data.enabled !== false;
         if (promptEl && data.prompt) promptEl.value = data.prompt;
+        const narrEl = document.getElementById('lp-narrator-prompt');
+        if (narrEl && data.narrator_prompt) narrEl.value = data.narrator_prompt;
     } catch (e) {
         console.error('Life protocol settings:', e);
         showNotification('Грешка при зареждане на настройките за протоколи.', 'error');
@@ -5906,11 +5917,12 @@ async function fetchLifeProtocolSettings() {
 async function saveLifeProtocolSettingsAdmin() {
     const enabled = document.getElementById('lp-enabled')?.checked !== false;
     const prompt = document.getElementById('lp-prompt')?.value || '';
+    const narrator_prompt = document.getElementById('lp-narrator-prompt')?.value || '';
     try {
         const res = await fetch(`${API_URL}/life-protocol/settings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ enabled, prompt }),
+            body: JSON.stringify({ enabled, prompt, narrator_prompt }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         showNotification('Настройките за протоколи са запазени.', 'success');
@@ -5961,7 +5973,7 @@ function renderLifeProtocolLeads() {
             <td>${d}</td>
             <td>${escapeHtml(lead.email || '')}</td>
             <td>${escapeHtml(lead.name || '—')}</td>
-            <td>${escapeHtml(lead.profile?.priority || '—')}</td>
+            <td>${escapeHtml(lead.profile?.priority === 'longevity' ? 'Anti-aging' : (lead.profile?.priority || '—'))}</td>
             <td>${stats.eligible_available ?? '—'}</td>
             <td>${stats.candidates_sent_to_ai ?? '—'}</td>`;
         tbody.appendChild(tr);
@@ -6005,7 +6017,8 @@ function renderLifeProtocolResults() {
 }
 
 async function runLifeProtocolSimulateLocal(useMockAi) {
-    const { prepareProtocolSubmission, buildMockProtocolResponse } = await import('./protocol-quiz-engine.js');
+    const { buildMockProtocolResponse, normalizeCumulativeBenefits } = await import('./protocol-quiz-engine.js');
+    const { prepareSiteAdvisorSubmission, finalizeSiteAdvisorResponse } = await import('./site-advisor-engine.js');
     const contentRes = await fetch('backend/life_page_content.json', { cache: 'no-cache' });
     if (!contentRes.ok) throw new Error('Неуспешно зареждане на life_page_content.json');
     const lifeContent = await contentRes.json();
@@ -6029,7 +6042,6 @@ async function runLifeProtocolSimulateLocal(useMockAi) {
         age_band: '45-54',
         height_cm: 168,
         weight_kg: 65,
-        priority: 'skin',
         conditions: ['none'],
         medications: ['none'],
         activity: 'rare',
@@ -6037,20 +6049,25 @@ async function runLifeProtocolSimulateLocal(useMockAi) {
         symptoms: ['fatigue'],
         allergies: ['none'],
         pregnancy: 'no',
-        sun_exposure: 'moderate',
         email: 'test@life-protocol.local',
         name: 'Тест Клиент',
     };
 
-    const prepared = await prepareProtocolSubmission(mockEnv, sampleProfile, deps);
-    const recommendation = buildMockProtocolResponse(prepared.candidates, prepared.profile, { ranked: prepared.ranked });
+    const prepared = await prepareSiteAdvisorSubmission(mockEnv, sampleProfile, deps, { siteId: 'life' });
+    const mock = buildMockProtocolResponse(prepared.candidates, prepared.profile, { ranked: prepared.ranked });
+    const recommendation = finalizeSiteAdvisorResponse(
+      normalizeCumulativeBenefits(mock),
+      prepared.eligible,
+      prepared.excluded_product_ids,
+      'life',
+    );
 
     return {
         success: true,
         mock: true,
         local_fallback: true,
         catalog_stats: prepared.payload.catalog_stats,
-        candidates_count: prepared.candidates.length,
+        candidates_count: prepared.candidates?.length ?? prepared.ranked?.length ?? 0,
         recommendation,
     };
 }
@@ -6155,6 +6172,168 @@ function setupLifeProtocolAdminListeners() {
     const tabBtn = document.querySelector('[data-tab="tab-life-protocol"]');
     tabBtn?.addEventListener('click', () => {
         if (currentProject === 'life') refreshLifeProtocolAdmin();
+    });
+}
+
+// =======================================================
+//          MAIN SITE AI ADVISOR ADMIN
+// =======================================================
+
+let mainAdvisorLeads = [];
+let mainAdvisorResults = [];
+
+async function fetchMainAdvisorSettings() {
+    try {
+        const res = await fetch(`${API_URL}/main-advisor/settings`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        document.getElementById('ma-enabled') && (document.getElementById('ma-enabled').checked = data.enabled !== false);
+        const promptEl = document.getElementById('ma-prompt');
+        if (promptEl && data.prompt) promptEl.value = data.prompt;
+        const narrEl = document.getElementById('ma-narrator-prompt');
+        if (narrEl && data.narrator_prompt) narrEl.value = data.narrator_prompt;
+    } catch (e) {
+        console.error('Main advisor settings:', e);
+        showNotification('Грешка при зареждане на настройките за AI консултант.', 'error');
+    }
+}
+
+async function saveMainAdvisorSettingsAdmin() {
+    const enabled = document.getElementById('ma-enabled')?.checked !== false;
+    const prompt = document.getElementById('ma-prompt')?.value || '';
+    const narrator_prompt = document.getElementById('ma-narrator-prompt')?.value || '';
+    try {
+        const res = await fetch(`${API_URL}/main-advisor/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled, prompt, narrator_prompt }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        showNotification('Настройките за AI консултант са запазени.', 'success');
+    } catch (e) {
+        showNotification('Грешка при запазване на настройките.', 'error');
+    }
+}
+
+async function fetchMainAdvisorLeads() {
+    try {
+        const res = await fetch(`${API_URL}/main-advisor/leads`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        mainAdvisorLeads = await res.json();
+        renderMainAdvisorLeads();
+    } catch (e) {
+        mainAdvisorLeads = [];
+        renderMainAdvisorLeads();
+    }
+}
+
+async function fetchMainAdvisorResults() {
+    try {
+        const res = await fetch(`${API_URL}/main-advisor/results`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        mainAdvisorResults = await res.json();
+        renderMainAdvisorResults();
+    } catch (e) {
+        mainAdvisorResults = [];
+        renderMainAdvisorResults();
+    }
+}
+
+function renderMainAdvisorLeads() {
+    const tbody = document.getElementById('ma-leads-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!mainAdvisorLeads.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);">Няма leads</td></tr>';
+        return;
+    }
+    mainAdvisorLeads.forEach((lead) => {
+        const tr = document.createElement('tr');
+        const d = lead.timestamp ? new Date(lead.timestamp).toLocaleString('bg-BG') : '—';
+        const stats = lead.catalog_stats || {};
+        tr.innerHTML = `
+            <td>${d}</td>
+            <td>${escapeHtml(lead.email || '')}</td>
+            <td>${escapeHtml(lead.name || '—')}</td>
+            <td>${lead.profile?.bmi ?? '—'}</td>
+            <td>${stats.eligible_available ?? '—'}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function renderMainAdvisorResults() {
+    const tbody = document.getElementById('ma-results-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!mainAdvisorResults.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary);">Няма резултати</td></tr>';
+        return;
+    }
+    mainAdvisorResults.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        const d = item.timestamp ? new Date(item.timestamp).toLocaleString('bg-BG') : '—';
+        const rec = item.recommendation || {};
+        const tiers = rec.tiers || {};
+        tr.innerHTML = `
+            <td>${d}</td>
+            <td>${escapeHtml(item.email || '')}</td>
+            <td>${escapeHtml(rec.recommended_tier || '—')}</td>
+            <td>${tiers.basic?.monthly_total_eur ?? '—'}</td>
+            <td>${tiers.optimal?.monthly_total_eur ?? '—'}</td>
+            <td>${tiers.premium?.monthly_total_eur ?? '—'}</td>
+            <td><button type="button" class="btn btn-sm btn-secondary" data-ma-idx="${idx}">JSON</button></td>`;
+        tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('[data-ma-idx]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const item = mainAdvisorResults[Number(btn.dataset.maIdx)];
+            const detail = document.getElementById('ma-result-detail');
+            const pre = document.getElementById('ma-result-json');
+            if (detail && pre) {
+                pre.textContent = JSON.stringify(item, null, 2);
+                detail.style.display = 'block';
+            }
+        });
+    });
+}
+
+async function runMainAdvisorSimulate(useMockAi) {
+    const out = document.getElementById('ma-simulate-output');
+    const statusEl = document.getElementById('ma-simulate-status');
+    if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = 'Симулация…'; }
+    if (out) out.style.display = 'none';
+    try {
+        const res = await fetch(`${API_URL}/main-advisor/simulate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ use_mock_ai: useMockAi }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || `HTTP ${res.status}`);
+        if (out) { out.style.display = 'block'; out.textContent = JSON.stringify(data, null, 2); }
+        if (statusEl) statusEl.textContent = useMockAi ? 'Mock симулация OK' : 'AI симулация OK';
+        sessionStorage.setItem('mainAdvisorResult', JSON.stringify({ ...data.recommendation, sessionId: 'admin-preview' }));
+        window.open('main-advisor-result.html?preview=admin', '_blank', 'noopener,noreferrer');
+    } catch (e) {
+        if (statusEl) statusEl.textContent = e.message || 'Грешка';
+        showNotification(e.message || 'Симулацията се провали.', 'error');
+    }
+}
+
+async function refreshMainAdvisorAdmin() {
+    await Promise.all([fetchMainAdvisorSettings(), fetchMainAdvisorLeads(), fetchMainAdvisorResults()]);
+}
+
+function setupMainAdvisorAdminListeners() {
+    document.getElementById('ma-save-settings-btn')?.addEventListener('click', saveMainAdvisorSettingsAdmin);
+    document.getElementById('ma-refresh-btn')?.addEventListener('click', refreshMainAdvisorAdmin);
+    document.getElementById('ma-simulate-mock-btn')?.addEventListener('click', () => runMainAdvisorSimulate(true));
+    document.getElementById('ma-simulate-real-btn')?.addEventListener('click', () => runMainAdvisorSimulate(false));
+    document.getElementById('ma-open-quiz-btn')?.addEventListener('click', () => {
+        window.open('main-advisor-quiz.html', '_blank', 'noopener,noreferrer');
+    });
+    document.querySelector('[data-tab="tab-main-advisor"]')?.addEventListener('click', () => {
+        if (currentProject === 'main') refreshMainAdvisorAdmin();
     });
 }
 
@@ -6418,6 +6597,7 @@ async function init() {
     setupEventListeners();
     setupPortfolioEventListeners();
     setupLifeProtocolAdminListeners();
+    setupMainAdvisorAdminListeners();
     setupPortfolioAdvisorAdminListeners();
     populateAddComponentMenu();
     updateProjectUI();
@@ -6441,6 +6621,9 @@ async function init() {
     await loadAISettings();
     if (currentProject === 'life') {
         await refreshLifeProtocolAdmin();
+    }
+    if (currentProject === 'main') {
+        await refreshMainAdvisorAdmin();
     }
     if (appData) {
         renderAll();

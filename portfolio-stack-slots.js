@@ -223,13 +223,14 @@ export function getSlotMeta(slotId) {
 }
 
 export function getGoalSlotOrder(goalId, profile = {}) {
-  let order = [...(GOAL_SLOT_ORDER[goalId] || GOAL_SLOT_ORDER.other)];
+  const mappedGoal = goalId === 'longevity' ? 'antiaging' : goalId;
+  let order = [...(GOAL_SLOT_ORDER[mappedGoal] || GOAL_SLOT_ORDER.other)];
 
   const cardioRisk = (profile.conditions || []).some((c) =>
     ['hypertension', 'cardiovascular'].includes(c));
   if (cardioRisk) {
     order = order.filter((s) => s !== 'stimulant' && s !== 'fat_burner');
-    if (goalId === 'otshalvane' && !order.includes('metabolism')) {
+    if (mappedGoal === 'otshalvane' && !order.includes('metabolism')) {
       order.unshift('metabolism');
     }
   }
@@ -247,10 +248,13 @@ export function getGoalSlotOrder(goalId, profile = {}) {
   if (profile.symptoms?.includes('joint_pain') && !order.includes('joint')) {
     order.splice(2, 0, 'joint');
   }
-  if (profile.symptoms?.includes('low_appetite') && goalId === 'muscle' && !order.includes('gainer')) {
+  if (profile.symptoms?.includes('cravings') && mappedGoal === 'otshalvane' && !order.includes('metabolism')) {
+    order.unshift('metabolism');
+  }
+  if (profile.symptoms?.includes('low_appetite') && mappedGoal === 'muscle' && !order.includes('gainer')) {
     order.splice(1, 0, 'gainer');
   }
-  if (profile.activity === 'regular' && goalId === 'muscle' && !order.includes('aminos')) {
+  if (profile.activity === 'regular' && mappedGoal === 'muscle' && !order.includes('aminos')) {
     const proteinIdx = order.indexOf('protein');
     if (proteinIdx >= 0 && !order.includes('aminos')) order.splice(proteinIdx + 1, 0, 'aminos');
   }

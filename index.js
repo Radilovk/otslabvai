@@ -438,7 +438,13 @@ function encodeProductsForAttr(products) {
 }
 // --- END: MODIFIED FUNCTION ---
 
-const generateInfoCardHTML = component => `
+const generateInfoCardHTML = component => {
+    const btnUrl = (() => {
+        const raw = component.button?.url || 'main-advisor-quiz.html';
+        if (raw.includes('quest.html') || raw.includes('/port/quest')) return 'main-advisor-quiz.html';
+        return raw;
+    })();
+    return `
     <section ${component.id ? `id="${component.id}"` : ''} class="info-card-section fade-in-up ${'image-align-' + (component.options.image_align || 'left')}">
         <div class="container">
             <div class="info-card-image">
@@ -447,10 +453,11 @@ const generateInfoCardHTML = component => `
             <div class="info-card-content">
                 <h2>${component.title}</h2>
                 <p>${component.content}</p>
-                ${component.button && component.button.text ? `<a href="${component.button.url}" class="btn-primary">${component.button.text}</a>` : ''}
+                ${component.button && component.button.text ? `<a href="${btnUrl}" class="btn-primary">${component.button.text}</a>` : ''}
             </div>
         </div>
     </section>`;
+};
 
 const generateBenefitsHTML = component => `
     <section id="benefits" class="section-padding">
@@ -979,12 +986,6 @@ function renderMainContent(pageContent) {
     
     let contentHtml = '';
     pageContent.forEach((component, index) => {
-        // Filter out the individual analysis info card (containing analyzis.png image)
-        // Note: The filename 'analyzis.png' is intentionally kept as-is to match the existing asset
-        if (component.type === 'info_card' && component.image && component.image.includes('analyzis.png')) {
-            return; // Skip rendering this component
-        }
-        
         // Skip hidden product categories
         if (component.type === 'product_category' && component.is_hidden) {
             return;
@@ -1507,7 +1508,7 @@ function initializeGlobalScripts() {
     // Only initialize quest modal if elements exist
     if (DOM.questModal.backdrop && DOM.questModal.container && DOM.questModal.iframe) {
         function openQuestModal(url) {
-            DOM.questModal.iframe.src = url || 'quest.html';
+            DOM.questModal.iframe.src = url || 'main-advisor-quiz.html';
             DOM.questModal.container.classList.add('show');
             DOM.questModal.backdrop.classList.add('show');
             DOM.body.classList.add('modal-open');
@@ -1520,7 +1521,7 @@ function initializeGlobalScripts() {
         }
         DOM.questModal.backdrop.addEventListener('click', closeQuestModal);
         document.addEventListener('click', e => {
-            const questLink = e.target.closest('a[href$="quest.html"]');
+            const questLink = e.target.closest('a[href$="quest.html"], a[href$="main-advisor-quiz.html"]');
             if (questLink) {
                 e.preventDefault();
                 openQuestModal(questLink.getAttribute('href'));

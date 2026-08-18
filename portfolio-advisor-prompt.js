@@ -3,98 +3,15 @@
  */
 
 import { getProductPriceEur } from './protocol-quiz-engine.js';
-import { profileHasPregnancyOrBreastfeeding } from './protocol-safety-rules.js';
-
-const CLINICAL_FLAG_VALUES = new Set(['none', 'all', 'other']);
-
-function listClinicalFlags(values = []) {
-  return values.filter((v) => v && !CLINICAL_FLAG_VALUES.has(v));
-}
-
-/** Профили с множество клинични фактори → AI pick вместо само compose. */
-export function hasAdvisorClinicalComplexity(profile = {}) {
-  const conditions = listClinicalFlags(profile.conditions);
-  const medications = listClinicalFlags(profile.medications);
-  const allergies = listClinicalFlags(profile.allergies);
-
-  if (profileHasPregnancyOrBreastfeeding(profile)) return true;
-  if (conditions.length >= 2) return true;
-  if (conditions.length && (medications.length || allergies.length)) return true;
-  if (medications.length >= 2) return true;
-  if (profile.diet && profile.diet !== 'omnivore' && (conditions.length || medications.length)) return true;
-  if (profile.priority === 'otshalvane' && Number(profile.bmi) >= 30) return true;
-  return false;
-}
-
-/**
- * Един автоматичен режим: compose за прости профили, AI pick при клинична сложност.
- * @returns {'ai_pick' | 'compose_narrate'}
- */
-export function resolveAdvisorCompositionStrategy(profile = {}) {
-  return hasAdvisorClinicalComplexity(profile) ? 'ai_pick' : 'compose_narrate';
-}
-
-/** Динамични клинични guardrails за prompt — не keyword blacklist, а контекст за модела. */
-export function buildAdvisorClinicalGuardrails(profile = {}) {
-  const lines = [];
-  const conditions = listClinicalFlags(profile.conditions);
-  const medications = listClinicalFlags(profile.medications);
-  const allergies = listClinicalFlags(profile.allergies);
-  const symptoms = listClinicalFlags(profile.symptoms);
-
-  if (profile.sex) lines.push(`Пол: ${profile.sex === 'female' ? 'жена' : 'мъж'}, възраст ${profile.age_band || 'неуточнена'}.`);
-  if (profile.bmi) lines.push(`BMI: ${profile.bmi} (ръст ${profile.height_cm || '?'} см, тегло ${profile.weight_kg || '?'} кг).`);
-  if (profile.priority) lines.push(`Основна цел: ${profile.priority_other || profile.priority}.`);
-  if (profile.diet && profile.diet !== 'omnivore') {
-    lines.push(`Хранителен модел: ${profile.diet_other || profile.diet} — избягвай несъвместни източници (месо/желатин/суроватка при веган и т.н.).`);
-  }
-
-  if (profileHasPregnancyOrBreastfeeding(profile)) {
-    lines.push('Бременност/кърмене: без стимуланти, мелатонин, ашваганда, берберин, saw palmetto, мъжки мултивитамини, високи дози витамин A; предпочитай безопасни основни витамини/минерали.');
-  }
-
-  for (const cond of conditions) {
-    if (cond === 'hypertension' || cond === 'cardiovascular') {
-      lines.push('Хипертония/сърдечно: без термогенни fat burners, йохимбин, ефедра, агресивни pre-workout; внимание с кофеин.');
-    } else if (cond === 'diabetes') {
-      lines.push('Диабет: без берберин и хром пиколинат в комбинация с лекарства; фокус върху протеин, омега-3, магнезий, алфа-липоична киселина ако е подходяща.');
-    } else if (cond === 'thyroid') {
-      lines.push('Щитовидна: без йод, келп, стимуланти; умерена енергия чрез B-витамини, желязо, CoQ10.');
-    } else if (cond === 'kidney') {
-      lines.push('Бъбречно: без високи дози протеин, креатин, гейнъри; умерени аминокиселини само ако са подходящи.');
-    } else if (cond === 'autoimmune') {
-      lines.push('Автоимунно: без ехинацея, астрагал и имуностимуланти; фокус върху антиоксиданти, омега-3, колаген за стави.');
-    } else if (cond === 'liver') {
-      lines.push('Чернодробно: без високи дози ниацин/желязо без нужда.');
-    }
-  }
-
-  for (const med of medications) {
-    if (med === 'statins') lines.push('Статини: включи CoQ10/убихинол ако има в каталога; не комбинирай с рискови стимуланти.');
-    if (med === 'anticoagulants') lines.push('Антикоагуланти: без омега-3, рибено масло, krill, витамин E, куркумин на високи дози.');
-    if (med === 'ssri') lines.push('SSRI: без 5-HTP, триптофан; внимание със стимуланти и седативни комбинации.');
-    if (med === 'thyroid_meds') lines.push('Тироидни лекарства: без йод/келп.');
-    if (med === 'hormone_therapy') lines.push('Хормонална терапия: без фитоестрогени и isoflavone.');
-  }
-
-  for (const allergy of allergies) {
-    lines.push(`Алергия ${allergy}: избягвай продукти с типични източници за тази алергия (провери имена и съставки).`);
-  }
-
-  if (symptoms.includes('joint_pain')) lines.push('Болки в ставите: предпочитай колаген, глюкозамин/MSM, омега-3 (ако няма антикоагуланти).');
-  if (symptoms.includes('poor_sleep')) lines.push('Лош сън: магнезий, билки за сън — без стимуланти в същия пакет.');
-  if (symptoms.includes('fatigue')) lines.push('Умора: желязо/B12/CoQ10 според контекста, не само кофеин.');
-  if (profile.activity === 'regular') lines.push('Редовни тренировки: протеин/креатин/BCAA са релевантни само ако няма бъбречно/бременност ограничения.');
-
-  if (profile.conditions_other) lines.push(`Доп. състояние (клиент): ${profile.conditions_other}`);
-  if (profile.medications_other) lines.push(`Доп. медикаменти (клиент): ${profile.medications_other}`);
-  if (profile.allergies_other) lines.push(`Доп. алергии (клиент): ${profile.allergies_other}`);
-
-  return lines.join('\n');
-}
+export {
+  hasAdvisorClinicalComplexity,
+  resolveAdvisorCompositionStrategy,
+  buildAdvisorClinicalGuardrails,
+} from './site-advisor-shared.js';
+import { buildAdvisorClinicalGuardrails } from './site-advisor-shared.js';
 
 function withClinicalGuardrails(template, profile) {
-  const guardrails = buildAdvisorClinicalGuardrails(profile);
+  const guardrails = buildAdvisorClinicalGuardrails(profile, 'portfolio');
   if (!guardrails) return template;
   return `${template}\n\nКЛИНИЧНИ GUARDRAILS ЗА ТОЗИ КЛИЕНТ (приоритет над маркетинг):\n${guardrails}`;
 }
@@ -103,7 +20,8 @@ export function getDefaultPortfolioAdvisorPrompt() {
   return `Експерт по хранителни добавки (протеини, витамини, аминокиселини, фитнес и здраве).
 Избери САМО product_id от candidate_products. БЕЗ reasoning извън JSON.
 
-СПАЗВАЙ client_profile и clinical_guardrails. При противоречие избери друг product_id — не „най-печеливият“, а клинично подходящият.
+СПАЗВАЙ client_profile и clinical_guardrails. При противоречие избери друг product_id — не „най-печеливший“, а клинично подходящият.
+При равна клинична стойност предпочитай продукт с по-добра печалба за магазина (candidate_products са вече филтрирани).
 Комбинирай продукти с различни роли (без дублиране на еднакви активни вещества в един tier).
 
 3 tier-а: basic (стартов пакет), optimal (препоръчан), premium (пълен пакет).
@@ -188,7 +106,7 @@ export function buildPortfolioNarratorPayload(profile, composed, eligibleProduct
     },
     stacks,
     meta: composed.meta,
-    clinical_guardrails: buildAdvisorClinicalGuardrails(profile),
+    clinical_guardrails: buildAdvisorClinicalGuardrails(profile, 'portfolio'),
   };
 }
 
