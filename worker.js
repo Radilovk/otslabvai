@@ -54,7 +54,7 @@ import {
   getDefaultPortfolioNarratorPrompt,
   buildPortfolioAdvisorMessages,
   buildPortfolioNarratorMessages,
-  resolveAdvisorCompositionMode,
+  resolveAdvisorCompositionStrategy,
 } from './portfolio-advisor-prompt.js';
 import { buildPortfolioAdvisorNarration } from './portfolio-advisor-narration.js';
 import {
@@ -2298,9 +2298,8 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
     throw new UserFacingError('AI консултантът е временно изключен.', 503);
   }
 
-  const compositionMode = resolveAdvisorCompositionMode(
+  const compositionMode = resolveAdvisorCompositionStrategy(
     buildPortfolioAdvisorProfile(rawAnswers),
-    settings,
   );
   const prepared = await preparePortfolioAdvisorSubmission(env, rawAnswers, { compositionMode });
   const {

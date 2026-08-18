@@ -1,12 +1,12 @@
 import {
   buildAdvisorClinicalGuardrails,
   hasAdvisorClinicalComplexity,
-  resolveAdvisorCompositionMode,
+  resolveAdvisorCompositionStrategy,
   buildPortfolioAdvisorMessages,
 } from './portfolio-advisor-prompt.js';
 
-describe('portfolio-advisor-prompt hybrid', () => {
-  test('hasAdvisorClinicalComplexity при диабет + статини', () => {
+describe('portfolio-advisor-prompt', () => {
+  test('hasAdvisorClinicalComplexity при диабет + хипертония', () => {
     expect(hasAdvisorClinicalComplexity({
       conditions: ['diabetes', 'hypertension'],
       medications: ['statins'],
@@ -15,29 +15,26 @@ describe('portfolio-advisor-prompt hybrid', () => {
     })).toBe(true);
   });
 
-  test('resolveAdvisorCompositionMode hybrid → ai_pick за сложен профил', () => {
-    const profile = {
+  test('resolveAdvisorCompositionStrategy → ai_pick за сложен профил', () => {
+    expect(resolveAdvisorCompositionStrategy({
       conditions: ['diabetes', 'hypertension'],
       medications: ['statins'],
       allergies: ['lactose'],
       diet: 'omnivore',
       priority: 'otshalvane',
       bmi: 34,
-    };
-    expect(resolveAdvisorCompositionMode(profile, { composition_mode: 'hybrid' })).toBe('ai_pick');
-    expect(resolveAdvisorCompositionMode(profile, { composition_mode: 'compose_narrate' })).toBe('compose_narrate');
+    })).toBe('ai_pick');
   });
 
-  test('resolveAdvisorCompositionMode hybrid → compose_narrate за прост профил', () => {
-    const profile = {
+  test('resolveAdvisorCompositionStrategy → compose_narrate за прост профил', () => {
+    expect(resolveAdvisorCompositionStrategy({
       conditions: ['none'],
       medications: ['none'],
       allergies: ['none'],
       diet: 'omnivore',
       priority: 'muscle',
       activity: 'regular',
-    };
-    expect(resolveAdvisorCompositionMode(profile, { composition_mode: 'hybrid' })).toBe('compose_narrate');
+    })).toBe('compose_narrate');
   });
 
   test('buildAdvisorClinicalGuardrails включва статини и хипертония', () => {

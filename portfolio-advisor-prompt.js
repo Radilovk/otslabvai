@@ -27,14 +27,10 @@ export function hasAdvisorClinicalComplexity(profile = {}) {
 }
 
 /**
- * @param {object} profile
- * @param {{ composition_mode?: string }} settings
+ * Един автоматичен режим: compose за прости профили, AI pick при клинична сложност.
  * @returns {'ai_pick' | 'compose_narrate'}
  */
-export function resolveAdvisorCompositionMode(profile, settings = {}) {
-  const mode = settings.composition_mode || 'hybrid';
-  if (mode === 'ai_pick') return 'ai_pick';
-  if (mode === 'compose_narrate') return 'compose_narrate';
+export function resolveAdvisorCompositionStrategy(profile = {}) {
   return hasAdvisorClinicalComplexity(profile) ? 'ai_pick' : 'compose_narrate';
 }
 

@@ -624,14 +624,9 @@
                         <input type="checkbox" id="pfa-enabled" checked>
                         <span>AI консултантът е активен (клиентите могат да получават препоръки)</span>
                     </label>
-                    <div class="form-group" style="margin-bottom:1rem;">
-                        <label for="pfa-composition-mode" style="font-weight:600;display:block;margin-bottom:0.5rem;">Режим на съставяне</label>
-                        <select id="pfa-composition-mode" style="padding:0.5rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);">
-                            <option value="hybrid">Хибрид (препоръчително) — AI при сложен профил</option>
-                            <option value="compose_narrate">Compose + Narrate — бързо за прости профили</option>
-                            <option value="ai_pick">AI избира продукти — винаги</option>
-                        </select>
-                    </div>
+                    <p class="hint" style="margin:0 0 1rem;font-size:0.88rem;color:var(--text-muted);">
+                        Режимът е автоматичен: safety филтър → клиничен score + печалба → compose или AI pick при сложен профил.
+                    </p>
                     <div class="list-item" style="background:var(--bg-primary);padding:1rem;border-radius:10px;margin-bottom:1rem;border:1px solid var(--border-color);">
                         <h4 style="margin:0 0 0.75rem;">Търговски приоритет (без AI)</h4>
                         <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;cursor:pointer;">

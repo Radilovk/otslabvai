@@ -38,7 +38,7 @@ import {
   scoreAdvisorCommercialBoost,
 } from './portfolio-advisor-commerce.js';
 import { loadPortfolioAdvisorSettings } from './portfolio-advisor-settings.js';
-import { buildAdvisorClinicalGuardrails } from './portfolio-advisor-prompt.js';
+import { buildAdvisorClinicalGuardrails, hasAdvisorClinicalComplexity } from './portfolio-advisor-prompt.js';
 
 export { composePortfolioAdvisorStacks };
 
@@ -133,6 +133,18 @@ export function buildPortfolioAdvisorProfile(raw) {
   }
   profile.product_categories = normalizeAdvisorCategories(raw);
   return profile;
+}
+
+/** При клинична сложност намаляваме търговския boost — печалба след адекватност. */
+export function getAdvisorCommerceOptionsForProfile(advisorSettings, profile) {
+  const base = normalizeAdvisorCommerceSettings(advisorSettings);
+  if (!hasAdvisorClinicalComplexity(profile)) return base;
+  return {
+    ...base,
+    profit_pct_weight: base.profit_pct_weight * 0.35,
+    margin_eur_weight: base.margin_eur_weight * 0.5,
+    discount_pct_weight: base.discount_pct_weight * 0.5,
+  };
 }
 
 export function scorePortfolioAdvisorProduct(product, profile, commerceOptions = null) {
@@ -507,8 +519,8 @@ export function getPortfolioComposeOptions(profile) {
 
 export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compositionMode = 'compose_narrate' } = {}) {
   const advisorSettings = await loadPortfolioAdvisorSettings(env);
-  const commerceOptions = normalizeAdvisorCommerceSettings(advisorSettings);
   const profile = buildPortfolioAdvisorProfile(rawAnswers);
+  const commerceOptions = getAdvisorCommerceOptionsForProfile(advisorSettings, profile);
   if (!profile.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
     throw new Error('Невалиден имейл адрес.');
   }
