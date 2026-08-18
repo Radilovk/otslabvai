@@ -38,6 +38,7 @@ import {
   scoreAdvisorCommercialBoost,
 } from './portfolio-advisor-commerce.js';
 import { loadPortfolioAdvisorSettings } from './portfolio-advisor-settings.js';
+import { buildAdvisorClinicalGuardrails } from './portfolio-advisor-prompt.js';
 
 export { composePortfolioAdvisorStacks };
 
@@ -578,6 +579,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     }
     const payload = {
       client_profile: profile,
+      clinical_guardrails: buildAdvisorClinicalGuardrails(profile),
       priority_summary: profile.priority,
       composition_mode: 'ai_pick',
       candidate_products: candidates.map(transformProductForAI),
@@ -622,6 +624,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
 
   const payload = {
     client_profile: profile,
+    clinical_guardrails: buildAdvisorClinicalGuardrails(profile),
     priority_summary: profile.priority,
     composition_mode: 'compose_narrate',
     constraints: {
