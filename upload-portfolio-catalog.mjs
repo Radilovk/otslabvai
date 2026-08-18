@@ -4,6 +4,7 @@
  */
 import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS, fetchDescriptionMap, fetchFitness1Products, mergeCatalogProducts } from './portfolio-api.js';
 import { fetchSilaProductsWithFallback, normalizeSilaApiToken, KV_SILA_TOKEN } from './sila-api.js';
+import { mergeSettingsForCatalogSync, persistSettingsAfterCatalogSync } from './catalog-settings-kv.mjs';
 
 const KV_NS = process.env.CLOUDFLARE_KV_NAMESPACE_ID || 'd220db696e414b7cb3da2b19abd53d0f';
 const ACCOUNT = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -75,7 +76,7 @@ async function main() {
   }
 
   const existing = uploadKv ? (await kvGet('portfolio_settings') || {}) : {};
-  const settings = { ...DEFAULT_SETTINGS, ...existing, global_markup_percent: 30 };
+  const settings = mergeSettingsForCatalogSync(DEFAULT_SETTINGS, existing);
   const groups = groupRawProducts(products, settings, descriptionMap);
   const meta = buildCatalogMeta(groups);
   meta.synced_at = new Date().toISOString();
@@ -101,8 +102,20 @@ async function main() {
     await kvPut(KV_SILA_TOKEN, normalizeSilaApiToken(SILA_TOKEN), 'text/plain');
   }
 
-  console.log('Uploading portfolio_settings (preserving hero/branding)...');
-  await kvPut('portfolio_settings', JSON.stringify(settings, null, 2), 'application/json');
+  console.log('Uploading portfolio_settings (preserving admin/branding from KV)...');
+  const freshKv = await kvGet('portfolio_settings') || {};
+  await kvPut(
+    'portfolio_settings',
+    JSON.stringify(
+      persistSettingsAfterCatalogSync(freshKv, {
+        last_sync: meta.synced_at,
+        last_sync_count: groups.length,
+      }),
+      null,
+      2
+    ),
+    'application/json'
+  );
 
   console.log('Uploading portfolio_meta...');
   await kvPut('portfolio_meta', JSON.stringify(meta), 'application/json');
