@@ -16,7 +16,13 @@ import {
   normalizeCumulativeBenefits,
   scoreProduct,
 } from './protocol-quiz-engine.js';
-import { getMustIncludeKeywords, getExclusionReasons, productSearchText, productMatchesAnyKeyword } from './protocol-safety-rules.js';
+import {
+  getMustIncludeKeywords,
+  getExclusionReasons,
+  productSearchText,
+  productMatchesAnyKeyword,
+  profileHasPregnancyOrBreastfeeding,
+} from './protocol-safety-rules.js';
 import { composePortfolioAdvisorStacks } from './portfolio-advisor-compose.js';
 import { classifyProductSlot, getGoalSlotOrder } from './portfolio-stack-slots.js';
 import {
@@ -155,6 +161,18 @@ export function scorePortfolioAdvisorProduct(product, profile, commerceOptions =
   }
   if (profile.symptoms?.includes('low_appetite') && productMatchesAnyKeyword(text, ['mass', 'гейн', 'gainer', 'протеин'])) {
     score += 1;
+  }
+
+  const conditions = profile.conditions || [];
+  if (conditions.some((c) => ['hypertension', 'cardiovascular'].includes(c))) {
+    if (productMatchesAnyKeyword(text, ['thermogenic', 'fat burn', 'fat burner', 'preworkout', 'pre-workout', 'предтрен'])) {
+      score -= 20;
+    }
+  }
+  if (profileHasPregnancyOrBreastfeeding(profile)) {
+    if (productMatchesAnyKeyword(text, ['for men', 'for man', ' men ', ' man ', 'за мъже', 'saw palmetto', 'palmetto', 'echinacea', 'ехинацея'])) {
+      score -= 25;
+    }
   }
 
   if (profile.selection_mode === 'single') {
@@ -530,6 +548,20 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
   );
 
   const mustIncludeKws = getMustIncludeKeywords(profile);
+  let workingPool = workingRanked;
+  if (mustIncludeKws.length) {
+    const seen = new Set(workingPool.map((e) => e.product.product_id));
+    workingPool = [...workingPool];
+    for (const entry of rankedResult.ranked) {
+      if (seen.has(entry.product.product_id)) continue;
+      const text = productSearchText(entry.product);
+      if (mustIncludeKws.some((kw) => productMatchesAnyKeyword(text, [kw]))) {
+        workingPool.push(entry);
+        seen.add(entry.product.product_id);
+      }
+    }
+  }
+
   const isSingle = profile.selection_mode === 'single';
   const priceCeiling = isSingle
     ? { basic_target: 25, premium_max: 80 }
@@ -539,17 +571,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     : { basic: '2-3', optimal: '3-5', premium: '4-6' };
 
   if (compositionMode === 'ai_pick') {
-    const candidates = workingRanked.map((e) => e.product);
-    const candidateIds = new Set(candidates.map((p) => p.product_id));
-
-    for (const entry of rankedResult.ranked) {
-      if (candidateIds.has(entry.product.product_id)) continue;
-      const text = productSearchText(entry.product);
-      if (mustIncludeKws.some((kw) => productMatchesAnyKeyword(text, [kw]))) {
-        candidates.push(entry.product);
-        candidateIds.add(entry.product.product_id);
-      }
-    }
+    const candidates = workingPool.map((e) => e.product);
 
     if (candidates.length < 3) {
       throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
@@ -591,7 +613,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       payload,
       candidates,
       eligible: advisorPool,
-      ranked: workingRanked,
+      ranked: workingPool,
       excluded_product_ids: rankedResult.excluded_product_ids,
       exclusion_map: rankedResult.exclusion_map,
       compositionMode,
@@ -632,7 +654,7 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
     profile,
     payload,
     eligible: advisorPool,
-    ranked: workingRanked,
+    ranked: workingPool,
     excluded_product_ids: rankedResult.excluded_product_ids,
     exclusion_map: rankedResult.exclusion_map,
     compositionMode,
