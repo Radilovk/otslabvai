@@ -32,7 +32,7 @@ describe('catalog-api', () => {
       { waitUntil: (p) => p }
     );
     expect(res.status).toBe(200);
-    expect(res.headers.get('Cache-Control')).toContain('s-maxage=60');
+    expect(res.headers.get('Cache-Control')).toContain('s-maxage=300');
     const data = await res.json();
     expect(data.i).toBe('abc12345');
     expect(data.s).toBe('def67890');

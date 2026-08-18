@@ -5,6 +5,11 @@
 import { buildCatalogArtifacts } from './catalog-build.js';
 import { CATALOG_KV } from './catalog-kv-keys.js';
 import { CATALOG_SYNC_POLICY } from './catalog-sync-policy.js';
+import {
+  mergeSettingsForCatalogSync,
+  persistSettingsAfterCatalogSync,
+  mergeIndexEmbeddedSettings,
+} from './catalog-settings-kv.mjs';
 import { DEFAULT_SETTINGS, fetchFitness1Products, mergeCatalogProducts } from './portfolio-api.js';
 import { fetchSilaProductsWithFallback, normalizeSilaApiToken, KV_SILA_TOKEN } from './sila-api.js';
 import {
@@ -99,7 +104,7 @@ async function main() {
   if (!API_KEY && !SILA_TOKEN) throw new Error('FITNESS1_API_KEY and/or SILA_API_TOKEN required');
   if (!TOKEN || !ACCOUNT) throw new Error('Cloudflare credentials required');
 
-  const settings = { ...DEFAULT_SETTINGS, ...(await kvGet('portfolio_settings') || {}), global_markup_percent: 30 };
+  const settings = mergeSettingsForCatalogSync(DEFAULT_SETTINGS, await kvGet('portfolio_settings') || {});
   const products = await fetchProducts();
   console.log(`Got ${products.length} SKUs`);
 
@@ -122,8 +127,13 @@ async function main() {
   };
 
   if (indexChanged) {
+    const freshKv = await kvGet('portfolio_settings') || {};
+    const indexPayload = {
+      ...built.indexPayload,
+      settings: mergeIndexEmbeddedSettings(built.indexPayload.settings, freshKv),
+    };
     console.log(`Writing index ${built.indexVersion}`);
-    await kvPut(CATALOG_KV.index(built.indexVersion), gzipJson(built.indexPayload));
+    await kvPut(CATALOG_KV.index(built.indexVersion), gzipJson(indexPayload));
     pointer.i = built.indexVersion;
     pointer.history.index = [...new Set([...(pointer.history.index || []), built.indexVersion])];
     for (let i = 0; i < built.chunks.length; i += 1) {
@@ -156,7 +166,18 @@ async function main() {
   console.log('Updating legacy portfolio_* keys...');
   if (API_KEY) await kvPut('fitness1_api_key', API_KEY, 'text/plain');
   if (SILA_TOKEN) await kvPut(KV_SILA_TOKEN, normalizeSilaApiToken(SILA_TOKEN), 'text/plain');
-  await kvPut('portfolio_settings', JSON.stringify(built.legacySettings, null, 2));
+  const freshKv = await kvGet('portfolio_settings') || {};
+  await kvPut(
+    'portfolio_settings',
+    JSON.stringify(
+      persistSettingsAfterCatalogSync(freshKv, {
+        last_sync: built.legacyMeta.synced_at,
+        last_sync_count: built.groups.length,
+      }),
+      null,
+      2
+    )
+  );
   await kvPut('portfolio_meta', JSON.stringify(built.legacyMeta));
   for (let i = 0; i < built.chunks.length; i += 1) {
     await kvPut(`portfolio_chunk_${i}`, JSON.stringify(built.chunks[i]));

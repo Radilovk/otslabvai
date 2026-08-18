@@ -14,7 +14,7 @@ const IMMUTABLE_HEADERS = {
 
 const POINTER_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
-  'Cache-Control': 'public, max-age=0, s-maxage=60'
+  'Cache-Control': `public, max-age=0, s-maxage=${CATALOG_SYNC_POLICY.POINTER_SMAXAGE_SEC}`
 };
 
 function jsonResponse(body, status = 200, headers = {}) {
@@ -68,23 +68,11 @@ export async function requestCatalogLightSync(env) {
   return { triggered: true };
 }
 
-async function maybeDispatchRefresh(env, pointer, ctx) {
-  if (!pointer?.t) return;
-  const ageMs = Date.now() - pointer.t * 1000;
-  if (ageMs < CATALOG_SYNC_POLICY.REFRESH_WINDOW_MS) return;
-  if (ctx?.waitUntil) {
-    ctx.waitUntil(requestCatalogLightSync(env));
-  } else {
-    await requestCatalogLightSync(env);
-  }
-}
-
-async function handleCatalogNow(env, ctx) {
+async function handleCatalogNow(env) {
   const pointer = await readJson(env, CATALOG_KV.POINTER);
   if (!pointer?.i || !pointer?.s) {
     return jsonResponse({ error: 'Каталогът не е синхронизиран.' }, 404, POINTER_HEADERS);
   }
-  await maybeDispatchRefresh(env, pointer, ctx);
   const branding = await getPublicSiteSettings(env);
   return jsonResponse({ i: pointer.i, s: pointer.s, t: pointer.t, branding }, 200, POINTER_HEADERS);
 }
@@ -105,7 +93,7 @@ export async function handleCatalogRoute(request, env, url, ctx) {
   const path = url.pathname;
 
   if (path === '/c/now' && request.method === 'GET') {
-    return handleCatalogNow(env, ctx);
+    return handleCatalogNow(env);
   }
 
   const indexMatch = path.match(/^\/c\/index-([a-f0-9]+)\.json$/);
