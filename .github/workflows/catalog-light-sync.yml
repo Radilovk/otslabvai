@@ -4,6 +4,8 @@ on:
   repository_dispatch:
     types: [catalog-light-sync]
   workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
 
 concurrency:
   group: catalog-light-sync

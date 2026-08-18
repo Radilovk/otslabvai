@@ -426,7 +426,9 @@ export function invalidatePortfolioCache() {
 
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') sync();
+    if (document.visibilityState !== 'visible') return;
+    if (catalogState.index && Date.now() - catalogState.lastSync < CATALOG_SYNC_POLICY.SOFT_TTL_MS) return;
+    sync();
   });
 }
 
