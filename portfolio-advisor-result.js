@@ -1,5 +1,5 @@
 import { formatPriceEur, buildCumulativeBenefitTiers } from './protocol-quiz-engine.js';
-import { persistAdvisorResult, loadAdvisorResult, RESULT_KEY } from './portfolio-advisor-store.js';
+import { persistAdvisorResult, loadAdvisorResult } from './portfolio-advisor-store.js';
 import { CART_KEY, saveCart, updateCartBadges, showToast } from './portfolio-shared.js';
 import { resolveImageUrl } from './life-img.js';
 
@@ -285,13 +285,7 @@ function addTierToCart(tier, btn) {
   }, 700);
 }
 
-const data = loadAdvisorResult() || (() => {
-  try {
-    return JSON.parse(sessionStorage.getItem(RESULT_KEY) || 'null');
-  } catch {
-    return null;
-  }
-})();
+const data = loadAdvisorResult();
 
 if (!data?.tiers) {
   container.innerHTML = `<div class="lpq-card"><p>Няма наличен резултат. <a href="portfolio-advisor-quiz.html">Попълнете въпросника</a>.</p></div>`;

@@ -14,7 +14,11 @@ export function persistAdvisorResult(data) {
 
 export function loadAdvisorResult() {
   try {
-    return JSON.parse(sessionStorage.getItem(RESULT_KEY) || 'null');
+    const fromSession = sessionStorage.getItem(RESULT_KEY);
+    if (fromSession) return JSON.parse(fromSession);
+    const fromLocal = localStorage.getItem(`${RESULT_KEY}Persistent`);
+    if (fromLocal) return JSON.parse(fromLocal);
+    return null;
   } catch {
     return null;
   }

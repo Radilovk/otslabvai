@@ -4,10 +4,6 @@
  */
 
 import {
-  collectImportedGroupIds,
-  refreshImportedProductsInContent,
-} from './portfolio-import.js';
-import {
   getExclusionReasons,
   getMustIncludeKeywords,
   productMatchesAnyKeyword,
@@ -62,6 +58,7 @@ export function extractProductsFromContent(pageContent) {
 
 /** Опреснява наличности от portfolio каталог (in-memory) */
 export async function refreshLifeProductsAvailability(env, pageContent, loadGroupsByIds) {
+  const { collectImportedGroupIds, refreshImportedProductsInContent } = await import('./portfolio-import.js');
   const groupIds = collectImportedGroupIds(pageContent);
   if (!groupIds.length) return pageContent;
 
