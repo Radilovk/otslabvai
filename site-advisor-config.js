@@ -146,7 +146,7 @@ const MAIN_SYMPTOMS_STEP = {
   field: 'symptoms',
   options: [
     { value: 'fatigue', label: 'Постоянна умора' },
-    { value: 'low_appetite', label: 'Трудно контролиран апетит / cravings' },
+    { value: 'cravings', label: 'Трудно контролиран апетит / cravings' },
     { value: 'poor_sleep', label: 'Лош сън (влияе на теглото)' },
     { value: 'joint_pain', label: 'Болки в ставите при движение' },
     { value: 'concentration', label: 'Липса на фокус / мотивация' },

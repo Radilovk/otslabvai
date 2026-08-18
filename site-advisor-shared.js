@@ -107,6 +107,9 @@ export function buildAdvisorClinicalGuardrails(profile = {}, siteId = 'life') {
   if (siteId === 'main' && profile.bmi >= 30) {
     lines.push('BMI ≥30: фокус върху ситост, метаболизъм, протеин — без агресивни стимуланти при хипертония/диабет.');
   }
+  if (siteId === 'main' && (profile.symptoms || []).includes('cravings')) {
+    lines.push('Cravings/апетит: приоритет ситост и метаболизъм — без агресивни стимуланти при кардио риск.');
+  }
   if (siteId === 'life') {
     lines.push('Anti-aging фокус: антиоксиданти, колаген, NAD/CoQ10, омега-3, сън и когниция — комплементарни роли в стека.');
   }

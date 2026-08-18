@@ -274,6 +274,7 @@ function addTierToCart(tier, btn) {
     if (existingIds.has(item.product_id)) continue;
     cart.push({
       id: item.product_id,
+      sku_id: item.sku_id || item.product_id,
       name: item.name,
       price: item.price_eur || 0,
       quantity: 1,

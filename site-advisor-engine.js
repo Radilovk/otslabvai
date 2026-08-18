@@ -42,6 +42,56 @@ export const SITE_GOAL_KEYWORDS = {
   ],
 };
 
+const CATALOG_GOAL_MATCHERS = {
+  longevity: ['дълголет', 'антиейдж', 'anti-aging', 'antiaging', 'клетъч', 'регенера', 'longevity', 'brain', 'мозък', 'cognition', 'когнит'],
+  otshalvane: ['отслаб', 'slim', 'weight', 'fat', 'изгар', 'апетит', 'метабол', 'диет', 'detox'],
+};
+
+function scoreCatalogGoalMetadata(product, siteId = 'life') {
+  const key = siteId === 'main' ? 'otshalvane' : 'longevity';
+  const matchers = CATALOG_GOAL_MATCHERS[key];
+  const goals = (product.system_data?.goals || []).map((g) => String(g).toLowerCase());
+  const text = goals.join(' ');
+  let score = 0;
+  for (const needle of matchers) {
+    if (text.includes(needle)) score += 6;
+  }
+  return score;
+}
+
+export const SITE_TIER_LIMITS = {
+  life: {
+    basic: { min: 3, max: 4, budgetEur: 32 },
+    optimal: { min: 5, max: 6, budgetEur: 68 },
+    premium: { min: 6, max: 8, budgetEur: 100 },
+  },
+  main: {
+    basic: { min: 2, max: 3, budgetEur: 35 },
+    optimal: { min: 3, max: 5, budgetEur: 75 },
+    premium: { min: 4, max: 6, budgetEur: 120 },
+  },
+};
+
+export const SITE_TIER_META = {
+  life: {
+    basic: { name: 'Базов старт', tagline: 'Минимален anti-aging протокол' },
+    optimal: { name: 'Оптимален протокол', tagline: 'Най-добра стойност за профила' },
+    premium: { name: 'Премиум регенерация', tagline: 'Пълен клетъчен протокол' },
+  },
+  main: {
+    basic: { name: 'Стартов план', tagline: 'Основа за отслабване' },
+    optimal: { name: 'Оптимална програма', tagline: 'Ситост + метаболизъм' },
+    premium: { name: 'Пълна програма', tagline: 'Максимално покритие' },
+  },
+};
+
+export function getSiteComposeOptions(siteId = 'life') {
+  return {
+    tierLimits: SITE_TIER_LIMITS[siteId] || SITE_TIER_LIMITS.life,
+    tierMeta: SITE_TIER_META[siteId] || SITE_TIER_META.life,
+  };
+}
+
 function getSitePriorityKeywordMap(siteId) {
   const priority = siteId === 'main' ? 'otshalvane' : 'longevity';
   return { [priority]: SITE_GOAL_KEYWORDS[priority] };
@@ -54,7 +104,7 @@ export function buildSiteAdvisorProfile(rawAnswers, siteId = 'life') {
 
 export function scoreSiteAdvisorProduct(product, profile, siteId = 'life') {
   const keywordMap = getSitePriorityKeywordMap(siteId);
-  let score = scoreProduct(product, profile, keywordMap);
+  let score = scoreProduct(product, profile, keywordMap) + scoreCatalogGoalMetadata(product, siteId);
   const text = productSearchText(product);
 
   if (profile.activity === 'regular' && siteId === 'main') {
@@ -64,8 +114,8 @@ export function scoreSiteAdvisorProduct(product, profile, siteId = 'life') {
   if (profile.symptoms?.includes('joint_pain') && productMatchesAnyKeyword(text, ['joint', 'став', 'колаген', 'collagen'])) {
     score += 2;
   }
-  if (profile.symptoms?.includes('low_appetite') && siteId === 'main') {
-    if (productMatchesAnyKeyword(text, ['appetite', 'апетит', 'ситост', 'fiber', 'фибри', 'protein', 'протеин'])) score += 2;
+  if (profile.symptoms?.includes('cravings') && siteId === 'main') {
+    if (productMatchesAnyKeyword(text, ['appetite', 'апетит', 'ситост', 'fiber', 'фибри', 'garcinia', 'гарциния', 'chromium', 'хром'])) score += 3;
   }
   if (profile.symptoms?.includes('poor_sleep') && productMatchesAnyKeyword(text, ['sleep', 'сън', 'melatonin', 'мелатонин', 'магнезий'])) {
     score += 1;
@@ -180,12 +230,16 @@ export async function prepareSiteAdvisorSubmission(env, rawAnswers, deps, {
   }
 
   const mustIncludeKws = getMustIncludeKeywords(profile);
-  const tierCounts = siteId === 'main'
-    ? { basic: '2-3', optimal: '3-5', premium: '4-6' }
-    : { basic: '3-4', optimal: '5-6', premium: '6-8' };
-  const priceCeiling = siteId === 'main'
-    ? { basic_target: 35, premium_max: 120 }
-    : { basic_target: 25, premium_max: 100 };
+  const tierLimits = SITE_TIER_LIMITS[siteId] || SITE_TIER_LIMITS.life;
+  const tierCounts = {
+    basic: `${tierLimits.basic.min}-${tierLimits.basic.max}`,
+    optimal: `${tierLimits.optimal.min}-${tierLimits.optimal.max}`,
+    premium: `${tierLimits.premium.min}-${tierLimits.premium.max}`,
+  };
+  const priceCeiling = {
+    basic_target: tierLimits.basic.budgetEur,
+    premium_max: tierLimits.premium.budgetEur,
+  };
 
   if (compositionMode === 'ai_pick') {
     const { candidates, excluded_product_ids, exclusion_map } = buildCandidatePool(

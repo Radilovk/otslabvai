@@ -48,6 +48,7 @@ import {
   prepareSiteAdvisorSubmission,
   buildSiteAdvisorProfile,
   finalizeSiteAdvisorResponse,
+  getSiteComposeOptions,
 } from './site-advisor-engine.js';
 import {
   getDefaultSiteAdvisorPrompt,
@@ -2181,7 +2182,8 @@ async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
     }
   }
 
-  const composed = composeProtocolStacks(profile, ranked);
+  const composeOptions = getSiteComposeOptions(siteId);
+  const composed = composeProtocolStacks(profile, ranked, composeOptions);
   const productMap = new Map(eligible.map((p) => [p.product_id, p]));
   payload.composed_meta = composed.meta;
 
@@ -2455,7 +2457,7 @@ async function handleMainAdvisorSimulate(request, env) {
     medications: ['none'],
     activity: 'moderate',
     diet: 'omnivore',
-    symptoms: ['low_appetite', 'fatigue'],
+    symptoms: ['cravings', 'fatigue'],
     allergies: ['none'],
     email: 'test@daotslabna.local',
     name: 'Тест Клиент',

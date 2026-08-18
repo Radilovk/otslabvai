@@ -22,10 +22,12 @@
   --lpq-border: rgba(255, 255, 255, 0.1);
 }
 
-.maa-body .lpq-header h1 {
-  font-family: var(--lpq-display);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.maa-body .lpq-header h1,
+.maa-body .lpq-header p,
+.maa-body .lpq-step h2,
+.maa-body .lpq-btn,
+.maa-body .lpq-option span {
+  font-family: var(--lpq-font);
 }
 
 .maa-body .lpq-btn-primary {

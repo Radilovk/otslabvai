@@ -42,6 +42,10 @@ const SYMPTOM_KEYWORDS = {
   fatigue: ['желязо', 'iron', 'b12', 'b-12', 'коензим', 'coq10', 'енерги', 'ашваганда', 'rhodiola'],
   hair_nails: ['биотин', 'biotin', 'цинк', 'zinc', 'колаген', 'collagen', 'силиций', 'silicon'],
   concentration: ['омега', 'omega', 'dha', 'фосфатидил', 'phosphatidyl', 'ginkgo', 'гинко', 'bacopa'],
+  joint_pain: ['joint', 'став', 'глюкозамин', 'glucosamine', 'колаген', 'collagen', 'хондро', 'chondro'],
+  poor_sleep: ['sleep', 'сън', 'melatonin', 'мелатонин', 'магнезий', 'magnesium'],
+  cravings: ['appetite', 'апетит', 'ситост', 'craving', 'fiber', 'фибри', 'garcinia', 'гарциния', 'chromium', 'хром'],
+  low_appetite: ['mass', 'гейн', 'gainer', 'протеин', 'protein'],
 };
 
 const PEPTIDE_KEYWORDS = [
@@ -292,6 +296,7 @@ export function enrichProtocolProductItem(item, product, siteId = 'life') {
     price_bgn: eurToBgn(priceEur),
     image_url: variant?.image_url || product.public_data?.image_url || '',
     variant_name: variant?.option_name || '',
+    sku_id: variant?.sku || product.product_id,
     product_url: productPath,
   };
 }

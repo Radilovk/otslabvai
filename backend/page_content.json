@@ -96,7 +96,7 @@
       "content": "Открий правилната формула за твоето тяло и начин на живот",
       "button": {
         "text": "Започни сега",
-        "url": "https://radilovk.github.io/port/quest.html"
+        "url": "main-advisor-quiz.html"
       },
       "options": {
         "image_align": "right"

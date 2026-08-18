@@ -9,6 +9,7 @@ import {
   productMatchesAnyKeyword,
   productSearchText,
 } from './protocol-safety-rules.js';
+import { productsConflictInStack } from './portfolio-stack-slots.js';
 import { getProductPriceEur } from './protocol-quiz-engine.js';
 
 const TIER_LIMITS = {
@@ -67,6 +68,7 @@ function pickProducts(ranked, { count, budgetEur, picked, diversify = true }) {
   const tryPick = (entry, force = false) => {
     const { product } = entry;
     if (picked.has(product.product_id)) return false;
+    if (selected.some((p) => productsConflictInStack(p, product))) return false;
     const price = getProductPriceEur(product);
     if (!force && selected.length >= 3 && totalEur + price > budgetEur) return false;
 
