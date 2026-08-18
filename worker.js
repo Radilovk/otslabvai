@@ -18,26 +18,10 @@ import {
   persistAISettings
 } from './ai-settings-resolver.js';
 import {
-  prepareProtocolSubmission,
-  validateProtocolResponse,
-  buildMockProtocolResponse,
-  finalizeProtocolResponse,
-} from './protocol-quiz-engine.js';
-import {
-  getDefaultProtocolQuizPrompt,
-  getDefaultNarratorPrompt,
-  buildProtocolQuizMessages,
-  buildNarratorMessages,
-} from './protocol-quiz-prompt.js';
-import {
-  composeProtocolStacks,
   assembleProtocolFromComposition,
   buildMockNarration,
+  composeProtocolStacks,
 } from './protocol-stack-composer.js';
-import {
-  loadLifeProtocolSettings,
-  saveLifeProtocolSettings,
-} from './protocol-quiz-settings.js';
 import {
   preparePortfolioAdvisorSubmission,
   finalizePortfolioAdvisorResponse,
@@ -50,11 +34,33 @@ import {
   savePortfolioAdvisorSettings,
 } from './portfolio-advisor-settings.js';
 import {
+  validateProtocolResponse,
+  buildMockProtocolResponse,
+  normalizeCumulativeBenefits,
+} from './protocol-quiz-engine.js';
+import {
+  loadLifeProtocolSettings,
+  saveLifeProtocolSettings,
+  loadMainAdvisorSettings,
+  saveMainAdvisorSettings,
+} from './protocol-quiz-settings.js';
+import {
+  prepareSiteAdvisorSubmission,
+  buildSiteAdvisorProfile,
+  finalizeSiteAdvisorResponse,
+} from './site-advisor-engine.js';
+import {
+  getDefaultSiteAdvisorPrompt,
+  getDefaultSiteNarratorPrompt,
+  buildSiteAdvisorMessages,
+  buildSiteNarratorMessages,
+} from './site-advisor-prompt.js';
+import { resolveAdvisorCompositionStrategy } from './site-advisor-shared.js';
+import {
   getDefaultPortfolioAdvisorPrompt,
   getDefaultPortfolioNarratorPrompt,
   buildPortfolioAdvisorMessages,
   buildPortfolioNarratorMessages,
-  resolveAdvisorCompositionStrategy,
 } from './portfolio-advisor-prompt.js';
 import { buildPortfolioAdvisorNarration } from './portfolio-advisor-narration.js';
 import {
@@ -191,6 +197,48 @@ export default {
           case '/life-protocol/simulate':
             if (request.method === 'POST') {
               response = await handleLifeProtocolSimulate(request, env);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/main-advisor-submit':
+            if (request.method === 'POST') {
+              response = await handleMainAdvisorSubmit(request, env, ctx);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/main-advisor/settings':
+            if (request.method === 'GET') {
+              response = await handleGetMainAdvisorSettings(env);
+            } else if (request.method === 'POST') {
+              response = await handleSaveMainAdvisorSettings(request, env, ctx);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/main-advisor/leads':
+            if (request.method === 'GET') {
+              response = await handleGetMainAdvisorLeads(env);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/main-advisor/results':
+            if (request.method === 'GET') {
+              response = await handleGetMainAdvisorResults(env);
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
+
+          case '/main-advisor/simulate':
+            if (request.method === 'POST') {
+              response = await handleMainAdvisorSimulate(request, env);
             } else {
               throw new UserFacingError('Method Not Allowed.', 405);
             }
@@ -2074,22 +2122,31 @@ function isProtocolAIRecoverableError(err) {
     return msg.includes('токен') || msg.includes('JSON') || msg.includes('празен');
 }
 
-async function runLifeProtocolGeneration(env, rawAnswers, { useMockAi = false, settingsOverride = null, skipEnabledCheck = false } = {}) {
-  const settings = settingsOverride || await loadLifeProtocolSettings(env);
+async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
+  useMockAi = false,
+  settingsOverride = null,
+  skipEnabledCheck = false,
+} = {}) {
+  const loadSettings = siteId === 'main' ? loadMainAdvisorSettings : loadLifeProtocolSettings;
+  const settings = settingsOverride || await loadSettings(env);
+  const disabledMsg = siteId === 'main'
+    ? 'AI консултантът е временно изключен.'
+    : 'Въпросникът за персонален протокол е временно изключен.';
+
   if (!skipEnabledCheck && !settings.enabled) {
-    throw new UserFacingError('Въпросникът за персонален протокол е временно изключен.', 503);
+    throw new UserFacingError(disabledMsg, 503);
   }
 
-  const compositionMode = settings.composition_mode === 'ai_pick' ? 'ai_pick' : 'compose_narrate';
+  const profile = buildSiteAdvisorProfile(rawAnswers, siteId);
+  const compositionMode = resolveAdvisorCompositionStrategy(profile);
 
   const deps = {
     loadProjectContent,
     loadGroupsByIds: loadPortfolioGroupsByIds,
   };
 
-  const prepared = await prepareProtocolSubmission(env, rawAnswers, deps, { compositionMode });
+  const prepared = await prepareSiteAdvisorSubmission(env, rawAnswers, deps, { siteId, compositionMode });
   const {
-    profile,
     payload,
     ranked,
     eligible,
@@ -2097,24 +2154,29 @@ async function runLifeProtocolGeneration(env, rawAnswers, { useMockAi = false, s
     candidates,
   } = prepared;
 
+  const finalize = (response) => finalizeSiteAdvisorResponse(response, eligible, excludedProductIds, siteId);
+
   if (compositionMode === 'ai_pick') {
     if (useMockAi) {
-      const recommendation = buildMockProtocolResponse(candidates, profile, { ranked });
+      const mock = buildMockProtocolResponse(candidates, profile, { ranked });
+      const recommendation = finalize(normalizeCumulativeBenefits(mock));
       return { profile, payload, candidates, recommendation, mock: true };
     }
 
-    const promptTemplate = settings.prompt || getDefaultProtocolQuizPrompt();
-    const messages = buildProtocolQuizMessages(promptTemplate, payload);
+    const promptTemplate = settings.prompt || getDefaultSiteAdvisorPrompt(siteId);
+    const messages = buildSiteAdvisorMessages(promptTemplate, payload, profile, siteId);
 
     try {
       const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
       let recommendation = parseJsonFromAI(aiRaw);
       recommendation = validateProtocolResponse(recommendation, candidates, excludedProductIds);
+      recommendation = finalize(normalizeCumulativeBenefits(recommendation));
       return { profile, payload, candidates, recommendation, mock: false };
     } catch (e) {
-      console.warn('Life protocol AI failed, using deterministic fallback:', e.message || e);
+      console.warn(`${siteId} advisor AI failed, using deterministic fallback:`, e.message || e);
       if (!isProtocolAIRecoverableError(e)) throw e;
-      const recommendation = buildMockProtocolResponse(candidates, profile, { ranked });
+      const mock = buildMockProtocolResponse(candidates, profile, { ranked });
+      const recommendation = finalize(normalizeCumulativeBenefits(mock));
       return { profile, payload, candidates, recommendation, mock: true, ai_fallback: true };
     }
   }
@@ -2126,27 +2188,35 @@ async function runLifeProtocolGeneration(env, rawAnswers, { useMockAi = false, s
   if (useMockAi) {
     const narration = buildMockNarration(composed, profile);
     const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
-    const recommendation = finalizeProtocolResponse(response, eligible, excludedProductIds);
+    const recommendation = finalize(normalizeCumulativeBenefits(response));
     return { profile, payload, composed, recommendation, mock: true };
   }
 
-  const promptTemplate = settings.narrator_prompt || getDefaultNarratorPrompt();
-  const messages = buildNarratorMessages(promptTemplate, profile, composed, eligible);
+  const promptTemplate = settings.narrator_prompt || getDefaultSiteNarratorPrompt(siteId);
+  const messages = buildSiteNarratorMessages(promptTemplate, profile, composed, eligible, siteId);
 
   try {
     const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
     const narration = parseJsonFromAI(aiRaw);
     const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
-    const recommendation = finalizeProtocolResponse(response, eligible, excludedProductIds);
+    const recommendation = finalize(normalizeCumulativeBenefits(response));
     return { profile, payload, composed, recommendation, mock: false };
   } catch (e) {
-    console.warn('Life protocol narrator AI failed, using deterministic fallback:', e.message || e);
+    console.warn(`${siteId} advisor narrator AI failed, using deterministic fallback:`, e.message || e);
     if (!isProtocolAIRecoverableError(e)) throw e;
     const narration = buildMockNarration(composed, profile);
     const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
-    const recommendation = finalizeProtocolResponse(response, eligible, excludedProductIds);
+    const recommendation = finalize(normalizeCumulativeBenefits(response));
     return { profile, payload, composed, recommendation, mock: true, ai_fallback: true };
   }
+}
+
+async function runLifeProtocolGeneration(env, rawAnswers, options = {}) {
+  return runSiteAdvisorGeneration(env, rawAnswers, 'life', options);
+}
+
+async function runMainAdvisorGeneration(env, rawAnswers, options = {}) {
+  return runSiteAdvisorGeneration(env, rawAnswers, 'main', options);
 }
 
 /**
@@ -2246,7 +2316,6 @@ async function handleLifeProtocolSimulate(request, env) {
     age_band: '45-54',
     height_cm: 168,
     weight_kg: 65,
-    priority: 'skin',
     conditions: ['none'],
     medications: ['none'],
     activity: 'rare',
@@ -2254,7 +2323,6 @@ async function handleLifeProtocolSimulate(request, env) {
     symptoms: ['fatigue'],
     allergies: ['none'],
     pregnancy: 'no',
-    sun_exposure: 'moderate',
     email: 'test@life-protocol.local',
     name: 'Тест Клиент',
   };
@@ -2274,7 +2342,141 @@ async function handleLifeProtocolSimulate(request, env) {
       success: true,
       mock: result.mock,
       catalog_stats: result.payload.catalog_stats,
-      candidates_count: result.candidates.length,
+      candidates_count: result.candidates?.length || 0,
+      excluded_count: result.payload.constraints.excluded_product_ids.length,
+      profile: result.profile,
+      recommendation: result.recommendation,
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    const msg = e instanceof UserFacingError ? e.message : (e.message || 'Симулацията се провали.');
+    const status = e instanceof UserFacingError ? e.status : 500;
+    return new Response(JSON.stringify({ success: false, error: msg }), {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+/**
+ * POST /main-advisor-submit
+ */
+async function handleMainAdvisorSubmit(request, env, ctx) {
+  const rawAnswers = await request.json();
+
+  let result;
+  try {
+    result = await runMainAdvisorGeneration(env, rawAnswers);
+  } catch (e) {
+    if (e instanceof UserFacingError) throw e;
+    throw new UserFacingError(e.message || 'Грешка при подготовка на препоръката.', 400);
+  }
+
+  const { profile, payload, recommendation } = result;
+  const sessionId = `main-advisor-${Date.now()}`;
+  const leadRecord = {
+    id: sessionId,
+    source: 'main-advisor-quiz',
+    timestamp: new Date().toISOString(),
+    email: profile.email,
+    name: profile.name || '',
+    profile,
+    catalog_stats: payload.catalog_stats,
+  };
+  const resultRecord = {
+    sessionId,
+    timestamp: leadRecord.timestamp,
+    email: profile.email,
+    recommendation,
+    catalog_stats: payload.catalog_stats,
+  };
+
+  ctx.waitUntil(saveMainAdvisorLead(env, leadRecord));
+  ctx.waitUntil(saveMainAdvisorResult(env, resultRecord));
+
+  return new Response(JSON.stringify({
+    sessionId,
+    email: profile.email,
+    ...recommendation,
+  }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleGetMainAdvisorSettings(env) {
+  const settings = await loadMainAdvisorSettings(env);
+  return new Response(JSON.stringify(settings), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+  });
+}
+
+async function handleSaveMainAdvisorSettings(request, env, ctx) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    throw new UserFacingError('Невалиден JSON.', 400);
+  }
+  const saved = await saveMainAdvisorSettings(env, body, ctx);
+  return new Response(JSON.stringify({ success: true, settings: saved }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleGetMainAdvisorLeads(env) {
+  const leads = await env.PAGE_CONTENT.get('main_advisor_leads', { type: 'json' }) || [];
+  return new Response(JSON.stringify(leads.slice().reverse()), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+  });
+}
+
+async function handleGetMainAdvisorResults(env) {
+  const results = await env.PAGE_CONTENT.get('main_advisor_results', { type: 'json' }) || [];
+  return new Response(JSON.stringify(results.slice().reverse()), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+  });
+}
+
+async function handleMainAdvisorSimulate(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const sampleProfile = body.profile || {
+    sex: 'female',
+    age_band: '35-44',
+    height_cm: 165,
+    weight_kg: 82,
+    conditions: ['none'],
+    medications: ['none'],
+    activity: 'moderate',
+    diet: 'omnivore',
+    symptoms: ['low_appetite', 'fatigue'],
+    allergies: ['none'],
+    email: 'test@daotslabna.local',
+    name: 'Тест Клиент',
+  };
+
+  if (body.profile) {
+    sampleProfile.email = sampleProfile.email || 'test@daotslabna.local';
+  }
+
+  const useMockAi = body.use_mock_ai !== false;
+
+  try {
+    const result = await runMainAdvisorGeneration(env, sampleProfile, {
+      useMockAi,
+      skipEnabledCheck: true,
+    });
+    return new Response(JSON.stringify({
+      success: true,
+      mock: result.mock,
+      catalog_stats: result.payload.catalog_stats,
+      candidates_count: result.candidates?.length || 0,
       excluded_count: result.payload.constraints.excluded_product_ids.length,
       profile: result.profile,
       recommendation: result.recommendation,
@@ -2540,6 +2742,26 @@ async function saveLifeProtocolResult(env, result) {
     await env.PAGE_CONTENT.put('life_protocol_results', JSON.stringify(list, null, 2));
   } catch (e) {
     console.error('Failed to save life protocol result:', e);
+  }
+}
+
+async function saveMainAdvisorLead(env, lead) {
+  try {
+    const list = await env.PAGE_CONTENT.get('main_advisor_leads', { type: 'json' }) || [];
+    list.push(lead);
+    await env.PAGE_CONTENT.put('main_advisor_leads', JSON.stringify(list, null, 2));
+  } catch (e) {
+    console.error('Failed to save main advisor lead:', e);
+  }
+}
+
+async function saveMainAdvisorResult(env, result) {
+  try {
+    const list = await env.PAGE_CONTENT.get('main_advisor_results', { type: 'json' }) || [];
+    list.push(result);
+    await env.PAGE_CONTENT.put('main_advisor_results', JSON.stringify(list, null, 2));
+  } catch (e) {
+    console.error('Failed to save main advisor result:', e);
   }
 }
 

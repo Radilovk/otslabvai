@@ -33,6 +33,14 @@ body.lpq-body {
   line-height: 1.6;
 }
 
+.lpq-info-text {
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  background: rgba(0, 196, 200, 0.08);
+  border: 1px solid rgba(0, 196, 200, 0.2);
+  margin: 0;
+}
+
 .lpq-replace-banner {
   max-width: 640px;
   margin: 0 auto 1rem;

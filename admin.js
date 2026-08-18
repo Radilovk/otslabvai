@@ -5961,7 +5961,7 @@ function renderLifeProtocolLeads() {
             <td>${d}</td>
             <td>${escapeHtml(lead.email || '')}</td>
             <td>${escapeHtml(lead.name || '—')}</td>
-            <td>${escapeHtml(lead.profile?.priority || '—')}</td>
+            <td>${escapeHtml(lead.profile?.priority === 'longevity' ? 'Anti-aging' : (lead.profile?.priority || '—'))}</td>
             <td>${stats.eligible_available ?? '—'}</td>
             <td>${stats.candidates_sent_to_ai ?? '—'}</td>`;
         tbody.appendChild(tr);
@@ -6005,7 +6005,8 @@ function renderLifeProtocolResults() {
 }
 
 async function runLifeProtocolSimulateLocal(useMockAi) {
-    const { prepareProtocolSubmission, buildMockProtocolResponse } = await import('./protocol-quiz-engine.js');
+    const { buildMockProtocolResponse, normalizeCumulativeBenefits } = await import('./protocol-quiz-engine.js');
+    const { prepareSiteAdvisorSubmission, finalizeSiteAdvisorResponse } = await import('./site-advisor-engine.js');
     const contentRes = await fetch('backend/life_page_content.json', { cache: 'no-cache' });
     if (!contentRes.ok) throw new Error('Неуспешно зареждане на life_page_content.json');
     const lifeContent = await contentRes.json();
@@ -6029,7 +6030,6 @@ async function runLifeProtocolSimulateLocal(useMockAi) {
         age_band: '45-54',
         height_cm: 168,
         weight_kg: 65,
-        priority: 'skin',
         conditions: ['none'],
         medications: ['none'],
         activity: 'rare',
@@ -6037,13 +6037,18 @@ async function runLifeProtocolSimulateLocal(useMockAi) {
         symptoms: ['fatigue'],
         allergies: ['none'],
         pregnancy: 'no',
-        sun_exposure: 'moderate',
         email: 'test@life-protocol.local',
         name: 'Тест Клиент',
     };
 
-    const prepared = await prepareProtocolSubmission(mockEnv, sampleProfile, deps);
-    const recommendation = buildMockProtocolResponse(prepared.candidates, prepared.profile, { ranked: prepared.ranked });
+    const prepared = await prepareSiteAdvisorSubmission(mockEnv, sampleProfile, deps, { siteId: 'life' });
+    const mock = buildMockProtocolResponse(prepared.candidates, prepared.profile, { ranked: prepared.ranked });
+    const recommendation = finalizeSiteAdvisorResponse(
+      normalizeCumulativeBenefits(mock),
+      prepared.eligible,
+      prepared.excluded_product_ids,
+      'life',
+    );
 
     return {
         success: true,

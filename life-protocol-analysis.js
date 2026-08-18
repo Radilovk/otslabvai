@@ -3,17 +3,14 @@
  * Работи паралелно с реалния API — минимално време за усещане за дълбок анализ.
  */
 
-const PRIORITY_LABELS = {
-  skin: 'Кожа и еластичност',
-  joints: 'Стави и подвижност',
-  energy: 'Енергия и метаболизъм',
-  sleep: 'Сън и възстановяване',
-  cognition: 'Концентрация и памет',
-  longevity: 'Жизненост и дълголетие',
+const SITE_FOCUS = {
+  life: { engine: 'Life Protocol Engine v3.0', catalog: 'anti-aging каталог', focus: 'антиейджинг и дълголетие', tiers: 'Basic (3–4) · Optimal (5–6) · Premium (6–8)' },
+  main: { engine: 'ДА ОТСЛАБНА Advisor v3.0', catalog: 'каталог за отслабване', focus: 'отслабване и метаболизъм', tiers: 'Basic (2–3) · Optimal (3–5) · Premium (4–6)' },
 };
 
 const ACTIVITY_LABELS = {
   regular: 'регулярна активност',
+  moderate: 'умерена активност',
   rare: 'ниска активност',
 };
 
@@ -29,11 +26,9 @@ function formatAnswerList(values, otherText) {
   return items;
 }
 
-function buildLogSequence(answers) {
+function buildLogSequence(answers, siteId = 'life') {
+  const site = SITE_FOCUS[siteId] || SITE_FOCUS.life;
   const bmi = calcBmi(answers.height_cm, answers.weight_kg);
-  const priority = answers.priority === 'other'
-    ? (answers.priority_other || 'друго')
-    : (PRIORITY_LABELS[answers.priority] || answers.priority || 'общо здраве');
   const activity = ACTIVITY_LABELS[answers.activity] || answers.activity || '—';
   const conditions = formatAnswerList(answers.conditions, answers.conditions_other);
   const meds = formatAnswerList(answers.medications, answers.medications_other);
@@ -41,8 +36,8 @@ function buildLogSequence(answers) {
   const allergies = formatAnswerList(answers.allergies, answers.allergies_other);
 
   const lines = [
-    { type: 'system', text: 'Инициализиране на Life Protocol Engine v2.4…', delay: 200 },
-    { type: 'info', text: 'Зареждане на anti-aging каталог (орални добавки)…', delay: 280 },
+    { type: 'system', text: `Инициализиране на ${site.engine}…`, delay: 200 },
+    { type: 'info', text: `Зареждане на ${site.catalog} (орални добавки)…`, delay: 280 },
     { type: 'ok', text: 'Синхронизация с наличности — активна', delay: 220 },
     { type: 'info', text: `Профил: ${answers.sex === 'male' ? 'мъж' : 'жена'}, ${answers.age_band || '—'} г.`, delay: 180 },
   ];
@@ -52,7 +47,7 @@ function buildLogSequence(answers) {
   }
 
   lines.push(
-    { type: 'info', text: `Приоритетен вектор: ${priority}`, delay: 380 },
+    { type: 'info', text: `Сайт фокус: ${site.focus}`, delay: 380 },
     { type: 'info', text: `Физическа активност: ${activity}`, delay: 300 },
     { type: 'warn', text: 'Прилагане на safety матрица (лекарства × алергии × състояния)…', delay: 520 },
   );
@@ -83,7 +78,7 @@ function buildLogSequence(answers) {
   lines.push(
     { type: 'info', text: 'Ранжиране на топ 25 кандидата за AI стак…', delay: 460 },
     { type: 'system', text: 'Обмисляне на синергии между активни вещества…', delay: 540 },
-    { type: 'info', text: 'Оптимизация: Basic (3–4) · Optimal (5–6) · Premium (6–8)', delay: 480 },
+    { type: 'info', text: `Оптимизация: ${site.tiers}`, delay: 480 },
     { type: 'info', text: 'Калкулиране на месечен бюджет в EUR…', delay: 400 },
     { type: 'info', text: 'Балансиране на сутрешен / вечерен прием…', delay: 420 },
     { type: 'system', text: 'AI анализ на персонални корелации…', delay: 600 },
@@ -96,11 +91,12 @@ function buildLogSequence(answers) {
 }
 
 export class ProtocolAnalysisAnimator {
-  constructor({ logEl, progressEl, statusEl, minDurationMs = 5500 } = {}) {
+  constructor({ logEl, progressEl, statusEl, minDurationMs = 5500, siteId = 'life' } = {}) {
     this.logEl = logEl;
     this.progressEl = progressEl;
     this.statusEl = statusEl;
     this.minDurationMs = minDurationMs;
+    this.siteId = siteId;
     this.startedAt = 0;
     this.stopped = false;
     this.resolveDone = null;
@@ -112,7 +108,7 @@ export class ProtocolAnalysisAnimator {
 
   start(answers) {
     this.startedAt = Date.now();
-    this.lines = buildLogSequence(answers);
+    this.lines = buildLogSequence(answers, this.siteId);
     this.stopped = false;
     this.lineIndex = 0;
     this.apiFinished = false;

@@ -3,6 +3,7 @@
  */
 
 import { getProductPriceEur } from './protocol-quiz-engine.js';
+import { buildAdvisorClinicalGuardrails, withClinicalGuardrails } from './site-advisor-shared.js';
 
 export function getDefaultProtocolQuizPrompt() {
   return `Експерт по anti-aging протоколи. Избери САМО product_id от списъка. БЕЗ reasoning, БЕЗ обяснения извън JSON.
@@ -66,10 +67,15 @@ export function buildNarratorPayload(profile, composed, eligibleProducts) {
   };
 }
 
-export function buildNarratorMessages(template, profile, composed, eligibleProducts) {
+export function buildNarratorMessages(template, profile, composed, eligibleProducts, siteId = 'life') {
   const payload = buildNarratorPayload(profile, composed, eligibleProducts);
+  payload.clinical_guardrails = buildAdvisorClinicalGuardrails(profile, siteId);
   const dataJson = JSON.stringify(payload);
-  const system = `${template}\n\nВАЖНО: Без chain-of-thought. Само финален JSON. Не променяй product_id.`;
+  const system = withClinicalGuardrails(
+    `${template}\n\nВАЖНО: Без chain-of-thought. Само финален JSON. Не променяй product_id.`,
+    profile,
+    siteId,
+  );
   if (template.includes('{{protocolData}}')) {
     return [{ role: 'user', content: template.replace('{{protocolData}}', () => dataJson) }];
   }
@@ -111,10 +117,12 @@ export function buildCompactProtocolPayload(payload) {
   };
 }
 
-export function buildProtocolQuizMessages(template, payload) {
+export function buildProtocolQuizMessages(template, payload, profile = null, siteId = 'life') {
   const compact = buildCompactProtocolPayload(payload);
+  if (profile) compact.clinical_guardrails = buildAdvisorClinicalGuardrails(profile, siteId);
   const dataJson = JSON.stringify(compact);
-  const system = `${template}\n\nВАЖНО: Без chain-of-thought. Само финален JSON.`;
+  const base = profile ? withClinicalGuardrails(template, profile, siteId) : template;
+  const system = `${base}\n\nВАЖНО: Без chain-of-thought. Само финален JSON.`;
   if (template.includes('{{protocolData}}')) {
     return [{ role: 'user', content: template.replace('{{protocolData}}', () => dataJson) }];
   }
