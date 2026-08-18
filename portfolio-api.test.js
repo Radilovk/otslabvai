@@ -13,6 +13,7 @@ import {
   syncPortfolioCatalogFromKv,
   requestPortfolioCatalogCiSync,
   PortfolioError,
+  buildPublicSiteSettings,
 } from './portfolio-api.js';
 import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
 
@@ -82,6 +83,17 @@ describe('Portfolio API', () => {
   test('charmEndingSeed is stable per SKU', () => {
     expect(charmEndingSeed('42')).toBe(charmEndingSeed('42'));
     expect([0, 1]).toContain(charmEndingSeed('1'));
+  });
+
+  test('buildPublicSiteSettings normalizes hero paths from KV', () => {
+    const pub = buildPublicSiteSettings({
+      hero_image: 'https://raw.githubusercontent.com/Radilovk/otslabvai/main/images/custom.jpg',
+      hero_slides: [{ image: '/images/slide.jpg' }],
+      global_markup_percent: 50
+    });
+    expect(pub.hero_image).toBe('images/slide.jpg');
+    expect(pub.hero_slides[0].image).toBe('images/slide.jpg');
+    expect(pub.global_markup_percent).toBeUndefined();
   });
 
   test('groupRawProducts merges variants and prices below regular percent', () => {
