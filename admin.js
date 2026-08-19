@@ -4943,6 +4943,13 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
                 Активен
             </label>
         </div>
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="promo-show-low-margin" ${isEdit && promoData.show_low_margin ? 'checked' : ''}>
+                Показва продукти под 25% марж
+            </label>
+            <small style="color:var(--text-secondary);">Само с този промо код се листват артикули с нисък марж (в каталога и AI изключени по подразбиране).</small>
+        </div>
         ${scope === 'portfolio' ? `
         <fieldset id="promo-pricing-fieldset" style="margin-top:1rem;border:1px solid var(--border-color);border-radius:8px;padding:1rem;">
             <legend>Персонални цени (по избор)</legend>
@@ -5002,6 +5009,7 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
         const validUntil = document.getElementById('promo-valid-until').value;
         const maxUses = document.getElementById('promo-max-uses').value;
         const active = document.getElementById('promo-active').checked;
+        const showLowMargin = document.getElementById('promo-show-low-margin')?.checked === true;
         
         // Validation
         if (!code || isNaN(discount)) {
@@ -5032,7 +5040,8 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
             validFrom: validFrom ? new Date(validFrom).toISOString() : null,
             validUntil: validUntil ? new Date(validUntil).toISOString() : null,
             maxUses: maxUses ? parseInt(maxUses) : null,
-            active
+            active,
+            show_low_margin: showLowMargin
         };
 
         if (promoApiScope === 'portfolio') {

@@ -14,7 +14,7 @@ import {
 } from './life-protocol-store.js';
 import { LIFE_CATEGORY_DEFS } from './life-category-assign.js';
 import { rewriteAllProductImages } from './life-img.js';
-import { isOnHomepage, isCatalogOnly, sortByOrder, catalogLink } from './product-visibility.js';
+import { isOnHomepage, isCatalogOnly, isProductListed, sortByOrder, catalogLink } from './product-visibility.js';
 import { attachSitePageVisibilitySync } from './site-page-sync.js';
 
 let pageContentLoadedAt = 0;
@@ -481,7 +481,7 @@ const generateProductCategoryHTML = (component, index) => {
     const categorySlug = component.id || component.category_id || sectionId;
     
     // Sort products by display_order if it exists, otherwise maintain current order
-    const sortedProducts = sortByOrder(component.products);
+    const sortedProducts = sortByOrder(component.products).filter(isProductListed);
     const displayProducts = sortedProducts.filter(isOnHomepage);
     const catalogOnlyCount = sortedProducts.filter(isCatalogOnly).length;
     let filterBarHTML = '';

@@ -10,6 +10,13 @@ import {
 } from './portfolio-advisor-catalog.js';
 import { portfolioGroupToSiteProduct } from './portfolio-import.js';
 
+function withMarginB2b(variants) {
+  return variants.map((v) => ({
+    ...v,
+    b2b_price: v.b2b_price ?? (Number(v.retail_price) || 10) * 0.5,
+  }));
+}
+
 function makeProduct({ name = 'Whey Protein', variants = [], tagline = '' } = {}) {
   const group = {
     group_id: '100',
@@ -19,9 +26,9 @@ function makeProduct({ name = 'Whey Protein', variants = [], tagline = '' } = {}
     category: 'Протеини',
     category_path: ['Протеини'],
     image: '',
-    variants: variants.length
+    variants: withMarginB2b(variants.length
       ? variants
-      : [{ sku_id: '1', pack: '1 кг', retail_price: 29.9, available: true }],
+      : [{ sku_id: '1', pack: '1 кг', retail_price: 29.9, available: true }]),
   };
   const product = portfolioGroupToSiteProduct(group);
   if (tagline) product.public_data.tagline = tagline;

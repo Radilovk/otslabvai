@@ -75,7 +75,7 @@ describe('Portfolio order creation rejects invalid orders', () => {
       option: 'Шоколад',
       available: true,
       b2b_price: 10,
-      retail_price: 13
+      retail_price: 14
     }]
   }];
 

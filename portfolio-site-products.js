@@ -137,6 +137,7 @@ export async function resolveSiteCartSku(env, project, rawId) {
     group_name: pub.name || found.product.product_id,
     brand: pub.brand || '',
     image: line.image,
+    margin_eligible: found.product.system_data?.margin_eligible,
     variant: {
       sku_id: line.sku_id,
       barcode: line.barcode,

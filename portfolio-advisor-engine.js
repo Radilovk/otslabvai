@@ -38,6 +38,7 @@ import {
   scoreAdvisorCommercialBoost,
 } from './portfolio-advisor-commerce.js';
 import { loadPortfolioAdvisorSettings } from './portfolio-advisor-settings.js';
+import { isCatalogListed } from './portfolio-margin-policy.js';
 import { buildAdvisorClinicalGuardrails, hasAdvisorClinicalComplexity } from './portfolio-advisor-prompt.js';
 
 export { composePortfolioAdvisorStacks };
@@ -71,7 +72,7 @@ export const PORTFOLIO_SINGLE_TIER_META = {
 
 export function filterPortfolioEligibleProducts(products, options = {}) {
   return filterAdvisorRetailProducts(
-    products.filter((p) => isProductAvailable(p) && !isPeptideOrInjectable(p)),
+    products.filter((p) => isProductAvailable(p) && !isPeptideOrInjectable(p) && isCatalogListed(p)),
     { selectionMode: options.selectionMode }
   );
 }

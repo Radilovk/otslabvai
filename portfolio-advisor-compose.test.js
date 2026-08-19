@@ -18,7 +18,7 @@ function makeRanked(id, name, categoryTop, price, score = 50) {
     category: categoryTop,
     category_path: [categoryTop],
     image: '',
-    variants: [{ sku_id: String(id), retail_price: price, available: true }],
+    variants: [{ sku_id: String(id), retail_price: price, b2b_price: price * 0.5, available: true }],
   };
   const product = portfolioGroupToSiteProduct(group);
   product.system_data.portfolio.category_top = categoryTop;
