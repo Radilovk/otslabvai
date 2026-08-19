@@ -39,6 +39,10 @@ import {
   isCatalogBackedCartId
 } from './portfolio-site-products.js';
 import {
+  getB2bProducts,
+  isDirectSaleProductLine,
+} from './portfolio-order-fulfillment.js';
+import {
   fetchSilaProducts,
   fetchSilaProductsForEnv,
   submitSilaOrder,
@@ -1146,13 +1150,20 @@ async function handleSilaKeyStatus(env) {
 
 function getOrderDistributors(order) {
   const dists = new Set();
-  for (const p of order.products || []) {
+  for (const p of getB2bProducts(order)) {
     dists.add(p.distributor || DISTRIBUTOR_FITNESS1);
   }
   return [...dists];
 }
 
 function isOrderFullySubmitted(order) {
+  const b2bProducts = getB2bProducts(order);
+  if (!b2bProducts.length) {
+    if (!Array.isArray(order.products) || order.products.length === 0) {
+      return Boolean(order.fitness1_order?.id);
+    }
+    return true;
+  }
   const distributors = getOrderDistributors(order);
   if (!distributors.length) {
     return Boolean(order.fitness1_order?.id);
@@ -1165,6 +1176,18 @@ function isOrderFullySubmitted(order) {
     }
   }
   return distributors.length > 0;
+}
+
+function isOrderB2bPending(order) {
+  if (!order || order.status === 'Отказана') return false;
+  const b2b = getB2bProducts(order);
+  if (!b2b.length) {
+    if (!Array.isArray(order.products) || order.products.length === 0) {
+      return !isOrderFullySubmitted(order);
+    }
+    return false;
+  }
+  return !isOrderFullySubmitted(order);
 }
 
 function filterProductsByDistributor(products, distributor) {
@@ -1471,6 +1494,7 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
       image: found.image,
       distributor: found.variant.distributor || DISTRIBUTOR_FITNESS1,
       distributor_ids: found.variant.distributor_ids || null,
+      fulfillment: isDirectSaleProductLine({ sku_id: found.variant.sku_id, name: label }) ? 'direct' : 'b2b',
     });
   }
 
@@ -1894,9 +1918,7 @@ async function handleGetOrdersSummary(request, env) {
   if (project) {
     orders = orders.filter((o) => String(o.project || 'portfolio') === project);
   }
-  const pending = orders.filter(
-    (o) => !isOrderFullySubmitted(o) && o.status !== 'Отказана'
-  ).length;
+  const pending = orders.filter((o) => isOrderB2bPending(o)).length;
   return jsonResponse({ pending, total: orders.length });
 }
 
@@ -1922,7 +1944,7 @@ async function handleGetOrder(request, env) {
 }
 
 async function validateOrderProducts(env, order) {
-  for (const p of order.products) {
+  for (const p of getB2bProducts(order)) {
     const found = await findVariantInCatalog(env, p.sku_id);
     if (!found?.variant.available) {
       throw new PortfolioError(`„${p.name}" вече не е наличен. Актуализирайте поръчката.`, 400);
@@ -2118,11 +2140,15 @@ async function handleApproveOrder(request, env) {
 
   await validateOrderProducts(env, order);
 
-  const pendingProducts = (order.products || []).filter((p) => {
+  const pendingProducts = getB2bProducts(order).filter((p) => {
     const d = p.distributor || DISTRIBUTOR_FITNESS1;
     if (isSilaDistributor(d)) return !order.sila_order?.id;
     return !order.fitness1_order?.id;
   });
+
+  if (!pendingProducts.length) {
+    throw new PortfolioError('Поръчката няма продукти за B2B изпращане (директни продажби се обработват ръчно).', 400);
+  }
 
   const submitted = await submitDistributorOrders(env, pendingProducts, {
     sourceOrderIds: [order.id],
@@ -2175,7 +2201,7 @@ async function handleApproveBatchOrder(request, env) {
     await validateOrderProducts(env, order);
   }
 
-  const allProducts = selected.map((s) => s.order.products);
+  const allProducts = selected.map((s) => getB2bProducts(s.order));
   const submitted = await submitDistributorOrders(env, allProducts, { sourceOrderIds: ids });
 
   for (const { idx } of selected) {
