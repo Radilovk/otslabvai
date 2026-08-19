@@ -4,14 +4,73 @@
 
 // API Endpoint
 import { API_URL } from './config.js';
+import {
+    getB2bProducts,
+    getDirectSaleProducts,
+    orderHasB2bProducts,
+    orderHasDirectSaleProducts,
+} from './portfolio-order-fulfillment.js';
 
 const ADMIN_TOKEN_KEY = 'admin_auth_token';
+const ADMIN_REMEMBER_KEY = 'admin_remember_login';
+const ADMIN_PASSWORD_KEY = 'admin_saved_password';
 const nativeFetch = window.fetch.bind(window);
+
+function isAdminRememberEnabled() {
+    try {
+        return localStorage.getItem(ADMIN_REMEMBER_KEY) === '1';
+    } catch {
+        return false;
+    }
+}
+
+function getStoredAdminToken() {
+    try {
+        if (isAdminRememberEnabled()) {
+            return localStorage.getItem(ADMIN_TOKEN_KEY) || sessionStorage.getItem(ADMIN_TOKEN_KEY);
+        }
+    } catch { /* ignore */ }
+    return sessionStorage.getItem(ADMIN_TOKEN_KEY);
+}
+
+function storeAdminToken(token, remember) {
+    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    try {
+        localStorage.removeItem(ADMIN_TOKEN_KEY);
+        if (remember) {
+            localStorage.setItem(ADMIN_TOKEN_KEY, token);
+            localStorage.setItem(ADMIN_REMEMBER_KEY, '1');
+        } else {
+            localStorage.removeItem(ADMIN_REMEMBER_KEY);
+            localStorage.removeItem(ADMIN_PASSWORD_KEY);
+        }
+    } catch { /* ignore */ }
+    if (!remember) {
+        sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
+    }
+}
+
+function storeAdminPassword(password, remember) {
+    try {
+        if (remember) localStorage.setItem(ADMIN_PASSWORD_KEY, password);
+        else localStorage.removeItem(ADMIN_PASSWORD_KEY);
+    } catch { /* ignore */ }
+}
+
+function clearAdminAuth() {
+    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    sessionStorage.removeItem('github_upload_token');
+    try {
+        localStorage.removeItem(ADMIN_TOKEN_KEY);
+        localStorage.removeItem(ADMIN_REMEMBER_KEY);
+        localStorage.removeItem(ADMIN_PASSWORD_KEY);
+    } catch { /* ignore */ }
+}
 
 window.fetch = function patchedAdminFetch(input, init = {}) {
     let url = typeof input === 'string' ? input : (input instanceof Request ? input.url : '');
     if (url.startsWith(API_URL) && !url.includes('/admin/login')) {
-        const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+        const token = getStoredAdminToken();
         if (token) {
             const headers = new Headers(init.headers || (input instanceof Request ? input.headers : undefined));
             if (!headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
@@ -33,7 +92,8 @@ function hideAdminLoginOverlay() {
     document.querySelector('.admin-container')?.removeAttribute('aria-hidden');
 }
 
-async function adminLogin(password) {
+async function adminLogin(password, options = {}) {
+    const remember = options.remember ?? document.getElementById('admin-login-remember')?.checked;
     const res = await nativeFetch(`${API_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -41,23 +101,45 @@ async function adminLogin(password) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Грешка при вход');
-    sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+    storeAdminToken(data.token, remember);
+    storeAdminPassword(password, remember);
     return data.token;
 }
 
+async function validateAdminToken(token) {
+    if (!token) return false;
+    const res = await nativeFetch(`${API_URL}/admin/session`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.ok;
+}
+
 async function ensureAdminSession() {
-    const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
-    if (token) {
-        const res = await nativeFetch(`${API_URL}/admin/session`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-            hideAdminLoginOverlay();
-            return true;
-        }
-        sessionStorage.removeItem(ADMIN_TOKEN_KEY);
-        sessionStorage.removeItem('github_upload_token');
+    let token = getStoredAdminToken();
+    if (token && await validateAdminToken(token)) {
+        hideAdminLoginOverlay();
+        return true;
     }
+
+    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    sessionStorage.removeItem('github_upload_token');
+    try { localStorage.removeItem(ADMIN_TOKEN_KEY); } catch { /* ignore */ }
+
+    if (isAdminRememberEnabled()) {
+        try {
+            const savedPassword = localStorage.getItem(ADMIN_PASSWORD_KEY);
+            if (savedPassword) {
+                await adminLogin(savedPassword, { remember: true });
+                hideAdminLoginOverlay();
+                return true;
+            }
+        } catch {
+            /* fall through to login form */
+        }
+    }
+
+    const rememberCb = document.getElementById('admin-login-remember');
+    if (rememberCb) rememberCb.checked = isAdminRememberEnabled();
     showAdminLoginOverlay();
     return false;
 }
@@ -83,8 +165,7 @@ function setupAdminLoginForm() {
     });
 
     logoutBtn?.addEventListener('click', () => {
-        sessionStorage.removeItem(ADMIN_TOKEN_KEY);
-        sessionStorage.removeItem('github_upload_token');
+        clearAdminAuth();
         location.reload();
     });
 }
@@ -196,9 +277,10 @@ let filteredPromoCodesData = [];
 let promoApiScope = 'main';
 let portfolioSettingsData = {};
 let portfolioOrdersData = [];
+let filteredPortfolioOrdersData = [];
+let filteredDirectOrdersData = [];
 let portfolioPromoCodesData = [];
 let filteredPortfolioPromoCodesData = [];
-let filteredPortfolioOrdersData = [];
 let portfolioOrderSortField = 'timestamp';
 let portfolioOrderSortDir = 'desc';
 let portfolioPendingCount = 0;
@@ -340,6 +422,7 @@ async function fetchPortfolioOrders() {
         console.error('Portfolio orders error:', error);
         portfolioOrdersData = [];
         filteredPortfolioOrdersData = [];
+        filteredDirectOrdersData = [];
         updatePortfolioPendingFromData();
         return [];
     }
@@ -361,7 +444,7 @@ async function fetchPortfolioOrdersSummary() {
 
 function isPortfolioOrderSendable(order) {
     if (!order || order.status === 'Отказана') return false;
-    const products = order.products || [];
+    const products = getB2bProducts(order);
     if (!products.length) return false;
     for (const p of products) {
         const d = p.distributor || 'fitness1';
@@ -401,23 +484,19 @@ function updatePortfolioPendingUI() {
         }
     }
 
-    const mainAlert = document.getElementById('main-portfolio-orders-alert');
-    if (mainAlert) mainAlert.style.display = 'none';
-
-    // Брояч върху таба „Поръчки" в portfolio режим
-    const pfTabBadge = document.getElementById('portfolio-orders-tab-badge');
-    if (pfTabBadge) {
-        pfTabBadge.hidden = portfolioPendingCount === 0;
-        pfTabBadge.textContent = String(portfolioPendingCount);
+    const ordersTabBadge = document.getElementById('orders-tab-badge');
+    if (ordersTabBadge) {
+        ordersTabBadge.hidden = portfolioPendingCount === 0;
+        ordersTabBadge.textContent = String(portfolioPendingCount);
     }
 
     const pfBanner = document.getElementById('portfolio-pending-banner');
-    if (pfBanner && isPortfolioProject()) {
+    if (pfBanner) {
         if (portfolioPendingCount > 0) {
             pfBanner.style.display = 'block';
             pfBanner.textContent = portfolioPendingCount === 1
-                ? '1 поръчка е готова за изпращане към доставчик. Маркирайте я (или няколко) и натиснете „Обобщи и изпрати“ — продуктите се сумират в една B2B поръчка, а вие разпределяте доставката до клиентите.'
-                : `${portfolioPendingCount} поръчки са готови за изпращане към доставчик. Маркирайте няколко и натиснете „Обобщи и изпрати“ — продуктите се сумират в една B2B поръчка, а вие разпределяте доставката до клиентите.`;
+                ? '1 B2B поръчка е готова за изпращане към Fitness1/Sila. Маркирайте я (или няколко) и натиснете „Обобщи и изпрати“.'
+                : `${portfolioPendingCount} B2B поръчки са готови за изпращане към Fitness1/Sila. Маркирайте няколко и натиснете „Обобщи и изпрати“.`;
         } else {
             pfBanner.style.display = 'none';
         }
@@ -466,14 +545,7 @@ function updatePortfolioBatchApproveButton() {
 }
 
 function switchToPortfolioOrdersTab() {
-    const projectSelector = document.getElementById('project-selector');
-    if (projectSelector && !isPortfolioProject()) {
-        switchToPortfolioOrdersAfterLoad = true;
-        projectSelector.value = 'portfolio';
-        projectSelector.dispatchEvent(new Event('change'));
-        return;
-    }
-    document.querySelector('[data-tab="tab-portfolio-orders"]')?.click();
+    document.querySelector('[data-tab="tab-orders"]')?.click();
 }
 
 function startPortfolioOrdersPolling() {
@@ -735,11 +807,9 @@ function renderAll() {
     renderNavigation();
     renderPageContent();
     renderFooter();
-    filterOrders(); // This will call renderOrders
-    filterContacts(); // This will call renderContacts
-    filterBiocodeInquiries(); // This will call renderBiocodeInquiries
-    filterOrders();
+    filterPortfolioOrders();
     filterContacts();
+    filterBiocodeInquiries();
 }
 
 function renderGlobalSettings() {
@@ -2098,13 +2168,14 @@ function setupEventListeners() {
         
         try { localStorage.setItem('adminActiveTab', target.dataset.tab); } catch (e) {}
 
-        if (target.dataset.tab === 'tab-portfolio-orders') {
+        if (target.dataset.tab === 'tab-orders') {
             fetchPortfolioOrders().then(() => filterPortfolioOrders());
         }
     });
 
     DOM.saveBtn.addEventListener('click', saveData);
 
+    if (DOM.ordersTableBody) {
     DOM.ordersTableBody.addEventListener('change', async e => {
         if (!e.target.classList.contains('order-status')) return;
         const row = e.target.closest('tr');
@@ -2140,11 +2211,11 @@ function setupEventListeners() {
         showOrderDetailModal(ordersData[index], index);
     });
     
-    DOM.orderSearchInput.addEventListener('input', () => filterOrders());
-    DOM.refreshOrdersBtn.addEventListener('click', async () => {
+    DOM.orderSearchInput?.addEventListener('input', () => filterOrders());
+    DOM.refreshOrdersBtn?.addEventListener('click', async () => {
         showNotification('Опресняване на поръчките...', 'info');
-        await fetchOrders();
-        filterOrders();
+        await fetchPortfolioOrders();
+        filterPortfolioOrders();
     });
     
     // Orders sort headers click handler (desktop)
@@ -2178,6 +2249,7 @@ function setupEventListeners() {
             ordersMobileSortDir.textContent = orderSortDir === 'asc' ? '↑' : '↓';
             filterOrders();
         });
+    }
     }
     
     DOM.contactsTableBody.addEventListener('change', async e => {
@@ -5467,8 +5539,10 @@ function filterPortfolioOrders() {
         const hay = `${c.firstName || ''} ${c.lastName || ''} ${c.phone || ''} ${o.id}`.toLowerCase();
         return !q || hay.includes(q);
     });
-    filteredPortfolioOrdersData = sortPortfolioOrders(base);
+    filteredPortfolioOrdersData = sortPortfolioOrders(base.filter((o) => orderHasB2bProducts(o)));
+    filteredDirectOrdersData = sortPortfolioOrders(base.filter((o) => orderHasDirectSaleProducts(o)));
     renderPortfolioOrders();
+    renderDirectOrders();
 }
 
 function renderPortfolioOrders() {
@@ -5481,7 +5555,7 @@ function renderPortfolioOrders() {
 
     if (!filteredPortfolioOrdersData.length) {
         tbody.innerHTML = `<tr><td colspan="11" class="mobile-empty" style="text-align:center;padding:2rem;color:var(--text-secondary);">
-            Няма portfolio поръчки. След успешно изпращане от checkout те се появяват тук автоматично.
+            Няма B2B поръчки за изпращане към Fitness1/Sila.
         </td></tr>`;
         updatePortfolioBatchApproveButton();
         return;
@@ -5489,8 +5563,9 @@ function renderPortfolioOrders() {
 
     filteredPortfolioOrdersData.forEach((order) => {
         const c = order.customer || {};
-        const products = (order.products || []).map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join('<br>');
-        const productsSummary = (order.products || []).map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join(', ');
+        const b2bProducts = getB2bProducts(order);
+        const products = b2bProducts.map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join('<br>');
+        const productsSummary = b2bProducts.map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join(', ');
         const summary = order.summary || {};
         const canSendToDistributor = isPortfolioOrderSendable(order);
         const delivery = formatPortfolioDelivery(c);
@@ -5578,6 +5653,93 @@ function renderPortfolioOrders() {
     });
 
     updatePortfolioBatchApproveButton();
+}
+
+function renderDirectOrders() {
+    const tbody = document.getElementById('direct-orders-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!filteredDirectOrdersData.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="mobile-empty" style="text-align:center;padding:2rem;color:var(--text-secondary);">
+            Няма поръчки с Lida, MeiziMax или Eveslim.
+        </td></tr>`;
+        return;
+    }
+
+    filteredDirectOrdersData.forEach((order) => {
+        const c = order.customer || {};
+        const directProducts = getDirectSaleProducts(order);
+        const products = directProducts.map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join('<br>');
+        const productsSummary = directProducts.map((p) => `${escAdminHtml(p.name)} ×${p.quantity}`).join(', ');
+        const delivery = formatPortfolioDelivery(c);
+        const status = order.status || 'Чака одобрение';
+        const projectLabel = { main: 'Main', life: 'Life', portfolio: 'PF' }[order.project || 'portfolio'] || order.project;
+        const dateText = order.timestamp
+            ? new Date(order.timestamp).toLocaleString('bg-BG', {
+                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            })
+            : '—';
+
+        const tr = document.createElement('tr');
+        tr.className = 'direct-order-row';
+        tr.dataset.orderId = order.id;
+        tr.style.cursor = 'pointer';
+        tr.innerHTML = `
+            <td data-label="Клиент" class="order-customer mobile-key">${escAdminHtml(`${c.firstName || ''} ${c.lastName || ''}`.trim())}<br><small class="pf-order-project-badge">${escAdminHtml(projectLabel)}</small></td>
+            <td data-label="Телефон" class="order-phone">${escAdminHtml(c.phone || '')}</td>
+            <td data-label="Email">${escAdminHtml(c.email || '')}</td>
+            <td data-label="Доставка" class="order-delivery">${delivery}</td>
+            <td data-label="Продукти" class="order-products mobile-key" data-summary="${escAdminHtml(productsSummary)}">${products}</td>
+            <td data-label="Дата" class="order-date mobile-key">${dateText}</td>
+            <td data-label="Статус" class="order-status-cell" onclick="event.stopPropagation()">
+                <select class="direct-order-status" data-id="${escAdminHtml(order.id)}">
+                    <option value="Чака одобрение" ${status === 'Чака одобрение' ? 'selected' : ''}>Чака одобрение</option>
+                    <option value="Обработва се" ${status === 'Обработва се' ? 'selected' : ''}>Обработва се</option>
+                    <option value="Изпратена" ${status === 'Изпратена' || status === 'Изпратена към клиент' ? 'selected' : ''}>Изпратена</option>
+                    <option value="Отказана" ${status === 'Отказана' ? 'selected' : ''}>Отказана</option>
+                </select>
+                <span class="mobile-status-badge"></span>
+            </td>
+            <td data-label="Действия" onclick="event.stopPropagation()">
+                <button type="button" class="btn btn-sm btn-secondary direct-detail-btn" data-id="${escAdminHtml(order.id)}">Детайли</button>
+            </td>`;
+        const badge = tr.querySelector('.mobile-status-badge');
+        if (badge) applyOrderStatusBadge(badge, status);
+        tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll('.direct-order-status').forEach((sel) => {
+        sel.addEventListener('change', async () => {
+            try {
+                const res = await fetch(`${API_URL}/portfolio/orders`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: sel.dataset.id, status: sel.value })
+                });
+                if (!res.ok) throw new Error('Грешка');
+                const idx = portfolioOrdersData.findIndex((o) => o.id === sel.dataset.id);
+                if (idx >= 0) portfolioOrdersData[idx].status = sel.value;
+                showNotification('Статусът е обновен.', 'success');
+            } catch {
+                showNotification('Грешка при обновяване на статус.', 'error');
+            }
+        });
+    });
+
+    tbody.querySelectorAll('.direct-detail-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const order = portfolioOrdersData.find((o) => o.id === btn.dataset.id);
+            if (order) showPortfolioOrderDetailModal(order);
+        });
+    });
+
+    tbody.querySelectorAll('tr[data-order-id]').forEach((row) => {
+        row.addEventListener('click', () => {
+            const order = portfolioOrdersData.find((o) => o.id === row.dataset.orderId);
+            if (order) showPortfolioOrderDetailModal(order);
+        });
+    });
 }
 
 function showPortfolioOrderDetailModal(order) {
@@ -6602,19 +6764,18 @@ async function init() {
     populateAddComponentMenu();
     updateProjectUI();
     startPortfolioOrdersPolling();
+    await fetchPortfolioOrdersSummary();
+    await fetchPortfolioOrders();
 
     if (isPortfolioProject()) {
         await fetchPortfolioSettings();
-        await fetchPortfolioOrders();
         await fetchPortfolioPromoCodes();
         await refreshPortfolioAdvisorAdmin();
         renderAll();
         return;
     }
 
-    await fetchPortfolioOrdersSummary();
     appData = await fetchData();
-    await fetchOrders();
     await fetchContacts();
     await fetchBiocodeInquiries();
     await fetchPromoCodes();

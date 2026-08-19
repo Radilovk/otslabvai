@@ -1677,6 +1677,28 @@ input:checked + .slider:before {
     min-height: 1.2rem;
 }
 
+.admin-login-remember {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.92rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.orders-section-title {
+    margin: 1.25rem 0 0.75rem;
+    font-size: 1.05rem;
+}
+
+.orders-section-title--direct {
+    color: var(--text-primary);
+}
+
+.direct-order-row td {
+    vertical-align: top;
+}
+
 .pf-order-project-badge {
     display: inline-block;
     margin-top: 0.2rem;

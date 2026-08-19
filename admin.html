@@ -43,6 +43,10 @@
         <h2>Админ вход</h2>
         <p>Въведете парола за достъп до панела.</p>
         <input type="password" id="admin-login-password" autocomplete="current-password" required placeholder="Парола">
+        <label class="admin-login-remember">
+            <input type="checkbox" id="admin-login-remember">
+            <span>Запомни на това устройство</span>
+        </label>
         <p id="admin-login-error" class="admin-login-error" role="alert"></p>
         <button type="submit" class="btn btn-primary">Вход</button>
     </form>
@@ -89,8 +93,8 @@
             <button class="tab-btn tab-main-life" data-tab="tab-footer">Футър</button>
             <button class="tab-btn tab-main-life" data-tab="tab-pages">Страници</button>
             <span class="tab-nav-divider" aria-hidden="true"></span>
-            <!-- Продажби -->
-            <button class="tab-btn tab-main-life" data-tab="tab-orders">Поръчки<span id="orders-tab-badge" class="tab-badge" hidden></span></button>
+            <!-- Продажби — общи за всички проекти -->
+            <button class="tab-btn" data-tab="tab-orders">Поръчки<span id="orders-tab-badge" class="tab-badge" hidden></span></button>
             <button class="tab-btn tab-main-life" data-tab="tab-promo-codes">Промо Кодове</button>
             <span class="tab-nav-divider" aria-hidden="true"></span>
             <!-- Комуникация -->
@@ -102,7 +106,6 @@
             <button class="tab-btn tab-main-life" data-tab="tab-ai-settings">AI Настройки</button>
             <!-- Проект Portfolio B2B -->
             <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-settings" style="display:none;">Настройки</button>
-            <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-orders" style="display:none;">Поръчки<span id="portfolio-orders-tab-badge" class="tab-badge" hidden></span></button>
             <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-promo-codes" style="display:none;">Промо Кодове</button>
             <button class="tab-btn tab-portfolio-only" data-tab="tab-portfolio-advisor" style="display:none;">AI консултант</button>
             <!-- BioCode запитвания — общи за всички проекти -->
@@ -153,48 +156,80 @@
                 </div>
             </section>
 
-            <!-- Секция: Поръчки -->
+            <!-- Секция: Поръчки (всички проекти) -->
             <section id="tab-orders" class="tab-pane">
                 <div class="orders-header">
                     <h2>Поръчки</h2>
                     <div class="orders-controls">
-                        <input type="text" id="order-search-input" placeholder="Търси по име, телефон...">
-                        <button id="refresh-orders-btn" class="btn btn-secondary">Опресни</button>
+                        <select id="portfolio-orders-project-filter" class="project-selector" title="Филтър по проект">
+                            <option value="">Всички проекти</option>
+                            <option value="portfolio">Portfolio B2B</option>
+                            <option value="main">ДА ОТСЛАБНА</option>
+                            <option value="life">Life</option>
+                        </select>
+                        <input type="text" id="portfolio-order-search" placeholder="Търси по име, телефон...">
+                        <button type="button" id="portfolio-batch-approve-btn" class="btn btn-success" style="display:none;" disabled>Обобщи и изпрати</button>
+                        <button id="refresh-portfolio-orders-btn" class="btn btn-secondary">Опресни</button>
                     </div>
                 </div>
-                <div id="main-portfolio-orders-alert" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:#cfe2ff;border:1px solid #9ec5fe;border-radius:8px;color:#084298;">
-                    <span id="main-portfolio-orders-alert-text"></span>
-                    <button type="button" id="go-to-portfolio-orders-btn" class="btn btn-sm btn-primary" style="margin-left:0.75rem;">Отвори Portfolio B2B Поръчки</button>
+                <div id="portfolio-orders-workflow-hint" class="instructions" style="margin-bottom:1rem;padding:1rem;background:var(--bg-secondary);border-radius:8px;">
+                    <strong>B2B поръчки:</strong> Клиентите поръчват от трите сайта; маркирате една или повече B2B поръчки и продуктите се
+                    <strong>обобщават по баркод</strong> и изпращат към Fitness1 или Sila BG. Разпределяте пратките към клиентите според адреса/офиса.
                 </div>
-                <!-- Мобилна лента за сортиране – скрита на таблети/десктоп -->
-                <div class="mobile-sort-bar" id="orders-mobile-sort-bar">
+                <div id="portfolio-pending-banner" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;color:#664d03;"></div>
+                <div class="mobile-sort-bar" id="portfolio-orders-mobile-sort-bar">
                     <label class="mobile-sort-label">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                         Сортирай:
                     </label>
-                    <select id="orders-mobile-sort-field">
+                    <select id="portfolio-orders-mobile-sort-field">
                         <option value="timestamp">Дата</option>
                         <option value="customer">Клиент</option>
                         <option value="status">Статус</option>
                     </select>
-                    <button id="orders-mobile-sort-dir" class="btn btn-sm btn-secondary mobile-sort-dir-btn" title="Посока на сортиране"></button>
+                    <button id="portfolio-orders-mobile-sort-dir" class="btn btn-sm btn-secondary mobile-sort-dir-btn" title="Посока на сортиране" aria-label="Посока на сортиране">↓</button>
                 </div>
+                <h3 class="orders-section-title">B2B към Fitness1 / Sila</h3>
                 <div class="table-wrapper">
-                    <table id="orders-table" class="orders-table">
+                    <table id="portfolio-orders-table" class="orders-table">
                         <thead>
                             <tr>
-                                <th class="orders-sort-th" data-sort="customer">Клиент <span class="sort-icon"></span></th>
+                                <th style="width:2rem;"><input type="checkbox" id="portfolio-select-all" title="Избери всички готови за изпращане"></th>
+                                <th>Клиент</th>
                                 <th>Телефон</th>
-                                <th>Email</th>
-                                <th>Продукти</th>
                                 <th>Доставка</th>
-                                <th class="orders-sort-th" data-sort="timestamp">Дата <span class="sort-icon"></span></th>
-                                <th class="orders-sort-th" data-sort="status">Статус <span class="sort-icon"></span></th>
+                                <th>Продукти</th>
+                                <th>Продажна</th>
+                                <th>B2B</th>
+                                <th>Марж</th>
+                                <th>Дата</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
                             </tr>
                         </thead>
-                        <tbody id="orders-table-body">
-                            <!-- Редовете ще се генерират от JS -->
-                        </tbody>
+                        <tbody id="portfolio-orders-table-body"></tbody>
+                    </table>
+                </div>
+
+                <h3 class="orders-section-title orders-section-title--direct" style="margin-top:2rem;">Директни продажби (Lida, MeiziMax, Eveslim)</h3>
+                <p class="instructions" style="margin-bottom:1rem;">
+                    Поръчки с Lida, MeiziMax или Eveslim <strong>не се изпращат автоматично</strong> към доставчик — обработвате ги ръчно и маркирате статуса.
+                </p>
+                <div class="table-wrapper">
+                    <table id="direct-orders-table" class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Клиент</th>
+                                <th>Телефон</th>
+                                <th>Email</th>
+                                <th>Доставка</th>
+                                <th>Продукти</th>
+                                <th>Дата</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="direct-orders-table-body"></tbody>
                     </table>
                 </div>
             </section>
@@ -588,62 +623,6 @@
                 <h2>Portfolio – Настройки</h2>
                 <p class="instructions">Глобална надценка, синхронизация с B2B каталога и статус.</p>
                 <div id="portfolio-settings-container" class="item-list"></div>
-            </section>
-
-            <!-- Portfolio: Поръчки -->
-            <section id="tab-portfolio-orders" class="tab-pane tab-portfolio-only">
-                <div class="orders-header">
-                    <h2>Portfolio – Поръчки</h2>
-                    <div class="orders-controls">
-                        <select id="portfolio-orders-project-filter" class="project-selector" title="Филтър по проект">
-                            <option value="">Всички проекти</option>
-                            <option value="portfolio">Portfolio B2B</option>
-                            <option value="main">ДА ОТСЛАБНА</option>
-                            <option value="life">Life</option>
-                        </select>
-                        <input type="text" id="portfolio-order-search" placeholder="Търси по име, телефон...">
-                        <button type="button" id="portfolio-batch-approve-btn" class="btn btn-success" style="display:none;" disabled>Обобщи и изпрати</button>
-                        <button id="refresh-portfolio-orders-btn" class="btn btn-secondary">Опресни</button>
-                    </div>
-                </div>
-                <div id="portfolio-orders-workflow-hint" class="instructions" style="margin-bottom:1rem;padding:1rem;background:var(--bg-secondary);border-radius:8px;">
-                    <strong>Как работи:</strong> Клиентите поръчват от portfolio сайта поръчките се записват тук с данни за доставка до всеки клиент 
-                    маркирате една или повече поръчки продуктите се <strong>обобщават по баркод</strong> и изпращат като една B2B поръчка към вашия дистрибуторски профил.
-                    Получавате B2B номер и вие разпределяте пратките към клиентите според адреса/офиса във всяка поръчка.
-                </div>
-                <div id="portfolio-pending-banner" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;color:#664d03;"></div>
-                <div class="mobile-sort-bar" id="portfolio-orders-mobile-sort-bar">
-                    <label class="mobile-sort-label">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                        Сортирай:
-                    </label>
-                    <select id="portfolio-orders-mobile-sort-field">
-                        <option value="timestamp">Дата</option>
-                        <option value="customer">Клиент</option>
-                        <option value="status">Статус</option>
-                    </select>
-                    <button id="portfolio-orders-mobile-sort-dir" class="btn btn-sm btn-secondary mobile-sort-dir-btn" title="Посока на сортиране" aria-label="Посока на сортиране">↓</button>
-                </div>
-                <div class="table-wrapper">
-                    <table id="portfolio-orders-table" class="orders-table">
-                        <thead>
-                            <tr>
-                                <th style="width:2rem;"><input type="checkbox" id="portfolio-select-all" title="Избери всички готови за изпращане"></th>
-                                <th>Клиент</th>
-                                <th>Телефон</th>
-                                <th>Доставка</th>
-                                <th>Продукти</th>
-                                <th>Продажна</th>
-                                <th>B2B</th>
-                                <th>Марж</th>
-                                <th>Дата</th>
-                                <th>Статус</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody id="portfolio-orders-table-body"></tbody>
-                    </table>
-                </div>
             </section>
 
             <!-- Portfolio: Промо кодове -->
