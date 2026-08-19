@@ -27,9 +27,16 @@ const sampleGroup = {
   category_path: ['Протеини', 'Whey'],
   image: 'http://example.com/img.jpg',
   variants: [
-    { sku_id: '10', pack: '1 кг', option: 'Шоколад', retail_price: 29.9, available: true, image: 'http://example.com/v.jpg' },
+    { sku_id: '10', pack: '1 кг', option: 'Шоколад', retail_price: 29.9, b2b_price: 14.95, available: true, image: 'http://example.com/v.jpg' },
   ],
 };
+
+function withMarginB2b(variants) {
+  return variants.map((v) => ({
+    ...v,
+    b2b_price: v.b2b_price ?? (Number(v.retail_price) || 10) * 0.5,
+  }));
+}
 
 function makeProduct(overrides = {}) {
   const base = portfolioGroupToSiteProduct(sampleGroup);
@@ -85,9 +92,9 @@ describe('getPortfolioComposeOptions', () => {
 describe('preparePortfolioAdvisorSubmission', () => {
   const groups = [
     sampleGroup,
-    { ...sampleGroup, group_id: '201', name: 'Creatine', category_path: ['Креатин'], variants: [{ sku_id: '11', retail_price: 12, available: true }] },
-    { ...sampleGroup, group_id: '202', name: 'Multivitamin', category_path: ['Витамини'], variants: [{ sku_id: '12', retail_price: 18, available: true }] },
-    { ...sampleGroup, group_id: '203', name: 'Omega 3', category_path: ['Омега'], variants: [{ sku_id: '13', retail_price: 22, available: true }] },
+    { ...sampleGroup, group_id: '201', name: 'Creatine', category_path: ['Креатин'], variants: withMarginB2b([{ sku_id: '11', retail_price: 12, available: true }]) },
+    { ...sampleGroup, group_id: '202', name: 'Multivitamin', category_path: ['Витамини'], variants: withMarginB2b([{ sku_id: '12', retail_price: 18, available: true }]) },
+    { ...sampleGroup, group_id: '203', name: 'Omega 3', category_path: ['Омега'], variants: withMarginB2b([{ sku_id: '13', retail_price: 22, available: true }]) },
   ];
 
   const mockEnv = {
@@ -192,11 +199,11 @@ describe('preparePortfolioAdvisorSubmission', () => {
     const profile = buildPortfolioAdvisorProfile({ priority: 'muscle', email: 'a@b.com' });
     const low = makeProduct();
     low.system_data.portfolio.commerce = {
-      profit_eur: 5, profit_pct: 10, margin_eur: 5, margin_pct: 20, distributor_discount_pct: 30, customer_discount_pct: 0, is_on_promo: false,
+      margin_eur: 5, margin_on_retail_pct: 20, catalog_margin_ok: true,
     };
     const high = makeProduct({ product_id: 'prod-pf-999' });
     high.system_data.portfolio.commerce = {
-      profit_eur: 25, profit_pct: 35, margin_eur: 25, margin_pct: 40, distributor_discount_pct: 40, customer_discount_pct: 0, is_on_promo: false,
+      margin_eur: 25, margin_on_retail_pct: 40, catalog_margin_ok: true,
     };
     expect(scorePortfolioAdvisorProduct(high, profile)).toBeGreaterThan(scorePortfolioAdvisorProduct(low, profile));
   });
@@ -209,7 +216,7 @@ describe('preparePortfolioAdvisorSubmission', () => {
         system_data: {
           portfolio: {
             category_top: categoryTop,
-            commerce: { profit_pct: profitPct, profit_eur: profitPct, customer_discount_pct: 0, is_on_promo: false },
+            commerce: { margin_on_retail_pct: profitPct, margin_eur: profitPct, catalog_margin_ok: true },
           },
         },
       },
@@ -242,7 +249,7 @@ describe('preparePortfolioAdvisorSubmission', () => {
         system_data: {
           portfolio: {
             category_top: categoryTop,
-            commerce: { profit_pct: profitPct, profit_eur: profitPct, customer_discount_pct: 0, is_on_promo: false },
+            commerce: { margin_on_retail_pct: profitPct, margin_eur: profitPct, catalog_margin_ok: true },
           },
         },
       },
@@ -264,6 +271,6 @@ describe('preparePortfolioAdvisorSubmission', () => {
 
     expect(result.candidates).toHaveLength(4);
     expect(result.selected_high_profit).toBeGreaterThanOrEqual(2);
-    expect(result.candidates.some((p) => (p.system_data.portfolio.commerce.profit_pct || 0) < 15)).toBe(true);
+    expect(result.candidates.some((p) => (p.system_data.portfolio.commerce.margin_on_retail_pct || 0) < 15)).toBe(true);
   });
 });

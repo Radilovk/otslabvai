@@ -28,6 +28,7 @@ import {
   sumLinePricingSavings,
   ceilRetailPrice,
 } from './portfolio-pricing.js';
+import { groupMeetsCatalogMargin, filterGroupVariantsForCatalog, variantMeetsCatalogMargin } from './portfolio-margin-policy.js';
 import { normalizeHeroImagePath } from './portfolio-hero-path.js';
 import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipping.js';
 import { assertOrderRateLimit } from './order-rate-limit.js';
@@ -390,6 +391,8 @@ export function buildCatalogMeta(groups, settings = null) {
     const packs = collectAvailablePacks(availableVariants);
     const marginStats = summarizeGroupMargin(g);
 
+    const marginEligible = availableVariants.length > 0 && groupMeetsCatalogMargin(g);
+
     const entry = enrichIndexEntry({
       group_id: g.group_id,
       name: g.name,
@@ -405,6 +408,7 @@ export function buildCatalogMeta(groups, settings = null) {
       default_sku_id: priceStats.default_sku_id,
       variant_count: g.variants.length,
       available: availableVariants.length > 0,
+      margin_eligible: marginEligible,
       image: g.image,
       packs,
       ...marginStats
@@ -471,10 +475,10 @@ export function sanitizeIndexEntryForClient(entry) {
   return clientEntry;
 }
 
-/** Client-facing meta: only in-stock products, no margin fields. */
-export function buildClientCatalogMeta(meta) {
+/** Client-facing meta: only in-stock products with sufficient margin, no margin fields. */
+export function buildClientCatalogMeta(meta, { includeLowMargin = false } = {}) {
   const index = (meta.index || [])
-    .filter((item) => item.available)
+    .filter((item) => item.available && (includeLowMargin || item.margin_eligible !== false))
     .map(sanitizeIndexEntryForClient);
 
   const brandMap = new Map();
@@ -1291,6 +1295,15 @@ async function handleGetFilters(env) {
   });
 }
 
+async function promoAllowsLowMargin(code, env) {
+  const raw = String(code || '').trim().toUpperCase();
+  if (!raw) return false;
+  const codes = await getPromoCodes(env);
+  const promo = codes.find((p) => p.code === raw);
+  const result = validatePromoRecord(promo);
+  return result.valid && promo.show_low_margin === true;
+}
+
 async function handleGetCatalog(request, env) {
   const meta = await getMeta(env);
   if (!meta) {
@@ -1311,7 +1324,8 @@ async function handleGetCatalog(request, env) {
     sort: url.searchParams.get('sort') || 'relevance'
   };
 
-  const clientMeta = buildClientCatalogMeta(meta);
+  const includeLowMargin = await promoAllowsLowMargin(url.searchParams.get('promo_code'), env);
+  const clientMeta = buildClientCatalogMeta(meta, { includeLowMargin });
   const filtered = filterIndex(clientMeta.index, params, clientMeta);
   const total = filtered.length;
   const start = (page - 1) * limit;
@@ -1335,10 +1349,19 @@ async function handleGetProduct(request, env) {
   const meta = await getMeta(env);
   if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
 
+  const indexEntry = (meta.index || []).find((e) => e.group_id === groupId);
+  const includeLowMargin = await promoAllowsLowMargin(url.searchParams.get('promo_code'), env);
+  if (indexEntry?.margin_eligible === false && !includeLowMargin) {
+    throw new PortfolioError('Продуктът не е наличен.', 404);
+  }
+
   const group = await getGroupFromChunks(env, meta, groupId);
   if (!group) throw new PortfolioError('Продуктът не е намерен.', 404);
 
-  return cachedResponse(sanitizeGroupForClient(group), 1800);
+  return cachedResponse(
+    sanitizeGroupForClient(filterGroupVariantsForCatalog(group, { includeLowMargin })),
+    1800
+  );
 }
 
 function parseLifeCartRef(rawId) {
@@ -1467,6 +1490,17 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
     if (!found.variant.available) {
       errors.push(`${found.group_name} (${found.variant.option || found.variant.pack}) не е наличен.`);
       continue;
+    }
+    const allowLowMargin = promoRecord?.show_low_margin === true;
+    if (!allowLowMargin) {
+      if (Number(found.variant.b2b_price) > 0 && !variantMeetsCatalogMargin(found.variant)) {
+        errors.push(`${found.group_name} не е наличен за поръчка.`);
+        continue;
+      }
+      if (found.margin_eligible === false) {
+        errors.push(`${found.group_name} не е наличен за поръчка.`);
+        continue;
+      }
     }
 
     const catalogRetail = Number(found.variant.retail_price) || 0;
@@ -1678,7 +1712,8 @@ function validatePromoRecord(promo, { increment = false } = {}) {
       discountType: promo.discountType || 'percentage',
       description: promo.description || '',
       pricing_mode: promo.pricing_mode || 'none',
-      pricing_percent: promo.pricing_percent ?? null
+      pricing_percent: promo.pricing_percent ?? null,
+      show_low_margin: promo.show_low_margin === true
     }
   };
 }
@@ -1710,6 +1745,7 @@ async function handleCreatePromoCode(request, env) {
     active: data.active !== false,
     pricing_mode: data.pricing_mode || 'none',
     pricing_percent: data.pricing_percent != null ? Number(data.pricing_percent) : null,
+    show_low_margin: data.show_low_margin === true,
     createdAt: new Date().toISOString()
   };
   codes.push(newPromo);
@@ -1736,7 +1772,10 @@ async function handleUpdatePromoCode(request, env) {
     pricing_mode: data.pricing_mode ?? codes[idx].pricing_mode ?? 'none',
     pricing_percent: data.pricing_percent !== undefined
       ? (data.pricing_percent != null ? Number(data.pricing_percent) : null)
-      : codes[idx].pricing_percent
+      : codes[idx].pricing_percent,
+    show_low_margin: data.show_low_margin !== undefined
+      ? data.show_low_margin === true
+      : codes[idx].show_low_margin === true
   });
   await savePromoCodes(env, codes);
   return jsonResponse({ success: true, promoCode: codes[idx] });

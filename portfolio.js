@@ -3,6 +3,7 @@ import {
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
 import { getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, onCatalogUpdated } from './portfolio-cache.js';
+import { isLowMarginCatalogUnlocked } from './portfolio-promo-catalog.js';
 import {
   countActiveFilters as countFilters,
   getRemovableFilterChips,
@@ -46,7 +47,8 @@ function getFilterParams() {
     goal: DOM.filterGoal.value,
     brand: DOM.filterBrand.value,
     min_price: DOM.filterMinPrice.value,
-    max_price: DOM.filterMaxPrice.value
+    max_price: DOM.filterMaxPrice.value,
+    include_low_margin: isLowMarginCatalogUnlocked() ? '1' : ''
   };
 }
 

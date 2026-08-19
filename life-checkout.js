@@ -12,6 +12,7 @@ import {
   promoUsesLinePricing
 } from './portfolio-checkout-shared.js';
 import { calculateCheckoutShipping } from './checkout-shipping.js';
+import { setLowMarginCatalogUnlock, clearLowMarginCatalogUnlock } from './portfolio-promo-catalog.js';
 
 const CART_KEY = 'lifeCart';
 const LAST_ORDER_KEY = 'life_last_order';
@@ -547,6 +548,7 @@ function syncPromoRemoveButtons() {
 
 async function removePromoCode() {
   activePromoCode = null;
+  clearLowMarginCatalogUnlock();
   $('promo-code-input') && ($('promo-code-input').value = '');
   $('promo-code-input-summary') && ($('promo-code-input-summary').value = '');
   setPromoMessage('Промо кодът е премахнат.', 'success');
@@ -574,11 +576,13 @@ async function applyPromoCode() {
     const data = await res.json();
     if (!data.valid) {
       activePromoCode = null;
+      clearLowMarginCatalogUnlock();
       setPromoMessage(data.error || 'Невалиден промо код.', 'error');
       updateSummary();
       return;
     }
     activePromoCode = data.promoCode;
+    setLowMarginCatalogUnlock(data.promoCode);
     if (promoUsesLinePricing(data.promoCode)) {
       let modeLabel;
       if (data.promoCode.discountType === 'margin_percentage') {

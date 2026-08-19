@@ -17,6 +17,9 @@ import {
   LIFE_CATEGORY_DEFS
 } from './life-category-assign.js';
 import { decodeHtmlEntities, normalizeCatalogText } from './portfolio-text.js';
+import {
+  variantMeetsCatalogMargin,
+} from './portfolio-margin-policy.js';
 
 function decodeName(text) {
   return normalizeCatalogText(text);
@@ -139,7 +142,8 @@ export function htmlToStructuredContent(html, productName = '') {
  * @returns {object} продукт { product_id, public_data, system_data, display_order }
  */
 export function portfolioGroupToSiteProduct(group) {
-  const variants = (group.variants || []).map((v) => ({
+  const rawVariants = group.variants || [];
+  const variants = rawVariants.map((v) => ({
     option_name: decodeName([v.pack, v.option].filter(Boolean).join(' • ')),
     sku: String(v.sku_id || ''),
     price: Number(v.retail_price) || 0,
@@ -148,14 +152,24 @@ export function portfolioGroupToSiteProduct(group) {
     available: v.available !== false
   }));
 
-  const availablePrices = variants.filter((v) => v.available && v.price > 0).map((v) => v.price);
+  const marginEligible = rawVariants.some(
+    (v) => v.available !== false && variantMeetsCatalogMargin(v)
+  );
+  const marginOkAvailable = rawVariants.filter(
+    (v) => v.available !== false && variantMeetsCatalogMargin(v)
+  );
+  const availablePrices = (marginOkAvailable.length ? marginOkAvailable : rawVariants.filter((v) => v.available !== false))
+    .map((v) => Number(v.retail_price) || 0)
+    .filter((p) => p > 0);
   const allPrices = variants.map((v) => v.price).filter((p) => p > 0);
   const price = availablePrices.length
     ? Math.min(...availablePrices)
     : (allPrices.length ? Math.min(...allPrices) : null);
 
-  const packs = [...new Set((group.variants || []).map((v) => v.pack).filter(Boolean))];
-  const anyAvailable = variants.some((v) => v.available);
+  const packs = [...new Set(rawVariants.map((v) => v.pack).filter(Boolean))];
+  const anyAvailable = marginEligible
+    ? marginOkAvailable.length > 0
+    : variants.some((v) => v.available);
   const productName = decodeName(group.name || '');
   const brandName = decodeName(group.brand || '');
   const structured = htmlToStructuredContent(group.description || '', productName);
@@ -186,6 +200,7 @@ export function portfolioGroupToSiteProduct(group) {
       inventory: anyAvailable ? 10 : 0,
       goals: [],
       source: 'portfolio',
+      margin_eligible: marginEligible,
       portfolio: {
         group_id: String(group.group_id),
         category: group.category || '',
@@ -240,6 +255,9 @@ function updateCommercialFields(existing, incoming) {
   }
 
   existing.system_data.source = 'portfolio';
+  if (incoming.system_data.margin_eligible !== undefined) {
+    existing.system_data.margin_eligible = incoming.system_data.margin_eligible;
+  }
   existing.system_data.portfolio = {
     ...(existing.system_data.portfolio || {}),
     ...incoming.system_data.portfolio,
@@ -403,7 +421,7 @@ export function buildAiSelectionMessages({ project, prompt, index, limit = 12, h
     throw new PortfolioImportError(`Невалиден проект „${project}". Позволени: ${Object.keys(IMPORT_PROJECTS).join(', ')}.`, 400);
   }
 
-  const available = sortByMarginDesc((index || []).filter((e) => e.available !== false));
+  const available = sortByMarginDesc((index || []).filter((e) => e.available !== false && e.margin_eligible !== false));
   const shown = available.slice(0, AI_SELECT_MAX_CATALOG_ENTRIES);
   const entries = shown.map(formatCatalogLine).join('\n');
   const truncated = catalogTotal > shown.length
