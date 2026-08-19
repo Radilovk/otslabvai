@@ -38,7 +38,7 @@ import {
   scoreAdvisorCommercialBoost,
 } from './portfolio-advisor-commerce.js';
 import { loadPortfolioAdvisorSettings } from './portfolio-advisor-settings.js';
-import { isSiteProductMarginEligible } from './portfolio-margin-policy.js';
+import { isCatalogListed } from './portfolio-margin-policy.js';
 import { buildAdvisorClinicalGuardrails, hasAdvisorClinicalComplexity } from './portfolio-advisor-prompt.js';
 
 export { composePortfolioAdvisorStacks };
@@ -72,7 +72,7 @@ export const PORTFOLIO_SINGLE_TIER_META = {
 
 export function filterPortfolioEligibleProducts(products, options = {}) {
   return filterAdvisorRetailProducts(
-    products.filter((p) => isProductAvailable(p) && !isPeptideOrInjectable(p) && isSiteProductMarginEligible(p)),
+    products.filter((p) => isProductAvailable(p) && !isPeptideOrInjectable(p) && isCatalogListed(p)),
     { selectionMode: options.selectionMode }
   );
 }
@@ -142,8 +142,9 @@ export function getAdvisorCommerceOptionsForProfile(advisorSettings, profile) {
   if (!hasAdvisorClinicalComplexity(profile)) return base;
   return {
     ...base,
-    margin_on_retail_weight: base.margin_on_retail_weight * 0.35,
+    profit_pct_weight: base.profit_pct_weight * 0.35,
     margin_eur_weight: base.margin_eur_weight * 0.5,
+    discount_pct_weight: base.discount_pct_weight * 0.5,
   };
 }
 
@@ -389,7 +390,7 @@ export function buildAdvisorWorkingPool(rankedEntries, commerceOptions, profile 
   const highProfit = [];
   const lowProfit = [];
   for (const entry of rankedEntries) {
-    const profitPct = getAdvisorCommercialStats(entry.product)?.margin_on_retail_pct || 0;
+    const profitPct = getAdvisorCommercialStats(entry.product)?.profit_pct || 0;
     if (profitPct >= opts.min_profit_pct_on_retail) highProfit.push(entry);
     else lowProfit.push(entry);
   }
@@ -466,7 +467,7 @@ export function buildAdvisorWorkingPool(rankedEntries, commerceOptions, profile 
   if (selected.length < minTarget) runPhases(lowProfit);
 
   const selectedHighProfit = selected.filter((entry) => {
-    const profitPct = getAdvisorCommercialStats(entry.product)?.margin_on_retail_pct || 0;
+    const profitPct = getAdvisorCommercialStats(entry.product)?.profit_pct || 0;
     return profitPct >= opts.min_profit_pct_on_retail;
   }).length;
 

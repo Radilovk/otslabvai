@@ -199,11 +199,11 @@ describe('preparePortfolioAdvisorSubmission', () => {
     const profile = buildPortfolioAdvisorProfile({ priority: 'muscle', email: 'a@b.com' });
     const low = makeProduct();
     low.system_data.portfolio.commerce = {
-      margin_eur: 5, margin_on_retail_pct: 20, catalog_margin_ok: true,
+      profit_eur: 5, profit_pct: 10, margin_eur: 5, margin_pct: 20, distributor_discount_pct: 30, customer_discount_pct: 0, is_on_promo: false,
     };
     const high = makeProduct({ product_id: 'prod-pf-999' });
     high.system_data.portfolio.commerce = {
-      margin_eur: 25, margin_on_retail_pct: 40, catalog_margin_ok: true,
+      profit_eur: 25, profit_pct: 35, margin_eur: 25, margin_pct: 40, distributor_discount_pct: 40, customer_discount_pct: 0, is_on_promo: false,
     };
     expect(scorePortfolioAdvisorProduct(high, profile)).toBeGreaterThan(scorePortfolioAdvisorProduct(low, profile));
   });
@@ -216,7 +216,7 @@ describe('preparePortfolioAdvisorSubmission', () => {
         system_data: {
           portfolio: {
             category_top: categoryTop,
-            commerce: { margin_on_retail_pct: profitPct, margin_eur: profitPct, catalog_margin_ok: true },
+            commerce: { profit_pct: profitPct, profit_eur: profitPct, customer_discount_pct: 0, is_on_promo: false },
           },
         },
       },
@@ -249,7 +249,7 @@ describe('preparePortfolioAdvisorSubmission', () => {
         system_data: {
           portfolio: {
             category_top: categoryTop,
-            commerce: { margin_on_retail_pct: profitPct, margin_eur: profitPct, catalog_margin_ok: true },
+            commerce: { profit_pct: profitPct, profit_eur: profitPct, customer_discount_pct: 0, is_on_promo: false },
           },
         },
       },
@@ -271,6 +271,6 @@ describe('preparePortfolioAdvisorSubmission', () => {
 
     expect(result.candidates).toHaveLength(4);
     expect(result.selected_high_profit).toBeGreaterThanOrEqual(2);
-    expect(result.candidates.some((p) => (p.system_data.portfolio.commerce.margin_on_retail_pct || 0) < 15)).toBe(true);
+    expect(result.candidates.some((p) => (p.system_data.portfolio.commerce.profit_pct || 0) < 15)).toBe(true);
   });
 });

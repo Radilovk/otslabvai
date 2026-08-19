@@ -14,7 +14,7 @@ import {
   buildMockNarration,
   composeProtocolStacks,
 } from './protocol-stack-composer.js';
-import { isSiteProductMarginEligible } from './portfolio-margin-policy.js';
+import { isCatalogListed } from './portfolio-margin-policy.js';
 
 /** Официален фиксиран курс BGN/EUR — цените в каталога са в EUR */
 export const EUR_RATE = 1.95583;
@@ -116,7 +116,7 @@ export function getProductPriceEur(product) {
 export const getProductPriceBgn = getProductPriceEur;
 
 export function filterEligibleProducts(products) {
-  return products.filter((p) => isOralSupplement(p) && isProductAvailable(p) && isSiteProductMarginEligible(p));
+  return products.filter((p) => isOralSupplement(p) && isProductAvailable(p) && isCatalogListed(p));
 }
 
 export function buildClientProfile(raw) {

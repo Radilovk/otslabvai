@@ -1,51 +1,30 @@
 /**
- * Minimum catalog margin: profit between our retail price and B2B cost.
- * Margin % = (retail − b2b) / retail × 100 (крайна намалена цена vs доставна).
- * Products below threshold are hidden from listings and AI unless a promo unlocks them.
+ * Catalog margin rule: (retail − b2b) / retail × 100 ≥ 25%.
+ * Computed once at sync/import → margin_eligible flag; listings check the flag.
  */
 
 export const MIN_CATALOG_MARGIN_PCT = 25;
 
-/** @param {{ b2b_price?: number, retail_price?: number }} variant */
-export function variantMarginOnRetailPct(variant) {
+export function variantMarginPct(variant) {
   const b2b = Number(variant?.b2b_price) || 0;
   const retail = Number(variant?.retail_price) || 0;
   if (!(b2b > 0 && retail > b2b)) return 0;
   return ((retail - b2b) / retail) * 100;
 }
 
-/** @param {{ b2b_price?: number, retail_price?: number }} variant */
-export function variantMeetsCatalogMargin(variant, minPct = MIN_CATALOG_MARGIN_PCT) {
-  return variantMarginOnRetailPct(variant) >= minPct;
+export function variantHasMargin(variant, minPct = MIN_CATALOG_MARGIN_PCT) {
+  return variantMarginPct(variant) >= minPct;
 }
 
-/** True if any in-stock variant meets the margin rule. */
-export function groupMeetsCatalogMargin(group, minPct = MIN_CATALOG_MARGIN_PCT) {
-  const variants = (group?.variants || []).filter((v) => v.available !== false);
-  return variants.some((v) => variantMeetsCatalogMargin(v, minPct));
+export function groupHasMargin(group, minPct = MIN_CATALOG_MARGIN_PCT) {
+  return (group?.variants || []).some(
+    (v) => v.available !== false && variantHasMargin(v, minPct)
+  );
 }
 
-/** Site product from portfolio import — system_data.margin_eligible set at import. */
-export function isSiteProductMarginEligible(product) {
-  return product?.system_data?.margin_eligible !== false;
-}
-
-/** Catalog index entry — margin_eligible baked at sync. */
-export function isIndexEntryMarginEligible(entry) {
-  return entry?.margin_eligible !== false;
-}
-
-/**
- * Filter catalog group variants for public display (keeps in-stock + margin OK).
- * @param {object} group
- * @param {{ includeLowMargin?: boolean }} [opts]
- */
-export function filterGroupVariantsForCatalog(group, opts = {}) {
-  const includeLowMargin = opts.includeLowMargin === true;
-  const variants = (group?.variants || []).filter((v) => {
-    if (v.available === false) return false;
-    if (includeLowMargin) return true;
-    return variantMeetsCatalogMargin(v);
-  });
-  return { ...group, variants };
+/** Index entry or site product — hidden only when margin_eligible is explicitly false. */
+export function isCatalogListed(item, allowLowMargin = false) {
+  if (allowLowMargin) return true;
+  const flag = item?.margin_eligible ?? item?.system_data?.margin_eligible;
+  return flag !== false;
 }

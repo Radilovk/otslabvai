@@ -28,7 +28,7 @@ import {
   sumLinePricingSavings,
   ceilRetailPrice,
 } from './portfolio-pricing.js';
-import { groupMeetsCatalogMargin, filterGroupVariantsForCatalog, variantMeetsCatalogMargin } from './portfolio-margin-policy.js';
+import { groupHasMargin, variantHasMargin, isCatalogListed } from './portfolio-margin-policy.js';
 import { normalizeHeroImagePath } from './portfolio-hero-path.js';
 import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipping.js';
 import { assertOrderRateLimit } from './order-rate-limit.js';
@@ -391,7 +391,7 @@ export function buildCatalogMeta(groups, settings = null) {
     const packs = collectAvailablePacks(availableVariants);
     const marginStats = summarizeGroupMargin(g);
 
-    const marginEligible = availableVariants.length > 0 && groupMeetsCatalogMargin(g);
+    const marginEligible = availableVariants.length > 0 && groupHasMargin(g);
 
     const entry = enrichIndexEntry({
       group_id: g.group_id,
@@ -478,7 +478,7 @@ export function sanitizeIndexEntryForClient(entry) {
 /** Client-facing meta: only in-stock products with sufficient margin, no margin fields. */
 export function buildClientCatalogMeta(meta, { includeLowMargin = false } = {}) {
   const index = (meta.index || [])
-    .filter((item) => item.available && (includeLowMargin || item.margin_eligible !== false))
+    .filter((item) => item.available && isCatalogListed(item, includeLowMargin))
     .map(sanitizeIndexEntryForClient);
 
   const brandMap = new Map();
@@ -1351,15 +1351,24 @@ async function handleGetProduct(request, env) {
 
   const indexEntry = (meta.index || []).find((e) => e.group_id === groupId);
   const includeLowMargin = await promoAllowsLowMargin(url.searchParams.get('promo_code'), env);
-  if (indexEntry?.margin_eligible === false && !includeLowMargin) {
+  if (!isCatalogListed(indexEntry, includeLowMargin)) {
     throw new PortfolioError('Продуктът не е наличен.', 404);
   }
 
   const group = await getGroupFromChunks(env, meta, groupId);
   if (!group) throw new PortfolioError('Продуктът не е намерен.', 404);
 
+  const clientGroup = includeLowMargin
+    ? group
+    : {
+      ...group,
+      variants: (group.variants || []).filter(
+        (v) => v.available !== false && variantHasMargin(v)
+      ),
+    };
+
   return cachedResponse(
-    sanitizeGroupForClient(filterGroupVariantsForCatalog(group, { includeLowMargin })),
+    sanitizeGroupForClient(clientGroup),
     1800
   );
 }
@@ -1493,11 +1502,11 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
     }
     const allowLowMargin = promoRecord?.show_low_margin === true;
     if (!allowLowMargin) {
-      if (Number(found.variant.b2b_price) > 0 && !variantMeetsCatalogMargin(found.variant)) {
+      if (Number(found.variant.b2b_price) > 0 && !variantHasMargin(found.variant)) {
         errors.push(`${found.group_name} не е наличен за поръчка.`);
         continue;
       }
-      if (found.margin_eligible === false) {
+      if (!isCatalogListed(found)) {
         errors.push(`${found.group_name} не е наличен за поръчка.`);
         continue;
       }

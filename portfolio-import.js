@@ -18,7 +18,8 @@ import {
 } from './life-category-assign.js';
 import { decodeHtmlEntities, normalizeCatalogText } from './portfolio-text.js';
 import {
-  variantMeetsCatalogMargin,
+  groupHasMargin,
+  variantHasMargin,
 } from './portfolio-margin-policy.js';
 
 function decodeName(text) {
@@ -152,11 +153,9 @@ export function portfolioGroupToSiteProduct(group) {
     available: v.available !== false
   }));
 
-  const marginEligible = rawVariants.some(
-    (v) => v.available !== false && variantMeetsCatalogMargin(v)
-  );
+  const marginEligible = groupHasMargin(group);
   const marginOkAvailable = rawVariants.filter(
-    (v) => v.available !== false && variantMeetsCatalogMargin(v)
+    (v) => v.available !== false && variantHasMargin(v)
   );
   const availablePrices = (marginOkAvailable.length ? marginOkAvailable : rawVariants.filter((v) => v.available !== false))
     .map((v) => Number(v.retail_price) || 0)
