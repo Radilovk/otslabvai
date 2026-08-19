@@ -1,6 +1,8 @@
 /**
- * Catalog margin rule: (retail − b2b) / retail × 100 ≥ 25%.
- * Computed once at sync/import → margin_eligible flag; listings check the flag.
+ * Catalog margin rule for Fitness1 + Sila.bg (and all 3 storefronts).
+ * Uses resolved retail_price vs b2b_price after portfolio-pricing.js.
+ * Margin % = (retail − b2b) / retail × 100 ≥ 25%.
+ * Computed once at sync/import → margin_eligible; listings check the flag.
  */
 
 export const MIN_CATALOG_MARGIN_PCT = 25;

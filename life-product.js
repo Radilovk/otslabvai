@@ -5,6 +5,7 @@
 import { API_URL } from './config.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import { rewriteProductImages } from './life-img.js';
+import { isProductListed } from './product-visibility.js';
 
 const DOM = {
     productContent: document.getElementById('product-detail-content'),
@@ -153,11 +154,11 @@ const generateEffectBar = effect => `
     </div>`;
 
 function renderProductDetail(product) {
-    if (!product.public_data) {
+    if (!product?.public_data || !isProductListed(product)) {
         DOM.productContent.innerHTML = `
             <div style="text-align: center; padding: 60px 20px;">
-                <h2>Продуктът не може да бъде зареден</h2>
-                <p>Моля, опитайте отново по-късно.</p>
+                <h2>Продуктът не е наличен</h2>
+                <p>Този продукт в момента не се предлага в каталога.</p>
                 <a href="life.html" class="btn btn-primary">Назад към продуктите</a>
             </div>
         `;
