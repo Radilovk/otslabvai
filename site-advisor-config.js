@@ -89,8 +89,8 @@ const BASE_STEPS = [
   },
   {
     id: 'conditions',
-    title: 'Медицински състояния',
-    hint: 'Отбележете всички приложими.',
+    title: 'Здравен статус',
+    hint: 'Отбележете всички приложими състояния.',
     type: 'multi',
     field: 'conditions',
     options: [
@@ -225,20 +225,6 @@ export function buildSiteAdvisorSteps(siteId = 'life', answers = {}) {
 
   steps.push(adaptStepForProfile(siteId === 'main' ? MAIN_SYMPTOMS_STEP : LIFE_SYMPTOMS_STEP, answers));
   steps.push(ALLERGIES_STEP);
-
-  if (answers.sex === 'female') {
-    steps.push({
-      id: 'pregnancy',
-      title: 'Бременност / кърмене',
-      type: 'single',
-      field: 'pregnancy',
-      options: [
-        { value: 'no', label: 'Не' },
-        { value: 'yes', label: 'Да' },
-        { value: 'na', label: 'Не е приложимо' },
-      ],
-    });
-  }
 
   steps.push({
     id: 'contact',
