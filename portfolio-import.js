@@ -20,6 +20,7 @@ import { decodeHtmlEntities, normalizeCatalogText } from './portfolio-text.js';
 import {
   groupHasMargin,
   variantHasMargin,
+  isCatalogListed,
 } from './portfolio-margin-policy.js';
 
 function decodeName(text) {
@@ -420,7 +421,9 @@ export function buildAiSelectionMessages({ project, prompt, index, limit = 12, h
     throw new PortfolioImportError(`Невалиден проект „${project}". Позволени: ${Object.keys(IMPORT_PROJECTS).join(', ')}.`, 400);
   }
 
-  const available = sortByMarginDesc((index || []).filter((e) => e.available !== false && e.margin_eligible !== false));
+  const available = sortByMarginDesc(
+    (index || []).filter((e) => e.available !== false && isCatalogListed(e))
+  );
   const shown = available.slice(0, AI_SELECT_MAX_CATALOG_ENTRIES);
   const entries = shown.map(formatCatalogLine).join('\n');
   const truncated = catalogTotal > shown.length
