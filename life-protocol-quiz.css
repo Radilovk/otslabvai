@@ -76,6 +76,13 @@ body.lpq-body {
   margin: 0;
 }
 
+.lpq-step-meta {
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--lpq-muted);
+}
+
 .lpq-progress {
   height: 6px;
   background: var(--lpq-border);

@@ -1,6 +1,6 @@
 /**
  * Споделени стъпки за AI консултанти на life-protocols и daotslabna.
- * Без въпрос за „цел“ и без избор на продуктови категории — зададени от сайта.
+ * Цел и категории идват от контекста на сайта — не се питат клиента.
  */
 
 const FEMALE_ONLY_CONDITIONS = [
@@ -11,20 +11,22 @@ const FEMALE_ONLY_CONDITIONS = [
 export const SITE_ADVISOR_META = {
   life: {
     siteId: 'life',
-    introTitle: 'Anti-aging профил',
-    introHint: 'Продуктите са фокусирани върху антиейджинг и дълголетие — не питаме за отделна „цел“.',
-    bodyHint: 'Използваме ги за ИТМ и персонализация на дозови насоки.',
-    contactTitle: 'Вашият протокол е почти готов',
+    pageTitle: 'Персонален anti-aging протокол',
+    pageSubtitle: 'Кратък профил → индивидуален стак с точни продукти и дози',
+    bodyHint: 'Ръст и тегло ни помагат да подберем дозите и интензитета.',
+    contactTitle: 'Готов е вашият протокол',
+    contactHint: 'Оставете имейл, за да видите трите варианта и да поръчате директно.',
     contactCta: 'Виж моя протокол',
     draftKey: 'lifeProtocolDraft',
     defaultPriority: 'longevity',
   },
   main: {
     siteId: 'main',
-    introTitle: 'Профил за отслабване',
-    introHint: 'Продуктите са за отслабване и метаболизъм — не питаме за отделна „цел“.',
-    bodyHint: 'ИТМ ни помага да подберем интензитет и тип продукти (ситост, метаболизъм, протеин).',
-    contactTitle: 'Вашата програма е почти готова',
+    pageTitle: 'Персонална програма за отслабване',
+    pageSubtitle: 'Кратък профил → три готови варианта с продукти, дози и график',
+    bodyHint: 'Ръст и тегло ни помагат да насочим програмата към вашите цели.',
+    contactTitle: 'Готова е вашата програма',
+    contactHint: 'Оставете имейл, за да видите трите варианта и да поръчате директно.',
     contactCta: 'Виж моята програма',
     draftKey: 'mainAdvisorDraft',
     defaultPriority: 'otshalvane',
@@ -35,7 +37,6 @@ const BASE_STEPS = [
   {
     id: 'sex',
     title: 'Пол',
-    hint: 'Влияе на хормоналните и метаболитни препоръки.',
     type: 'single',
     field: 'sex',
     options: [
@@ -88,8 +89,8 @@ const BASE_STEPS = [
   },
   {
     id: 'conditions',
-    title: 'Медицински състояния',
-    hint: 'Отбележете всички приложими. Не спира процеса.',
+    title: 'Здравен статус',
+    hint: 'Отбележете всички приложими състояния.',
     type: 'multi',
     field: 'conditions',
     options: [
@@ -123,7 +124,7 @@ const BASE_STEPS = [
 const LIFE_SYMPTOMS_STEP = {
   id: 'symptoms',
   title: 'Симптоми и нужди',
-  hint: 'Индикатори за възможен дефицит — не заместват лабораторни изследвания.',
+  hint: 'Помага ни да подберем правилните активни вещества.',
   type: 'multi',
   field: 'symptoms',
   options: [
@@ -140,14 +141,14 @@ const LIFE_SYMPTOMS_STEP = {
 
 const MAIN_SYMPTOMS_STEP = {
   id: 'symptoms',
-  title: 'Симптоми и предизвикателства',
-  hint: 'Помага ни да подберем правилния фокус в програмата за отслабване.',
+  title: 'Какво ви затруднява най-много?',
+  hint: 'Изберете всичко приложимо — така насочваме програмата.',
   type: 'multi',
   field: 'symptoms',
   options: [
     { value: 'fatigue', label: 'Постоянна умора' },
-    { value: 'cravings', label: 'Трудно контролиран апетит / cravings' },
-    { value: 'poor_sleep', label: 'Лош сън (влияе на теглото)' },
+    { value: 'cravings', label: 'Трудно контролиран апетит' },
+    { value: 'poor_sleep', label: 'Лош сън' },
     { value: 'joint_pain', label: 'Болки в ставите при движение' },
     { value: 'concentration', label: 'Липса на фокус / мотивация' },
     { value: 'none', label: 'Нищо от изброените', exclusive: true },
@@ -211,14 +212,7 @@ export function pruneSiteAdvisorAnswers(answers = {}) {
  */
 export function buildSiteAdvisorSteps(siteId = 'life', answers = {}) {
   const meta = SITE_ADVISOR_META[siteId] || SITE_ADVISOR_META.life;
-  const steps = [
-    {
-      id: 'site_intro',
-      title: meta.introTitle,
-      hint: meta.introHint,
-      type: 'info',
-    },
-  ];
+  const steps = [];
 
   for (const step of BASE_STEPS) {
     const adapted = adaptStepForProfile(step, answers);
@@ -232,24 +226,10 @@ export function buildSiteAdvisorSteps(siteId = 'life', answers = {}) {
   steps.push(adaptStepForProfile(siteId === 'main' ? MAIN_SYMPTOMS_STEP : LIFE_SYMPTOMS_STEP, answers));
   steps.push(ALLERGIES_STEP);
 
-  if (answers.sex === 'female') {
-    steps.push({
-      id: 'pregnancy',
-      title: 'Бременност / кърмене',
-      type: 'single',
-      field: 'pregnancy',
-      options: [
-        { value: 'no', label: 'Не' },
-        { value: 'yes', label: 'Да' },
-        { value: 'na', label: 'Не е приложимо' },
-      ],
-    });
-  }
-
   steps.push({
     id: 'contact',
     title: meta.contactTitle,
-    hint: 'Въведете имейл, за да видите резултата. Ще го използваме при поръчка.',
+    hint: meta.contactHint,
     type: 'contact',
     ctaLabel: meta.contactCta,
   });
@@ -259,4 +239,8 @@ export function buildSiteAdvisorSteps(siteId = 'life', answers = {}) {
 
 export function getSiteAdvisorDraftKey(siteId = 'life') {
   return SITE_ADVISOR_META[siteId]?.draftKey || 'lifeProtocolDraft';
+}
+
+export function getSiteAdvisorMeta(siteId = 'life') {
+  return SITE_ADVISOR_META[siteId] || SITE_ADVISOR_META.life;
 }

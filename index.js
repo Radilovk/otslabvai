@@ -1508,7 +1508,9 @@ function initializeGlobalScripts() {
     // Only initialize quest modal if elements exist
     if (DOM.questModal.backdrop && DOM.questModal.container && DOM.questModal.iframe) {
         function openQuestModal(url) {
-            DOM.questModal.iframe.src = url || 'main-advisor-quiz.html';
+            const base = url || 'main-advisor-quiz.html';
+            const embedUrl = base.includes('?') ? `${base}&embed=1` : `${base}?embed=1`;
+            DOM.questModal.iframe.src = embedUrl;
             DOM.questModal.container.classList.add('show');
             DOM.questModal.backdrop.classList.add('show');
             DOM.body.classList.add('modal-open');
