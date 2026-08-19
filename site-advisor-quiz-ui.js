@@ -5,6 +5,7 @@
 import {
   buildSiteAdvisorSteps,
   getSiteAdvisorDraftKey,
+  getSiteAdvisorMeta,
   pruneSiteAdvisorAnswers,
 } from './site-advisor-config.js';
 import { finalizeSiteAnswers } from './site-advisor-shared.js';
@@ -30,6 +31,17 @@ export function createSiteAdvisorQuiz(options) {
   const formCard = document.getElementById('lpq-form-card');
   const loadingCard = document.getElementById('lpq-loading');
   const draftKey = getSiteAdvisorDraftKey(siteId);
+  const siteMeta = getSiteAdvisorMeta(siteId);
+  const stepMetaEl = document.getElementById('lpq-step-meta');
+
+  const isEmbed = new URLSearchParams(window.location.search).get('embed') === '1'
+    || window.self !== window.top;
+  if (isEmbed) document.body.classList.add('lpq-embed');
+
+  const titleEl = document.getElementById('maa-page-title');
+  const subtitleEl = document.getElementById('maa-page-subtitle');
+  if (titleEl && siteMeta.pageTitle) titleEl.textContent = siteMeta.pageTitle;
+  if (subtitleEl && siteMeta.pageSubtitle) subtitleEl.textContent = siteMeta.pageSubtitle;
 
   const answers = loadDraft();
 
@@ -100,9 +112,7 @@ export function createSiteAdvisorQuiz(options) {
   function renderStep(step) {
     let inner = step.hint ? `<p class="lpq-hint">${step.hint}</p>` : '';
 
-    if (step.type === 'info') {
-      inner += `<p class="lpq-info-text">Продължете напред — следващите въпроси ни помагат да персонализираме препоръката според вашия профил.</p>`;
-    } else if (step.type === 'single' || step.type === 'multi') {
+    if (step.type === 'single' || step.type === 'multi') {
       const inputType = step.type === 'single' ? 'radio' : 'checkbox';
       const current = answers[step.field];
       const selected = step.type === 'single' ? [current] : (Array.isArray(current) ? current : []);
@@ -220,11 +230,19 @@ export function createSiteAdvisorQuiz(options) {
     const pct = ((index + 1) / activeSteps.length) * 100;
     progressEl.style.width = `${pct}%`;
 
+    if (stepMetaEl) {
+      stepMetaEl.textContent = `Стъпка ${index + 1} от ${activeSteps.length}`;
+    }
+
     prevBtn.hidden = index === 0;
     const lastStep = activeSteps[activeSteps.length - 1];
-    nextBtn.textContent = index === activeSteps.length - 1
-      ? (lastStep?.ctaLabel || 'Виж резултата')
-      : 'Напред';
+    if (index === activeSteps.length - 1) {
+      nextBtn.textContent = lastStep?.ctaLabel || 'Виж резултата';
+    } else if (index === 0) {
+      nextBtn.textContent = 'Започни';
+    } else {
+      nextBtn.textContent = 'Напред';
+    }
   }
 
   function showError(stepId, msg) {
