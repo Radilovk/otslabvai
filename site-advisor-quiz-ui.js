@@ -231,7 +231,11 @@ export function createSiteAdvisorQuiz(options) {
     progressEl.style.width = `${pct}%`;
 
     if (stepMetaEl) {
-      stepMetaEl.textContent = `Стъпка ${index + 1} от ${activeSteps.length}`;
+      if (index === 0 && !answers.sex) {
+        stepMetaEl.textContent = 'Стъпка 1';
+      } else {
+        stepMetaEl.textContent = `Стъпка ${index + 1} от ${activeSteps.length}`;
+      }
     }
 
     prevBtn.hidden = index === 0;
