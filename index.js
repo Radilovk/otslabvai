@@ -438,6 +438,8 @@ function encodeProductsForAttr(products) {
 }
 // --- END: MODIFIED FUNCTION ---
 
+const INFO_CARD_CTA_ARROW = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`;
+
 const generateInfoCardHTML = component => {
     const btnUrl = (() => {
         const raw = component.button?.url || 'main-advisor-quiz.html';
@@ -446,14 +448,19 @@ const generateInfoCardHTML = component => {
     })();
     return `
     <section ${component.id ? `id="${component.id}"` : ''} class="info-card-section fade-in-up ${'image-align-' + (component.options.image_align || 'left')}">
+        <div class="info-card-bg" aria-hidden="true"></div>
         <div class="container">
             <div class="info-card-image">
-                <img src="${component.image}" alt="${component.title}" loading="lazy">
+                <div class="info-card-image-frame">
+                    <div class="info-card-image-glow" aria-hidden="true"></div>
+                    <img src="${component.image}" alt="${component.title}" loading="lazy">
+                </div>
             </div>
             <div class="info-card-content">
+                <span class="info-card-eyebrow">AI съветник</span>
                 <h2>${component.title}</h2>
                 <p>${component.content}</p>
-                ${component.button && component.button.text ? `<a href="${btnUrl}" class="btn-primary">${component.button.text}</a>` : ''}
+                ${component.button && component.button.text ? `<a href="${btnUrl}" class="btn btn-hero-primary info-card-cta"><span>${component.button.text}</span>${INFO_CARD_CTA_ARROW}</a>` : ''}
             </div>
         </div>
     </section>`;
