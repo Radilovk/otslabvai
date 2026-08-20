@@ -69,7 +69,8 @@ const ICON_PATHS = {
   chevronRight: '<path d="m9 5 7 7-7 7"/>',
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
   arrowRight: '<path d="M4 12h16"/><path d="m13 5 7 7-7 7"/>',
-  map: '<path d="M9 3 3 5.5v15L9 18l6 2.5 6-2.5v-15L15 5.5 9 3z"/><path d="M9 3v15M15 5.5v15"/>'
+  map: '<path d="M9 3 3 5.5v15L9 18l6 2.5 6-2.5v-15L15 5.5 9 3z"/><path d="M9 3v15M15 5.5v15"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>'
 };
 
 export function icon(name, { size = 18, className = '', strokeWidth = 2 } = {}) {

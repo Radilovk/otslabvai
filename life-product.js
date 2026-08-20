@@ -6,6 +6,7 @@ import { API_URL } from './config.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import { rewriteProductImages } from './life-img.js';
 import { isProductListed } from './product-visibility.js';
+import { bindProductShareButton, shareIconSvg, absoluteProductUrl } from './product-share.js';
 
 const DOM = {
     productContent: document.getElementById('product-detail-content'),
@@ -98,6 +99,20 @@ const showToast = (message, type = 'info', duration = 3000) => {
         toast.addEventListener('transitionend', () => toast.remove());
     }, duration);
 };
+
+function setupProductShare(productId, productName) {
+    const btn = document.getElementById('share-product-btn');
+    if (!btn) return;
+    const sharePath = `${location.pathname}?id=${encodeURIComponent(productId)}`;
+    bindProductShareButton(btn, {
+        getUrl: () => absoluteProductUrl(sharePath),
+        getTitle: () => productName,
+        onSuccess: (result) => {
+            showToast(result.method === 'share' ? 'Споделено' : 'Линкът е копиран', 'success');
+        },
+        onError: () => showToast('Неуспешно споделяне', 'error'),
+    });
+}
 
 const addToCart = (id, name, price, inventory, image) => {
     const maxQty = Number(inventory) || 0;
@@ -436,6 +451,10 @@ function renderProductDetail(product) {
                     ${initDeltaHTML}
                 </div>
                 <span class="product-detail-stock ${stockClass}">${stockText}</span>
+                <button type="button" class="share-product-btn" id="share-product-btn" aria-label="Сподели продукта" title="Сподели линк">
+                    ${shareIconSvg({ size: 16 })}
+                    <span class="share-product-btn-label">Сподели</span>
+                </button>
             </div>
         </div>
 
@@ -466,6 +485,8 @@ function renderProductDetail(product) {
     `;
 
     DOM.productContent.innerHTML = productHTML;
+
+    setupProductShare(productId, publicData.name);
 
     // Setup variant selector interaction
     if (variants.length > 1) {

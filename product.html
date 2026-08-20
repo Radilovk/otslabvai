@@ -127,6 +127,45 @@
             background: #F8D7DA;
             color: #721c24;
         }
+
+        .share-product-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: 1.5px solid var(--border-color, rgba(0,0,0,0.12));
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary, #555);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s, background 0.2s;
+            min-height: 40px;
+        }
+
+        .share-product-btn:hover {
+            border-color: var(--accent, #2d6a4f);
+            color: var(--accent, #2d6a4f);
+            background: rgba(45, 106, 79, 0.06);
+        }
+
+        .share-product-btn svg {
+            flex-shrink: 0;
+        }
+
+        .share-product-btn-label {
+            line-height: 1;
+        }
+
+        @media (max-width: 480px) {
+            .share-product-btn-label {
+                display: none;
+            }
+            .share-product-btn {
+                padding: 8px 10px;
+            }
+        }
         
         .product-detail-image {
             width: 100%;
