@@ -10,6 +10,7 @@ import {
   shouldShowActiveFilterRow,
   formatFiltersToggleLabel
 } from './portfolio-catalog-ui.js';
+import { initPortfolioPromoModal } from './portfolio-promo-ui.js';
 
 const LIMIT = 24;
 
@@ -413,6 +414,12 @@ async function init() {
     DOM.resultsMeta.textContent = '';
   }
 
+  initPortfolioPromoModal({
+    onApplied: () => {
+      state.page = 1;
+      loadCatalog();
+    },
+  });
 }
 
 init();

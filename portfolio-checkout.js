@@ -16,7 +16,12 @@ import {
   promoUsesLinePricing
 } from './portfolio-checkout-shared.js';
 import { calculateCheckoutShipping } from './checkout-shipping.js';
-import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-visibility.js';
+import {
+  applyPortfolioPromoCode,
+  clearPortfolioPromo,
+  loadActivePromo,
+  promoSuccessMessage,
+} from './portfolio-promo-ui.js';
 
 let cart = getCart();
 let activePromoCode = null;
@@ -489,7 +494,7 @@ function syncPromoRemoveButtons() {
 
 async function removePromoCode() {
   activePromoCode = null;
-  clearLowMarginPromoUnlock();
+  clearPortfolioPromo();
   $('promo-code-input') && ($('promo-code-input').value = '');
   $('promo-code-input-summary') && ($('promo-code-input-summary').value = '');
   setPromoMessage('Промо кодът е премахнат.', 'success');
@@ -509,41 +514,21 @@ async function applyPromoCode() {
   if (btn) btn.disabled = true;
 
   try {
-    const res = await fetch(`${API_URL}/portfolio/validate-promo`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code })
-    });
-    const data = await res.json();
-    if (!data.valid) {
+    const result = await applyPortfolioPromoCode(code);
+    if (!result.ok) {
       activePromoCode = null;
-      clearLowMarginPromoUnlock();
-      setPromoMessage(data.error || 'Невалиден промо код.', 'error');
+      clearPortfolioPromo();
+      setPromoMessage(result.error, 'error');
       updateSummary();
       return;
     }
-    activePromoCode = data.promoCode;
-    setLowMarginPromoUnlock(data.promoCode);
-    if (promoUsesLinePricing(data.promoCode)) {
-      let modeLabel;
-      if (data.promoCode.discountType === 'margin_percentage') {
-        modeLabel = `${data.promoCode.discount}% от маржа (надценка)`;
-      } else {
-        const pct = data.promoCode.pricing_percent ?? 0;
-        modeLabel = data.promoCode.pricing_mode === 'below_regular'
-          ? `${pct}% под препоръчителна цена`
-          : `${pct}% над доставна`;
-      }
-      setPromoMessage(`Промо кодът е приложен: персонални цени (${modeLabel}).`, 'success');
+    activePromoCode = result.promo;
+    setPromoMessage(result.message, 'success');
+    if (promoUsesLinePricing(result.promo)) {
       await validateCartOnServer({ silent: true });
-    } else {
-      const discountLabel = data.promoCode.discountType === 'percentage'
-        ? `${data.promoCode.discount}%`
-        : formatPrice(data.promoCode.discount);
-      setPromoMessage(`Промо кодът е приложен: −${discountLabel}`, 'success');
     }
-    if ($('promo-code-input')) $('promo-code-input').value = data.promoCode.code;
-    if ($('promo-code-input-summary')) $('promo-code-input-summary').value = data.promoCode.code;
+    if ($('promo-code-input')) $('promo-code-input').value = result.promo.code;
+    if ($('promo-code-input-summary')) $('promo-code-input-summary').value = result.promo.code;
     syncPromoRemoveButtons();
     updateSummary();
   } catch {
@@ -600,6 +585,16 @@ async function init() {
   cart = getCart();
   await enrichCartGroupIds();
   renderCart();
+
+  const savedPromo = loadActivePromo();
+  if (savedPromo?.code) {
+    activePromoCode = savedPromo;
+    if ($('promo-code-input')) $('promo-code-input').value = savedPromo.code;
+    if ($('promo-code-input-summary')) $('promo-code-input-summary').value = savedPromo.code;
+    syncPromoRemoveButtons();
+    setPromoMessage(promoSuccessMessage(savedPromo), 'success');
+  }
+
   if (cart.length) validateCartOnServer({ silent: true });
 
   $('apply-promo-btn')?.addEventListener('click', applyPromoCode);
