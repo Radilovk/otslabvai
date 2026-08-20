@@ -725,6 +725,16 @@ function applyBiocodeInquiryStatusOverrides() {
     } catch (e) { /* ignore corrupt cache */ }
 }
 
+function normalizePromoListItem(promo, index = 0) {
+    if (!promo) return promo;
+    if (promo.id) return { ...promo };
+    const code = String(promo.code || '').toUpperCase().trim();
+    return {
+        ...promo,
+        id: code ? `pf-promo-mig-${code}` : `pf-promo-row-${index}`,
+    };
+}
+
 async function fetchPromoCodes() {
     try {
         const response = await fetch(`${API_URL}/portfolio/promo-codes`, {
@@ -732,7 +742,7 @@ async function fetchPromoCodes() {
         });
         if (!response.ok) throw new Error(`HTTP грешка! Статус: ${response.status}`);
         const rawPromoCodes = await response.json();
-        promoCodesData = rawPromoCodes.map((promo, index) => ({ ...promo, id: promo.id || `promo_${index}_${Date.now()}` }));
+        promoCodesData = rawPromoCodes.map((promo, index) => normalizePromoListItem(promo, index));
         filteredPromoCodesData = [...promoCodesData];
     } catch (error) {
         showNotification('Грешка при зареждане на промо кодовете.', 'error');
@@ -5229,7 +5239,7 @@ async function updatePromoCode(promoData) {
 }
 
 async function deletePromoCode(promoId) {
-    const endpoint = `${API_URL}/portfolio/promo-codes?id=${promoId}`;
+    const endpoint = `${API_URL}/portfolio/promo-codes?id=${encodeURIComponent(promoId)}`;
     try {
         const response = await fetch(endpoint, {
             method: 'DELETE'
@@ -6096,10 +6106,7 @@ async function fetchPortfolioPromoCodes() {
     try {
         const response = await fetch(`${API_URL}/portfolio/promo-codes`, { cache: 'no-cache' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        portfolioPromoCodesData = (await response.json()).map((promo, index) => ({
-            ...promo,
-            id: promo.id || `pf-promo-${String(promo.code || index).toLowerCase().replace(/\s+/g, '-')}`,
-        }));
+        portfolioPromoCodesData = (await response.json()).map((promo, index) => normalizePromoListItem(promo, index));
         filteredPortfolioPromoCodesData = [...portfolioPromoCodesData];
         return portfolioPromoCodesData;
     } catch (error) {

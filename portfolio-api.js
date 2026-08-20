@@ -1667,6 +1667,31 @@ async function handleGetChunk(request, env) {
 
 // --- Portfolio promo codes ---
 
+function promoCodeKey(code) {
+  return String(code || '').toUpperCase().trim();
+}
+
+function promoRecordId(promo, index = 0) {
+  if (promo?.id) return promo.id;
+  const code = promoCodeKey(promo?.code);
+  return code ? `pf-promo-mig-${code}` : `pf-promo-row-${index}`;
+}
+
+async function removePromoFromLegacy(env, { id, code }) {
+  const legacyRaw = await env.PAGE_CONTENT.get('promo_codes');
+  if (!legacyRaw) return;
+  const legacyCodes = JSON.parse(legacyRaw);
+  const key = promoCodeKey(code);
+  const filtered = legacyCodes.filter((p) => {
+    if (id && p.id === id) return false;
+    if (key && promoCodeKey(p.code) === key) return false;
+    return true;
+  });
+  if (filtered.length !== legacyCodes.length) {
+    await env.PAGE_CONTENT.put('promo_codes', JSON.stringify(filtered, null, 2));
+  }
+}
+
 async function getPromoCodes(env) {
   const raw = await env.PAGE_CONTENT.get(KV_PROMO);
   let codes = raw ? JSON.parse(raw) : [];
@@ -1675,14 +1700,23 @@ async function getPromoCodes(env) {
   if (!legacyRaw) return codes;
 
   const legacyCodes = JSON.parse(legacyRaw);
-  const existing = new Set(codes.map((p) => p.code));
+  const existing = new Set(codes.map((p) => promoCodeKey(p.code)));
+  const legacyRemaining = [];
   let merged = false;
+
   for (const legacy of legacyCodes) {
-    const code = String(legacy.code || '').toUpperCase().trim();
-    if (!code || existing.has(code)) continue;
+    const code = promoCodeKey(legacy.code);
+    if (!code) {
+      legacyRemaining.push(legacy);
+      continue;
+    }
+    if (existing.has(code)) {
+      merged = true;
+      continue;
+    }
     codes.push({
       ...legacy,
-      id: legacy.id || `pf-promo-mig-${code}`,
+      id: promoRecordId(legacy),
       code,
       pricing_mode: legacy.pricing_mode || 'none',
       pricing_percent: legacy.pricing_percent ?? null
@@ -1690,7 +1724,13 @@ async function getPromoCodes(env) {
     existing.add(code);
     merged = true;
   }
-  if (merged) await savePromoCodes(env, codes);
+
+  if (merged) {
+    await savePromoCodes(env, codes);
+    if (legacyRemaining.length !== legacyCodes.length) {
+      await env.PAGE_CONTENT.put('promo_codes', JSON.stringify(legacyRemaining, null, 2));
+    }
+  }
   return codes;
 }
 
@@ -1768,8 +1808,14 @@ async function handleUpdatePromoCode(request, env) {
   const codes = await getPromoCodes(env);
   const idx = codes.findIndex((p) => p.id === data.id);
   if (idx === -1) throw new PortfolioError('Промо кодът не е намерен.', 404);
+
+  const nextCode = data.code ? promoCodeKey(data.code) : promoCodeKey(codes[idx].code);
+  if (nextCode && codes.some((p, i) => i !== idx && promoCodeKey(p.code) === nextCode)) {
+    throw new PortfolioError('Промо код с такъв код вече съществува.', 409);
+  }
+
   Object.assign(codes[idx], {
-    code: data.code ? data.code.toUpperCase().trim() : codes[idx].code,
+    code: data.code ? promoCodeKey(data.code) : codes[idx].code,
     discount: data.discount !== undefined ? parseFloat(data.discount) : codes[idx].discount,
     discountType: data.discountType || codes[idx].discountType,
     description: data.description ?? codes[idx].description,
@@ -1791,13 +1837,14 @@ async function handleUpdatePromoCode(request, env) {
 }
 
 async function handleDeletePromoCode(request, env) {
-  const id = new URL(request.url).searchParams.get('id');
+  const id = decodeURIComponent(new URL(request.url).searchParams.get('id') || '');
   if (!id) throw new PortfolioError('Липсва ID.', 400);
   let codes = await getPromoCodes(env);
-  const before = codes.length;
+  const target = codes.find((p) => p.id === id);
+  if (!target) throw new PortfolioError('Промо кодът не е намерен.', 404);
   codes = codes.filter((p) => p.id !== id);
-  if (codes.length === before) throw new PortfolioError('Промо кодът не е намерен.', 404);
   await savePromoCodes(env, codes);
+  await removePromoFromLegacy(env, { id: target.id, code: target.code });
   return jsonResponse({ success: true });
 }
 
@@ -2350,3 +2397,5 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     return jsonResponse({ error: 'Вътрешна грешка в Portfolio API.' }, 500);
   }
 }
+
+export { promoCodeKey, promoRecordId, removePromoFromLegacy };
