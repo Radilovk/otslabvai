@@ -1,7 +1,6 @@
 /**
  * Promo-aware catalog: unlock low-margin listings + display adjusted prices.
  */
-import { loadActivePromo } from './portfolio-promo-ui.js';
 import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-visibility.js';
 import { promoUsesLinePricing } from './portfolio-checkout-shared.js';
 import {
@@ -101,8 +100,9 @@ export function formatIndexPriceHtml(item, promo) {
   return formatGroupPriceHtml(item);
 }
 
+/** Line-pricing promos need per-variant b2b data; cart % uses index min/max only. */
 export async function enrichCatalogItemsWithPromoPrices(items, promo) {
-  if (!promo || !items?.length) return items || [];
+  if (!promo || !items?.length || !promoUsesLinePricing(promo)) return items || [];
   return Promise.all(items.map(async (item) => {
     const stats = await computeGroupPromoPriceStats(item.group_id, promo);
     if (!stats) return item;
@@ -114,10 +114,6 @@ export async function enrichCatalogItemsWithPromoPrices(items, promo) {
       promo_has_adjusted_price: stats.has_promo || stats.compare_at_price > stats.min_price,
     };
   }));
-}
-
-export function getActivePromoForCatalog() {
-  return loadActivePromo();
 }
 
 export function variantDisplayPrice(variant, promo) {

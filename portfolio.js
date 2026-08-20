@@ -10,11 +10,11 @@ import {
   shouldShowActiveFilterRow,
   formatFiltersToggleLabel
 } from './portfolio-catalog-ui.js';
+import { promoUsesLinePricing } from './portfolio-checkout-shared.js';
 import { initPortfolioPromoModal, loadActivePromo } from './portfolio-promo-ui.js';
 import {
   enrichCatalogItemsWithPromoPrices,
   formatIndexPriceHtml,
-  getActivePromoForCatalog,
   syncPromoCatalogUnlock,
 } from './portfolio-promo-catalog.js';
 
@@ -60,7 +60,7 @@ function getFilterParams() {
 }
 
 function formatPrice(item) {
-  return formatIndexPriceHtml(item, getActivePromoForCatalog());
+  return formatIndexPriceHtml(item, loadActivePromo());
 }
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect fill='%23eef2f0' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.35em' fill='%235f6f66' font-family='sans-serif' font-size='14'%3EНяма снимка%3C/text%3E%3C/svg%3E";
@@ -220,11 +220,8 @@ function loadCatalog() {
   state.page = data.page;
 
   const renderItems = async () => {
-    const promo = getActivePromoForCatalog();
-    let items = data.items;
-    if (promo) {
-      items = await enrichCatalogItemsWithPromoPrices(items, promo);
-    }
+    const promo = loadActivePromo();
+    const items = await enrichCatalogItemsWithPromoPrices(data.items, promo);
     if (DOM.resultsMeta) {
       DOM.resultsMeta.hidden = false;
       DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
@@ -434,7 +431,7 @@ async function init() {
 
   initPortfolioPromoModal({
     onApplied: () => {
-      syncPromoCatalogUnlock(getActivePromoForCatalog());
+      syncPromoCatalogUnlock(loadActivePromo());
       state.page = 1;
       reconcileFacets();
       loadCatalog();

@@ -1,6 +1,7 @@
 import {
   promoUnlocksLowMargin,
   formatIndexPriceHtml,
+  enrichCatalogItemsWithPromoPrices,
 } from './portfolio-promo-catalog.js';
 
 describe('portfolio-promo-catalog', () => {
@@ -32,5 +33,13 @@ describe('portfolio-promo-catalog', () => {
     }, { discountType: 'margin_percentage', discount: 50 });
     expect(html).toContain('75.00');
     expect(html).toContain('100.00');
+  });
+
+  test('enrichCatalogItemsWithPromoPrices skips cart percent promos', async () => {
+    const items = [{ group_id: 'g1', min_price: 100 }];
+    const promo = { discountType: 'percentage', discount: 10 };
+    const out = await enrichCatalogItemsWithPromoPrices(items, promo);
+    expect(out).toBe(items);
+    expect(out[0].promo_min_price).toBeUndefined();
   });
 });

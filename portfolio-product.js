@@ -9,11 +9,7 @@ import { bindProductShareButton, replaceProductUrl } from './product-share.js';
 import { resolveOgImageUrl } from './og-share-meta.js';
 import { isCatalogListed } from './portfolio-margin-policy.js';
 import { isLowMarginPromoUnlocked } from './product-visibility.js';
-import {
-  getActivePromoForCatalog,
-  variantDisplayPrice,
-  syncPromoCatalogUnlock,
-} from './portfolio-promo-catalog.js';
+import { variantDisplayPrice, syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
 import { loadActivePromo } from './portfolio-promo-ui.js';
 
 const DOM = {
@@ -179,7 +175,7 @@ function renderRelated() {
 }
 
 function formatVariantPrice(variant) {
-  const promo = getActivePromoForCatalog();
+  const promo = loadActivePromo();
   const priced = variantDisplayPrice(variant, promo);
   return formatVariantPriceHtml(priced);
 }
@@ -385,7 +381,7 @@ function addToCart() {
     showToast('Този вариант не е наличен.', 'error');
     return;
   }
-  const v = variantDisplayPrice(selectedVariant, getActivePromoForCatalog()) || selectedVariant;
+  const v = variantDisplayPrice(selectedVariant, loadActivePromo()) || selectedVariant;
   const label = [product.name, v.pack, v.option].filter(Boolean).join(' – ');
   const cart = getCart();
   const idx = cart.findIndex((i) => i.sku_id === v.sku_id);

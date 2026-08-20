@@ -3,9 +3,8 @@
  */
 
 import { API_URL } from './config.js';
-import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-visibility.js';
 import { promoUsesLinePricing } from './portfolio-checkout-shared.js';
-import { promoUnlocksLowMargin, syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
+import { syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
 
 export const PROMO_CODE_SESSION_KEY = 'pfActivePromoCode';
 
@@ -65,7 +64,6 @@ export async function applyPortfolioPromoCode(code) {
 
 export function clearPortfolioPromo() {
   saveActivePromo(null);
-  clearLowMarginPromoUnlock();
   syncPromoCatalogUnlock(null);
 }
 
