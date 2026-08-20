@@ -35,6 +35,9 @@
                     <a href="portfolio-advisor-quiz.html" class="pf-nav-link">AI консултант</a>
                 </nav>
                 <div class="pf-header-actions">
+                    <button type="button" class="pf-promo-chip pf-promo-chip--header" data-pf-promo-open aria-label="Промо код" title="Промо код">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    </button>
                     <button type="button" class="pf-theme-toggle" id="pf-theme-toggle" aria-label="Тъмна тема">
                         <svg class="pf-theme-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                         <svg class="pf-theme-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -67,6 +70,10 @@
             <p id="hero-subtitle">Протеини, витамини, аминокиселини и още – с удобна поръчка и доставка до офис.</p>
             <div class="pf-hero-actions">
                 <a href="portfolio-advisor-quiz.html" class="pf-btn pf-btn-primary pf-hero-cta">AI консултант — намери своя пакет</a>
+                <button type="button" class="pf-promo-chip" data-pf-promo-open aria-haspopup="dialog">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    <span class="pf-promo-chip-label">Промо код</span>
+                </button>
             </div>
             <div class="pf-hero-stats" id="hero-stats" style="display:none">
                 <div class="pf-hero-stat"><strong id="stat-products">—</strong><span>продуктови групи</span></div>
@@ -157,6 +164,26 @@
         <script>!function(){var n=document.documentElement.getAttribute('data-pf-cart');if(!n)return;var f=document.getElementById('pf-fab-cart');if(f)f.classList.add('pf-visible');var b=f&&f.querySelector('[data-pf-cart-count]');if(b){b.textContent=n;b.style.display='';}}();</script>
     </div>
     <div class="pf-toast-container" id="toast-container"></div>
+
+    <div id="pf-promo-modal" class="pf-modal" role="dialog" aria-labelledby="pf-promo-modal-title" aria-hidden="true">
+        <div class="pf-modal-overlay" data-pf-promo-close tabindex="-1"></div>
+        <div class="pf-modal-content pf-promo-modal-content">
+            <div class="pf-modal-header">
+                <h3 id="pf-promo-modal-title">Промо код</h3>
+                <button type="button" class="pf-modal-close" data-pf-promo-close aria-label="Затвори">×</button>
+            </div>
+            <div class="pf-promo-modal-body">
+                <p class="pf-promo-modal-lead">Въведете код за отстъпка или специални цени в количката.</p>
+                <div class="pf-promo-row">
+                    <input type="text" id="pf-promo-modal-input" placeholder="Напр. WELCOME10" autocomplete="off" autocapitalize="characters" spellcheck="false">
+                    <button type="button" class="pf-btn pf-btn-primary" id="pf-promo-modal-apply">Приложи</button>
+                </div>
+                <p class="pf-promo-msg" id="pf-promo-modal-msg" hidden></p>
+                <p class="pf-promo-modal-note">Кодът се запазва за количката. Някои кодове отключват и допълнителни продукти в каталога.</p>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="portfolio.js"></script>
 </body>
 </html>

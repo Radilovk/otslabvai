@@ -848,6 +848,10 @@ img, svg { display: block; max-width: 100%; height: auto; }
 
 .pf-hero-actions {
   margin-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
 }
 
 .pf-hero-cta {
@@ -1785,6 +1789,73 @@ html[data-pf-cart] .pf-fab-cart { display: grid; }
 .pf-promo-msg { margin: 0.5rem 0 0; font-size: 0.85rem; }
 .pf-promo-msg.success { color: var(--pf-success); }
 .pf-promo-msg.error { color: var(--pf-error); }
+
+.pf-promo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.pf-promo-chip:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.pf-promo-chip--active {
+  border-color: var(--pf-accent, #7dd3a8);
+  background: rgba(125, 211, 168, 0.22);
+}
+
+.pf-promo-chip--header {
+  min-height: var(--pf-touch);
+  width: var(--pf-touch);
+  padding: 0;
+  justify-content: center;
+  border-radius: var(--pf-radius-sm);
+  border-color: var(--pf-border);
+  background: var(--pf-surface);
+  color: var(--pf-ink);
+}
+
+.pf-promo-chip--header:hover {
+  border-color: var(--pf-primary);
+  color: var(--pf-primary);
+  background: rgba(var(--pf-primary-rgb), 0.06);
+}
+
+.pf-promo-modal-content {
+  max-width: 440px;
+  padding: 0;
+}
+
+.pf-promo-modal-body {
+  padding: 0 1.25rem 1.25rem;
+}
+
+.pf-promo-modal-lead {
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
+  color: var(--pf-muted);
+}
+
+.pf-promo-modal-note {
+  margin: 0.85rem 0 0;
+  font-size: 0.8rem;
+  color: var(--pf-muted);
+  line-height: 1.45;
+}
 
 .pf-muted-text { color: var(--pf-muted); }
 

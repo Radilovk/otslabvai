@@ -1171,9 +1171,13 @@ function decoratePromoRowForMobile(rowTemplate) {
 }
 
 function formatPromoDiscountLabel(promo) {
-    if (promo.discountType === 'margin_percentage') return `${promo.discount}% от маржа`;
-    if (promo.discountType === 'percentage') return `${promo.discount}%`;
-    return `${promo.discount} €`;
+  if (!promo) return '';
+  if (promo.discountType === 'margin_percentage') return `${promo.discount}% от маржа`;
+  if (promo.discountType === 'fixed') return `${promo.discount} €`;
+  if (promo.pricing_mode === 'below_regular') return `${promo.pricing_percent ?? promo.discount}% под regular`;
+  if (promo.pricing_mode === 'above_b2b') return `${promo.pricing_percent ?? promo.discount}% над b2b`;
+  if (promo.discountType === 'percentage') return `${promo.discount}%`;
+  return `${promo.discount} €`;
 }
 
 function renderPromoCodes() {
@@ -4885,6 +4889,81 @@ function getDefaultPromptTemplate() {
 //          8. PROMO CODE MANAGEMENT FUNCTIONS
 // =======================================================
 
+const PROMO_EFFECT_OPTIONS = [
+  { id: 'cart_percent', label: 'Отстъпка % от количката', help: 'Намалява общата сума при плащане. Пример: 10% от 80€ → плащат 72€.' },
+  { id: 'cart_fixed', label: 'Фиксирана отстъпка (€)', help: 'Изважда фиксирана сума от поръчката. Пример: −5€ от общата сума.' },
+  { id: 'price_below_regular', label: 'Персонална цена: % под препоръчителна', help: 'Променя цената на всеки артикул в количката — X% под regular цената от каталога.' },
+  { id: 'price_above_b2b', label: 'Персонална цена: % над доставна', help: 'Променя цената на всеки артикул — X% над B2B доставната цена (Fitness1 / Sila).' },
+  { id: 'margin_share', label: '% от маржа (до доставна цена)', help: 'Отдава част от маржа на клиента. 100% = доставна цена; 50% = половината марж.' },
+];
+
+function promoInfoBtn(helpText) {
+  const id = `promo-help-${Math.random().toString(36).slice(2, 9)}`;
+  return `<button type="button" class="promo-info-btn" aria-expanded="false" aria-controls="${id}" title="Пояснение">ⓘ</button>
+    <p class="promo-info-text" id="${id}" hidden>${helpText}</p>`;
+}
+
+function bindPromoInfoButtons(root) {
+  root?.querySelectorAll('.promo-info-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const help = btn.parentElement?.querySelector('.promo-info-text');
+      if (!help) return;
+      const open = help.hidden;
+      help.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+    });
+  });
+}
+
+function inferPromoEffect(promo) {
+  if (!promo) return 'cart_percent';
+  if (promo.discountType === 'margin_percentage') return 'margin_share';
+  if (promo.discountType === 'fixed') return 'cart_fixed';
+  if (promo.pricing_mode === 'below_regular') return 'price_below_regular';
+  if (promo.pricing_mode === 'above_b2b') return 'price_above_b2b';
+  return 'cart_percent';
+}
+
+function promoEffectValue(promo, effect) {
+  if (!promo) return '';
+  if (effect === 'price_below_regular' || effect === 'price_above_b2b') {
+    return promo.pricing_percent ?? promo.discount ?? '';
+  }
+  return promo.discount ?? '';
+}
+
+function promoPayloadFromEffect(effect, value, base) {
+  const payload = { ...base };
+  const v = Number(value);
+  if (effect === 'margin_share') {
+    payload.discountType = 'margin_percentage';
+    payload.discount = v;
+    payload.pricing_mode = 'none';
+    payload.pricing_percent = null;
+  } else if (effect === 'cart_fixed') {
+    payload.discountType = 'fixed';
+    payload.discount = v;
+    payload.pricing_mode = 'none';
+    payload.pricing_percent = null;
+  } else if (effect === 'price_below_regular') {
+    payload.discountType = 'percentage';
+    payload.discount = 0;
+    payload.pricing_mode = 'below_regular';
+    payload.pricing_percent = v;
+  } else if (effect === 'price_above_b2b') {
+    payload.discountType = 'percentage';
+    payload.discount = 0;
+    payload.pricing_mode = 'above_b2b';
+    payload.pricing_percent = v;
+  } else {
+    payload.discountType = 'percentage';
+    payload.discount = v;
+    payload.pricing_mode = 'none';
+    payload.pricing_percent = null;
+  }
+  return payload;
+}
+
 function openPromoCodeModal(mode, promoData = null, scope = 'main') {
     promoApiScope = scope;
     const isEdit = mode === 'edit';
@@ -4894,181 +4973,186 @@ function openPromoCodeModal(mode, promoData = null, scope = 'main') {
     
     const form = document.createElement('form');
     form.className = 'modal-form';
-    form.innerHTML = `
+    const initialEffect = scope === 'portfolio' ? inferPromoEffect(promoData) : (promoData?.discountType === 'fixed' ? 'cart_fixed' : 'cart_percent');
+    const initialValue = isEdit ? promoEffectValue(promoData, initialEffect) : '';
+
+    const portfolioEffectField = scope === 'portfolio' ? `
         <div class="form-group">
-            <label for="promo-code-input">Код *</label>
-            <input type="text" id="promo-code-input" required value="${isEdit ? promoData.code : ''}" ${isEdit ? 'disabled' : ''}>
-            ${isEdit ? '<small>Кодът не може да бъде променен</small>' : ''}
+            <div class="form-label-row">
+                <label for="promo-effect">Какво прави кодът? *</label>
+                ${promoInfoBtn('Изберете един вид ефект. Стойността по-долу е процент или сума според избора.')}
+            </div>
+            <select id="promo-effect" required>
+                ${PROMO_EFFECT_OPTIONS.map((opt) => `
+                    <option value="${opt.id}" ${initialEffect === opt.id ? 'selected' : ''}>${opt.label}</option>
+                `).join('')}
+            </select>
+            <p class="promo-info-text" id="promo-effect-help"></p>
         </div>
         <div class="form-group">
-            <label for="promo-discount">Отстъпка *</label>
-            <input type="number" id="promo-discount" required min="0" max="100" value="${isEdit ? promoData.discount : ''}">
+            <div class="form-label-row">
+                <label for="promo-value" id="promo-value-label">Стойност *</label>
+                ${promoInfoBtn('Процент (0–100) или сума в € — според избрания вид по-горе.')}
+            </div>
+            <input type="number" id="promo-value" required min="0" step="0.01" value="${initialValue}" placeholder="напр. 10">
         </div>
+    ` : `
         <div class="form-group">
-            <label for="promo-discount-type">Тип отстъпка *</label>
+            <div class="form-label-row">
+                <label for="promo-discount-type">Тип отстъпка *</label>
+                ${promoInfoBtn('Процент от количката или фиксирана сума в евро.')}
+            </div>
             <select id="promo-discount-type">
                 <option value="percentage" ${isEdit && promoData.discountType === 'percentage' ? 'selected' : ''}>Процент (%)</option>
                 <option value="fixed" ${isEdit && promoData.discountType === 'fixed' ? 'selected' : ''}>Фиксирана сума (€)</option>
-                <option value="margin_percentage" ${isEdit && promoData.discountType === 'margin_percentage' ? 'selected' : ''}>% от маржа (надценка)</option>
             </select>
-            <small id="promo-discount-type-hint" style="display:block;margin-top:0.35rem;color:var(--text-secondary);">
-                При „% от маржа“: 100% дава доставна цена (напр. крайна 50€, доставна 20€ → 20€).
-            </small>
         </div>
         <div class="form-group">
-            <label for="promo-description">Описание</label>
-            <textarea id="promo-description" rows="2">${isEdit ? (promoData.description || '') : ''}</textarea>
+            <label for="promo-discount">Отстъпка *</label>
+            <input type="number" id="promo-discount" required min="0" value="${isEdit ? promoData.discount : ''}">
         </div>
+    `;
+
+    form.innerHTML = `
+        <p class="promo-modal-intro">${scope === 'portfolio'
+    ? 'Portfolio промо кодове важат за biocode-bg.com — Fitness1 и Sila продукти.'
+    : 'Промо код за daotslabna.com / life-protocols (отстъпка в количката).'}</p>
         <div class="form-group">
-            <label for="promo-valid-from">Валиден от</label>
-            <input type="datetime-local" id="promo-valid-from" value="${isEdit && promoData.validFrom ? new Date(promoData.validFrom).toISOString().slice(0, 16) : ''}">
+            <label for="promo-code-input">Код *</label>
+            <input type="text" id="promo-code-input" required value="${isEdit ? promoData.code : ''}" ${isEdit ? 'disabled' : ''} placeholder="Напр. WELCOME10">
+            ${isEdit ? '<small class="form-hint">Кодът не може да бъде променен</small>' : ''}
         </div>
+        ${portfolioEffectField}
         <div class="form-group">
-            <label for="promo-valid-until">Валиден до</label>
-            <input type="datetime-local" id="promo-valid-until" value="${isEdit && promoData.validUntil ? new Date(promoData.validUntil).toISOString().slice(0, 16) : ''}">
+            <label for="promo-description">Описание (по избор)</label>
+            <textarea id="promo-description" rows="2" placeholder="Кратко за клиента или вътрешна бележка">${isEdit ? (promoData.description || '') : ''}</textarea>
         </div>
-        <div class="form-group">
-            <label for="promo-max-uses">Максимален брой използвания</label>
-            <input type="number" id="promo-max-uses" min="0" value="${isEdit && promoData.maxUses ? promoData.maxUses : ''}" placeholder="Празно = неограничено">
-        </div>
-        ${isEdit ? `
-        <div class="form-group">
-            <label for="promo-used-count">Текущ брой използвания</label>
-            <input type="number" id="promo-used-count" min="0" value="${promoData.usedCount || 0}">
-        </div>
-        ` : ''}
-        <div class="form-group">
-            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" id="promo-active" ${isEdit ? (promoData.active ? 'checked' : '') : 'checked'}>
-                Активен
-            </label>
-        </div>
-        <div class="form-group">
-            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" id="promo-show-low-margin" ${isEdit && promoData.show_low_margin ? 'checked' : ''}>
-                Показва продукти под 25% марж
-            </label>
-            <small style="color:var(--text-secondary);">Само с този промо код се листват артикули с нисък марж (в каталога и AI изключени по подразбиране).</small>
-        </div>
-        ${scope === 'portfolio' ? `
-        <fieldset id="promo-pricing-fieldset" style="margin-top:1rem;border:1px solid var(--border-color);border-radius:8px;padding:1rem;">
-            <legend>Персонални цени (по избор)</legend>
-            <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0;">
-                Ако е зададено, кодът променя цените в количката вместо (или в допълнение към) отстъпката при плащане.
-            </p>
-            <div class="form-group" style="margin-top:0.75rem;">
-                <label for="promo-pricing-mode">Режим на цена</label>
-                <select id="promo-pricing-mode">
-                    <option value="none" ${!isEdit || !promoData.pricing_mode || promoData.pricing_mode === 'none' ? 'selected' : ''}>Само отстъпка при плащане</option>
-                    <option value="below_regular" ${isEdit && promoData.pricing_mode === 'below_regular' ? 'selected' : ''}>% под препоръчителна</option>
-                    <option value="above_b2b" ${isEdit && promoData.pricing_mode === 'above_b2b' ? 'selected' : ''}>% над доставна</option>
-                </select>
+        <details class="promo-advanced">
+            <summary>Допълнителни настройки</summary>
+            <div class="form-group">
+                <label for="promo-valid-from">Валиден от</label>
+                <input type="datetime-local" id="promo-valid-from" value="${isEdit && promoData.validFrom ? new Date(promoData.validFrom).toISOString().slice(0, 16) : ''}">
             </div>
             <div class="form-group">
-                <label for="promo-pricing-percent">Процент за персонална цена</label>
-                <input type="number" id="promo-pricing-percent" min="0" max="99" step="0.5"
-                    value="${isEdit && promoData.pricing_percent != null ? promoData.pricing_percent : ''}" placeholder="напр. 8">
+                <label for="promo-valid-until">Валиден до</label>
+                <input type="datetime-local" id="promo-valid-until" value="${isEdit && promoData.validUntil ? new Date(promoData.validUntil).toISOString().slice(0, 16) : ''}">
             </div>
-        </fieldset>
-        ` : ''}
+            <div class="form-group">
+                <label for="promo-max-uses">Макс. брой използвания</label>
+                <input type="number" id="promo-max-uses" min="0" value="${isEdit && promoData.maxUses ? promoData.maxUses : ''}" placeholder="Празно = неограничено">
+            </div>
+            ${isEdit ? `
+            <div class="form-group">
+                <label for="promo-used-count">Текущ брой използвания</label>
+                <input type="number" id="promo-used-count" min="0" value="${promoData.usedCount || 0}">
+            </div>` : ''}
+        </details>
+        <div class="form-group checkbox-group">
+            <input type="checkbox" id="promo-active" ${isEdit ? (promoData.active ? 'checked' : '') : 'checked'}>
+            <label for="promo-active">Активен</label>
+        </div>
+        ${scope === 'portfolio' ? `
+        <div class="form-group checkbox-group">
+            <input type="checkbox" id="promo-show-low-margin" ${isEdit && promoData.show_low_margin ? 'checked' : ''}>
+            <label for="promo-show-low-margin">Показва продукти под 25% марж</label>
+            ${promoInfoBtn('Отключва скрити артикули в каталога и AI. Без този флаг те не се виждат.')}
+        </div>` : ''}
     `;
-    
+
     DOM.modal.body.innerHTML = '';
     DOM.modal.body.appendChild(form);
+    bindPromoInfoButtons(form);
+
+    const effectEl = document.getElementById('promo-effect');
+    const valueEl = document.getElementById('promo-value');
+    const valueLabel = document.getElementById('promo-value-label');
+    const effectHelp = document.getElementById('promo-effect-help');
+
+    function syncPortfolioEffectUi() {
+        if (!effectEl || !valueEl) return;
+        const opt = PROMO_EFFECT_OPTIONS.find((o) => o.id === effectEl.value);
+        if (effectHelp && opt) {
+            effectHelp.textContent = opt.help;
+            effectHelp.hidden = false;
+        }
+        if (valueLabel) {
+            valueLabel.textContent = effectEl.value === 'cart_fixed' ? 'Сума (€) *' : 'Процент (%) *';
+        }
+        valueEl.max = effectEl.value === 'cart_fixed' ? '' : '100';
+    }
+    effectEl?.addEventListener('change', syncPortfolioEffectUi);
+    syncPortfolioEffectUi();
 
     const discountTypeEl = document.getElementById('promo-discount-type');
     const discountEl = document.getElementById('promo-discount');
-    const pricingFieldset = document.getElementById('promo-pricing-fieldset');
-    const typeHint = document.getElementById('promo-discount-type-hint');
+    discountTypeEl?.addEventListener('change', () => {
+        if (!discountEl) return;
+        discountEl.max = discountTypeEl.value === 'percentage' ? '100' : '';
+    });
 
-    function syncPromoDiscountTypeUi() {
-        const type = discountTypeEl?.value || 'percentage';
-        const isMargin = type === 'margin_percentage';
-        const isPercent = type === 'percentage' || isMargin;
-        if (discountEl) {
-            discountEl.max = isPercent ? '100' : '';
-            discountEl.placeholder = isMargin ? 'напр. 100' : '';
-        }
-        if (pricingFieldset) {
-            pricingFieldset.disabled = isMargin;
-            pricingFieldset.style.opacity = isMargin ? '0.5' : '1';
-        }
-        if (typeHint) {
-            typeHint.style.display = isMargin ? 'block' : 'none';
-        }
-    }
-    discountTypeEl?.addEventListener('change', syncPromoDiscountTypeUi);
-    syncPromoDiscountTypeUi();
-    
     currentModalSaveCallback = async () => {
         const code = document.getElementById('promo-code-input').value.trim().toUpperCase();
-        const discount = parseFloat(document.getElementById('promo-discount').value);
-        const discountType = document.getElementById('promo-discount-type').value;
         const description = document.getElementById('promo-description').value.trim();
         const validFrom = document.getElementById('promo-valid-from').value;
         const validUntil = document.getElementById('promo-valid-until').value;
         const maxUses = document.getElementById('promo-max-uses').value;
         const active = document.getElementById('promo-active').checked;
         const showLowMargin = document.getElementById('promo-show-low-margin')?.checked === true;
-        
-        // Validation
-        if (!code || isNaN(discount)) {
-            alert('Моля, попълнете всички задължителни полета.');
+
+        if (!code) {
+            alert('Въведете промо код.');
             return false;
         }
-        
-        if (discount < 0) {
-            alert('Отстъпката не може да бъде отрицателна.');
-            return false;
-        }
-        
-        if (discount === 0) {
-            alert('Отстъпката трябва да е по-голяма от 0.');
-            return false;
-        }
-        
-        if ((discountType === 'percentage' || discountType === 'margin_percentage') && discount > 100) {
-            alert('Процентната отстъпка не може да е повече от 100%.');
-            return false;
-        }
-        
-        const promoPayload = {
+
+        let promoPayload = {
             code,
-            discount,
-            discountType,
             description,
             validFrom: validFrom ? new Date(validFrom).toISOString() : null,
             validUntil: validUntil ? new Date(validUntil).toISOString() : null,
-            maxUses: maxUses ? parseInt(maxUses) : null,
+            maxUses: maxUses ? parseInt(maxUses, 10) : null,
             active,
-            show_low_margin: showLowMargin
+            show_low_margin: showLowMargin,
         };
 
-        if (promoApiScope === 'portfolio') {
-            const pricingMode = discountType === 'margin_percentage'
-                ? 'none'
-                : (document.getElementById('promo-pricing-mode')?.value || 'none');
-            const pricingPercentRaw = document.getElementById('promo-pricing-percent')?.value;
-            promoPayload.pricing_mode = pricingMode;
-            promoPayload.pricing_percent = pricingMode === 'none' || pricingPercentRaw === ''
-                ? null
-                : parseFloat(pricingPercentRaw);
-            if (pricingMode !== 'none' && (promoPayload.pricing_percent == null || promoPayload.pricing_percent < 0)) {
-                alert('Въведете валиден процент за персонална цена.');
+        if (scope === 'portfolio') {
+            const effect = effectEl.value;
+            const value = parseFloat(valueEl.value);
+            if (!Number.isFinite(value) || value <= 0) {
+                alert('Въведете валидна стойност (по-голяма от 0).');
                 return false;
             }
+            if (effect !== 'cart_fixed' && value > 100) {
+                alert('Процентът не може да е повече от 100%.');
+                return false;
+            }
+            promoPayload = promoPayloadFromEffect(effect, value, promoPayload);
+        } else {
+            const discount = parseFloat(discountEl.value);
+            const discountType = discountTypeEl.value;
+            if (!Number.isFinite(discount) || discount <= 0) {
+                alert('Въведете валидна отстъпка.');
+                return false;
+            }
+            if (discountType === 'percentage' && discount > 100) {
+                alert('Процентната отстъпка не може да е повече от 100%.');
+                return false;
+            }
+            promoPayload.discount = discount;
+            promoPayload.discountType = discountType;
+            promoPayload.pricing_mode = 'none';
+            promoPayload.pricing_percent = null;
         }
-        
+
         if (isEdit) {
             promoPayload.id = promoData.id;
-            promoPayload.usedCount = parseInt(document.getElementById('promo-used-count').value);
+            promoPayload.usedCount = parseInt(document.getElementById('promo-used-count')?.value || '0', 10);
             const ok = await updatePromoCode(promoPayload);
             if (ok) closeModal();
         } else {
             const ok = await createPromoCode(promoPayload);
             if (ok) closeModal();
         }
-        
+
         return false;
     };
     
