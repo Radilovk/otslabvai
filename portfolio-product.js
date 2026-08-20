@@ -6,7 +6,7 @@ import { formatGroupPriceHtml, formatVariantPriceHtml, formatPacksDisplay } from
 import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
 import { filterIndex } from './portfolio-filter.js';
 import { bindProductShareButton, replaceProductUrl } from './product-share.js';
-import { resolveOgImageUrl, absoluteUrl } from './og-share-meta.js';
+import { resolveOgImageUrl } from './og-share-meta.js';
 
 const DOM = {
   root: document.getElementById('product-root'),
