@@ -1,9 +1,11 @@
 import {
-  escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage, icon
+  escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage, icon,
+  buildPortfolioProductUrl,
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatVariantPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
 import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
 import { filterIndex } from './portfolio-filter.js';
+import { bindProductShareButton, replaceProductUrl } from './product-share.js';
 
 const DOM = {
   root: document.getElementById('product-root'),
@@ -37,6 +39,20 @@ function productPageUrl(item) {
   const base = `portfolio-product.html?group_id=${encodeURIComponent(item.group_id)}`;
   if (!item.default_sku_id) return base;
   return `${base}&sku=${encodeURIComponent(item.default_sku_id)}`;
+}
+
+function getProductSharePath() {
+  return buildPortfolioProductUrl(product.group_id, selectedVariant?.sku_id);
+}
+
+function getProductShareUrl() {
+  return new URL(getProductSharePath(), location.origin).href;
+}
+
+function syncBrowserProductUrl() {
+  replaceProductUrl(getProductSharePath(), document.title);
+  const ogUrl = document.getElementById('og-url');
+  if (ogUrl) ogUrl.setAttribute('content', getProductShareUrl());
 }
 
 function pickDefaultVariant() {
@@ -173,6 +189,7 @@ function render() {
   if (ogTitle) ogTitle.setAttribute('content', document.title);
   if (ogDesc) ogDesc.setAttribute('content', `${product.name} – ${product.brand || 'BIOCODE'}`);
   if (ogImage && product.image) ogImage.setAttribute('content', product.image);
+  syncBrowserProductUrl();
 
   DOM.root.innerHTML = `
     ${renderBreadcrumb()}
@@ -182,7 +199,12 @@ function render() {
         <div class="pf-product-brand">${escapeHtml(product.brand)}</div>
         <h1>${escapeHtml(product.name)}</h1>
         <p class="pf-product-cat">${escapeHtml(product.category)}</p>
-        <div class="pf-product-price" id="price-display">${price}</div>
+        <div class="pf-product-price-row">
+          <div class="pf-product-price" id="price-display">${price}</div>
+          <button type="button" class="pf-share-btn" id="share-product" aria-label="Сподели продукта" title="Сподели линк">
+            ${icon('share', { size: 18 })}
+          </button>
+        </div>
 
         ${hasPacks ? `
         <div class="pf-variant-group">
@@ -297,6 +319,18 @@ function bindPageEvents() {
   qtyInput?.addEventListener('change', () => {
     quantity = Math.min(maxQty, Math.max(1, parseInt(qtyInput.value, 10) || 1));
     qtyInput.value = quantity;
+  });
+
+  bindProductShareButton(document.getElementById('share-product'), {
+    getUrl: getProductShareUrl,
+    getTitle: () => product?.name || document.title,
+    onSuccess: (result) => {
+      showToast(
+        result.method === 'share' ? 'Споделено' : 'Линкът е копиран',
+        'success'
+      );
+    },
+    onError: () => showToast('Неуспешно споделяне', 'error'),
   });
 }
 

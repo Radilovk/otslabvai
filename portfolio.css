@@ -1927,7 +1927,42 @@ html[data-pf-cart] .pf-fab-cart { display: grid; }
   font-size: clamp(1.65rem, 5vw, 2.25rem);
   font-weight: 700;
   color: var(--pf-primary);
+  margin: 0;
+}
+
+.pf-product-price-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
   margin: 0.85rem 0;
+  flex-wrap: wrap;
+}
+
+.pf-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1.5px solid var(--pf-border);
+  border-radius: var(--pf-radius-sm);
+  background: var(--pf-surface);
+  color: var(--pf-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.pf-share-btn:hover {
+  border-color: var(--pf-primary);
+  color: var(--pf-primary);
+  background: var(--pf-primary-soft);
+}
+
+.pf-share-btn:focus-visible {
+  outline: 2px solid var(--pf-primary);
+  outline-offset: 2px;
 }
 
 .pf-variant-group { margin-bottom: 1.15rem; }
