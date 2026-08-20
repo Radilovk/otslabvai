@@ -3,8 +3,8 @@
  */
 
 import { API_URL } from './config.js';
-import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-visibility.js';
 import { promoUsesLinePricing } from './portfolio-checkout-shared.js';
+import { syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
 
 export const PROMO_CODE_SESSION_KEY = 'pfActivePromoCode';
 
@@ -58,13 +58,13 @@ export async function applyPortfolioPromoCode(code) {
   }
   const promo = data.promoCode;
   saveActivePromo(promo);
-  setLowMarginPromoUnlock(promo);
+  syncPromoCatalogUnlock(promo);
   return { ok: true, promo, message: promoSuccessMessage(promo) };
 }
 
 export function clearPortfolioPromo() {
   saveActivePromo(null);
-  clearLowMarginPromoUnlock();
+  syncPromoCatalogUnlock(null);
 }
 
 function setModalMessage(el, text, type = '') {

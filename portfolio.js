@@ -1,7 +1,7 @@
 import {
   escapeHtml, debounce, initPortfolioPage, icon
 } from './portfolio-shared.js';
-import { formatGroupPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
+import { formatPacksDisplay } from './portfolio-pricing.js';
 import { getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, onCatalogUpdated } from './portfolio-cache.js';
 import { isLowMarginPromoUnlocked } from './product-visibility.js';
 import {
@@ -10,7 +10,13 @@ import {
   shouldShowActiveFilterRow,
   formatFiltersToggleLabel
 } from './portfolio-catalog-ui.js';
-import { initPortfolioPromoModal } from './portfolio-promo-ui.js';
+import { promoUsesLinePricing } from './portfolio-checkout-shared.js';
+import { initPortfolioPromoModal, loadActivePromo } from './portfolio-promo-ui.js';
+import {
+  enrichCatalogItemsWithPromoPrices,
+  formatIndexPriceHtml,
+  syncPromoCatalogUnlock,
+} from './portfolio-promo-catalog.js';
 
 const LIMIT = 24;
 
@@ -54,7 +60,7 @@ function getFilterParams() {
 }
 
 function formatPrice(item) {
-  return formatGroupPriceHtml(item);
+  return formatIndexPriceHtml(item, loadActivePromo());
 }
 
 const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect fill='%23eef2f0' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.35em' fill='%235f6f66' font-family='sans-serif' font-size='14'%3EНяма снимка%3C/text%3E%3C/svg%3E";
@@ -212,24 +218,33 @@ function loadCatalog() {
   state.total = data.total;
   state.totalPages = data.total_pages;
   state.page = data.page;
-  if (DOM.resultsMeta) {
-    DOM.resultsMeta.hidden = false;
-    DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
-  }
-  DOM.grid.innerHTML = data.items.length
-    ? data.items.map(renderCard).join('')
-    : `<div class="pf-empty">
+
+  const renderItems = async () => {
+    const promo = loadActivePromo();
+    const items = await enrichCatalogItemsWithPromoPrices(data.items, promo);
+    if (DOM.resultsMeta) {
+      DOM.resultsMeta.hidden = false;
+      DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
+    }
+    DOM.grid.innerHTML = items.length
+      ? items.map(renderCard).join('')
+      : `<div class="pf-empty">
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <p>Няма продукти с тези филтри.</p>
         <button type="button" class="pf-btn pf-btn-outline pf-empty-clear" id="empty-clear-filters">Изчисти филтрите</button>
       </div>`;
-  document.getElementById('empty-clear-filters')?.addEventListener('click', () => {
-    DOM.clearFilters.click();
+    document.getElementById('empty-clear-filters')?.addEventListener('click', () => {
+      DOM.clearFilters.click();
+    });
+    renderPagination();
+    updateFiltersToggleLabel();
+    renderActiveFilterChips();
+    updateSidebarApplyLabel();
+  };
+
+  renderItems().catch(() => {
+    DOM.grid.innerHTML = '<div class="pf-error">Грешка при показване на каталога.</div>';
   });
-  renderPagination();
-  updateFiltersToggleLabel();
-  renderActiveFilterChips();
-  updateSidebarApplyLabel();
 }
 
 function populateFilters(filters) {
@@ -416,10 +431,19 @@ async function init() {
 
   initPortfolioPromoModal({
     onApplied: () => {
+      syncPromoCatalogUnlock(loadActivePromo());
       state.page = 1;
+      reconcileFacets();
       loadCatalog();
     },
   });
+
+  const savedPromo = loadActivePromo();
+  if (savedPromo) {
+    syncPromoCatalogUnlock(savedPromo);
+    reconcileFacets();
+    loadCatalog();
+  }
 }
 
 init();

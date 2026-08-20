@@ -3,10 +3,14 @@ import {
   buildPortfolioProductUrl,
 } from './portfolio-shared.js';
 import { formatGroupPriceHtml, formatVariantPriceHtml, formatPacksDisplay } from './portfolio-pricing.js';
-import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
+import { getProductFromCache, getDescriptionFromCache, getCachedMeta, catalogState } from './portfolio-cache.js';
 import { filterIndex } from './portfolio-filter.js';
 import { bindProductShareButton, replaceProductUrl } from './product-share.js';
 import { resolveOgImageUrl } from './og-share-meta.js';
+import { isCatalogListed } from './portfolio-margin-policy.js';
+import { isLowMarginPromoUnlocked } from './product-visibility.js';
+import { variantDisplayPrice, syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
+import { loadActivePromo } from './portfolio-promo-ui.js';
 
 const DOM = {
   root: document.getElementById('product-root'),
@@ -171,7 +175,9 @@ function renderRelated() {
 }
 
 function formatVariantPrice(variant) {
-  return formatVariantPriceHtml(variant);
+  const promo = loadActivePromo();
+  const priced = variantDisplayPrice(variant, promo);
+  return formatVariantPriceHtml(priced);
 }
 
 function render() {
@@ -375,7 +381,7 @@ function addToCart() {
     showToast('Този вариант не е наличен.', 'error');
     return;
   }
-  const v = selectedVariant;
+  const v = variantDisplayPrice(selectedVariant, loadActivePromo()) || selectedVariant;
   const label = [product.name, v.pack, v.option].filter(Boolean).join(' – ');
   const cart = getCart();
   const idx = cart.findIndex((i) => i.sku_id === v.sku_id);
@@ -408,8 +414,9 @@ async function loadProduct() {
   }
   try {
     const meta = getCachedMeta();
-    const listed = meta?.index?.some((item) => item.group_id === groupId);
-    if (meta?.index && !listed) {
+    const fullIndex = catalogState.index?.products || meta?.index || [];
+    const entry = fullIndex.find((item) => String(item.group_id) === String(groupId));
+    if (entry && !isCatalogListed(entry, isLowMarginPromoUnlocked())) {
       DOM.root.innerHTML = '<div class="pf-error">Продуктът не е наличен в момента.</div>';
       return;
     }
@@ -433,6 +440,8 @@ async function loadProduct() {
 async function init() {
   await initPortfolioPage({ showMobileBar: false, settingsOnly: false });
   document.body.classList.add('pf-body--product');
+  const savedPromo = loadActivePromo();
+  if (savedPromo) syncPromoCatalogUnlock(savedPromo);
   initBackButton();
   updateCartBadges();
   await loadProduct();
