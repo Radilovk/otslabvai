@@ -6,6 +6,7 @@ import { formatGroupPriceHtml, formatVariantPriceHtml, formatPacksDisplay } from
 import { getProductFromCache, getDescriptionFromCache, getCachedMeta } from './portfolio-cache.js';
 import { filterIndex } from './portfolio-filter.js';
 import { bindProductShareButton, replaceProductUrl } from './product-share.js';
+import { resolveOgImageUrl } from './og-share-meta.js';
 
 const DOM = {
   root: document.getElementById('product-root'),
@@ -188,7 +189,8 @@ function render() {
   const ogImage = document.getElementById('og-image');
   if (ogTitle) ogTitle.setAttribute('content', document.title);
   if (ogDesc) ogDesc.setAttribute('content', `${product.name} – ${product.brand || 'BIOCODE'}`);
-  if (ogImage && product.image) ogImage.setAttribute('content', product.image);
+  const ogImageUrl = resolveOgImageUrl(selectedVariant?.image || product.image, undefined, location.origin);
+  if (ogImage && ogImageUrl) ogImage.setAttribute('content', ogImageUrl);
   syncBrowserProductUrl();
 
   DOM.root.innerHTML = `

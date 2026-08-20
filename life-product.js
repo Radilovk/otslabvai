@@ -7,6 +7,7 @@ import { normalizeEffectLabel } from './effect-labels.js';
 import { rewriteProductImages } from './life-img.js';
 import { isProductListed } from './product-visibility.js';
 import { bindProductShareButton, shareIconSvg, absoluteProductUrl } from './product-share.js';
+import { resolveOgImageUrl } from './og-share-meta.js';
 
 const DOM = {
     productContent: document.getElementById('product-detail-content'),
@@ -678,15 +679,17 @@ function updateProductMetaTags(publicData) {
     metaDesc.content = description;
     
     // Update Open Graph tags
+    const ogImage = resolveOgImageUrl(publicData.image_url, undefined, location.origin);
     updateOrCreateMetaTag('property', 'og:title', publicData.name);
     updateOrCreateMetaTag('property', 'og:description', description);
-    updateOrCreateMetaTag('property', 'og:image', publicData.image_url);
+    updateOrCreateMetaTag('property', 'og:image', ogImage);
     updateOrCreateMetaTag('property', 'og:url', window.location.href);
     
     // Update Twitter Card tags
+    updateOrCreateMetaTag('name', 'twitter:card', 'summary_large_image');
     updateOrCreateMetaTag('name', 'twitter:title', publicData.name);
     updateOrCreateMetaTag('name', 'twitter:description', description);
-    updateOrCreateMetaTag('name', 'twitter:image', publicData.image_url);
+    updateOrCreateMetaTag('name', 'twitter:image', ogImage);
 }
 
 function updateOrCreateMetaTag(attribute, value, content) {

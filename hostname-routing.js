@@ -1,7 +1,4 @@
-/**
- * Hostname-based static asset routing for multi-domain single-repo deploy.
- * Maps clean URLs on custom domains to prefixed HTML files in the asset bundle.
- */
+import { maybeEnhanceProductHtmlResponse } from './product-og-serve.js';
 
 /** @typedef {'main' | 'life' | 'portfolio'} SiteId */
 
@@ -194,5 +191,10 @@ export async function serveMappedAsset(request, env, url) {
     response = await env.ASSETS.fetch(new Request(assetUrl.toString(), fetchInit));
   }
 
-  return response;
+  return maybeEnhanceProductHtmlResponse(response, {
+    env,
+    site,
+    mappedPath,
+    requestUrl: request.url,
+  });
 }
