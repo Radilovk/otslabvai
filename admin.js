@@ -1168,6 +1168,8 @@ function decoratePromoRowForMobile(rowTemplate) {
     rowTemplate.querySelector('.promo-code')?.classList.add('mobile-key');
     rowTemplate.querySelector('.promo-discount')?.classList.add('mobile-key');
     rowTemplate.querySelector('.promo-validity')?.classList.add('mobile-key');
+    rowTemplate.querySelector('.promo-active')?.classList.add('mobile-key', 'promo-active-cell');
+    rowTemplate.querySelector('.promo-actions')?.classList.add('mobile-key', 'promo-actions-cell');
 }
 
 function formatPromoDiscountLabel(promo) {
@@ -2409,15 +2411,20 @@ function setupEventListeners() {
     
     // Promo codes table actions
     DOM.promoCodesTableBody.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.promo-edit-btn');
+        const deleteBtn = e.target.closest('.promo-delete-btn');
+        if (!editBtn && !deleteBtn) return;
+
         const row = e.target.closest('tr');
         if (!row) return;
-        
+
         const promoId = row.dataset.promoId;
         const promo = promoCodesData.find(p => p.id === promoId);
-        
-        if (e.target.classList.contains('promo-edit-btn')) {
+        if (!promo) return;
+
+        if (editBtn) {
             openPromoCodeModal('edit', promo, 'main');
-        } else if (e.target.classList.contains('promo-delete-btn')) {
+        } else if (deleteBtn) {
             if (confirm(`Сигурни ли сте, че искате да изтриете промо кода "${promo.code}"?`)) {
                 promoApiScope = 'main';
                 await deletePromoCode(promoId);
@@ -6057,14 +6064,20 @@ function setupPortfolioEventListeners() {
 
     const portfolioPromoBody = document.getElementById('portfolio-promo-codes-table-body');
     portfolioPromoBody?.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.promo-edit-btn');
+        const deleteBtn = e.target.closest('.promo-delete-btn');
+        if (!editBtn && !deleteBtn) return;
+
         const row = e.target.closest('tr');
         if (!row) return;
         const promoId = row.dataset.promoId;
         const promo = portfolioPromoCodesData.find(p => p.id === promoId);
+        if (!promo) return;
+
         promoApiScope = 'portfolio';
-        if (e.target.classList.contains('promo-edit-btn')) {
+        if (editBtn) {
             openPromoCodeModal('edit', promo, 'portfolio');
-        } else if (e.target.classList.contains('promo-delete-btn')) {
+        } else if (deleteBtn) {
             if (confirm(`Сигурни ли сте, че искате да изтриете промо кода "${promo.code}"?`)) {
                 await deletePromoCode(promoId);
             }
@@ -6083,7 +6096,10 @@ async function fetchPortfolioPromoCodes() {
     try {
         const response = await fetch(`${API_URL}/portfolio/promo-codes`, { cache: 'no-cache' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        portfolioPromoCodesData = await response.json();
+        portfolioPromoCodesData = (await response.json()).map((promo, index) => ({
+            ...promo,
+            id: promo.id || `pf-promo-${String(promo.code || index).toLowerCase().replace(/\s+/g, '-')}`,
+        }));
         filteredPortfolioPromoCodesData = [...portfolioPromoCodesData];
         return portfolioPromoCodesData;
     } catch (error) {

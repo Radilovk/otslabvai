@@ -1402,10 +1402,55 @@ input:checked + .slider:before {
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .promo-actions button {
     white-space: nowrap;
+}
+
+/* Promo cards on mobile – show edit/delete + active toggle */
+@media (max-width: 767px) {
+    .orders-table td.promo-code {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        padding-bottom: 0.25rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .orders-table td.promo-active-cell {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-top: 0.35rem;
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+    }
+
+    .orders-table td.promo-active-cell::before {
+        content: 'Активен';
+        display: inline;
+        font-weight: 600;
+    }
+
+    .orders-table td.promo-actions-cell {
+        display: flex !important;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-color);
+        width: 100%;
+    }
+
+    .orders-table td.promo-actions-cell .promo-edit-btn,
+    .orders-table td.promo-actions-cell .promo-delete-btn {
+        flex: 1;
+        min-height: 36px;
+        font-size: 0.8rem;
+    }
 }
 
 /* Social Media Admin Card */
