@@ -308,6 +308,7 @@ function reconcileFacets() {
 }
 
 function openFilters() {
+  reconcileFacets();
   DOM.sidebar?.classList.add('pf-sidebar--open');
   DOM.sidebarOverlay?.classList.add('pf-visible');
   DOM.filtersToggle?.setAttribute('aria-expanded', 'true');
@@ -333,10 +334,20 @@ function updateSidebarApplyLabel() {
 }
 
 function bindEvents() {
-  const reload = debounce(() => { state.page = 1; reconcileFacets(); loadCatalog(); }, 200);
-  DOM.searchInput.addEventListener('input', reload);
+  const reloadFilters = debounce(() => {
+    state.page = 1;
+    reconcileFacets();
+    loadCatalog();
+  }, 300);
+
+  const runSearch = debounce(() => {
+    state.page = 1;
+    requestAnimationFrame(() => loadCatalog());
+  }, 320);
+
+  DOM.searchInput.addEventListener('input', runSearch);
   [DOM.filterMinPrice, DOM.filterMaxPrice]
-    .forEach((el) => el.addEventListener('input', reload));
+    .forEach((el) => el.addEventListener('input', reloadFilters));
   [DOM.filterMinPrice, DOM.filterMaxPrice]
     .forEach((el) => el.addEventListener('change', () => { state.page = 1; reconcileFacets(); loadCatalog(); }));
   [DOM.filterCategory, DOM.filterGoal, DOM.filterBrand]
