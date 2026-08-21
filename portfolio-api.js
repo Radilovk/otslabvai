@@ -21,6 +21,7 @@ import {
   resolveVariantPricing,
   summarizeGroupPricing,
   collectAvailablePacks,
+  buildIndexVariantPricing,
   normalizePricingPolicy,
   applyPromoCodePrice,
   promoUsesLinePricing,
@@ -388,6 +389,7 @@ export function buildCatalogMeta(groups, settings = null) {
 
     const availableVariants = g.variants.filter((v) => v.available);
     const priceStats = summarizeGroupPricing(availableVariants);
+    const indexPricing = buildIndexVariantPricing(availableVariants);
     const packs = collectAvailablePacks(availableVariants);
     const marginStats = summarizeGroupMargin(g);
 
@@ -403,6 +405,9 @@ export function buildCatalogMeta(groups, settings = null) {
       category_path: g.category_path,
       min_price: priceStats.min_price,
       max_price: priceStats.max_price,
+      min_client_price: indexPricing.min_client_price,
+      max_client_price: indexPricing.max_client_price,
+      vp: indexPricing.vp,
       has_promo: priceStats.has_promo,
       compare_at_price: priceStats.compare_at_price,
       default_sku_id: priceStats.default_sku_id,
@@ -443,6 +448,11 @@ export function buildCatalogMeta(groups, settings = null) {
 /** Strip admin-only / internal fields before sending product data to the client. */
 export function sanitizeVariantForClient(variant) {
   if (!variant) return variant;
+  const clientFinal = Number(variant.regular_price) || Number(variant.retail_price) || 0;
+  const wholesale = Number(variant.b2b_price) || 0;
+  const margin_eur = wholesale > 0 && clientFinal > wholesale
+    ? Math.round((clientFinal - wholesale) * 100) / 100
+    : 0;
   const {
     b2b_price,
     markup_percent,
@@ -451,7 +461,7 @@ export function sanitizeVariantForClient(variant) {
     distributor_ids,
     ...client
   } = variant;
-  return client;
+  return margin_eur > 0 ? { ...client, margin_eur } : client;
 }
 
 export function sanitizeGroupForClient(group) {
@@ -883,12 +893,16 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = false, f
 function rebuildIndexEntryForGroup(entry, group, settings) {
   const availableVariants = group.variants.filter((v) => v.available);
   const priceStats = summarizeGroupPricing(availableVariants);
+  const indexPricing = buildIndexVariantPricing(availableVariants);
   const packs = collectAvailablePacks(availableVariants);
   const marginStats = summarizeGroupMargin(group);
   const updated = enrichIndexEntry({
     ...entry,
     min_price: priceStats.min_price,
     max_price: priceStats.max_price,
+    min_client_price: indexPricing.min_client_price,
+    max_client_price: indexPricing.max_client_price,
+    vp: indexPricing.vp,
     has_promo: priceStats.has_promo,
     compare_at_price: priceStats.compare_at_price,
     default_sku_id: priceStats.default_sku_id,

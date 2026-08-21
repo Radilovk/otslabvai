@@ -1,6 +1,7 @@
 import {
   promoUnlocksLowMargin,
   formatIndexPriceHtml,
+  enrichCatalogItemsWithPromoPrices,
 } from './portfolio-promo-catalog.js';
 
 describe('portfolio-promo-catalog', () => {
@@ -31,16 +32,24 @@ describe('portfolio-promo-catalog', () => {
     expect(html).toContain('100.00');
   });
 
-  test('formatIndexPriceHtml uses promo line stats when present', () => {
+  test('formatIndexPriceHtml computes line pricing from vp dots synchronously', () => {
     const html = formatIndexPriceHtml({
-      min_price: 100,
-      max_price: 100,
-      promo_min_price: 60,
-      promo_max_price: 60,
-      promo_compare_at_price: 100,
-      promo_has_adjusted_price: true,
+      min_price: 85,
+      max_price: 85,
+      vp: [[85, 100, 80]],
     }, { discountType: 'margin_percentage', discount: 50 });
     expect(html).toContain('60.00');
     expect(html).toContain('100.00');
+  });
+
+  test('enrichCatalogItemsWithPromoPrices is synchronous', () => {
+    const items = [{
+      group_id: 'g1',
+      min_price: 85,
+      vp: [[85, 100, 80]],
+    }];
+    const promo = { discountType: 'margin_percentage', discount: 50 };
+    const out = enrichCatalogItemsWithPromoPrices(items, promo);
+    expect(out[0].promo_min_price).toBe(60);
   });
 });

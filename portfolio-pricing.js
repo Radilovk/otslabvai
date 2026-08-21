@@ -184,16 +184,19 @@ export function applyPromoCodePrice(variant, promo, policy = DEFAULT_PRICING_POL
   if (!promo?.pricing_mode || promo.pricing_mode === 'none') return base;
 
   const normalized = normalizePricingPolicy(policy);
-  const b2b = Number(variant?.b2b_price) || 0;
-  const regular = Number(variant?.regular_price) || 0;
-  const floor = roundPrice(b2b + normalized.min_profit_eur);
+  const wholesale = deliveryPrice(variant);
+  const regular = Number(variant?.regular_price) || clientFinalPrice(variant);
+  const floor = wholesale > 0
+    ? roundPrice(wholesale + normalized.min_profit_eur)
+    : roundPrice(normalized.min_profit_eur);
   const pct = Math.max(0, Number(promo.pricing_percent) || 0);
 
   if (promo.pricing_mode === 'below_regular' && regular > floor) {
     return ceilRetailPrice(priceBelowRegular(regular, pct, floor));
   }
-  if (promo.pricing_mode === 'above_b2b') {
-    return ceilRetailPrice(Math.max(floor, roundPrice(b2b * (1 + pct / 100))));
+  if (promo.pricing_mode === 'above_b2b' && wholesale > 0) {
+    const floor = roundPrice(wholesale + normalized.min_profit_eur);
+    return ceilRetailPrice(Math.max(floor, roundPrice(wholesale * (1 + pct / 100))));
   }
   return base;
 }
@@ -242,12 +245,85 @@ export function applyCartPercentPromoPrice(variant, promo) {
 
   const client = clientFinalPrice(variant);
   const fromClient = ceilRetailPrice(client * (1 - pct / 100));
-  const wholesale = Number(variant?.b2b_price) || 0;
+  const wholesale = deliveryPrice(variant);
   const price = wholesale > 0
     ? Math.max(wholesale, Math.min(selling, fromClient))
     : Math.min(selling, fromClient);
   const compareAt = client > price ? client : 0;
   return { price, compareAt, isOnPromo: compareAt > price };
+}
+
+/** Delivery price (b2b) — from field or derived from margin_eur on client variants. */
+export function deliveryPrice(variant) {
+  const b2b = Number(variant?.b2b_price) || 0;
+  if (b2b > 0) return b2b;
+  const margin = Number(variant?.margin_eur) || 0;
+  const client = clientFinalPrice(variant);
+  return margin > 0 && client > margin ? roundPrice(client - margin) : 0;
+}
+
+/** Compact index dot: [catalog retail, client final, margin EUR]. */
+export function variantFromPricingDot(dot) {
+  const retail = Number(dot?.[0]) || 0;
+  const client = Number(dot?.[1]) || 0;
+  const marginEur = Number(dot?.[2]) || 0;
+  return {
+    retail_price: retail,
+    regular_price: client,
+    margin_eur: marginEur,
+    b2b_price: marginEur > 0 ? roundPrice(client - marginEur) : 0,
+  };
+}
+
+/** Build client-side promo pricing snapshot for catalog index entries. */
+export function buildIndexVariantPricing(availableVariants) {
+  const dots = (availableVariants || [])
+    .filter((v) => catalogSellingPrice(v) > 0)
+    .map((v) => {
+      const client = clientFinalPrice(v);
+      const retail = catalogSellingPrice(v);
+      const wholesale = Number(v.b2b_price) || 0;
+      const marginEur = wholesale > 0 && client > wholesale ? roundPrice(client - wholesale) : 0;
+      return [retail, client, marginEur];
+    });
+  const clients = dots.map((d) => d[1]).filter((n) => n > 0);
+  return {
+    vp: dots,
+    min_client_price: clients.length ? Math.min(...clients) : 0,
+    max_client_price: clients.length ? Math.max(...clients) : 0,
+  };
+}
+
+/** Sync promo min/max/compare for catalog cards from index vp dots. */
+export function computePromoStatsFromVp(vp, promo) {
+  if (!promo || !Array.isArray(vp) || !vp.length) return null;
+
+  const adjusted = vp.map((dot) => {
+    const v = variantFromPricingDot(dot);
+    let price = catalogSellingPrice(v);
+    let compareAt = 0;
+    let isOnPromo = false;
+
+    if (promoUsesLinePricing(promo)) {
+      price = resolvePromoLinePrice(v, promo);
+      compareAt = promoCompareAtPrice(v, price);
+      isOnPromo = compareAt > price;
+    } else if (promo.discountType === 'percentage' && Number(promo.discount) > 0) {
+      const r = applyCartPercentPromoPrice(v, promo);
+      price = r.price;
+      compareAt = r.compareAt;
+      isOnPromo = r.isOnPromo;
+    }
+
+    return {
+      retail_price: price,
+      compare_at_price: compareAt,
+      is_on_promo: isOnPromo,
+      available: true,
+    };
+  });
+
+  return summarizeGroupPricing(adjusted);
 }
 
 /** Compare-at for promo display: client final when higher than promo price. */
@@ -279,7 +355,7 @@ export function resolvePromoLinePrice(variant, promo, policy = DEFAULT_PRICING_P
   if (promo.discountType === 'margin_percentage') {
     return applyMarginSharePrice(
       clientFinalPrice(variant),
-      variant?.b2b_price,
+      deliveryPrice(variant),
       promo.discount,
       catalogRetail
     );

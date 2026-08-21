@@ -4,7 +4,7 @@
 
 import { API_URL } from './config.js';
 import { promoUsesLinePricing } from './portfolio-checkout-shared.js';
-import { syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
+import { syncPromoCatalogUnlock, notifyPromoChanged } from './portfolio-promo-catalog.js';
 
 export const PROMO_CODE_SESSION_KEY = 'pfActivePromoCode';
 
@@ -59,12 +59,14 @@ export async function applyPortfolioPromoCode(code) {
   const promo = data.promoCode;
   saveActivePromo(promo);
   syncPromoCatalogUnlock(promo);
+  notifyPromoChanged(promo);
   return { ok: true, promo, message: promoSuccessMessage(promo) };
 }
 
 export function clearPortfolioPromo() {
   saveActivePromo(null);
   syncPromoCatalogUnlock(null);
+  notifyPromoChanged(null);
 }
 
 function setModalMessage(el, text, type = '') {
