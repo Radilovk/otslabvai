@@ -199,19 +199,64 @@ export function applyPromoCodePrice(variant, promo, policy = DEFAULT_PRICING_POL
 }
 
 /**
- * Promo: give away a share of the margin (retail − b2b) as discount.
- * @param {number} retail - catalog retail price
- * @param {number} b2b - delivery / B2B cost
- * @param {number} marginPercent - 0–100, share of margin discounted (100 → price = b2b)
+ * Promo: give away a share of the margin (client final − delivery) as discount.
+ * @param {number} clientFinal - listed client/final price (regular_price)
+ * @param {number} b2b - delivery / purchase cost
+ * @param {number} marginPercent - 0–100, share of margin discounted (100 → delivery price)
+ * @param {number} [catalogRetail] - current catalog selling price (cap: never above this)
  */
-export function applyMarginSharePrice(retail, b2b, marginPercent) {
-  const retailPrice = Number(retail) || 0;
+export function applyMarginSharePrice(clientFinal, b2b, marginPercent, catalogRetail = 0) {
+  const client = Number(clientFinal) || 0;
   const wholesale = Number(b2b) || 0;
-  if (!(retailPrice > wholesale) || !(wholesale > 0)) return ceilRetailPrice(retailPrice);
+  const selling = Number(catalogRetail) || client;
+  if (!(client > wholesale) || !(wholesale > 0)) return ceilRetailPrice(selling);
 
-  const margin = retailPrice - wholesale;
+  const margin = client - wholesale;
   const share = Math.max(0, Math.min(100, Number(marginPercent) || 0));
-  return ceilRetailPrice(Math.max(wholesale, retailPrice - margin * (share / 100)));
+  const fromMargin = client - margin * (share / 100);
+  return ceilRetailPrice(Math.max(wholesale, Math.min(selling, fromMargin)));
+}
+
+/** Listed client/final price (regular); falls back to catalog retail. */
+export function clientFinalPrice(variant) {
+  const regular = Number(variant?.regular_price) || 0;
+  const retail = Number(variant?.retail_price) || 0;
+  return regular > 0 ? regular : retail;
+}
+
+/** Catalog selling price before promo. */
+export function catalogSellingPrice(variant) {
+  return Number(variant?.retail_price) || 0;
+}
+
+/**
+ * Cart % promo on a line: discount from client/final price, pay min(catalog, discounted).
+ * @returns {{ price: number, compareAt: number, isOnPromo: boolean }}
+ */
+export function applyCartPercentPromoPrice(variant, promo) {
+  const selling = catalogSellingPrice(variant);
+  const pct = Number(promo?.discount) || 0;
+  if (!promo || promo.discountType !== 'percentage' || !(pct > 0)) {
+    return { price: selling, compareAt: 0, isOnPromo: false };
+  }
+
+  const client = clientFinalPrice(variant);
+  const fromClient = ceilRetailPrice(client * (1 - pct / 100));
+  const wholesale = Number(variant?.b2b_price) || 0;
+  const price = wholesale > 0
+    ? Math.max(wholesale, Math.min(selling, fromClient))
+    : Math.min(selling, fromClient);
+  const compareAt = client > price ? client : 0;
+  return { price, compareAt, isOnPromo: compareAt > price };
+}
+
+/** Compare-at for promo display: client final when higher than promo price. */
+export function promoCompareAtPrice(variant, promoPrice) {
+  const client = clientFinalPrice(variant);
+  const selling = catalogSellingPrice(variant);
+  if (client > promoPrice) return client;
+  if (selling > promoPrice) return selling;
+  return 0;
 }
 
 /** True when promo changes per-line prices instead of a cart-level discount. */
@@ -228,11 +273,16 @@ export function promoUsesLinePricing(promo) {
  * @param {object} [policy]
  */
 export function resolvePromoLinePrice(variant, promo, policy = DEFAULT_PRICING_POLICY) {
-  const catalogRetail = Number(variant?.retail_price) || 0;
+  const catalogRetail = catalogSellingPrice(variant);
   if (!promo) return catalogRetail;
 
   if (promo.discountType === 'margin_percentage') {
-    return applyMarginSharePrice(catalogRetail, variant?.b2b_price, promo.discount);
+    return applyMarginSharePrice(
+      clientFinalPrice(variant),
+      variant?.b2b_price,
+      promo.discount,
+      catalogRetail
+    );
   }
   return applyPromoCodePrice(variant, promo, policy);
 }

@@ -6,6 +6,7 @@ import {
   summarizeGroupPricing,
   applyPromoCodePrice,
   applyMarginSharePrice,
+  applyCartPercentPromoPrice,
   promoUsesLinePricing,
   resolvePromoLinePrice,
   sumLinePricingSavings,
@@ -99,15 +100,38 @@ describe('portfolio-pricing', () => {
     expect(applyMarginSharePrice(50, 20, 50)).toBe(35);
   });
 
-  test('applyMarginSharePrice leaves retail when no margin', () => {
-    expect(applyMarginSharePrice(20, 20, 100)).toBe(20);
-    expect(applyMarginSharePrice(50, 0, 100)).toBe(50);
+  test('applyMarginSharePrice uses client final price and caps at catalog retail', () => {
+    expect(applyMarginSharePrice(100, 20, 50, 85)).toBe(60);
+    expect(applyMarginSharePrice(100, 20, 100, 85)).toBe(20);
+    expect(applyMarginSharePrice(20, 20, 100, 20)).toBe(20);
+    expect(applyMarginSharePrice(50, 0, 100, 50)).toBe(50);
+  });
+
+  test('applyCartPercentPromoPrice discounts from client final price', () => {
+    const variant = { b2b_price: 20, regular_price: 100, retail_price: 95 };
+    const r = applyCartPercentPromoPrice(variant, { discountType: 'percentage', discount: 10 });
+    expect(r.price).toBe(90);
+    expect(r.compareAt).toBe(100);
+    expect(r.isOnPromo).toBe(true);
+  });
+
+  test('applyCartPercentPromoPrice never raises above catalog retail', () => {
+    const variant = { b2b_price: 20, regular_price: 100, retail_price: 85 };
+    const r = applyCartPercentPromoPrice(variant, { discountType: 'percentage', discount: 10 });
+    expect(r.price).toBe(85);
+    expect(r.compareAt).toBe(100);
   });
 
   test('promoUsesLinePricing detects margin_percentage', () => {
     expect(promoUsesLinePricing({ discountType: 'margin_percentage' })).toBe(true);
     expect(promoUsesLinePricing({ discountType: 'percentage' })).toBe(false);
     expect(promoUsesLinePricing({ pricing_mode: 'above_b2b' })).toBe(true);
+  });
+
+  test('resolvePromoLinePrice applies margin share from client final price', () => {
+    const variant = { b2b_price: 20, regular_price: 100, retail_price: 85 };
+    const price = resolvePromoLinePrice(variant, { discountType: 'margin_percentage', discount: 50 });
+    expect(price).toBe(60);
   });
 
   test('resolvePromoLinePrice applies margin share', () => {

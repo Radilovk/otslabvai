@@ -32,7 +32,7 @@ describe('portfolio-promo-ui', () => {
     });
     expect(msg).toContain('FIT');
     expect(msg).toContain('15%');
-    expect(msg).toContain('препоръчителна');
+    expect(msg).toContain('клиентска');
   });
 
   test('promoSuccessMessage for margin share', () => {

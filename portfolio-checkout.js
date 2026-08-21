@@ -22,8 +22,7 @@ import {
   loadActivePromo,
   promoSuccessMessage,
 } from './portfolio-promo-ui.js';
-
-let cart = getCart();
+import { syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
 let activePromoCode = null;
 
 const els = {};
@@ -589,6 +588,7 @@ async function init() {
   const savedPromo = loadActivePromo();
   if (savedPromo?.code) {
     activePromoCode = savedPromo;
+    syncPromoCatalogUnlock(savedPromo);
     if ($('promo-code-input')) $('promo-code-input').value = savedPromo.code;
     if ($('promo-code-input-summary')) $('promo-code-input-summary').value = savedPromo.code;
     syncPromoRemoveButtons();
