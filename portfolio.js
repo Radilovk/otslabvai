@@ -217,7 +217,6 @@ function loadCatalog() {
   state.total = data.total;
   state.totalPages = data.total_pages;
   state.page = data.page;
-  const promo = loadActivePromo();
   if (DOM.resultsMeta) {
     DOM.resultsMeta.hidden = false;
     DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
