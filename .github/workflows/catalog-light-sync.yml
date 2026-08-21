@@ -4,8 +4,10 @@ on:
   repository_dispatch:
     types: [catalog-light-sync]
   workflow_dispatch:
+  # Every 6h: stock/price diff → KV only when hashes change (see catalog-light-sync.mjs).
+  # Also runs on deploy + on-demand from Worker (debounced). Not every run rewrites catalog.
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 */6 * * *'
 
 concurrency:
   group: catalog-light-sync

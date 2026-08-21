@@ -12,6 +12,8 @@ import {
   resolvePromoLinePrice,
   applyCartPercentPromoPrice,
   promoCompareAtPrice,
+  promoDisplayStats,
+  shouldDisplayPromoPrice,
 } from './portfolio-pricing.js';
 
 export const PROMO_CHANGED_EVENT = 'pf-promo-changed';
@@ -45,12 +47,12 @@ function cartPercentIndexStats(item, promo) {
   const pct = Number(promo.discount) / 100;
   const fromClientMin = ceilRetailPrice(clientMin * (1 - pct));
   const fromClientMax = ceilRetailPrice(clientMax * (1 - pct));
-  return {
+  return promoDisplayStats({
     min_price: Math.min(sellingMin, fromClientMin),
     max_price: Math.min(sellingMax, fromClientMax),
     compare_at_price: clientMin,
     has_promo: Math.min(sellingMin, fromClientMin) < clientMin,
-  };
+  });
 }
 
 export function formatIndexPriceHtml(item, promo) {
@@ -58,14 +60,7 @@ export function formatIndexPriceHtml(item, promo) {
 
   if (item.vp?.length) {
     const stats = computePromoStatsFromVp(item.vp, promo);
-    if (stats) {
-      return formatGroupPriceHtml({
-        min_price: stats.min_price,
-        max_price: stats.max_price,
-        compare_at_price: stats.compare_at_price,
-        has_promo: stats.has_promo || stats.compare_at_price > stats.min_price,
-      });
-    }
+    if (stats) return formatGroupPriceHtml(stats);
   }
 
   if (promo.discountType === 'percentage' && Number(promo.discount) > 0) {
@@ -82,17 +77,23 @@ export function variantDisplayPrice(variant, promo) {
     const selling = Number(variant.retail_price) || 0;
     const promoRetail = resolvePromoLinePrice(variant, promo);
     if (promoRetail === selling) return variant;
+    const compareAt = promoCompareAtPrice(variant, promoRetail);
+    if (!shouldDisplayPromoPrice(compareAt, promoRetail)) {
+      return { ...variant, retail_price: promoRetail, compare_at_price: 0, is_on_promo: false };
+    }
     return {
       ...variant,
       retail_price: promoRetail,
-      compare_at_price: promoCompareAtPrice(variant, promoRetail),
+      compare_at_price: compareAt,
       is_on_promo: true,
     };
   }
 
   if (promo.discountType === 'percentage' && Number(promo.discount) > 0) {
     const { price, compareAt, isOnPromo } = applyCartPercentPromoPrice(variant, promo);
-    if (!isOnPromo) return variant;
+    if (!isOnPromo || !shouldDisplayPromoPrice(compareAt, price)) {
+      return { ...variant, retail_price: price, compare_at_price: 0, is_on_promo: false };
+    }
     return {
       ...variant,
       retail_price: price,

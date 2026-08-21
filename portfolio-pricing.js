@@ -398,15 +398,17 @@ export function summarizeGroupPricing(variants) {
     (v) => v.is_on_promo && (Number(v.compare_at_price) || 0) > Number(v.retail_price)
   ) || cheapestAtMin[0];
 
-  const hasPromo = list.some(
-    (v) => (v.is_on_promo || v.pricing_mode === 'f1_promo') &&
-      (Number(v.compare_at_price) || 0) > (Number(v.retail_price) || 0)
-  );
+  const hasPromo = list.some((v) => {
+    const retail = Number(v.retail_price) || 0;
+    const compare = Number(v.compare_at_price) || 0;
+    return (v.is_on_promo || v.pricing_mode === 'f1_promo') && shouldDisplayPromoPrice(compare, retail);
+  });
 
-  const compareAt = anchor?.is_on_promo &&
+  const rawCompare = anchor?.is_on_promo &&
     (Number(anchor.compare_at_price) || 0) > Number(anchor.retail_price)
     ? Number(anchor.compare_at_price)
     : 0;
+  const compareAt = shouldDisplayPromoPrice(rawCompare, minPrice) ? rawCompare : 0;
 
   return {
     min_price: minPrice,
@@ -462,13 +464,37 @@ export function formatEur(amount) {
   return `${(Number(amount) || 0).toFixed(2)} €`;
 }
 
+/** Min discount % before strikethrough / promo badge (catalog display). */
+export const MIN_PROMO_DISPLAY_DISCOUNT_PCT = 5;
+
+export function promoDiscountPercent(compare, retail) {
+  const c = Number(compare) || 0;
+  const r = Number(retail) || 0;
+  if (!(c > r) || !(c > 0)) return 0;
+  return ((c - r) / c) * 100;
+}
+
+export function shouldDisplayPromoPrice(compare, retail) {
+  return promoDiscountPercent(compare, retail) >= MIN_PROMO_DISPLAY_DISCOUNT_PCT;
+}
+
+/** Drop compare/strikethrough when discount is below display threshold. */
+export function promoDisplayStats(stats) {
+  const min = Number(stats?.min_price) || 0;
+  const compare = Number(stats?.compare_at_price) || 0;
+  if (!stats?.has_promo || !shouldDisplayPromoPrice(compare, min)) {
+    return { ...stats, has_promo: false, compare_at_price: 0 };
+  }
+  return stats;
+}
+
 /** Product page – single selected variant. */
 export function formatVariantPriceHtml(variant) {
   if (!variant) return '—';
   const retail = Number(variant.retail_price) || 0;
   const compare = Number(variant.compare_at_price) || 0;
   const current = formatEur(retail);
-  if (variant.is_on_promo && compare > retail) {
+  if (variant.is_on_promo && shouldDisplayPromoPrice(compare, retail)) {
     return `<span class="pf-price-compare">${formatEur(compare)}</span><span class="pf-price-sale">${current}</span>`;
   }
   return current;
@@ -479,10 +505,16 @@ export function formatVariantPriceHtml(variant) {
  * Strikethrough uses compare only from the cheapest available variant, never a mismatched SKU.
  */
 export function formatGroupPriceHtml(stats) {
-  const min = Number(stats?.min_price) || 0;
-  const max = Number(stats?.max_price) || 0;
-  const compare = Number(stats?.compare_at_price) || 0;
-  const showCompare = stats?.has_promo && compare > min;
+  const normalized = promoDisplayStats({
+    min_price: stats?.min_price,
+    max_price: stats?.max_price,
+    compare_at_price: stats?.compare_at_price,
+    has_promo: stats?.has_promo,
+  });
+  const min = Number(normalized.min_price) || 0;
+  const max = Number(normalized.max_price) || 0;
+  const compare = Number(normalized.compare_at_price) || 0;
+  const showCompare = normalized.has_promo && compare > min;
 
   if (min === max) {
     const current = formatEur(min);
