@@ -5,33 +5,11 @@
 import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS, fetchDescriptionMap, fetchFitness1Products, mergeCatalogProducts } from './portfolio-api.js';
 import { fetchSilaProductsWithFallback, normalizeSilaApiToken, KV_SILA_TOKEN } from './sila-api.js';
 import { mergeSettingsForCatalogSync, persistSettingsAfterCatalogSync } from './catalog-settings-kv.mjs';
+import { kvGet, kvPut } from './catalog-kv-client.mjs';
 
-const KV_NS = process.env.CLOUDFLARE_KV_NAMESPACE_ID || 'd220db696e414b7cb3da2b19abd53d0f';
-const ACCOUNT = process.env.CLOUDFLARE_ACCOUNT_ID;
-const TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 const F1_KEY = process.env.FITNESS1_API_KEY;
 const SILA_TOKEN = process.env.SILA_API_TOKEN;
 const CHUNK_SIZE = 150;
-
-async function kvGet(key) {
-  const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/storage/kv/namespaces/${KV_NS}/values/${encodeURIComponent(key)}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`KV get ${key}: ${res.status}`);
-  const text = await res.text();
-  try { return JSON.parse(text); } catch { return text; }
-}
-
-async function kvPut(key, body, contentType = 'application/json') {
-  const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/storage/kv/namespaces/${KV_NS}/values/${encodeURIComponent(key)}`;
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': contentType },
-    body: typeof body === 'string' ? body : JSON.stringify(body)
-  });
-  const data = await res.json();
-  if (!data.success) throw new Error(`KV put ${key} failed: ${JSON.stringify(data.errors)}`);
-}
 
 async function fetchAllProducts() {
   let f1Products = [];
@@ -64,7 +42,7 @@ async function fetchAllProducts() {
 
 async function main() {
   if (!F1_KEY && !SILA_TOKEN) throw new Error('FITNESS1_API_KEY and/or SILA_API_TOKEN required');
-  const uploadKv = TOKEN && ACCOUNT;
+  const uploadKv = process.env.CLOUDFLARE_API_TOKEN && process.env.CLOUDFLARE_ACCOUNT_ID;
 
   const products = await fetchAllProducts();
   console.log(`Got ${products.length} merged SKUs`);

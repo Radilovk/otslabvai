@@ -232,6 +232,7 @@ jobs:
           SILA_API_TOKEN: ${{ secrets.SILA_API_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CATALOG_SKIP_LEGACY: '1'
         run: |
           if [ -z "$FITNESS1_API_KEY" ] && [ -z "$SILA_API_TOKEN" ]; then
             echo "Skipping catalog-light-sync – no distributor API keys configured"
