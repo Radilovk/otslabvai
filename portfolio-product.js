@@ -9,7 +9,7 @@ import { bindProductShareButton, replaceProductUrl } from './product-share.js';
 import { resolveOgImageUrl } from './og-share-meta.js';
 import { isCatalogListed } from './portfolio-margin-policy.js';
 import { isLowMarginPromoUnlocked } from './product-visibility.js';
-import { variantDisplayPrice, syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
+import { variantDisplayPrice, syncPromoCatalogUnlock, PROMO_CHANGED_EVENT } from './portfolio-promo-catalog.js';
 import { loadActivePromo } from './portfolio-promo-ui.js';
 
 const DOM = {
@@ -448,6 +448,9 @@ async function init() {
   updateCartBadges();
   const savedPromo = loadActivePromo();
   if (savedPromo) syncPromoCatalogUnlock(savedPromo);
+  window.addEventListener(PROMO_CHANGED_EVENT, () => {
+    if (product) render();
+  });
   await loadProduct();
 }
 

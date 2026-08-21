@@ -7,6 +7,9 @@ import {
   applyPromoCodePrice,
   applyMarginSharePrice,
   applyCartPercentPromoPrice,
+  computePromoStatsFromVp,
+  buildIndexVariantPricing,
+  deliveryPrice,
   promoUsesLinePricing,
   resolvePromoLinePrice,
   sumLinePricingSavings,
@@ -116,10 +119,28 @@ describe('portfolio-pricing', () => {
   });
 
   test('applyCartPercentPromoPrice never raises above catalog retail', () => {
-    const variant = { b2b_price: 20, regular_price: 100, retail_price: 85 };
+    const variant = { margin_eur: 80, regular_price: 100, retail_price: 85 };
     const r = applyCartPercentPromoPrice(variant, { discountType: 'percentage', discount: 10 });
     expect(r.price).toBe(85);
     expect(r.compareAt).toBe(100);
+  });
+
+  test('deliveryPrice derives from margin_eur on client variants', () => {
+    expect(deliveryPrice({ regular_price: 100, margin_eur: 80 })).toBe(20);
+  });
+
+  test('computePromoStatsFromVp handles margin share from vp dots', () => {
+    const stats = computePromoStatsFromVp([[85, 100, 80]], { discountType: 'margin_percentage', discount: 50 });
+    expect(stats.min_price).toBe(60);
+    expect(stats.compare_at_price).toBe(100);
+  });
+
+  test('buildIndexVariantPricing stores vp without raw b2b', () => {
+    const p = buildIndexVariantPricing([
+      { retail_price: 85, regular_price: 100, b2b_price: 20, available: true },
+    ]);
+    expect(p.min_client_price).toBe(100);
+    expect(p.vp).toEqual([[85, 100, 80]]);
   });
 
   test('promoUsesLinePricing detects margin_percentage', () => {

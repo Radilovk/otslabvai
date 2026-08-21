@@ -10,13 +10,11 @@ import {
   shouldShowActiveFilterRow,
   formatFiltersToggleLabel
 } from './portfolio-catalog-ui.js';
-import { promoUsesLinePricing } from './portfolio-checkout-shared.js';
 import { initPortfolioPromoModal, loadActivePromo } from './portfolio-promo-ui.js';
 import {
-  enrichCatalogItemsWithPromoPrices,
-  enrichIndexClientPrices,
   formatIndexPriceHtml,
   syncPromoCatalogUnlock,
+  PROMO_CHANGED_EVENT,
 } from './portfolio-promo-catalog.js';
 
 const LIMIT = 24;
@@ -219,40 +217,24 @@ function loadCatalog() {
   state.total = data.total;
   state.totalPages = data.total_pages;
   state.page = data.page;
-
-  const renderItems = async () => {
-    const promo = loadActivePromo();
-    let items = data.items;
-    if (promo) {
-      if (promoUsesLinePricing(promo)) {
-        items = await enrichCatalogItemsWithPromoPrices(items, promo);
-      } else if (promo.discountType === 'percentage' && Number(promo.discount) > 0) {
-        items = await enrichIndexClientPrices(items);
-      }
-    }
-    if (DOM.resultsMeta) {
-      DOM.resultsMeta.hidden = false;
-      DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
-    }
-    DOM.grid.innerHTML = items.length
-      ? items.map(renderCard).join('')
-      : `<div class="pf-empty">
+  if (DOM.resultsMeta) {
+    DOM.resultsMeta.hidden = false;
+    DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
+  }
+  DOM.grid.innerHTML = data.items.length
+    ? data.items.map(renderCard).join('')
+    : `<div class="pf-empty">
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <p>Няма продукти с тези филтри.</p>
         <button type="button" class="pf-btn pf-btn-outline pf-empty-clear" id="empty-clear-filters">Изчисти филтрите</button>
       </div>`;
-    document.getElementById('empty-clear-filters')?.addEventListener('click', () => {
-      DOM.clearFilters.click();
-    });
-    renderPagination();
-    updateFiltersToggleLabel();
-    renderActiveFilterChips();
-    updateSidebarApplyLabel();
-  };
-
-  renderItems().catch(() => {
-    DOM.grid.innerHTML = '<div class="pf-error">Грешка при показване на каталога.</div>';
+  document.getElementById('empty-clear-filters')?.addEventListener('click', () => {
+    DOM.clearFilters.click();
   });
+  renderPagination();
+  updateFiltersToggleLabel();
+  renderActiveFilterChips();
+  updateSidebarApplyLabel();
 }
 
 function populateFilters(filters) {
@@ -419,7 +401,6 @@ async function init() {
     if (filters) populateFilters(filters);
     state.cacheReady = true;
     bindEvents();
-    loadCatalog();
     void cache.sync();
   } else {
     showSkeletons();
@@ -428,8 +409,16 @@ async function init() {
     if (filters) populateFilters(filters);
     state.cacheReady = true;
     bindEvents();
-    loadCatalog();
   }
+
+  const savedPromo = loadActivePromo();
+  if (savedPromo) syncPromoCatalogUnlock(savedPromo);
+  loadCatalog();
+
+  window.addEventListener(PROMO_CHANGED_EVENT, () => {
+    state.page = 1;
+    loadCatalog();
+  });
 
   try {
     onCatalogUpdated(() => {
@@ -450,19 +439,10 @@ async function init() {
 
   initPortfolioPromoModal({
     onApplied: () => {
-      syncPromoCatalogUnlock(loadActivePromo());
       state.page = 1;
-      reconcileFacets();
       loadCatalog();
     },
   });
-
-  const savedPromo = loadActivePromo();
-  if (savedPromo) {
-    syncPromoCatalogUnlock(savedPromo);
-    reconcileFacets();
-    loadCatalog();
-  }
 }
 
 init();
