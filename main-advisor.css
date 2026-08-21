@@ -168,13 +168,15 @@
   background: linear-gradient(135deg, #E4007C 0%, #FF2D9B 50%, #C2006A 100%);
   border: none;
   font-weight: 600;
-  box-shadow: 0 4px 20px rgba(228, 0, 124, 0.35);
+  box-shadow: 0 4px 20px rgba(228, 0, 124, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   min-width: 8.5rem;
+  letter-spacing: 0.02em;
 }
 
 .maa-body .lpq-btn-primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-  transform: translateY(-1px);
+  filter: brightness(1.06);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(228, 0, 124, 0.42);
 }
 
 .maa-body .lpq-btn-ghost {
@@ -210,13 +212,222 @@
   border-top-color: var(--color-primary);
 }
 
+/* ── Result page: tier cards (brand palette, light + dark) ── */
+.maa-body .lpr-tiers {
+  gap: 1.25rem;
+}
+
+.maa-body .lpr-tier {
+  border-radius: 18px;
+  font-family: var(--lpq-font);
+}
+
+.maa-body .lpr-tier h3 {
+  font-family: var(--lpq-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--lpq-text);
+}
+
+.maa-body .lpr-tier .lpr-tagline,
+.maa-body .lpr-tier-hint,
+.maa-body .lpr-price-sub,
+.maa-body .lpr-strategy {
+  font-family: var(--lpq-font);
+}
+
+.maa-body .lpr-tier[data-tier="basic"] {
+  --tier-accent: #64748b;
+  --tier-accent-dim: rgba(100, 116, 139, 0.12);
+  --tier-border: rgba(100, 116, 139, 0.22);
+  --tier-surface: linear-gradient(165deg, #fafbfc 0%, #f1f5f9 100%);
+  --tier-shadow-selected: 0 6px 22px rgba(100, 116, 139, 0.12);
+  --tier-shadow-recommended: 0 8px 28px rgba(100, 116, 139, 0.14);
+  --tier-shadow-selected-strong: 0 10px 32px rgba(100, 116, 139, 0.16);
+}
+
+.maa-body .lpr-tier[data-tier="basic"] .lpr-price {
+  color: #475569;
+  font-size: 1.35rem;
+}
+
+.maa-body .lpr-tier[data-tier="basic"] .lpr-tier-badge {
+  background: linear-gradient(135deg, #94a3b8, #64748b);
+}
+
+.maa-body .lpr-tier[data-tier="basic"] .lpr-order-btn {
+  background: linear-gradient(135deg, #94a3b8, #64748b);
+}
+
+.maa-body .lpr-tier[data-tier="optimal"] {
+  --tier-accent: #E4007C;
+  --tier-accent-dim: rgba(228, 0, 124, 0.1);
+  --tier-border: rgba(228, 0, 124, 0.28);
+  --tier-surface: linear-gradient(165deg, #fff5fa 0%, #ffe8f3 55%, #fce4ef 100%);
+  --tier-shadow-selected: 0 8px 28px rgba(228, 0, 124, 0.14);
+  --tier-shadow-recommended: 0 10px 34px rgba(228, 0, 124, 0.18);
+  --tier-shadow-selected-strong: 0 12px 38px rgba(228, 0, 124, 0.22);
+}
+
+.maa-body .lpr-tier[data-tier="optimal"] .lpr-price {
+  color: #C2006A;
+  font-size: 1.5rem;
+}
+
+.maa-body .lpr-tier[data-tier="optimal"] .lpr-tier-badge {
+  background: linear-gradient(135deg, #E4007C, #FF2D9B);
+}
+
+.maa-body .lpr-tier[data-tier="optimal"] .lpr-benefit-new {
+  color: #9d0056;
+}
+
+.maa-body .lpr-tier[data-tier="optimal"] .lpr-order-btn {
+  background: linear-gradient(135deg, #E4007C 0%, #FF2D9B 50%, #C2006A 100%);
+  box-shadow: 0 4px 18px rgba(228, 0, 124, 0.32);
+}
+
+.maa-body .lpr-tier[data-tier="premium"] {
+  --tier-accent: #00A99D;
+  --tier-accent-dim: rgba(0, 169, 157, 0.12);
+  --tier-border: rgba(0, 169, 157, 0.32);
+  --tier-surface: linear-gradient(155deg, #f0fdfc 0%, #e6faf8 42%, #dcf5f2 100%);
+  --tier-shadow-selected: 0 10px 32px rgba(0, 169, 157, 0.12);
+  --tier-shadow-recommended: 0 12px 38px rgba(0, 169, 157, 0.16);
+  --tier-shadow-selected-strong: 0 14px 42px rgba(0, 169, 157, 0.2);
+}
+
+.maa-body .lpr-tier[data-tier="premium"] .lpr-price {
+  color: #007a72;
+  font-size: 1.6rem;
+}
+
+.maa-body .lpr-tier[data-tier="premium"] h3 {
+  color: #0f4a45;
+}
+
+.maa-body .lpr-tier[data-tier="premium"] .lpr-tier-badge {
+  background: linear-gradient(135deg, #00CFC2, #00A99D);
+}
+
+.maa-body .lpr-tier[data-tier="premium"] .lpr-benefit-new {
+  color: #0f4a45;
+}
+
+.maa-body .lpr-tier[data-tier="premium"] .lpr-product-price {
+  color: #007a72;
+}
+
+.maa-body .lpr-tier[data-tier="premium"] .lpr-order-btn {
+  background: linear-gradient(135deg, #00CFC2 0%, #00A99D 55%, #008f84 100%);
+  box-shadow: 0 4px 16px rgba(0, 169, 157, 0.28);
+}
+
+[data-theme="dark"] .maa-body .lpr-tier[data-tier="basic"] {
+  --tier-surface: linear-gradient(165deg, #1a1f26 0%, #141820 100%);
+  --tier-border: rgba(148, 163, 184, 0.28);
+}
+
+[data-theme="dark"] .maa-body .lpr-tier[data-tier="basic"] .lpr-price {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .maa-body .lpr-tier[data-tier="optimal"] {
+  --tier-surface: linear-gradient(165deg, #24101c 0%, #1a0b14 55%, #150910 100%);
+  --tier-border: rgba(228, 0, 124, 0.35);
+}
+
+[data-theme="dark"] .maa-body .lpr-tier[data-tier="optimal"] .lpr-price {
+  color: #ff6eb8;
+}
+
+[data-theme="dark"] .maa-body .lpr-tier[data-tier="optimal"] .lpr-benefit-new {
+  color: #ffc2e0;
+}
+
+[data-theme="dark"] .maa-body .lpr-tier[data-tier="premium"] {
+  --tier-surface: linear-gradient(155deg, #0a1f1d 0%, #0d1818 42%, #0a1414 100%);
+  --tier-border: rgba(0, 169, 157, 0.35);
+}
+
+[data-theme="dark"] .maa-body .lpr-tier[data-tier="premium"] h3,
+[data-theme="dark"] .maa-body .lpr-tier[data-tier="premium"] .lpr-benefit-new {
+  color: #a7f3ec;
+}
+
+[data-theme="dark"] .maa-body .lpr-tier[data-tier="premium"] .lpr-price,
+[data-theme="dark"] .maa-body .lpr-tier[data-tier="premium"] .lpr-product-price {
+  color: #5eead4;
+}
+
 .maa-body .lpr-tier.recommended {
-  border-color: var(--color-primary);
+  border-color: var(--tier-accent, var(--color-primary));
 }
 
 .maa-body .lpr-tier-badge {
-  background: var(--color-primary);
+  background: var(--tier-accent, var(--color-primary));
   color: #fff;
+  font-family: var(--lpq-font);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+
+.maa-body .lpr-price {
+  font-family: var(--lpq-display);
+  font-weight: 700;
+}
+
+.maa-body .lpr-benefits li {
+  font-family: var(--lpq-font);
+  color: var(--lpq-text);
+}
+
+.maa-body .lpr-benefits li.lpr-benefit-base {
+  color: var(--lpq-muted);
+}
+
+.maa-body .lpq-btn-primary,
+.maa-body .lpr-order-btn {
+  font-family: var(--lpq-font);
+  font-weight: 600;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+}
+
+.maa-body .lpq-btn-primary:hover:not(:disabled),
+.maa-body .lpr-order-btn:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-2px);
+}
+
+.maa-body .lpr-schedule {
+  border-radius: 18px;
+  font-family: var(--lpq-font);
+}
+
+.maa-body .lpr-schedule-header h3 {
+  font-family: var(--lpq-display);
+  font-weight: 600;
+}
+
+.maa-body .lpr-schedule-tier-label {
+  background: var(--lpq-accent-dim);
+  color: var(--color-primary);
+  font-family: var(--lpq-font);
+}
+
+[data-theme="dark"] .maa-body .lpr-schedule {
+  background: var(--lpq-card);
+  border-color: var(--lpq-border);
+}
+
+[data-theme="dark"] .maa-body .lpr-product-img {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.maa-body .lpq-header h1 {
+  font-family: var(--lpq-display);
 }
 
 @media (max-width: 520px) {
