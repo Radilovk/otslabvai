@@ -198,8 +198,9 @@
               "category": "Anti-Aging / Против стареене > Флавоноиди",
               "brand_id": "887",
               "imported_at": "2026-07-10T02:32:35.345Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 0
         },
@@ -270,8 +271,9 @@
               "category": "Anti-Aging / Против стареене > Флавоноиди",
               "brand_id": "866",
               "imported_at": "2026-07-10T02:32:35.345Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 1
         },
@@ -379,8 +381,9 @@
               "category": "Anti-Aging / Против стареене > Флавоноиди",
               "brand_id": "177",
               "imported_at": "2026-07-10T21:33:07.832Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 2
         },
@@ -531,8 +534,9 @@
               "category": "Билки > Адаптогени > Адаптогенни комплекси",
               "brand_id": "177",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 3
         },
@@ -642,8 +646,9 @@
               "category": "Изгаряне на мазнини > L-Карнитин > Ацетил L-Карнитин / ALCAR",
               "brand_id": "887",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 4
         },
@@ -768,8 +773,9 @@
               "category": "Мастни киселини > Рибено масло > Масло от сьомга",
               "brand_id": "214",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 5
         },
@@ -883,8 +889,9 @@
               "category": "Антиоксиданти > Алфа Липоева киселина > Алфа Липоева киселина / S-ALA",
               "brand_id": "769",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 7
         },
@@ -1000,7 +1007,7 @@
                 "price": 23.7,
                 "ean": "5056555210048",
                 "image_url": "https://fitness1.bg/products/v3/p46678/trt_professional_300g-lemon_lime1-d0baaca-1000x1000xwhite.jpg",
-                "available": false
+                "available": true
               },
               {
                 "option_name": "300 грама • Портокал",
@@ -1008,14 +1015,14 @@
                 "price": 23.7,
                 "ean": "5056555210055",
                 "image_url": "https://fitness1.bg/products/v3/p46678/trt_professional_300g-orangeburst1-aee5f59-1000x1000xwhite.jpg",
-                "available": false
+                "available": true
               }
             ]
           },
           "system_data": {
             "manufacturer": "Applied Nutrition",
             "application_type": "Oral",
-            "inventory": 0,
+            "inventory": 10,
             "goals": [
               "Антиейджинг",
               "Хормонално здраве",
@@ -1031,8 +1038,9 @@
               "category": "Хардкор продукти и стимулатори > Стимулатори на тестостерона > Тестостеронови Бустери",
               "brand_id": "745",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 10
         },
@@ -1141,8 +1149,9 @@
               "category": "Антиоксиданти > Цитрусови биофлавоноиди",
               "brand_id": "177",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 13
         }
@@ -1280,8 +1289,9 @@
               "category": "Минерали > Магнезий > Магнезиев бисглицинат / Albion",
               "brand_id": "101",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": true
           },
           "display_order": 0
         },
@@ -1412,8 +1422,9 @@
               "category": "Здраве и тонус > 5-HTP / 5-Хидрокситриптофан",
               "brand_id": "866",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 1
         },
@@ -1563,8 +1574,9 @@
               "category": "Витамини > Витамин Б > Б-Комплекс",
               "brand_id": "177",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 2
         },
@@ -1696,8 +1708,9 @@
               "category": "Здраве и тонус > Тонус и настроение",
               "brand_id": "887",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 3
         },
@@ -1780,7 +1793,7 @@
                 "price": 57.1,
                 "ean": "4260631683287",
                 "image_url": "https://fitness1.bg/products/v3/p47729/ancc-biovital-1000x1000-700x800w-88de61b-1000x1000xwhite.jpg",
-                "available": true
+                "available": false
               }
             ]
           },
@@ -1788,7 +1801,7 @@
             "show_on_homepage": true,
             "manufacturer": "Biovital",
             "application_type": "Oral",
-            "inventory": 10,
+            "inventory": 0,
             "goals": [
               "Клетъчна регенерация",
               "Антиейджинг",
@@ -1804,8 +1817,9 @@
               "category": "Билки > Гъби > Комплекси с гъби",
               "brand_id": "1158",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 4
         },
@@ -1951,8 +1965,9 @@
               "category": "Витамини > ADEK",
               "brand_id": "866",
               "imported_at": "2026-07-10T23:17:00.693Z",
-              "refreshed_at": "2026-08-14T22:36:12.008Z"
-            }
+              "refreshed_at": "2026-08-21T20:14:39.242Z"
+            },
+            "margin_eligible": false
           },
           "display_order": 5
         }
