@@ -1,7 +1,7 @@
 import {
   escapeHtml, debounce, initPortfolioPage, icon
 } from './portfolio-shared.js';
-import { formatPacksDisplay } from './portfolio-pricing.js';
+import { formatPacksDisplay, shouldDisplayPromoPrice } from './portfolio-pricing.js';
 import { getFiltersFromCache, queryCatalogFromCache, getFacetsFromCache, onCatalogUpdated } from './portfolio-cache.js';
 import { isLowMarginPromoUnlocked } from './product-visibility.js';
 import {
@@ -76,8 +76,15 @@ function productCardUrl(item) {
   return `${base}&sku=${encodeURIComponent(item.default_sku_id)}`;
 }
 
+function itemShowsPromoBadge(item) {
+  const min = Number(item.promo_min_price ?? item.min_price) || 0;
+  const compare = Number(item.promo_compare_at_price ?? item.compare_at_price) || 0;
+  const flagged = item.promo_has_adjusted_price ?? item.has_promo;
+  return !!flagged && shouldDisplayPromoPrice(compare, min);
+}
+
 function renderCard(item) {
-  const promoBadge = item.has_promo ? '<span class="pf-badge pf-badge--promo">Промо</span>' : '';
+  const promoBadge = itemShowsPromoBadge(item) ? '<span class="pf-badge pf-badge--promo">Промо</span>' : '';
   const img = item.image || PLACEHOLDER_IMG;
   return `
     <div class="pf-product-card">

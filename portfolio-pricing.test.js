@@ -18,6 +18,8 @@ import {
   formatVariantPriceHtml,
   formatPacksDisplay,
   ceilRetailPrice,
+  shouldDisplayPromoPrice,
+  promoDisplayStats,
 } from './portfolio-pricing.js';
 
 const policy = {
@@ -214,6 +216,38 @@ describe('portfolio-pricing', () => {
     };
     const stats = summarizeGroupPricing([variant]);
     expect(formatGroupPriceHtml(stats)).toBe(formatVariantPriceHtml(variant));
+  });
+
+  test('formatGroupPriceHtml hides strikethrough below 5% discount', () => {
+    const html = formatGroupPriceHtml({
+      min_price: 96,
+      max_price: 96,
+      has_promo: true,
+      compare_at_price: 100,
+    });
+    expect(html).toBe('96.00 €');
+    expect(html).not.toContain('pf-price-compare');
+  });
+
+  test('formatGroupPriceHtml shows strikethrough at 5% discount or more', () => {
+    const html = formatGroupPriceHtml({
+      min_price: 95,
+      max_price: 95,
+      has_promo: true,
+      compare_at_price: 100,
+    });
+    expect(html).toContain('pf-price-compare');
+    expect(html).toContain('100.00');
+    expect(html).toContain('95.00');
+  });
+
+  test('formatVariantPriceHtml hides small discounts', () => {
+    const html = formatVariantPriceHtml({
+      retail_price: 19.2,
+      compare_at_price: 20,
+      is_on_promo: true,
+    });
+    expect(html).toBe('19.20 €');
   });
 
   test('formatGroupPriceHtml shows range without wrong strikethrough', () => {
