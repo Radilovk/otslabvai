@@ -17,37 +17,11 @@ import {
   collectImportedGroupIds
 } from './portfolio-import.js';
 import { SITE_CONTENT_KEYS } from './portfolio-site-products.js';
+import { kvGet, kvPut, kvDelete } from './catalog-kv-client.mjs';
 
-const KV_NS = process.env.CLOUDFLARE_KV_NAMESPACE_ID || 'd220db696e414b7cb3da2b19abd53d0f';
-const ACCOUNT = process.env.CLOUDFLARE_ACCOUNT_ID;
-const TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 const API_KEY = process.env.FITNESS1_API_KEY;
 const SILA_TOKEN = process.env.SILA_API_TOKEN;
-
-async function kvGet(key) {
-  const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/storage/kv/namespaces/${KV_NS}/values/${encodeURIComponent(key)}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`KV get ${key}: ${res.status}`);
-  const text = await res.text();
-  try { return JSON.parse(text); } catch { return text; }
-}
-
-async function kvPut(key, body, contentType = 'application/json') {
-  const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/storage/kv/namespaces/${KV_NS}/values/${encodeURIComponent(key)}`;
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': contentType },
-    body: typeof body === 'string' ? body : JSON.stringify(body)
-  });
-  const data = await res.json();
-  if (!data.success) throw new Error(`KV put ${key} failed: ${JSON.stringify(data.errors)}`);
-}
-
-async function kvDelete(key) {
-  const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/storage/kv/namespaces/${KV_NS}/values/${encodeURIComponent(key)}`;
-  await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${TOKEN}` } });
-}
+const SKIP_LEGACY = process.env.CATALOG_SKIP_LEGACY === '1';
 
 async function fetchProducts() {
   let f1Products = [];
@@ -102,7 +76,9 @@ async function pruneOldVersions(pointer, keep = CATALOG_SYNC_POLICY.RETAIN_VERSI
 
 async function main() {
   if (!API_KEY && !SILA_TOKEN) throw new Error('FITNESS1_API_KEY and/or SILA_API_TOKEN required');
-  if (!TOKEN || !ACCOUNT) throw new Error('Cloudflare credentials required');
+  if (!process.env.CLOUDFLARE_API_TOKEN || !process.env.CLOUDFLARE_ACCOUNT_ID) {
+    throw new Error('Cloudflare credentials required');
+  }
 
   const settings = mergeSettingsForCatalogSync(DEFAULT_SETTINGS, await kvGet('portfolio_settings') || {});
   const products = await fetchProducts();
@@ -163,9 +139,33 @@ async function main() {
   await kvPut(CATALOG_KV.POINTER, pointer);
 
   // Legacy KV for validate-cart, admin, advisor engine
+  if (SKIP_LEGACY) {
+    console.log('Skipping legacy portfolio_* keys (CATALOG_SKIP_LEGACY=1)');
+  } else {
+    await updateLegacyPortfolioKeys(built, indexChanged);
+  }
+
+  console.log(JSON.stringify({
+    ok: true,
+    indexChanged,
+    stockChanged,
+    skipLegacy: SKIP_LEGACY,
+    pointer: { i: pointer.i, s: pointer.s, t: pointer.t },
+    groups: built.groups.length
+  }));
+
+  await refreshSiteProjectsFromCatalog(built.groups);
+}
+
+async function updateLegacyPortfolioKeys(built, indexChanged) {
   console.log('Updating legacy portfolio_* keys...');
-  if (API_KEY) await kvPut('fitness1_api_key', API_KEY, 'text/plain');
-  if (SILA_TOKEN) await kvPut(KV_SILA_TOKEN, normalizeSilaApiToken(SILA_TOKEN), 'text/plain');
+  if (process.env.FITNESS1_API_KEY) {
+    await kvPut('fitness1_api_key', process.env.FITNESS1_API_KEY, 'text/plain');
+  }
+  if (process.env.SILA_API_TOKEN) {
+    await kvPut(KV_SILA_TOKEN, normalizeSilaApiToken(process.env.SILA_API_TOKEN), 'text/plain');
+  }
+
   const freshKv = await kvGet('portfolio_settings') || {};
   await kvPut(
     'portfolio_settings',
@@ -178,20 +178,19 @@ async function main() {
       2
     )
   );
+
+  if (!indexChanged) {
+    console.log('Legacy portfolio_meta/chunks unchanged — skipped');
+    return;
+  }
+
   await kvPut('portfolio_meta', JSON.stringify(built.legacyMeta));
   for (let i = 0; i < built.chunks.length; i += 1) {
     await kvPut(`portfolio_chunk_${i}`, JSON.stringify(built.chunks[i]));
+    if ((i + 1) % 20 === 0 || i === built.chunks.length - 1) {
+      console.log(`  legacy chunks ${i + 1}/${built.chunks.length}`);
+    }
   }
-
-  console.log(JSON.stringify({
-    ok: true,
-    indexChanged,
-    stockChanged,
-    pointer: { i: pointer.i, s: pointer.s, t: pointer.t },
-    groups: built.groups.length
-  }));
-
-  await refreshSiteProjectsFromCatalog(built.groups);
 }
 
 async function refreshSiteProjectsFromCatalog(groups) {
