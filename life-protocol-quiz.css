@@ -571,6 +571,75 @@ body.lpq-body {
   color: #9a7b1a;
 }
 
+/* ── Dark theme: tier surfaces & readable text ── */
+[data-theme="dark"] .lpr-tier[data-tier="basic"] {
+  --tier-accent: #94a3b8;
+  --tier-accent-dim: rgba(148, 163, 184, 0.14);
+  --tier-border: rgba(148, 163, 184, 0.28);
+  --tier-surface: linear-gradient(165deg, #1c2430 0%, #151b24 100%);
+  --tier-shadow-selected: 0 6px 24px rgba(0, 0, 0, 0.35);
+  --tier-shadow-recommended: 0 8px 28px rgba(0, 0, 0, 0.4);
+  --tier-shadow-selected-strong: 0 10px 32px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .lpr-tier[data-tier="basic"] .lpr-price {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .lpr-tier[data-tier="basic"] .lpr-tier-badge {
+  background: #64748b;
+}
+
+[data-theme="dark"] .lpr-tier[data-tier="optimal"] {
+  --tier-accent: #2dd4d8;
+  --tier-accent-dim: rgba(45, 212, 216, 0.14);
+  --tier-border: rgba(45, 212, 216, 0.32);
+  --tier-surface: linear-gradient(165deg, #122428 0%, #0f1e22 55%, #0d1a1e 100%);
+  --tier-shadow-selected: 0 8px 28px rgba(45, 212, 216, 0.12);
+  --tier-shadow-recommended: 0 10px 34px rgba(45, 212, 216, 0.16);
+  --tier-shadow-selected-strong: 0 12px 38px rgba(45, 212, 216, 0.2);
+}
+
+[data-theme="dark"] .lpr-tier[data-tier="optimal"] .lpr-price {
+  color: #5eead4;
+}
+
+[data-theme="dark"] .lpr-tier[data-tier="optimal"] .lpr-benefit-new {
+  color: #ccfbf1;
+}
+
+[data-theme="dark"] .lpr-tier[data-tier="premium"] {
+  --tier-accent: #e8c547;
+  --tier-accent-dim: rgba(232, 197, 71, 0.14);
+  --tier-border: rgba(232, 197, 71, 0.32);
+  --tier-surface: linear-gradient(155deg, #221e14 0%, #1a1710 42%, #141108 100%);
+  --tier-shadow-selected: 0 10px 32px rgba(232, 197, 71, 0.1);
+  --tier-shadow-recommended: 0 12px 38px rgba(232, 197, 71, 0.14);
+  --tier-shadow-selected-strong: 0 14px 42px rgba(232, 197, 71, 0.18);
+}
+
+[data-theme="dark"] .lpr-tier[data-tier="premium"] h3,
+[data-theme="dark"] .lpr-tier[data-tier="premium"] .lpr-benefit-new {
+  color: #f5e6b8;
+}
+
+[data-theme="dark"] .lpr-tier[data-tier="premium"] .lpr-price,
+[data-theme="dark"] .lpr-tier[data-tier="premium"] .lpr-product-price {
+  color: #e8c547;
+}
+
+[data-theme="dark"] .lpr-product-img {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .lpr-product-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .lpr-schedule {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
 .lpr-tier-badge {
   position: absolute;
   top: -10px;
