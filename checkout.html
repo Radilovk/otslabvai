@@ -68,8 +68,13 @@
         .product-list { list-style: none; }
         .product-item { display: flex; gap: 1rem; align-items: center; padding: 1rem 0; border-bottom: 1px solid var(--border-color); }
         .product-item:last-child { border-bottom: none; }
-        .product-image { width: 60px; height: 60px; border-radius: 8px; object-fit: contain; background: rgba(0,0,0,0.03); border: 1px solid var(--border-color); }
-        .product-info { flex-grow: 1; }
+        .product-image { width: 60px; height: 60px; border-radius: 8px; object-fit: contain; background: rgba(0,0,0,0.03); border: 1px solid var(--border-color); flex-shrink: 0; }
+        .product-image--empty { display: block; background: var(--bg-primary); }
+        .product-link { color: inherit; text-decoration: none; display: block; }
+        .product-link:hover .product-image { border-color: var(--color-primary); }
+        .product-info a { color: inherit; text-decoration: none; }
+        .product-info a:hover { color: var(--color-primary); }
+        .product-info { flex-grow: 1; min-width: 0; }
         .product-info h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1rem; font-weight: 600; margin: 0; }
         .product-info span { font-size: 0.9rem; color: var(--text-secondary); }
         .product-controls { display: flex; flex-direction: column; align-items: flex-end; }
@@ -1417,6 +1422,20 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
 
         const saveCart = () => localStorage.setItem('cart', JSON.stringify(cartData));
 
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function buildProductUrl(product) {
+            const productId = String(product.product_id || product.id || '').split('_')[0];
+            return productId ? `product.html?id=${encodeURIComponent(productId)}` : null;
+        }
+
         function cartForApi() {
             return cartData.map((p) => {
                 const sku_id = p.sku_id || p.id;
@@ -1469,10 +1488,21 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
                 const itemEl = document.createElement('li');
                 itemEl.className = 'product-item';
                 itemEl.dataset.id = product.id;
+                const productUrl = buildProductUrl(product);
+                const safeName = escapeHtml(product.name);
+                const mediaHtml = product.image
+                    ? `<img src="${escapeHtml(product.image)}" alt="" class="product-image" loading="lazy" decoding="async">`
+                    : '<div class="product-image product-image--empty" aria-hidden="true"></div>';
+                const linkedMedia = productUrl
+                    ? `<a href="${escapeHtml(productUrl)}" class="product-link" aria-label="Преглед: ${safeName}">${mediaHtml}</a>`
+                    : mediaHtml;
+                const nameHtml = productUrl
+                    ? `<h3><a href="${escapeHtml(productUrl)}">${safeName}</a></h3>`
+                    : `<h3>${safeName}</h3>`;
                 itemEl.innerHTML = `
-                    ${product.image ? `<img src="${product.image}" alt="${product.name}" class="product-image">` : ''}
+                    ${linkedMedia}
                     <div class="product-info">
-                        <h3>${product.name}</h3>
+                        ${nameHtml}
                         <span>Ед. цена: ${product.price.toFixed(2)} €</span>
                     </div>
                     <div class="product-controls">

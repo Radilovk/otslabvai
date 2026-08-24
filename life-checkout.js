@@ -163,14 +163,24 @@ function renderCart() {
 
   list.innerHTML = cart.map((item, idx) => {
     const productId = String(item.product_id || item.id || '').split('_')[0];
-    const nameHtml = productId
-      ? `<a href="life-product.html?id=${encodeURIComponent(productId)}">${escapeHtml(item.name)}</a>`
-      : escapeHtml(item.name);
+    const productUrl = productId
+      ? `life-product.html?id=${encodeURIComponent(productId)}`
+      : null;
+    const safeName = escapeHtml(item.name);
+    const nameHtml = productUrl
+      ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link pf-summary-product-name">${safeName}</a>`
+      : `<strong>${safeName}</strong>`;
+    const mediaHtml = item.image
+      ? `<img src="${escapeHtml(item.image)}" alt="" class="pf-summary-img" loading="lazy" decoding="async">`
+      : '<div class="pf-summary-img pf-summary-img--empty"></div>';
+    const linkedMedia = productUrl
+      ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link" aria-label="Преглед: ${safeName}">${mediaHtml}</a>`
+      : mediaHtml;
     return `
     <li class="pf-summary-item" data-idx="${idx}">
-      ${item.image ? `<img src="${escapeHtml(item.image)}" alt="" class="pf-summary-img" loading="lazy" decoding="async">` : '<div class="pf-summary-img pf-summary-img--empty"></div>'}
+      ${linkedMedia}
       <div class="pf-summary-info">
-        <strong>${nameHtml}</strong>
+        ${nameHtml}
         <div class="pf-qty-row">
           <button type="button" class="pf-qty-btn" data-action="minus" data-idx="${idx}" aria-label="Намали">−</button>
           <span>${item.quantity}</span>
