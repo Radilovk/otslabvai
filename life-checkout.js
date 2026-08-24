@@ -8,9 +8,10 @@ import {
 import {
   validateCartOnServer as sharedValidateCart,
   setStockWarningBanner,
-  syncCartPricesFromServer,
+  syncCartFromServer,
   promoUsesLinePricing
 } from './portfolio-checkout-shared.js';
+import { resolveCartImageUrl } from './cart-image.js';
 import { calculateCheckoutShipping } from './checkout-shipping.js';
 import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-visibility.js';
 
@@ -140,7 +141,7 @@ async function validateCartOnServer({ silent = false } = {}) {
     silent,
     showToast,
     onPriceSync: (serverProducts) => {
-      if (syncCartPricesFromServer(cart, serverProducts)) {
+      if (syncCartFromServer(cart, serverProducts)) {
         saveCart(cart);
         renderCart();
       }
@@ -170,8 +171,9 @@ function renderCart() {
     const nameHtml = productUrl
       ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link pf-summary-product-name">${safeName}</a>`
       : `<strong>${safeName}</strong>`;
-    const mediaHtml = item.image
-      ? `<img src="${escapeHtml(item.image)}" alt="" class="pf-summary-img" loading="lazy" decoding="async">`
+    const imageUrl = resolveCartImageUrl(item, 120);
+    const mediaHtml = imageUrl
+      ? `<img src="${escapeHtml(imageUrl)}" alt="" class="pf-summary-img" loading="lazy" decoding="async" referrerpolicy="no-referrer">`
       : '<div class="pf-summary-img pf-summary-img--empty"></div>';
     const linkedMedia = productUrl
       ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link" aria-label="Преглед: ${safeName}">${mediaHtml}</a>`

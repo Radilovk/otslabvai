@@ -1,5 +1,6 @@
 import { formatPriceEur, buildCumulativeBenefitTiers } from './protocol-quiz-engine.js';
 import { persistAdvisorResult } from './main-advisor-store.js';
+import { resolveImageUrl } from './life-img.js';
 
 const RESULT_KEY = 'mainAdvisorResult';
 const CART_KEY = 'cart';
@@ -229,7 +230,7 @@ function addTierToCart(tier, btn) {
       price: item.price_eur || 0,
       quantity: 1,
       inventory: 99,
-      image: item.image_url || '',
+      image: resolveImageUrl(item.image_url, 400) || '',
     });
     existingIds.add(item.product_id);
   }

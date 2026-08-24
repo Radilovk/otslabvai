@@ -1,6 +1,9 @@
 /**
  * Shared checkout helpers: server cart validation + stock warning banner.
  */
+import { syncCartFromServer, syncCartPricesFromServer } from './cart-image.js';
+
+export { syncCartFromServer, syncCartPricesFromServer };
 
 const STOCK_BANNER_ID = 'cart-stock-warning';
 
@@ -85,26 +88,6 @@ export async function validateCartOnServer({
     if (!silent && showToast) showToast(msg, 'error');
     return false;
   }
-}
-
-/**
- * Map server validate-cart lines back onto local cart items by sku/id.
- */
-export function syncCartPricesFromServer(cart, serverProducts) {
-  if (!Array.isArray(cart) || !Array.isArray(serverProducts)) return false;
-  let changed = false;
-  for (const item of serverProducts) {
-    const sku = String(item.sku_id || '');
-    const idx = cart.findIndex((c) => {
-      const local = String(c.sku_id || c.id || '');
-      return local === sku || local.endsWith(`_${sku}`) || sku.endsWith(`_${local}`);
-    });
-    if (idx >= 0 && item.retail_price != null && cart[idx].price !== item.retail_price) {
-      cart[idx].price = item.retail_price;
-      changed = true;
-    }
-  }
-  return changed;
 }
 
 /** True when promo adjusts per-line prices (not a cart-level discount). */
