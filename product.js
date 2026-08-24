@@ -7,6 +7,7 @@ import { normalizeEffectLabel } from './effect-labels.js';
 import { isProductListed } from './product-visibility.js';
 import { bindProductShareButton, shareIconSvg, absoluteProductUrl } from './product-share.js';
 import { resolveOgImageUrl } from './og-share-meta.js';
+import { getCheckoutReturnPath } from './portfolio-checkout-cart-ui.js';
 
 const DOM = {
     productContent: document.getElementById('product-detail-content'),
@@ -1116,7 +1117,17 @@ function initializeGlobalScripts() {
 //          MAIN INITIALIZATION
 // =======================================================
 
+function applyCheckoutReturnBackLink() {
+    const back = document.querySelector('.sticky-back-button');
+    const returnPath = getCheckoutReturnPath();
+    if (back && returnPath) {
+        back.href = returnPath;
+        back.setAttribute('aria-label', 'Назад към количката');
+    }
+}
+
 async function main() {
+    applyCheckoutReturnBackLink();
     // Initialize logo immediately using cached values if available
     initializeLogoFromCache();
     

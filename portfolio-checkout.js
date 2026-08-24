@@ -15,6 +15,11 @@ import {
   syncCartPricesFromServer,
   promoUsesLinePricing
 } from './portfolio-checkout-shared.js';
+import {
+  withCheckoutReturn,
+  renderCheckoutCartItemMedia,
+  renderCheckoutCartItemTitle,
+} from './portfolio-checkout-cart-ui.js';
 import { calculateCheckoutShipping } from './checkout-shipping.js';
 import {
   applyPortfolioPromoCode,
@@ -105,24 +110,22 @@ function bindSubmitButtons() {
   });
 }
 
+const CHECKOUT_RETURN_PATH = 'portfolio-checkout.html';
+
 function renderCartItemMedia(item, productUrl) {
-  const safeName = escapeHtml(item.name);
-  if (item.image) {
-    const img = `<img src="${escapeHtml(item.image)}" alt="" class="pf-summary-img" loading="lazy" decoding="async">`;
-    return productUrl
-      ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link" aria-label="Преглед: ${safeName}">${img}</a>`
-      : img;
-  }
-  const placeholder = '<div class="pf-summary-img pf-summary-img--empty"></div>';
-  return productUrl
-    ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link" aria-label="Преглед: ${safeName}">${placeholder}</a>`
-    : placeholder;
+  return renderCheckoutCartItemMedia(item, productUrl, escapeHtml);
 }
 
 function renderCartItemTitle(item, productUrl) {
-  const safeName = escapeHtml(item.name);
-  if (!productUrl) return `<strong>${safeName}</strong>`;
-  return `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link pf-summary-product-name">${safeName}</a>`;
+  return renderCheckoutCartItemTitle(item, productUrl, escapeHtml);
+}
+
+function cartProductUrl(item) {
+  if (!item.group_id) return null;
+  return withCheckoutReturn(
+    buildPortfolioProductUrl(item.group_id, item.sku_id || item.id),
+    CHECKOUT_RETURN_PATH
+  );
 }
 
 function hasStockWarning() {
@@ -142,9 +145,7 @@ function renderCart() {
   }
 
   list.innerHTML = cart.map((item, idx) => {
-    const productUrl = item.group_id
-      ? buildPortfolioProductUrl(item.group_id, item.sku_id || item.id)
-      : null;
+    const productUrl = cartProductUrl(item);
     return `
     <li class="pf-summary-item" data-idx="${idx}">
       ${renderCartItemMedia(item, productUrl)}

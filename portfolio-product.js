@@ -10,7 +10,7 @@ import { resolveOgImageUrl } from './og-share-meta.js';
 import { isCatalogListed } from './portfolio-margin-policy.js';
 import { isLowMarginPromoUnlocked } from './product-visibility.js';
 import { variantDisplayPrice, syncPromoCatalogUnlock, PROMO_CHANGED_EVENT } from './portfolio-promo-catalog.js';
-import { loadActivePromo } from './portfolio-promo-ui.js';
+import { getCheckoutReturnPath } from './portfolio-checkout-cart-ui.js';
 
 const DOM = {
   root: document.getElementById('product-root'),
@@ -458,6 +458,11 @@ function initBackButton() {
   const btn = document.getElementById('pf-product-back');
   if (!btn) return;
   btn.addEventListener('click', () => {
+    const checkoutReturn = getCheckoutReturnPath();
+    if (checkoutReturn) {
+      window.location.href = checkoutReturn;
+      return;
+    }
     const cat = product?.category_path?.[0];
     const fallback = cat
       ? `portfolio.html?category=${encodeURIComponent(cat)}`

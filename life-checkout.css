@@ -41,6 +41,33 @@ body.life-checkout-page .pf-checkout-page {
     }
 }
 
+/* life.css sets img { max-width: 100%; height: auto } — keep cart thumbs fixed */
+body.life-checkout-page .pf-summary-thumb-link {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+}
+
+body.life-checkout-page .pf-summary-thumb-link .pf-summary-img,
+body.life-checkout-page .pf-summary-img.pf-summary-img--empty {
+    width: 52px;
+    height: 52px;
+    max-width: 52px;
+    max-height: 52px;
+    object-fit: contain;
+}
+
+@media (min-width: 900px) {
+    body.life-checkout-page .pf-summary-thumb-link,
+    body.life-checkout-page .pf-summary-thumb-link .pf-summary-img,
+    body.life-checkout-page .pf-summary-img.pf-summary-img--empty {
+        width: 56px;
+        height: 56px;
+        max-width: 56px;
+        max-height: 56px;
+    }
+}
+
 /* Life brand tokens on portfolio checkout components */
 body.life-checkout-page {
     --pf-primary: var(--accent, #00c4c8);
