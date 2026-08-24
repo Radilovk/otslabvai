@@ -2277,6 +2277,9 @@ async function refreshOrderStockIfStale(env, order, freshnessMs = SYNC_POLICY.AP
 
 /**
  * Re-validate stock and submit pending B2B lines to Fitness1/Sila.
+ * @param {object} env
+ * @param {object} order
+ * @param {{ sourceOrderIds?: string[], refreshStock?: boolean }} [options]
  * @returns {Promise<{ submitted: { fitness1: object|null, sila: object|null } }>}
  */
 async function submitB2bForOrder(env, order, { sourceOrderIds, refreshStock = true } = {}) {
