@@ -11,24 +11,11 @@ import {
   syncCartPricesFromServer,
   promoUsesLinePricing
 } from './portfolio-checkout-shared.js';
-import {
-  resolveLifeCartProductUrl,
-  withCheckoutReturn,
-  renderCheckoutCartItemMedia,
-  renderCheckoutCartItemTitle,
-} from './portfolio-checkout-cart-ui.js';
 import { calculateCheckoutShipping } from './checkout-shipping.js';
 import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-visibility.js';
 
 const CART_KEY = 'lifeCart';
 const LAST_ORDER_KEY = 'life_last_order';
-const CHECKOUT_RETURN_PATH = 'life-checkout.html';
-
-function cartProductUrl(item) {
-  const base = resolveLifeCartProductUrl(item);
-  if (!base) return null;
-  return withCheckoutReturn(base, CHECKOUT_RETURN_PATH);
-}
 
 let cart = getCart();
 let activePromoCode = null;
@@ -175,13 +162,15 @@ function renderCart() {
   }
 
   list.innerHTML = cart.map((item, idx) => {
-    const productUrl = cartProductUrl(item);
+    const productId = String(item.product_id || item.id || '').split('_')[0];
+    const nameHtml = productId
+      ? `<a href="life-product.html?id=${encodeURIComponent(productId)}">${escapeHtml(item.name)}</a>`
+      : escapeHtml(item.name);
     return `
     <li class="pf-summary-item" data-idx="${idx}">
-      ${renderCheckoutCartItemMedia(item, productUrl, escapeHtml)}
+      ${item.image ? `<img src="${escapeHtml(item.image)}" alt="" class="pf-summary-img" loading="lazy" decoding="async">` : '<div class="pf-summary-img pf-summary-img--empty"></div>'}
       <div class="pf-summary-info">
-        ${renderCheckoutCartItemTitle(item, productUrl, escapeHtml)}
-        ${productUrl ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-view-link">Преглед на продукта</a>` : ''}
+        <strong>${nameHtml}</strong>
         <div class="pf-qty-row">
           <button type="button" class="pf-qty-btn" data-action="minus" data-idx="${idx}" aria-label="Намали">−</button>
           <span>${item.quantity}</span>

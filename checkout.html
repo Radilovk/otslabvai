@@ -68,22 +68,7 @@
         .product-list { list-style: none; }
         .product-item { display: flex; gap: 1rem; align-items: center; padding: 1rem 0; border-bottom: 1px solid var(--border-color); }
         .product-item:last-child { border-bottom: none; }
-        .product-thumb-link {
-            flex-shrink: 0;
-            display: block;
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            background: rgba(0,0,0,0.03);
-        }
-        .product-thumb-link:hover { border-color: var(--color-primary); }
-        .product-image { width: 60px; height: 60px; max-width: 60px; max-height: 60px; border-radius: 8px; object-fit: contain; background: rgba(0,0,0,0.03); border: none; display: block; }
-        .product-info h3 a { color: inherit; text-decoration: none; }
-        .product-info h3 a:hover { color: var(--color-primary); text-decoration: underline; }
-        .product-view-link { display: inline-block; margin-top: 0.25rem; font-size: 0.82rem; color: var(--color-primary); text-decoration: none; }
-        .product-view-link:hover { text-decoration: underline; }
+        .product-image { width: 60px; height: 60px; border-radius: 8px; object-fit: contain; background: rgba(0,0,0,0.03); border: 1px solid var(--border-color); }
         .product-info { flex-grow: 1; }
         .product-info h3 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1rem; font-weight: 600; margin: 0; }
         .product-info span { font-size: 0.9rem; color: var(--text-secondary); }
@@ -1130,15 +1115,6 @@
     } from './portfolio-checkout-shared.js';
 import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-visibility.js';
     import { calculateCheckoutShipping } from './checkout-shipping.js';
-    import { escapeHtml } from './portfolio-shared.js';
-    import {
-      resolveMainCartProductUrl,
-      withCheckoutReturn,
-      renderCheckoutCartItemMedia,
-      renderCheckoutCartItemTitle,
-    } from './portfolio-checkout-cart-ui.js';
-
-    const CHECKOUT_RETURN_PATH = 'checkout.html';
     
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -1490,26 +1466,13 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
             }
 
             cartData.forEach(product => {
-                const productUrl = (() => {
-                    const base = resolveMainCartProductUrl(product);
-                    return base ? withCheckoutReturn(base, CHECKOUT_RETURN_PATH) : null;
-                })();
-                const nameHtml = productUrl
-                    ? `<a href="${productUrl}">${product.name}</a>`
-                    : product.name;
-                const thumbHtml = renderCheckoutCartItemMedia(product, productUrl, escapeHtml, {
-                    thumb: 'product-image',
-                    link: 'product-thumb-link',
-                    empty: 'product-image--empty',
-                });
                 const itemEl = document.createElement('li');
                 itemEl.className = 'product-item';
                 itemEl.dataset.id = product.id;
                 itemEl.innerHTML = `
-                    ${thumbHtml}
+                    ${product.image ? `<img src="${product.image}" alt="${product.name}" class="product-image">` : ''}
                     <div class="product-info">
-                        <h3>${nameHtml}</h3>
-                        ${productUrl ? `<a href="${productUrl}" class="product-view-link">Преглед на продукта</a>` : ''}
+                        <h3>${product.name}</h3>
                         <span>Ед. цена: ${product.price.toFixed(2)} €</span>
                     </div>
                     <div class="product-controls">
