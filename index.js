@@ -453,7 +453,7 @@ const generateInfoCardHTML = component => {
             <div class="info-card-content">
                 <h2>${component.title}</h2>
                 <p>${component.content}</p>
-                ${component.button && component.button.text ? `<a href="${btnUrl}" class="btn-primary">${component.button.text}</a>` : ''}
+                ${component.button && component.button.text ? `<a href="${btnUrl}" class="btn btn-hero-primary">${component.button.text}</a>` : ''}
             </div>
         </div>
     </section>`;
