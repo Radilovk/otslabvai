@@ -23,6 +23,7 @@ import {
   promoSuccessMessage,
 } from './portfolio-promo-ui.js';
 import { syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
+let cart = [];
 let activePromoCode = null;
 
 const els = {};
@@ -582,6 +583,7 @@ async function init() {
   await initPortfolioPage({ active: 'checkout', settingsOnly: true });
   document.body.classList.add('pf-body--checkout');
   cart = getCart();
+  renderCart();
   await enrichCartGroupIds();
   renderCart();
 
