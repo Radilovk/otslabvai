@@ -583,6 +583,7 @@ async function init() {
   await initPortfolioPage({ active: 'checkout', settingsOnly: true });
   document.body.classList.add('pf-body--checkout');
   cart = getCart();
+  renderCart();
   await enrichCartGroupIds();
   renderCart();
 
