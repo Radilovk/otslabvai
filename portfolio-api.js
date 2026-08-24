@@ -43,6 +43,7 @@ import {
 import {
   getB2bProducts,
   isDirectSaleProductLine,
+  orderHasB2bProducts,
 } from './portfolio-order-fulfillment.js';
 import {
   fetchSilaProducts,
@@ -154,6 +155,8 @@ export const DEFAULT_SETTINGS = {
   hero_slides: [],
   hero_carousel_interval: 6000,
   pricing_policy: { ...DEFAULT_PRICING_POLICY },
+  /** When true, B2B lines are sent to Fitness1/Sila immediately on order creation (secures stock). */
+  auto_submit_b2b: true,
   footer: {
     contact_email: 'office@biocode.com',
     contact_phone: '',
@@ -1288,7 +1291,10 @@ async function handleSaveSettings(request, env) {
     footer: incoming.footer ?? current.footer,
     pricing_policy: incoming.pricing_policy
       ? { ...current.pricing_policy, ...incoming.pricing_policy }
-      : current.pricing_policy
+      : current.pricing_policy,
+    auto_submit_b2b: incoming.auto_submit_b2b != null
+      ? Boolean(incoming.auto_submit_b2b)
+      : (current.auto_submit_b2b != null ? Boolean(current.auto_submit_b2b) : true)
   };
   await saveSettings(env, merged);
   return jsonResponse({ success: true, settings: merged });
@@ -1978,6 +1984,8 @@ async function handleCreateOrder(request, env) {
     }
   }
 
+  const settings = await getSettings(env);
+
   const newOrder = {
     id: `${orderPrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     project,
@@ -2000,6 +2008,21 @@ async function handleCreateOrder(request, env) {
     admin_note: '',
     stock_checked_at: stockCheckedAt
   };
+
+  if (isAutoSubmitB2bEnabled(settings) && orderHasB2bProducts(newOrder)) {
+    try {
+      await submitB2bForOrder(env, newOrder, {
+        sourceOrderIds: [newOrder.id],
+        refreshStock: false,
+      });
+    } catch (e) {
+      const msg = e instanceof PortfolioError
+        ? e.message
+        : (e?.message || 'B2B изпращане неуспешно');
+      newOrder.b2b_submit_error = { message: msg, at: new Date().toISOString() };
+      newOrder.status = 'Чака одобрение';
+    }
+  }
 
   const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
   const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
@@ -2225,6 +2248,61 @@ async function handleUpdateOrder(request, env) {
   return jsonResponse({ success: true, order: orders[idx] });
 }
 
+export function isAutoSubmitB2bEnabled(settings) {
+  return settings?.auto_submit_b2b !== false;
+}
+
+function getPendingB2bProducts(order) {
+  return getB2bProducts(order).filter((p) => {
+    const d = p.distributor || DISTRIBUTOR_FITNESS1;
+    if (isSilaDistributor(d)) return !order.sila_order?.id;
+    return !order.fitness1_order?.id;
+  });
+}
+
+function applyB2bSubmissionToOrder(order, submitted) {
+  if (submitted.fitness1) order.fitness1_order = submitted.fitness1;
+  if (submitted.sila) order.sila_order = submitted.sila;
+  order.status = buildOrderStatusLabel(order);
+  if (isOrderFullySubmitted(order)) {
+    delete order.b2b_submit_error;
+  }
+}
+
+async function refreshOrderStockIfStale(env, order, freshnessMs = SYNC_POLICY.APPROVE_FRESHNESS_MS) {
+  if (!isSyncStale(order.stock_checked_at, freshnessMs)) return;
+  const syncedAt = await ensureStockFresh(env, extractCartSkuIds(order.products), freshnessMs);
+  if (syncedAt) order.stock_checked_at = syncedAt;
+}
+
+/**
+ * Re-validate stock and submit pending B2B lines to Fitness1/Sila.
+ * @returns {Promise<{ submitted: { fitness1: object|null, sila: object|null } }>}
+ */
+async function submitB2bForOrder(env, order, { sourceOrderIds, refreshStock = true } = {}) {
+  if (isOrderFullySubmitted(order)) {
+    return { submitted: { fitness1: null, sila: null } };
+  }
+
+  const pendingProducts = getPendingB2bProducts(order);
+  if (!pendingProducts.length) {
+    return { submitted: { fitness1: null, sila: null } };
+  }
+
+  if (refreshStock) {
+    await refreshOrderStockIfStale(env, order);
+  }
+
+  await validateOrderProducts(env, order);
+
+  const submitted = await submitDistributorOrders(env, pendingProducts, {
+    sourceOrderIds: sourceOrderIds || [order.id],
+  });
+
+  applyB2bSubmissionToOrder(order, submitted);
+  return { submitted };
+}
+
 async function handleApproveOrder(request, env) {
   const body = await request.json();
   if (!body?.id) throw new PortfolioError('Липсва ID на поръчка.', 400);
@@ -2240,31 +2318,11 @@ async function handleApproveOrder(request, env) {
     throw new PortfolioError('Поръчката вече е изпратена към дистрибуторите.', 409);
   }
 
-  const skuIds = extractCartSkuIds(order.products);
-  const needsRefresh = isSyncStale(order.stock_checked_at, SYNC_POLICY.APPROVE_FRESHNESS_MS);
-  if (needsRefresh) {
-    await ensureStockFresh(env, skuIds, SYNC_POLICY.APPROVE_FRESHNESS_MS);
-  }
-
-  await validateOrderProducts(env, order);
-
-  const pendingProducts = getB2bProducts(order).filter((p) => {
-    const d = p.distributor || DISTRIBUTOR_FITNESS1;
-    if (isSilaDistributor(d)) return !order.sila_order?.id;
-    return !order.fitness1_order?.id;
-  });
-
-  if (!pendingProducts.length) {
+  if (!getPendingB2bProducts(order).length) {
     throw new PortfolioError('Поръчката няма продукти за B2B изпращане (директни продажби се обработват ръчно).', 400);
   }
 
-  const submitted = await submitDistributorOrders(env, pendingProducts, {
-    sourceOrderIds: [order.id],
-  });
-
-  if (submitted.fitness1) orders[idx].fitness1_order = submitted.fitness1;
-  if (submitted.sila) orders[idx].sila_order = submitted.sila;
-  orders[idx].status = buildOrderStatusLabel(orders[idx]);
+  const { submitted } = await submitB2bForOrder(env, order, { sourceOrderIds: [order.id] });
   if (body.admin_note) orders[idx].admin_note = body.admin_note;
 
   await env.PAGE_CONTENT.put(KV_ORDERS, JSON.stringify(orders, null, 2));

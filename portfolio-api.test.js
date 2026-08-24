@@ -14,6 +14,7 @@ import {
   requestPortfolioCatalogCiSync,
   PortfolioError,
   buildPublicSiteSettings,
+  isAutoSubmitB2bEnabled,
 } from './portfolio-api.js';
 import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
 
@@ -374,7 +375,7 @@ describe('Portfolio Fitness1 order approval', () => {
       pack: '1 кг',
       option: 'Шоколад',
       available: true,
-      b2b_price: 10,
+      b2b_price: 9,
       retail_price: 13
     }]
   }];
@@ -498,6 +499,124 @@ describe('Portfolio Fitness1 order approval', () => {
     expect(data.orders).toHaveLength(2);
     expect(data.orders[0].fitness1_order.batch).toBe(true);
     expect(data.orders[0].fitness1_order.id).toBe(88888);
+  });
+
+  test('isAutoSubmitB2bEnabled defaults to true unless explicitly false', () => {
+    expect(isAutoSubmitB2bEnabled({})).toBe(true);
+    expect(isAutoSubmitB2bEnabled({ auto_submit_b2b: true })).toBe(true);
+    expect(isAutoSubmitB2bEnabled({ auto_submit_b2b: false })).toBe(false);
+  });
+
+  test('POST /portfolio/orders auto-submits B2B to Fitness1 on creation', async () => {
+    const store = new Map([
+      ['portfolio_settings', JSON.stringify({ auto_submit_b2b: true, global_markup_percent: 30 })],
+      ['portfolio_meta', JSON.stringify(catalogMeta)],
+      ['portfolio_chunk_0', JSON.stringify(catalogChunk)],
+      ['portfolio_orders', JSON.stringify([])]
+    ]);
+
+    const env = {
+      FITNESS1_API_KEY: 'test-key',
+      PAGE_CONTENT: {
+        get: async (key) => store.get(key) ?? null,
+        put: async (key, value) => { store.set(key, value); },
+        delete: async (key) => { store.delete(key); }
+      }
+    };
+
+    const originalFetch = global.fetch;
+    let fetchCalled = false;
+    global.fetch = async (url, opts) => {
+      fetchCalled = true;
+      expect(url).toContain('https://fitness1.bg/b2b/api/orders/create');
+      const body = JSON.parse(opts.body);
+      expect(body.products).toEqual([{ barcode: '1234567890', quantity: 1 }]);
+      return {
+        ok: true,
+        json: async () => ({ status: 'ok', order: { id: 77777, price: '10.00' } })
+      };
+    };
+
+    const request = new Request('https://example.com/portfolio/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer: {
+          firstName: 'Иван',
+          lastName: 'Петров',
+          phone: '0888123456',
+          policyConsent: true,
+          terms: true,
+          deliveryMethod: 'courier',
+          courierCompany: 'Speedy',
+          courierOfficeId: '123',
+          courierOfficeName: 'Офис София'
+        },
+        products: [{ sku_id: '1', quantity: 1 }],
+        summary: { total: '14.64 €' }
+      })
+    });
+    const res = await handlePortfolioRoute(request, env, new URL(request.url));
+    global.fetch = originalFetch;
+
+    expect(res.status).toBe(201);
+    expect(fetchCalled).toBe(true);
+    const data = await res.json();
+    expect(data.order.status).toBe('Изпратена към доставчик');
+    expect(data.order.fitness1_order.id).toBe(77777);
+  });
+
+  test('POST /portfolio/orders skips auto-submit when disabled in settings', async () => {
+    const store = new Map([
+      ['portfolio_settings', JSON.stringify({ auto_submit_b2b: false, global_markup_percent: 30 })],
+      ['portfolio_meta', JSON.stringify(catalogMeta)],
+      ['portfolio_chunk_0', JSON.stringify(catalogChunk)],
+      ['portfolio_orders', JSON.stringify([])]
+    ]);
+
+    const env = {
+      FITNESS1_API_KEY: 'test-key',
+      PAGE_CONTENT: {
+        get: async (key) => store.get(key) ?? null,
+        put: async (key, value) => { store.set(key, value); },
+        delete: async (key) => { store.delete(key); }
+      }
+    };
+
+    const originalFetch = global.fetch;
+    let fetchCalled = false;
+    global.fetch = async () => {
+      fetchCalled = true;
+      return { ok: true, json: async () => ({ status: 'ok', order: { id: 1 } }) };
+    };
+
+    const request = new Request('https://example.com/portfolio/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer: {
+          firstName: 'Иван',
+          lastName: 'Петров',
+          phone: '0888123456',
+          policyConsent: true,
+          terms: true,
+          deliveryMethod: 'courier',
+          courierCompany: 'Speedy',
+          courierOfficeId: '123',
+          courierOfficeName: 'Офис София'
+        },
+        products: [{ sku_id: '1', quantity: 1 }],
+        summary: { total: '14.64 €' }
+      })
+    });
+    const res = await handlePortfolioRoute(request, env, new URL(request.url));
+    global.fetch = originalFetch;
+
+    expect(res.status).toBe(201);
+    expect(fetchCalled).toBe(false);
+    const data = await res.json();
+    expect(data.order.status).toBe('Чака одобрение');
+    expect(data.order.fitness1_order).toBeNull();
   });
 
   test('GET /portfolio/orders/summary returns pending count', async () => {

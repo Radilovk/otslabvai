@@ -5464,6 +5464,19 @@ function renderPortfolioSettings() {
                 <label for="pf-reseller-note">Бележка за админ</label>
                 <input type="text" id="pf-reseller-note" value="${escAdminHtml(s.reseller_delivery_note || '')}" style="width:100%;max-width:500px;padding:0.5rem;">
             </div>
+            <fieldset style="margin-top:1.25rem;border:1px solid var(--border-color);border-radius:8px;padding:1rem;">
+                <legend>B2B изпращане</legend>
+                <label style="display:flex;align-items:flex-start;gap:0.5rem;">
+                    <input type="checkbox" id="pf-auto-submit-b2b" ${s.auto_submit_b2b !== false ? 'checked' : ''} style="margin-top:0.2rem;">
+                    <span>
+                        <strong>Автоматично към доставчик при поръчка</strong><br>
+                        <span style="font-size:0.85rem;color:var(--text-secondary);">
+                            Резервира наличност веднага (отделна B2B поръчка за всеки клиент). При грешка поръчката остава за ръчно изпращане.
+                            Ръчното „Обобщи“ е само ако искате една сборна поръчка към доставчик.
+                        </span>
+                    </span>
+                </label>
+            </fieldset>
         </div>
         <div class="list-item" style="background:var(--bg-secondary);padding:1.5rem;border-radius:12px;margin-bottom:1rem;">
             <h3 style="margin-top:0;">Hero банер</h3>
@@ -5586,6 +5599,7 @@ async function savePortfolioSettings() {
         reseller_phone: document.getElementById('pf-reseller-phone')?.value || '',
         reseller_address: document.getElementById('pf-reseller-address')?.value || '',
         reseller_delivery_note: document.getElementById('pf-reseller-note')?.value || '',
+        auto_submit_b2b: document.getElementById('pf-auto-submit-b2b')?.checked ?? true,
         pricing_policy: {
             ...(current.pricing_policy || {}),
             standard_mode: standardMode,
@@ -5711,6 +5725,7 @@ function renderPortfolioOrders() {
                 </select>
                 <span class="mobile-status-badge"></span>
                 ${formatDistributorOrderRefs(order) ? `<br><small>B2B ${escAdminHtml(formatDistributorOrderRefs(order))}</small>` : ''}
+                ${order.b2b_submit_error?.message ? `<br><small style="color:#c0392b;">B2B грешка: ${escAdminHtml(order.b2b_submit_error.message)}</small>` : ''}
             </td>
             <td data-label="Действия" class="portfolio-order-actions" onclick="event.stopPropagation()">
                 <button type="button" class="btn btn-sm btn-secondary portfolio-detail-btn" data-id="${escAdminHtml(order.id)}">Детайли</button>
@@ -5994,8 +6009,8 @@ async function approvePortfolioOrdersBatch() {
         return;
     }
     const msg = ids.length === 1
-        ? 'Изпращане на поръчката към B2B доставчик?'
-        : `Обобщаване на ${ids.length} поръчки в една B2B поръчка? Продуктите ще се сумират по баркод. Данните за доставка до всеки клиент остават в админ панела за ваше разпределение.`;
+        ? 'Повторно изпращане към B2B доставчик (ако автоматичното не успе)?'
+        : `Обобщаване на ${ids.length} поръчки в една B2B поръчка? Продуктите ще се сумират по баркод. Полезно само ако автоматичното изпращане е изключено. Данните за доставка до всеки клиент остават в админ панела.`;
     if (!confirm(msg)) return;
 
     try {
