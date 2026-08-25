@@ -12,10 +12,9 @@ import {
 import {
   validateCartOnServer as sharedValidateCart,
   setStockWarningBanner,
-  syncCartFromServer,
+  syncCartPricesFromServer,
   promoUsesLinePricing
 } from './portfolio-checkout-shared.js';
-import { resolveCartImageUrl } from './cart-image.js';
 import { calculateCheckoutShipping } from './checkout-shipping.js';
 import {
   applyPortfolioPromoCode,
@@ -109,9 +108,8 @@ function bindSubmitButtons() {
 
 function renderCartItemMedia(item, productUrl) {
   const safeName = escapeHtml(item.name);
-  const imageUrl = resolveCartImageUrl(item, 120);
-  if (imageUrl) {
-    const img = `<img src="${escapeHtml(imageUrl)}" alt="" class="pf-summary-img" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
+  if (item.image) {
+    const img = `<img src="${escapeHtml(item.image)}" alt="" class="pf-summary-img" loading="lazy" decoding="async">`;
     return productUrl
       ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link" aria-label="Преглед: ${safeName}">${img}</a>`
       : img;
@@ -194,7 +192,7 @@ async function validateCartOnServer({ silent = false } = {}) {
     silent,
     showToast,
     onPriceSync: (serverProducts) => {
-      if (syncCartFromServer(cart, serverProducts)) {
+      if (syncCartPricesFromServer(cart, serverProducts)) {
         saveCart(cart);
         renderCart();
       }
