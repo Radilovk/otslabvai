@@ -37,7 +37,7 @@ function buildSampleProducts() {
         pack: g % 2 === 0 ? '2 кг' : '1 кг',
         option,
         category: cat,
-        image: '',
+        image: `https://picsum.photos/seed/pf-${groupId}/400/400`,
         label: '',
         barcode: String(100000 + sku),
         b2b_price: (8 + (g % 5)).toFixed(2),

@@ -1857,6 +1857,27 @@ html[data-pf-cart] .pf-fab-cart { display: grid; }
   line-height: 1.45;
 }
 
+.pf-promo-conditions {
+  margin: 0 0 1rem;
+}
+
+.pf-promo-conditions-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--pf-ink);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.pf-promo-conditions-list li + li {
+  margin-top: 0.45rem;
+}
+
+.pf-promo-conditions-ok {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
 .pf-muted-text { color: var(--pf-muted); }
 
 /* ─── Product detail ─── */

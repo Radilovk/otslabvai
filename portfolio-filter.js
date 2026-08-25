@@ -2,6 +2,11 @@
 import { matchesSearchQuery, tokenizeQuery } from './portfolio-search.js';
 import { isCatalogListed } from './portfolio-margin-policy.js';
 
+function hasCatalogImage(image) {
+  const img = String(image || '').trim();
+  return /^https?:\/\//i.test(img) || img.startsWith('//');
+}
+
 export { matchesSearchQuery, tokenizeQuery, buildSearchText, enrichIndexEntry } from './portfolio-search.js';
 
 /** Filters the index without sorting – reused by filterIndex and by facet counting. */
@@ -28,6 +33,7 @@ export function applyFilters(index, params, meta = {}) {
   } else {
     results = results.filter((i) => i.available);
   }
+  results = results.filter((i) => hasCatalogImage(i.image));
   const allowLowMargin = params.include_low_margin === '1' || params.include_low_margin === true;
   if (!allowLowMargin) {
     results = results.filter((i) => isCatalogListed(i));

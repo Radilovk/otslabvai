@@ -21,6 +21,7 @@ import {
   clearPortfolioPromo,
   loadActivePromo,
   promoSuccessMessage,
+  openPromoConditionsModal,
 } from './portfolio-promo-ui.js';
 import { syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
 let cart = [];
@@ -524,6 +525,7 @@ async function applyPromoCode() {
     }
     activePromoCode = result.promo;
     setPromoMessage(result.message, 'success');
+    openPromoConditionsModal(result.promo, 'pf-promo-conditions-modal');
     if (promoUsesLinePricing(result.promo)) {
       await validateCartOnServer({ silent: true });
     }

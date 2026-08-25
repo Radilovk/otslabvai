@@ -169,17 +169,24 @@
         <div class="pf-modal-overlay" data-pf-promo-close tabindex="-1"></div>
         <div class="pf-modal-content pf-promo-modal-content">
             <div class="pf-modal-header">
-                <h3 id="pf-promo-modal-title">Промо код</h3>
+                <h3 id="pf-promo-modal-title" data-pf-promo-title>Промо код</h3>
                 <button type="button" class="pf-modal-close" data-pf-promo-close aria-label="Затвори">×</button>
             </div>
             <div class="pf-promo-modal-body">
-                <p class="pf-promo-modal-lead">Въведете код за отстъпка или специални цени в количката.</p>
-                <div class="pf-promo-row">
-                    <input type="text" id="pf-promo-modal-input" placeholder="Напр. WELCOME10" autocomplete="off" autocapitalize="characters" spellcheck="false">
-                    <button type="button" class="pf-btn pf-btn-primary" id="pf-promo-modal-apply">Приложи</button>
+                <div data-pf-promo-form>
+                    <p class="pf-promo-modal-lead">Въведете код за отстъпка или специални цени в количката.</p>
+                    <div class="pf-promo-row">
+                        <input type="text" id="pf-promo-modal-input" data-pf-promo-input placeholder="Напр. WELCOME10" autocomplete="off" autocapitalize="characters" spellcheck="false">
+                        <button type="button" class="pf-btn pf-btn-primary" id="pf-promo-modal-apply" data-pf-promo-apply>Приложи</button>
+                    </div>
+                    <p class="pf-promo-msg" id="pf-promo-modal-msg" data-pf-promo-msg hidden></p>
+                    <p class="pf-promo-modal-note">Кодът се запазва за количката. Някои кодове отключват и допълнителни продукти в каталога.</p>
                 </div>
-                <p class="pf-promo-msg" id="pf-promo-modal-msg" hidden></p>
-                <p class="pf-promo-modal-note">Кодът се запазва за количката. Някои кодове отключват и допълнителни продукти в каталога.</p>
+                <div data-pf-promo-success hidden>
+                    <p class="pf-promo-modal-lead">Условия на приложения промо код:</p>
+                    <div data-pf-promo-conditions class="pf-promo-conditions"></div>
+                    <button type="button" class="pf-btn pf-btn-primary pf-promo-conditions-ok" data-pf-promo-close>Разбрах</button>
+                </div>
             </div>
         </div>
     </div>

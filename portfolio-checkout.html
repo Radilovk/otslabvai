@@ -168,6 +168,23 @@
     </button>
     <div class="pf-toast-container" id="toast-container"></div>
 
+    <div id="pf-promo-conditions-modal" class="pf-modal" role="dialog" aria-labelledby="pf-promo-checkout-title" aria-hidden="true">
+        <div class="pf-modal-overlay" data-pf-promo-close tabindex="-1"></div>
+        <div class="pf-modal-content pf-promo-modal-content">
+            <div class="pf-modal-header">
+                <h3 id="pf-promo-checkout-title" data-pf-promo-title>Промо код</h3>
+                <button type="button" class="pf-modal-close" data-pf-promo-close aria-label="Затвори">×</button>
+            </div>
+            <div class="pf-promo-modal-body">
+                <div data-pf-promo-success>
+                    <p class="pf-promo-modal-lead">Условия на приложения промо код:</p>
+                    <div data-pf-promo-conditions class="pf-promo-conditions"></div>
+                    <button type="button" class="pf-btn pf-btn-primary pf-promo-conditions-ok" data-pf-promo-close>Разбрах</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="speedy-map-modal" class="pf-modal" role="dialog" aria-modal="true" aria-label="Избор на офис на Спиди">
         <div class="pf-modal-overlay" id="speedy-map-overlay" aria-hidden="true"></div>
         <div class="pf-modal-content pf-modal-map">

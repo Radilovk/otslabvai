@@ -12,6 +12,11 @@ import { isLowMarginPromoUnlocked } from './product-visibility.js';
 import { variantDisplayPrice, syncPromoCatalogUnlock, PROMO_CHANGED_EVENT } from './portfolio-promo-catalog.js';
 import { loadActivePromo } from './portfolio-promo-ui.js';
 
+function imageFromDescription(html) {
+  const m = String(html || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m ? m[1].trim() : '';
+}
+
 const DOM = {
   root: document.getElementById('product-root'),
   toastContainer: document.getElementById('toast-container')
@@ -428,6 +433,12 @@ async function loadProduct() {
     if (!product) {
       DOM.root.innerHTML = '<div class="pf-error">Продуктът не е намерен.</div>';
       return;
+    }
+    if (!product.image) {
+      product.image = imageFromDescription(product.description);
+    }
+    for (const v of product.variants || []) {
+      v.image = v.image || product.image || '';
     }
     product.variants = (product.variants || []).filter((v) => v.available);
     if (!product.variants.length) {

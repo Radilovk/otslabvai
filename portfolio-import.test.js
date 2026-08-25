@@ -409,7 +409,7 @@ describe('handlePortfolioImportRoute', () => {
       loadProjectContent: jest.fn(async () => makeContent()),
       saveProjectContent: jest.fn(async () => {}),
       getCatalogMeta: jest.fn(async () => ({
-        index: [{ group_id: '100', name: 'Test Protein', brand: 'TestBrand', category: 'Протеини > Whey', category_top: 'Протеини', min_price: 15.9, available: true }],
+        index: [{ group_id: '100', name: 'Test Protein', brand: 'TestBrand', category: 'Протеини > Whey', category_top: 'Протеини', min_price: 15.9, available: true, image: 'http://example.com/img.jpg' }],
         brands: [], categories: []
       })),
       loadGroupsByIds: jest.fn(async (e, ids) => {
