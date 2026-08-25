@@ -1,6 +1,5 @@
 /**
- * Cart line image resolution for main / life / portfolio checkouts.
- * Handles manual products, Fitness1/Sila imports, and API-added lines.
+ * Daotslabna checkout cart image resolution (Fitness1 proxy + page_content fallback).
  */
 import { resolveImageUrl } from './life-img.js';
 import { findSiteProduct, siteProductToOrderLine } from './portfolio-site-products.js';
