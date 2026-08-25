@@ -42,7 +42,7 @@ async function assertCheckout(page, { cartKey, cartItems, path, productLinkPatte
     throw new Error(`${label}: subtotal not updated (${subtotal})`);
   }
 
-  const thumb = page.locator('#product-list .pf-summary-img, #product-list .product-image').first();
+  const thumb = page.locator('#product-list .pf-summary-img, #product-list .cart-item-thumb').first();
   await thumb.waitFor({ timeout: 5000 });
 
   const link = page.locator(`#product-list a[href*="${productLinkPattern}"]`).first();
