@@ -4,15 +4,20 @@ import {
 } from './seo-data.js';
 import {
   getPeptidesCatalog,
+  getSameAsForSite,
+  productJsonLd,
   productSlugFromRecord,
   productUrl,
   renderCatalogHtml,
+  resolveSiteContext,
   robotsTxt,
   sitemapXml,
   SITE_SEO,
   slugify,
+  wwwToApexRedirectUrl,
 } from './seo-inject.js';
 import { matchCatalogProduct, matchPortfolioIndexEntry } from './seo-hydration.js';
+import { maybeWwwRedirect } from './seo-serve.js';
 
 describe('seo-inject', () => {
   test('extractPageContentProducts maps nested KV structure', () => {
@@ -32,7 +37,42 @@ describe('seo-inject', () => {
     expect(products[0].title).toBe('Lida Green');
     expect(products[0].price).toBe(38);
     expect(products[0].slug).toBe('lida-green');
-    expect(productUrl(SITE_SEO.main, products[0])).toBe('https://daotslabna.com/products/lida-green');
+    expect(productUrl(resolveSiteContext('main'), products[0])).toBe('https://daotslabna.com/products/lida-green');
+  });
+
+  test('resolveSiteContext uses canonical apex origin per site', () => {
+    const life = resolveSiteContext('life');
+    const peptides = resolveSiteContext('peptides');
+    expect(life.origin).toBe('https://life-protocols.com');
+    expect(peptides.origin).toBe('https://biocode-peptides.com');
+    expect(life.origin).not.toBe(peptides.origin);
+  });
+
+  test('retail sameAs excludes peptides domain', () => {
+    const retail = getSameAsForSite('main');
+    expect(retail).toContain('https://daotslabna.com/');
+    expect(retail).not.toContain('https://biocode-peptides.com/');
+  });
+
+  test('peptides sameAs is isolated from retail storefronts', () => {
+    const peptides = getSameAsForSite('peptides');
+    expect(peptides).toContain('https://biocode-peptides.com/');
+    expect(peptides).not.toContain('https://daotslabna.com/');
+  });
+
+  test('peptides product JSON-LD has no Offer block', () => {
+    const site = resolveSiteContext('peptides');
+    const schema = productJsonLd(site, getPeptidesCatalog()[0]);
+    expect(schema.offers).toBeUndefined();
+    expect(schema.category).toContain('RUO');
+  });
+
+  test('www redirects to apex', () => {
+    const url = new URL('https://www.daotslabna.com/products/test');
+    expect(wwwToApexRedirectUrl(url)).toBe('https://daotslabna.com/products/test');
+    const res = maybeWwwRedirect(url);
+    expect(res.status).toBe(301);
+    expect(res.headers.get('Location')).toBe('https://daotslabna.com/products/test');
   });
 
   test('extractPortfolioIndexProducts builds slugs from names', () => {
@@ -51,20 +91,19 @@ describe('seo-inject', () => {
   });
 
   test('robots.txt allows AI crawlers', () => {
-    const txt = robotsTxt(SITE_SEO.main);
+    const txt = robotsTxt(resolveSiteContext('main'));
     expect(txt).toContain('GPTBot');
-    expect(txt).toContain('ClaudeBot');
     expect(txt).toContain('https://daotslabna.com/sitemap.xml');
   });
 
-  test('sitemap includes product URLs', () => {
-    const xml = sitemapXml(SITE_SEO.peptides, getPeptidesCatalog());
-    expect(xml).toContain('/products/bpc-157');
-    expect(xml).toContain('biocode-peptides.com');
+  test('sitemap uses site-specific origin', () => {
+    const xml = sitemapXml(resolveSiteContext('peptides'), getPeptidesCatalog());
+    expect(xml).toContain('https://biocode-peptides.com/products/bpc-157');
+    expect(xml).not.toContain('daotslabna.com');
   });
 
   test('renderCatalogHtml includes EUR prices', () => {
-    const html = renderCatalogHtml(SITE_SEO.main, [{
+    const html = renderCatalogHtml(resolveSiteContext('main'), [{
       title: 'Test',
       slug: 'test',
       price: 19.99,

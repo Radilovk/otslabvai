@@ -135,21 +135,48 @@ curl -s https://biocode-peptides.com/llms.txt | head -15
 
 ---
 
-## Мрежова идентичност (4 сайта = 1 граф)
+## Мрежова идентичност
 
-Всички сайтове вече споделят `sameAs` в JSON-LD:
+**Retail граф (3 сайта):** `daotslabna.com` ↔ `life-protocols.com` ↔ `biocode-bg.com` + GitHub
 
-- daotslabna.com
-- life-protocols.com
-- biocode-bg.com
-- biocode-peptides.com
-- github.com/Radilovk/otslabvai
+**Peptides е изолиран** — `biocode-peptides.com` НЕ е в `sameAs` на retail сайтовете (YMYL/research isolation). Техническият SEO слой за peptides остава пълен.
 
-**Твоята задача:** добави реални социални профили (Facebook, Instagram, LinkedIn) в `BRAND_NETWORK.sameAs` в `seo-inject.js` когато ги имаш.
+Peptides JSON-LD: `Product` без `Offer`, категория RUO — без търговски health claims.
 
 ---
 
-## Какво НЕ очаквай
+## Pre-merge checklist (ревю)
+
+| Проверка | Как |
+|----------|-----|
+| Няма cloaking | Няма `User-Agent` branch в seo-*; няма `Vary: User-Agent` |
+| Per-host canonical | `resolveSiteContext()` → apex origin per siteId |
+| www → apex | 301 от `www.*` към apex |
+| Invalid slug | HTTP 404, не soft 200 |
+| Invalid legacy id | HTTP 404 на `product.html?id=bad` |
+| KV cacheTtl | `get(key, { type: 'json', cacheTtl: 300 })` |
+
+```bash
+# Cloaking — същият HTML с и без UA
+curl -s https://daotslabna.com/ | grep -c "seo-catalog"
+curl -s -A "GPTBot/1.1" https://daotslabna.com/ | grep -c "seo-catalog"
+
+# Per-host canonical
+for d in daotslabna.com life-protocols.com biocode-bg.com biocode-peptides.com; do
+  echo "== $d"
+  curl -s "https://$d/" | grep -o 'rel="canonical" href="[^"]*"'
+  curl -s "https://$d/sitemap.xml" | grep -o '<loc>[^<]*</loc>' | head -2
+done
+
+# Redirect + 404
+curl -sIL "https://daotslabna.com/product.html?id=prod-lida-green" | grep -E "HTTP|location"
+curl -sI "https://daotslabna.com/products/nesushtestvuvasht" | head -1
+curl -sI "https://www.daotslabna.com/" | grep -i location
+```
+
+---
+
+## Базова линия (направи ДНЕС, преди deploy)
 
 | Мит | Реалност |
 |-----|----------|

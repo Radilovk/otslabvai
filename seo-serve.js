@@ -1,10 +1,12 @@
 /**
- * Edge SEO/AEO request handler — robots, sitemap, llms.txt, product URLs, HTML injection.
+ * Edge SEO/AEO request handler.
+ *
+ * ANTI-CLOAKING: HTML injection runs for ALL requests (no User-Agent branching).
+ * Client hydration removes #seo-catalog / #seo-product after JS loads.
+ * Responses must NOT set Vary: User-Agent.
  */
 
 import {
-  SITE_SEO,
-  buildSlugIndex,
   injectSeo,
   isCatalogHomePath,
   itemListJsonLd,
@@ -18,8 +20,10 @@ import {
   renderCatalogHtml,
   renderPeptidesProductDocument,
   renderProductHtml,
+  resolveSiteContext,
   robotsTxt,
   sitemapXml,
+  wwwToApexRedirectUrl,
 } from './seo-inject.js';
 import {
   findProductByLegacyId,
@@ -30,6 +34,7 @@ import { getSiteForHost, mapAssetPath } from './hostname-routing.js';
 
 const TEXT_PLAIN = { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'public, max-age=3600' };
 const TEXT_XML = { 'content-type': 'application/xml; charset=utf-8', 'cache-control': 'public, max-age=3600' };
+const HTML_CACHE = 'public, max-age=300, stale-while-revalidate=60';
 
 function assetFetchInit(request) {
   const init = { method: request.method, headers: request.headers };
@@ -37,9 +42,26 @@ function assetFetchInit(request) {
   return init;
 }
 
-async function fetchMappedAsset(env, request, site, pathname) {
+function redirect(url, status = 301) {
+  return new Response(null, { status, headers: { Location: url } });
+}
+
+function withHtmlCacheHeaders(response, status = response.status) {
+  const headers = new Headers(response.headers);
+  headers.delete('content-length');
+  headers.delete('vary');
+  headers.set('cache-control', HTML_CACHE);
+  return new Response(response.body, { status, headers });
+}
+
+export function maybeWwwRedirect(url) {
+  const target = wwwToApexRedirectUrl(url);
+  return target ? redirect(target) : null;
+}
+
+async function fetchMappedAsset(env, request, siteId, pathname) {
   if (!env.ASSETS) return null;
-  const mappedPath = mapAssetPath(site, pathname);
+  const mappedPath = mapAssetPath(siteId, pathname);
   const assetUrl = new URL(request.url);
   assetUrl.pathname = mappedPath;
   let response = await env.ASSETS.fetch(new Request(assetUrl.toString(), assetFetchInit(request)));
@@ -50,12 +72,8 @@ async function fetchMappedAsset(env, request, site, pathname) {
   return response;
 }
 
-function redirect(url, status = 301) {
-  return new Response(null, { status, headers: { Location: url } });
-}
-
 export async function maybeLegacyProductRedirect(url, env, siteId) {
-  const site = SITE_SEO[siteId];
+  const site = resolveSiteContext(siteId);
   if (!site) return null;
 
   const path = url.pathname.split('?')[0];
@@ -71,16 +89,21 @@ export async function maybeLegacyProductRedirect(url, env, siteId) {
 
   const products = await loadSiteCatalog(env, siteId);
   const product = findProductByLegacyId(products, legacyId);
-  if (!product) return null;
+  if (!product) {
+    return new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+  }
 
   return redirect(productUrl(site, product));
 }
 
 export async function handleSeoRequest(request, env, url) {
+  const wwwRedirect = maybeWwwRedirect(url);
+  if (wwwRedirect) return wwwRedirect;
+
   const siteId = getSiteForHost(url.hostname);
   if (!siteId) return null;
 
-  const site = SITE_SEO[siteId];
+  const site = resolveSiteContext(siteId);
   const pathname = url.pathname.split('?')[0];
 
   if (pathname === '/robots.txt') {
@@ -109,10 +132,12 @@ export async function handleSeoRequest(request, env, url) {
 }
 
 async function serveSeoProductPage(request, env, url, siteId, slug) {
-  const site = SITE_SEO[siteId];
+  const site = resolveSiteContext(siteId);
   const products = await loadSiteCatalog(env, siteId);
   const product = findProductBySlug(products, slug);
-  if (!product) return new Response('Not found', { status: 404 });
+  if (!product) {
+    return new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+  }
 
   const canonical = productUrl(site, product);
 
@@ -120,16 +145,17 @@ async function serveSeoProductPage(request, env, url, siteId, slug) {
     return new Response(renderPeptidesProductDocument(site, product), {
       headers: {
         'content-type': 'text/html; charset=utf-8',
-        'cache-control': 'public, max-age=300, stale-while-revalidate=60',
+        'cache-control': HTML_CACHE,
       },
     });
   }
 
   const templatePath = site.productTemplate;
   const response = await fetchMappedAsset(env, request, siteId, templatePath);
-  if (!response?.ok) return new Response('Not found', { status: 404 });
+  if (!response?.ok) {
+    return new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+  }
 
-  const canonical = productUrl(site, product);
   const head = [
     ldTag(orgJsonLd(site)),
     ldTag(productJsonLd(site, product)),
@@ -149,9 +175,7 @@ async function serveSeoProductPage(request, env, url, siteId, slug) {
     canonical,
   });
 
-  const headers = new Headers(enhanced.headers);
-  headers.set('cache-control', 'public, max-age=300, stale-while-revalidate=60');
-  return new Response(enhanced.body, { status: enhanced.status, headers });
+  return withHtmlCacheHeaders(enhanced);
 }
 
 export async function maybeEnhanceSeoHtml(response, ctx) {
@@ -161,7 +185,7 @@ export async function maybeEnhanceSeoHtml(response, ctx) {
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('text/html')) return response;
 
-  const site = SITE_SEO[siteId];
+  const site = resolveSiteContext(siteId);
   if (!site) return response;
 
   const url = new URL(requestUrl);
@@ -181,15 +205,7 @@ export async function maybeEnhanceSeoHtml(response, ctx) {
     canonical,
   });
 
-  const headers = new Headers(enhanced.headers);
-  headers.delete('content-length');
-  headers.set('cache-control', 'public, max-age=300, stale-while-revalidate=60');
-  return new Response(enhanced.body, { status: enhanced.status, headers });
-}
-
-export async function preloadSlugIndex(env, siteId) {
-  const products = await loadSiteCatalog(env, siteId);
-  return buildSlugIndex(products);
+  return withHtmlCacheHeaders(enhanced);
 }
 
 export { productSlugFromRecord, productUrl };

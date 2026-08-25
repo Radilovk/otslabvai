@@ -1,18 +1,23 @@
 /**
  * Load catalog data from KV for edge SEO/AEO layer.
+ * KV reads use cacheTtl to avoid per-bot KV billing spikes.
  */
 
 import { getProductPriceEur } from './protocol-quiz-engine.js';
-import { getPortfolioMeta } from './portfolio-api.js';
 import {
   getPeptidesCatalog,
   productSlugFromRecord,
   slugify,
 } from './seo-inject.js';
 
+const KV_JSON_CACHE = { type: 'json', cacheTtl: 300 };
+const PORTFOLIO_META_KEY = 'portfolio_meta';
+
 async function loadJsonFromKv(env, keys) {
   if (!env?.PAGE_CONTENT) return null;
   for (const key of keys) {
+    const parsed = await env.PAGE_CONTENT.get(key, KV_JSON_CACHE);
+    if (parsed != null) return parsed;
     const raw = await env.PAGE_CONTENT.get(key);
     if (!raw) continue;
     try {
@@ -22,6 +27,14 @@ async function loadJsonFromKv(env, keys) {
     }
   }
   return null;
+}
+
+async function loadPortfolioMetaCached(env) {
+  if (!env?.PAGE_CONTENT) return null;
+  const parsed = await env.PAGE_CONTENT.get(PORTFOLIO_META_KEY, KV_JSON_CACHE);
+  if (parsed != null) return parsed;
+  const raw = await env.PAGE_CONTENT.get(PORTFOLIO_META_KEY);
+  return raw ? JSON.parse(raw) : null;
 }
 
 export function extractPageContentProducts(pageContent, categoryFallback = 'Продукти') {
@@ -75,7 +88,7 @@ export async function loadSiteCatalog(env, siteId) {
   }
 
   if (siteId === 'portfolio') {
-    const meta = await getPortfolioMeta(env);
+    const meta = await loadPortfolioMetaCached(env);
     return extractPortfolioIndexProducts(meta);
   }
 

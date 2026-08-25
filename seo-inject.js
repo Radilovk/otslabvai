@@ -6,16 +6,67 @@ import { PEPTIDES_CATALOG } from './peptides-catalog.js';
 
 /** @typedef {'main' | 'life' | 'portfolio' | 'peptides'} SiteId */
 
-export const BRAND_NETWORK = {
-  orgId: 'https://biocode-peptides.com/#organization',
-  sameAs: [
-    'https://daotslabna.com/',
-    'https://life-protocols.com/',
-    'https://biocode-bg.com/',
-    'https://biocode-peptides.com/',
-    'https://github.com/Radilovk/otslabvai',
-  ],
+/** Apex host per site — canonical URLs always use these, not www. */
+export const CANONICAL_HOST = {
+  main: 'daotslabna.com',
+  life: 'life-protocols.com',
+  portfolio: 'biocode-bg.com',
+  peptides: 'biocode-peptides.com',
 };
+
+/** www → apex 301 (8 hosts → 4 canonical). */
+export const WWW_TO_APEX = {
+  'www.daotslabna.com': 'daotslabna.com',
+  'www.life-protocols.com': 'life-protocols.com',
+  'www.biocode-bg.com': 'biocode-bg.com',
+  'www.biocode-peptides.com': 'biocode-peptides.com',
+};
+
+/** Retail ecosystem — peptides intentionally excluded (YMYL isolation). */
+export const RETAIL_SAME_AS = [
+  'https://daotslabna.com/',
+  'https://life-protocols.com/',
+  'https://biocode-bg.com/',
+  'https://github.com/Radilovk/otslabvai',
+];
+
+/** Peptides stands alone — no cross-link to supplement storefronts. */
+export const PEPTIDES_SAME_AS = [
+  'https://biocode-peptides.com/',
+  'https://www.linkedin.com/company/biocode-peptides',
+];
+
+/** @deprecated use RETAIL_SAME_AS / getSameAsForSite */
+export const BRAND_NETWORK = { sameAs: RETAIL_SAME_AS };
+
+export function getSameAsForSite(siteId) {
+  return siteId === 'peptides' ? PEPTIDES_SAME_AS : RETAIL_SAME_AS;
+}
+
+/**
+ * Build per-request site context with canonical origin from siteId (not from Host typo).
+ * Injection uses this for all requests — never branch on User-Agent (anti-cloaking).
+ */
+export function resolveSiteContext(siteId) {
+  const base = SITE_SEO[siteId];
+  if (!base) return null;
+  const canonicalHost = CANONICAL_HOST[siteId];
+  return {
+    ...base,
+    origin: `https://${canonicalHost}`,
+    canonicalHost,
+  };
+}
+
+/** @returns {string|null} redirect target URL for www hosts */
+export function wwwToApexRedirectUrl(url) {
+  const apex = WWW_TO_APEX[String(url.hostname || '').toLowerCase()];
+  if (!apex) return null;
+  const target = new URL(url.toString());
+  target.protocol = 'https:';
+  target.hostname = apex;
+  return target.toString();
+}
 
 /** @type {Record<SiteId, object>} */
 export const SITE_SEO = {
@@ -143,10 +194,11 @@ export function productUrl(site, product) {
 }
 
 export function orgJsonLd(site) {
+  const orgId = `${site.origin}/#organization`;
   return {
     '@context': 'https://schema.org',
     '@type': site.storeType === 'Organization' ? 'Organization' : 'OnlineStore',
-    '@id': site.siteId === 'peptides' ? BRAND_NETWORK.orgId : `${site.origin}/#organization`,
+    '@id': orgId,
     name: site.name,
     url: site.origin,
     description: site.description,
@@ -162,12 +214,42 @@ export function orgJsonLd(site) {
         addressCountry: 'US',
       },
     }),
-    sameAs: BRAND_NETWORK.sameAs,
+    sameAs: getSameAsForSite(site.siteId),
+  };
+}
+
+/** Peptides: Product schema without Offer — RUO, no commercial health claims. */
+export function peptidesResearchJsonLd(site, product) {
+  const url = productUrl(site, product);
+  const props = [
+    { '@type': 'PropertyValue', name: 'Intended use', value: 'Research use only (RUO). Not for human or veterinary consumption.' },
+  ];
+  if (product.purity) {
+    props.push({ '@type': 'PropertyValue', name: 'Typical purity (HPLC)', value: product.purity });
+  }
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    '@id': `${url}#product`,
+    name: product.title,
+    description: `Laboratory research material. ${product.description || ''}`.trim(),
+    category: 'Research chemical (RUO)',
+    brand: { '@type': 'Brand', name: site.name },
+    audience: {
+      '@type': 'PeopleAudience',
+      audienceType: 'Qualified laboratory researchers',
+    },
+    additionalProperty: props,
   };
 }
 
 export function productJsonLd(site, product) {
+  if (site.siteId === 'peptides') {
+    return peptidesResearchJsonLd(site, product);
+  }
+
   const url = productUrl(site, product);
+  const orgId = `${site.origin}/#organization`;
   const payload = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -189,25 +271,8 @@ export function productJsonLd(site, product) {
       availability: product.inStock !== false
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
-      seller: { '@id': site.siteId === 'peptides' ? BRAND_NETWORK.orgId : `${site.origin}/#organization` },
+      seller: { '@id': orgId },
     };
-  } else if (site.siteId === 'peptides') {
-    payload.offers = {
-      '@type': 'Offer',
-      url,
-      availability: 'https://schema.org/InStock',
-      priceCurrency: site.currency,
-      seller: { '@id': BRAND_NETWORK.orgId },
-      description: 'Research use only — inquire for lot-specific pricing',
-    };
-  }
-
-  if (product.purity) {
-    payload.additionalProperty = [{
-      '@type': 'PropertyValue',
-      name: 'Typical purity (HPLC)',
-      value: product.purity,
-    }];
   }
 
   return payload;
@@ -374,7 +439,7 @@ export function llmsTxt(site, products) {
     `> ${site.llmsIntro || site.description}`,
     '',
     '## Network',
-    ...BRAND_NETWORK.sameAs.map((url) => `- ${url}`),
+    ...getSameAsForSite(site.siteId).map((networkUrl) => `- ${networkUrl}`),
     '',
     `## Catalog (${products.length} products, updated ${new Date().toISOString().slice(0, 10)})`,
     '',
@@ -433,7 +498,7 @@ export function renderPeptidesProductDocument(site, product) {
 <meta name="description" content="${esc((product.description || '').slice(0, 155))}">
 <link rel="canonical" href="${esc(canonical)}">
 ${ldTag(orgJsonLd(site))}
-${ldTag(productJsonLd(site, product))}
+${ldTag(peptidesResearchJsonLd(site, product))}
 </head>
 <body>
 <header><a href="${site.origin}/">${esc(site.name)}</a> · <a href="${site.origin}/products.html">Catalog</a> · <a href="${site.origin}/contact.html">Contact</a></header>

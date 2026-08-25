@@ -1,5 +1,5 @@
 import { maybeEnhanceProductHtmlResponse } from './product-og-serve.js';
-import { handleSeoRequest, maybeEnhanceSeoHtml } from './seo-serve.js';
+import { handleSeoRequest, maybeEnhanceSeoHtml, maybeWwwRedirect } from './seo-serve.js';
 
 /** @typedef {'main' | 'life' | 'portfolio' | 'peptides'} SiteId */
 
@@ -204,6 +204,9 @@ function assetFetchInit(request) {
  */
 export async function serveMappedAsset(request, env, url) {
   if (!env.ASSETS) return null;
+
+  const wwwRedirect = maybeWwwRedirect(url);
+  if (wwwRedirect) return wwwRedirect;
 
   const seoResponse = await handleSeoRequest(request, env, url);
   if (seoResponse) return seoResponse;
