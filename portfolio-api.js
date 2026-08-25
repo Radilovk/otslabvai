@@ -31,6 +31,7 @@ import {
 } from './portfolio-pricing.js';
 import { groupHasMargin, variantHasMargin, isCatalogListed } from './portfolio-margin-policy.js';
 import { normalizeHeroImagePath } from './portfolio-hero-path.js';
+import { resolveCatalogImage, applyGroupImageFallbacks, groupsWithCatalogImages } from './catalog-image.js';
 import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipping.js';
 import { assertOrderRateLimit } from './order-rate-limit.js';
 import { decodeHtmlEntities, normalizeCatalogText } from './portfolio-text.js';
@@ -365,14 +366,21 @@ export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
       if (desc) g.description = decodeDescription(desc);
     }
     if (p.label && !g.label) g.label = p.label;
-    if (!g.image && p.image) g.image = p.image;
+    const rowImage = resolveCatalogImage({
+      image: p.image,
+      label: p.label,
+      description: p.description || descriptionMap?.get(gid) || '',
+    });
+    if (!g.image && rowImage) g.image = rowImage;
 
     const variant = buildVariantPricing(p, settings, gid);
-    variant.image = variant.image || g.image;
+    variant.image = variant.image || rowImage || g.image;
     g.variants.push(variant);
   }
 
-  return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name, 'bg'));
+  return Array.from(groups.values())
+    .map((g) => applyGroupImageFallbacks(g))
+    .sort((a, b) => a.name.localeCompare(b.name, 'bg'));
 }
 
 export function buildCatalogMeta(groups, settings = null) {
@@ -851,7 +859,7 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = false, f
     ? await fetchDescriptionMap(keys[0])
     : null;
 
-  const groups = groupRawProducts(rawProducts, settings, descriptionMap);
+  const groups = groupsWithCatalogImages(groupRawProducts(rawProducts, settings, descriptionMap));
   const meta = buildCatalogMeta(groups, settings);
   meta.synced_at = new Date().toISOString();
   meta.distributors = {
@@ -1781,7 +1789,10 @@ function validatePromoRecord(promo, { increment = false } = {}) {
       description: promo.description || '',
       pricing_mode: promo.pricing_mode || 'none',
       pricing_percent: promo.pricing_percent ?? null,
-      show_low_margin: promo.show_low_margin === true
+      show_low_margin: promo.show_low_margin === true,
+      validUntil: promo.validUntil || null,
+      maxUses: promo.maxUses || null,
+      usedCount: promo.usedCount || 0,
     }
   };
 }

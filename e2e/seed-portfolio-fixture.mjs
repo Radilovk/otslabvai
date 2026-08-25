@@ -4,6 +4,7 @@
  */
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS } from '../portfolio-api.js';
+import { groupsWithCatalogImages } from '../catalog-image.js';
 
 const OUT_DIR = 'backend/portfolio';
 
@@ -37,7 +38,7 @@ function buildSampleProducts() {
         pack: g % 2 === 0 ? '2 кг' : '1 кг',
         option,
         category: cat,
-        image: '',
+        image: `https://picsum.photos/seed/pf-${groupId}/400/400`,
         label: '',
         barcode: String(100000 + sku),
         b2b_price: (8 + (g % 5)).toFixed(2),
@@ -62,7 +63,7 @@ export function seedPortfolioFixture({ force = false } = {}) {
     brand_markups: { 749: 25 }
   };
 
-  const groups = groupRawProducts(buildSampleProducts(), settings);
+  const groups = groupsWithCatalogImages(groupRawProducts(buildSampleProducts(), settings));
   const meta = buildCatalogMeta(groups);
   meta.synced_at = new Date().toISOString();
 

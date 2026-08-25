@@ -38,38 +38,38 @@ function seedMinimalCatalog() {
   const groups = [
     {
       group_id: '1001', product_id: 'p1', name: 'Whey Protein 80', brand: 'TestBrand', brand_id: '1',
-      category: 'Протеини > Whey', category_path: ['Протеини', 'Whey'], image: '',
-      variants: [{ sku_id: '101', pack: '1kg', option: 'Vanilla', b2b_price: 20, retail_price: 29.9, available: true, image: '' }],
+      category: 'Протеини > Whey', category_path: ['Протеини', 'Whey'], image: 'https://picsum.photos/seed/pf-1001/400/400',
+      variants: [{ sku_id: '101', pack: '1kg', option: 'Vanilla', b2b_price: 20, retail_price: 29.9, available: true, image: 'https://picsum.photos/seed/pf-1001/400/400' }],
     },
     {
       group_id: '1002', product_id: 'p2', name: 'Creatine Monohydrate', brand: 'TestBrand', brand_id: '1',
-      category: 'Креатин', category_path: ['Креатин'], image: '',
-      variants: [{ sku_id: '102', pack: '300g', option: '', b2b_price: 8, retail_price: 14.5, available: true, image: '' }],
+      category: 'Протеини > Whey', category_path: ['Протеини', 'Whey'], image: 'https://picsum.photos/seed/pf-1002/400/400',
+      variants: [{ sku_id: '102', pack: '300g', option: '', b2b_price: 8, retail_price: 14.5, available: true, image: 'https://picsum.photos/seed/pf-1002/400/400' }],
     },
     {
       group_id: '1003', product_id: 'p3', name: 'Multivitamin Complex', brand: 'TestBrand', brand_id: '1',
-      category: 'Витамини и минерали', category_path: ['Витамини и минерали'], image: '',
-      variants: [{ sku_id: '103', pack: '60 caps', option: '', b2b_price: 10, retail_price: 18.0, available: true, image: '' }],
+      category: 'Витамини и минерали', category_path: ['Витамини и минерали'], image: 'https://picsum.photos/seed/pf-1003/400/400',
+      variants: [{ sku_id: '103', pack: '60 caps', option: '', b2b_price: 10, retail_price: 18.0, available: true, image: 'https://picsum.photos/seed/pf-1003/400/400' }],
     },
     {
       group_id: '1004', product_id: 'p4', name: 'Omega 3 Fish Oil', brand: 'TestBrand', brand_id: '1',
-      category: 'Омега мастни киселини', category_path: ['Омега мастни киселини'], image: '',
-      variants: [{ sku_id: '104', pack: '90 caps', option: '', b2b_price: 12, retail_price: 22.0, available: true, image: '' }],
+      category: 'Омега мастни киселини', category_path: ['Омега мастни киселини'], image: 'https://picsum.photos/seed/pf-1004/400/400',
+      variants: [{ sku_id: '104', pack: '90 caps', option: '', b2b_price: 12, retail_price: 22.0, available: true, image: 'https://picsum.photos/seed/pf-1004/400/400' }],
     },
     {
       group_id: '1005', product_id: 'p5', name: 'Budget Whey', brand: 'TestBrand', brand_id: '1',
-      category: 'Протеини > Whey', category_path: ['Протеини', 'Whey'], image: '',
-      variants: [{ sku_id: '105', pack: '900g', option: '', b2b_price: 6, retail_price: 9.9, available: true, image: '' }],
+      category: 'Протеини > Whey', category_path: ['Протеини', 'Whey'], image: 'https://picsum.photos/seed/pf-1005/400/400',
+      variants: [{ sku_id: '105', pack: '900g', option: '', b2b_price: 6, retail_price: 9.9, available: true, image: 'https://picsum.photos/seed/pf-1005/400/400' }],
     },
     {
       group_id: '1006', product_id: 'p6', name: 'Premium Isolate', brand: 'TestBrand', brand_id: '1',
-      category: 'Протеини > Whey', category_path: ['Протеини', 'Whey'], image: '',
-      variants: [{ sku_id: '106', pack: '1kg', option: '', b2b_price: 35, retail_price: 59.9, available: true, image: '' }],
+      category: 'Протеини > Whey', category_path: ['Протеини', 'Whey'], image: 'https://picsum.photos/seed/pf-1006/400/400',
+      variants: [{ sku_id: '106', pack: '1kg', option: '', b2b_price: 35, retail_price: 59.9, available: true, image: 'https://picsum.photos/seed/pf-1006/400/400' }],
     },
     {
       group_id: '1007', product_id: 'p7', name: 'Ashwagandha Root', brand: 'TestBrand', brand_id: '1',
-      category: 'Хербални добавки', category_path: ['Хербални добавки'], image: '',
-      variants: [{ sku_id: '107', pack: '60 caps', option: '', b2b_price: 7, retail_price: 12.5, available: true, image: '' }],
+      category: 'Хербални добавки', category_path: ['Хербални добавки'], image: 'https://picsum.photos/seed/pf-1007/400/400',
+      variants: [{ sku_id: '107', pack: '60 caps', option: '', b2b_price: 7, retail_price: 12.5, available: true, image: 'https://picsum.photos/seed/pf-1007/400/400' }],
     },
   ];
   const settings = { product_overrides: {}, global_markup_percent: 30 };

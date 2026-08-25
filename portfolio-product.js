@@ -7,6 +7,7 @@ import { getProductFromCache, getDescriptionFromCache, getCachedMeta, catalogSta
 import { filterIndex } from './portfolio-filter.js';
 import { bindProductShareButton, replaceProductUrl } from './product-share.js';
 import { resolveOgImageUrl } from './og-share-meta.js';
+import { applyGroupImageFallbacks } from './catalog-image.js';
 import { isCatalogListed } from './portfolio-margin-policy.js';
 import { isLowMarginPromoUnlocked } from './product-visibility.js';
 import { variantDisplayPrice, syncPromoCatalogUnlock, PROMO_CHANGED_EVENT } from './portfolio-promo-catalog.js';
@@ -429,6 +430,7 @@ async function loadProduct() {
       DOM.root.innerHTML = '<div class="pf-error">Продуктът не е намерен.</div>';
       return;
     }
+    product = applyGroupImageFallbacks(product);
     product.variants = (product.variants || []).filter((v) => v.available);
     if (!product.variants.length) {
       DOM.root.innerHTML = '<div class="pf-error">Продуктът не е наличен в момента.</div>';

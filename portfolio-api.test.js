@@ -213,6 +213,7 @@ describe('Portfolio search', () => {
       min_price: 20,
       max_price: 30,
       available: true,
+      image: 'http://example.com/whey.jpg',
       search_text: 'gold whey protein optimum протеини whey'
     },
     {
@@ -225,6 +226,7 @@ describe('Portfolio search', () => {
       min_price: 5,
       max_price: 8,
       available: true,
+      image: 'http://example.com/vitamin.jpg',
       search_text: 'vitamin c 1000 now витамини'
     }
   ];
@@ -284,9 +286,9 @@ describe('Portfolio faceted filters', () => {
     brands: [{ id: '10', name: 'Optimum', count: 2 }, { id: '20', name: 'Now', count: 1 }]
   };
   const index = [
-    { group_id: '1', name: 'Whey', brand: 'Optimum', brand_id: '10', category: 'Протеини > Whey', category_top: 'Протеини', min_price: 20, max_price: 30, available: true, search_text: 'whey optimum протеини' },
-    { group_id: '2', name: 'Creatine', brand: 'Optimum', brand_id: '10', category: 'Протеини > Creatine', category_top: 'Протеини', min_price: 10, max_price: 10, available: true, search_text: 'creatine optimum протеини' },
-    { group_id: '3', name: 'Vitamin C', brand: 'Now', brand_id: '20', category: 'Витамини', category_top: 'Витамини', min_price: 5, max_price: 8, available: true, search_text: 'vitamin c now витамини' }
+    { group_id: '1', name: 'Whey', brand: 'Optimum', brand_id: '10', category: 'Протеини > Whey', category_top: 'Протеини', min_price: 20, max_price: 30, available: true, image: 'http://example.com/whey.jpg', search_text: 'whey optimum протеини' },
+    { group_id: '2', name: 'Creatine', brand: 'Optimum', brand_id: '10', category: 'Протеини > Creatine', category_top: 'Протеини', min_price: 10, max_price: 10, available: true, image: 'http://example.com/creatine.jpg', search_text: 'creatine optimum протеини' },
+    { group_id: '3', name: 'Vitamin C', brand: 'Now', brand_id: '20', category: 'Витамини', category_top: 'Витамини', min_price: 5, max_price: 8, available: true, image: 'http://example.com/vitamin.jpg', search_text: 'vitamin c now витамини' }
   ];
 
   test('selecting a category hides brands with nothing in it and scopes their counts', () => {
