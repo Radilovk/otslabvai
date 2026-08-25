@@ -7,11 +7,15 @@ import { getProductFromCache, getDescriptionFromCache, getCachedMeta, catalogSta
 import { filterIndex } from './portfolio-filter.js';
 import { bindProductShareButton, replaceProductUrl } from './product-share.js';
 import { resolveOgImageUrl } from './og-share-meta.js';
-import { applyGroupImageFallbacks } from './catalog-image.js';
 import { isCatalogListed } from './portfolio-margin-policy.js';
 import { isLowMarginPromoUnlocked } from './product-visibility.js';
 import { variantDisplayPrice, syncPromoCatalogUnlock, PROMO_CHANGED_EVENT } from './portfolio-promo-catalog.js';
 import { loadActivePromo } from './portfolio-promo-ui.js';
+
+function imageFromDescription(html) {
+  const m = String(html || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m ? m[1].trim() : '';
+}
 
 const DOM = {
   root: document.getElementById('product-root'),
@@ -430,7 +434,12 @@ async function loadProduct() {
       DOM.root.innerHTML = '<div class="pf-error">Продуктът не е намерен.</div>';
       return;
     }
-    product = applyGroupImageFallbacks(product);
+    if (!product.image) {
+      product.image = imageFromDescription(product.description);
+    }
+    for (const v of product.variants || []) {
+      v.image = v.image || product.image || '';
+    }
     product.variants = (product.variants || []).filter((v) => v.available);
     if (!product.variants.length) {
       DOM.root.innerHTML = '<div class="pf-error">Продуктът не е наличен в момента.</div>';

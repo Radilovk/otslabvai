@@ -1,7 +1,11 @@
 /** Shared catalog index filtering – used by API and client cache */
 import { matchesSearchQuery, tokenizeQuery } from './portfolio-search.js';
 import { isCatalogListed } from './portfolio-margin-policy.js';
-import { hasCatalogImage } from './catalog-image.js';
+
+function hasCatalogImage(image) {
+  const img = String(image || '').trim();
+  return /^https?:\/\//i.test(img) || img.startsWith('//');
+}
 
 export { matchesSearchQuery, tokenizeQuery, buildSearchText, enrichIndexEntry } from './portfolio-search.js';
 

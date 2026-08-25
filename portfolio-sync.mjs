@@ -15,7 +15,6 @@ import {
   fetchFitness1Products,
   mergeCatalogProducts,
 } from './portfolio-api.js';
-import { groupsWithCatalogImages } from './catalog-image.js';
 import { fetchSilaProductsWithFallback } from './sila-api.js';
 
 const F1_KEY = process.env.FITNESS1_API_KEY;
@@ -63,7 +62,7 @@ async function main() {
   }
 
   const settings = { ...DEFAULT_SETTINGS, global_markup_percent: 30 };
-  const groups = groupsWithCatalogImages(groupRawProducts(products, settings, descriptionMap));
+  const groups = groupRawProducts(products, settings, descriptionMap);
   const meta = buildCatalogMeta(groups);
   meta.synced_at = new Date().toISOString();
   meta.distributors = {

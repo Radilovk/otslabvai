@@ -3,8 +3,6 @@ import {
   loadActivePromo,
   promoSuccessMessage,
   clearPortfolioPromo,
-  buildPromoConditions,
-  buildPromoConditionsHtml,
   PROMO_CODE_SESSION_KEY,
 } from './portfolio-promo-ui.js';
 
@@ -46,32 +44,6 @@ describe('portfolio-promo-ui', () => {
     expect(msg).toContain('MARGIN50');
     expect(msg).toContain('50%');
     expect(msg).toContain('маржа');
-  });
-
-  test('buildPromoConditions includes admin description and validity', () => {
-    const lines = buildPromoConditions({
-      code: 'VIP10',
-      discountType: 'percentage',
-      discount: 10,
-      description: 'Само за първа поръчка.',
-      validUntil: '2030-01-15T12:00:00.000Z',
-      maxUses: 5,
-      usedCount: 2,
-    });
-    expect(lines.some((l) => l.includes('VIP10'))).toBe(true);
-    expect(lines.some((l) => l.includes('първа поръчка'))).toBe(true);
-    expect(lines.some((l) => l.includes('Валиден до'))).toBe(true);
-    expect(lines.some((l) => l.includes('3 от 5'))).toBe(true);
-  });
-
-  test('buildPromoConditionsHtml renders list markup', () => {
-    const html = buildPromoConditionsHtml({
-      code: 'X',
-      discountType: 'percentage',
-      discount: 5,
-    });
-    expect(html).toContain('<ul');
-    expect(html).toContain('<li>');
   });
 
   test('persists and clears promo in session storage', () => {

@@ -8,7 +8,6 @@ import {
   sanitizeIndexEntryForClient,
   DEFAULT_SETTINGS
 } from './portfolio-api.js';
-import { groupsWithCatalogImages } from './catalog-image.js';
 import { catalogHash } from './catalog-hash.js';
 import { CATALOG_SYNC_POLICY } from './catalog-sync-policy.js';
 
@@ -84,7 +83,7 @@ function brandingFingerprint(settings) {
 export function buildCatalogArtifacts(rawProducts, settings = DEFAULT_SETTINGS, options = {}) {
   const now = options.now ?? Date.now();
   const generatedAt = Math.floor(now / 1000);
-  const groups = groupsWithCatalogImages(groupRawProducts(rawProducts, settings));
+  const groups = groupRawProducts(rawProducts, settings);
   const meta = buildCatalogMeta(groups, settings);
   const pricingVersion = pricingConfigFingerprint(settings);
   const transformVersion = CATALOG_SYNC_POLICY.TRANSFORM_VERSION;

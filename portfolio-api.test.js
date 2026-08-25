@@ -15,6 +15,7 @@ import {
   PortfolioError,
   buildPublicSiteSettings,
   isAutoSubmitB2bEnabled,
+  resolveCatalogImage,
 } from './portfolio-api.js';
 import { filterIndex, paginateIndex, computeFacets } from './portfolio-filter.js';
 
@@ -184,6 +185,22 @@ describe('Portfolio API', () => {
     const groups = groupRawProducts(products, settings);
     expect(groups[0].name).toBe('Creatine & Taurine');
     expect(groups[0].brand).toBe('Brand & Co');
+  });
+
+  test('resolveCatalogImage falls back to description img', () => {
+    expect(resolveCatalogImage({
+      image: '',
+      description: '<img src="https://fitness1.bg/uploads/shaker.webp">',
+    })).toBe('https://fitness1.bg/uploads/shaker.webp');
+  });
+
+  test('groupRawProducts drops groups without resolvable image', () => {
+    const products = [{
+      ...sampleProducts[0],
+      image: '',
+      description: '',
+    }];
+    expect(groupRawProducts(products, settings)).toHaveLength(0);
   });
 
   test('handlePortfolioRoute returns 404 when catalog is not synced', async () => {

@@ -31,7 +31,28 @@ import {
 } from './portfolio-pricing.js';
 import { groupHasMargin, variantHasMargin, isCatalogListed } from './portfolio-margin-policy.js';
 import { normalizeHeroImagePath } from './portfolio-hero-path.js';
-import { resolveCatalogImage, applyGroupImageFallbacks, groupsWithCatalogImages } from './catalog-image.js';
+
+const CATALOG_IMG_URL_RE = /^https?:\/\//i;
+
+/** Resolve product image from API fields or first <img> in Fitness1 HTML description. */
+export function resolveCatalogImage(fields = {}) {
+  const image = String(fields.image || '').trim();
+  if (CATALOG_IMG_URL_RE.test(image) || image.startsWith('//')) return image;
+  const label = String(fields.label || '').trim();
+  if (CATALOG_IMG_URL_RE.test(label) || label.startsWith('//')) return label;
+  const m = String(fields.description || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m ? m[1].trim() : '';
+}
+
+function finalizeGroupImages(group) {
+  if (!group) return;
+  if (!resolveCatalogImage({ image: group.image })) {
+    group.image = resolveCatalogImage({ label: group.label, description: group.description });
+  }
+  for (const v of group.variants || []) {
+    v.image = v.image || group.image || '';
+  }
+}
 import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipping.js';
 import { assertOrderRateLimit } from './order-rate-limit.js';
 import { decodeHtmlEntities, normalizeCatalogText } from './portfolio-text.js';
@@ -378,8 +399,10 @@ export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
     g.variants.push(variant);
   }
 
-  return Array.from(groups.values())
-    .map((g) => applyGroupImageFallbacks(g))
+  const listed = Array.from(groups.values());
+  for (const g of listed) finalizeGroupImages(g);
+  return listed
+    .filter((g) => resolveCatalogImage({ image: g.image }))
     .sort((a, b) => a.name.localeCompare(b.name, 'bg'));
 }
 
@@ -859,7 +882,7 @@ export async function syncPortfolioCatalog(env, { includeDescriptions = false, f
     ? await fetchDescriptionMap(keys[0])
     : null;
 
-  const groups = groupsWithCatalogImages(groupRawProducts(rawProducts, settings, descriptionMap));
+  const groups = groupRawProducts(rawProducts, settings, descriptionMap);
   const meta = buildCatalogMeta(groups, settings);
   meta.synced_at = new Date().toISOString();
   meta.distributors = {

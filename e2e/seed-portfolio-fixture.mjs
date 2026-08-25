@@ -4,7 +4,6 @@
  */
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS } from '../portfolio-api.js';
-import { groupsWithCatalogImages } from '../catalog-image.js';
 
 const OUT_DIR = 'backend/portfolio';
 
@@ -63,7 +62,7 @@ export function seedPortfolioFixture({ force = false } = {}) {
     brand_markups: { 749: 25 }
   };
 
-  const groups = groupsWithCatalogImages(groupRawProducts(buildSampleProducts(), settings));
+  const groups = groupRawProducts(buildSampleProducts(), settings);
   const meta = buildCatalogMeta(groups);
   meta.synced_at = new Date().toISOString();
 

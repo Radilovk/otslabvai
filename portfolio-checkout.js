@@ -22,7 +22,6 @@ import {
   loadActivePromo,
   promoSuccessMessage,
   openPromoConditionsModal,
-  initPromoConditionsModal,
 } from './portfolio-promo-ui.js';
 import { syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
 let cart = [];
@@ -601,8 +600,6 @@ async function init() {
   }
 
   if (cart.length) validateCartOnServer({ silent: true });
-
-  initPromoConditionsModal('pf-promo-conditions-modal');
 
   $('apply-promo-btn')?.addEventListener('click', applyPromoCode);
   $('apply-promo-btn-summary')?.addEventListener('click', applyPromoCode);

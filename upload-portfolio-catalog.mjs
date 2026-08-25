@@ -3,7 +3,6 @@
  * Requires: FITNESS1_API_KEY and/or SILA_API_TOKEN, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
  */
 import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS, fetchDescriptionMap, fetchFitness1Products, mergeCatalogProducts } from './portfolio-api.js';
-import { groupsWithCatalogImages } from './catalog-image.js';
 import { fetchSilaProductsWithFallback, normalizeSilaApiToken, KV_SILA_TOKEN } from './sila-api.js';
 import { mergeSettingsForCatalogSync, persistSettingsAfterCatalogSync } from './catalog-settings-kv.mjs';
 import { kvGet, kvPut } from './catalog-kv-client.mjs';
@@ -56,7 +55,7 @@ async function main() {
 
   const existing = uploadKv ? (await kvGet('portfolio_settings') || {}) : {};
   const settings = mergeSettingsForCatalogSync(DEFAULT_SETTINGS, existing);
-  const groups = groupsWithCatalogImages(groupRawProducts(products, settings, descriptionMap));
+  const groups = groupRawProducts(products, settings, descriptionMap);
   const meta = buildCatalogMeta(groups);
   meta.synced_at = new Date().toISOString();
   meta.distributors = {

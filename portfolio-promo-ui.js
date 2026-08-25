@@ -43,23 +43,8 @@ export function promoSuccessMessage(promo) {
   return `Код ${promo.code}: отстъпка ${label}.`;
 }
 
-function formatPromoValidUntil(validUntil) {
-  if (!validUntil) return '';
-  const date = new Date(validUntil);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleString('bg-BG', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-/** Human-readable promo conditions for the client success modal. */
-export function buildPromoConditions(promo) {
+function promoConditionLines(promo) {
   if (!promo) return [];
-
   const lines = [promoSuccessMessage(promo)];
 
   if (promo.discountType === 'percentage' && Number(promo.discount) > 0 && !promoUsesLinePricing(promo)) {
@@ -85,24 +70,28 @@ export function buildPromoConditions(promo) {
     lines.push('Кодът се запазва за количката до премахване или изтичане на сесията.');
   }
 
-  const until = formatPromoValidUntil(promo.validUntil);
-  if (until) lines.push(`Валиден до: ${until}.`);
+  if (promo.validUntil) {
+    const date = new Date(promo.validUntil);
+    if (!Number.isNaN(date.getTime())) {
+      lines.push(`Валиден до: ${date.toLocaleString('bg-BG', {
+        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+      })}.`);
+    }
+  }
 
   if (promo.maxUses) {
     const used = Number(promo.usedCount) || 0;
     const max = Number(promo.maxUses);
-    const remaining = Math.max(0, max - used);
-    lines.push(`Остават ${remaining} от ${max} възможни използвания на кода.`);
+    lines.push(`Остават ${Math.max(0, max - used)} от ${max} възможни използвания на кода.`);
   }
 
   const description = String(promo.description || '').trim();
   if (description) lines.push(description);
-
   return lines;
 }
 
-export function buildPromoConditionsHtml(promo) {
-  const lines = buildPromoConditions(promo);
+function promoConditionsHtml(promo) {
+  const lines = promoConditionLines(promo);
   if (!lines.length) return '';
   return `<ul class="pf-promo-conditions-list">${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>`;
 }
@@ -147,79 +136,65 @@ function setModalMessage(el, text, type = '') {
   el.className = `pf-promo-msg ${type}`.trim();
 }
 
-function getPromoModalEls(modalId = 'pf-promo-modal') {
-  const modal = document.getElementById(modalId);
+function promoModal(id) {
+  const modal = document.getElementById(id);
   if (!modal) return null;
   return {
     modal,
-    title: modal.querySelector('[data-pf-promo-title]') || document.getElementById('pf-promo-modal-title'),
-    formBlock: modal.querySelector('[data-pf-promo-form]'),
-    successBlock: modal.querySelector('[data-pf-promo-success]'),
-    conditionsEl: modal.querySelector('[data-pf-promo-conditions]'),
-    input: modal.querySelector('[data-pf-promo-input]') || document.getElementById('pf-promo-modal-input'),
-    applyBtn: modal.querySelector('[data-pf-promo-apply]') || document.getElementById('pf-promo-modal-apply'),
-    msg: modal.querySelector('[data-pf-promo-msg]') || document.getElementById('pf-promo-modal-msg'),
-    closers: modal.querySelectorAll('[data-pf-promo-close]'),
-    openers: document.querySelectorAll('[data-pf-promo-open]'),
+    title: modal.querySelector('[data-pf-promo-title]'),
+    form: modal.querySelector('[data-pf-promo-form]'),
+    success: modal.querySelector('[data-pf-promo-success]'),
+    conditions: modal.querySelector('[data-pf-promo-conditions]'),
+    input: modal.querySelector('[data-pf-promo-input]'),
+    apply: modal.querySelector('[data-pf-promo-apply]'),
+    msg: modal.querySelector('[data-pf-promo-msg]'),
   };
 }
 
-export function showPromoConditionsView(modalId = 'pf-promo-modal', promo) {
-  const els = getPromoModalEls(modalId);
-  if (!els) return;
+function showPromoForm(m) {
+  if (m.title) m.title.textContent = 'Промо код';
+  if (m.form) m.form.hidden = false;
+  if (m.success) m.success.hidden = true;
+  if (m.conditions) m.conditions.innerHTML = '';
+  setModalMessage(m.msg, '', '');
+}
 
-  if (els.title) {
-    els.title.textContent = promo?.code
+function showPromoSuccess(m, promo) {
+  if (m.title) {
+    m.title.textContent = promo?.code
       ? `Промо код ${promo.code} е активен`
       : 'Промо кодът е приложен';
   }
-  if (els.conditionsEl) {
-    els.conditionsEl.innerHTML = buildPromoConditionsHtml(promo);
-  }
-  if (els.formBlock) els.formBlock.hidden = true;
-  if (els.successBlock) els.successBlock.hidden = false;
-  setModalMessage(els.msg, '', '');
+  if (m.conditions) m.conditions.innerHTML = promoConditionsHtml(promo);
+  if (m.form) m.form.hidden = true;
+  if (m.success) m.success.hidden = false;
+  setModalMessage(m.msg, '', '');
 }
 
-export function resetPromoInputView(modalId = 'pf-promo-modal') {
-  const els = getPromoModalEls(modalId);
-  if (!els) return;
+const boundPromoModals = new Set();
 
-  if (els.formBlock) els.formBlock.hidden = false;
-  if (els.successBlock) els.successBlock.hidden = true;
-  if (els.title) els.title.textContent = 'Промо код';
-  if (els.conditionsEl) els.conditionsEl.innerHTML = '';
-  setModalMessage(els.msg, '', '');
-}
-
-export function openPromoConditionsModal(promo, modalId = 'pf-promo-modal') {
-  initPromoConditionsModal(modalId);
-  const els = getPromoModalEls(modalId);
-  if (!els) return;
-
-  showPromoConditionsView(modalId, promo);
-  els.modal.classList.add('active');
-  els.modal.setAttribute('aria-hidden', 'false');
-}
-
-/** Bind close handlers for a conditions-only modal (checkout). */
-export function initPromoConditionsModal(modalId = 'pf-promo-conditions-modal') {
-  const modal = document.getElementById(modalId);
-  if (!modal || modal.dataset.pfPromoBound === '1') return;
-  modal.dataset.pfPromoBound = '1';
-
+function bindPromoModalClose(m, onClose) {
+  if (boundPromoModals.has(m.modal.id)) return;
+  boundPromoModals.add(m.modal.id);
   const close = () => {
-    modal.classList.remove('active');
-    modal.setAttribute('aria-hidden', 'true');
+    m.modal.classList.remove('active');
+    m.modal.setAttribute('aria-hidden', 'true');
+    onClose?.();
   };
-
-  modal.querySelectorAll('[data-pf-promo-close]').forEach((btn) => {
-    btn.addEventListener('click', close);
-  });
-
+  m.modal.querySelectorAll('[data-pf-promo-close]').forEach((btn) => btn.addEventListener('click', close));
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.classList.contains('active')) close();
+    if (e.key === 'Escape' && m.modal.classList.contains('active')) close();
   });
+}
+
+/** Show conditions modal (catalog or checkout). */
+export function openPromoConditionsModal(promo, modalId = 'pf-promo-conditions-modal') {
+  const m = promoModal(modalId);
+  if (!m) return;
+  bindPromoModalClose(m, m.form ? () => showPromoForm(m) : undefined);
+  showPromoSuccess(m, promo);
+  m.modal.classList.add('active');
+  m.modal.setAttribute('aria-hidden', 'false');
 }
 
 /**
@@ -227,57 +202,48 @@ export function initPromoConditionsModal(modalId = 'pf-promo-conditions-modal') 
  * @param {{ onApplied?: (promo: object) => void, modalId?: string }} [opts]
  */
 export function initPortfolioPromoModal(opts = {}) {
-  const modalId = opts.modalId || 'pf-promo-modal';
-  const els = getPromoModalEls(modalId);
-  if (!els || !els.input || !els.applyBtn) return;
+  const m = promoModal(opts.modalId || 'pf-promo-modal');
+  if (!m?.input || !m?.apply) return;
+
+  const openers = document.querySelectorAll('[data-pf-promo-open]');
+  bindPromoModalClose(m, () => showPromoForm(m));
 
   const open = () => {
-    resetPromoInputView(modalId);
-    els.modal.classList.add('active');
-    els.modal.setAttribute('aria-hidden', 'false');
+    showPromoForm(m);
+    m.modal.classList.add('active');
+    m.modal.setAttribute('aria-hidden', 'false');
     const saved = loadActivePromo();
-    if (saved?.code && !els.input.value) els.input.value = saved.code;
-    setTimeout(() => els.input.focus(), 50);
+    if (saved?.code && !m.input.value) m.input.value = saved.code;
+    setTimeout(() => m.input.focus(), 50);
   };
 
-  const close = () => {
-    els.modal.classList.remove('active');
-    els.modal.setAttribute('aria-hidden', 'true');
-    resetPromoInputView(modalId);
-  };
-
-  els.openers.forEach((btn) => btn.addEventListener('click', open));
-  els.closers.forEach((btn) => btn.addEventListener('click', close));
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && els.modal.classList.contains('active')) close();
-  });
+  openers.forEach((btn) => btn.addEventListener('click', open));
 
   const runApply = async () => {
-    const code = els.input.value.trim();
+    const code = m.input.value.trim();
     if (!code) {
-      setModalMessage(els.msg, 'Въведете промо код.', 'error');
+      setModalMessage(m.msg, 'Въведете промо код.', 'error');
       return;
     }
-    els.applyBtn.disabled = true;
-    setModalMessage(els.msg, 'Проверяваме кода…', '');
+    m.apply.disabled = true;
+    setModalMessage(m.msg, 'Проверяваме кода…', '');
     try {
       const result = await applyPortfolioPromoCode(code);
       if (!result.ok) {
-        setModalMessage(els.msg, result.error, 'error');
+        setModalMessage(m.msg, result.error, 'error');
         return;
       }
-      showPromoConditionsView(modalId, result.promo);
+      showPromoSuccess(m, result.promo);
       opts.onApplied?.(result.promo);
     } catch {
-      setModalMessage(els.msg, 'Грешка при проверка на кода.', 'error');
+      setModalMessage(m.msg, 'Грешка при проверка на кода.', 'error');
     } finally {
-      els.applyBtn.disabled = false;
+      m.apply.disabled = false;
     }
   };
 
-  els.applyBtn.addEventListener('click', runApply);
-  els.input.addEventListener('keydown', (e) => {
+  m.apply.addEventListener('click', runApply);
+  m.input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       runApply();
@@ -286,15 +252,11 @@ export function initPortfolioPromoModal(opts = {}) {
 
   const saved = loadActivePromo();
   if (saved?.code) {
-    els.openers.forEach((btn) => btn.classList.add('pf-promo-chip--active'));
-    btnSetLabel(els.openers, saved.code);
+    openers.forEach((btn) => btn.classList.add('pf-promo-chip--active'));
+    openers.forEach((btn) => {
+      const label = btn.querySelector('.pf-promo-chip-label');
+      if (label) label.textContent = saved.code;
+      else btn.setAttribute('title', `Промо: ${saved.code}`);
+    });
   }
-}
-
-function btnSetLabel(buttons, code) {
-  buttons.forEach((btn) => {
-    const label = btn.querySelector('.pf-promo-chip-label');
-    if (label) label.textContent = code;
-    else btn.setAttribute('title', `Промо: ${code}`);
-  });
 }
