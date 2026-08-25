@@ -4,11 +4,8 @@
  */
 
 import { getProductPriceEur } from './protocol-quiz-engine.js';
-import {
-  getPeptidesCatalog,
-  productSlugFromRecord,
-  slugify,
-} from './seo-inject.js';
+import { PEPTIDES_CATALOG } from './peptides-catalog.js';
+import { productSlugFromRecord, slugify } from './seo-slug.js';
 
 const KV_JSON_CACHE = { type: 'json', cacheTtl: 300 };
 const PORTFOLIO_META_KEY = 'portfolio_meta';
@@ -84,7 +81,16 @@ export function extractPortfolioIndexProducts(meta) {
 
 export async function loadSiteCatalog(env, siteId) {
   if (siteId === 'peptides') {
-    return getPeptidesCatalog();
+    return (PEPTIDES_CATALOG.products || []).map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      title: p.title,
+      description: p.description,
+      category: p.category,
+      purity: p.purity,
+      inStock: p.inStock !== false,
+      price: null,
+    }));
   }
 
   if (siteId === 'portfolio') {

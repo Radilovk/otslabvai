@@ -4,9 +4,10 @@
   "main": "worker.js",
   "license": "MIT",
   "scripts": {
-    "start": "wrangler dev",
+    "start": "npx wrangler dev --no-live-reload --persist-to /tmp/wrangler-port-persist",
+    "dev": "npx wrangler dev --no-live-reload --persist-to /tmp/wrangler-port-persist",
     "local": "node local/local-worker.js",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy && node scripts/purge-seo-cache.mjs",
     "upload-static": "./upload-static-to-kv.sh",
     "upload-static-node": "node upload-static-files.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",

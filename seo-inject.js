@@ -3,6 +3,9 @@
  */
 
 import { PEPTIDES_CATALOG } from './peptides-catalog.js';
+import { productSlugFromRecord, slugify } from './seo-slug.js';
+
+export { slugify, productSlugFromRecord };
 
 /** @typedef {'main' | 'life' | 'portfolio' | 'peptides'} SiteId */
 
@@ -171,22 +174,6 @@ export const esc = (s = '') => String(s)
   .replace(/</g, '&lt;')
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;');
-
-export const slugify = (s = '') => String(s)
-  .toLowerCase()
-  .trim()
-  .normalize('NFD')
-  .replace(/\p{M}/gu, '')
-  .replace(/[^\p{L}\p{N}]+/gu, '-')
-  .replace(/^-|-$/g, '');
-
-export function productSlugFromRecord(product) {
-  if (product.slug) return product.slug;
-  const name = product.title || product.name || product.public_data?.name || '';
-  const fromName = slugify(name);
-  if (fromName) return fromName;
-  return String(product.id || product.product_id || '').replace(/^prod-/, '');
-}
 
 export function productUrl(site, product) {
   const slug = productSlugFromRecord(product);

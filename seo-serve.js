@@ -3,7 +3,7 @@
  *
  * ANTI-CLOAKING: HTML injection runs for ALL requests (no User-Agent branching).
  * Client hydration removes #seo-catalog / #seo-product after JS loads.
- * Responses must NOT set Vary: User-Agent.
+ * Only strip User-Agent from Vary — preserve Accept-Encoding etc.
  */
 
 import {
@@ -30,11 +30,12 @@ import {
   findProductBySlug,
   loadSiteCatalog,
 } from './seo-data.js';
-import { getSiteForHost, mapAssetPath } from './hostname-routing.js';
+import { getSiteForHost, mapAssetPath } from './site-routing.js';
 
 const TEXT_PLAIN = { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'public, max-age=3600' };
-const TEXT_XML = { 'content-type': 'application/xml; charset=utf-8', 'cache-control': 'public, max-age=3600' };
-const HTML_CACHE = 'public, max-age=300, stale-while-revalidate=60';
+const TEXT_XML = { 'content-type': 'application/xml; charset=utf-8', 'cache-control': 'public, max-age=600' };
+/** Short edge TTL — catalog prices must not linger after KV updates. Purge on deploy too. */
+export const HTML_CACHE = 'public, max-age=60, s-maxage=120, stale-while-revalidate=60';
 
 function assetFetchInit(request) {
   const init = { method: request.method, headers: request.headers };
@@ -46,12 +47,38 @@ function redirect(url, status = 301) {
   return new Response(null, { status, headers: { Location: url } });
 }
 
+/** Remove only User-Agent from Vary; keep Accept-Encoding and other values. */
+export function stripUserAgentFromVary(headers) {
+  const vary = headers.get('vary');
+  if (!vary) return;
+  const parts = vary.split(',').map((p) => p.trim()).filter(Boolean);
+  const filtered = parts.filter((p) => p.toLowerCase() !== 'user-agent');
+  if (!filtered.length) headers.delete('vary');
+  else headers.set('vary', filtered.join(', '));
+}
+
 function withHtmlCacheHeaders(response, status = response.status) {
   const headers = new Headers(response.headers);
   headers.delete('content-length');
-  headers.delete('vary');
+  stripUserAgentFromVary(headers);
   headers.set('cache-control', HTML_CACHE);
   return new Response(response.body, { status, headers });
+}
+
+async function notFoundResponse(env, request) {
+  if (!env?.ASSETS) {
+    return new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+  }
+  const pageUrl = new URL('/404.html', request.url);
+  const res = await env.ASSETS.fetch(new Request(pageUrl.toString(), assetFetchInit(request)));
+  if (!res.ok) {
+    return new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+  }
+  const headers = new Headers(res.headers);
+  headers.delete('content-length');
+  stripUserAgentFromVary(headers);
+  headers.set('cache-control', 'public, max-age=300');
+  return new Response(res.body, { status: 404, headers });
 }
 
 export function maybeWwwRedirect(url) {
@@ -72,7 +99,7 @@ async function fetchMappedAsset(env, request, siteId, pathname) {
   return response;
 }
 
-export async function maybeLegacyProductRedirect(url, env, siteId) {
+export async function maybeLegacyProductRedirect(url, env, siteId, request) {
   const site = resolveSiteContext(siteId);
   if (!site) return null;
 
@@ -90,7 +117,7 @@ export async function maybeLegacyProductRedirect(url, env, siteId) {
   const products = await loadSiteCatalog(env, siteId);
   const product = findProductByLegacyId(products, legacyId);
   if (!product) {
-    return new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+    return notFoundResponse(env, request);
   }
 
   return redirect(productUrl(site, product));
@@ -120,7 +147,7 @@ export async function handleSeoRequest(request, env, url) {
     return new Response(llmsTxt(site, products), { headers: TEXT_PLAIN });
   }
 
-  const legacyRedirect = await maybeLegacyProductRedirect(url, env, siteId);
+  const legacyRedirect = await maybeLegacyProductRedirect(url, env, siteId, request);
   if (legacyRedirect) return legacyRedirect;
 
   const productMatch = pathname.match(/^\/products\/([^/]+)\/?$/);
@@ -136,7 +163,7 @@ async function serveSeoProductPage(request, env, url, siteId, slug) {
   const products = await loadSiteCatalog(env, siteId);
   const product = findProductBySlug(products, slug);
   if (!product) {
-    return new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+    return notFoundResponse(env, request);
   }
 
   const canonical = productUrl(site, product);
@@ -153,7 +180,7 @@ async function serveSeoProductPage(request, env, url, siteId, slug) {
   const templatePath = site.productTemplate;
   const response = await fetchMappedAsset(env, request, siteId, templatePath);
   if (!response?.ok) {
-    return new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+    return notFoundResponse(env, request);
   }
 
   const head = [

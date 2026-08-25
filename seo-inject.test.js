@@ -67,8 +67,8 @@ describe('seo-inject', () => {
     expect(schema.category).toContain('RUO');
   });
 
-  test('www redirects to apex', () => {
-    const url = new URL('https://www.daotslabna.com/products/test');
+  test('www redirects to apex over https', () => {
+    const url = new URL('http://www.daotslabna.com/products/test');
     expect(wwwToApexRedirectUrl(url)).toBe('https://daotslabna.com/products/test');
     const res = maybeWwwRedirect(url);
     expect(res.status).toBe(301);

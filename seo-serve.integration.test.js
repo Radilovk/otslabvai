@@ -1,7 +1,7 @@
 /**
  * Integration-style tests for seo-serve (no wrangler required).
  */
-import { handleSeoRequest, maybeWwwRedirect } from './seo-serve.js';
+import { handleSeoRequest, maybeWwwRedirect, stripUserAgentFromVary } from './seo-serve.js';
 import { resolveSiteContext } from './seo-inject.js';
 
 const PAGE_CONTENT = {
@@ -16,6 +16,8 @@ const PAGE_CONTENT = {
   }],
 };
 
+const NOT_FOUND_HTML = '<!doctype html><html><head><title>404</title></head><body><h1>Страницата не е намерена</h1></body></html>';
+
 function mockEnv() {
   const store = new Map([
     ['page_content', JSON.stringify(PAGE_CONTENT)],
@@ -25,6 +27,9 @@ function mockEnv() {
       fetch(req) {
         const url = new URL(req.url);
         const html = '<!doctype html><html><head><title>t</title></head><body><div id="main"></div></body></html>';
+        if (url.pathname === '/404.html' || url.pathname.endsWith('/404.html')) {
+          return new Response(NOT_FOUND_HTML, { headers: { 'content-type': 'text/html; charset=utf-8' } });
+        }
         if (url.pathname.endsWith('.html')) {
           return new Response(html, { headers: { 'content-type': 'text/html' } });
         }
@@ -53,11 +58,14 @@ describe('seo-serve integration', () => {
     expect(bot).toBeNull();
   });
 
-  test('invalid product slug returns 404', async () => {
+  test('invalid product slug returns 404 with 404.html body', async () => {
     const env = mockEnv();
     const url = new URL('http://daotslabna.com/products/does-not-exist');
     const res = await handleSeoRequest(new Request(url), env, url);
     expect(res.status).toBe(404);
+    const html = await res.text();
+    expect(html).toContain('Страницата не е намерена');
+    expect(res.headers.get('content-type')).toContain('text/html');
   });
 
   test('peptides product page returns 200 without HTMLRewriter', async () => {
@@ -105,5 +113,19 @@ describe('seo-serve integration', () => {
   test('resolveSiteContext never mixes origins', () => {
     expect(resolveSiteContext('portfolio').origin).toBe('https://biocode-bg.com');
     expect(resolveSiteContext('peptides').origin).toBe('https://biocode-peptides.com');
+  });
+
+  test('stripUserAgentFromVary removes only User-Agent', () => {
+    const headers = new Headers({ vary: 'Accept-Encoding, User-Agent' });
+    stripUserAgentFromVary(headers);
+    expect(headers.get('vary')).toBe('Accept-Encoding');
+
+    const uaOnly = new Headers({ vary: 'User-Agent' });
+    stripUserAgentFromVary(uaOnly);
+    expect(uaOnly.has('vary')).toBe(false);
+
+    const encodingOnly = new Headers({ vary: 'Accept-Encoding' });
+    stripUserAgentFromVary(encodingOnly);
+    expect(encodingOnly.get('vary')).toBe('Accept-Encoding');
   });
 });

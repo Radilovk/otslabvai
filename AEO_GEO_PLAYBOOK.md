@@ -45,8 +45,22 @@
 
 ```bash
 npm run deploy
-# или push към main / cursor branch → GitHub Actions
+# wrangler deploy + zone cache purge за 4-те storefront host-а
+# или push към main / cursor branch → GitHub Actions (purge стъпка след deploy)
 ```
+
+**Кеш:** HTML маршрутите ползват `max-age=60, s-maxage=120`. KV чете с `cacheTtl: 300`. При смяна на цена/наличност edge кешът може да живее по-дълго от 5 мин — `npm run deploy` и CI purge-ват zone cache за всички 4 домейна.
+
+### 3b. Локален dev (reload loop)
+
+`assets.directory = "."` кара wrangler да watch-ва целия repo. Miniflare пише sqlite в `.wrangler/state/` → watcher → безкраен reload. **Не е import цикъл** (графът е разклонен: `site-routing.js` / `seo-slug.js`).
+
+```bash
+npm run dev
+# използва --no-live-reload --persist-to /tmp/wrangler-port-persist
+```
+
+Ако пак reload-ва: `WRANGLER_LOG=debug npm run dev` и търси `🌀 File` редове — трябва да липсват `.wrangler/state` промени.
 
 ### 4. Проверка след deploy (копирай и пусни)
 
@@ -152,9 +166,11 @@ Peptides JSON-LD: `Product` без `Offer`, категория RUO — без т
 | Няма cloaking | Няма `User-Agent` branch в seo-*; няма `Vary: User-Agent` |
 | Per-host canonical | `resolveSiteContext()` → apex origin per siteId |
 | www → apex | 301 от `www.*` към apex |
-| Invalid slug | HTTP 404, не soft 200 |
+| Invalid slug | HTTP 404 + `404.html` body, не `text/plain` |
 | Invalid legacy id | HTTP 404 на `product.html?id=bad` |
+| Vary header | Само `User-Agent` се маха; `Accept-Encoding` остава |
 | KV cacheTtl | `get(key, { type: 'json', cacheTtl: 300 })` |
+| Deploy cache purge | `scripts/purge-seo-cache.mjs` в `npm run deploy` и CI |
 
 ```bash
 # Cloaking — същият HTML с и без UA
