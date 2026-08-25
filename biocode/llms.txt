@@ -14,6 +14,14 @@ BioCode Peptides differentiates on analytical rigor: every released lot is synth
 - Typical purity specification: ≥98–99% by HPLC, identity confirmed by mass spectrometry
 - Contact: info@biocode-peptides.com
 
+## Network (BioCode ecosystem)
+
+- https://daotslabna.com/ — weight management storefront (Bulgaria, EUR)
+- https://life-protocols.com/ — longevity & anti-aging protocols (Bulgaria, EUR)
+- https://biocode-bg.com/ — nutrition supplements catalog (Bulgaria, EUR)
+- https://biocode-peptides.com/ — research peptides (USA, RUO)
+- https://github.com/Radilovk/otslabvai
+
 ## Pages
 
 - [Home](https://www.biocode-peptides.com/index.html): Company overview, trust signals, featured products, FAQ

@@ -6,6 +6,7 @@ import { API_URL } from './config.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import { isOnHomepage, isCatalogOnly, isProductListed, sortByOrder, catalogLink } from './product-visibility.js';
 import { attachSitePageVisibilitySync } from './site-page-sync.js';
+import { removeSeoPrerender } from './seo-hydration.js';
 
 let pageContentLoadedAt = 0;
 
@@ -1704,6 +1705,7 @@ async function main() {
             renderMainContent(data.page_content);
             // Extract products for search functionality
             extractProductsForSearch(data.page_content);
+            removeSeoPrerender();
         }
         
         renderFooter(data.settings, data.footer);

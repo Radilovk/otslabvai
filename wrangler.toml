@@ -55,3 +55,11 @@ zone_name = "life-protocols.com"
 [[routes]]
 pattern = "www.life-protocols.com/*"
 zone_name = "life-protocols.com"
+
+[[routes]]
+pattern = "biocode-peptides.com"
+custom_domain = true
+
+[[routes]]
+pattern = "www.biocode-peptides.com"
+custom_domain = true

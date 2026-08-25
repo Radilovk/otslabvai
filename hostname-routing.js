@@ -1,6 +1,7 @@
 import { maybeEnhanceProductHtmlResponse } from './product-og-serve.js';
+import { handleSeoRequest, maybeEnhanceSeoHtml } from './seo-serve.js';
 
-/** @typedef {'main' | 'life' | 'portfolio'} SiteId */
+/** @typedef {'main' | 'life' | 'portfolio' | 'peptides'} SiteId */
 
 /** @type {Record<string, SiteId>} */
 export const SITE_BY_HOST = {
@@ -10,6 +11,8 @@ export const SITE_BY_HOST = {
   'www.life-protocols.com': 'life',
   'biocode-bg.com': 'portfolio',
   'www.biocode-bg.com': 'portfolio',
+  'biocode-peptides.com': 'peptides',
+  'www.biocode-peptides.com': 'peptides',
 };
 
 /** HTML pages shared across sites — never prefix-remapped. */
@@ -23,6 +26,15 @@ const SHARED_HTML = new Set([
 const STATIC_ASSET_EXTENSIONS = new Set([
   'js', 'css', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico',
   'woff', 'woff2', 'ttf', 'eot', 'map', 'txt', 'xml', 'php', 'pdf', 'webmanifest',
+]);
+
+const PEPTIDES_ROOT_PAGES = new Set([
+  'index.html',
+  'about.html',
+  'science.html',
+  'quality.html',
+  'products.html',
+  'contact.html',
 ]);
 
 /**
@@ -121,6 +133,18 @@ function mapPrefixedHtml(site, pathname) {
   return path;
 }
 
+function mapPeptidesAssetPath(pathname) {
+  const path = pathname.split('?')[0] || '/';
+  if (path.startsWith('/biocode/')) return path;
+  if (path === '/' || path === '') return '/biocode/index.html';
+  if (path.startsWith('/assets/')) return `/biocode${path}`;
+  if (path.startsWith('/products/')) return path;
+  const file = path.replace(/^\//, '');
+  if (PEPTIDES_ROOT_PAGES.has(file)) return `/biocode/${file}`;
+  if (path.endsWith('.html') && !path.includes('/')) return `/biocode/${file}`;
+  return path;
+}
+
 /**
  * Map a request path to the asset file path for the given site.
  * @param {SiteId | null} site
@@ -131,6 +155,10 @@ export function mapAssetPath(site, pathname) {
   const path = pathname.split('?')[0] || '/';
 
   if (!site) return path;
+
+  if (site === 'peptides') {
+    return mapPeptidesAssetPath(path);
+  }
 
   if (path === '/' || path === '') {
     switch (site) {
@@ -177,6 +205,9 @@ function assetFetchInit(request) {
 export async function serveMappedAsset(request, env, url) {
   if (!env.ASSETS) return null;
 
+  const seoResponse = await handleSeoRequest(request, env, url);
+  if (seoResponse) return seoResponse;
+
   const site = getSiteForHost(url.hostname);
   const pathname = url.pathname;
   const mappedPath = mapAssetPath(site, pathname);
@@ -191,10 +222,10 @@ export async function serveMappedAsset(request, env, url) {
     response = await env.ASSETS.fetch(new Request(assetUrl.toString(), fetchInit));
   }
 
-  return maybeEnhanceProductHtmlResponse(response, {
-    env,
-    site,
-    mappedPath,
-    requestUrl: request.url,
-  });
+  const ctx = { env, site, mappedPath, requestUrl: request.url };
+
+  response = await maybeEnhanceSeoHtml(response, ctx);
+  response = await maybeEnhanceProductHtmlResponse(response, ctx);
+
+  return response;
 }
