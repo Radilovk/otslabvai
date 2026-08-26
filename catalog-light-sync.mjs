@@ -18,6 +18,7 @@ import {
 } from './portfolio-import.js';
 import { SITE_CONTENT_KEYS } from './portfolio-site-products.js';
 import { kvGet, kvPut, kvDelete } from './catalog-kv-client.mjs';
+import { pruneCatalogVersions, recordGroupChunks } from './catalog-prune.mjs';
 
 const API_KEY = process.env.FITNESS1_API_KEY;
 const SILA_TOKEN = process.env.SILA_API_TOKEN;
@@ -56,24 +57,6 @@ function gzipJson(obj) {
   return JSON.stringify(obj);
 }
 
-async function pruneOldVersions(pointer, keep = CATALOG_SYNC_POLICY.RETAIN_VERSIONS) {
-  const history = pointer.history || { index: [], stock: [] };
-  const trim = (list, prefix, suffix = '') => {
-    while (list.length > keep) {
-      const old = list.shift();
-      if (old) kvDelete(`${prefix}${old}${suffix}`).catch(() => {});
-    }
-  };
-  trim(history.index, 'catalog_index_');
-  trim(history.stock, 'catalog_stock_');
-  for (const entry of history.groups || []) {
-    if (entry.v && entry.i != null) {
-      kvDelete(CATALOG_KV.groups(entry.v, entry.i)).catch(() => {});
-    }
-  }
-  pointer.history = history;
-}
-
 async function main() {
   if (!API_KEY && !SILA_TOKEN) throw new Error('FITNESS1_API_KEY and/or SILA_API_TOKEN required');
   if (!process.env.CLOUDFLARE_API_TOKEN || !process.env.CLOUDFLARE_ACCOUNT_ID) {
@@ -93,6 +76,16 @@ async function main() {
     || built.hashes.transformVersion !== prevHashes.transformVersion;
   const stockChanged = built.hashes.stockContent !== prevHashes.stockContent
     || built.hashes.transformVersion !== prevHashes.transformVersion;
+
+  if (!indexChanged && !stockChanged) {
+    console.log(JSON.stringify({
+      ok: true,
+      skipped: true,
+      reason: 'no_content_change',
+      pointer: { i: prevPointer.i, s: prevPointer.s, t: prevPointer.t }
+    }));
+    return;
+  }
 
   const pointer = {
     i: prevPointer.i || built.indexVersion,
@@ -114,9 +107,8 @@ async function main() {
     pointer.history.index = [...new Set([...(pointer.history.index || []), built.indexVersion])];
     for (let i = 0; i < built.chunks.length; i += 1) {
       await kvPut(CATALOG_KV.groups(built.indexVersion, i), gzipJson(built.chunks[i]));
-      pointer.history.groups = pointer.history.groups || [];
-      pointer.history.groups.push({ v: built.indexVersion, i });
     }
+    recordGroupChunks(pointer.history, built.indexVersion, built.chunks.length);
   }
 
   if (stockChanged) {
@@ -134,7 +126,10 @@ async function main() {
     perGroup: built.hashes.perGroup
   });
 
-  await pruneOldVersions(pointer);
+  const pruneStats = await pruneCatalogVersions(pointer, kvDelete);
+  if (pruneStats.deleted > 0) {
+    console.log(`Pruned stale catalog KV keys: ${JSON.stringify(pruneStats)}`);
+  }
   pointer.t = built.pointer.t;
   await kvPut(CATALOG_KV.POINTER, pointer);
 
@@ -184,12 +179,19 @@ async function updateLegacyPortfolioKeys(built, indexChanged) {
     return;
   }
 
+  const prevMeta = await kvGet('portfolio_meta');
+  const oldChunkCount = prevMeta?.chunk_count ?? 0;
+  const newChunkCount = built.chunks.length;
+
   await kvPut('portfolio_meta', JSON.stringify(built.legacyMeta));
-  for (let i = 0; i < built.chunks.length; i += 1) {
+  for (let i = 0; i < newChunkCount; i += 1) {
     await kvPut(`portfolio_chunk_${i}`, JSON.stringify(built.chunks[i]));
-    if ((i + 1) % 20 === 0 || i === built.chunks.length - 1) {
-      console.log(`  legacy chunks ${i + 1}/${built.chunks.length}`);
+    if ((i + 1) % 20 === 0 || i === newChunkCount - 1) {
+      console.log(`  legacy chunks ${i + 1}/${newChunkCount}`);
     }
+  }
+  for (let i = newChunkCount; i < oldChunkCount; i += 1) {
+    await kvDelete(`portfolio_chunk_${i}`);
   }
 }
 
