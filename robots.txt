@@ -8,14 +8,5 @@ Disallow: /admin.css
 Disallow: /backend/
 Disallow: /__pycache__/
 
-# Allow important pages
-Allow: /index.html
-Allow: /product.html
-Allow: /about-us.html
-Allow: /contact.html
-Allow: /shipping.html
-Allow: /terms.html
-Allow: /policy.html
-
 # Sitemap
 Sitemap: https://daotslabna.com/sitemap.xml
