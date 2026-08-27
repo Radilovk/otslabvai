@@ -213,6 +213,12 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
+      - name: Purge SEO edge cache (all storefront hosts)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/purge-seo-cache.mjs
+
       - name: Sync Portfolio catalog to KV
         env:
           FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
