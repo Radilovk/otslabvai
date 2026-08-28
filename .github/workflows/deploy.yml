@@ -138,29 +138,6 @@ jobs:
             --data-binary "$SILA_API_TOKEN"
           echo "sila_api_token synced to KV"
 
-      - name: Set admin password Worker secret
-        run: printf '%s' 'kakadu1234' | npx wrangler secret put ADMIN_PASSWORD
-
-      - name: Set Fitness1 API key as Worker secret
-        env:
-          FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
-        run: |
-          if [ -z "$FITNESS1_API_KEY" ]; then
-            echo "Skipping Worker secret – FITNESS1_API_KEY not configured"
-            exit 0
-          fi
-          printf '%s' "$FITNESS1_API_KEY" | npx wrangler secret put FITNESS1_API_KEY
-
-      - name: Set Sila API token as Worker secret
-        env:
-          SILA_API_TOKEN: ${{ secrets.SILA_API_TOKEN }}
-        run: |
-          if [ -z "$SILA_API_TOKEN" ]; then
-            echo "Skipping Worker secret – SILA_API_TOKEN not configured"
-            exit 0
-          fi
-          printf '%s' "$SILA_API_TOKEN" | npx wrangler secret put SILA_API_TOKEN
-
       - name: Set AI API keys in KV
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -180,7 +157,6 @@ jobs:
           else
             echo "Skipping GOOGLE_AI_API_KEY – GitHub secret not set"
           fi
-
 
       - name: Sync Life page content to KV
         if: github.ref == 'refs/heads/main'
@@ -212,6 +188,37 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Wrangler 4+ requires an active Worker deployment before `secret put`.
+      - name: Set admin password Worker secret
+        env:
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          if [ -z "$ADMIN_PASSWORD" ]; then
+            echo "Skipping ADMIN_PASSWORD – GitHub secret not configured"
+            exit 0
+          fi
+          printf '%s' "$ADMIN_PASSWORD" | npx wrangler secret put ADMIN_PASSWORD
+
+      - name: Set Fitness1 API key as Worker secret
+        env:
+          FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
+        run: |
+          if [ -z "$FITNESS1_API_KEY" ]; then
+            echo "Skipping Worker secret – FITNESS1_API_KEY not configured"
+            exit 0
+          fi
+          printf '%s' "$FITNESS1_API_KEY" | npx wrangler secret put FITNESS1_API_KEY
+
+      - name: Set Sila API token as Worker secret
+        env:
+          SILA_API_TOKEN: ${{ secrets.SILA_API_TOKEN }}
+        run: |
+          if [ -z "$SILA_API_TOKEN" ]; then
+            echo "Skipping Worker secret – SILA_API_TOKEN not configured"
+            exit 0
+          fi
+          printf '%s' "$SILA_API_TOKEN" | npx wrangler secret put SILA_API_TOKEN
 
       - name: Sync Portfolio catalog to KV
         env:

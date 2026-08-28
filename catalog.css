@@ -146,14 +146,15 @@
   body[data-site="main"] .catalog-title { font-size: 0.88rem; }
 }
 
-/* Dark theme: inset product photos on dark wells */
+/* Dark theme: soft product spotlight — no inner frame */
 [data-theme="dark"] .catalog-image {
-  background: radial-gradient(ellipse 80% 65% at 50% 40%, rgba(0, 169, 157, 0.07) 0%, transparent 55%),
-              linear-gradient(165deg, #10141a 0%, #161b22 48%, #0d1015 100%);
-  padding: 0.75rem;
+  background: radial-gradient(ellipse 88% 78% at 50% 42%, rgba(0, 169, 157, 0.1) 0%, transparent 62%);
+  padding: 0.65rem 0.85rem;
+  border: none;
 }
 
 [data-theme="dark"] .catalog-image img {
-  border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.42));
 }
