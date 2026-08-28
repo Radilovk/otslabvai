@@ -46,24 +46,25 @@
     --neon-secondary: 0 0 8px #00A99D, 0 0 20px rgba(0, 169, 157, 0.7), 0 0 40px rgba(0, 169, 157, 0.4);
     
     /* Dark Theme Variables (keeping for theme toggle) */
-    --bg-primary-dark: #0D0F12;
-    --bg-secondary-dark: #12151A;
-    --text-primary-dark: #E9ECEF;
-    --text-secondary-dark: #A0AEC0;
-    --accent-dark: #E4007C;
-    --accent-rgb-dark: 228, 0, 124;
-    --accent-secondary-dark: #00A99D;
-    --accent-secondary-rgb-dark: 0, 169, 157;
-    --border-color-dark: rgba(255, 255, 255, 0.1);
-    --shadow-dark: rgba(228, 0, 124, 0.25);
-    --spotlight-color-dark: rgba(228, 0, 124, 0.08);
-    --note-color-dark: #ffd700;
-    --success-color-dark: #00A99D;
-    --error-color-dark: #dc3545;
-    --skeleton-bg-dark: #1a1e25;
-    --skeleton-highlight-dark: #2a303a;
+    --bg-primary-dark: #0f1419;
+    --bg-secondary-dark: #171d26;
+    --bg-tertiary-dark: #1e2633;
+    --text-primary-dark: #f1f5f9;
+    --text-secondary-dark: #94a3b8;
+    --accent-dark: #ff3d9a;
+    --accent-rgb-dark: 255, 61, 154;
+    --accent-secondary-dark: #2dd4bf;
+    --accent-secondary-rgb-dark: 45, 212, 191;
+    --border-color-dark: rgba(148, 163, 184, 0.14);
+    --shadow-dark: rgba(0, 0, 0, 0.32);
+    --spotlight-color-dark: rgba(228, 0, 124, 0.12);
+    --note-color-dark: #fbbf24;
+    --success-color-dark: #2dd4bf;
+    --error-color-dark: #f87171;
+    --skeleton-bg-dark: #1a2230;
+    --skeleton-highlight-dark: #243044;
 
-    --header-bg-dark: rgba(13, 15, 18, 0.85);
+    --header-bg-dark: rgba(15, 20, 25, 0.88);
     --header-height: 70px;
     --overlay-bg-dark: rgba(0,0,0,0.5);
     --header-gradient-start-light: rgba(250, 251, 252, 0.98);
@@ -73,17 +74,22 @@
     --header-scrolled-bg-light: rgba(250, 251, 252, 0.98);
     --hero-bg-start-light: #FFE5F1;
     --hero-bg-end-light: #E0F2F1;
-    --header-gradient-start-dark: rgba(18, 21, 26, 0.95);
-    --header-gradient-end-dark: rgba(13, 15, 18, 0.95);
-    --header-border-dark: rgba(228, 0, 124, 0.2);
-    --header-border-scrolled-dark: rgba(228, 0, 124, 0.3);
-    --header-scrolled-bg-dark: rgba(13, 15, 18, 0.98);
-    --hero-bg-start-dark: #1a0d14;
-    --hero-bg-end-dark: #0a1a1a;
+    --header-gradient-start-dark: rgba(23, 29, 38, 0.96);
+    --header-gradient-end-dark: rgba(15, 20, 25, 0.96);
+    --header-border-dark: rgba(228, 0, 124, 0.22);
+    --header-border-scrolled-dark: rgba(228, 0, 124, 0.34);
+    --header-scrolled-bg-dark: rgba(15, 20, 25, 0.97);
+    --hero-bg-start-dark: #1a1020;
+    --hero-bg-end-dark: #0d1a1f;
+    --bg-mesh-dark: radial-gradient(ellipse 90% 60% at 12% -8%, rgba(228, 0, 124, 0.09), transparent 55%),
+                    radial-gradient(ellipse 70% 50% at 98% 2%, rgba(0, 169, 157, 0.07), transparent 50%),
+                    linear-gradient(180deg, #121820 0%, #0f1419 100%);
     
     /* Theme gradient variables - default values */
     --theme-gradient-light: linear-gradient(135deg, #FFE5F1 0%, #E0F2F1 100%);
-    --theme-gradient-dark: linear-gradient(135deg, #1a0d14 0%, #0a1a1a 100%);
+    --theme-gradient-dark: radial-gradient(ellipse 80% 70% at 20% 0%, rgba(228, 0, 124, 0.14), transparent 55%),
+                           radial-gradient(ellipse 60% 55% at 85% 10%, rgba(0, 169, 157, 0.1), transparent 50%),
+                           linear-gradient(155deg, #1a1020 0%, #0f1419 48%, #0d1a1f 100%);
     
     /* Light Theme Variables (Lipolor-inspired) - Improved with less white */
     --bg-primary-light: #FAFBFC;
@@ -169,9 +175,9 @@
     --hero-bg-start: var(--hero-bg-start-dark);
     --hero-bg-end: var(--hero-bg-end-dark);
     --theme-gradient: var(--theme-gradient-dark);
-    --product-image-well: radial-gradient(ellipse 80% 65% at 50% 40%, rgba(0, 169, 157, 0.07) 0%, transparent 55%),
-                          linear-gradient(165deg, #10141a 0%, #161b22 48%, #0d1015 100%);
-    --product-image-stage-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    --bg-mesh: var(--bg-mesh-dark);
+    --product-image-well: radial-gradient(ellipse 88% 78% at 50% 42%, rgba(0, 169, 157, 0.1) 0%, transparent 62%);
+    --product-image-stage-shadow: 0 8px 18px rgba(0, 0, 0, 0.42);
 }
 
 /* Basic Reset */
@@ -196,6 +202,12 @@ body {
     transition: background-color 0.4s ease, color 0.4s ease;
     /* Add padding-top to account for fixed header */
     padding-top: var(--header-height);
+}
+
+[data-theme="dark"] body {
+    background-color: var(--bg-primary);
+    background-image: var(--bg-mesh);
+    background-attachment: fixed;
 }
 
 /* Prevent flashing of content that's dynamically loaded */
@@ -1718,6 +1730,15 @@ main {
     padding: 60px 0; 
 }
 
+[data-theme="dark"] .category-section:nth-of-type(even) {
+    background: linear-gradient(180deg, rgba(23, 29, 38, 0.55) 0%, rgba(15, 20, 25, 0) 100%);
+}
+
+[data-theme="dark"] .main-footer {
+    background: linear-gradient(180deg, var(--bg-secondary) 0%, #121820 100%);
+    border-top-color: rgba(148, 163, 184, 0.12);
+}
+
 /* First category section should be closer to hero section */
 .category-section:first-of-type {
     padding-top: 30px;
@@ -1859,6 +1880,17 @@ main {
     will-change: transform;
 }
 
+[data-theme="dark"] .product-card {
+    background: var(--bg-secondary);
+    border-color: rgba(148, 163, 184, 0.12);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .product-card:hover {
+    border-color: rgba(228, 0, 124, 0.35);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(228, 0, 124, 0.18);
+}
+
 .product-card::before {
     content: ""; 
     position: absolute; 
@@ -1906,13 +1938,14 @@ main {
 
 [data-theme="dark"] .product-image {
     background: var(--product-image-well);
-    padding: 1rem 1.15rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.65rem 0.85rem;
+    border: none;
 }
 
 [data-theme="dark"] .product-image img {
-    border-radius: 10px;
-    box-shadow: var(--product-image-stage-shadow);
+    border-radius: 0;
+    box-shadow: none;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.42));
 }
 
 .card-content { 
@@ -3073,6 +3106,9 @@ body.modal-open { overflow: hidden; }
     /* Optimize product images for mobile — full product visible, no crop */
     .product-image {
         min-height: 120px;
+    }
+    [data-theme="dark"] .product-image {
+        padding: 0.5rem 0.65rem;
     }
     .product-image img {
         max-height: 220px;
