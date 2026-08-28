@@ -1907,6 +1907,10 @@ main {
     background: #ffffff;
 }
 
+[data-theme="light"] .product-image img {
+    filter: none;
+}
+
 [data-theme="dark"] .product-card {
     background: var(--bg-secondary);
     border-color: rgba(148, 163, 184, 0.12);
