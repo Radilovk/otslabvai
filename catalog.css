@@ -52,6 +52,23 @@
   transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
+[data-theme="light"] .catalog-card {
+  background: #ffffff;
+}
+
+[data-theme="light"] .catalog-image {
+  background: #ffffff;
+}
+
+[data-theme="light"] .catalog-image img {
+  filter: none;
+}
+
+[data-theme="light"] .catalog-body {
+  background: #ffffff;
+  border-top: 1px solid rgba(15, 37, 64, 0.06);
+}
+
 .catalog-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
