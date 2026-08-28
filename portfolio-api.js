@@ -1666,7 +1666,8 @@ async function handleBootstrap(env, ctx) {
 
   if (!meta) {
     const apiKey = await getFitness1ApiKey(env);
-    if (!apiKey) {
+    const silaToken = await getSilaApiToken(env);
+    if (!apiKey && !silaToken) {
       throw new PortfolioError('Каталогът не е синхронизиран.', 404);
     }
     await syncPortfolioCatalog(env, { includeDescriptions: false, fallbackToKv: true });

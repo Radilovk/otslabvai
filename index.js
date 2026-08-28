@@ -164,6 +164,14 @@ const getStatIconSVG = (iconName) => {
     return icons[iconName] || '';
 };
 
+const DEFAULT_HERO_STAT_ICONS = ['users', 'trophy', 'leaf'];
+
+function resolveStatIcon(stat, index) {
+    const icon = String(stat?.icon || '').trim();
+    if (icon) return icon;
+    return DEFAULT_HERO_STAT_ICONS[index] || 'chart';
+};
+
 const generateHeroHTML = component => {
     // Build style attribute for custom background
     let heroStyle = '';
@@ -272,10 +280,10 @@ const generateHeroHTML = component => {
         { value: '100%', label: 'Естествени съставки', icon: 'leaf' }
     ];
     
-    const statsHTML = stats.map(stat => `
+    const statsHTML = stats.map((stat, index) => `
         <div class="stat-item">
-            ${stat.icon ? `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
-                ${getStatIconSVG(stat.icon)}
+            ${resolveStatIcon(stat, index) ? `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon">
+                ${getStatIconSVG(resolveStatIcon(stat, index))}
             </svg>` : ''}
             <strong>${escapeHtml(stat.value)}</strong>
             <span>${escapeHtml(stat.label)}</span>
