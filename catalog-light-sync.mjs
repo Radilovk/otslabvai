@@ -12,11 +12,7 @@ import {
 } from './catalog-settings-kv.mjs';
 import { DEFAULT_SETTINGS, fetchFitness1Products, mergeCatalogProducts } from './portfolio-api.js';
 import { fetchSilaProductsWithFallback, normalizeSilaApiToken, KV_SILA_TOKEN } from './sila-api.js';
-import {
-  refreshImportedProductsInContent,
-  collectImportedGroupIds
-} from './portfolio-import.js';
-import { SITE_CONTENT_KEYS } from './portfolio-site-products.js';
+import { refreshSiteProjectsFromCatalog } from './catalog-site-refresh.mjs';
 import { kvGet, kvPut, kvDelete } from './catalog-kv-client.mjs';
 import { pruneCatalogVersions, recordGroupChunks } from './catalog-prune.mjs';
 
@@ -149,7 +145,8 @@ async function main() {
     groups: built.groups.length
   }));
 
-  await refreshSiteProjectsFromCatalog(built.groups);
+  const refreshResults = await refreshSiteProjectsFromCatalog(built.groups);
+  console.log('Site project refresh:', JSON.stringify(refreshResults));
 }
 
 async function updateLegacyPortfolioKeys(built, indexChanged) {
@@ -193,33 +190,6 @@ async function updateLegacyPortfolioKeys(built, indexChanged) {
   for (let i = newChunkCount; i < oldChunkCount; i += 1) {
     await kvDelete(`portfolio_chunk_${i}`);
   }
-}
-
-async function refreshSiteProjectsFromCatalog(groups) {
-  const groupsById = new Map(groups.map((g) => [String(g.group_id), g]));
-  const results = {};
-
-  for (const project of ['main', 'life']) {
-    const keys = SITE_CONTENT_KEYS[project];
-    let content = await kvGet(keys.kvKey);
-    if (!content) content = await kvGet(keys.fallback);
-    if (!content) {
-      results[project] = { skipped: true, reason: 'no content' };
-      continue;
-    }
-
-    const groupIds = collectImportedGroupIds(content);
-    if (!groupIds.length) {
-      results[project] = { skipped: true, reason: 'no imported products' };
-      continue;
-    }
-
-    const stats = refreshImportedProductsInContent(content, groupsById);
-    await kvPut(keys.kvKey, content);
-    results[project] = stats;
-  }
-
-  console.log('Site project refresh:', JSON.stringify(results));
 }
 
 main().catch((e) => {

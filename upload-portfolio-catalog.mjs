@@ -5,6 +5,7 @@
 import { groupRawProducts, buildCatalogMeta, DEFAULT_SETTINGS, fetchDescriptionMap, fetchFitness1Products, mergeCatalogProducts } from './portfolio-api.js';
 import { fetchSilaProductsWithFallback, normalizeSilaApiToken, KV_SILA_TOKEN } from './sila-api.js';
 import { mergeSettingsForCatalogSync, persistSettingsAfterCatalogSync } from './catalog-settings-kv.mjs';
+import { refreshSiteProjectsFromCatalog } from './catalog-site-refresh.mjs';
 import { kvGet, kvPut } from './catalog-kv-client.mjs';
 
 const F1_KEY = process.env.FITNESS1_API_KEY;
@@ -103,6 +104,9 @@ async function main() {
     console.log(`Uploading portfolio_chunk_${i} (${slice.length} groups)...`);
     await kvPut(`portfolio_chunk_${i}`, JSON.stringify(slice), 'application/json');
   }
+
+  const refreshResults = await refreshSiteProjectsFromCatalog(groups);
+  console.log('Site project refresh:', JSON.stringify(refreshResults));
 
   console.log('✅ Portfolio catalog uploaded to KV');
 }
