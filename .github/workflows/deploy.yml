@@ -44,7 +44,12 @@ jobs:
             echo "Without it, all domains serve index.html for / (serve_directly / asset-first mode)."
             exit 1
           fi
-          echo "run_worker_first = true confirmed in wrangler.toml"
+          wrangler_major=$(npx wrangler --version | cut -d. -f1)
+          if [ "$wrangler_major" != "4" ]; then
+            echo "::error::Wrangler 4+ required (got $(npx wrangler --version)). Wrangler 3 ignores run_worker_first."
+            exit 1
+          fi
+          echo "run_worker_first = true confirmed; Wrangler $(npx wrangler --version)"
 
       - name: Bake bio_content.json into bio.html
         if: github.ref == 'refs/heads/main'
@@ -197,6 +202,8 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Must be Wrangler 4+ or run_worker_first in wrangler.toml is silently ignored.
+          wranglerVersion: "4"
 
       # Wrangler 4+ requires an active Worker deployment before `secret put`.
       - name: Set admin password Worker secret

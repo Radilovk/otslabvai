@@ -16,6 +16,8 @@ workers_dev = true
 # serve_directly = true in dashboard docs), Cloudflare serves index.html for "/"
 # before the Worker runs — all domains then show the main site.
 # run_worker_first = true forces every request through worker.js → serveMappedAsset().
+# Requires Wrangler 4+ in devDependencies — Wrangler 3 silently ignores this field.
+# _routes.json (include /*) is a belt-and-suspenders equivalent for static routing.
 # After changing this, redeploy with `npm run deploy` (or GitHub Actions).
 [assets]
 directory = "."

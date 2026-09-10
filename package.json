@@ -30,6 +30,7 @@
   "devDependencies": {
     "jest": "^29.7.0",
     "playwright": "^1.61.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.131.0"
   }
 }
