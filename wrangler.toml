@@ -11,7 +11,12 @@ workers_dev = true
 # Set via: npx wrangler secret put FITNESS1_API_KEY
 # Set via: npx wrangler secret put SILA_API_TOKEN
 # Or KV keys fitness1_api_key / sila_api_token (see upload-portfolio-catalog.mjs)
-# Worker runs first: API/KV routes in worker.js; static assets via env.ASSETS with hostname routing.
+# CRITICAL for multi-domain routing (daotslabna / life-protocols / biocode-bg):
+# With the default asset-first mode (run_worker_first = false, sometimes shown as
+# serve_directly = true in dashboard docs), Cloudflare serves index.html for "/"
+# before the Worker runs — all domains then show the main site.
+# run_worker_first = true forces every request through worker.js → serveMappedAsset().
+# After changing this, redeploy with `npm run deploy` (or GitHub Actions).
 [assets]
 directory = "."
 binding = "ASSETS"

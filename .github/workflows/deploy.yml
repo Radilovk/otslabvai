@@ -37,6 +37,15 @@ jobs:
       - name: Validate Worker (typecheck + Portfolio tests)
         run: npm run validate:worker
 
+      - name: Verify multi-domain assets config (run_worker_first)
+        run: |
+          if ! grep -Eq '^run_worker_first\s*=\s*true' wrangler.toml; then
+            echo "::error::wrangler.toml must set run_worker_first = true so hostname routing runs before static assets."
+            echo "Without it, all domains serve index.html for / (serve_directly / asset-first mode)."
+            exit 1
+          fi
+          echo "run_worker_first = true confirmed in wrangler.toml"
+
       - name: Bake bio_content.json into bio.html
         if: github.ref == 'refs/heads/main'
         run: |
@@ -316,7 +325,7 @@ jobs:
             echo "ERROR: portfolio hero image must be served as a static asset"
             fail=1
           fi
-          for host in daotslabna.com www.daotslabna.com biocode-bg.com www.biocode-bg.com; do
+          for host in daotslabna.com www.daotslabna.com biocode-bg.com www.biocode-bg.com life-protocols.com www.life-protocols.com; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 "https://${host}/" || echo "000")
             echo "https://${host}/ → HTTP ${code}"
             if [ "$code" != "200" ]; then
@@ -325,3 +334,6 @@ jobs:
           done
           if [ "$fail" -ne 0 ]; then exit 1; fi
           echo "Portfolio API routes are live on ${BASE}"
+
+      - name: Smoke test hostname routing (custom domains)
+        run: node scripts/verify-hostname-routing.mjs
