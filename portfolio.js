@@ -16,6 +16,7 @@ import {
   syncPromoCatalogUnlock,
   PROMO_CHANGED_EVENT,
 } from './portfolio-promo-catalog.js';
+import { removeSeoPrerender } from './seo-hydration.js';
 
 const LIMIT = 24;
 
@@ -421,6 +422,7 @@ async function init() {
   const savedPromo = loadActivePromo();
   if (savedPromo) syncPromoCatalogUnlock(savedPromo);
   loadCatalog();
+  removeSeoPrerender();
 
   window.addEventListener(PROMO_CHANGED_EVENT, () => {
     state.page = 1;

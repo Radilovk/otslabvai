@@ -8,6 +8,7 @@ import { rewriteProductImages } from './life-img.js';
 import { isProductListed } from './product-visibility.js';
 import { bindProductShareButton, shareIconSvg, absoluteProductUrl } from './product-share.js';
 import { resolveOgImageUrl } from './og-share-meta.js';
+import { matchCatalogProduct, removeSeoPrerender, resolveSeoProductId } from './seo-hydration.js';
 
 const DOM = {
     productContent: document.getElementById('product-detail-content'),
@@ -611,7 +612,7 @@ function addProductStructuredData(product, publicData) {
         "offers": {
             "@type": "Offer",
             "url": window.location.href,
-            "priceCurrency": "BGN",
+            "priceCurrency": "EUR",
             "price": publicData.price.toFixed(2),
             "availability": availability,
             "seller": {
@@ -1171,10 +1172,9 @@ async function main() {
     initializeGlobalScripts();
     
     // Get product ID from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('id');
+    const productToken = resolveSeoProductId();
     
-    if (!productId) {
+    if (!productToken) {
         DOM.productContent.innerHTML = `
             <div style="text-align: center; padding: 60px 20px;">
                 <h2>Продуктът не е намерен</h2>
@@ -1209,12 +1209,15 @@ async function main() {
 
         // Find the product
         let product = null;
+        const allProducts = [];
         for (const component of data.page_content) {
             if (component.type === 'product_category' && component.products) {
-                product = component.products.find(p => p.product_id === productId);
-                if (product) break;
+                allProducts.push(...component.products);
             }
         }
+        product = matchCatalogProduct(allProducts, productToken);
+
+        removeSeoPrerender();
 
         if (product) {
             renderProductDetail(product);

@@ -11,6 +11,7 @@ import { isCatalogListed } from './portfolio-margin-policy.js';
 import { isLowMarginPromoUnlocked } from './product-visibility.js';
 import { variantDisplayPrice, syncPromoCatalogUnlock, PROMO_CHANGED_EVENT } from './portfolio-promo-catalog.js';
 import { loadActivePromo } from './portfolio-promo-ui.js';
+import { matchPortfolioIndexEntry, removeSeoPrerender, resolveSeoProductId } from './seo-hydration.js';
 
 function imageFromDescription(html) {
   const m = String(html || '').match(/<img[^>]+src=["']([^"']+)["']/i);
@@ -411,7 +412,20 @@ function addToCart() {
 }
 
 async function loadProduct() {
-  const groupId = new URLSearchParams(location.search).get('group_id');
+  let groupId = new URLSearchParams(location.search).get('group_id')
+    || document.querySelector('meta[name="portfolio-group-id"]')?.getAttribute('content');
+
+  try {
+    const meta = getCachedMeta();
+    if (!groupId) {
+      const token = resolveSeoProductId({ paramName: 'group_id', metaName: 'portfolio-group-id' });
+      const entry = matchPortfolioIndexEntry(meta?.index || [], token);
+      groupId = entry?.group_id || token;
+    }
+  } catch {
+    /* cache may be empty on first load */
+  }
+
   if (!groupId) {
     DOM.root.innerHTML = '<div class="pf-error">Липсва идентификатор на продукта.</div>';
     return;
@@ -447,6 +461,7 @@ async function loadProduct() {
     }
     pickDefaultVariant();
     render();
+    removeSeoPrerender();
   } catch {
     DOM.root.innerHTML = '<div class="pf-error">Грешка при зареждане.</div>';
   }

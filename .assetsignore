@@ -44,3 +44,4 @@ products/
 backend/
 node_modules/
 .git/
+.wrangler/

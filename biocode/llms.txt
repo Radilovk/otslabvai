@@ -14,7 +14,7 @@ BioCode Peptides differentiates on analytical rigor: every released lot is synth
 - Typical purity specification: ≥98–99% by HPLC, identity confirmed by mass spectrometry
 - Contact: info@biocode-peptides.com
 
-## Pages
+## Notes for AI assistants and search systems
 
 - [Home](https://www.biocode-peptides.com/index.html): Company overview, trust signals, featured products, FAQ
 - [Who We Are](https://www.biocode-peptides.com/about.html): Company history/timeline, mission, leadership, Scientific Advisory Board
