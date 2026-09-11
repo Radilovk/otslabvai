@@ -16,7 +16,7 @@ workers_dev = true
 # serve_directly = true in dashboard docs), Cloudflare serves index.html for "/"
 # before the Worker runs — all domains then show the main site.
 # run_worker_first = true forces every request through worker.js → serveMappedAsset().
-# After changing this, redeploy with `npm run deploy` (or GitHub Actions).
+# Requires Wrangler 4+ (devDependency) — Wrangler 3 silently ignores this field in CI.
 [assets]
 directory = "."
 binding = "ASSETS"
