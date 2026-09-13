@@ -68,6 +68,7 @@ describe('mapAssetPath', () => {
 
   test('maps life subpages with life- prefix', () => {
     expect(mapAssetPath('life', '/checkout.html')).toBe('/life-checkout.html');
+    expect(mapAssetPath('life', '/about-us.html')).toBe('/life-about.html');
     expect(mapAssetPath('life', '/life-product.html')).toBe('/life-product.html');
     expect(mapAssetPath('life', '/life-protocol-quiz.html')).toBe('/life-protocol-quiz.html');
     expect(mapAssetPath('life', '/admin.html')).toBe('/admin.html');

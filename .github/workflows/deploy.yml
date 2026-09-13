@@ -343,4 +343,4 @@ jobs:
           echo "Portfolio API routes are live on ${BASE}"
 
       - name: Smoke test hostname routing (custom domains)
-        run: node scripts/verify-hostname-routing.mjs
+        run: node scripts/verify-platform-production.mjs
