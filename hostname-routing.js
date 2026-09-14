@@ -106,6 +106,7 @@ function mapPrefixedHtml(site, pathname) {
   const file = path.slice(1);
   if (site === 'life') {
     if (file === 'life.html' || file.startsWith('life-')) return path;
+    if (file === 'about-us.html') return '/life-about.html';
     return `/life-${file}`;
   }
   if (site === 'portfolio') {
@@ -186,7 +187,9 @@ export async function serveMappedAsset(request, env, url) {
   assetUrl.pathname = mappedPath;
   let response = await env.ASSETS.fetch(new Request(assetUrl.toString(), fetchInit));
 
-  if (response.status === 404 && mappedPath !== pathname) {
+  // Only the main site may fall back to the requested path. On life/portfolio a missing
+  // mapped file must not serve the generic main-site HTML (e.g. checkout.html).
+  if (response.status === 404 && mappedPath !== pathname && site === 'main') {
     assetUrl.pathname = pathname;
     response = await env.ASSETS.fetch(new Request(assetUrl.toString(), fetchInit));
   }
