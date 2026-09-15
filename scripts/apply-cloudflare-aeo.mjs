@@ -3,7 +3,7 @@
  * Apply Cloudflare Dashboard settings required for AEO/GEO (AI crawler access).
  * Idempotent — safe to run after each deploy. Reports manual steps when bot APIs unavailable.
  * Re-run after rotating CLOUDFLARE_API_TOKEN with full zone permissions.
- * Last token rotation: 2026-09-15 (new token in GitHub secrets).
+ * Last token rotation: 2026-09-15 (corrected ~40 char API token).
  * Usage:
  *   CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... node scripts/apply-cloudflare-aeo.mjs
  *   node scripts/apply-cloudflare-aeo.mjs --dry-run
@@ -277,11 +277,6 @@ async function applyZone(domain) {
 }
 
 async function main() {
-  if (!TOKEN) {
-    console.error('Missing CLOUDFLARE_API_TOKEN');
-    process.exit(1);
-  }
-
   console.log(`Cloudflare AEO apply ${DRY_RUN ? '(DRY RUN)' : ''}`);
   console.log(`Account: ${ACCOUNT_ID || '(not set)'}`);
   console.log(`Token length: ${TOKEN.length} chars (value not logged)`);
