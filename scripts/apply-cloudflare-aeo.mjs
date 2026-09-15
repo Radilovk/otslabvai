@@ -67,16 +67,58 @@ async function getSetting(zoneId, id) {
   return ok ? result?.value : `error: ${error}`;
 }
 
-async function setSetting(zoneId, id, value) {
+async function setSettingSafe(zoneId, id, value) {
   const current = await getSetting(zoneId, id);
   if (current === value) {
-    return { changed: false, from: current, to: value };
+    return { ok: true, changed: false, from: current, to: value };
   }
   if (DRY_RUN) {
-    return { changed: true, dryRun: true, from: current, to: value };
+    return { ok: true, changed: true, dryRun: true, from: current, to: value };
   }
-  await cf(`/zones/${zoneId}/settings/${id}`, { method: 'PATCH', body: { value } });
-  return { changed: true, from: current, to: value };
+  const { ok, error } = await cfTry(`/zones/${zoneId}/settings/${id}`, {
+    method: 'PATCH',
+    body: { value },
+  });
+  return ok
+    ? { ok: true, changed: true, from: current, to: value }
+    : { ok: false, from: current, to: value, error };
+}
+
+async function tryBotProtections(zoneId) {
+  const attempts = [];
+
+  if (DRY_RUN) {
+    return [{ ok: true, dryRun: true, action: 'bot_protections_skipped_in_dry_run' }];
+  }
+
+  // Bot Fight Mode / Super Bot Fight — endpoint varies by plan.
+  attempts.push({
+    action: 'settings.bot_fight_mode=off',
+    ...(await cfTry(`/zones/${zoneId}/settings/bot_fight_mode`, {
+      method: 'PATCH',
+      body: { value: 'off' },
+    })),
+  });
+
+  const { ok: gotBm, result: bm } = await cfTry(`/zones/${zoneId}/bot_management`);
+  if (gotBm) {
+    const payload = {
+      ...bm,
+      fight_mode: false,
+      enable_js: bm?.enable_js ?? false,
+    };
+    if ('ai_bots_protection' in (bm || {})) {
+      payload.ai_bots_protection = 'allow';
+    }
+    attempts.push({
+      action: 'bot_management.fight_mode=false',
+      ...(await cfTry(`/zones/${zoneId}/bot_management`, { method: 'PUT', body: payload })),
+    });
+  } else {
+    attempts.push({ action: 'bot_management.get', ok: false, error: bm || 'unavailable on plan' });
+  }
+
+  return attempts;
 }
 
 async function purgeZone(zoneId, domain) {
@@ -143,13 +185,15 @@ async function applyZone(domain) {
   const audit = {
     ssl: await getSetting(zoneId, 'ssl'),
     security_level: await getSetting(zoneId, 'security_level'),
-    bot_fight_mode: await getSetting(zoneId, 'bot_fight_mode'),
+    bot_management: (await cfTry(`/zones/${zoneId}/bot_management`)).ok
+      ? (await cfTry(`/zones/${zoneId}/bot_management`)).result
+      : 'unavailable',
   };
   console.log('Before:', audit);
 
   const changes = {};
-  changes.ssl = await setSetting(zoneId, 'ssl', 'strict');
-  changes.bot_fight_mode = await setSetting(zoneId, 'bot_fight_mode', 'off');
+  changes.ssl = await setSettingSafe(zoneId, 'ssl', 'strict');
+  changes.bot_protections = await tryBotProtections(zoneId);
 
   let dns = [];
   try {
@@ -195,7 +239,7 @@ async function main() {
   if (!allSmokeOk) process.exitCode = 1;
 
   console.log('\nDone.');
-  console.log('Manual if API unavailable: Security → Bots → AI Crawl Control → allow AI crawlers.');
+  console.log('Manual if bot API unavailable: Security → Bots → Bot Fight Mode OFF + AI Crawl Control allow.');
 }
 
 main().catch((err) => {
