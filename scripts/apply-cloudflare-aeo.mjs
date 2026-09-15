@@ -120,11 +120,11 @@ async function tryBotProtections(zoneId) {
 
 async function purgeZone(zoneId, domain) {
   if (DRY_RUN) return { purged: true, dryRun: true };
-  await cf(`/zones/${zoneId}/purge_cache`, {
+  const { ok, error } = await cfTry(`/zones/${zoneId}/purge_cache`, {
     method: 'POST',
     body: { purge_everything: true },
   });
-  return { purged: true };
+  return ok ? { purged: true } : { purged: false, error };
 }
 
 async function auditDnsProxy(zoneId, domain) {
