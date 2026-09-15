@@ -100,16 +100,13 @@ async function tryBotProtections(zoneId) {
     })),
   });
 
-  const { ok: gotBm, result: bm } = await cfTry(`/zones/${zoneId}/bot_management`);
+  const { ok: gotBm, result: bmState } = await cfTry(`/zones/${zoneId}/bot_management`);
   if (gotBm) {
     const payload = {
-      ...bm,
+      ...bmState,
       fight_mode: false,
-      enable_js: bm?.enable_js ?? false,
+      enable_js: bmState?.enable_js ?? false,
     };
-    if ('ai_bots_protection' in (bm || {})) {
-      payload.ai_bots_protection = 'allow';
-    }
     attempts.push({
       action: 'bot_management.fight_mode=false',
       ...(await cfTry(`/zones/${zoneId}/bot_management`, { method: 'PUT', body: payload })),
@@ -182,12 +179,11 @@ async function httpSmoke() {
 async function applyZone(domain) {
   console.log(`\n=== ${domain} ===`);
   const zoneId = await getZoneId(domain);
+  const bm = await cfTry(`/zones/${zoneId}/bot_management`);
   const audit = {
     ssl: await getSetting(zoneId, 'ssl'),
     security_level: await getSetting(zoneId, 'security_level'),
-    bot_management: (await cfTry(`/zones/${zoneId}/bot_management`)).ok
-      ? (await cfTry(`/zones/${zoneId}/bot_management`)).result
-      : 'unavailable',
+    bot_management: bm.ok ? bm.result : 'unavailable',
   };
   console.log('Before:', audit);
 
