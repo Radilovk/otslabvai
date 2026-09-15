@@ -14,7 +14,7 @@
 | JSON-LD Organization | ✅ | Edge injection |
 | JSON-LD Product (clean URLs) | ✅ | `/products/{slug}` |
 | FAQPage schema | ✅ | `faq.html`, `life-faq.html`, `portfolio-faq.html` |
-| Видим HTML каталог (без JS) | ✅ | `#seo-catalog` на homepage |
+| Видим HTML каталог (без JS) | ✅ | `llms.txt`, `sitemap.xml`, FAQ страници (не inject в body) |
 | IndexNow | ⏳ ръчно / CI secret | виж по-долу |
 | Bot Fight Mode изключен | ⚠️ Cloudflare Dashboard | Security → Bots |
 
