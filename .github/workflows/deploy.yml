@@ -344,3 +344,9 @@ jobs:
 
       - name: Smoke test hostname routing (custom domains)
         run: node scripts/verify-platform-production.mjs
+
+      - name: Apply Cloudflare AEO zone settings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/apply-cloudflare-aeo.mjs

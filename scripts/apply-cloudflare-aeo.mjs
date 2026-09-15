@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Apply Cloudflare Dashboard settings required for AEO/GEO (AI crawler access).
- *
+ * Idempotent — safe to run after each deploy.
  * Usage:
  *   CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... node scripts/apply-cloudflare-aeo.mjs
  *   node scripts/apply-cloudflare-aeo.mjs --dry-run

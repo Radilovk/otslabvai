@@ -181,11 +181,9 @@ X-Robots-Tag: index, follow, max-snippet:-1
 
 ## 6. Deploy процедура
 
-<<<<<<< HEAD
-=======
 ### 6.0 Автоматично Cloudflare apply (API)
 
-След merge, пуснете GitHub Actions workflow **Apply Cloudflare AEO settings** или локално:
+Пуснете GitHub Actions workflow **Apply Cloudflare AEO settings** или локално:
 
 ```bash
 CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... node scripts/apply-cloudflare-aeo.mjs
@@ -201,7 +199,6 @@ node scripts/apply-cloudflare-aeo.mjs --dry-run
 
 **Ръчно остава:** Security → Bots → **AI Crawl Control** (няма публичен API).
 
->>>>>>> cursor/cloudflare-aeo-apply-bb92
 ### 6.1 Автоматичен (production)
 
 1. Merge в `main` (или push към `cursor/**` за preview deploy).

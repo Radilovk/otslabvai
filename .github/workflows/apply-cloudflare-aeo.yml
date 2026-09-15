@@ -11,6 +11,12 @@ on:
         options:
           - 'false'
           - 'true'
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/apply-cloudflare-aeo.mjs'
+      - '.github/workflows/apply-cloudflare-aeo.yml'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
