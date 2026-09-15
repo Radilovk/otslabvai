@@ -47,5 +47,5 @@ jobs:
           node scripts/apply-cloudflare-aeo.mjs $ARGS
 
       - name: Production AEO smoke
-        if: inputs.dry_run == 'false'
+        if: inputs.dry_run != 'true'
         run: npm run test:platform-production
