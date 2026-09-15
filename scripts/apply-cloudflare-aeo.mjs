@@ -1,0 +1,204 @@
+#!/usr/bin/env node
+/**
+ * Apply Cloudflare Dashboard settings required for AEO/GEO (AI crawler access).
+ *
+ * Usage:
+ *   CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... node scripts/apply-cloudflare-aeo.mjs
+ *   node scripts/apply-cloudflare-aeo.mjs --dry-run
+ */
+import { SITE_HOSTS } from '../hostname-routing-contract.js';
+
+const API = 'https://api.cloudflare.com/client/v4';
+const TOKEN = process.env.CLOUDFLARE_API_TOKEN || '';
+const ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || '';
+const DRY_RUN = process.argv.includes('--dry-run');
+
+const ZONES = [
+  { site: 'main', domain: 'daotslabna.com' },
+  { site: 'life', domain: 'life-protocols.com' },
+  { site: 'portfolio', domain: 'biocode-bg.com' },
+];
+
+/** @type {Record<string, string>} */
+const zoneCache = {};
+
+function authHeaders(extra = {}) {
+  return {
+    Authorization: `Bearer ${TOKEN}`,
+    'Content-Type': 'application/json',
+    ...extra,
+  };
+}
+
+async function cf(path, { method = 'GET', body } = {}) {
+  const res = await fetch(`${API}${path}`, {
+    method,
+    headers: authHeaders(),
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!json.success) {
+    const msg = json.errors?.map((e) => e.message).join('; ') || res.statusText;
+    throw new Error(`${method} ${path} failed: ${msg}`);
+  }
+  return json.result;
+}
+
+async function cfTry(path, { method = 'GET', body } = {}) {
+  try {
+    const result = await cf(path, { method, body });
+    return { ok: true, result };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+async function getZoneId(domain) {
+  if (zoneCache[domain]) return zoneCache[domain];
+  const result = await cf(`/zones?name=${encodeURIComponent(domain)}&status=active&per_page=1`);
+  const zone = result?.[0];
+  if (!zone?.id) throw new Error(`Zone not found for ${domain}`);
+  zoneCache[domain] = zone.id;
+  return zone.id;
+}
+
+async function getSetting(zoneId, id) {
+  const { ok, result, error } = await cfTry(`/zones/${zoneId}/settings/${id}`);
+  return ok ? result?.value : `error: ${error}`;
+}
+
+async function setSetting(zoneId, id, value) {
+  const current = await getSetting(zoneId, id);
+  if (current === value) {
+    return { changed: false, from: current, to: value };
+  }
+  if (DRY_RUN) {
+    return { changed: true, dryRun: true, from: current, to: value };
+  }
+  await cf(`/zones/${zoneId}/settings/${id}`, { method: 'PATCH', body: { value } });
+  return { changed: true, from: current, to: value };
+}
+
+async function purgeZone(zoneId, domain) {
+  if (DRY_RUN) return { purged: true, dryRun: true };
+  await cf(`/zones/${zoneId}/purge_cache`, {
+    method: 'POST',
+    body: { purge_everything: true },
+  });
+  return { purged: true };
+}
+
+async function auditDnsProxy(zoneId, domain) {
+  const records = await cf(`/zones/${zoneId}/dns_records?per_page=100`);
+  const important = records.filter((r) =>
+    (r.name === domain || r.name === `www.${domain}`) &&
+    (r.type === 'A' || r.type === 'AAAA' || r.type === 'CNAME')
+  );
+  return important.map((r) => ({
+    name: r.name,
+    type: r.type,
+    proxied: r.proxied,
+  }));
+}
+
+async function verifyWorkerRoutes() {
+  if (!ACCOUNT_ID) return { ok: false, note: 'CLOUDFLARE_ACCOUNT_ID not set' };
+  const { ok, result, error } = await cfTry(`/accounts/${ACCOUNT_ID}/workers/scripts/port/routes`);
+  if (!ok) return { ok: false, error };
+  const patterns = (result || []).map((r) => r.pattern || r.zone_name || JSON.stringify(r));
+  const expected = [
+    'daotslabna.com',
+    'www.daotslabna.com',
+    'biocode-bg.com',
+    'www.biocode-bg.com',
+    'life-protocols.com',
+  ];
+  const missing = expected.filter((p) => !patterns.some((x) => String(x).includes(p.replace('/*', ''))));
+  return { ok: missing.length === 0, patterns, missing };
+}
+
+async function httpSmoke() {
+  const checks = [];
+  for (const [site, hosts] of Object.entries(SITE_HOSTS)) {
+    const host = hosts[0];
+    const robots = await fetch(`https://${host}/robots.txt`, { headers: { 'Cache-Control': 'no-cache' } });
+    const robotsText = await robots.text();
+    const home = await fetch(`https://${host}/`, { headers: { 'Cache-Control': 'no-cache' } });
+    const homeHtml = await home.text();
+    checks.push({
+      site,
+      host,
+      robotsOk: robots.ok && robotsText.includes('OAI-SearchBot'),
+      sitemapOk: robotsText.includes(`Sitemap: https://${host}/sitemap.xml`),
+      llmsStatus: (await fetch(`https://${host}/llms.txt`)).status,
+      noSeoCatalogLeak: !homeHtml.includes('id="seo-catalog"'),
+    });
+  }
+  return checks;
+}
+
+async function applyZone(domain) {
+  console.log(`\n=== ${domain} ===`);
+  const zoneId = await getZoneId(domain);
+  const audit = {
+    ssl: await getSetting(zoneId, 'ssl'),
+    security_level: await getSetting(zoneId, 'security_level'),
+    bot_fight_mode: await getSetting(zoneId, 'bot_fight_mode'),
+  };
+  console.log('Before:', audit);
+
+  const changes = {};
+  changes.ssl = await setSetting(zoneId, 'ssl', 'strict');
+  changes.bot_fight_mode = await setSetting(zoneId, 'bot_fight_mode', 'off');
+
+  let dns = [];
+  try {
+    dns = await auditDnsProxy(zoneId, domain);
+  } catch (err) {
+    dns = [{ error: err.message }];
+  }
+
+  const purge = await purgeZone(zoneId, domain);
+  console.log('Changes:', changes);
+  console.log('DNS (apex/www):', dns);
+  console.log('Purge:', purge);
+
+  return { domain, zoneId, audit, changes, dns, purge };
+}
+
+async function main() {
+  if (!TOKEN) {
+    console.error('Missing CLOUDFLARE_API_TOKEN');
+    process.exit(1);
+  }
+
+  console.log(`Cloudflare AEO apply ${DRY_RUN ? '(DRY RUN)' : ''}`);
+  console.log(`Account: ${ACCOUNT_ID || '(not set)'}`);
+
+  const results = [];
+  for (const { domain } of ZONES) {
+    results.push(await applyZone(domain));
+  }
+
+  console.log('\n=== Worker routes ===');
+  const routes = await verifyWorkerRoutes();
+  console.log(routes);
+
+  console.log('\n=== HTTP smoke ===');
+  const smoke = await httpSmoke();
+  for (const row of smoke) {
+    const ok = row.robotsOk && row.sitemapOk && row.llmsStatus === 200 && row.noSeoCatalogLeak;
+    console.log(`${ok ? 'OK' : 'FAIL'} ${row.host}`, row);
+  }
+
+  const allSmokeOk = smoke.every((r) => r.robotsOk && r.sitemapOk && r.llmsStatus === 200 && r.noSeoCatalogLeak);
+  if (!allSmokeOk) process.exitCode = 1;
+
+  console.log('\nDone.');
+  console.log('Manual if API unavailable: Security → Bots → AI Crawl Control → allow AI crawlers.');
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
