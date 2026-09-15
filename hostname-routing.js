@@ -1,4 +1,5 @@
 import { maybeEnhanceProductHtmlResponse } from './product-og-serve.js';
+import { maybeEnhanceSeoHtml } from './seo-aeo-serve.js';
 
 /** @typedef {'main' | 'life' | 'portfolio'} SiteId */
 
@@ -194,10 +195,13 @@ export async function serveMappedAsset(request, env, url) {
     response = await env.ASSETS.fetch(new Request(assetUrl.toString(), fetchInit));
   }
 
-  return maybeEnhanceProductHtmlResponse(response, {
+  const ctx = {
     env,
     site,
     mappedPath,
     requestUrl: request.url,
-  });
+  };
+
+  const withOg = await maybeEnhanceProductHtmlResponse(response, ctx);
+  return maybeEnhanceSeoHtml(withOg, ctx);
 }
