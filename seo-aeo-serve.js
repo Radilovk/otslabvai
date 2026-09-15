@@ -14,8 +14,6 @@ import {
   productJsonLd,
   productUrl,
   publicCanonical,
-  renderCatalogHtml,
-  renderProductHtml,
   robotsTxt,
   sitemapXml,
 } from './seo-aeo-inject.js';
@@ -133,7 +131,6 @@ async function serveSeoProductPage(request, env, url, siteId, slug) {
 
   const enhanced = injectSeo(response, {
     head,
-    body: [renderProductHtml(site, product)],
     canonical,
   });
 
@@ -166,14 +163,12 @@ export async function maybeEnhanceSeoHtml(response, ctx) {
   const canonical = publicCanonical(site, pathname);
 
   const head = [];
-  const body = [];
 
   if (isCatalogHomePath(site, pathname) || isCatalogHomePath(site, mappedPath.split('?')[0])) {
     head.push(ldTag(orgJsonLd(site)));
     const products = await loadSiteCatalog(env, /** @type {'main'|'life'|'portfolio'} */ (siteId));
     if (products.length) {
       head.push(ldTag(itemListJsonLd(site, products)));
-      body.push(renderCatalogHtml(site, products));
     }
   } else if (!mappedPath.includes('checkout') && !mappedPath.includes('order-success')) {
     head.push(ldTag(orgJsonLd(site)));
@@ -181,7 +176,7 @@ export async function maybeEnhanceSeoHtml(response, ctx) {
 
   const html = await response.text();
   const isNoIndex = /<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html);
-  const enhanced = injectSeo(new Response(html, { headers: response.headers }), { head, body, canonical });
+  const enhanced = injectSeo(new Response(html, { headers: response.headers }), { head, canonical });
 
   const headers = new Headers(enhanced.headers);
   headers.delete('content-length');
