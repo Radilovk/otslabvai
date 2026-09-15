@@ -71,6 +71,7 @@ import {
   handleAdminSession
 } from './admin-auth.js';
 import { isWorkerApiPath, serveMappedAsset } from './hostname-routing.js';
+import { handleSeoRequest } from './seo-aeo-serve.js';
 
 // Cache configuration constants
 const CACHE_CONFIG = {
@@ -143,6 +144,9 @@ export default {
 
     if (!isWorkerApiPath(pathname)) {
       try {
+        const seoResponse = await handleSeoRequest(request, env, url);
+        if (seoResponse) return seoResponse;
+
         const assetResponse = await serveMappedAsset(request, env, url);
         if (assetResponse) {
           // ASSETS responses have immutable headers — return without CORS mutation.

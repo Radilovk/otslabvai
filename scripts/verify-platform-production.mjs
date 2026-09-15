@@ -7,6 +7,7 @@
  *   PLATFORM_API_BASE=https://port.radilov-k.workers.dev node scripts/verify-platform-production.mjs
  */
 import {
+  PRODUCTION_AEO_CASES,
   PRODUCTION_API_CASES,
   PRODUCTION_PAGE_CASES,
   SITE_HOSTS,
@@ -71,6 +72,20 @@ async function checkApi(spec) {
   return { id: spec.id, url, ok: errors.length === 0, errors, status: res.status };
 }
 
+/** @param {object} spec */
+async function checkAeo(spec) {
+  const host = SITE_HOSTS[spec.site][0];
+  const url = `https://${host}${spec.path}`;
+  const res = await fetch(url, { headers: { 'Cache-Control': 'no-cache' } });
+  const body = await res.text();
+  const errors = [];
+  if (res.status !== 200) errors.push(`HTTP ${res.status} (expected 200)`);
+  for (const needle of spec.bodyIncludes || []) {
+    if (!body.includes(needle)) errors.push(`body missing "${needle}"`);
+  }
+  return { id: spec.id, url, ok: errors.length === 0, errors };
+}
+
 /** www mirror checks for homepages only */
 function wwwMirrorCases() {
   return (['main', 'life', 'portfolio']).map((site) => {
@@ -113,6 +128,23 @@ for (const spec of PRODUCTION_API_CASES) {
     const result = await checkApi(spec);
     if (result.ok) {
       console.log(`OK  [${result.id}] ${result.url} → HTTP ${result.status}`);
+    } else {
+      failed += 1;
+      console.error(`FAIL [${result.id}] ${result.url}`);
+      for (const err of result.errors) console.error(`     - ${err}`);
+    }
+  } catch (e) {
+    failed += 1;
+    console.error(`FAIL [${spec.id}]: ${e.message}`);
+  }
+}
+
+console.log('\n--- AEO/GEO (robots, sitemap, llms) ---');
+for (const spec of PRODUCTION_AEO_CASES) {
+  try {
+    const result = await checkAeo(spec);
+    if (result.ok) {
+      console.log(`OK  [${result.id}] ${result.url}`);
     } else {
       failed += 1;
       console.error(`FAIL [${result.id}] ${result.url}`);

@@ -74,6 +74,10 @@ export const PRODUCTION_PAGE_CASES = [
   { id: 'life-protocol-quiz', site: 'life', path: '/life-protocol-quiz.html', titleIncludes: ['Life Protocols'] },
   { id: 'portfolio-advisor-quiz', site: 'portfolio', path: '/portfolio-advisor-quiz.html', titleIncludes: ['BIOCODE'] },
 
+  { id: 'main-faq', site: 'main', path: '/faq.html', titleIncludes: ['ДА ОТСЛАБНА'], cssIncludes: ['index.css'] },
+  { id: 'life-faq', site: 'life', path: '/faq.html', titleIncludes: ['Life Protocols'], titleExcludes: [MAIN_SITE_MARKER] },
+  { id: 'portfolio-faq', site: 'portfolio', path: '/faq.html', titleIncludes: ['BIOCODE'], titleExcludes: [MAIN_SITE_MARKER] },
+
   { id: 'shared-admin', site: 'main', path: '/admin.html', titleIncludes: ['Админ Панел'] },
   { id: 'shared-admin-life-host', site: 'life', path: '/admin.html', titleIncludes: ['Админ Панел'] },
   { id: 'shared-admin-portfolio-host', site: 'portfolio', path: '/admin.html', titleIncludes: ['Админ Панел'] },
@@ -151,3 +155,19 @@ export function expandProductionPageUrls(cases = PRODUCTION_PAGE_CASES) {
 }
 
 export const WORKER_API_BASE = process.env.PLATFORM_API_BASE || 'https://port.radilov-k.workers.dev';
+
+/**
+ * AEO/GEO edge endpoints — per-domain robots, sitemap, llms.txt
+ * @type {Array<{ id: string, site: SiteId, path: string, bodyIncludes: string[] }>}
+ */
+export const PRODUCTION_AEO_CASES = [
+  { id: 'main-robots', site: 'main', path: '/robots.txt', bodyIncludes: ['OAI-SearchBot', 'Claude-SearchBot', 'Sitemap: https://daotslabna.com/sitemap.xml'] },
+  { id: 'life-robots', site: 'life', path: '/robots.txt', bodyIncludes: ['PerplexityBot', 'Sitemap: https://life-protocols.com/sitemap.xml'] },
+  { id: 'portfolio-robots', site: 'portfolio', path: '/robots.txt', bodyIncludes: ['ChatGPT-User', 'Sitemap: https://biocode-bg.com/sitemap.xml'] },
+  { id: 'main-llms', site: 'main', path: '/llms.txt', bodyIncludes: ['ДА ОТСЛАБНА', 'daotslabna.com'] },
+  { id: 'life-llms', site: 'life', path: '/llms.txt', bodyIncludes: ['Life Protocols', 'life-protocols.com'] },
+  { id: 'portfolio-llms', site: 'portfolio', path: '/llms.txt', bodyIncludes: ['BIOCODE', 'biocode-bg.com'] },
+  { id: 'main-sitemap', site: 'main', path: '/sitemap.xml', bodyIncludes: ['https://daotslabna.com/', '<urlset'] },
+  { id: 'life-sitemap', site: 'life', path: '/sitemap.xml', bodyIncludes: ['https://life-protocols.com/faq.html'] },
+  { id: 'portfolio-sitemap', site: 'portfolio', path: '/sitemap.xml', bodyIncludes: ['https://biocode-bg.com/'] },
+];
