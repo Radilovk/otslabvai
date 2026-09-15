@@ -65,7 +65,9 @@ const REQUIRED_PERMISSIONS = [
 
 async function verifyToken() {
   const { ok, result, error } = await cfTry('/user/tokens/verify');
-  if (!ok) return { ok: false, error };
+  if (!ok) {
+    return { ok: false, verify_endpoint: false, error };
+  }
 
   const policies = (result?.policies || []).map((p) => ({
     effect: p.effect,
@@ -77,12 +79,21 @@ async function verifyToken() {
 
   return {
     ok: true,
+    verify_endpoint: true,
     status: result?.status,
     expires_on: result?.expires_on,
     policies,
     granted: [...granted].sort(),
     missing_permissions: missing,
   };
+}
+
+async function verifyTokenViaZones() {
+  const { ok, result, error } = await cfTry('/zones?status=active&per_page=50');
+  if (!ok) return { ok: false, error };
+  const names = new Set((result || []).map((z) => z.name));
+  const missingZones = ZONES.map((z) => z.domain).filter((d) => !names.has(d));
+  return { ok: missingZones.length === 0, zone_count: result?.length || 0, missing_zones: missingZones };
 }
 
 async function probeZonePermissions(domain) {
@@ -269,14 +280,21 @@ async function main() {
   const tokenInfo = await verifyToken();
   console.log('Token verify:', tokenInfo);
   if (!tokenInfo.ok) {
-    console.error('Token invalid — update GitHub secret CLOUDFLARE_API_TOKEN');
-    process.exit(1);
-  }
-  if (tokenInfo.missing_permissions?.length) {
+    console.warn(
+      'Token verify endpoint unavailable (needs User->API Tokens->Read). Falling back to zone API probe.'
+    );
+  } else if (tokenInfo.missing_permissions?.length) {
     console.warn(
       'Token missing permissions (update GitHub secret CLOUDFLARE_API_TOKEN):',
       tokenInfo.missing_permissions.join(', ')
     );
+  }
+
+  const zoneAccess = await verifyTokenViaZones();
+  console.log('Zone access:', zoneAccess);
+  if (!zoneAccess.ok) {
+    console.error('Token cannot access required zones — update GitHub secret CLOUDFLARE_API_TOKEN');
+    process.exit(1);
   }
 
   const probe = await probeZonePermissions(ZONES[0].domain);
