@@ -11,8 +11,16 @@
 import { SITE_HOSTS } from '../hostname-routing-contract.js';
 
 const API = 'https://api.cloudflare.com/client/v4';
-const TOKEN = process.env.CLOUDFLARE_API_TOKEN || '';
-const ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || '';
+
+function normalizeToken(raw) {
+  return String(raw || '')
+    .trim()
+    .replace(/^Bearer\s+/i, '')
+    .replace(/[\r\n]+/g, '');
+}
+
+const TOKEN = normalizeToken(process.env.CLOUDFLARE_API_TOKEN);
+const ACCOUNT_ID = String(process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
 const DRY_RUN = process.argv.includes('--dry-run');
 
 const ZONES = [
@@ -276,6 +284,11 @@ async function main() {
 
   console.log(`Cloudflare AEO apply ${DRY_RUN ? '(DRY RUN)' : ''}`);
   console.log(`Account: ${ACCOUNT_ID || '(not set)'}`);
+  console.log(`Token length: ${TOKEN.length} chars (value not logged)`);
+  if (!TOKEN) {
+    console.error('CLOUDFLARE_API_TOKEN is empty after trim — check GitHub secret paste');
+    process.exit(1);
+  }
 
   const tokenInfo = await verifyToken();
   console.log('Token verify:', tokenInfo);

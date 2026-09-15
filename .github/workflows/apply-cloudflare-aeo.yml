@@ -31,6 +31,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Normalize Cloudflare secrets
+        run: |
+          TOKEN="$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed 's/^Bearer[[:space:]]*//')"
+          ACCOUNT="$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          if [ -z "$TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is empty after normalization"
+            exit 1
+          fi
+          echo "Cloudflare token length: ${#TOKEN} chars"
+          echo "::add-mask::$TOKEN"
+          echo "CLOUDFLARE_API_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          echo "CLOUDFLARE_ACCOUNT_ID=$ACCOUNT" >> "$GITHUB_ENV"
+
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
