@@ -1,0 +1,44 @@
+name: Apply Cloudflare AEO settings
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run only (no changes)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    name: Apply Cloudflare AEO
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply Cloudflare AEO settings
+        run: |
+          ARGS=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS="--dry-run"; fi
+          node scripts/apply-cloudflare-aeo.mjs $ARGS
+
+      - name: Production AEO smoke
+        if: inputs.dry_run == 'false'
+        run: npm run test:platform-production
