@@ -40,6 +40,7 @@ jobs:
         run: npm ci
 
       - name: Apply Cloudflare AEO settings
+        continue-on-error: true
         run: |
           ARGS=""
           if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS="--dry-run"; fi

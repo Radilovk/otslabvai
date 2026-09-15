@@ -54,18 +54,50 @@ async function cfTry(path, { method = 'GET', body } = {}) {
   }
 }
 
+const REQUIRED_PERMISSIONS = [
+  'Zone Settings Edit',
+  'Zone Read',
+  'Cache Purge',
+  'DNS Read',
+  'Workers Scripts Read',
+];
+
 async function verifyToken() {
   const { ok, result, error } = await cfTry('/user/tokens/verify');
   if (!ok) return { ok: false, error };
+
+  const policies = (result?.policies || []).map((p) => ({
+    effect: p.effect,
+    resources: p.resources,
+    permission_groups: (p.permission_groups || []).map((g) => g.name || g.id),
+  }));
+  const granted = new Set(policies.flatMap((p) => p.permission_groups));
+  const missing = REQUIRED_PERMISSIONS.filter((name) => !granted.has(name));
+
   return {
     ok: true,
     status: result?.status,
     expires_on: result?.expires_on,
-    policies: (result?.policies || []).map((p) => ({
-      effect: p.effect,
-      resources: p.resources,
-      permission_groups: (p.permission_groups || []).map((g) => g.name || g.id),
-    })),
+    policies,
+    granted: [...granted].sort(),
+    missing_permissions: missing,
+  };
+}
+
+async function probeZonePermissions(domain) {
+  const zoneId = await getZoneId(domain);
+  const dns = await cfTry(`/zones/${zoneId}/dns_records?per_page=1`);
+  const purge = await cfTry(`/zones/${zoneId}/purge_cache`, {
+    method: 'POST',
+    body: { purge_everything: true },
+  });
+  return {
+    domain,
+    zoneId,
+    dns_read: dns.ok,
+    cache_purge: purge.ok,
+    dns_error: dns.ok ? undefined : dns.error,
+    purge_error: purge.ok ? undefined : purge.error,
   };
 }
 async function getZoneId(domain) {
@@ -232,6 +264,27 @@ async function main() {
 
   console.log(`Cloudflare AEO apply ${DRY_RUN ? '(DRY RUN)' : ''}`);
   console.log(`Account: ${ACCOUNT_ID || '(not set)'}`);
+
+  const tokenInfo = await verifyToken();
+  console.log('Token verify:', tokenInfo);
+  if (!tokenInfo.ok) {
+    console.error('Token invalid — update GitHub secret CLOUDFLARE_API_TOKEN');
+    process.exit(1);
+  }
+  if (tokenInfo.missing_permissions?.length) {
+    console.warn(
+      'Token missing permissions (update GitHub secret CLOUDFLARE_API_TOKEN):',
+      tokenInfo.missing_permissions.join(', ')
+    );
+  }
+
+  const probe = await probeZonePermissions(ZONES[0].domain);
+  console.log('Permission probe:', probe);
+  if (!probe.dns_read || !probe.cache_purge) {
+    console.warn(
+      'DNS purge/audit may fail until token has Cache Purge + DNS Read on all 3 zones.'
+    );
+  }
 
   const results = [];
   for (const { domain } of ZONES) {
