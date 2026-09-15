@@ -107,12 +107,15 @@ async function tryBotProtections(zoneId) {
       fight_mode: false,
       enable_js: bmState?.enable_js ?? false,
     };
+    if (bmState && 'ai_bots_protection' in bmState) {
+      payload.ai_bots_protection = 'allow';
+    }
     attempts.push({
       action: 'bot_management.fight_mode=false',
       ...(await cfTry(`/zones/${zoneId}/bot_management`, { method: 'PUT', body: payload })),
     });
   } else {
-    attempts.push({ action: 'bot_management.get', ok: false, error: bm || 'unavailable on plan' });
+    attempts.push({ action: 'bot_management.get', ok: false, error: 'unavailable on plan' });
   }
 
   return attempts;
