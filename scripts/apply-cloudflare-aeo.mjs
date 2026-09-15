@@ -54,6 +54,20 @@ async function cfTry(path, { method = 'GET', body } = {}) {
   }
 }
 
+async function verifyToken() {
+  const { ok, result, error } = await cfTry('/user/tokens/verify');
+  if (!ok) return { ok: false, error };
+  return {
+    ok: true,
+    status: result?.status,
+    expires_on: result?.expires_on,
+    policies: (result?.policies || []).map((p) => ({
+      effect: p.effect,
+      resources: p.resources,
+      permission_groups: (p.permission_groups || []).map((g) => g.name || g.id),
+    })),
+  };
+}
 async function getZoneId(domain) {
   if (zoneCache[domain]) return zoneCache[domain];
   const result = await cf(`/zones?name=${encodeURIComponent(domain)}&status=active&per_page=1`);
