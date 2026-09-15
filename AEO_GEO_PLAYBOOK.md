@@ -38,6 +38,8 @@ curl -s https://biocode-bg.com/sitemap.xml | head
 
 ## Cloudflare (ръчно)
 
+**Пълен handoff за Cloudflare админ:** [`CLOUDFLARE_AEO_SETUP.md`](./CLOUDFLARE_AEO_SETUP.md)
+
 1. **Bot Fight Mode** — изключете или allowlist за verified bots.
 2. **WAF** — няма правило блокиращо `*bot*` User-Agent.
 3. **SSL** — Full (strict).
