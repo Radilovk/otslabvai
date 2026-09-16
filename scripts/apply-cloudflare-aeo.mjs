@@ -69,7 +69,36 @@ const REQUIRED_PERMISSIONS = [
   'Cache Purge',
   'DNS Read',
   'Workers Scripts Read',
+  'Bot Management Write',
 ];
+
+/** AEO-safe bot_management target (Bot Preference Sync OFF, AI edge block OFF). */
+function desiredBotManagementConfig(bmState = {}) {
+  const payload = {
+    fight_mode: false,
+    enable_js: bmState.enable_js === true,
+    ai_bots_protection: 'disabled',
+    cf_robots_variant: 'off',
+    is_robots_txt_managed: false,
+    content_bots_protection: 'disabled',
+    crawler_protection: 'disabled',
+  };
+  if (bmState?.stale_zone_configuration) {
+    Object.assign(payload, {
+      sbfm_likely_automated: 'allow',
+      sbfm_definitely_automated: 'allow',
+      sbfm_verified_bots: 'allow',
+      sbfm_static_resource_protection: false,
+      optimize_wordpress: false,
+      suppress_session_score: false,
+    });
+  }
+  return payload;
+}
+
+function botManagementNeedsUpdate(current = {}, desired = {}) {
+  return Object.entries(desired).some(([key, value]) => current[key] !== value);
+}
 
 async function verifyToken() {
   const { ok, result, error } = await cfTry('/user/tokens/verify');
@@ -151,14 +180,14 @@ async function setSettingSafe(zoneId, id, value) {
     : { ok: false, from: current, to: value, error };
 }
 
-async function tryBotProtections(zoneId) {
+async function syncBotManagementConfig(zoneId) {
   const attempts = [];
 
   if (DRY_RUN) {
-    return [{ ok: true, dryRun: true, action: 'bot_protections_skipped_in_dry_run' }];
+    return [{ ok: true, dryRun: true, action: 'bot_management_skipped_in_dry_run' }];
   }
 
-  // Bot Fight Mode / Super Bot Fight — endpoint varies by plan.
+  // Legacy setting — still patch when available (some plans expose both).
   attempts.push({
     action: 'settings.bot_fight_mode=off',
     ...(await cfTry(`/zones/${zoneId}/settings/bot_fight_mode`, {
@@ -167,22 +196,61 @@ async function tryBotProtections(zoneId) {
     })),
   });
 
-  const { ok: gotBm, result: bmState } = await cfTry(`/zones/${zoneId}/bot_management`);
-  if (gotBm) {
-    const payload = {
-      ...bmState,
-      fight_mode: false,
-      enable_js: bmState?.enable_js ?? false,
-    };
-    if (bmState && 'ai_bots_protection' in bmState) {
-      payload.ai_bots_protection = 'allow';
-    }
+  const { ok: gotBm, result: bmState, error: bmGetError } = await cfTry(
+    `/zones/${zoneId}/bot_management`
+  );
+  if (!gotBm) {
     attempts.push({
-      action: 'bot_management.fight_mode=false',
-      ...(await cfTry(`/zones/${zoneId}/bot_management`, { method: 'PUT', body: payload })),
+      action: 'bot_management.get',
+      ok: false,
+      error: bmGetError || 'unavailable on plan or missing Bot Management Write',
     });
-  } else {
-    attempts.push({ action: 'bot_management.get', ok: false, error: 'unavailable on plan' });
+    return attempts;
+  }
+
+  const desired = desiredBotManagementConfig(bmState);
+  const needsUpdate = botManagementNeedsUpdate(bmState, desired);
+  attempts.push({
+    action: 'bot_management.audit',
+    ok: true,
+    before: {
+      fight_mode: bmState.fight_mode,
+      ai_bots_protection: bmState.ai_bots_protection,
+      cf_robots_variant: bmState.cf_robots_variant,
+      is_robots_txt_managed: bmState.is_robots_txt_managed,
+      content_bots_protection: bmState.content_bots_protection,
+      crawler_protection: bmState.crawler_protection,
+    },
+    desired,
+    needsUpdate,
+  });
+
+  if (!needsUpdate) {
+    attempts.push({ action: 'bot_management.put', ok: true, changed: false, note: 'already aligned' });
+    return attempts;
+  }
+
+  attempts.push({
+    action: 'bot_management.put',
+    changed: true,
+    ...(await cfTry(`/zones/${zoneId}/bot_management`, { method: 'PUT', body: desired })),
+  });
+
+  const verify = await cfTry(`/zones/${zoneId}/bot_management`);
+  if (verify.ok) {
+    attempts.push({
+      action: 'bot_management.verify',
+      ok:
+        verify.result?.cf_robots_variant === 'off' &&
+        verify.result?.is_robots_txt_managed === false &&
+        verify.result?.fight_mode === false,
+      after: {
+        fight_mode: verify.result?.fight_mode,
+        ai_bots_protection: verify.result?.ai_bots_protection,
+        cf_robots_variant: verify.result?.cf_robots_variant,
+        is_robots_txt_managed: verify.result?.is_robots_txt_managed,
+      },
+    });
   }
 
   return attempts;
@@ -234,11 +302,16 @@ async function httpSmoke() {
     const robotsText = await robots.text();
     const home = await fetch(`https://${host}/`, { headers: { 'Cache-Control': 'no-cache' } });
     const homeHtml = await home.text();
+    const gptBotHome = await fetch(`https://${host}/`, {
+      headers: { 'Cache-Control': 'no-cache', 'User-Agent': 'GPTBot' },
+    });
     checks.push({
       site,
       host,
       robotsOk: robots.ok && robotsText.includes('OAI-SearchBot'),
       sitemapOk: robotsText.includes(`Sitemap: https://${host}/sitemap.xml`),
+      noManagedRobotsBlock: !robotsText.includes('# BEGIN Cloudflare Managed content'),
+      gptBotHomeOk: gptBotHome.status === 200,
       llmsStatus: (await fetch(`https://${host}/llms.txt`)).status,
       noSeoCatalogLeak: !homeHtml.includes('id="seo-catalog"'),
     });
@@ -294,7 +367,7 @@ async function applyZone(domain) {
 
   const changes = {};
   changes.ssl = await setSettingSafe(zoneId, 'ssl', 'strict');
-  changes.bot_protections = await tryBotProtections(zoneId);
+  changes.bot_management = await syncBotManagementConfig(zoneId);
 
   let dns = [];
   try {
@@ -367,15 +440,31 @@ async function main() {
   console.log('\n=== HTTP smoke ===');
   const smoke = await httpSmoke();
   for (const row of smoke) {
-    const ok = row.robotsOk && row.sitemapOk && row.llmsStatus === 200 && row.noSeoCatalogLeak;
+    const ok =
+      row.robotsOk &&
+      row.sitemapOk &&
+      row.noManagedRobotsBlock &&
+      row.gptBotHomeOk &&
+      row.llmsStatus === 200 &&
+      row.noSeoCatalogLeak;
     console.log(`${ok ? 'OK' : 'FAIL'} ${row.host}`, row);
   }
 
-  const allSmokeOk = smoke.every((r) => r.robotsOk && r.sitemapOk && r.llmsStatus === 200 && r.noSeoCatalogLeak);
+  const allSmokeOk = smoke.every(
+    (r) =>
+      r.robotsOk &&
+      r.sitemapOk &&
+      r.noManagedRobotsBlock &&
+      r.gptBotHomeOk &&
+      r.llmsStatus === 200 &&
+      r.noSeoCatalogLeak
+  );
   if (!allSmokeOk) process.exitCode = 1;
 
   console.log('\nDone.');
-  console.log('Manual if bot API unavailable: Security → Bots → Bot Fight Mode OFF + AI Crawl Control allow.');
+  console.log(
+    'Manual if bot_management API unavailable: Security → Bots → Bot Fight OFF, Bot Preference Sync OFF, AI Crawl Control allow.'
+  );
 }
 
 main().catch((err) => {

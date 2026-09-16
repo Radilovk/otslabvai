@@ -161,15 +161,18 @@ export const WORKER_API_BASE = process.env.PLATFORM_API_BASE || 'https://port.ra
  * @type {Array<{ id: string, site: SiteId, path: string, bodyIncludes: string[] }>}
  */
 export const PRODUCTION_AEO_CASES = [
-  { id: 'main-robots', site: 'main', path: '/robots.txt', bodyIncludes: ['Content-Signal: search=yes,ai-input=yes,ai-train=no', 'OAI-SearchBot', 'Claude-SearchBot', 'Sitemap: https://daotslabna.com/sitemap.xml'] },
-  { id: 'life-robots', site: 'life', path: '/robots.txt', bodyIncludes: ['Content-Signal:', 'PerplexityBot', 'Sitemap: https://life-protocols.com/sitemap.xml'] },
-  { id: 'portfolio-robots', site: 'portfolio', path: '/robots.txt', bodyIncludes: ['Content-Signal:', 'ChatGPT-User', 'Sitemap: https://biocode-bg.com/sitemap.xml'] },
+  { id: 'main-robots', site: 'main', path: '/robots.txt', bodyIncludes: ['Content-Signal: search=yes,ai-input=yes,ai-train=no', 'OAI-SearchBot', 'Claude-SearchBot', 'Sitemap: https://daotslabna.com/sitemap.xml'], bodyExcludes: ['# BEGIN Cloudflare Managed content'] },
+  { id: 'life-robots', site: 'life', path: '/robots.txt', bodyIncludes: ['Content-Signal:', 'PerplexityBot', 'Sitemap: https://life-protocols.com/sitemap.xml'], bodyExcludes: ['# BEGIN Cloudflare Managed content'] },
+  { id: 'portfolio-robots', site: 'portfolio', path: '/robots.txt', bodyIncludes: ['Content-Signal:', 'ChatGPT-User', 'Sitemap: https://biocode-bg.com/sitemap.xml'], bodyExcludes: ['# BEGIN Cloudflare Managed content'] },
   { id: 'main-llms', site: 'main', path: '/llms.txt', bodyIncludes: ['ДА ОТСЛАБНА', 'daotslabna.com'] },
   { id: 'life-llms', site: 'life', path: '/llms.txt', bodyIncludes: ['Life Protocols', 'life-protocols.com'] },
   { id: 'portfolio-llms', site: 'portfolio', path: '/llms.txt', bodyIncludes: ['BIOCODE', 'biocode-bg.com'] },
   { id: 'main-sitemap', site: 'main', path: '/sitemap.xml', bodyIncludes: ['https://daotslabna.com/', '<urlset'] },
   { id: 'life-sitemap', site: 'life', path: '/sitemap.xml', bodyIncludes: ['https://life-protocols.com/faq.html'] },
   { id: 'portfolio-sitemap', site: 'portfolio', path: '/sitemap.xml', bodyIncludes: ['https://biocode-bg.com/'] },
+  { id: 'main-gptbot-home', site: 'main', path: '/', userAgent: 'GPTBot' },
+  { id: 'life-gptbot-home', site: 'life', path: '/', userAgent: 'GPTBot' },
+  { id: 'portfolio-gptbot-home', site: 'portfolio', path: '/', userAgent: 'GPTBot' },
 ];
 
 /**

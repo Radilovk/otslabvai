@@ -169,6 +169,40 @@ curl -sI -A 'GPTBot' https://daotslabna.com/ | head -3
 
 Worker `port` е източник на истина за `robots.txt`, `Content-Signal`, sitemap и llms — **не** дублирайте в Dashboard.
 
+#### Защо toggle-ът се включва отново (безплатен план)
+
+| Причина | Обяснение |
+|---------|-----------|
+| **Sep 2025 migration** | Cloudflare мигрира Managed robots.txt → **Bot Preference Sync**; нови/legacy зони често получават **ON по подразбиране** |
+| **Dashboard UX** | UI може да показва Sync ON дори след ръчно OFF — особено на Free/BFM план без пълен Bot Management UI |
+| **Не е paywall** | Feature-ът е на **всички планове**; проблемът е default + UI drift, не липса на paid plan |
+
+**Автоматичен countermeasure (API):** `scripts/apply-cloudflare-aeo.mjs` пуска се след **всеки deploy** (`.github/workflows/deploy.yml`) и задава:
+
+| API поле | Стойност | Ефект |
+|----------|----------|-------|
+| `cf_robots_variant` | `"off"` | Bot Preference Sync **OFF** — без prepend на Managed блок |
+| `is_robots_txt_managed` | `false` | Managed robots.txt **OFF** |
+| `ai_bots_protection` | `"disabled"` | Edge **не** блокира AI crawlers (не `"block"`) |
+| `fight_mode` | `false` | Bot Fight Mode OFF |
+| `crawler_protection` | `"disabled"` | Без link-maze на AI crawlers |
+
+> **Важно:** Старият скрипт използваше `ai_bots_protection: "allow"` — **невалидна** стойност (API приема само `block` \| `disabled` \| `only_on_ad_pages`), което водеше до **тих провал** на PUT и Sync оставаше ON.
+
+**Token permission:** добавете **Zone → Bot Management → Edit** към `CLOUDFLARE_API_TOKEN` (GitHub secret).
+
+**Проверка след deploy / apply:**
+
+```bash
+# robots без Cloudflare Managed prepend
+curl -s https://daotslabna.com/robots.txt | head -5
+# НЕ трябва: "# BEGIN Cloudflare Managed content"
+
+# GPTBot не получава 403
+curl -sI -A 'GPTBot' https://daotslabna.com/ | head -1
+# HTTP/2 200
+```
+
 ### 4.2 WAF custom rules — без блокиране на bots
 
 **Път:** Security → **WAF** → Custom rules
@@ -251,10 +285,12 @@ node scripts/apply-cloudflare-aeo.mjs --dry-run
 Скриптът за всяка от 3-те зони:
 - SSL → Full (strict)
 - Bot Fight Mode → off
+- **Bot Preference Sync OFF** via `PUT /zones/{id}/bot_management` (`cf_robots_variant: off`, `is_robots_txt_managed: false`, `ai_bots_protection: disabled`) — виж §4.1.2
 - Purge cache
-- HTTP smoke (robots, llms, no `#seo-catalog` leak)
+- DNS-AID `_agents` HTTPS records (§4.5)
+- HTTP smoke (robots без Managed prepend, GPTBot 200, llms, no `#seo-catalog` leak)
 
-**Ръчно остава:** Security → Bots → **AI Crawl Control → Crawlers** (§4.1.1) и **Bot Preference Sync OFF** (§4.1.2) — няма публичен API. **DNSSEC** за DNS-AID validation (§4.5).
+**Ръчно остава:** Security → Bots → **AI Crawl Control → Crawlers** (§4.1.1) — per-bot allow/block няма публичен REST endpoint. **DNSSEC** за DNS-AID validation (§4.5).
 
 ### 4.5 DNS-AID (Publish your AI bots)
 
@@ -329,7 +365,7 @@ npx wrangler deploy   # изисква CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT
 | `FITNESS1_API_KEY` | Portfolio import (optional но нужен за catalog) |
 | `SILA_API_TOKEN` | Portfolio import (optional) |
 
-API token permissions: **Account → Workers Scripts → Edit**, **Account → Workers KV Storage → Edit**, **Zone → DNS → Edit** (за custom domains).
+API token permissions: **Account → Workers Scripts → Edit**, **Account → Workers KV Storage → Edit**, **Zone → DNS → Edit** (за custom domains), **Zone → Bot Management → Edit** (за Bot Preference Sync API).
 
 ---
 
@@ -404,6 +440,9 @@ curl -X POST "https://api.indexnow.org/indexnow" \
 [ ] Routes: 4 custom domains + 2 life-protocols zone routes
 [ ] DNS apex + www — Proxied (🟠) — и трите зони
 [ ] Bot Fight Mode OFF — и трите зони
+[ ] Bot Preference Sync OFF (§4.1.2) — API apply след deploy или ръчно
+[ ] curl robots.txt — без `# BEGIN Cloudflare Managed content`
+[ ] curl -A GPTBot homepage → HTTP 200 (не 403)
 [ ] WAF — няма global bot block
 [ ] SSL Full (strict) — и трите зони
 [ ] Deploy SUCCESS (GitHub Actions)
@@ -420,7 +459,8 @@ curl -X POST "https://api.indexnow.org/indexnow" \
 |---------|---------|----------|
 | Всички домейни → main homepage | Asset-first / Wrangler 3 | Проверете CI log; `wrangler.toml` + Wrangler 4 |
 | `robots.txt` без AI bots | Static asset served directly | `run_worker_first=true`; Purge cache |
-| HTTP 403 от bot User-Agent | Bot Fight Mode / WAF | §4.1, §4.2 |
+| `# BEGIN Cloudflare Managed content` в robots.txt | Bot Preference Sync ON | §4.1.2 — `node scripts/apply-cloudflare-aeo.mjs` или deploy; проверете Bot Management Write token |
+| HTTP 403 от bot User-Agent | Bot Fight Mode / WAF / ai_bots_protection block | §4.1, §4.2; apply script задава `ai_bots_protection: disabled` |
 | `llms.txt` 404 | Стар deploy без AEO PR | Redeploy от `main` |
 | life canonical → daotslabna.com | Стар HTML cache | Purge + deploy с AEO edge layer |
 | Deploy warning `Unexpected fields: run_worker_first` | Wrangler 3 | Upgrade to Wrangler 4 in CI |
