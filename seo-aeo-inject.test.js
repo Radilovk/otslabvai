@@ -11,8 +11,10 @@ import {
 } from './seo-aeo-inject.js';
 
 describe('seo-aeo-inject', () => {
-  test('robotsTxt includes 2026 AI search crawlers', () => {
+  test('robotsTxt includes 2026 AI search crawlers and Content-Signal', () => {
     const txt = robotsTxt(SITE_SEO.main);
+    expect(txt).toContain('Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference');
+    expect(txt).not.toContain('BEGIN Cloudflare Managed');
     expect(txt).toContain('OAI-SearchBot');
     expect(txt).toContain('Claude-SearchBot');
     expect(txt).toContain('PerplexityBot');

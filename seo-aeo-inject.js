@@ -90,6 +90,18 @@ export const AI_CRAWLER_AGENTS = [
 
 export const ROBOTS_META = 'index, follow, max-snippet:-1';
 
+/** EU Content Signals + Cloudflare Agent Readiness (AEO: allow search + RAG, block training). */
+export const CONTENT_SIGNALS = 'search=yes,ai-input=yes,ai-train=no,use=reference';
+
+export const ROBOTS_GLOBAL_DISALLOW = [
+  '/admin.html',
+  '/bioadmin.html',
+  '/checkout.html',
+  '/portfolio-checkout.html',
+  '/life-checkout.html',
+  '/backend/',
+];
+
 export const esc = (s = '') => String(s)
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -296,23 +308,24 @@ export function injectSeo(response, options = {}) {
 }
 
 export function robotsTxt(site) {
+  const adminDisallow = 'Disallow: /admin.html\nDisallow: /bioadmin.html\n';
   const blocks = AI_CRAWLER_AGENTS
-    .map((ua) => `User-agent: ${ua}\nAllow: /\nDisallow: /admin.html\nDisallow: /bioadmin.html\n`)
+    .map((ua) => `User-agent: ${ua}\nAllow: /\n${adminDisallow}`)
     .join('\n');
 
+  const globalDisallow = ROBOTS_GLOBAL_DISALLOW.map((p) => `Disallow: ${p}`).join('\n');
+
   return `# AI search optimized — 2026
+# Content Signals: search + ai-input allowed; ai-train blocked (EU 2019/790)
+
+User-agent: *
+Content-Signal: ${CONTENT_SIGNALS}
+Allow: /
+${globalDisallow}
+
 ${blocks}
 User-agent: CCBot
 Disallow: /
-
-User-agent: *
-Allow: /
-Disallow: /admin.html
-Disallow: /bioadmin.html
-Disallow: /checkout.html
-Disallow: /portfolio-checkout.html
-Disallow: /life-checkout.html
-Disallow: /backend/
 
 Sitemap: ${site.origin}/sitemap.xml
 `;

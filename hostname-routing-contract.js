@@ -161,9 +161,9 @@ export const WORKER_API_BASE = process.env.PLATFORM_API_BASE || 'https://port.ra
  * @type {Array<{ id: string, site: SiteId, path: string, bodyIncludes: string[] }>}
  */
 export const PRODUCTION_AEO_CASES = [
-  { id: 'main-robots', site: 'main', path: '/robots.txt', bodyIncludes: ['OAI-SearchBot', 'Claude-SearchBot', 'Sitemap: https://daotslabna.com/sitemap.xml'] },
-  { id: 'life-robots', site: 'life', path: '/robots.txt', bodyIncludes: ['PerplexityBot', 'Sitemap: https://life-protocols.com/sitemap.xml'] },
-  { id: 'portfolio-robots', site: 'portfolio', path: '/robots.txt', bodyIncludes: ['ChatGPT-User', 'Sitemap: https://biocode-bg.com/sitemap.xml'] },
+  { id: 'main-robots', site: 'main', path: '/robots.txt', bodyIncludes: ['Content-Signal: search=yes,ai-input=yes,ai-train=no', 'OAI-SearchBot', 'Claude-SearchBot', 'Sitemap: https://daotslabna.com/sitemap.xml'] },
+  { id: 'life-robots', site: 'life', path: '/robots.txt', bodyIncludes: ['Content-Signal:', 'PerplexityBot', 'Sitemap: https://life-protocols.com/sitemap.xml'] },
+  { id: 'portfolio-robots', site: 'portfolio', path: '/robots.txt', bodyIncludes: ['Content-Signal:', 'ChatGPT-User', 'Sitemap: https://biocode-bg.com/sitemap.xml'] },
   { id: 'main-llms', site: 'main', path: '/llms.txt', bodyIncludes: ['ДА ОТСЛАБНА', 'daotslabna.com'] },
   { id: 'life-llms', site: 'life', path: '/llms.txt', bodyIncludes: ['Life Protocols', 'life-protocols.com'] },
   { id: 'portfolio-llms', site: 'portfolio', path: '/llms.txt', bodyIncludes: ['BIOCODE', 'biocode-bg.com'] },
