@@ -20,6 +20,8 @@ describe('seo-aeo-inject', () => {
     expect(txt).toContain('Claude-SearchBot');
     expect(txt).toContain('PerplexityBot');
     expect(txt).toContain('Sitemap: https://daotslabna.com/sitemap.xml');
+    expect(txt).toContain('Agentmap: https://daotslabna.com/.well-known/ai-catalog.json');
+    expect(txt).toContain('Allow: /.well-known/');
     expect(txt).toContain('User-agent: CCBot\nDisallow: /');
   });
 

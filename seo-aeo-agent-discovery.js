@@ -41,6 +41,13 @@ export function apiCatalogLinkset(site) {
         link(`${origin}/sitemap.xml`, 'application/xml'),
         link(`${origin}/robots.txt`, 'text/plain'),
         link(`${origin}/.well-known/security.txt`, 'text/plain'),
+        link(`${origin}/auth.md`, 'text/markdown'),
+        link(`${origin}/.well-known/agent-skills/index.json`, 'application/json'),
+      ],
+      'service-desc': [
+        link(`${origin}/.well-known/mcp/server-card.json`, 'application/json'),
+        link(`${origin}/.well-known/agent-card.json`, 'application/json'),
+        link(`${origin}/.well-known/ai-catalog.json`, 'application/ai-catalog+json'),
       ],
     },
     {
@@ -87,9 +94,13 @@ export function apiCatalogJson(site) {
 export function agentDiscoveryLinkHeader(site) {
   return [
     '</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"',
+    '</.well-known/ai-catalog.json>; rel="ai-catalog"; type="application/ai-catalog+json"',
+    '</.well-known/mcp/server-card.json>; rel="service-desc"; type="application/json"',
+    '</.well-known/agent-card.json>; rel="agent-card"; type="application/json"',
     '</llms.txt>; rel="describedby"; type="text/plain"',
     '</sitemap.xml>; rel="describedby"; type="application/xml"',
     '</.well-known/openapi/catalog.json>; rel="service-desc"; type="application/json"',
+    '</auth.md>; rel="describedby"; type="text/markdown"',
   ].join(', ');
 }
 

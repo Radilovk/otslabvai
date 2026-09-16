@@ -246,6 +246,41 @@ async function httpSmoke() {
   return checks;
 }
 
+async function ensureDnsAidRecords(zoneId, domain) {
+  const targets = [
+    { name: `_index._agents.${domain}`, comment: 'DNS-AID index entrypoint' },
+    { name: `_mcp._agents.${domain}`, comment: 'DNS-AID MCP discovery' },
+    { name: `_a2a._agents.${domain}`, comment: 'DNS-AID A2A discovery' },
+  ];
+  const results = [];
+  for (const { name, comment } of targets) {
+    const shortName = name.replace(`.${domain}`, '');
+    const body = {
+      type: 'HTTPS',
+      name: shortName,
+      content: `1 ${domain} alpn=h2,h3 ipv4hint=`,
+      proxied: false,
+      comment,
+    };
+    if (DRY_RUN) {
+      results.push({ name: shortName, action: 'dry-run', content: body.content });
+      continue;
+    }
+    const existing = await cfTry(`/zones/${zoneId}/dns_records?type=HTTPS&name=${encodeURIComponent(name)}`);
+    if (existing.ok && existing.result?.length) {
+      results.push({ name: shortName, action: 'exists' });
+      continue;
+    }
+    const created = await cfTry(`/zones/${zoneId}/dns_records`, { method: 'POST', body });
+    results.push({
+      name: shortName,
+      action: created.ok ? 'created' : 'failed',
+      error: created.ok ? undefined : created.error,
+    });
+  }
+  return results;
+}
+
 async function applyZone(domain) {
   console.log(`\n=== ${domain} ===`);
   const zoneId = await getZoneId(domain);
@@ -269,11 +304,18 @@ async function applyZone(domain) {
   }
 
   const purge = await purgeZone(zoneId, domain);
+  let dnsAid = [];
+  try {
+    dnsAid = await ensureDnsAidRecords(zoneId, domain);
+  } catch (err) {
+    dnsAid = [{ error: err.message }];
+  }
   console.log('Changes:', changes);
   console.log('DNS (apex/www):', dns);
+  console.log('DNS-AID (_agents):', dnsAid);
   console.log('Purge:', purge);
 
-  return { domain, zoneId, audit, changes, dns, purge };
+  return { domain, zoneId, audit, changes, dns, dnsAid, purge };
 }
 
 async function main() {

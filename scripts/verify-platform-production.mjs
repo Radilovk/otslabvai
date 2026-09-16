@@ -8,6 +8,7 @@
  */
 import {
   PRODUCTION_AEO_CASES,
+  PRODUCTION_ADVANCED_INTEGRATION_CASES,
   PRODUCTION_AGENT_DISCOVERY_CASES,
   PRODUCTION_API_CASES,
   PRODUCTION_PAGE_CASES,
@@ -179,6 +180,23 @@ for (const spec of PRODUCTION_AEO_CASES) {
 
 console.log('\n--- Agent discovery (api-catalog, Link headers) ---');
 for (const spec of PRODUCTION_AGENT_DISCOVERY_CASES) {
+  try {
+    const result = await checkAeo(spec);
+    if (result.ok) {
+      console.log(`OK  [${result.id}] ${result.url}`);
+    } else {
+      failed += 1;
+      console.error(`FAIL [${result.id}] ${result.url}`);
+      for (const err of result.errors) console.error(`     - ${err}`);
+    }
+  } catch (e) {
+    failed += 1;
+    console.error(`FAIL [${spec.id}]: ${e.message}`);
+  }
+}
+
+console.log('\n--- Advanced Integration (OAuth, MCP, A2A, Skills, ARD) ---');
+for (const spec of PRODUCTION_ADVANCED_INTEGRATION_CASES) {
   try {
     const result = await checkAeo(spec);
     if (result.ok) {

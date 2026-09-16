@@ -133,11 +133,17 @@ export default {
       try {
         await assertAdminAuthorized(request, env);
       } catch (authErr) {
+        const origin = url.origin;
+        const resourceMeta = `${origin}/.well-known/oauth-protected-resource`;
         return new Response(JSON.stringify({
           error: authErr.message || 'Неоторизиран достъп. Влезте в админ панела.',
         }), {
           status: authErr.status || 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+            'WWW-Authenticate': `Bearer realm="${new URL(origin).hostname}", resource_metadata="${resourceMeta}", scope="admin:write"`,
+          },
         });
       }
     }

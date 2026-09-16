@@ -254,7 +254,48 @@ node scripts/apply-cloudflare-aeo.mjs --dry-run
 - Purge cache
 - HTTP smoke (robots, llms, no `#seo-catalog` leak)
 
-**Ръчно остава:** Security → Bots → **AI Crawl Control → Crawlers** (§4.1.1) и **Bot Preference Sync OFF** (§4.1.2) — няма публичен API.
+**Ръчно остава:** Security → Bots → **AI Crawl Control → Crawlers** (§4.1.1) и **Bot Preference Sync OFF** (§4.1.2) — няма публичен API. **DNSSEC** за DNS-AID validation (§4.5).
+
+### 4.5 DNS-AID (Publish your AI bots)
+
+**Автоматично (API):** `scripts/apply-cloudflare-aeo.mjs` създава HTTPS записи:
+
+| Record | Purpose |
+|--------|---------|
+| `_index._agents` | General agent discovery entrypoint → apex |
+| `_mcp._agents` | MCP server card discovery |
+| `_a2a._agents` | A2A agent card discovery |
+
+**Ръчно:** Security → DNS → **DNSSEC → Enable** (за `dnssecValidated` в isitagentready scan).
+
+**Проверка:**
+
+```bash
+dig +short HTTPS _index._agents.daotslabna.com
+curl -s https://daotslabna.com/.well-known/ai-catalog.json | head
+grep Agentmap https://daotslabna.com/robots.txt
+```
+
+### 4.6 Advanced Integration (Worker `.well-known/`)
+
+След deploy Worker `port` сервира (за **всеки** от 3-те домейна):
+
+| URL | Check |
+|-----|-------|
+| `/.well-known/oauth-authorization-server` | OAuth Discovery |
+| `/.well-known/oauth-protected-resource` | OAuth Protected Resource |
+| `/auth.md` | Auth.md agent registration |
+| `/.well-known/mcp/server-card.json` | MCP Server Card |
+| `/.well-known/agent-card.json` | A2A Agent Card |
+| `/.well-known/agent-skills/index.json` | Skills Index |
+| `/.well-known/http-message-signatures-directory` | Web Bot Auth (JWKS directory) |
+| `/.well-known/ai-catalog.json` | ARD manifest (+ `Agentmap` in robots.txt) |
+| `/a2a/v1` | A2A JSON-RPC stub |
+
+Homepages include `webmcp-storefront.js` (WebMCP tools when browser supports `modelContext`).
+
+Validate: `POST https://isitagentready.com/api/scan` with `{"url":"https://daotslabna.com"}` — target **Level 5 (Agent-Native)** after deploy.
+
 
 ### 6.1 Автоматичен (production)
 
