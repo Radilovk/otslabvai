@@ -214,6 +214,26 @@ curl -sI -A 'GPTBot' https://daotslabna.com/ | head -1
 
 **Позволено:** правила за `/admin.html`, `/api/`, rate limit на POST — **не** глобален bot block на `/`.
 
+#### WAF API fallback (автоматично)
+
+`scripts/apply-cloudflare-aeo.mjs` създава/обновява **Skip** правило в `http_request_firewall_custom` за всички AI crawlers от Worker `AI_CRAWLER_AGENTS`:
+
+| Skip target | Защо |
+|-------------|------|
+| `http_request_sbfm` | Super Bot Fight Mode (Pro+) |
+| `http_request_firewall_managed` | Managed WAF rules |
+| `http_ratelimit` | Rate limits |
+| `bic`, `securityLevel`, `uaBlock`, `waf` | Legacy edge products |
+| `ruleset: current` | Останали custom rules след allow rule |
+
+Описание в Dashboard: **`AEO: allow AI search crawlers (otslabvai)`** — на **първа** позиция.
+
+Ако zone има Cloudflare Managed Ruleset с AI block rules, скриптът добавя exception **`AEO: skip managed AI bot blocks (otslabvai)`** преди execute rule-а.
+
+> **Limit:** Bot Fight Mode (Free) **не може** да се skip-не via WAF — затова `bot_management.fight_mode=false` остава primary fix (§4.1.2).
+
+**Token permission:** **Zone → WAF → Edit** (`Zone WAF Write`).
+
 ### 4.3 SSL/TLS → **Full (strict)**
 
 **Път:** SSL/TLS → Overview → **Full (strict)**
@@ -286,6 +306,7 @@ node scripts/apply-cloudflare-aeo.mjs --dry-run
 - SSL → Full (strict)
 - Bot Fight Mode → off
 - **Bot Preference Sync OFF** via `PUT /zones/{id}/bot_management` (`cf_robots_variant: off`, `is_robots_txt_managed: false`, `ai_bots_protection: disabled`) — виж §4.1.2
+- **WAF Skip rule** for AI crawlers (`AEO: allow AI search crawlers`) — виж §4.2
 - Purge cache
 - DNS-AID `_agents` HTTPS records (§4.5)
 - HTTP smoke (robots без Managed prepend, GPTBot 200, llms, no `#seo-catalog` leak)
@@ -365,7 +386,7 @@ npx wrangler deploy   # изисква CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT
 | `FITNESS1_API_KEY` | Portfolio import (optional но нужен за catalog) |
 | `SILA_API_TOKEN` | Portfolio import (optional) |
 
-API token permissions: **Account → Workers Scripts → Edit**, **Account → Workers KV Storage → Edit**, **Zone → DNS → Edit** (за custom domains), **Zone → Bot Management → Edit** (за Bot Preference Sync API).
+API token permissions: **Account → Workers Scripts → Edit**, **Account → Workers KV Storage → Edit**, **Zone → DNS → Edit** (за custom domains), **Zone → Bot Management → Edit**, **Zone → WAF → Edit**.
 
 ---
 
