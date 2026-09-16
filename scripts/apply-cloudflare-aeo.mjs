@@ -8,7 +8,9 @@
  *   CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... node scripts/apply-cloudflare-aeo.mjs
  *   node scripts/apply-cloudflare-aeo.mjs --dry-run
  */
+import { pathToFileURL } from 'node:url';
 import { SITE_HOSTS } from '../hostname-routing-contract.js';
+import { AI_CRAWLER_AGENTS } from '../seo-aeo-inject.js';
 
 const API = 'https://api.cloudflare.com/client/v4';
 
@@ -69,7 +71,215 @@ const REQUIRED_PERMISSIONS = [
   'Cache Purge',
   'DNS Read',
   'Workers Scripts Read',
+  'Bot Management Write',
+  'Zone WAF Write',
 ];
+
+const WAF_CUSTOM_PHASE = 'http_request_firewall_custom';
+const WAF_MANAGED_PHASE = 'http_request_firewall_managed';
+const CF_MANAGED_RULESET_ID = 'efb7b8c949ac4650a09736fc376e9aee';
+const WAF_AI_SKIP_RULE_DESC = 'AEO: allow AI search crawlers (otslabvai)';
+const WAF_AI_MANAGED_EXCEPTION_DESC = 'AEO: skip managed AI bot blocks (otslabvai)';
+const AI_MANAGED_RULE_DESC = /\b(AI bot|AI crawler|AI scraper|GPTBot|ClaudeBot|Bytespider|Block AI)\b/i;
+
+/** Build WAF expression matching AI crawler User-Agents from Worker robots.txt list. */
+export function buildAiCrawlerUaExpression(agents = AI_CRAWLER_AGENTS) {
+  const parts = agents.map(
+    (agent) => `http.user_agent contains "${String(agent).replace(/"/g, '\\"')}"`
+  );
+  return `(${parts.join(' or ')})`;
+}
+
+function buildAiCrawlerSkipRule() {
+  return {
+    description: WAF_AI_SKIP_RULE_DESC,
+    expression: buildAiCrawlerUaExpression(),
+    action: 'skip',
+    action_parameters: {
+      phases: ['http_request_sbfm', 'http_request_firewall_managed', 'http_ratelimit'],
+      products: ['bic', 'securityLevel', 'uaBlock', 'waf'],
+      ruleset: 'current',
+    },
+    enabled: true,
+  };
+}
+
+function ruleNeedsUpdate(existingRule, desiredRule) {
+  return (
+    existingRule.expression !== desiredRule.expression ||
+    existingRule.action !== desiredRule.action ||
+    JSON.stringify(existingRule.action_parameters || {}) !==
+      JSON.stringify(desiredRule.action_parameters || {}) ||
+    existingRule.enabled !== desiredRule.enabled
+  );
+}
+
+async function getPhaseEntrypoint(zoneId, phase) {
+  const res = await fetch(`${API}/zones/${zoneId}/rulesets/phases/${phase}/entrypoint`, {
+    headers: authHeaders(),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (res.status === 404 || (json.errors || []).some((e) => /not found/i.test(e.message || ''))) {
+    return { ok: false, notFound: true };
+  }
+  if (!json.success) {
+    return { ok: false, error: json.errors?.map((e) => e.message).join('; ') || res.statusText };
+  }
+  return { ok: true, result: json.result };
+}
+
+async function discoverManagedAiBlockRuleIds(zoneId) {
+  const { ok, result } = await cfTry(`/zones/${zoneId}/rulesets/${CF_MANAGED_RULESET_ID}`);
+  if (!ok || !result?.rules?.length) return [];
+  return result.rules
+    .filter((rule) => rule.enabled !== false && AI_MANAGED_RULE_DESC.test(rule.description || ''))
+    .map((rule) => rule.id);
+}
+
+async function upsertEntrypointRule(zoneId, phase, desiredRule, { position } = {}) {
+  const entry = await getPhaseEntrypoint(zoneId, phase);
+  if (!entry.ok && !entry.notFound) {
+    return { ok: false, action: `${phase}.get`, error: entry.error };
+  }
+
+  if (entry.notFound) {
+    if (DRY_RUN) {
+      return { ok: true, dryRun: true, action: `${phase}.create`, rule: desiredRule.description };
+    }
+    const created = await cfTry(`/zones/${zoneId}/rulesets`, {
+      method: 'POST',
+      body: { name: `${phase} entry point`, kind: 'zone', phase, rules: [desiredRule] },
+    });
+    return created.ok
+      ? { ok: true, action: `${phase}.create`, changed: true }
+      : { ok: false, action: `${phase}.create`, error: created.error };
+  }
+
+  const rulesetId = entry.result.id;
+  const existing = (entry.result.rules || []).find((r) => r.description === desiredRule.description);
+  if (existing) {
+    if (!ruleNeedsUpdate(existing, desiredRule)) {
+      return { ok: true, action: `${phase}.update`, changed: false, ruleId: existing.id };
+    }
+    if (DRY_RUN) {
+      return { ok: true, dryRun: true, action: `${phase}.update`, ruleId: existing.id };
+    }
+    const updated = await cfTry(`/zones/${zoneId}/rulesets/${rulesetId}/rules/${existing.id}`, {
+      method: 'PATCH',
+      body: desiredRule,
+    });
+    return updated.ok
+      ? { ok: true, action: `${phase}.update`, changed: true, ruleId: existing.id }
+      : { ok: false, action: `${phase}.update`, error: updated.error, ruleId: existing.id };
+  }
+
+  if (DRY_RUN) {
+    return { ok: true, dryRun: true, action: `${phase}.add`, rule: desiredRule.description, position };
+  }
+  const body = position ? { ...desiredRule, position } : desiredRule;
+  const added = await cfTry(`/zones/${zoneId}/rulesets/${rulesetId}/rules`, {
+    method: 'POST',
+    body,
+  });
+  return added.ok
+    ? { ok: true, action: `${phase}.add`, changed: true, position }
+    : { ok: false, action: `${phase}.add`, error: added.error, position };
+}
+
+async function syncAiCrawlerWafSkipRule(zoneId) {
+  const attempts = [];
+  if (DRY_RUN) {
+    attempts.push({ ok: true, dryRun: true, action: 'waf_custom.skip', rule: WAF_AI_SKIP_RULE_DESC });
+    return attempts;
+  }
+
+  const skipRule = buildAiCrawlerSkipRule();
+  attempts.push(
+    await upsertEntrypointRule(zoneId, WAF_CUSTOM_PHASE, skipRule, { position: { index: 1 } })
+  );
+
+  const aiRuleIds = await discoverManagedAiBlockRuleIds(zoneId);
+  if (!aiRuleIds.length) {
+    attempts.push({
+      ok: true,
+      action: 'waf_managed.exception',
+      changed: false,
+      note: 'no managed AI block rules discovered',
+    });
+    return attempts;
+  }
+
+  const managedEntry = await getPhaseEntrypoint(zoneId, WAF_MANAGED_PHASE);
+  if (!managedEntry.ok) {
+    attempts.push({
+      ok: managedEntry.notFound === true,
+      action: 'waf_managed.entrypoint',
+      error: managedEntry.error,
+      note: managedEntry.notFound ? 'managed WAF not deployed on zone' : undefined,
+    });
+    return attempts;
+  }
+
+  const executeRule = (managedEntry.result.rules || []).find(
+    (rule) => rule.action === 'execute' && rule.action_parameters?.id === CF_MANAGED_RULESET_ID
+  );
+  const managedExceptionRule = {
+    description: WAF_AI_MANAGED_EXCEPTION_DESC,
+    expression: buildAiCrawlerUaExpression(),
+    action: 'skip',
+    action_parameters: { rules: { [CF_MANAGED_RULESET_ID]: aiRuleIds } },
+    enabled: true,
+  };
+
+  const existingException = (managedEntry.result.rules || []).find(
+    (r) => r.description === WAF_AI_MANAGED_EXCEPTION_DESC
+  );
+  if (existingException && !ruleNeedsUpdate(existingException, managedExceptionRule)) {
+    attempts.push({
+      ok: true,
+      action: 'waf_managed.exception',
+      changed: false,
+      skippedRules: aiRuleIds.length,
+    });
+    return attempts;
+  }
+
+  const position = executeRule?.id ? { before: executeRule.id } : { index: 1 };
+  attempts.push(
+    await upsertEntrypointRule(zoneId, WAF_MANAGED_PHASE, managedExceptionRule, { position })
+  );
+  attempts[attempts.length - 1].skippedRules = aiRuleIds.length;
+
+  return attempts;
+}
+
+/** AEO-safe bot_management target (Bot Preference Sync OFF, AI edge block OFF). */
+function desiredBotManagementConfig(bmState = {}) {
+  const payload = {
+    fight_mode: false,
+    enable_js: bmState.enable_js === true,
+    ai_bots_protection: 'disabled',
+    cf_robots_variant: 'off',
+    is_robots_txt_managed: false,
+    content_bots_protection: 'disabled',
+    crawler_protection: 'disabled',
+  };
+  if (bmState?.stale_zone_configuration) {
+    Object.assign(payload, {
+      sbfm_likely_automated: 'allow',
+      sbfm_definitely_automated: 'allow',
+      sbfm_verified_bots: 'allow',
+      sbfm_static_resource_protection: false,
+      optimize_wordpress: false,
+      suppress_session_score: false,
+    });
+  }
+  return payload;
+}
+
+function botManagementNeedsUpdate(current = {}, desired = {}) {
+  return Object.entries(desired).some(([key, value]) => current[key] !== value);
+}
 
 async function verifyToken() {
   const { ok, result, error } = await cfTry('/user/tokens/verify');
@@ -151,14 +361,14 @@ async function setSettingSafe(zoneId, id, value) {
     : { ok: false, from: current, to: value, error };
 }
 
-async function tryBotProtections(zoneId) {
+async function syncBotManagementConfig(zoneId) {
   const attempts = [];
 
   if (DRY_RUN) {
-    return [{ ok: true, dryRun: true, action: 'bot_protections_skipped_in_dry_run' }];
+    return [{ ok: true, dryRun: true, action: 'bot_management_skipped_in_dry_run' }];
   }
 
-  // Bot Fight Mode / Super Bot Fight — endpoint varies by plan.
+  // Legacy setting — still patch when available (some plans expose both).
   attempts.push({
     action: 'settings.bot_fight_mode=off',
     ...(await cfTry(`/zones/${zoneId}/settings/bot_fight_mode`, {
@@ -167,22 +377,61 @@ async function tryBotProtections(zoneId) {
     })),
   });
 
-  const { ok: gotBm, result: bmState } = await cfTry(`/zones/${zoneId}/bot_management`);
-  if (gotBm) {
-    const payload = {
-      ...bmState,
-      fight_mode: false,
-      enable_js: bmState?.enable_js ?? false,
-    };
-    if (bmState && 'ai_bots_protection' in bmState) {
-      payload.ai_bots_protection = 'allow';
-    }
+  const { ok: gotBm, result: bmState, error: bmGetError } = await cfTry(
+    `/zones/${zoneId}/bot_management`
+  );
+  if (!gotBm) {
     attempts.push({
-      action: 'bot_management.fight_mode=false',
-      ...(await cfTry(`/zones/${zoneId}/bot_management`, { method: 'PUT', body: payload })),
+      action: 'bot_management.get',
+      ok: false,
+      error: bmGetError || 'unavailable on plan or missing Bot Management Write',
     });
-  } else {
-    attempts.push({ action: 'bot_management.get', ok: false, error: 'unavailable on plan' });
+    return attempts;
+  }
+
+  const desired = desiredBotManagementConfig(bmState);
+  const needsUpdate = botManagementNeedsUpdate(bmState, desired);
+  attempts.push({
+    action: 'bot_management.audit',
+    ok: true,
+    before: {
+      fight_mode: bmState.fight_mode,
+      ai_bots_protection: bmState.ai_bots_protection,
+      cf_robots_variant: bmState.cf_robots_variant,
+      is_robots_txt_managed: bmState.is_robots_txt_managed,
+      content_bots_protection: bmState.content_bots_protection,
+      crawler_protection: bmState.crawler_protection,
+    },
+    desired,
+    needsUpdate,
+  });
+
+  if (!needsUpdate) {
+    attempts.push({ action: 'bot_management.put', ok: true, changed: false, note: 'already aligned' });
+    return attempts;
+  }
+
+  attempts.push({
+    action: 'bot_management.put',
+    changed: true,
+    ...(await cfTry(`/zones/${zoneId}/bot_management`, { method: 'PUT', body: desired })),
+  });
+
+  const verify = await cfTry(`/zones/${zoneId}/bot_management`);
+  if (verify.ok) {
+    attempts.push({
+      action: 'bot_management.verify',
+      ok:
+        verify.result?.cf_robots_variant === 'off' &&
+        verify.result?.is_robots_txt_managed === false &&
+        verify.result?.fight_mode === false,
+      after: {
+        fight_mode: verify.result?.fight_mode,
+        ai_bots_protection: verify.result?.ai_bots_protection,
+        cf_robots_variant: verify.result?.cf_robots_variant,
+        is_robots_txt_managed: verify.result?.is_robots_txt_managed,
+      },
+    });
   }
 
   return attempts;
@@ -234,11 +483,16 @@ async function httpSmoke() {
     const robotsText = await robots.text();
     const home = await fetch(`https://${host}/`, { headers: { 'Cache-Control': 'no-cache' } });
     const homeHtml = await home.text();
+    const gptBotHome = await fetch(`https://${host}/`, {
+      headers: { 'Cache-Control': 'no-cache', 'User-Agent': 'GPTBot' },
+    });
     checks.push({
       site,
       host,
       robotsOk: robots.ok && robotsText.includes('OAI-SearchBot'),
       sitemapOk: robotsText.includes(`Sitemap: https://${host}/sitemap.xml`),
+      noManagedRobotsBlock: !robotsText.includes('# BEGIN Cloudflare Managed content'),
+      gptBotHomeOk: gptBotHome.status === 200,
       llmsStatus: (await fetch(`https://${host}/llms.txt`)).status,
       noSeoCatalogLeak: !homeHtml.includes('id="seo-catalog"'),
     });
@@ -294,7 +548,8 @@ async function applyZone(domain) {
 
   const changes = {};
   changes.ssl = await setSettingSafe(zoneId, 'ssl', 'strict');
-  changes.bot_protections = await tryBotProtections(zoneId);
+  changes.bot_management = await syncBotManagementConfig(zoneId);
+  changes.waf_ai_crawler_allow = await syncAiCrawlerWafSkipRule(zoneId);
 
   let dns = [];
   try {
@@ -367,18 +622,38 @@ async function main() {
   console.log('\n=== HTTP smoke ===');
   const smoke = await httpSmoke();
   for (const row of smoke) {
-    const ok = row.robotsOk && row.sitemapOk && row.llmsStatus === 200 && row.noSeoCatalogLeak;
+    const ok =
+      row.robotsOk &&
+      row.sitemapOk &&
+      row.noManagedRobotsBlock &&
+      row.gptBotHomeOk &&
+      row.llmsStatus === 200 &&
+      row.noSeoCatalogLeak;
     console.log(`${ok ? 'OK' : 'FAIL'} ${row.host}`, row);
   }
 
-  const allSmokeOk = smoke.every((r) => r.robotsOk && r.sitemapOk && r.llmsStatus === 200 && r.noSeoCatalogLeak);
+  const allSmokeOk = smoke.every(
+    (r) =>
+      r.robotsOk &&
+      r.sitemapOk &&
+      r.noManagedRobotsBlock &&
+      r.gptBotHomeOk &&
+      r.llmsStatus === 200 &&
+      r.noSeoCatalogLeak
+  );
   if (!allSmokeOk) process.exitCode = 1;
 
   console.log('\nDone.');
-  console.log('Manual if bot API unavailable: Security → Bots → Bot Fight Mode OFF + AI Crawl Control allow.');
+  console.log(
+    'Manual if APIs unavailable: Security → Bots → Bot Fight OFF, Bot Preference Sync OFF, AI Crawl Control allow; WAF → no global bot block.'
+  );
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+const isCli = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isCli) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

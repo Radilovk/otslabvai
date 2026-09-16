@@ -90,12 +90,18 @@ async function checkApi(spec) {
 async function checkAeo(spec) {
   const host = SITE_HOSTS[spec.site][0];
   const url = `https://${host}${spec.path}`;
-  const res = await fetch(url, { headers: { 'Cache-Control': 'no-cache' } });
+  const headers = { 'Cache-Control': 'no-cache' };
+  if (spec.userAgent) headers['User-Agent'] = spec.userAgent;
+  const res = await fetch(url, { headers });
   const body = await res.text();
   const errors = [];
-  if (res.status !== 200) errors.push(`HTTP ${res.status} (expected 200)`);
+  const expectedStatus = spec.status ?? 200;
+  if (res.status !== expectedStatus) errors.push(`HTTP ${res.status} (expected ${expectedStatus})`);
   for (const needle of spec.bodyIncludes || []) {
     if (!body.includes(needle)) errors.push(`body missing "${needle}"`);
+  }
+  for (const needle of spec.bodyExcludes || []) {
+    if (body.includes(needle)) errors.push(`body must not include "${needle}"`);
   }
   for (const needle of spec.contentTypeIncludes || []) {
     const ct = res.headers.get('content-type') || '';
