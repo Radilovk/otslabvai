@@ -47,6 +47,15 @@ describe('isWorkerApiPath', () => {
     expect(isWorkerApiPath('/orders')).toBe(true);
     expect(isWorkerApiPath('/quest-submit')).toBe(true);
   });
+
+  test('does not treat /.well-known/ agent discovery JSON as Worker API', () => {
+    expect(isWorkerApiPath('/.well-known/mcp/server-card.json')).toBe(false);
+    expect(isWorkerApiPath('/.well-known/agent-card.json')).toBe(false);
+    expect(isWorkerApiPath('/.well-known/agent-skills/index.json')).toBe(false);
+    expect(isWorkerApiPath('/.well-known/ai-catalog.json')).toBe(false);
+    expect(isWorkerApiPath('/.well-known/jwks.json')).toBe(false);
+    expect(isWorkerApiPath('/page_content.json')).toBe(true);
+  });
 });
 
 describe('isStaticAssetPath', () => {

@@ -51,6 +51,9 @@ export function isStaticAssetPath(pathname) {
 export function isWorkerApiPath(pathname) {
   const path = pathname.split('?')[0];
 
+  // Agent discovery JSON under /.well-known/ is served by handleSeoRequest, not Worker API switch.
+  if (path.startsWith('/.well-known/')) return false;
+
   if (path.endsWith('.json')) return true;
   if (path.startsWith('/api/')) return true;
 
