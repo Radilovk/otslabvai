@@ -31,6 +31,13 @@ describe('seo-aeo-agent-discovery', () => {
     expect(link).toContain('application/linkset+json');
   });
 
+  test('serveAgentDiscoveryAsset returns security.txt', async () => {
+    const res = serveAgentDiscoveryAsset(SITE_SEO.main, '/.well-known/security.txt');
+    expect(res).not.toBeNull();
+    const body = await res.text();
+    expect(body).toContain('Contact: mailto:radilov.k@gmail.com');
+  });
+
   test('serveAgentDiscoveryAsset returns linkset response', async () => {
     const res = serveAgentDiscoveryAsset(SITE_SEO.main, '/.well-known/api-catalog');
     expect(res).not.toBeNull();

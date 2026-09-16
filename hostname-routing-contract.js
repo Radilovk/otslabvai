@@ -178,6 +178,12 @@ export const PRODUCTION_AEO_CASES = [
  */
 export const PRODUCTION_AGENT_DISCOVERY_CASES = [
   {
+    id: 'main-security-txt',
+    site: 'main',
+    path: '/.well-known/security.txt',
+    bodyIncludes: ['Contact: mailto:radilov.k@gmail.com', 'Preferred-Languages'],
+  },
+  {
     id: 'main-api-catalog',
     site: 'main',
     path: '/.well-known/api-catalog',

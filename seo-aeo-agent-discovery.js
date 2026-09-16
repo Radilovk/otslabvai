@@ -15,6 +15,10 @@ const OPENAPI_HEADERS = {
   'cache-control': 'public, max-age=3600',
 };
 
+const TEXT_PLAIN_HEADERS = {
+  'content-type': 'text/plain; charset=utf-8',
+};
+
 /** @param {string} href @param {string} type */
 function link(href, type) {
   return { href, type };
@@ -36,6 +40,7 @@ export function apiCatalogLinkset(site) {
       describedby: [
         link(`${origin}/sitemap.xml`, 'application/xml'),
         link(`${origin}/robots.txt`, 'text/plain'),
+        link(`${origin}/.well-known/security.txt`, 'text/plain'),
       ],
     },
     {
@@ -159,8 +164,25 @@ export function openapiContentSpec(site) {
   };
 }
 
+/** RFC 9116 security.txt for Agent Readiness / responsible disclosure. */
+export function securityTxt(site) {
+  const expires = new Date();
+  expires.setFullYear(expires.getFullYear() + 1);
+  const contact = site.securityContact || 'office@biocode.com';
+  return [
+    `Contact: mailto:${contact}`,
+    `Expires: ${expires.toISOString()}`,
+    'Preferred-Languages: bg, en',
+    `Canonical: ${site.origin}/.well-known/security.txt`,
+    '',
+  ].join('\n');
+}
+
 /** @param {Parameters<typeof apiCatalogLinkset>[0]} site @param {string} pathname */
 export function serveAgentDiscoveryAsset(site, pathname) {
+  if (pathname === '/.well-known/security.txt') {
+    return new Response(securityTxt(site), { headers: { ...TEXT_PLAIN_HEADERS, 'cache-control': 'public, max-age=86400' } });
+  }
   if (pathname === '/.well-known/api-catalog') {
     return new Response(apiCatalogJson(site), { headers: LINKSET_HEADERS });
   }

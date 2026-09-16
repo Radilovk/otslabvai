@@ -9,6 +9,7 @@ import {
   itemListJsonLd,
   ldTag,
   llmsTxt,
+  llmsFullTxt,
   orgJsonLd,
   productIdScript,
   productJsonLd,
@@ -93,9 +94,14 @@ export async function handleSeoRequest(request, env, url) {
     return new Response(sitemapXml(site, products), { headers: TEXT_XML });
   }
 
-  if (pathname === '/llms.txt' || pathname === '/llms-full.txt') {
+  if (pathname === '/llms.txt') {
     const products = await loadSiteCatalog(env, siteId);
     return new Response(llmsTxt(site, products), { headers: TEXT_PLAIN });
+  }
+
+  if (pathname === '/llms-full.txt') {
+    const products = await loadSiteCatalog(env, siteId);
+    return new Response(llmsFullTxt(site, products), { headers: TEXT_PLAIN });
   }
 
   const legacyRedirect = await maybeLegacyProductRedirect(url, env, siteId);

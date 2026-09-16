@@ -37,6 +37,7 @@ export const SITE_SEO = {
       '/main-advisor-quiz.html',
     ],
     llmsIntro: 'ДА ОТСЛАБНА (daotslabna.com) — български онлайн магазин за отслабване и контрол на теглото. Цени в EUR, доставка в цяла България.',
+    securityContact: 'radilov.k@gmail.com',
   },
   life: {
     siteId: 'life',
@@ -55,6 +56,7 @@ export const SITE_SEO = {
       '/faq.html',
     ],
     llmsIntro: 'Life Protocols (life-protocols.com) — anti-aging и longevity добавки с AI персонален протокол. Цени в EUR, доставка в България.',
+    securityContact: 'office@biocode.com',
   },
   portfolio: {
     siteId: 'portfolio',
@@ -71,6 +73,7 @@ export const SITE_SEO = {
       '/faq.html',
     ],
     llmsIntro: 'BIOCODE Nutrition Science (biocode-bg.com) — каталог хранителни добавки за България. Цени в EUR.',
+    securityContact: 'office@biocode.com',
   },
 };
 
@@ -321,6 +324,9 @@ export function robotsTxt(site) {
 User-agent: *
 Content-Signal: ${CONTENT_SIGNALS}
 Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /.well-known/api-catalog
 ${globalDisallow}
 
 ${blocks}
@@ -368,6 +374,8 @@ export function llmsTxt(site, products) {
     `- [Начало](${site.origin}/): ${site.description.slice(0, 120)}`,
     `- [FAQ](${site.origin}/faq.html): Често задавани въпроси за ${site.name}`,
     `- [Sitemap](${site.origin}/sitemap.xml): Пълен списък URL`,
+    `- [API catalog](${site.origin}/.well-known/api-catalog): Machine-readable API discovery (RFC 9727)`,
+    `- [llms-full.txt](${site.origin}/llms-full.txt): Разширен каталог за AI агенти`,
     '',
     '## Мрежа от сайтове',
     ...BRAND_NETWORK.sameAs.map((url) => `- ${url}`),
@@ -388,6 +396,35 @@ export function llmsTxt(site, products) {
   lines.push('- Цените са в EUR, освен ако на страницата е посочено друго.');
   lines.push('- Български език, доставка в цяла България, плащане с наложен платеж.');
   lines.push(`- Официален домейн: ${site.origin}`);
+  lines.push(`- Content-Signal: ${CONTENT_SIGNALS}`);
+
+  return `${lines.join('\n')}\n`;
+}
+
+/** Extended llms.txt — full product list for agent ingestion. */
+export function llmsFullTxt(site, products) {
+  const lines = [
+    `# ${site.name} — llms-full.txt`,
+    '',
+    `> ${site.llmsIntro || site.description}`,
+    '',
+    '## Основни страници',
+    `- [Начало](${site.origin}/): ${site.description}`,
+    `- [FAQ](${site.origin}/faq.html): Често задавани въпроси`,
+    `- [Sitemap](${site.origin}/sitemap.xml)`,
+    `- [API catalog](${site.origin}/.well-known/api-catalog)`,
+    '',
+    `## Пълен каталог (${products.length} продукта, ${new Date().toISOString().slice(0, 10)})`,
+    '',
+  ];
+
+  for (const p of products) {
+    lines.push(`- [${p.title}](${productUrl(site, p)}): ${(p.description || '').slice(0, 240)}`);
+  }
+
+  lines.push('', '## За AI системи', '');
+  lines.push(`- Content-Signal: ${CONTENT_SIGNALS}`);
+  lines.push(`- Източник: ${site.origin}`);
 
   return `${lines.join('\n')}\n`;
 }
