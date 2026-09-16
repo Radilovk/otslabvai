@@ -17,6 +17,7 @@ import {
   robotsTxt,
   sitemapXml,
 } from './seo-aeo-inject.js';
+import { agentDiscoveryLinkHeader, serveAgentDiscoveryAsset } from './seo-aeo-agent-discovery.js';
 import {
   findProductByLegacyId,
   findProductBySlug,
@@ -79,6 +80,9 @@ export async function handleSeoRequest(request, env, url) {
 
   const site = SITE_SEO[siteId];
   const pathname = url.pathname.split('?')[0];
+
+  const discoveryResponse = serveAgentDiscoveryAsset(site, pathname);
+  if (discoveryResponse) return discoveryResponse;
 
   if (pathname === '/robots.txt') {
     return new Response(robotsTxt(site), { headers: TEXT_PLAIN });
@@ -183,6 +187,9 @@ export async function maybeEnhanceSeoHtml(response, ctx) {
   headers.set('cache-control', 'public, max-age=300, stale-while-revalidate=60');
   if (!isNoIndex) {
     headers.set('x-robots-tag', 'index, follow, max-snippet:-1');
+    if (isCatalogHomePath(site, pathname)) {
+      headers.set('Link', agentDiscoveryLinkHeader(site));
+    }
   }
 
   return new Response(enhanced.body, { status: enhanced.status, headers });

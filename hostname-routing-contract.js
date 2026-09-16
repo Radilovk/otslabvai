@@ -171,3 +171,49 @@ export const PRODUCTION_AEO_CASES = [
   { id: 'life-sitemap', site: 'life', path: '/sitemap.xml', bodyIncludes: ['https://life-protocols.com/faq.html'] },
   { id: 'portfolio-sitemap', site: 'portfolio', path: '/sitemap.xml', bodyIncludes: ['https://biocode-bg.com/'] },
 ];
+
+/**
+ * RFC 9727 api-catalog + RFC 8288 Link headers (Agent Readiness).
+ * @type {Array<{ id: string, site: SiteId, path: string, bodyIncludes?: string[], contentTypeIncludes?: string[], linkHeaderIncludes?: string[] }>}
+ */
+export const PRODUCTION_AGENT_DISCOVERY_CASES = [
+  {
+    id: 'main-api-catalog',
+    site: 'main',
+    path: '/.well-known/api-catalog',
+    contentTypeIncludes: ['application/linkset+json'],
+    bodyIncludes: ['"linkset"', 'llms.txt', '/c/now', 'page_content.json'],
+  },
+  {
+    id: 'life-api-catalog',
+    site: 'life',
+    path: '/.well-known/api-catalog',
+    contentTypeIncludes: ['application/linkset+json'],
+    bodyIncludes: ['life-protocols.com', 'life_page_content.json'],
+  },
+  {
+    id: 'portfolio-api-catalog',
+    site: 'portfolio',
+    path: '/.well-known/api-catalog',
+    contentTypeIncludes: ['application/linkset+json'],
+    bodyIncludes: ['portfolio/bootstrap', 'portfolio/catalog'],
+  },
+  {
+    id: 'main-home-link',
+    site: 'main',
+    path: '/',
+    linkHeaderIncludes: ['rel="api-catalog"', 'llms.txt'],
+  },
+  {
+    id: 'life-home-link',
+    site: 'life',
+    path: '/',
+    linkHeaderIncludes: ['rel="api-catalog"', 'describedby'],
+  },
+  {
+    id: 'portfolio-home-link',
+    site: 'portfolio',
+    path: '/',
+    linkHeaderIncludes: ['rel="api-catalog"'],
+  },
+];
