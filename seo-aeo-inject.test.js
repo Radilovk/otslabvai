@@ -5,6 +5,7 @@ import {
   orgJsonLd,
   productSlugFromRecord,
   productUrl,
+  publicCanonical,
   robotsTxt,
   sitemapXml,
   slugify,
@@ -58,5 +59,11 @@ describe('seo-aeo-inject', () => {
     expect(org['@type']).toBe('OnlineStore');
     expect(org.sameAs).toContain('https://life-protocols.com/');
     expect(AI_CRAWLER_AGENTS.length).toBeGreaterThanOrEqual(8);
+  });
+
+  test('publicCanonical uses apex origin and request path', () => {
+    expect(publicCanonical(SITE_SEO.main, '/')).toBe('https://daotslabna.com/');
+    expect(publicCanonical(SITE_SEO.life, '/shipping.html')).toBe('https://life-protocols.com/shipping.html');
+    expect(publicCanonical(SITE_SEO.portfolio, '/checkout.html')).toBe('https://biocode-bg.com/checkout.html');
   });
 });

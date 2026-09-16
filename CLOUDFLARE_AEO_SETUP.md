@@ -112,6 +112,63 @@ Custom domains за `daotslabna.com` / `biocode-bg.com` се управлява�
 |----------|-------|
 | Cloudflare връща **403** на AI bots | `OAI-SearchBot`, `GPTBot`, `PerplexityBot`, `Claude-SearchBot` — **нулева AI видимост** въпреки правилен `robots.txt` |
 
+### 4.1.1 AI Crawl Control → Crawlers (ръчно, три зони)
+
+**Път:** Security → **Bots** → **AI Crawl Control** → таб **Crawlers**
+
+> Няма публичен Cloudflare API за per-crawler allow/block. Настройките се задават **ръчно** за всяка zone: `daotslabna.com`, `life-protocols.com`, `biocode-bg.com`.
+
+**Цел (AEO/GEO):** AI **търсене** и **RAG** — разрешени; **обучение на модели** — забранено (съвпада с Worker `Content-Signal: search=yes,ai-input=yes,ai-train=no`).
+
+#### Глобални сигнали (Bot Preference Sync)
+
+Ако виждате `# BEGIN Cloudflare Managed content` в `/robots.txt` — Managed robots.txt / Bot Preference Sync е **ON**. Изключете го (виж §4.1.2). Worker-ът вече сервира правилен `robots.txt`.
+
+| Сигнал | Dashboard стойност | Защо |
+|--------|-------------------|------|
+| **Search** | **Allow** | Видимост в ChatGPT Search, Perplexity, Claude search |
+| **Training** | **Disallow AI training** (не Block) | Блокира training crawl без да руши search bots |
+| **Agent** | **Allow** | AI агенти могат да четат `/llms.txt`, api-catalog |
+
+#### Crawlers таб — препоръчани действия
+
+За **всяка** от трите зони, в **Crawlers**:
+
+| Crawler / група | Действие | Бележка |
+|-----------------|----------|---------|
+| **OAI-SearchBot** | Allow | OpenAI search index |
+| **GPTBot** | Allow | OpenAI (general crawl; training blocked via Content-Signal) |
+| **ChatGPT-User** | Allow | User-triggered fetch |
+| **PerplexityBot** | Allow | Perplexity |
+| **Claude-SearchBot** | Allow | Anthropic search |
+| **ClaudeBot** / **anthropic-ai** | Allow | Anthropic general |
+| **Googlebot** | Allow | Google Search |
+| **Google-Extended** | Disallow training или Allow* | *Training signal above handles model training |
+| **bingbot** | Allow | Bing |
+| **Applebot-Extended** | Allow | Apple Intelligence |
+| **CCBot** | Block или Disallow | Common Crawl — Worker вече `Disallow: /` |
+| Неизвестни / scraping bots | Block (по избор) | Само ако не са search crawlers |
+
+**Проверка след настройка:**
+
+```bash
+curl -s https://daotslabna.com/robots.txt | head -20
+# НЕ трябва: "# BEGIN Cloudflare Managed content" с Disallow за GPTBot
+# ТРЯБВА: Content-Signal: search=yes,ai-input=yes,ai-train=no
+curl -sI -A 'GPTBot' https://daotslabna.com/ | head -3
+# Очаквано: HTTP/2 200 (не 403)
+```
+
+### 4.1.2 Managed robots.txt / Bot Preference Sync → **OFF**
+
+**Път:** Security → **Bots** → **Bot Preference Sync** (или Managed robots.txt) → **Off**
+
+| Ако е ON | Ефект |
+|----------|-------|
+| Cloudflare **prepend**-ва Managed блок в `/robots.txt` | `Disallow: /` за GPTBot, ClaudeBot и др. — **конфликт** с Worker Allow правила |
+
+Worker `port` е източник на истина за `robots.txt`, `Content-Signal`, sitemap и llms — **не** дублирайте в Dashboard.
+
 ### 4.2 WAF custom rules — без блокиране на bots
 
 **Път:** Security → **WAF** → Custom rules
@@ -197,7 +254,7 @@ node scripts/apply-cloudflare-aeo.mjs --dry-run
 - Purge cache
 - HTTP smoke (robots, llms, no `#seo-catalog` leak)
 
-**Ръчно остава:** Security → Bots → **AI Crawl Control** (няма публичен API).
+**Ръчно остава:** Security → Bots → **AI Crawl Control → Crawlers** (§4.1.1) и **Bot Preference Sync OFF** (§4.1.2) — няма публичен API.
 
 ### 6.1 Автоматичен (production)
 

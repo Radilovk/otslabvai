@@ -15,6 +15,7 @@ import {
   WORKER_API_BASE,
   expandProductionPageUrls,
 } from '../hostname-routing-contract.js';
+import { SITE_SEO, publicCanonical } from '../seo-aeo-inject.js';
 
 function extractTitle(html) {
   const m = html.match(/<title[^>]*>([^<]*)<\/title>/i);
@@ -46,6 +47,17 @@ async function checkPage(spec) {
   }
   for (const needle of spec.cssIncludes || []) {
     if (!html.includes(needle)) errors.push(`missing stylesheet reference "${needle}"`);
+  }
+
+  if (spec.status !== 404 && spec.site && SITE_SEO[spec.site]) {
+    const expectedCanonical = publicCanonical(SITE_SEO[spec.site], spec.path);
+    const canonicalRe = new RegExp(
+      `<link[^>]+rel=["']canonical["'][^>]+href=["']${expectedCanonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`,
+      'i',
+    );
+    if (!canonicalRe.test(html)) {
+      errors.push(`missing canonical href="${expectedCanonical}"`);
+    }
   }
 
   return { ...spec, title, ok: errors.length === 0, errors };
