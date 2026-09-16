@@ -326,7 +326,9 @@ Content-Signal: ${CONTENT_SIGNALS}
 Allow: /
 Allow: /llms.txt
 Allow: /llms-full.txt
-Allow: /.well-known/api-catalog
+Allow: /.well-known/
+Allow: /auth.md
+Allow: /a2a/v1
 ${globalDisallow}
 
 ${blocks}
@@ -334,6 +336,7 @@ User-agent: CCBot
 Disallow: /
 
 Sitemap: ${site.origin}/sitemap.xml
+Agentmap: ${site.origin}/.well-known/ai-catalog.json
 `;
 }
 

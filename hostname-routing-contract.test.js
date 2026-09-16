@@ -71,6 +71,36 @@ describe('hostname routing contract — production page matrix', () => {
   });
 });
 
+describe('hostname routing contract — static HTML canonical tags', () => {
+  test('storefront HTML files include rel=canonical (404 excluded)', () => {
+    const skip = new Set(['404.html']);
+    const skipPrefixes = ['biocode/', 'lipolor/'];
+    const htmlFiles = [];
+    function walk(dir) {
+      for (const name of fs.readdirSync(dir)) {
+        if (name === 'node_modules' || name.startsWith('.')) continue;
+        const full = path.join(dir, name);
+        if (fs.statSync(full).isDirectory()) walk(full);
+        else if (name.endsWith('.html')) htmlFiles.push(path.relative(ROOT, full));
+      }
+    }
+    walk(ROOT);
+
+    const missing = htmlFiles.filter((rel) => {
+      const norm = rel.replace(/\\/g, '/');
+      if (skip.has(norm)) return false;
+      if (skipPrefixes.some((p) => norm.startsWith(p))) return false;
+      return true;
+    })
+      .filter((rel) => {
+        const html = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+        return !/<link[^>]+rel=["']canonical["']/i.test(html);
+      });
+
+    expect(missing).toEqual([]);
+  });
+});
+
 describe('hostname routing contract — cross-site isolation markers', () => {
   test('life and portfolio homepage titles never use main mission title', () => {
     expect(readTitleFromFile('/life.html')).not.toContain(MAIN_SITE_MARKER);

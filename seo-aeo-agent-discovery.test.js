@@ -27,6 +27,7 @@ describe('seo-aeo-agent-discovery', () => {
   test('agentDiscoveryLinkHeader includes api-catalog and describedby', () => {
     const link = agentDiscoveryLinkHeader(SITE_SEO.life);
     expect(link).toContain('rel="api-catalog"');
+    expect(link).toContain('rel="ai-catalog"');
     expect(link).toContain('</llms.txt>; rel="describedby"');
     expect(link).toContain('application/linkset+json');
   });

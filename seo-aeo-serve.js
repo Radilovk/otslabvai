@@ -19,6 +19,7 @@ import {
   sitemapXml,
 } from './seo-aeo-inject.js';
 import { agentDiscoveryLinkHeader, serveAgentDiscoveryAsset } from './seo-aeo-agent-discovery.js';
+import { serveAdvancedIntegrationAsset, a2aJsonRpcResponse } from './seo-aeo-advanced-integration.js';
 import {
   findProductByLegacyId,
   findProductBySlug,
@@ -84,6 +85,13 @@ export async function handleSeoRequest(request, env, url) {
 
   const discoveryResponse = serveAgentDiscoveryAsset(site, pathname);
   if (discoveryResponse) return discoveryResponse;
+
+  const advancedResponse = await serveAdvancedIntegrationAsset(site, pathname);
+  if (advancedResponse) return advancedResponse;
+
+  if (pathname === '/a2a/v1' && request.method === 'POST') {
+    return handleA2aJsonRpc(request, site);
+  }
 
   if (pathname === '/robots.txt') {
     return new Response(robotsTxt(site), { headers: TEXT_PLAIN });
@@ -199,4 +207,18 @@ export async function maybeEnhanceSeoHtml(response, ctx) {
   }
 
   return new Response(enhanced.body, { status: enhanced.status, headers });
+}
+
+/** @param {Request} request @param {import('./seo-aeo-inject.js').SITE_SEO extends Record<string, infer S> ? S : never} site */
+async function handleA2aJsonRpc(request, site) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+  const payload = a2aJsonRpcResponse(body?.id ?? null, site);
+  return new Response(JSON.stringify(payload), {
+    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+  });
 }
