@@ -428,28 +428,17 @@ npm run test:platform-production
 
 ---
 
-## 8. IndexNow (опционално — Bing / ChatGPT Search corpus)
+## 8. IndexNow (Bing / ChatGPT Search corpus)
 
-1. Генерирайте ключ (32 hex chars), напр. `a1b2c3d4e5f6789012345678901234ab`
-2. Добавете файл `{key}.txt` в repo root със съдържание **само ключа** → deploy
-3. Ping след deploy:
+**Key file in repo:** `d4865568cd8377b3aba2f48091b90927.txt` (served at `https://{domain}/d4865568cd8377b3aba2f48091b90927.txt` on all 3 domains after deploy).
+
+**GitHub secret:** `INDEXNOW_KEY` = `d4865568cd8377b3aba2f48091b90927`
+
+Deploy workflow runs `npm run ping:indexnow` automatically when the secret is set. Manual:
 
 ```bash
-curl -X POST "https://api.indexnow.org/indexnow" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "host": "daotslabna.com",
-    "key": "a1b2c3d4e5f6789012345678901234ab",
-    "keyLocation": "https://daotslabna.com/a1b2c3d4e5f6789012345678901234ab.txt",
-    "urlList": [
-      "https://daotslabna.com/",
-      "https://daotslabna.com/faq.html",
-      "https://daotslabna.com/sitemap.xml"
-    ]
-  }'
+INDEXNOW_KEY=d4865568cd8377b3aba2f48091b90927 npm run ping:indexnow
 ```
-
-Повторете с `host` / URLs за `life-protocols.com` и `biocode-bg.com`.
 
 ---
 
