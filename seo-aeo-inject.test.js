@@ -37,6 +37,14 @@ describe('seo-aeo-inject', () => {
     expect(xml).toContain('https://life-protocols.com/');
     expect(xml).toContain('https://life-protocols.com/products/test-product');
     expect(xml).toContain('https://life-protocols.com/faq.html');
+    expect(xml).toContain('https://life-protocols.com/life.html');
+    expect(xml).not.toContain('https://life-protocols.com/index.html');
+  });
+
+  test('sitemapXml for portfolio omits index.html (uses portfolio.html)', () => {
+    const xml = sitemapXml(SITE_SEO.portfolio, []);
+    expect(xml).toContain('https://biocode-bg.com/portfolio.html');
+    expect(xml).not.toContain('https://biocode-bg.com/index.html');
   });
 
   test('llmsTxt lists brand and products', () => {

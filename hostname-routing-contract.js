@@ -168,7 +168,7 @@ export const PRODUCTION_AEO_CASES = [
   { id: 'life-llms', site: 'life', path: '/llms.txt', bodyIncludes: ['Life Protocols', 'life-protocols.com'] },
   { id: 'portfolio-llms', site: 'portfolio', path: '/llms.txt', bodyIncludes: ['BIOCODE', 'biocode-bg.com'] },
   { id: 'main-sitemap', site: 'main', path: '/sitemap.xml', bodyIncludes: ['https://daotslabna.com/', '<urlset'] },
-  { id: 'life-sitemap', site: 'life', path: '/sitemap.xml', bodyIncludes: ['https://life-protocols.com/faq.html'] },
+  { id: 'life-sitemap', site: 'life', path: '/sitemap.xml', bodyIncludes: ['https://life-protocols.com/faq.html', 'https://life-protocols.com/life.html'], bodyExcludes: ['https://life-protocols.com/index.html'] },
   { id: 'portfolio-sitemap', site: 'portfolio', path: '/sitemap.xml', bodyIncludes: ['https://biocode-bg.com/'] },
   { id: 'main-gptbot-home', site: 'main', path: '/', userAgent: 'GPTBot' },
   { id: 'life-gptbot-home', site: 'life', path: '/', userAgent: 'GPTBot' },
