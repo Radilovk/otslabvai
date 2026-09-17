@@ -6,6 +6,7 @@
  * Last token rotation: 2026-09-15 (corrected ~40 char API token).
  * Usage:
  *   CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... node scripts/apply-cloudflare-aeo.mjs
+ *   CLOUDFLARE_API_TOKEN1=... (fallback alias) also accepted
  *   node scripts/apply-cloudflare-aeo.mjs --dry-run
  */
 import { pathToFileURL } from 'node:url';
@@ -21,7 +22,9 @@ function normalizeToken(raw) {
     .replace(/[\r\n]+/g, '');
 }
 
-const TOKEN = normalizeToken(process.env.CLOUDFLARE_API_TOKEN);
+// Cursor env uses CLOUDFLARE_API_TOKEN1; GitHub CI uses CLOUDFLARE_API_TOKEN — prefer TOKEN1 when both set.
+const TOKEN = normalizeToken(process.env.CLOUDFLARE_API_TOKEN1 || process.env.CLOUDFLARE_API_TOKEN);
+const TOKEN_SOURCE = process.env.CLOUDFLARE_API_TOKEN1 ? 'CLOUDFLARE_API_TOKEN1' : 'CLOUDFLARE_API_TOKEN';
 const ACCOUNT_ID = String(process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
 const DRY_RUN = process.argv.includes('--dry-run');
 
@@ -510,17 +513,22 @@ async function ensureDnsAidRecords(zoneId, domain) {
   for (const { name, comment } of targets) {
     const shortName = name.replace(`.${domain}`, '');
     const body = {
-      type: 'HTTPS',
+      type: 'SVCB',
       name: shortName,
-      content: `1 ${domain} alpn=h2,h3 ipv4hint=`,
+      ttl: 3600,
+      data: {
+        priority: 1,
+        target: domain,
+        value: 'alpn="h2,h3" port=443',
+      },
       proxied: false,
       comment,
     };
     if (DRY_RUN) {
-      results.push({ name: shortName, action: 'dry-run', content: body.content });
+      results.push({ name: shortName, action: 'dry-run', data: body.data });
       continue;
     }
-    const existing = await cfTry(`/zones/${zoneId}/dns_records?type=HTTPS&name=${encodeURIComponent(name)}`);
+    const existing = await cfTry(`/zones/${zoneId}/dns_records?type=SVCB&name=${encodeURIComponent(name)}`);
     if (existing.ok && existing.result?.length) {
       results.push({ name: shortName, action: 'exists' });
       continue;
@@ -576,9 +584,12 @@ async function applyZone(domain) {
 async function main() {
   console.log(`Cloudflare AEO apply ${DRY_RUN ? '(DRY RUN)' : ''}`);
   console.log(`Account: ${ACCOUNT_ID || '(not set)'}`);
+  console.log(`Token source: ${TOKEN.length ? TOKEN_SOURCE : '(none)'}`);
   console.log(`Token length: ${TOKEN.length} chars (value not logged)`);
   if (!TOKEN) {
-    console.error('CLOUDFLARE_API_TOKEN is empty after trim — check GitHub secret paste');
+    console.error(
+      'CLOUDFLARE_API_TOKEN (or CLOUDFLARE_API_TOKEN1) is empty after trim — check GitHub/Cursor secret'
+    );
     process.exit(1);
   }
 

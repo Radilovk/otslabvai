@@ -227,56 +227,64 @@ export const PRODUCTION_AGENT_DISCOVERY_CASES = [
   },
 ];
 
-/** Advanced Integration (Level 4/5) — OAuth, MCP, A2A, Agent Skills, ARD. */
+/** Advanced Integration (Level 4/5) — OAuth, MCP, A2A, Agent Skills, ARD (all 3 domains). */
+function advancedIntegrationCases(site, origin, skillId, mcpToolNeedle = 'get_llms_index') {
+  return [
+    {
+      id: `${site}-oauth-as`,
+      site,
+      path: '/.well-known/oauth-authorization-server',
+      bodyIncludes: [`"issuer": "${origin}"`, 'authorization_endpoint', 'jwks_uri', 'agent_auth'],
+    },
+    {
+      id: `${site}-oauth-prm`,
+      site,
+      path: '/.well-known/oauth-protected-resource',
+      bodyIncludes: [`"resource": "${origin}"`, 'authorization_servers', 'bearer_methods_supported'],
+    },
+    {
+      id: `${site}-mcp-card`,
+      site,
+      path: '/.well-known/mcp/server-card.json',
+      bodyIncludes: ['"transport": "http"', '"tools"', mcpToolNeedle],
+    },
+    {
+      id: `${site}-a2a-card`,
+      site,
+      path: '/.well-known/agent-card.json',
+      bodyIncludes: ['supportedInterfaces', '/a2a/v1', '"skills"'],
+    },
+    {
+      id: `${site}-agent-skills`,
+      site,
+      path: '/.well-known/agent-skills/index.json',
+      bodyIncludes: ['$schema', `${skillId}-storefront`, 'sha256:'],
+    },
+    {
+      id: `${site}-auth-md`,
+      site,
+      path: '/auth.md',
+      bodyIncludes: ['#', 'auth.md', 'anonymous-flow'],
+    },
+    {
+      id: `${site}-ai-catalog`,
+      site,
+      path: '/.well-known/ai-catalog.json',
+      contentTypeIncludes: ['application/ai-catalog+json'],
+      bodyIncludes: ['specVersion', 'representativeQueries', 'application/mcp-server-card+json'],
+    },
+    {
+      id: `${site}-web-bot-auth`,
+      site,
+      path: '/.well-known/http-message-signatures-directory',
+      contentTypeIncludes: ['application/http-message-signatures-directory+json'],
+      bodyIncludes: ['"keys"', 'Ed25519'],
+    },
+  ];
+}
+
 export const PRODUCTION_ADVANCED_INTEGRATION_CASES = [
-  {
-    id: 'main-oauth-as',
-    site: 'main',
-    path: '/.well-known/oauth-authorization-server',
-    bodyIncludes: ['"issuer": "https://daotslabna.com"', 'authorization_endpoint', 'jwks_uri', 'agent_auth'],
-  },
-  {
-    id: 'main-oauth-prm',
-    site: 'main',
-    path: '/.well-known/oauth-protected-resource',
-    bodyIncludes: ['"resource": "https://daotslabna.com"', 'authorization_servers', 'bearer_methods_supported'],
-  },
-  {
-    id: 'main-mcp-card',
-    site: 'main',
-    path: '/.well-known/mcp/server-card.json',
-    bodyIncludes: ['"transport": "http"', '"tools"', 'get_llms_index'],
-  },
-  {
-    id: 'main-a2a-card',
-    site: 'main',
-    path: '/.well-known/agent-card.json',
-    bodyIncludes: ['supportedInterfaces', '/a2a/v1', '"skills"'],
-  },
-  {
-    id: 'main-agent-skills',
-    site: 'main',
-    path: '/.well-known/agent-skills/index.json',
-    bodyIncludes: ['$schema', 'main-storefront', 'sha256:'],
-  },
-  {
-    id: 'main-auth-md',
-    site: 'main',
-    path: '/auth.md',
-    bodyIncludes: ['#', 'auth.md', 'anonymous-flow'],
-  },
-  {
-    id: 'main-ai-catalog',
-    site: 'main',
-    path: '/.well-known/ai-catalog.json',
-    contentTypeIncludes: ['application/ai-catalog+json'],
-    bodyIncludes: ['specVersion', 'representativeQueries', 'application/mcp-server-card+json'],
-  },
-  {
-    id: 'main-web-bot-auth',
-    site: 'main',
-    path: '/.well-known/http-message-signatures-directory',
-    contentTypeIncludes: ['application/http-message-signatures-directory+json'],
-    bodyIncludes: ['"keys"', 'Ed25519'],
-  },
+  ...advancedIntegrationCases('main', 'https://daotslabna.com', 'main', 'get_llms_index'),
+  ...advancedIntegrationCases('life', 'https://life-protocols.com', 'life', 'get_storefront_bootstrap'),
+  ...advancedIntegrationCases('portfolio', 'https://biocode-bg.com', 'portfolio', 'get_storefront_bootstrap'),
 ];
