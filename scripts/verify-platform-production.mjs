@@ -9,6 +9,7 @@
 import {
   PRODUCTION_AEO_CASES,
   PRODUCTION_ADVANCED_INTEGRATION_CASES,
+  PRODUCTION_MARKDOWN_NEGOTIATION_CASES,
   PRODUCTION_AGENT_DISCOVERY_CASES,
   PRODUCTION_API_CASES,
   PRODUCTION_PAGE_CASES,
@@ -92,6 +93,7 @@ async function checkAeo(spec) {
   const url = `https://${host}${spec.path}`;
   const headers = { 'Cache-Control': 'no-cache' };
   if (spec.userAgent) headers['User-Agent'] = spec.userAgent;
+  if (spec.accept) headers.Accept = spec.accept;
   const res = await fetch(url, { headers });
   const body = await res.text();
   const errors = [];
@@ -110,6 +112,9 @@ async function checkAeo(spec) {
   for (const needle of spec.linkHeaderIncludes || []) {
     const link = res.headers.get('link') || '';
     if (!link.includes(needle)) errors.push(`Link header missing "${needle}"`);
+  }
+  for (const name of spec.headerIncludes || []) {
+    if (!res.headers.get(name)) errors.push(`missing response header "${name}"`);
   }
   return { id: spec.id, url, ok: errors.length === 0, errors };
 }
@@ -203,6 +208,23 @@ for (const spec of PRODUCTION_AGENT_DISCOVERY_CASES) {
 
 console.log('\n--- Advanced Integration (OAuth, MCP, A2A, Skills, ARD) ---');
 for (const spec of PRODUCTION_ADVANCED_INTEGRATION_CASES) {
+  try {
+    const result = await checkAeo(spec);
+    if (result.ok) {
+      console.log(`OK  [${result.id}] ${result.url}`);
+    } else {
+      failed += 1;
+      console.error(`FAIL [${result.id}] ${result.url}`);
+      for (const err of result.errors) console.error(`     - ${err}`);
+    }
+  } catch (e) {
+    failed += 1;
+    console.error(`FAIL [${spec.id}]: ${e.message}`);
+  }
+}
+
+console.log('\n--- Markdown for Agents (Accept: text/markdown) ---');
+for (const spec of PRODUCTION_MARKDOWN_NEGOTIATION_CASES) {
   try {
     const result = await checkAeo(spec);
     if (result.ok) {

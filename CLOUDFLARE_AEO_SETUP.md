@@ -182,6 +182,25 @@ curl -sI -A 'GPTBot' https://daotslabna.com/ | head -3
 # Очаквано: HTTP/2 200 (не 403)
 ```
 
+### 4.1.3 Markdown for Agents (Accept: `text/markdown`)
+
+**Проблем:** Scanner `markdownNegotiation` fail — сайтът връща `text/html` дори при `Accept: text/markdown`.
+
+**Автоматично (двоен слой):**
+
+1. **Worker** (`seo-aeo-markdown.js` + `maybeEnhanceSeoHtml`) — content negotiation на HTML страници; връща `Content-Type: text/markdown`, `x-markdown-tokens`, YAML frontmatter + body.
+2. **Cloudflare zone** (optional, Pro+) — `scripts/apply-cloudflare-aeo.mjs` опитва `content_converter: on`. На Free plan API може да върне *Not allowed* — тогава Worker layer (1) е достатъчен; на Pro+ включете и от Dashboard: AI Crawl Control → **Markdown for Agents**.
+
+**Проверка (life-protocols и другите):**
+
+```bash
+curl -sI -H "Accept: text/markdown" https://life-protocols.com/ | rg -i "content-type|x-markdown"
+curl -s -H "Accept: text/markdown" https://life-protocols.com/ | head -10
+# Очаквано: text/markdown + --- frontmatter ---
+```
+
+**Auth.md** (отделен check) — вече live на и 3-те домейна: `/auth.md`, OAuth PRM/AS metadata, `agent_auth.skill` + anonymous flow.
+
 ### 4.1.2 Managed robots.txt / Bot Preference Sync → **OFF**
 
 **Път:** Security → **Bots** → **Bot Preference Sync** (или Managed robots.txt) → **Off**
@@ -441,7 +460,7 @@ npx wrangler deploy   # изисква CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT
 | `FITNESS1_API_KEY` | Portfolio import (optional но нужен за catalog) |
 | `SILA_API_TOKEN` | Portfolio import (optional) |
 
-CI prefer-ва `CLOUDFLARE_API_TOKEN1` над `CLOUDFLARE_API_TOKEN` (`.github/workflows/deploy.yml`).
+CI prefer-ва `CLOUDFLARE_API_TOKEN1` над `CLOUDFLARE_API_TOKEN` (`.github/workflows/deploy.yml`). След deploy проверете Actions log: `Cloudflare token source: CLOUDFLARE_API_TOKEN1` и IndexNow `OK` × 3 домейна.
 
 API token permissions: **Account → Workers Scripts → Edit**, **Account → Workers KV Storage → Edit**, **Zone → DNS → Edit** (за custom domains), **Zone → Bot Management → Edit**, **Zone → WAF → Edit**.
 

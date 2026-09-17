@@ -203,6 +203,7 @@ export async function serveMappedAsset(request, env, url) {
     site,
     mappedPath,
     requestUrl: request.url,
+    request,
   };
 
   const withOg = await maybeEnhanceProductHtmlResponse(response, ctx);

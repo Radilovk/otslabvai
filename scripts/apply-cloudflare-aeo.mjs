@@ -608,6 +608,7 @@ async function applyZone(domain) {
 
   const changes = {};
   changes.ssl = await setSettingSafe(zoneId, 'ssl', 'strict');
+  changes.content_converter = await setSettingSafe(zoneId, 'content_converter', 'on');
   changes.bot_management = await syncBotManagementConfig(zoneId);
   changes.waf_ai_crawler_allow = await syncAiCrawlerWafSkipRule(zoneId);
 
