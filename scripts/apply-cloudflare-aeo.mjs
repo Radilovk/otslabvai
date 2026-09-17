@@ -22,8 +22,9 @@ function normalizeToken(raw) {
     .replace(/[\r\n]+/g, '');
 }
 
-const TOKEN = normalizeToken(process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN1);
-const TOKEN_SOURCE = process.env.CLOUDFLARE_API_TOKEN ? 'CLOUDFLARE_API_TOKEN' : 'CLOUDFLARE_API_TOKEN1';
+// Cursor env uses CLOUDFLARE_API_TOKEN1; GitHub CI uses CLOUDFLARE_API_TOKEN — prefer TOKEN1 when both set.
+const TOKEN = normalizeToken(process.env.CLOUDFLARE_API_TOKEN1 || process.env.CLOUDFLARE_API_TOKEN);
+const TOKEN_SOURCE = process.env.CLOUDFLARE_API_TOKEN1 ? 'CLOUDFLARE_API_TOKEN1' : 'CLOUDFLARE_API_TOKEN';
 const ACCOUNT_ID = String(process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
 const DRY_RUN = process.argv.includes('--dry-run');
 
