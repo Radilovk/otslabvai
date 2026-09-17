@@ -29,18 +29,38 @@ jobs:
 
       - name: Normalize Cloudflare secrets
         run: |
-          RAW_TOKEN="${CLOUDFLARE_API_TOKEN1:-$CLOUDFLARE_API_TOKEN}"
-          TOKEN="$(printf '%s' "$RAW_TOKEN" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed 's/^Bearer[[:space:]]*//')"
+          normalize_token() {
+            printf '%s' "$1" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed 's/^Bearer[[:space:]]*//'
+          }
+          verify_cf_token() {
+            local t="$1"
+            [ -z "$t" ] && return 1
+            curl -sf -o /dev/null -H "Authorization: Bearer $t" \
+              "https://api.cloudflare.com/client/v4/user/tokens/verify"
+          }
+          try_token() {
+            local name="$1" raw="$2"
+            local cand
+            cand="$(normalize_token "$raw")"
+            if [ -z "$cand" ]; then return 1; fi
+            if verify_cf_token "$cand"; then
+              TOKEN="$cand"
+              SOURCE="$name"
+              return 0
+            fi
+            echo "::warning::${name} failed Cloudflare verify — trying fallback"
+            return 1
+          }
+          TOKEN=""
+          SOURCE=""
+          try_token CLOUDFLARE_API_TOKEN1 "$CLOUDFLARE_API_TOKEN1" \
+            || try_token CLOUDFLARE_API_TOKEN "$CLOUDFLARE_API_TOKEN"
           ACCOUNT="$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
           if [ -z "$TOKEN" ]; then
-            echo "::error::CLOUDFLARE_API_TOKEN1 and CLOUDFLARE_API_TOKEN are both empty after normalization"
+            echo "::error::Neither CLOUDFLARE_API_TOKEN1 nor CLOUDFLARE_API_TOKEN passed Cloudflare verify"
             exit 1
           fi
-          if [ -n "$CLOUDFLARE_API_TOKEN1" ]; then
-            echo "Cloudflare token source: CLOUDFLARE_API_TOKEN1 (${#TOKEN} chars)"
-          else
-            echo "Cloudflare token source: CLOUDFLARE_API_TOKEN (${#TOKEN} chars)"
-          fi
+          echo "Cloudflare token source: ${SOURCE} (${#TOKEN} chars)"
           echo "::add-mask::$TOKEN"
           echo "CLOUDFLARE_API_TOKEN=$TOKEN" >> "$GITHUB_ENV"
           echo "CLOUDFLARE_ACCOUNT_ID=$ACCOUNT" >> "$GITHUB_ENV"
