@@ -513,17 +513,22 @@ async function ensureDnsAidRecords(zoneId, domain) {
   for (const { name, comment } of targets) {
     const shortName = name.replace(`.${domain}`, '');
     const body = {
-      type: 'HTTPS',
+      type: 'SVCB',
       name: shortName,
-      content: `1 ${domain} alpn=h2,h3 ipv4hint=`,
+      ttl: 3600,
+      data: {
+        priority: 1,
+        target: domain,
+        value: 'alpn="h2,h3" port=443',
+      },
       proxied: false,
       comment,
     };
     if (DRY_RUN) {
-      results.push({ name: shortName, action: 'dry-run', content: body.content });
+      results.push({ name: shortName, action: 'dry-run', data: body.data });
       continue;
     }
-    const existing = await cfTry(`/zones/${zoneId}/dns_records?type=HTTPS&name=${encodeURIComponent(name)}`);
+    const existing = await cfTry(`/zones/${zoneId}/dns_records?type=SVCB&name=${encodeURIComponent(name)}`);
     if (existing.ok && existing.result?.length) {
       results.push({ name: shortName, action: 'exists' });
       continue;
