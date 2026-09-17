@@ -441,7 +441,7 @@ npx wrangler deploy   # изисква CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT
 | `FITNESS1_API_KEY` | Portfolio import (optional но нужен за catalog) |
 | `SILA_API_TOKEN` | Portfolio import (optional) |
 
-CI prefer-ва `CLOUDFLARE_API_TOKEN1` над `CLOUDFLARE_API_TOKEN` (`.github/workflows/deploy.yml`).
+CI prefer-ва `CLOUDFLARE_API_TOKEN1` над `CLOUDFLARE_API_TOKEN` (`.github/workflows/deploy.yml`). След deploy проверете Actions log: `Cloudflare token source: CLOUDFLARE_API_TOKEN1` и IndexNow `OK` × 3 домейна.
 
 API token permissions: **Account → Workers Scripts → Edit**, **Account → Workers KV Storage → Edit**, **Zone → DNS → Edit** (за custom domains), **Zone → Bot Management → Edit**, **Zone → WAF → Edit**.
 
