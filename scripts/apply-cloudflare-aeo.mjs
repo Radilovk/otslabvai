@@ -22,11 +22,32 @@ function normalizeToken(raw) {
     .replace(/[\r\n]+/g, '');
 }
 
-// Cursor env uses CLOUDFLARE_API_TOKEN1; GitHub CI uses CLOUDFLARE_API_TOKEN — prefer TOKEN1 when both set.
-const TOKEN = normalizeToken(process.env.CLOUDFLARE_API_TOKEN1 || process.env.CLOUDFLARE_API_TOKEN);
-const TOKEN_SOURCE = process.env.CLOUDFLARE_API_TOKEN1 ? 'CLOUDFLARE_API_TOKEN1' : 'CLOUDFLARE_API_TOKEN';
+// Resolved in main() — first env var that passes Cloudflare verify wins (TOKEN1 preferred).
+let TOKEN = '';
+let TOKEN_SOURCE = '';
 const ACCOUNT_ID = String(process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
 const DRY_RUN = process.argv.includes('--dry-run');
+
+async function resolveCloudflareToken() {
+  const candidates = [
+    ['CLOUDFLARE_API_TOKEN1', process.env.CLOUDFLARE_API_TOKEN1],
+    ['CLOUDFLARE_API_TOKEN', process.env.CLOUDFLARE_API_TOKEN],
+  ];
+  for (const [source, raw] of candidates) {
+    const token = normalizeToken(raw);
+    if (!token) continue;
+    TOKEN = token;
+    TOKEN_SOURCE = source;
+    const verify = await cfTry('/user/tokens/verify');
+    if (verify.ok) return { token, source };
+    const zoneProbe = await cfTry('/zones?per_page=1');
+    if (zoneProbe.ok) return { token, source };
+    console.warn(`${source} failed Cloudflare verify — trying fallback`);
+  }
+  TOKEN = '';
+  TOKEN_SOURCE = '';
+  return { token: '', source: '' };
+}
 
 const ZONES = [
   { site: 'main', domain: 'daotslabna.com' },
@@ -616,11 +637,15 @@ async function applyZone(domain) {
 async function main() {
   console.log(`Cloudflare AEO apply ${DRY_RUN ? '(DRY RUN)' : ''}`);
   console.log(`Account: ${ACCOUNT_ID || '(not set)'}`);
+
+  const resolved = await resolveCloudflareToken();
+  TOKEN = resolved.token;
+  TOKEN_SOURCE = resolved.source;
   console.log(`Token source: ${TOKEN.length ? TOKEN_SOURCE : '(none)'}`);
   console.log(`Token length: ${TOKEN.length} chars (value not logged)`);
   if (!TOKEN) {
     console.error(
-      'CLOUDFLARE_API_TOKEN (or CLOUDFLARE_API_TOKEN1) is empty after trim — check GitHub/Cursor secret'
+      'Neither CLOUDFLARE_API_TOKEN1 nor CLOUDFLARE_API_TOKEN passed Cloudflare verify — check GitHub/Cursor secrets'
     );
     process.exit(1);
   }
