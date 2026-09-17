@@ -503,15 +503,34 @@ async function httpSmoke() {
   return checks;
 }
 
-async function ensureDnsAidRecords(zoneId, domain) {
-  const targets = [
-    { name: `_index._agents.${domain}`, comment: 'DNS-AID index entrypoint' },
-    { name: `_mcp._agents.${domain}`, comment: 'DNS-AID MCP discovery' },
-    { name: `_a2a._agents.${domain}`, comment: 'DNS-AID A2A discovery' },
+/** DNS-AID SVCB targets per domain (Cloudflare DNS API). */
+export function dnsAidRecordSpecs(domain) {
+  return [
+    {
+      name: `_index._agents.${domain}`,
+      shortName: '_index._agents',
+      comment: 'DNS-AID index entrypoint',
+      svcParams: 'alpn="h2,h3" port=443',
+    },
+    {
+      name: `_mcp._agents.${domain}`,
+      shortName: '_mcp._agents',
+      comment: 'DNS-AID MCP discovery',
+      svcParams: 'alpn="h2,h3" port=443',
+    },
+    {
+      name: `_a2a._agents.${domain}`,
+      shortName: '_a2a._agents',
+      comment: 'DNS-AID A2A discovery',
+      svcParams: 'alpn="a2a" port=443 mandatory=alpn,port',
+    },
   ];
+}
+
+async function ensureDnsAidRecords(zoneId, domain) {
+  const targets = dnsAidRecordSpecs(domain);
   const results = [];
-  for (const { name, comment } of targets) {
-    const shortName = name.replace(`.${domain}`, '');
+  for (const { name, shortName, comment, svcParams } of targets) {
     const body = {
       type: 'SVCB',
       name: shortName,
@@ -519,7 +538,7 @@ async function ensureDnsAidRecords(zoneId, domain) {
       data: {
         priority: 1,
         target: domain,
-        value: 'alpn="h2,h3" port=443',
+        value: svcParams,
       },
       proxied: false,
       comment,
@@ -529,8 +548,21 @@ async function ensureDnsAidRecords(zoneId, domain) {
       continue;
     }
     const existing = await cfTry(`/zones/${zoneId}/dns_records?type=SVCB&name=${encodeURIComponent(name)}`);
-    if (existing.ok && existing.result?.length) {
-      results.push({ name: shortName, action: 'exists' });
+    const record = existing.ok && existing.result?.length ? existing.result[0] : null;
+    if (record) {
+      const currentValue = record.data?.value || '';
+      if (currentValue === svcParams) {
+        results.push({ name: shortName, action: 'exists' });
+        continue;
+      }
+      const updated = await cfTry(`/zones/${zoneId}/dns_records/${record.id}`, { method: 'PATCH', body });
+      results.push({
+        name: shortName,
+        action: updated.ok ? 'updated' : 'update-failed',
+        from: currentValue,
+        to: svcParams,
+        error: updated.ok ? undefined : updated.error,
+      });
       continue;
     }
     const created = await cfTry(`/zones/${zoneId}/dns_records`, { method: 'POST', body });

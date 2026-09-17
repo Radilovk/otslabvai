@@ -234,7 +234,7 @@ function advancedIntegrationCases(site, origin, skillId, mcpToolNeedle = 'get_ll
       id: `${site}-oauth-as`,
       site,
       path: '/.well-known/oauth-authorization-server',
-      bodyIncludes: [`"issuer": "${origin}"`, 'authorization_endpoint', 'jwks_uri', 'agent_auth'],
+      bodyIncludes: [`"issuer": "${origin}"`, 'authorization_endpoint', 'jwks_uri', 'agent_auth', '"skill"'],
     },
     {
       id: `${site}-oauth-prm`,
