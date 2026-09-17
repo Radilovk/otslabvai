@@ -16,6 +16,7 @@ describe('seo-aeo-advanced-integration', () => {
     expect(doc.authorization_endpoint).toContain('/admin.html');
     expect(doc.token_endpoint).toContain('/admin/session');
     expect(doc.jwks_uri).toContain('/.well-known/jwks.json');
+    expect(doc.agent_auth.skill).toBe('https://daotslabna.com/.well-known/agent-skills/storefront/SKILL.md');
     expect(doc.agent_auth.register_uri).toBe('https://daotslabna.com/auth.md');
   });
 

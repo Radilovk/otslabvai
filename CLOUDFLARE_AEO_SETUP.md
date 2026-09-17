@@ -315,23 +315,53 @@ node scripts/apply-cloudflare-aeo.mjs --dry-run
 
 ### 4.5 DNS-AID (Publish your AI bots)
 
-**Автоматично (API):** `scripts/apply-cloudflare-aeo.mjs` създава HTTPS записи:
+**Автоматично (API):** `scripts/apply-cloudflare-aeo.mjs` създава/обновява **SVCB** записи (upsert — и създава нови, и patch-ва стари стойности):
 
-| Record | Purpose |
-|--------|---------|
-| `_index._agents` | General agent discovery entrypoint → apex |
-| `_mcp._agents` | MCP server card discovery |
-| `_a2a._agents` | A2A agent card discovery |
+| Record | Purpose | SVCB SvcParams |
+|--------|---------|----------------|
+| `_index._agents` | General agent discovery entrypoint → apex | `alpn="h2,h3" port=443` |
+| `_mcp._agents` | MCP server card discovery | `alpn="h2,h3" port=443` |
+| `_a2a._agents` | A2A agent card discovery | `alpn="a2a" port=443 mandatory=alpn,port` |
 
-**Ръчно:** Security → DNS → **DNSSEC → Enable** (за `dnssecValidated` в isitagentready scan).
+**Auth.md agent registration:** OAuth AS metadata includes `agent_auth.skill` → `/.well-known/agent-skills/storefront/SKILL.md`, plus `register_uri` → `/auth.md` and anonymous flow (`auth.md#anonymous-flow`).
+
+#### DNSSEC (ръчно — за `dnsAid` pass в isitagentready)
+
+Scanner-ите валидират DNS-AID през DNS-over-HTTPS и очакват **authenticated data** (`AD: true`). Cloudflare API не може да configure-не DS записа при **registrar**-а — това е единствената ръчна стъпка.
+
+**За всяка от 3-те зони** (`daotslabna.com`, `life-protocols.com`, `biocode-bg.com`):
+
+1. Cloudflare Dashboard → **DNS** → **Settings** → **DNSSEC** → **Enable**
+2. Cloudflare показва **DS record** (Key tag, Algorithm, Digest type, Digest)
+3. Влез в **registrar**-а (където е закупен домейнът) → DNSSEC / DS records → **Add DS record** със стойностите от Cloudflare
+4. Изчакай propagation (обикновено 15–60 мин, понякога до 24 ч)
 
 **Проверка:**
 
 ```bash
-dig +short HTTPS _index._agents.daotslabna.com
+# SVCB records (DoH)
+curl -s "https://cloudflare-dns.com/dns-query?name=_a2a._agents.daotslabna.com&type=SVCB" \
+  -H "accept: application/dns-json" | jq '.Answer[0].data, .AD'
+# Очаквано data: 1 daotslabna.com. alpn=a2a port=443 mandatory=alpn,port
+# AD: true след DNSSEC chain validation
+
+dig +short SVCB _index._agents.daotslabna.com
+dig +short DNSKEY daotslabna.com
+
 curl -s https://daotslabna.com/.well-known/ai-catalog.json | head
 grep Agentmap https://daotslabna.com/robots.txt
 ```
+
+**isitagentready scan:**
+
+```bash
+curl -X POST https://isitagentready.com/api/scan \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://daotslabna.com"}'
+# checks.discoverability.dnsAid.status → "pass" (след DNSSEC)
+```
+
+> **Commerce checks** (`acp`, `mpp`, `ucp`, `x402`, AP2) — **не** са цел за тези storefronts: checkout е human-in-browser, не agent-native payments. Discovery layer (robots, llms, MCP, A2A, OAuth, auth.md, DNS-AID) е достатъчен.
 
 ### 4.6 Advanced Integration (Worker `.well-known/`)
 

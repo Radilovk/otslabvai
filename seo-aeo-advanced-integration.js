@@ -48,6 +48,7 @@ export function oauthAuthorizationServer(site) {
     scopes_supported: ['catalog:read', 'storefront:read', 'content:read', 'admin:write'],
     code_challenge_methods_supported: ['S256'],
     agent_auth: {
+      skill: `${origin}/.well-known/agent-skills/storefront/SKILL.md`,
       register_uri: `${origin}/auth.md`,
       identity_types_supported: ['anonymous'],
       anonymous: {
