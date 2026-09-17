@@ -51,6 +51,26 @@ describe('serveMappedAsset', () => {
     expect(await res?.text()).toContain('Life Protocols');
   });
 
+  test('returns markdown when Accept: text/markdown', async () => {
+    const env = {
+      ASSETS: mockAssets({
+        '/life.html': '<!doctype html><html><head><title>Life Protocols</title>'
+          + '<meta name="description" content="Longevity">'
+          + '</head><body><h1>Life Protocols</h1><p>Products.</p></body></html>',
+      }),
+    };
+    const req = new Request('https://life-protocols.com/', {
+      headers: { Accept: 'text/markdown' },
+    });
+    const res = await serveMappedAsset(req, env, new URL(req.url));
+    expect(res?.status).toBe(200);
+    expect(res?.headers.get('content-type')).toContain('text/markdown');
+    expect(res?.headers.get('x-markdown-tokens')).toBeTruthy();
+    const text = await res.text();
+    expect(text).toContain('title: Life Protocols');
+    expect(text).toContain('# Life Protocols');
+  });
+
   test('maps life about-us alias to life-about.html', async () => {
     const env = {
       ASSETS: mockAssets({

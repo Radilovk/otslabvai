@@ -288,3 +288,33 @@ export const PRODUCTION_ADVANCED_INTEGRATION_CASES = [
   ...advancedIntegrationCases('life', 'https://life-protocols.com', 'life', 'get_storefront_bootstrap'),
   ...advancedIntegrationCases('portfolio', 'https://biocode-bg.com', 'portfolio', 'get_storefront_bootstrap'),
 ];
+
+export const PRODUCTION_MARKDOWN_NEGOTIATION_CASES = [
+  {
+    id: 'main-home-markdown',
+    site: 'main',
+    path: '/',
+    accept: 'text/markdown',
+    contentTypeIncludes: ['text/markdown'],
+    bodyIncludes: ['---', 'title:'],
+    headerIncludes: ['x-markdown-tokens'],
+  },
+  {
+    id: 'life-home-markdown',
+    site: 'life',
+    path: '/',
+    accept: 'text/markdown',
+    contentTypeIncludes: ['text/markdown'],
+    bodyIncludes: ['---', 'Life Protocols'],
+    headerIncludes: ['x-markdown-tokens'],
+  },
+  {
+    id: 'portfolio-home-markdown',
+    site: 'portfolio',
+    path: '/',
+    accept: 'text/markdown',
+    contentTypeIncludes: ['text/markdown'],
+    bodyIncludes: ['---', 'BIOCODE'],
+    headerIncludes: ['x-markdown-tokens'],
+  },
+];

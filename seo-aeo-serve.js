@@ -3,6 +3,11 @@
  */
 
 import {
+  htmlToAgentMarkdown,
+  markdownResponseHeaders,
+  wantsMarkdownResponse,
+} from './seo-aeo-markdown.js';
+import {
   SITE_SEO,
   injectSeo,
   isCatalogHomePath,
@@ -160,18 +165,14 @@ async function serveSeoProductPage(request, env, url, siteId, slug) {
 
 /**
  * @param {Response} response
- * @param {{ env: object, site: string|null, mappedPath: string, requestUrl: string }} ctx
+ * @param {{ env: object, site: string|null, mappedPath: string, requestUrl: string, request?: Request }} ctx
  */
 export async function maybeEnhanceSeoHtml(response, ctx) {
-  const { env, site: siteId, mappedPath, requestUrl } = ctx;
+  const { env, site: siteId, mappedPath, requestUrl, request } = ctx;
   if (!response?.ok || !siteId) return response;
 
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('text/html')) return response;
-
-  // HTMLRewriter exists only in the Cloudflare Workers runtime (not in Jest/Node).
-  // @ts-ignore Cloudflare Workers runtime global
-  if (typeof HTMLRewriter === 'undefined') return response;
 
   const site = SITE_SEO[siteId];
   if (!site) return response;
@@ -194,6 +195,27 @@ export async function maybeEnhanceSeoHtml(response, ctx) {
 
   const html = await response.text();
   const isNoIndex = /<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html);
+
+  // @ts-ignore Cloudflare Workers runtime global
+  const hasRewriter = typeof HTMLRewriter !== 'undefined';
+
+  if (request && wantsMarkdownResponse(request)) {
+    const sourceHtml = hasRewriter
+      ? await injectSeo(new Response(html, { headers: response.headers }), { head, canonical }).text()
+      : html;
+    const markdown = htmlToAgentMarkdown(sourceHtml, { canonical, siteName: site.name });
+    const headers = new Headers(markdownResponseHeaders(markdown, { originalHtml: sourceHtml }));
+    headers.set('x-robots-tag', 'index, follow, max-snippet:-1');
+    if (!isNoIndex && isCatalogHomePath(site, pathname)) {
+      headers.set('Link', agentDiscoveryLinkHeader(site));
+    }
+    return new Response(markdown, { status: response.status, headers });
+  }
+
+  if (!hasRewriter) {
+    return new Response(html, { status: response.status, headers: response.headers });
+  }
+
   const enhanced = injectSeo(new Response(html, { headers: response.headers }), { head, canonical });
 
   const headers = new Headers(enhanced.headers);
