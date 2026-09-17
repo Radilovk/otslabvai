@@ -39,9 +39,8 @@ async function resolveCloudflareToken() {
     TOKEN = token;
     TOKEN_SOURCE = source;
     const verify = await cfTry('/user/tokens/verify');
-    if (verify.ok) return { token, source };
     const zoneProbe = await cfTry('/zones?per_page=1');
-    if (zoneProbe.ok) return { token, source };
+    if (verify.ok || zoneProbe.ok) return { token, source };
     console.warn(`${source} failed Cloudflare verify — trying fallback`);
   }
   TOKEN = '';

@@ -35,8 +35,9 @@ jobs:
           verify_cf_token() {
             local t="$1"
             [ -z "$t" ] && return 1
+            # Zone list works with Zone:Read; /user/tokens/verify needs User:API Tokens:Read
             curl -sf -o /dev/null -H "Authorization: Bearer $t" \
-              "https://api.cloudflare.com/client/v4/user/tokens/verify"
+              "https://api.cloudflare.com/client/v4/zones?per_page=1"
           }
           try_token() {
             local name="$1" raw="$2"
