@@ -48,7 +48,7 @@ export const SITE_SEO = {
     lang: 'bg',
     storeType: 'OnlineStore',
     productTemplate: '/life-product.html',
-    homePaths: new Set(['/', '/index.html', '/life.html']),
+    homePaths: new Set(['/', '/life.html']),
     staticPaths: [
       '/life-about.html',
       '/life-contact.html',
@@ -67,7 +67,7 @@ export const SITE_SEO = {
     lang: 'bg',
     storeType: 'OnlineStore',
     productTemplate: '/portfolio-product.html',
-    homePaths: new Set(['/', '/index.html', '/portfolio.html']),
+    homePaths: new Set(['/', '/portfolio.html']),
     staticPaths: [
       '/portfolio-advisor-quiz.html',
       '/faq.html',

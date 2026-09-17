@@ -82,6 +82,29 @@ GitHub (push main / cursor/*)
 
 **Не трийте** routes ръчно без да обновите `wrangler.toml` — следващият deploy ги възстановява.
 
+### 2.5 Life Protocols — специфика (няма `index.html`)
+
+Life Protocols **не** използва `index.html` като homepage — Worker map-ва `/` → **`/life.html`** (`hostname-routing.js`). Същото важи за portfolio (`/portfolio.html`).
+
+| Аспект | Main (`daotslabna.com`) | Life (`life-protocols.com`) | Portfolio (`biocode-bg.com`) |
+|--------|-------------------------|----------------------------|------------------------------|
+| Homepage asset | `index.html` | `life.html` | `portfolio.html` |
+| Wrangler route | `custom_domain = true` | `zone_name` route `life-protocols.com/*` | `custom_domain = true` |
+| HTML prefix | без prefix (`/faq.html`) | `life-*` (`/life-about.html`) | `portfolio-*` |
+| KV content key | `page_content` | `life_page_content` | portfolio catalog KV |
+| Sitemap home URLs | `/`, `/index.html` | `/`, `/life.html` | `/`, `/portfolio.html` |
+
+**Защо zone route, не custom_domain:** DNS на `life-protocols.com` е управляван отделно; Wrangler attach-ва Worker без да променя apex записите. Routing-ът минава през `run_worker_first = true` + `mapAssetPath('life', '/')` → `life.html`.
+
+**Проверка:**
+
+```bash
+curl -sI https://life-protocols.com/ | head -1          # HTTP 200
+curl -sI https://life-protocols.com/index.html | head -1 # HTTP 404 (очаквано)
+curl -s https://life-protocols.com/sitemap.xml | rg 'life.html|index.html'
+# Трябва life.html, НЕ index.html
+```
+
 ---
 
 ## 3. DNS — три зони
@@ -410,11 +433,15 @@ npx wrangler deploy   # изисква CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT
 
 | Secret | Употреба |
 |--------|----------|
-| `CLOUDFLARE_API_TOKEN` | Wrangler deploy + KV API |
+| `CLOUDFLARE_API_TOKEN1` | **Предпочитан** API token (deploy, KV, AEO apply) |
+| `CLOUDFLARE_API_TOKEN` | Fallback ако TOKEN1 липсва |
 | `CLOUDFLARE_ACCOUNT_ID` | Account ID |
+| `INDEXNOW_KEY` | `d4865568cd8377b3aba2f48091b90927` — auto IndexNow ping след deploy |
 | `ADMIN_PASSWORD` | Admin login |
 | `FITNESS1_API_KEY` | Portfolio import (optional но нужен за catalog) |
 | `SILA_API_TOKEN` | Portfolio import (optional) |
+
+CI prefer-ва `CLOUDFLARE_API_TOKEN1` над `CLOUDFLARE_API_TOKEN` (`.github/workflows/deploy.yml`).
 
 API token permissions: **Account → Workers Scripts → Edit**, **Account → Workers KV Storage → Edit**, **Zone → DNS → Edit** (за custom domains), **Zone → Bot Management → Edit**, **Zone → WAF → Edit**.
 

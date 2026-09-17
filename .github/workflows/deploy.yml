@@ -20,6 +20,7 @@ jobs:
       contents: write
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_API_TOKEN1: ${{ secrets.CLOUDFLARE_API_TOKEN1 }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
@@ -28,13 +29,18 @@ jobs:
 
       - name: Normalize Cloudflare secrets
         run: |
-          TOKEN="$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed 's/^Bearer[[:space:]]*//')"
+          RAW_TOKEN="${CLOUDFLARE_API_TOKEN1:-$CLOUDFLARE_API_TOKEN}"
+          TOKEN="$(printf '%s' "$RAW_TOKEN" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed 's/^Bearer[[:space:]]*//')"
           ACCOUNT="$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
           if [ -z "$TOKEN" ]; then
-            echo "::error::CLOUDFLARE_API_TOKEN is empty after normalization"
+            echo "::error::CLOUDFLARE_API_TOKEN1 and CLOUDFLARE_API_TOKEN are both empty after normalization"
             exit 1
           fi
-          echo "Cloudflare token length: ${#TOKEN} chars"
+          if [ -n "$CLOUDFLARE_API_TOKEN1" ]; then
+            echo "Cloudflare token source: CLOUDFLARE_API_TOKEN1 (${#TOKEN} chars)"
+          else
+            echo "Cloudflare token source: CLOUDFLARE_API_TOKEN (${#TOKEN} chars)"
+          fi
           echo "::add-mask::$TOKEN"
           echo "CLOUDFLARE_API_TOKEN=$TOKEN" >> "$GITHUB_ENV"
           echo "CLOUDFLARE_ACCOUNT_ID=$ACCOUNT" >> "$GITHUB_ENV"
@@ -132,7 +138,7 @@ jobs:
         run: |
           curl -s -X PUT \
             "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/d220db696e414b7cb3da2b19abd53d0f/values/bio_content" \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             -H "Content-Type: application/json" \
             --data-binary "@bio_content.json" | python3 -c "import sys,json; r=json.load(sys.stdin); print('KV sync:', 'OK' if r.get('success') else r)"
 
@@ -146,7 +152,7 @@ jobs:
           fi
           curl -s -X PUT \
             "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/d220db696e414b7cb3da2b19abd53d0f/values/fitness1_api_key" \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             -H "Content-Type: text/plain" \
             --data-binary "$FITNESS1_API_KEY"
 
@@ -160,7 +166,7 @@ jobs:
           fi
           curl -s -X PUT \
             "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/d220db696e414b7cb3da2b19abd53d0f/values/sila_api_token" \
-            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             -H "Content-Type: text/plain" \
             --data-binary "$SILA_API_TOKEN"
           echo "sila_api_token synced to KV"
@@ -171,7 +177,7 @@ jobs:
           GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
         run: |
           KV="https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/d220db696e414b7cb3da2b19abd53d0f/values"
-          AUTH="Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}"
+          AUTH="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
           if [ -n "$OPENAI_API_KEY" ]; then
             curl -s -X PUT "${KV}/ai_openai_api_key" -H "$AUTH" -H "Content-Type: text/plain" --data-binary "$OPENAI_API_KEY"
             echo "OPENAI_API_KEY synced to KV"
@@ -189,7 +195,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           KV="https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces/d220db696e414b7cb3da2b19abd53d0f/values"
-          AUTH="Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}"
+          AUTH="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
           if [ -f backend/life_page_content.json ]; then
             # Always refresh the static fallback seed used when life_page_content is missing.
             curl -s -X PUT "${KV}/static_backend_life_page_content.json" \
@@ -213,7 +219,7 @@ jobs:
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # Must be Wrangler 4+ or run_worker_first in wrangler.toml is silently ignored.
           wranglerVersion: "4"
@@ -253,8 +259,6 @@ jobs:
         env:
           FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
           SILA_API_TOKEN: ${{ secrets.SILA_API_TOKEN }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$FITNESS1_API_KEY" ] && [ -z "$SILA_API_TOKEN" ]; then
             echo "::warning::Skipping catalog sync – FITNESS1_API_KEY and SILA_API_TOKEN not set"
@@ -266,8 +270,6 @@ jobs:
         env:
           FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
           SILA_API_TOKEN: ${{ secrets.SILA_API_TOKEN }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CATALOG_SKIP_LEGACY: '1'
         run: |
           if [ -z "$FITNESS1_API_KEY" ] && [ -z "$SILA_API_TOKEN" ]; then
@@ -360,10 +362,6 @@ jobs:
 
       - name: Apply Cloudflare AEO zone settings
         continue-on-error: true
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_API_TOKEN1: ${{ secrets.CLOUDFLARE_API_TOKEN1 }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: node scripts/apply-cloudflare-aeo.mjs
 
       - name: Ping IndexNow (optional)
