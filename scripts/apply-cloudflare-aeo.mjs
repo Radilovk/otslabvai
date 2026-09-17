@@ -6,6 +6,7 @@
  * Last token rotation: 2026-09-15 (corrected ~40 char API token).
  * Usage:
  *   CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... node scripts/apply-cloudflare-aeo.mjs
+ *   CLOUDFLARE_API_TOKEN1=... (fallback alias) also accepted
  *   node scripts/apply-cloudflare-aeo.mjs --dry-run
  */
 import { pathToFileURL } from 'node:url';
@@ -21,7 +22,8 @@ function normalizeToken(raw) {
     .replace(/[\r\n]+/g, '');
 }
 
-const TOKEN = normalizeToken(process.env.CLOUDFLARE_API_TOKEN);
+const TOKEN = normalizeToken(process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN1);
+const TOKEN_SOURCE = process.env.CLOUDFLARE_API_TOKEN ? 'CLOUDFLARE_API_TOKEN' : 'CLOUDFLARE_API_TOKEN1';
 const ACCOUNT_ID = String(process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
 const DRY_RUN = process.argv.includes('--dry-run');
 
@@ -576,9 +578,12 @@ async function applyZone(domain) {
 async function main() {
   console.log(`Cloudflare AEO apply ${DRY_RUN ? '(DRY RUN)' : ''}`);
   console.log(`Account: ${ACCOUNT_ID || '(not set)'}`);
+  console.log(`Token source: ${TOKEN.length ? TOKEN_SOURCE : '(none)'}`);
   console.log(`Token length: ${TOKEN.length} chars (value not logged)`);
   if (!TOKEN) {
-    console.error('CLOUDFLARE_API_TOKEN is empty after trim — check GitHub secret paste');
+    console.error(
+      'CLOUDFLARE_API_TOKEN (or CLOUDFLARE_API_TOKEN1) is empty after trim — check GitHub/Cursor secret'
+    );
     process.exit(1);
   }
 
