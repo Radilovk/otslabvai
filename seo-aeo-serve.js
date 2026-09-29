@@ -26,7 +26,6 @@ import {
 import { agentDiscoveryLinkHeader, serveAgentDiscoveryAsset } from './seo-aeo-agent-discovery.js';
 import { serveAdvancedIntegrationAsset, a2aJsonRpcResponse } from './seo-aeo-advanced-integration.js';
 import {
-  findProductByLegacyId,
   findProductBySlug,
   loadSiteCatalog,
 } from './seo-aeo-data.js';
@@ -52,32 +51,6 @@ async function fetchMappedAsset(env, request, siteId, pathname) {
     response = await env.ASSETS.fetch(new Request(assetUrl.toString(), assetFetchInit(request)));
   }
   return response;
-}
-
-function redirect(url, status = 301) {
-  return new Response(null, { status, headers: { Location: url } });
-}
-
-export async function maybeLegacyProductRedirect(url, env, siteId) {
-  const site = SITE_SEO[siteId];
-  if (!site) return null;
-
-  const path = url.pathname.split('?')[0];
-  const templates = {
-    main: '/product.html',
-    life: '/life-product.html',
-    portfolio: '/portfolio-product.html',
-  };
-  if (path !== templates[siteId]) return null;
-
-  const legacyId = url.searchParams.get('id') || url.searchParams.get('group_id');
-  if (!legacyId) return null;
-
-  const products = await loadSiteCatalog(env, siteId);
-  const product = findProductByLegacyId(products, legacyId);
-  if (!product) return null;
-
-  return redirect(productUrl(site, product));
 }
 
 /** @param {Request} request @param {object} env @param {URL} url */
@@ -117,9 +90,6 @@ export async function handleSeoRequest(request, env, url) {
     return new Response(llmsFullTxt(site, products), { headers: TEXT_PLAIN });
   }
 
-  const legacyRedirect = await maybeLegacyProductRedirect(url, env, siteId);
-  if (legacyRedirect) return legacyRedirect;
-
   const productMatch = pathname.match(/^\/products\/([^/]+)\/?$/);
   if (productMatch) {
     return serveSeoProductPage(request, env, url, siteId, decodeURIComponent(productMatch[1]));
@@ -152,7 +122,10 @@ async function serveSeoProductPage(request, env, url, siteId, slug) {
     }
   }
 
+  // The template uses relative asset paths (portfolio.css, portfolio-product.js, images/…).
+  // Under /products/<slug> they would resolve to /products/… and 404 → blank page.
   const enhanced = injectSeo(response, {
+    headPrepend: ['<base href="/">'],
     head,
     canonical,
   });

@@ -252,15 +252,28 @@ export function renderProductHtml(site, product) {
 </article>`;
 }
 
+/**
+ * Clean /products/<slug> URLs have no query string, but the product page scripts read
+ * ?id= (main/life) or ?group_id=&sku= (portfolio). Restore them before the module runs.
+ */
 export function productIdScript(product) {
   const id = product.legacyId || product.id || product.product_id || '';
   if (!id) return '';
-  return `<script>window.__SEO_PRODUCT_ID=${JSON.stringify(String(id))};</script>`;
+  const params = product.group_id
+    ? { group_id: String(product.group_id), ...(product.default_sku_id ? { sku: String(product.default_sku_id) } : {}) }
+    : { id: String(id) };
+  const js = `window.__SEO_PRODUCT_ID=${JSON.stringify(String(id))};`
+    + `(function(p){try{var q=new URLSearchParams(location.search),c=false;`
+    + `for(var k in p){if(!q.has(k)){q.set(k,p[k]);c=true;}}`
+    + `if(c)history.replaceState(history.state,'',location.pathname+'?'+q.toString()+location.hash);}catch(e){}})`
+    + `(${JSON.stringify(params)});`;
+  return `<script>${js.replace(/</g, '\\u003c')}</script>`;
 }
 
 class HeadBodyEnhancer {
-  constructor({ head = [], body = [], canonical = null, robotsContent = ROBOTS_META }) {
+  constructor({ head = [], headPrepend = [], body = [], canonical = null, robotsContent = ROBOTS_META }) {
     this.head = head;
+    this.headPrepend = headPrepend;
     this.body = body;
     this.canonical = canonical;
     this.robotsContent = robotsContent;
@@ -270,6 +283,7 @@ class HeadBodyEnhancer {
   }
 
   headElement(el) {
+    for (const h of [...this.headPrepend].reverse()) el.prepend(h, { html: true });
     for (const h of this.head) el.append(h, { html: true });
     if (this.canonical && !this.foundCanonical) {
       el.append(`<link rel="canonical" href="${esc(this.canonical)}">`, { html: true });
