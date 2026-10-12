@@ -187,11 +187,14 @@ function candidatesForStep(pools, slots) {
   return slots.flatMap((s) => pools.get(s) || []).sort((a, b) => a.index - b.index);
 }
 
-/** Основният продукт: от водещите по релевантност — първият, който се вписва в базовия бюджет; иначе най-евтиният от тях. */
+/**
+ * Основният продукт: първият по релевантност → печалба, чиято опаковка се вписва в базовия бюджет
+ * (търси се до 12 места надолу — 4-килограмова кофа протеин не е „базов“ избор); иначе най-евтиният от тях.
+ */
 function pickCore(candidates, basicBudget) {
-  const top = candidates.slice(0, 5);
+  const top = candidates.slice(0, 12).filter((e) => priceOf(e.product) > 0);
   if (!top.length) return null;
-  const fits = top.find((e) => priceOf(e.product) > 0 && priceOf(e.product) <= basicBudget);
+  const fits = top.find((e) => priceOf(e.product) <= basicBudget);
   if (fits) return fits.product;
   return top.reduce((min, e) => (priceOf(e.product) < priceOf(min.product) ? e : min)).product;
 }
@@ -209,11 +212,20 @@ function toItem(product, role) {
   };
 }
 
-/** Колко продукта влизат във всяко ниво — винаги нарастващо (напр. 1/2/3, 2/3/4, 3/5/6). */
-export function tierCounts(n, limits) {
+/**
+ * Колко продукта влизат във всяко ниво — винаги нарастващо (напр. 1/2/3, 2/3/4, 3/5/6).
+ * С цени: базовото и оптималното ниво се свиват, докато сумата им влезе в бюджета им (поне 1 / basic+1).
+ */
+export function tierCounts(n, limits, prices = null, minBasic = 1) {
   const premium = Math.min(n, limits.premium.max);
-  const optimal = Math.min(limits.optimal.max, premium - (premium > 2 ? 1 : 0));
-  const basic = Math.max(1, Math.min(limits.basic.max, optimal - 1));
+  let optimal = Math.min(limits.optimal.max, premium - (premium > 2 ? 1 : 0));
+  let basic = Math.max(1, Math.min(limits.basic.max, optimal - 1));
+  if (prices) {
+    const sum = (k) => prices.slice(0, k).reduce((a, b) => a + b, 0);
+    while (basic > minBasic && sum(basic) > limits.basic.budgetEur) basic -= 1;
+    while (optimal > basic + 1 && sum(optimal) > limits.optimal.budgetEur) optimal -= 1;
+  }
+  if (optimal <= basic && premium > basic) optimal = Math.min(premium, basic + 1);
   return { basic, optimal, premium };
 }
 
@@ -229,30 +241,35 @@ export function tierCounts(n, limits) {
 export function composeAlternatives(profile, rankedEntries, { plan = undefined, tierMeta = {}, tierLimits = null } = {}) {
   const pools = buildPools(rankedEntries);
   const steps = plan || buildSlotPlan(profile.priority, profile);
+  // Пул: първата стъпка от плана с поне 3 продукта → всички стъпки от плана → безопасните универсални → всичко.
   let pool = [];
   for (const step of steps) {
     pool = candidatesForStep(pools, step.slots);
     if (pool.length >= 3) break;
   }
+  if (pool.length < 3) pool = candidatesForStep(pools, [...new Set(steps.flatMap((s) => s.slots))]);
+  if (pool.length < 3) pool = candidatesForStep(pools, [...new Set([...steps.flatMap((s) => s.slots), ...UNIVERSAL_STEPS.flat()])]);
   if (pool.length < 3) pool = rankedEntries.map((e, index) => ({ ...e, index }));
-  const top = pool.slice(0, 8).filter((e) => priceOf(e.product) > 0);
+  const top = pool.slice(0, 10).filter((e) => priceOf(e.product) > 0);
   if (!top.length) throw new Error('Няма подходящи продукти.');
 
-  const optimal = top[0].product;
-  const others = top.slice(1).map((e) => e.product);
-  const basicBudget = tierLimits?.basic?.budgetEur ?? Infinity;
   const premiumBudget = tierLimits?.premium?.budgetEur ?? Infinity;
-  const cheaper = others.filter((p) => priceOf(p) < priceOf(optimal) && priceOf(p) <= basicBudget * 1.5);
-  const basic = cheaper.sort((a, b) => priceOf(a) - priceOf(b))[0]
-    || others.sort((a, b) => priceOf(a) - priceOf(b))[0] || optimal;
-  const pricier = others.filter((p) => p.product_id !== basic.product_id && priceOf(p) > priceOf(optimal) && priceOf(p) <= premiumBudget);
-  // Премиум: следващият по релевантност, който е по-скъп (по-голяма опаковка/по-силна формула), не най-скъпият изобщо.
-  const premium = pricier[0]
-    || others.find((p) => p.product_id !== basic.product_id) || optimal;
+  const affordable = top.filter((e) => priceOf(e.product) <= premiumBudget);
+  const ranked = (affordable.length ? affordable : top).map((e) => e.product);
+  const best = ranked[0];
+  // Три различни продукта: най-подходящият + най-евтиният + следващият по релевантност; нивата — по цена.
+  const picks = [best];
+  const cheapest = [...ranked].sort((a, b) => priceOf(a) - priceOf(b)).find((p) => !picks.includes(p));
+  if (cheapest) picks.push(cheapest);
+  const next = ranked.find((p) => !picks.includes(p));
+  if (next) picks.push(next);
+  while (picks.length < 3) picks.push(picks[picks.length - 1]);
+  const [basic, optimal, premium] = [...picks].sort((a, b) => priceOf(a) - priceOf(b));
+  const recommended = basic === best ? 'basic' : premium === best ? 'premium' : 'optimal';
 
   const tier = (product) => ({ products: [toItem(product, 'core')] });
   return {
-    recommended_tier: 'optimal',
+    recommended_tier: recommended,
     tiers: {
       basic: { ...tierMeta.basic, ...tier(basic) },
       optimal: { ...tierMeta.optimal, ...tier(optimal) },
@@ -261,7 +278,7 @@ export function composeAlternatives(profile, rankedEntries, { plan = undefined, 
     meta: {
       mode: 'alternatives',
       ranked_pool_size: rankedEntries.length,
-      core_slot: getProductFacts(optimal).slot,
+      core_slot: getProductFacts(best).slot,
       distinct_products: new Set([basic.product_id, optimal.product_id, premium.product_id]).size,
     },
   };
@@ -325,7 +342,9 @@ export function composeAdvisorStacks(profile, rankedEntries, options) {
     return composeAlternatives(profile, rankedEntries, { plan, tierMeta: meta, tierLimits: limits });
   }
 
-  const counts = tierCounts(selected.length, limits);
+  // Продукт, задължителен по медикамент (напр. CoQ10 при статини), не отпада от базовото ниво заради бюджета.
+  const mustIndex = must ? selected.indexOf(must) : -1;
+  const counts = tierCounts(selected.length, limits, selected.map(priceOf), mustIndex >= 0 ? mustIndex + 1 : 1);
   const items = selected.map((p, i) => toItem(p, i === 0 ? 'core' : 'support'));
   const premiumItems = items.slice(0, counts.premium);
   // Само 2 продукта → премиум получава по-силен/по-голям основен продукт, за да не повтаря оптималното ниво.
