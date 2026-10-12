@@ -1,0 +1,29 @@
+name: Diagnose distributors (read-only)
+
+# Само четене: Sila BG Distro, Fitness1 B2B и реалния каталог в KV. Нищо не записва.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'ccr-**'
+    paths:
+      - 'scripts/diagnose-distributors.mjs'
+      - '.github/workflows/diagnose-distributors.yml'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    env:
+      FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
+      SILA_API_TOKEN: ${{ secrets.SILA_API_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Diagnose
+        run: node scripts/diagnose-distributors.mjs
