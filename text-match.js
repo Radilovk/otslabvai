@@ -36,7 +36,7 @@ function normalizedHaystack(text) {
   const key = String(text || '');
   let hit = normalizedTextCache.get(key);
   if (hit === undefined) {
-    if (normalizedTextCache.size > 5000) normalizedTextCache.clear();
+    if (normalizedTextCache.size > 2000) normalizedTextCache.clear();
     hit = ` ${normalizeMatchText(key)} `;
     normalizedTextCache.set(key, hit);
   }

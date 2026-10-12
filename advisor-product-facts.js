@@ -336,14 +336,26 @@ function descriptionText(product) {
   return [pd.description, pd.about_content, ...(pd.ingredients || []).map((i) => i?.description)].filter(Boolean).join(' ');
 }
 
+/** @type {Array<[string, FactRule]>} */
+const CATEGORY_RULES_NORMALIZED = CATEGORY_RULES.map(([pattern, rule]) => [` ${normalizeMatchText(pattern)}`, rule]);
+const categoryRuleCache = new Map();
+
 /** @returns {FactRule|null} */
 function matchCategory(product) {
-  const path = ` ${normalizeMatchText(categoryText(product))} `;
-  if (!path.trim()) return null;
-  for (const [pattern, rule] of CATEGORY_RULES) {
-    if (path.includes(` ${normalizeMatchText(pattern)}`)) return rule;
+  const raw = categoryText(product);
+  if (!raw) return null;
+  if (categoryRuleCache.has(raw)) return categoryRuleCache.get(raw);
+  const path = ` ${normalizeMatchText(raw)} `;
+  let hit = null;
+  for (const [pattern, rule] of CATEGORY_RULES_NORMALIZED) {
+    if (path.includes(pattern)) {
+      hit = rule;
+      break;
+    }
   }
-  return null;
+  if (categoryRuleCache.size > 3000) categoryRuleCache.clear();
+  categoryRuleCache.set(raw, hit);
+  return hit;
 }
 
 /** @returns {FactRule|null} */
