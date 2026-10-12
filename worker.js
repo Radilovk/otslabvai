@@ -22,6 +22,7 @@ import {
   assembleProtocolFromComposition,
   buildMockNarration,
   composeProtocolStacks,
+  composeCoreSupportStacks,
 } from './protocol-stack-composer.js';
 import {
   preparePortfolioAdvisorSubmission,
@@ -2167,7 +2168,7 @@ async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
     candidates,
   } = prepared;
 
-  const finalize = (response) => finalizeSiteAdvisorResponse(response, eligible, excludedProductIds, siteId);
+  const finalize = (response) => finalizeSiteAdvisorResponse(response, eligible, excludedProductIds, siteId, profile);
 
   if (compositionMode === 'ai_pick') {
     if (useMockAi) {
@@ -2195,7 +2196,9 @@ async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
   }
 
   const composeOptions = getSiteComposeOptions(siteId);
-  const composed = composeProtocolStacks(profile, ranked, composeOptions);
+  // daotslabna: 1 основен продукт в 3 ценови нива + подкрепа; без основен продукт → общ композитор.
+  const composed = (siteId === 'main' && composeCoreSupportStacks(profile, ranked, composeOptions))
+    || composeProtocolStacks(profile, ranked, composeOptions);
   const productMap = new Map(eligible.map((p) => [p.product_id, p]));
   payload.composed_meta = composed.meta;
 

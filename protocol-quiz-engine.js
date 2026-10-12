@@ -28,7 +28,7 @@ export function eurToBgn(eur) {
 }
 
 /** @type {Record<string, string[]>} */
-const PRIORITY_GOAL_KEYWORDS = {
+export const PRIORITY_GOAL_KEYWORDS = {
   skin: ['кожа', 'skin', 'колаген', 'collagen', 'еластич', 'антиейджинг', 'anti-aging', 'хиалурон', 'hyaluronic'],
   joints: ['став', 'joint', 'хондро', 'chondro', 'глюкозамин', 'glucosamine', 'подвижност', 'mobility'],
   energy: ['енерги', 'energy', 'метабол', 'умора', 'fatigue', 'коензим', 'coq10', 'b12', 'желязо'],
@@ -194,6 +194,9 @@ export function buildClientProfile(raw) {
     weight_kg: weightKg,
     priority: raw.priority || 'longevity',
     priority_other: pickOther('priority'),
+    stimulant_tolerance: ['ok', 'sensitive', 'avoid'].includes(raw.stimulant_tolerance) ? raw.stimulant_tolerance : '',
+    weight_goal: ['1-5', '5-10', '10-20', '20+'].includes(raw.weight_goal) ? raw.weight_goal : '',
+    budget_band: ['up30', '30-60', '60-100', '100+'].includes(raw.budget_band) ? raw.budget_band : '',
     conditions: Array.isArray(raw.conditions) ? raw.conditions : [],
     conditions_other: pickOther('conditions'),
     medications: Array.isArray(raw.medications) ? raw.medications : [],

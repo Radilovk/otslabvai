@@ -30,3 +30,15 @@ describe('site-advisor-config', () => {
     }
   });
 });
+
+describe('нови въпроси', () => {
+  test('main пита за кофеин, цел в кг и бюджет; life пита за фокус', async () => {
+    const { buildSiteAdvisorSteps } = await import('./site-advisor-config.js');
+    const main = buildSiteAdvisorSteps('main', {}).map((s) => s.id);
+    expect(main).toEqual(expect.arrayContaining(['weight_goal', 'stimulant_tolerance', 'budget_band']));
+    expect(main).not.toContain('priority');
+    const life = buildSiteAdvisorSteps('life', {}).map((s) => s.id);
+    expect(life.indexOf('priority')).toBe(life.indexOf('age') + 1);
+    expect(life).not.toContain('stimulant_tolerance');
+  });
+});

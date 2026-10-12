@@ -13,7 +13,9 @@ import {
   enrichProtocolProductItem,
   scoreProduct,
   computeTierMonthlyCost,
+  PRIORITY_GOAL_KEYWORDS,
 } from './protocol-quiz-engine.js';
+import { getProductConflictGroups } from './portfolio-stack-slots.js';
 import {
   getExclusionReasons,
   getMustIncludeKeywords,
@@ -93,9 +95,23 @@ export function getSiteComposeOptions(siteId = 'life') {
   };
 }
 
-function getSitePriorityKeywordMap(siteId) {
-  const priority = siteId === 'main' ? 'otshalvane' : 'longevity';
-  return { [priority]: SITE_GOAL_KEYWORDS[priority] };
+function getSitePriorityKeywordMap(siteId, priority = '') {
+  if (siteId === 'main') return { otshalvane: SITE_GOAL_KEYWORDS.otshalvane };
+  // life: избраният фокус (кожа, сън…) има собствени ключови думи; „дълголетие“ е общият набор.
+  if (priority && priority !== 'longevity' && PRIORITY_GOAL_KEYWORDS[priority]) {
+    return { [priority]: PRIORITY_GOAL_KEYWORDS[priority] };
+  }
+  return { longevity: SITE_GOAL_KEYWORDS.longevity };
+}
+
+/** Изключване по поносимост към стимуланти (повечето бърнъри съдържат кофеин). */
+function getStimulantExclusion(profile, product) {
+  const tol = profile.stimulant_tolerance;
+  if (tol !== 'avoid' && tol !== 'sensitive') return null;
+  const groups = getProductConflictGroups(product);
+  if (groups.includes('stimulant')) return 'stimulant_sensitivity';
+  if (tol === 'avoid' && groups.includes('thermogenic')) return 'stimulant_free_requested';
+  return null;
 }
 
 export function buildSiteAdvisorProfile(rawAnswers, siteId = 'life') {
@@ -104,7 +120,7 @@ export function buildSiteAdvisorProfile(rawAnswers, siteId = 'life') {
 }
 
 export function scoreSiteAdvisorProduct(product, profile, siteId = 'life') {
-  const keywordMap = getSitePriorityKeywordMap(siteId);
+  const keywordMap = getSitePriorityKeywordMap(siteId, profile.priority);
   let score = scoreProduct(product, profile, keywordMap) + scoreCatalogGoalMetadata(product, siteId);
   const text = productSearchText(product);
 
@@ -146,6 +162,8 @@ export function rankSiteAdvisorProducts(profile, products, siteId = 'life') {
 
   for (const product of products) {
     const reasons = getExclusionReasons(profile, product);
+    const stimulantReason = getStimulantExclusion(profile, product);
+    if (stimulantReason) reasons.push(stimulantReason);
     if (reasons.length) {
       excluded.set(product.product_id, reasons);
       continue;
@@ -167,7 +185,22 @@ export function enrichSiteProductItem(item, product, siteId = 'life') {
   return base;
 }
 
-export function finalizeSiteAdvisorResponse(response, eligibleProducts, excludedProductIds = [], siteId = 'life') {
+const BUDGET_MAX_EUR = { up30: 30, '30-60': 60, '60-100': 100, '100+': Infinity };
+
+/** Най-пълният пакет, който се вписва в бюджета (≈ месечна цена, иначе цената на опаковките). */
+export function pickTierForBudget(tiers, budgetBand) {
+  const max = BUDGET_MAX_EUR[budgetBand];
+  if (max === undefined) return null;
+  for (const key of ['premium', 'optimal', 'basic']) {
+    const tier = tiers?.[key];
+    if (!tier) continue;
+    const cost = Number(tier.monthly_cost_eur) > 0 ? tier.monthly_cost_eur : tier.monthly_total_eur;
+    if (cost <= max) return key;
+  }
+  return 'basic';
+}
+
+export function finalizeSiteAdvisorResponse(response, eligibleProducts, excludedProductIds = [], siteId = 'life', profile = null) {
   const excluded = new Set(excludedProductIds);
   const productMap = new Map(eligibleProducts.map((p) => [p.product_id, p]));
 
@@ -198,6 +231,8 @@ export function finalizeSiteAdvisorResponse(response, eligibleProducts, excluded
   if (!['basic', 'optimal', 'premium'].includes(rec)) {
     response.recommended_tier = 'optimal';
   }
+  const byBudget = profile?.budget_band ? pickTierForBudget(response.tiers, profile.budget_band) : null;
+  if (byBudget) response.recommended_tier = byBudget;
 
   return response;
 }
@@ -231,7 +266,7 @@ export async function prepareSiteAdvisorSubmission(env, rawAnswers, deps, {
     throw new Error('Няма достатъчно налични орални продукти за персонална препоръка. Моля, опитайте по-късно.');
   }
 
-  const keywordMap = getSitePriorityKeywordMap(siteId);
+  const keywordMap = getSitePriorityKeywordMap(siteId, profile.priority);
   const rankedResult = rankSiteAdvisorProducts(profile, eligible, siteId);
 
   if (rankedResult.ranked.length < 3) {

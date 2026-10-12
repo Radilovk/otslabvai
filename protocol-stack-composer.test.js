@@ -1,5 +1,6 @@
 import {
   composeProtocolStacks,
+  composeCoreSupportStacks,
   buildMockNarration,
   assembleProtocolFromComposition,
 } from './protocol-stack-composer.js';
@@ -88,5 +89,31 @@ describe('compose-then-narrate pipeline', () => {
 
     expect(final.tiers.basic.products[0].price_eur).toBeGreaterThan(0);
     expect(final.tiers.premium.products.length).toBeGreaterThanOrEqual(6);
+  });
+});
+
+describe('composeCoreSupportStacks (daotslabna)', () => {
+  const p = (id, name, price, goals) => ({ product: sampleProduct(id, name, price, goals), score: 0 });
+
+  test('3 различни нива: евтин основен / основен + подкрепа / основен + 2 подкрепи', () => {
+    const ranked = [
+      p('core-best', 'Fat Burner Pro', 40, ['weight-loss']),
+      p('core-cheap', 'Fat Burner Lite', 18, ['weight-loss']),
+      p('sup1', 'Глутатион', 30, ['detox']),
+      p('sup-exp', 'Скъпа подкрепа', 90, ['detox']),
+      p('sup2', 'Спирулина', 15, ['superfood']),
+    ].map((e, i) => ({ ...e, score: 100 - i }));
+    const profile = { priority: 'otshalvane', symptoms: [], conditions: [], medications: [], allergies: [], diet: 'omnivore' };
+    const composed = composeCoreSupportStacks(profile, ranked);
+    const ids = (k) => composed.tiers[k].products.map((x) => x.product_id);
+
+    expect(ids('basic')).toEqual(['core-cheap']);
+    expect(ids('optimal')).toEqual(['core-best', 'sup1']);
+    expect(ids('premium')).toEqual(['core-best', 'sup1', 'sup2']);
+  });
+
+  test('без основен продукт → null (ползва се общият композитор)', () => {
+    const ranked = [{ product: sampleProduct('a', 'Глутатион', 30, ['detox']), score: 1 }];
+    expect(composeCoreSupportStacks({ priority: 'otshalvane' }, ranked)).toBeNull();
   });
 });
