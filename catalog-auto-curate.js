@@ -463,7 +463,7 @@ export function shortlistCurationCandidates(index, project, pageContent, opts = 
     if (need <= 0) continue;
     const minPrice = slot.minPrice ?? DEFAULT_PRICE.min;
     const maxPrice = slot.maxPrice ?? DEFAULT_PRICE.max;
-    const candidates = (index || [])
+    const eligible = (index || [])
       .filter((e) => isCurationEligible(e))
       .filter((e) => !groupIds.has(String(e.group_id)) && !skus.has(String(e.default_sku_id)) && !names.has(norm(e.name)))
       .filter((e) => {
@@ -472,8 +472,17 @@ export function shortlistCurationCandidates(index, project, pageContent, opts = 
       })
       .filter((e) => !curationRejectReason(entryAsProduct(e), slot))
       .map((e) => ({ entry: e, profit: entryProfit(e), price: entryPrice(e) }))
-      .sort((a, b) => (b.profit.eur - a.profit.eur) || (b.profit.pct - a.profit.pct) || (a.price - b.price))
-      .slice(0, need * SHORTLIST_FACTOR + 4);
+      .sort((a, b) => (b.profit.eur - a.profit.eur) || (b.profit.pct - a.profit.pct) || (a.price - b.price));
+    // Кандидати отделно за всяка роля в мястото — иначе по-печелившата роля изтласква останалите.
+    const perRole = need * SHORTLIST_FACTOR + 4;
+    const roleCount = new Map();
+    const candidates = eligible.filter((c) => {
+      const role = getProductFacts(entryAsProduct(c.entry)).slot;
+      const n = roleCount.get(role) || 0;
+      if (n >= perRole) return false;
+      roleCount.set(role, n + 1);
+      return true;
+    });
     out.push({ slot, need, candidates });
   }
   return out;

@@ -285,7 +285,7 @@ const STRONG_NAME_RULES = [
   [['fish oil', 'рибено масло', 'krill oil', 'крилово масло'], { slot: 'omega3' }],
   [['melatonin', 'мелатонин'], { slot: 'sleep' }],
   [['coq10', 'co q10', 'ubiquinol', 'убихинол', 'коензим q10'], { slot: 'coq10' }],
-  [['glucosamine', 'глюкозамин', 'chondroitin', 'хондроитин'], { slot: 'joint' }],
+  [['glucosamine', 'глюкозамин', 'chondroitin', 'хондроитин', 'joint', 'arthro', 'артро'], { slot: 'joint' }],
   [['collagen', 'колаген'], { slot: 'collagen' }],
 ];
 
