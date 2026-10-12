@@ -24,6 +24,7 @@ import {
   profileHasPregnancyOrBreastfeeding,
 } from './protocol-safety-rules.js';
 import { composePortfolioAdvisorStacks } from './portfolio-advisor-compose.js';
+import { buildProductCard, buildReviewCandidates, sanitizeProfileForAI, summarizeComposedForAI } from './advisor-ai.js';
 import { classifyProductSlot, getGoalSlotOrder } from './portfolio-stack-slots.js';
 import {
   filterAdvisorRetailProducts,
@@ -40,6 +41,7 @@ import {
 } from './portfolio-advisor-commerce.js';
 import { loadPortfolioAdvisorSettings } from './portfolio-advisor-settings.js';
 import { isCatalogListed } from './portfolio-margin-policy.js';
+import { pickMainVariant, isAdvisorSupplement } from './advisor-product-facts.js';
 import { buildAdvisorClinicalGuardrails, hasAdvisorClinicalComplexity } from './portfolio-advisor-prompt.js';
 
 export { composePortfolioAdvisorStacks };
@@ -73,7 +75,8 @@ export const PORTFOLIO_SINGLE_TIER_META = {
 
 export function filterPortfolioEligibleProducts(products, options = {}) {
   return filterAdvisorRetailProducts(
-    products.filter((p) => isProductAvailable(p) && !isPeptideOrInjectable(p) && isCatalogListed(p)),
+    // Само добавки за възрастни: без аксесоари, облекло, храни, детски продукти и мостри.
+    products.filter((p) => isProductAvailable(p) && !isPeptideOrInjectable(p) && isCatalogListed(p) && isAdvisorSupplement(p)),
     { selectionMode: options.selectionMode }
   );
 }
@@ -229,10 +232,9 @@ export function rankPortfolioAdvisorProducts(profile, products, commerceOptions 
   };
 }
 
+/** Препоръчваният вариант: основната разфасовка, не мостра. */
 function getCheapestVariant(product) {
-  const variants = (product.public_data?.variants || []).filter((v) => v.available !== false && v.price > 0);
-  if (!variants.length) return null;
-  return variants.reduce((min, v) => (Number(v.price) < Number(min.price) ? v : min));
+  return pickMainVariant(product).variant;
 }
 
 export function enrichPortfolioProductItem(item, product) {
@@ -553,106 +555,31 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
 
   const rankedResult = rankPortfolioAdvisorProducts(profile, advisorPool, commerceOptions);
 
-  if (rankedResult.ranked.length < 3) {
-    throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
-  }
-
-  const poolPurpose = compositionMode === 'ai_pick' ? 'ai_pick' : 'compose';
-  const { workingRanked, stats: poolStats } = buildAdvisorWorkingPool(
-    rankedResult.ranked,
-    commerceOptions,
-    profile,
-    { purpose: poolPurpose }
-  );
-
-  const mustIncludeKws = getMustIncludeKeywords(profile);
-  let workingPool = workingRanked;
-  if (mustIncludeKws.length) {
-    const seen = new Set(workingPool.map((e) => e.product.product_id));
-    workingPool = [...workingPool];
-    for (const entry of rankedResult.ranked) {
-      if (seen.has(entry.product.product_id)) continue;
-      const text = productSearchText(entry.product);
-      if (mustIncludeKws.some((kw) => productMatchesAnyKeyword(text, [kw]))) {
-        workingPool.push(entry);
-        seen.add(entry.product.product_id);
-      }
+  if (!rankedResult.ranked.length) {
+    if (profileHasPregnancyOrBreastfeeding(profile)) {
+      throw new Error('При бременност и кърмене подборът на добавки трябва да е с лекар — нямаме безопасна препоръка за тази цел.');
     }
+    throw new Error('Няма подходящи продукти за този профил в избраните категории. Изберете „Всички категории“ или друга цел.');
   }
 
-  const isSingle = profile.selection_mode === 'single';
-  const priceCeiling = isSingle
-    ? { basic_target: 25, premium_max: 80 }
-    : { basic_target: 55, premium_max: 150 };
-  const tierCounts = isSingle
-    ? { basic: '1', optimal: '1', premium: '1' }
-    : { basic: '2-3', optimal: '3-5', premium: '4-6' };
-
-  if (compositionMode === 'ai_pick') {
-    const candidates = workingPool.map((e) => e.product);
-
-    if (candidates.length < 3) {
-      throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
-    }
-    const payload = {
-      client_profile: profile,
-      clinical_guardrails: buildAdvisorClinicalGuardrails(profile),
-      priority_summary: profile.priority,
-      composition_mode: 'ai_pick',
-      candidate_products: candidates.map(transformProductForAI),
-      constraints: {
-        excluded_product_ids: rankedResult.excluded_product_ids,
-        must_include_keywords: mustIncludeKws,
-        oral_only: false,
-        selection_mode: profile.selection_mode,
-        price_ceiling_eur: priceCeiling,
-        tier_product_counts: tierCounts,
-      },
-      exclusion_map: rankedResult.exclusion_map,
-      catalog_stats: {
-        total_in_catalog: allProducts.length,
-        eligible_available: categoryPool.length,
-        commercial_eligible: commercialPool.length,
-        advisor_pool_size: advisorPool.length,
-        commerce_enabled: commerceOptions.enabled,
-        commerce_min_discount_pct: commerceOptions.min_distributor_discount_pct,
-        commerce_min_profit_pct: commerceOptions.min_profit_pct_on_retail,
-        ranked_pool_size: rankedResult.ranked.length,
-        working_pool_size: poolStats.pool_size,
-        working_pool_max: poolStats.pool_max,
-        categories_in_working_pool: poolStats.categories_represented,
-        slots_in_working_pool: poolStats.slots_covered,
-        high_profit_pool_size: poolStats.high_profit_pool_size,
-        candidates_sent_to_ai: candidates.length,
-        candidates_high_profit: poolStats.selected_high_profit,
-      },
-    };
-    return {
-      profile,
-      payload,
-      candidates,
-      eligible: advisorPool,
-      ranked: workingPool,
-      excluded_product_ids: rankedResult.excluded_product_ids,
-      exclusion_map: rankedResult.exclusion_map,
-      compositionMode,
-    };
-  }
+  const composed = composePortfolioAdvisorStacks(profile, rankedResult.ranked, getPortfolioComposeOptions(profile));
+  const candidates = compositionMode === 'ai_pick'
+    ? buildReviewCandidates(composed, rankedResult.ranked)
+    : [];
+  const limits = getPortfolioComposeOptions(profile).tierLimits;
 
   const payload = {
-    client_profile: profile,
+    client_profile: sanitizeProfileForAI(profile),
     clinical_guardrails: buildAdvisorClinicalGuardrails(profile),
-    priority_summary: profile.priority,
-    composition_mode: 'compose_narrate',
+    composition_mode: compositionMode,
+    selection_mode: profile.selection_mode,
+    suggested_tiers: summarizeComposedForAI(composed),
+    candidate_products: candidates.map(buildProductCard),
     constraints: {
-      excluded_product_ids: rankedResult.excluded_product_ids,
-      must_include_keywords: mustIncludeKws,
-      oral_only: false,
-      selection_mode: profile.selection_mode,
-      price_ceiling_eur: priceCeiling,
-      tier_product_counts: tierCounts,
+      must_include_keywords: getMustIncludeKeywords(profile),
+      tier_product_counts: Object.fromEntries(['basic', 'optimal', 'premium']
+        .map((k) => [k, `${limits[k].min}-${limits[k].max}`])),
     },
-    exclusion_map: rankedResult.exclusion_map,
     catalog_stats: {
       total_in_catalog: allProducts.length,
       eligible_available: categoryPool.length,
@@ -662,19 +589,19 @@ export async function preparePortfolioAdvisorSubmission(env, rawAnswers, { compo
       commerce_min_discount_pct: commerceOptions.min_distributor_discount_pct,
       commerce_min_profit_pct: commerceOptions.min_profit_pct_on_retail,
       ranked_pool_size: rankedResult.ranked.length,
-      working_pool_size: poolStats.pool_size,
-      working_pool_max: poolStats.pool_max,
-      categories_in_working_pool: poolStats.categories_represented,
-      slots_in_working_pool: poolStats.slots_covered,
-      candidates_sent_to_ai: 0,
+      excluded_count: rankedResult.excluded_product_ids.length,
+      candidates_sent_to_ai: candidates.length,
+      composition: composed.meta?.mode,
     },
   };
 
   return {
     profile,
     payload,
+    composed,
+    candidates,
     eligible: advisorPool,
-    ranked: workingPool,
+    ranked: rankedResult.ranked,
     excluded_product_ids: rankedResult.excluded_product_ids,
     exclusion_map: rankedResult.exclusion_map,
     compositionMode,

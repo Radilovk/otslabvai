@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { buildPortfolioAdvisorNarration } from './portfolio-advisor-narration.js';
 import { PORTFOLIO_SINGLE_TIER_META } from './portfolio-advisor-engine.js';
-import { composeSingleProductOptions } from './portfolio-advisor-compose.js';
+import { composePortfolioAdvisorStacks } from './portfolio-advisor-compose.js';
 import { portfolioGroupToSiteProduct } from './portfolio-import.js';
 import { assembleProtocolFromComposition } from './protocol-stack-composer.js';
 
@@ -26,7 +26,7 @@ describe('buildPortfolioAdvisorNarration', () => {
       { product: makeProduct(2, 'Creatine', 12), score: 8 },
       { product: makeProduct(3, 'Multivitamin', 18), score: 6 },
     ];
-    const composed = composeSingleProductOptions(ranked, PORTFOLIO_SINGLE_TIER_META);
+    const composed = composePortfolioAdvisorStacks({ selection_mode: 'single', priority: 'muscle' }, ranked, { tierMeta: PORTFOLIO_SINGLE_TIER_META });
     const productMap = new Map(ranked.map((r) => [r.product.product_id, r.product]));
     const profile = { selection_mode: 'single', priority: 'muscle' };
 

@@ -15,6 +15,7 @@ import {
   composeProtocolStacks,
 } from './protocol-stack-composer.js';
 import { isCatalogListed } from './portfolio-margin-policy.js';
+import { pickMainVariant } from './advisor-product-facts.js';
 
 /** Официален фиксиран курс BGN/EUR — цените в каталога са в EUR */
 export const EUR_RATE = 1.95583;
@@ -103,14 +104,9 @@ export function isProductAvailable(product) {
   return variants.some((v) => v.available !== false && Number(v.price) > 0);
 }
 
-/** Минимална налична цена в EUR (каталогът на Life е в евро) */
+/** Цена в EUR на основната разфасовка (най-евтината налична, която не е мостра/единична доза). */
 export function getProductPriceEur(product) {
-  const sale = product.public_data?.sale_price;
-  const price = product.public_data?.price;
-  const variants = (product.public_data?.variants || []).filter((v) => v.available !== false && v.price > 0);
-  if (variants.length) return Math.min(...variants.map((v) => Number(v.price)));
-  if (typeof sale === 'number' && sale > 0) return sale;
-  return Number(price) || 0;
+  return pickMainVariant(product).price;
 }
 
 const SUPPLY_DAYS_MIN = 7;
@@ -333,10 +329,9 @@ export function rankEligibleProducts(profile, products, { priorityKeywords } = {
   };
 }
 
+/** Препоръчваният вариант: основната разфасовка, не мостра. */
 function getCheapestVariant(product) {
-  const variants = (product.public_data?.variants || []).filter((v) => v.available !== false && v.price > 0);
-  if (!variants.length) return null;
-  return variants.reduce((min, v) => (Number(v.price) < Number(min.price) ? v : min));
+  return pickMainVariant(product).variant;
 }
 
 export function enrichProtocolProductItem(item, product, siteId = 'life') {

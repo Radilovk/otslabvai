@@ -6,8 +6,8 @@
  * Env: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
  */
 import { kvGet } from '../catalog-kv-client.mjs';
-import { prepareSiteAdvisorSubmission, getSiteComposeOptions } from '../site-advisor-engine.js';
-import { composeCoreSupportStacks, composeProtocolStacks } from '../protocol-stack-composer.js';
+import { prepareSiteAdvisorSubmission } from '../site-advisor-engine.js';
+import { getProductFacts } from '../advisor-product-facts.js';
 import {
   extractProductsFromContent,
   filterEligibleProducts,
@@ -16,19 +16,13 @@ import {
 } from '../protocol-quiz-engine.js';
 import {
   preparePortfolioAdvisorSubmission,
-  getPortfolioComposeOptions,
   loadPortfolioCatalogProducts,
   filterPortfolioEligibleProducts,
   buildPortfolioAdvisorProfile,
 } from '../portfolio-advisor-engine.js';
-import { composePortfolioAdvisorStacks } from '../portfolio-advisor-compose.js';
 import { resolveAdvisorCompositionStrategy } from '../site-advisor-shared.js';
-import {
-  STACK_CONFLICT_GROUPS,
-  classifyProductSlot,
-  getProductConflictGroups,
-} from '../portfolio-stack-slots.js';
-import { productSearchText, productMatchesAnyKeyword } from '../protocol-safety-rules.js';
+import { classifyProductSlot, getProductConflictGroups } from '../portfolio-stack-slots.js';
+import { buildSiteAdvisorMessages } from '../site-advisor-prompt.js';
 import { buildSiteAdvisorProfile } from '../site-advisor-engine.js';
 import { filterOrderableCartSkus, loadPortfolioGroupsByIds } from '../portfolio-api.js';
 
@@ -57,33 +51,18 @@ const loadProjectContent = async (_env, project) => {
 
 const name = (p) => String(p?.public_data?.name || p?.product_id || '').slice(0, 60);
 
-function matchedKeyword(product, keywords) {
-  const text = productSearchText(product);
-  return keywords.find((kw) => productMatchesAnyKeyword(text, [kw])) || null;
-}
-
-/** Класификация на каталога: слотове, конфликтни групи и откъде идва съвпадението (име или само описание). */
+/** Класификация на каталога по факти: вид, слот, стимуланти, източник. */
 function classificationReport(label, products) {
   section(`КЛАСИФИКАЦИЯ: ${label} (${products.length} продукта)`);
-  const slots = {};
-  for (const p of products) {
-    const s = classifyProductSlot(p);
-    slots[s] = (slots[s] || 0) + 1;
-  }
-  console.log('слотове:', JSON.stringify(slots));
-
-  for (const group of ['stimulant', 'thermogenic', 'omega3', 'protein']) {
-    const kws = STACK_CONFLICT_GROUPS[group];
-    const flagged = products.filter((p) => getProductConflictGroups(p).includes(group));
-    const byDescOnly = flagged.filter((p) => !productMatchesAnyKeyword(String(p.public_data?.name || '').toLowerCase(), kws));
-    const kwCount = {};
-    for (const p of byDescOnly) {
-      const kw = matchedKeyword(p, kws) || '?';
-      kwCount[kw] = (kwCount[kw] || 0) + 1;
-    }
-    console.log(`\n[${group}] маркирани: ${flagged.length}; само по описание: ${byDescOnly.length}; думи: ${JSON.stringify(kwCount)}`);
-    for (const p of byDescOnly.slice(0, 8)) console.log(`   - ${name(p)}  ← „${matchedKeyword(p, kws)}“`);
-  }
+  const count = (f) => {
+    const m = {};
+    for (const p of products) { const k = f(getProductFacts(p)); m[k] = (m[k] || 0) + 1; }
+    return JSON.stringify(m);
+  };
+  console.log('вид:', count((x) => x.kind));
+  console.log('слот:', count((x) => x.slot));
+  console.log('източник:', count((x) => x.source));
+  console.log('стимуланти:', products.filter((p) => getProductFacts(p).stimulant).length);
 }
 
 function describeTiers(composed, productMap) {
@@ -95,7 +74,7 @@ function describeTiers(composed, productMap) {
       const price = getProductPriceEur(p);
       sum += price;
       const days = getPackDaysSupply(p);
-      return `      ${name(p)} | ${classifyProductSlot(p)} | ${price.toFixed(2)} € | ${days ? `${days} дни` : 'дни ?'} | ${item.timing || ''}`;
+      return `      ${name(p)} | ${classifyProductSlot(p)}${getProductConflictGroups(p).includes('stimulant') ? ' (стимулант)' : ''} | ${price.toFixed(2)} € | ${days ? `${days} дни` : 'дни ?'} | ${item.timing || ''}`;
     });
     console.log(`   ${key}: ${tier.products.length} бр., ${sum.toFixed(2)} €`);
     for (const r of rows) console.log(r);
@@ -152,16 +131,16 @@ async function diagnoseSite(siteId) {
     try {
       const profile = buildSiteAdvisorProfile(answers, siteId);
       const mode = resolveAdvisorCompositionStrategy(profile);
-      const prepared = await prepareSiteAdvisorSubmission(env, answers, deps, { siteId, compositionMode: 'compose_narrate' });
-      const { ranked, eligible: el, exclusion_map: exMap } = prepared;
-      console.log(`режим в production: ${mode}; поръчваеми: ${el.length}; след safety: ${ranked.length}`);
+      const prepared = await prepareSiteAdvisorSubmission(env, answers, deps, { siteId, compositionMode: mode });
+      const { ranked, eligible: el, exclusion_map: exMap, composed, payload } = prepared;
+      console.log(`режим: ${mode}; поръчваеми: ${el.length}; след safety: ${ranked.length}`);
       console.log(`изключени: ${JSON.stringify(exclusionSummary(exMap))}`);
-      console.log('топ 8:');
-      for (const e of ranked.slice(0, 8)) console.log(`   ${e.score.toFixed(1)} | ${name(e.product)} | ${classifyProductSlot(e.product)} | ${getProductConflictGroups(e.product).join(',')}`);
-      const opts = getSiteComposeOptions(siteId);
-      const composed = (siteId === 'main' && composeCoreSupportStacks(profile, ranked, opts)) || composeProtocolStacks(profile, ranked, opts);
-      console.log(`съставено (${composed.meta?.mode || 'general'}):`);
+      console.log(`съставено (${composed.meta?.mode}${composed.meta?.plan ? ': ' + composed.meta.plan.join(' → ') : ''}):`);
       describeTiers(composed, new Map(el.map((p) => [p.product_id, p])));
+      if (mode === 'ai_pick') {
+        const msgs = buildSiteAdvisorMessages('x', payload, profile, siteId);
+        console.log(`AI преглед: ${payload.candidate_products.length} карти; данни към AI ≈ ${msgs[msgs.length - 1].content.length} знака; имейл в данните: ${msgs.some((m) => m.content.includes('diag@example.com'))}`);
+      }
     } catch (e) {
       console.log(`ГРЕШКА: ${e.message}`);
     }
@@ -179,15 +158,13 @@ async function diagnosePortfolio() {
     try {
       const profile = buildPortfolioAdvisorProfile(answers);
       const mode = resolveAdvisorCompositionStrategy(profile);
-      const prepared = await preparePortfolioAdvisorSubmission(env, answers, { compositionMode: 'compose_narrate' });
-      const { ranked, eligible: el, exclusion_map: exMap, payload } = prepared;
-      console.log(`режим в production: ${mode}; пул: ${el.length}; работен: ${ranked.length}`);
+      const prepared = await preparePortfolioAdvisorSubmission(env, answers, { compositionMode: mode });
+      const { ranked, eligible: el, exclusion_map: exMap, payload, composed } = prepared;
+      console.log(`режим: ${mode}; пул: ${el.length}; след safety: ${ranked.length}`);
       console.log(`изключени: ${JSON.stringify(exclusionSummary(exMap))}`);
-      console.log(`stats: ${JSON.stringify(payload.catalog_stats)}`);
-      console.log('топ 8:');
-      for (const e of ranked.slice(0, 8)) console.log(`   ${e.score.toFixed(1)} | ${name(e.product)} | ${classifyProductSlot(e.product)} | ${getProductConflictGroups(e.product).join(',')}`);
-      const composed = composePortfolioAdvisorStacks(profile, ranked, getPortfolioComposeOptions(profile));
+      console.log(`съставено (${composed.meta?.mode}${composed.meta?.plan ? ': ' + composed.meta.plan.join(' → ') : ''}):`);
       describeTiers(composed, new Map(el.map((p) => [p.product_id, p])));
+      if (payload.candidate_products.length) console.log(`AI преглед: ${payload.candidate_products.length} карти`);
     } catch (e) {
       console.log(`ГРЕШКА: ${e.message}`);
     }

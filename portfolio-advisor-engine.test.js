@@ -132,7 +132,10 @@ describe('preparePortfolioAdvisorSubmission', () => {
     expect(prepared.profile.priority).toBe('muscle');
     expect(prepared.ranked.length).toBeGreaterThanOrEqual(3);
     expect(prepared.payload.catalog_stats.eligible_available).toBeGreaterThanOrEqual(3);
-    expect(prepared.payload.constraints.oral_only).toBe(false);
+    // Към AI отиват профил без лични данни и готовите пакети на алгоритъма.
+    expect(prepared.payload.client_profile.email).toBeUndefined();
+    expect(prepared.payload.suggested_tiers.basic.length).toBeGreaterThan(0);
+    expect(prepared.composed.tiers.premium.products.length).toBeGreaterThanOrEqual(prepared.composed.tiers.basic.products.length);
   });
 
   test('отхвърля невалиден имейл', async () => {

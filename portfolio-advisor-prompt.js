@@ -2,7 +2,7 @@
  * AI prompts за Portfolio AI консултант — пакети и единични продукти.
  */
 
-import { getProductPriceEur } from './protocol-quiz-engine.js';
+import { buildProductCard, sanitizeProfileForAI } from './advisor-ai.js';
 export {
   hasAdvisorClinicalComplexity,
   resolveAdvisorCompositionStrategy,
@@ -18,22 +18,18 @@ function withClinicalGuardrails(template, profile) {
 
 export function getDefaultPortfolioAdvisorPrompt() {
   return `Експерт по хранителни добавки (протеини, витамини, аминокиселини, фитнес и здраве).
-Избери САМО product_id от candidate_products. БЕЗ reasoning извън JSON.
-
-СПАЗВАЙ client_profile и clinical_guardrails. При противоречие избери друг product_id — не „най-печеливший“, а клинично подходящият.
-При равна клинична стойност предпочитай продукт с по-добра печалба за магазина: candidate_products са подредени по този приоритет — избирай по-напред в списъка.
-Комбинирай продукти с различни роли (без дублиране на еднакви активни вещества в един tier).
-
-3 tier-а: basic (стартов пакет), optimal (препоръчан), premium (пълен пакет).
-Ако selection_mode е "single" — всеки tier съдържа ТОЧНО 1 продукт (различни ценови нива).
-Ползите (benefits) са кумулативни: optimal включва basic + нови теми; premium включва optimal + нови.
-При selection_mode "single" — ползите и strategy са САМО за единичния продукт в tier-а (без кумулативност).
-Кратки dose/timing/why_for_you (макс. 12 думи).
+Клиентът има сложен клиничен профил. Алгоритъмът вече е филтрирал каталога (безопасност, вид продукт, пол,
+хранителен модел, наличност, марж) и е съставил пакети в suggested_tiers. Твоята задача е клиничен преглед:
+- Започни от suggested_tiers. Смени продукт САМО ако профилът/клиничните правила го налагат,
+  и то само с product_id от products (алтернативите са със същата роля). Не добавяй продукти извън products.
+- Два продукта със stimulant:true не влизат в едно ниво; не повтаряй един продукт в ниво.
+- Ако selection_mode е "single" — всеки tier съдържа ТОЧНО 1 продукт (различни ценови нива).
+- Пакетите са вложени: optimal = basic + продукти; premium = optimal + продукти. Ползите са кумулативни.
+- dose = по intake/serving от картата; ако липсва — „Според етикета“. Не измисляй дози.
+Кратки why_for_you (макс. 12 думи).
 
 Върни САМО JSON:
-{"analysis":"2 изречения","recommended_tier":"optimal","tiers":{"basic":{"name":"...","tagline":"...","benefits":["..."],"strategy":"...","products":[{"product_id":"...","role":"core","dose":"...","timing":"сутрин","why_for_you":"..."}]},"optimal":{...},"premium":{...}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."],"disclaimer":"Информацията не замества лекарска консултация."}
-
-НЕ попълвай monthly_total — ще се изчисли автоматично.`;
+{"analysis":"2 изречения","recommended_tier":"optimal","tiers":{"basic":{"name":"...","tagline":"...","benefits":["..."],"strategy":"...","products":[{"product_id":"...","role":"core","dose":"...","timing":"сутрин","why_for_you":"..."}]},"optimal":{...},"premium":{...}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."],"disclaimer":"Информацията не замества лекарска консултация."}`;
 }
 
 export function getDefaultPortfolioNarratorPrompt() {
@@ -53,13 +49,15 @@ export function getDefaultPortfolioNarratorPrompt() {
 - НИКОГА не увеличавай доза защото има друг продукт в пакета.
 - Ако не знаеш точната доза — пиши „Според етикета".
 
-Ползите са НЕЗАВИСИМИ за всеки tier (не кумулативни). Всеки tier е отделен пакет.
-Обясни ролята на всеки продукт като допълващ другите — без повтарящи се активни вещества.
+Пакетите са вложени: optimal = basic + нови продукти; premium = optimal + нови. Ползите са кумулативни, без повторение.
+Всеки продукт има карта: role (роля), actives/category, intake/serving (етикет), stimulant, days.
+Обясни ролята на всеки продукт като допълващ другите.
 БЕЗ синонимно повторение.`;
 }
 
 export function buildPortfolioNarratorPayload(profile, composed, eligibleProducts) {
   const productMap = new Map(eligibleProducts.map((p) => [p.product_id, p]));
+  const products = {};
   const stacks = {};
 
   for (const key of ['basic', 'optimal', 'premium']) {
@@ -67,46 +65,19 @@ export function buildPortfolioNarratorPayload(profile, composed, eligibleProduct
     stacks[key] = {
       name: tier.name,
       tagline: tier.tagline,
-      products: (tier.products || []).map((item) => {
-        const p = productMap.get(item.product_id);
-        return {
-          id: item.product_id,
-          name: p?.public_data?.name || item.product_id,
-          eur: Math.round(getProductPriceEur(p) * 100) / 100,
-          role: item.role,
-        };
-      }),
+      product_ids: (tier.products || []).map((item) => item.product_id),
     };
+    for (const item of tier.products || []) {
+      const p = productMap.get(item.product_id);
+      if (p && !products[item.product_id]) products[item.product_id] = buildProductCard(p);
+    }
   }
 
   return {
-    profile: {
-      sex: profile.sex,
-      age_band: profile.age_band,
-      bmi: profile.bmi,
-      height_cm: profile.height_cm,
-      weight_kg: profile.weight_kg,
-      priority: profile.priority,
-      priority_other: profile.priority_other || '',
-      selection_mode: profile.selection_mode || 'package',
-      product_categories: profile.product_categories,
-      symptoms: profile.symptoms,
-      symptoms_other: profile.symptoms_other || '',
-      activity: profile.activity,
-      diet: profile.diet,
-      diet_other: profile.diet_other || '',
-      conditions: profile.conditions,
-      conditions_other: profile.conditions_other || '',
-      medications: profile.medications,
-      medications_other: profile.medications_other || '',
-      allergies: profile.allergies,
-      allergies_other: profile.allergies_other || '',
-      pregnancy: profile.pregnancy,
-      menopause_context: profile.menopause_context,
-    },
+    profile: sanitizeProfileForAI(profile),
     stacks,
-    meta: composed.meta,
-    clinical_guardrails: buildAdvisorClinicalGuardrails(profile, 'portfolio'),
+    products,
+    composition: composed.meta?.mode,
   };
 }
 
@@ -115,7 +86,7 @@ export function buildPortfolioNarratorMessages(template, profile, composed, elig
   const dataJson = JSON.stringify(payload);
   const singleModeNote = profile.selection_mode === 'single'
     ? '\n\nSINGLE MODE: Всеки tier съдържа ТОЧНО 1 продукт. Ползите и strategy са САМО за този продукт — без кумулативни пакетни ползи и без други артикули.'
-    : '\n\nPACKAGE MODE: Трите tier-а са НЕЗАВИСИМИ пакети с различни продукти. Ползите НЕ са кумулативни. Всеки продукт има допълваща роля. Dose = само по етикет, без увеличаване заради други продукти в пакета.';
+    : '\n\nPACKAGE MODE: Пакетите са вложени (optimal = basic + продукти, premium = optimal + продукти). Ползите са кумулативни. Dose = само по етикет, без увеличаване заради други продукти в пакета.';
   const system = withClinicalGuardrails(
     `${template}${singleModeNote}\n\nВАЖНО: Без chain-of-thought. Само финален JSON. Не променяй product_id.`,
     profile,
@@ -130,7 +101,15 @@ export function buildPortfolioNarratorMessages(template, profile, composed, elig
 }
 
 export function buildPortfolioAdvisorMessages(template, payload, profile = null) {
-  const dataJson = JSON.stringify(payload);
+  // Само нужното за избора: профил без лични данни, пакетите на алгоритъма и картите на кандидатите.
+  const dataJson = JSON.stringify({
+    profile: payload.client_profile,
+    selection_mode: payload.selection_mode,
+    suggested_tiers: payload.suggested_tiers,
+    products: payload.candidate_products || [],
+    must_include: payload.constraints?.must_include_keywords || [],
+    tier_product_counts: payload.constraints?.tier_product_counts,
+  });
   const base = profile ? withClinicalGuardrails(template, profile) : template;
   const system = `${base}\n\nВАЖНО: Без chain-of-thought. Само финален JSON.`;
   if (template.includes('{{protocolData}}')) {
