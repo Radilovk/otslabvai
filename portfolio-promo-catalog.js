@@ -1,20 +1,11 @@
 /**
- * Promo-aware catalog — instant client-side updates after validate-promo.
- * Uses index vp dots + min_client_price (built at sync); no chunk fetches.
+ * Промо цени в каталога. Изчисляват се САМО на сървъра (POST /portfolio/promo-prices), защото
+ * зависят от доставната цена, която не бива да стига до браузъра. Клиентът пази готовите цени
+ * в кеш по промо код и показва нормалната цена, докато не дойдат.
  */
+import { API_URL } from './config.js';
 import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-visibility.js';
-import { promoUsesLinePricing } from './portfolio-checkout-shared.js';
-import {
-  computePromoStatsFromVp,
-  formatGroupPriceHtml,
-  ceilRetailPrice,
-  variantFromPricingDot,
-  resolvePromoLinePrice,
-  applyCartPercentPromoPrice,
-  promoCompareAtPrice,
-  promoDisplayStats,
-  shouldDisplayPromoPrice,
-} from './portfolio-pricing.js';
+import { formatGroupPriceHtml } from './portfolio-pricing.js';
 
 export const PROMO_CHANGED_EVENT = 'pf-promo-changed';
 
@@ -39,99 +30,50 @@ export function notifyPromoChanged(promo) {
   }
 }
 
-function cartPercentIndexStats(item, promo) {
-  const clientMin = Number(item.min_client_price ?? item.min_price) || 0;
-  const clientMax = Number(item.max_client_price ?? item.max_price) || clientMin;
-  const sellingMin = Number(item.min_price) || 0;
-  const sellingMax = Number(item.max_price) || sellingMin;
-  const pct = Number(promo.discount) / 100;
-  const fromClientMin = ceilRetailPrice(clientMin * (1 - pct));
-  const fromClientMax = ceilRetailPrice(clientMax * (1 - pct));
-  return promoDisplayStats({
-    min_price: Math.min(sellingMin, fromClientMin),
-    max_price: Math.min(sellingMax, fromClientMax),
-    compare_at_price: clientMin,
-    has_promo: Math.min(sellingMin, fromClientMin) < clientMin,
-  });
+/** promoCode → { groups: Map<group_id, stats>, variants: Map<sku_id, price fields> } */
+const promoPriceCache = new Map();
+
+function cacheFor(promo) {
+  const code = String(promo?.code || '');
+  if (!promoPriceCache.has(code)) promoPriceCache.set(code, { groups: new Map(), variants: new Map() });
+  return promoPriceCache.get(code);
+}
+
+/**
+ * Браузър: изтегля промо цените за показваните продукти/варианти (само липсващите в кеша).
+ * @returns {Promise<boolean>} true, ако са дошли нови цени (трябва повторно рендиране)
+ */
+export async function fetchPromoPrices(promo, { groupIds = [], skuIds = [] } = {}, fetchImpl = fetch) {
+  if (!promo?.code) return false;
+  const cache = cacheFor(promo);
+  const missingGroups = [...new Set(groupIds.map(String))].filter((id) => id && !cache.groups.has(id)).slice(0, 200);
+  const missingSkus = [...new Set(skuIds.map(String))].filter((id) => id && !cache.variants.has(id)).slice(0, 200);
+  if (!missingGroups.length && !missingSkus.length) return false;
+  try {
+    const res = await fetchImpl(`${API_URL}/portfolio/promo-prices`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: promo.code, group_ids: missingGroups, sku_ids: missingSkus }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    for (const id of missingGroups) cache.groups.set(id, data.groups?.[id] || null);
+    for (const id of missingSkus) cache.variants.set(id, data.variants?.[id] || null);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function formatIndexPriceHtml(item, promo) {
   if (!promo) return formatGroupPriceHtml(item);
-
-  if (item.vp?.length) {
-    const stats = computePromoStatsFromVp(item.vp, promo);
-    if (stats) return formatGroupPriceHtml(stats);
-  }
-
-  if (promo.discountType === 'percentage' && Number(promo.discount) > 0) {
-    return formatGroupPriceHtml(cartPercentIndexStats(item, promo));
-  }
-
-  return formatGroupPriceHtml(item);
+  const stats = cacheFor(promo).groups.get(String(item.group_id));
+  return formatGroupPriceHtml(stats || item);
 }
 
+/** Браузър: вариант с промо цена от сървъра (ако вече е изтеглена). */
 export function variantDisplayPrice(variant, promo) {
   if (!variant || !promo) return variant;
-
-  if (promoUsesLinePricing(promo)) {
-    const selling = Number(variant.retail_price) || 0;
-    const promoRetail = resolvePromoLinePrice(variant, promo);
-    if (promoRetail === selling) return variant;
-    const compareAt = promoCompareAtPrice(variant, promoRetail);
-    if (!shouldDisplayPromoPrice(compareAt, promoRetail)) {
-      return { ...variant, retail_price: promoRetail, compare_at_price: 0, is_on_promo: false };
-    }
-    return {
-      ...variant,
-      retail_price: promoRetail,
-      compare_at_price: compareAt,
-      is_on_promo: true,
-    };
-  }
-
-  if (promo.discountType === 'percentage' && Number(promo.discount) > 0) {
-    const { price, compareAt, isOnPromo } = applyCartPercentPromoPrice(variant, promo);
-    if (!isOnPromo || !shouldDisplayPromoPrice(compareAt, price)) {
-      return { ...variant, retail_price: price, compare_at_price: 0, is_on_promo: false };
-    }
-    return {
-      ...variant,
-      retail_price: price,
-      compare_at_price: compareAt,
-      is_on_promo: true,
-    };
-  }
-
-  return variant;
+  const priced = cacheFor(promo).variants.get(String(variant.sku_id));
+  return priced ? { ...variant, ...priced } : variant;
 }
-
-/** @deprecated sync-only — kept for tests */
-export function enrichCatalogItemsWithPromoPrices(items, promo) {
-  if (!promo || !items?.length) return items || [];
-  return items.map((item) => {
-    if (!item.vp?.length) return item;
-    const stats = computePromoStatsFromVp(item.vp, promo);
-    if (!stats) return item;
-    return {
-      ...item,
-      promo_min_price: stats.min_price,
-      promo_max_price: stats.max_price,
-      promo_compare_at_price: stats.compare_at_price,
-      promo_has_adjusted_price: stats.has_promo || stats.compare_at_price > stats.min_price,
-    };
-  });
-}
-
-/** @deprecated sync-only — vp dots include client prices */
-export function enrichIndexClientPrices(items) {
-  return items || [];
-}
-
-/** @deprecated */
-export async function computeGroupPromoPriceStats(groupId, promo) {
-  void groupId;
-  void promo;
-  return null;
-}
-
-export { variantFromPricingDot };

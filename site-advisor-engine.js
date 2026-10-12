@@ -7,7 +7,6 @@ import {
   buildClientProfile,
   extractProductsFromContent,
   filterEligibleProducts,
-  buildCandidatePool,
   refreshLifeProductsAvailability,
   transformProductForAI,
   enrichProtocolProductItem,
@@ -16,6 +15,7 @@ import {
   PRIORITY_GOAL_KEYWORDS,
 } from './protocol-quiz-engine.js';
 import { getProductConflictGroups } from './portfolio-stack-slots.js';
+import { rerankByProfitWithinRelevance } from './portfolio-advisor-commerce.js';
 import {
   getExclusionReasons,
   getMustIncludeKeywords,
@@ -258,18 +258,22 @@ export async function prepareSiteAdvisorSubmission(env, rawAnswers, deps, {
   let eligible = filterEligibleProducts(allProducts);
 
   // Препоръчваме само продукти, които checkout-ът реално приема (наличност при доставчика, марж, каталог).
+  /** @type {(product: object) => number} */
+  let profitOf = () => 0;
   if (deps.filterOrderable) {
     const skuOf = (p) => enrichSiteProductItem({ product_id: p.product_id }, p, siteId).sku_id;
     const orderable = await deps.filterOrderable(env, eligible.map(skuOf), project);
     eligible = eligible.filter((p) => orderable.has(skuOf(p)));
+    profitOf = (p) => orderable.get(skuOf(p))?.profit_eur || 0;
   }
 
   if (eligible.length < 3) {
     throw new Error('Няма достатъчно налични орални продукти за персонална препоръка. Моля, опитайте по-късно.');
   }
 
-  const keywordMap = getSitePriorityKeywordMap(siteId, profile.priority);
   const rankedResult = rankSiteAdvisorProducts(profile, eligible, siteId);
+  // Между еднакво подходящите продукти печели по-печелившият за магазина.
+  rankedResult.ranked = rerankByProfitWithinRelevance(rankedResult.ranked, profitOf);
 
   if (rankedResult.ranked.length < 3) {
     throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
@@ -288,11 +292,17 @@ export async function prepareSiteAdvisorSubmission(env, rawAnswers, deps, {
   };
 
   if (compositionMode === 'ai_pick') {
-    const { candidates, excluded_product_ids, exclusion_map } = buildCandidatePool(
-      profile,
-      eligible,
-      { maxCandidates: 18, priorityKeywords: keywordMap },
-    );
+    // Същият списък като при compose: safety + стимуланти + точкуване на сайта + печалба между равностойните.
+    const candidates = rankedResult.ranked.slice(0, 18).map((e) => e.product);
+    const candidateIds = new Set(candidates.map((p) => p.product_id));
+    for (const { product } of rankedResult.ranked) {
+      if (candidateIds.has(product.product_id)) continue;
+      if (mustIncludeKws.some((kw) => productMatchesAnyKeyword(productSearchText(product), [kw]))) {
+        candidates.push(product);
+        candidateIds.add(product.product_id);
+      }
+    }
+    const { excluded_product_ids, exclusion_map } = rankedResult;
 
     if (candidates.length < 3) {
       throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');

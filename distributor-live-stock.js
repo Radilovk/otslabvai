@@ -13,6 +13,28 @@ import { isSilaDistributor } from './sila-api.js';
 const F1_PRODUCTS_URL = 'https://fitness1.bg/b2b/api/products_v3';
 const SILA_API_URL = 'https://distro.silabg.com/api/v1';
 export const LIVE_STOCK_TIMEOUT_MS = 3500;
+/** Кеш в рамките на worker isolate: checkout-ът валидира количката многократно — не викаме доставчика всеки път. */
+export const LIVE_STOCK_CACHE_MS = 2 * 60 * 1000;
+const liveCache = new Map();
+
+function cacheGet(key) {
+  const hit = liveCache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > LIVE_STOCK_CACHE_MS) {
+    liveCache.delete(key);
+    return null;
+  }
+  return hit.value;
+}
+
+function cacheSet(key, value) {
+  if (liveCache.size > 2000) liveCache.clear();
+  liveCache.set(key, { at: Date.now(), value });
+}
+
+export function clearLiveStockCache() {
+  liveCache.clear();
+}
 
 async function fetchJson(url, fetchImpl, timeoutMs) {
   const controller = new AbortController();
@@ -62,22 +84,26 @@ export async function checkSilaEan(ean, apiToken, { fetchImpl = fetch, timeoutMs
 
 /**
  * @param {Array<{ sku_id: string, barcode?: string, distributor?: string, name?: string, fulfillment?: string }>} lines
- * @param {{ f1Key?: string|null, silaToken?: string|null, fetchImpl?: typeof fetch, timeoutMs?: number }} opts
+ * @param {{ f1Key?: string|null, silaToken?: string|null, fetchImpl?: typeof fetch, timeoutMs?: number, useCache?: boolean }} opts
  * @returns {Promise<{ checked_at: string, results: LiveStockResult[], unavailable: LiveStockResult[], unknown: LiveStockResult[] }>}
  */
-export async function checkLiveStock(lines, { f1Key = null, silaToken = null, fetchImpl = fetch, timeoutMs = LIVE_STOCK_TIMEOUT_MS } = {}) {
+export async function checkLiveStock(lines, { f1Key = null, silaToken = null, fetchImpl = fetch, timeoutMs = LIVE_STOCK_TIMEOUT_MS, useCache = true } = {}) {
   /** @returns {Promise<LiveStockResult>} */
   const checkOne = async (line) => {
     const base = { sku_id: String(line.sku_id), name: line.name || '', distributor: isSilaDistributor(line.distributor) ? 'sila' : 'fitness1' };
     if (line.fulfillment === 'direct') return { ...base, status: 'skipped' };
     try {
-      let r;
-      if (base.distributor === 'sila') {
-        if (!silaToken || !line.barcode) return { ...base, status: 'unknown', error: !silaToken ? 'няма Sila токен' : 'няма баркод' };
-        r = await checkSilaEan(line.barcode, silaToken, { fetchImpl, timeoutMs });
-      } else {
-        if (!f1Key) return { ...base, status: 'unknown', error: 'няма Fitness1 ключ' };
-        r = await checkFitness1Sku(line.sku_id, f1Key, { fetchImpl, timeoutMs });
+      const cacheKey = `${base.distributor}:${base.distributor === 'sila' ? line.barcode : line.sku_id}`;
+      let r = useCache ? cacheGet(cacheKey) : null;
+      if (!r) {
+        if (base.distributor === 'sila') {
+          if (!silaToken || !line.barcode) return { ...base, status: 'unknown', error: !silaToken ? 'няма Sila токен' : 'няма баркод' };
+          r = await checkSilaEan(line.barcode, silaToken, { fetchImpl, timeoutMs });
+        } else {
+          if (!f1Key) return { ...base, status: 'unknown', error: 'няма Fitness1 ключ' };
+          r = await checkFitness1Sku(line.sku_id, f1Key, { fetchImpl, timeoutMs });
+        }
+        cacheSet(cacheKey, r);
       }
       return { ...base, status: r.available ? 'available' : 'unavailable', b2b_price: r.b2b_price, ...(r.reason ? { reason: r.reason } : {}) };
     } catch (e) {

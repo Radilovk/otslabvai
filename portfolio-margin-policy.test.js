@@ -70,3 +70,12 @@ describe('portfolio-margin-policy', () => {
     expect(isCatalogListed({ margin_eligible: false }, true)).toBe(true);
   });
 });
+
+describe('по-скъпи от магазина на доставчика', () => {
+  test('вариант над клиентската цена на доставчика не минава', async () => {
+    const { variantHasMargin } = await import('./portfolio-margin-policy.js');
+    expect(variantHasMargin({ b2b_price: 10, retail_price: 20, f1_reference_price: 22 })).toBe(true);
+    expect(variantHasMargin({ b2b_price: 10, retail_price: 20, f1_reference_price: 18 })).toBe(false);
+    expect(variantHasMargin({ b2b_price: 10, retail_price: 20 })).toBe(true);
+  });
+});

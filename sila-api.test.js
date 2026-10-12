@@ -366,3 +366,24 @@ describe('Sila: реални полета от API-то', () => {
     expect(body).toMatchObject({ delivery_type: 1, address_id: '1723' });
   });
 });
+
+describe('един каталог по баркод', () => {
+  test('модел на Sila с общ баркод → останалите му варианти влизат в продукта на Fitness1', async () => {
+    const { mergeCatalogProducts } = await import('./sila-api.js');
+    const f1 = [
+      { id: 'f1', group_id: '100', product_id: 'p100', barcode: 'A', b2b_price: '20.00', available: true, product_name: 'Diet Whey', brand_name: 'Applied Nutrition', brand_id: '7', category: 'Протеини > Изолат', option: 'Шоколад', pack: '1 кг' },
+    ];
+    const sila = [
+      { id: 'A', group_id: '90000001', barcode: 'A', b2b_price: '18.00', available: true, product_name: 'Diet Whey Protein', brand_name: 'Applied Nutrition', distributor_ids: { model_id: 'm1', taste_id: 't1' } },
+      { id: 'B', group_id: '90000001', barcode: 'B', b2b_price: '18.00', available: true, product_name: 'Diet Whey Protein', brand_name: 'Applied Nutrition', option: 'Banana', distributor_ids: { model_id: 'm1', taste_id: 't2' } },
+      { id: 'C', group_id: '90000002', barcode: 'C', b2b_price: '9.00', available: true, product_name: 'Iso Whey', brand_name: 'APPLIED NUTRITION', category: '' },
+    ];
+    const merged = mergeCatalogProducts(f1, sila);
+    const byId = Object.fromEntries(merged.map((p) => [p.id, p]));
+
+    expect(byId.f1).toMatchObject({ distributor: 'sila', b2b_price: '18.00', group_id: '100' });
+    expect(byId.A).toBeUndefined();
+    expect(byId.B).toMatchObject({ group_id: '100', product_name: 'Diet Whey', category: 'Протеини > Изолат', option: 'Banana', distributor: 'sila' });
+    expect(byId.C).toMatchObject({ group_id: '90000002', brand_name: 'Applied Nutrition', category: 'Протеини' });
+  });
+});

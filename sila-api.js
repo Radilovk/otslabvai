@@ -158,6 +158,28 @@ export function resolveSilaCategory(rawCategory, productName) {
   return classifySilaProductByName(productName) || 'Други';
 }
 
+/**
+ * Sila пише разфасовката в името: „HCA / 150 Caps.“, „Omega 3 / 100 Softgels“.
+ * Fitness1 я държи отделно — разделяме, за да изглеждат продуктите еднакво.
+ */
+export function splitSilaPackFromName(name) {
+  const raw = String(name || '').trim();
+  const m = raw.match(/^(.*\S)\s*\/\s*([^/]*\d[^/]*)$/);
+  if (!m) return { name: raw, pack: '' };
+  const pack = m[2].trim().replace(/\.$/, '');
+  if (!/\d/.test(pack) || !/\d\s*(caps?|capsules?|vcaps?|tabs?|tablets?|softgels?|soft|serv\w*|g|gr|kg|ml|l|lbs?|packs?|sachets?|pcs|бр|капс\w*|табл\w*|гр|мл|дози)\b|\d\s*x\s*\d/i.test(pack)) {
+    return { name: raw, pack: '' };
+  }
+  return { name: m[1].trim(), pack };
+}
+
+/** „OPTIMUM NUTRITION“ → „Optimum Nutrition“; съкращения до 3 букви остават (USA). */
+export function displayBrandName(brand) {
+  const raw = String(brand || '').trim();
+  if (!raw || raw !== raw.toUpperCase() || !/[A-ZА-Я]{2}/.test(raw)) return raw;
+  return raw.split(/(\s+)/).map((w) => (w.length <= 3 ? w : w.toLowerCase().replace(/(^|[\-.&/])([a-zа-я])/g, (_, p, c) => p + c.toUpperCase()))).join('');
+}
+
 /** Категория по име на продукта; null ако няма съвпадение. */
 export function classifySilaProductByName(name) {
   const text = String(name || '');
@@ -574,10 +596,12 @@ export function normalizeSilaProduct(item) {
   const regular = parsePrice(pickFirst(item, ['price_retail', 'regular_price', 'retail_price', 'rrp'], '')) || b2b;
   const sale = parsePrice(pickFirst(item, ['price_promo', 'sale_price', 'promo_price'], ''));
 
-  const productName = pickFirst(item, ['product_name', 'model_name', 'name', 'title'], 'Без име');
-  const brandName = pickFirst(item, ['brand_name', 'brand'], '');
+  const rawName = pickFirst(item, ['product_name', 'model_name', 'name', 'title'], 'Без име');
+  const brandName = displayBrandName(pickFirst(item, ['brand_name', 'brand'], ''));
   const tasteName = pickFirst(item, ['taste_name', 'taste', 'flavor_name', 'flavor'], '');
-  const sizeName = pickFirst(item, ['size_name', 'size', 'pack', 'packaging'], '');
+  const split = splitSilaPackFromName(rawName);
+  const productName = split.name;
+  const sizeName = pickFirst(item, ['size_name', 'size', 'pack', 'packaging'], '') || split.pack;
   const rawCategory = pickFirst(item, ['category', 'category_name', 'group'], '');
   const category = resolveSilaCategory(rawCategory, productName);
 
@@ -617,16 +641,76 @@ export function normalizeSilaProducts(items) {
   return items.map(normalizeSilaProduct).filter(Boolean);
 }
 
+export const SILA_SHOP_PROMO_URL = 'https://www.silabg.com/bg/list/order/6/showall/1';
+
+const decodeEntities = (t) => String(t || '').replace(/&nbsp;/g, ' ').replace(/&euro;/g, '€').replace(/&amp;/g, '&');
+
+/**
+ * Промоциите в магазина на Sila (silabg.com) — B2B API-то ги няма. Една страница със всички промо модели:
+ * model_id → { regular, price, percent }. Без тези данни продаваме на ~3% под RRP продукти, които
+ * клиентът намира с 20–50% по-евтино при самата Sila.
+ * @param {string} html
+ * @returns {Map<string, { regular: number, price: number, percent: number }>}
+ */
+export function parseSilaShopPromotions(html) {
+  const out = new Map();
+  const text = String(html || '');
+  const re = /name="model_id"[^>]*value="(\d+)"/g;
+  let m;
+  while ((m = re.exec(text))) {
+    const block = text.slice(m.index, m.index + 2500);
+    const end = block.indexOf('name="model_id"', 20);
+    const scope = end > 0 ? block.slice(0, end) : block;
+    const old = scope.match(/class="promo_price_old"[^>]*>([^<]+)</);
+    const p1 = scope.match(/class="price_1_PL">\s*(\d+)\s*</);
+    const p2 = scope.match(/class="price_2_PL">\s*(\d+)\s*</);
+    const pct = scope.match(/>\s*(\d+(?:\.\d+)?)%\s*</);
+    if (!old || !p1) continue;
+    const regular = parseFloat(decodeEntities(old[1]).replace(/[^\d.,]/g, '').replace(',', '.'));
+    const price = parseFloat(`${p1[1]}.${p2 ? p2[1] : '00'}`);
+    if (!(regular > 0 && price > 0 && price < regular)) continue;
+    const prev = out.get(m[1]);
+    // Няколко блока за един модел (размери) — пазим най-ниската цена: тя е реалната конкуренция.
+    if (!prev || price < prev.price) {
+      out.set(m[1], { regular, price, percent: pct ? Number(pct[1]) : Math.round((1 - price / regular) * 1000) / 10 });
+    }
+  }
+  return out;
+}
+
+/** @returns {Promise<Map<string, { regular: number, price: number, percent: number }>>} празна при грешка */
+export async function fetchSilaShopPromotions(fetchImpl = fetch) {
+  try {
+    const res = await fetchImpl(SILA_SHOP_PROMO_URL, { headers: { Accept: 'text/html' } });
+    if (!res.ok) return new Map();
+    return parseSilaShopPromotions(await res.text());
+  } catch {
+    return new Map();
+  }
+}
+
 /** Fetch in-stock Sila products (product list + brandfeed images for gaps). */
-export async function fetchSilaProducts(apiToken) {
-  const rawItems = await fetchSilaProductListRaw(apiToken);
+/** Промо цената в магазина на Sila влиза като sale_price — същият механизъм като промоциите на Fitness1. */
+export function applySilaShopPromotion(item, promotions) {
+  const promo = promotions?.get(String(item?.model_id ?? ''));
+  if (!promo) return item;
+  const regular = parsePrice(item.regular_price);
+  if (regular > 0 && promo.price >= regular) return item;
+  return { ...item, price_promo: promo.price.toFixed(2) };
+}
+
+export async function fetchSilaProducts(apiToken, { promotions = null } = {}) {
+  const [rawItems, shopPromotions] = await Promise.all([
+    fetchSilaProductListRaw(apiToken),
+    promotions ? Promise.resolve(promotions) : fetchSilaShopPromotions(),
+  ]);
   if (!rawItems.length) return [];
 
   const availableItems = rawItems.filter(isSilaProductAvailable);
   if (!availableItems.length) return [];
 
   const imageLookup = await loadSilaImageLookup(apiToken, availableItems);
-  const enriched = availableItems.map((item) => enrichSilaProductRow(item, imageLookup));
+  const enriched = availableItems.map((item) => applySilaShopPromotion(enrichSilaProductRow(item, imageLookup), shopPromotions));
   return normalizeSilaProducts(enriched).filter((p) => p.available);
 }
 
@@ -713,9 +797,12 @@ export function shouldSourceFromSila(f1Row, silaRow) {
 }
 
 /**
- * Merge catalogs: Fitness1 first, then Sila-only rows (deduped by barcode, brands unified by name).
- * При общ баркод редът остава във Fitness1 групата (SKU, категория, описание не се сменят),
- * но се снабдява от Sila, когато е по-изгодно или единствено налично (shouldSourceFromSila).
+ * Един каталог от двата доставчика, само по баркод:
+ *  1. Общ баркод → един артикул (SKU на Fitness1), снабдяван от по-изгодния: наличен, после
+ *     по-ниска доставна цена (shouldSourceFromSila).
+ *  2. Модел на Sila, от който поне един баркод е във Fitness1 продукт → останалите му варианти
+ *     (разфасовки/вкусове без общ баркод) влизат в същия продукт — една страница за клиента.
+ *  3. Модел без общ баркод → отделен продукт (марката се изписва както при Fitness1).
  */
 export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
   const f1 = (fitness1Products || []).map((p) => ({ ...p, distributor: DISTRIBUTOR_FITNESS1 }));
@@ -723,6 +810,7 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
   const seenBarcodes = new Set();
   const f1ByBarcode = new Map();
   const brandByName = new Map();
+  const brandDisplayByKey = new Map();
   for (const p of f1) {
     const bc = String(p.barcode || '').trim();
     if (bc) {
@@ -731,6 +819,17 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
     }
     const bk = normalizeBrandKey(p.brand_name);
     if (bk && p.brand_id) brandByName.set(bk, String(p.brand_id));
+    if (bk && p.brand_name && !brandDisplayByKey.has(bk)) brandDisplayByKey.set(bk, p.brand_name);
+  }
+
+  // Модел на Sila → Fitness1 продукт, по общ баркод на който и да е негов вариант.
+  const f1RowByModel = new Map();
+  for (const raw of silaProducts || []) {
+    const bc = String(raw.barcode || '').trim();
+    const f1Row = bc ? f1ByBarcode.get(bc) : null;
+    if (f1Row && raw.group_id != null && !f1RowByModel.has(String(raw.group_id))) {
+      f1RowByModel.set(String(raw.group_id), f1Row);
+    }
   }
 
   const merged = [...f1];
@@ -752,9 +851,26 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
     if (bc && seenBarcodes.has(bc)) continue;
 
     const item = { ...raw, distributor: raw.distributor || DISTRIBUTOR_SILA };
+    const linked = f1RowByModel.get(String(raw.group_id));
+    if (linked) {
+      // Вариант на същия продукт: страницата, името, марката и категорията са на Fitness1.
+      Object.assign(item, {
+        group_id: linked.group_id,
+        product_id: linked.product_id,
+        product_name: linked.product_name,
+        brand_id: linked.brand_id,
+        brand_name: linked.brand_name,
+        category: linked.category,
+      });
+      merged.push(item);
+      if (bc) seenBarcodes.add(bc);
+      continue;
+    }
     const bk = normalizeBrandKey(item.brand_name);
     if (bk && brandByName.has(bk)) {
       item.brand_id = brandByName.get(bk);
+      // Клиентът вижда една марка с едно изписване, независимо от доставчика.
+      if (brandDisplayByKey.has(bk)) item.brand_name = brandDisplayByKey.get(bk);
     }
     if (!item.category || /^sila\b/i.test(item.category) || item.category === 'Други') {
       item.category = classifySilaProductByName(item.product_name) || 'Други';

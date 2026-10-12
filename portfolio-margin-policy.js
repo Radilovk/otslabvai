@@ -14,8 +14,18 @@ export function variantMarginPct(variant) {
   return ((retail - b2b) / retail) * 100;
 }
 
+/**
+ * По-скъпи сме от магазина на самия доставчик (Fitness1 sale/regular, промоция в магазина на Sila):
+ * клиентът ще го намери по-евтино там — не предлагаме такъв вариант.
+ */
+export function variantIsUndercutByDistributorShop(variant) {
+  const reference = Number(variant?.f1_reference_price) || 0;
+  const retail = Number(variant?.retail_price) || 0;
+  return reference > 0 && retail > reference + 0.005;
+}
+
 export function variantHasMargin(variant, minPct = MIN_CATALOG_MARGIN_PCT) {
-  return variantMarginPct(variant) >= minPct;
+  return variantMarginPct(variant) >= minPct && !variantIsUndercutByDistributorShop(variant);
 }
 
 export function groupHasMargin(group, minPct = MIN_CATALOG_MARGIN_PCT) {

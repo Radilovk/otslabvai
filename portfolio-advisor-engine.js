@@ -36,6 +36,7 @@ import {
   getAdvisorCommercialStats,
   normalizeAdvisorCommerceSettings,
   scoreAdvisorCommercialBoost,
+  rerankByProfitWithinRelevance,
 } from './portfolio-advisor-commerce.js';
 import { loadPortfolioAdvisorSettings } from './portfolio-advisor-settings.js';
 import { isCatalogListed } from './portfolio-margin-policy.js';
@@ -217,9 +218,12 @@ export function rankPortfolioAdvisorProducts(profile, products, commerceOptions 
 
   const finiteRanked = ranked.filter((entry) => Number.isFinite(entry.score));
   finiteRanked.sort((a, b) => b.score - a.score);
+  const profitRanked = commerce.enabled === false
+    ? finiteRanked
+    : rerankByProfitWithinRelevance(finiteRanked, (p) => getAdvisorCommercialStats(p)?.profit_eur || 0);
 
   return {
-    ranked: finiteRanked,
+    ranked: profitRanked,
     excluded_product_ids: Array.from(excluded.keys()),
     exclusion_map: Object.fromEntries(excluded),
   };

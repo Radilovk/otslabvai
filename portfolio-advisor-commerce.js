@@ -280,3 +280,25 @@ export function scoreAdvisorCommercialBoost(product, options = ADVISOR_COMMERCE_
 
   return Math.max(0, boost);
 }
+
+/**
+ * „Релевантност първо, печалба решава“: последователни продукти с близка релевантност
+ * (до 15% или 5 т. под водача на групата) се подреждат по печалба в € (низходящо).
+ * Неподходящ продукт не изпреварва подходящ само защото е по-печеливш.
+ * @param {{ product: object, score: number }[]} ranked - подредени по релевантност (низходящо)
+ * @param {(product: object) => number} profitOf - печалба в € за продукта
+ */
+export function rerankByProfitWithinRelevance(ranked, profitOf, { bandPct = 0.15, minBand = 5 } = {}) {
+  const out = [];
+  let i = 0;
+  while (i < ranked.length) {
+    const head = ranked[i].score;
+    const floor = head - Math.max(minBand, Math.abs(head) * bandPct);
+    let j = i + 1;
+    while (j < ranked.length && ranked[j].score >= floor) j += 1;
+    const band = ranked.slice(i, j).sort((a, b) => (profitOf(b.product) || 0) - (profitOf(a.product) || 0) || b.score - a.score);
+    out.push(...band);
+    i = j;
+  }
+  return out;
+}
