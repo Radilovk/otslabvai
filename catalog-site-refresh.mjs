@@ -1,7 +1,11 @@
 /**
  * Refresh daotslabna (main) and life-protocols imported products after catalog sync.
  */
-import { refreshImportedProductsInContent, collectImportedGroupIds } from './portfolio-import.js';
+import {
+  refreshImportedProductsInContent,
+  refreshSkuLinkedProductsInContent,
+  collectImportedGroupIds,
+} from './portfolio-import.js';
 import { SITE_CONTENT_KEYS } from './portfolio-site-products.js';
 import { kvGet, kvPut } from './catalog-kv-client.mjs';
 
@@ -19,14 +23,16 @@ export async function refreshSiteProjectsFromCatalog(groups) {
     }
 
     const groupIds = collectImportedGroupIds(content);
-    if (!groupIds.length) {
-      results[project] = { skipped: true, reason: 'no imported products' };
+    const imported = groupIds.length ? refreshImportedProductsInContent(content, groupsById) : null;
+    // Ръчно добавени продукти, вързани към каталога само по SKU на варианта (daotslabna).
+    const skuLinked = refreshSkuLinkedProductsInContent(content, groups);
+    if (!imported && !skuLinked.updated && !skuLinked.missing) {
+      results[project] = { skipped: true, reason: 'no catalog-linked products' };
       continue;
     }
 
-    const stats = refreshImportedProductsInContent(content, groupsById);
     await kvPut(keys.kvKey, content);
-    results[project] = stats;
+    results[project] = { ...(imported || {}), sku_linked: skuLinked };
   }
 
   return results;

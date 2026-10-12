@@ -186,12 +186,12 @@ describe('portfolio-advisor-config', () => {
   });
 
   test('FALLBACK_CATALOG_CATEGORIES съдържа реални Fitness1 категории', () => {
-    expect(FALLBACK_CATALOG_CATEGORIES).toContain('Изгаряне на мазнини');
+    expect(FALLBACK_CATALOG_CATEGORIES).toContain('Отслабване и контрол на теглото');
     expect(FALLBACK_CATALOG_CATEGORIES).toContain('Протеини');
     const fallbackFiltered = filterCategoriesForAdvisor(
       FALLBACK_CATALOG_CATEGORIES.map((name) => ({ name })),
       'otshalvane'
     );
-    expect(fallbackFiltered[0]?.name).toBe('Изгаряне на мазнини');
+    expect(fallbackFiltered[0]?.name).toBe('Отслабване и контрол на теглото');
   });
 });

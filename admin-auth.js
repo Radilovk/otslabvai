@@ -129,6 +129,7 @@ export function routeRequiresAdmin(pathname, method) {
   if (path === '/portfolio/sync' && m === 'POST') return true;
   // Изпраща реални поръчки към дистрибуторите — само от админ панела.
   if (path === '/portfolio/orders/approve' && m === 'POST') return true;
+  if (path.startsWith('/portfolio/diagnostics/')) return true;
   if (path === '/portfolio/orders/approve-batch' && m === 'POST') return true;
 
   if (path === '/page_content.json' && m === 'POST') return true;

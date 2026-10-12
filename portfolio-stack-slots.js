@@ -29,6 +29,7 @@ export const STACK_CONFLICT_GROUPS = {
   astaxanthin: ['astaxanthin', 'астаксантин'],
   nad_precursor: ['nmn', 'nad+', 'никотинамид мононуклеотид', 'nicotinamide mononucleotide', 'nicotinamide riboside'],
   pqq: ['pqq', 'pyrroloquinoline'],
+  diuretic: ['диуретик', 'diuretic', 'бреза', 'birch', 'глухарче', 'dandelion', 'отводн', 'water retention'],
 };
 
 /** Слот дефиниции — ключови думи за класификация */

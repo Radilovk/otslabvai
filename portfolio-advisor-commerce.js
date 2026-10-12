@@ -14,6 +14,8 @@
  * Deep unprofitable pricing is handled naturally via low profit %, not promo heuristics.
  */
 
+import { MIN_PROMO_DISPLAY_DISCOUNT_PCT } from './portfolio-pricing.js';
+
 export const ADVISOR_COMMERCE_DEFAULTS = {
   enabled: true,
   /** Min discount vs RRP (regular vs b2b) to stay in the advisor pool. */
@@ -36,6 +38,11 @@ export const ADVISOR_COMMERCE_DEFAULTS = {
   profit_pct_weight: 0.18,
   /** Legacy: score boost per 10 percentage points of distributor discount. */
   discount_pct_weight: 0.06,
+  /**
+   * Продукти с видима промо отстъпка за клиента не се препоръчват (търсим пълна цена и висок марж).
+   * Ако без тях пулът стане < 3, prepare се връща към пълния пул.
+   */
+  exclude_client_promo: true,
 };
 
 /** Merge saved KV settings with defaults and clamp to safe ranges. */
@@ -54,6 +61,7 @@ export function normalizeAdvisorCommerceSettings(raw = {}) {
   };
   return {
     enabled: src.enabled !== false,
+    exclude_client_promo: src.exclude_client_promo !== false,
     min_distributor_discount_pct: clamp(
       src.min_distributor_discount_pct,
       0,
@@ -229,6 +237,9 @@ export function isExcludedByAdvisorCommerce(product, options = ADVISOR_COMMERCE_
   if (!stats) return false;
 
   if (isDeepUnprofitablePromo(stats, opts)) return true;
+  // Стандартното ценообразуване е ~3% под препоръчителната цена (is_on_promo=true, но без видима отстъпка).
+  // Изключваме само видимите промоции — от прага, при който сайтът показва зачеркната цена.
+  if (opts.exclude_client_promo && (stats.customer_discount_pct || 0) >= MIN_PROMO_DISPLAY_DISCOUNT_PCT) return true;
 
   const dist = stats.distributor_discount_pct || 0;
   const markup = stats.margin_pct || 0;

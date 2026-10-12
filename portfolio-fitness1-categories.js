@@ -29,6 +29,52 @@ export const FITNESS1_CATALOG_CATEGORIES = [
   'Anti-Aging / Против стареене',
 ];
 
+/**
+ * Текущо дърво на Fitness1 (production, 2026-10). Старите имена по-горе остават за съвместимост
+ * със записани данни; връзката цел → категория ги покрива чрез псевдоними.
+ */
+export const FITNESS1_CURRENT_CATEGORIES = [
+  'Добавки по здравна цел',
+  'Билки и растителни екстракти',
+  'Функционални храни',
+  'Отслабване и контрол на теглото',
+  'Красота и подмладяване',
+  'Здраве за цялото семейство',
+  'Хидратация и електролити',
+  'Дълголетие / Anti-Aging',
+  'Аминокиселини',
+  'Антиоксиданти',
+  'Витамини',
+  'Качване на маса и възстановяване',
+  'Креатин',
+  'Мастни киселини',
+  'Минерали',
+  'Мултивитамини',
+  'Предтренировъчни добавки',
+  'Протеини',
+  'Стави и сухожилия',
+  'Хардкор продукти и стимулатори',
+  'Козметика',
+  'Спортни аксесоари и уреди',
+  'Аксесоари за бокс и ММА',
+  'Тениски и облекло',
+  'Уреди за дома и тялото',
+];
+
+/** Старо име → ново (Fitness1 преименува категориите). */
+export const CATEGORY_ALIASES = {
+  'Изгаряне на мазнини': 'Отслабване и контрол на теглото',
+  'Билки': 'Билки и растителни екстракти',
+  'Здравословни и спортни храни': 'Функционални храни',
+  'Здраве и тонус': 'Добавки по здравна цел',
+  'Добавки за деца': 'Здраве за цялото семейство',
+  'Anti-Aging / Против стареене': 'Дълголетие / Anti-Aging',
+};
+
+for (const name of FITNESS1_CURRENT_CATEGORIES) {
+  if (!FITNESS1_CATALOG_CATEGORIES.includes(name)) FITNESS1_CATALOG_CATEGORIES.push(name);
+}
+
 /** Категории, които никога не се предлагат в AI консултанта */
 export const FITNESS1_EXCLUDED_CATEGORIES = new Set([
   'Аксесоари за бокс и ММА',
@@ -91,6 +137,26 @@ export const GOAL_CATEGORY_TIERS = {
     FITNESS1_CATALOG_CATEGORIES.filter((name) => !FITNESS1_EXCLUDED_CATEGORIES.has(name)),
   ],
 };
+
+/** Допълнителни текущи категории към цели (без стар еквивалент). */
+const EXTRA_GOAL_CATEGORIES = {
+  antiaging: [[1, 'Красота и подмладяване']],
+  energy: [[1, 'Хидратация и електролити']],
+  recovery: [[1, 'Хидратация и електролити'], [2, 'Добавки по здравна цел']],
+};
+
+// Всеки tier получава и новите имена на старите си категории.
+for (const [goalId, tiers] of Object.entries(GOAL_CATEGORY_TIERS)) {
+  for (const tier of tiers) {
+    for (const name of [...tier]) {
+      const alias = CATEGORY_ALIASES[name];
+      if (alias && !tier.includes(alias)) tier.push(alias);
+    }
+  }
+  for (const [tierIndex, name] of EXTRA_GOAL_CATEGORIES[goalId] || []) {
+    if (tiers[tierIndex] && !tiers[tierIndex].includes(name)) tiers[tierIndex].push(name);
+  }
+}
 
 const tierLookupCache = new Map();
 

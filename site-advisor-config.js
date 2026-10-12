@@ -98,7 +98,8 @@ const BASE_STEPS = [
       { value: 'diabetes', label: 'Диабет / инсулинова резистентност' },
       { value: 'thyroid', label: 'Заболяване на щитовидната жлеза' },
       { value: 'autoimmune', label: 'Автоимунно заболяване' },
-      { value: 'kidney', label: 'Бъбречно или чернодробно заболяване' },
+      { value: 'kidney', label: 'Бъбречно заболяване' },
+      { value: 'liver', label: 'Чернодробно заболяване' },
       { value: 'cardiovascular', label: 'Сърдечно-съдово заболяване' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
       { value: 'other', label: 'Друго', allowsText: true },
@@ -120,6 +121,63 @@ const BASE_STEPS = [
     ],
   },
 ];
+
+/** life: клиентът избира фокус — сменя точкуването на продуктите. */
+export const LIFE_PRIORITY_STEP = {
+  id: 'priority',
+  title: 'Какъв е основният ви фокус?',
+  type: 'single',
+  field: 'priority',
+  options: [
+    { value: 'longevity', label: 'Общо дълголетие и антиейджинг' },
+    { value: 'energy', label: 'Енергия и издръжливост' },
+    { value: 'skin', label: 'Кожа, коса, нокти' },
+    { value: 'sleep', label: 'Сън и възстановяване' },
+    { value: 'cognition', label: 'Фокус и памет' },
+    { value: 'joints', label: 'Стави и подвижност' },
+  ],
+};
+
+const MAIN_WEIGHT_GOAL_STEP = {
+  id: 'weight_goal',
+  title: 'Колко килограма искате да свалите?',
+  type: 'single',
+  field: 'weight_goal',
+  options: [
+    { value: '1-5', label: 'До 5 кг' },
+    { value: '5-10', label: '5–10 кг' },
+    { value: '10-20', label: '10–20 кг' },
+    { value: '20+', label: 'Над 20 кг' },
+  ],
+};
+
+/** Повечето бърнъри са стимулантни — този отговор реално изключва продукти. */
+const MAIN_STIMULANT_STEP = {
+  id: 'stimulant_tolerance',
+  title: 'Как понасяте кофеин?',
+  hint: 'Повечето фет бърнъри съдържат кофеин или други стимуланти.',
+  type: 'single',
+  field: 'stimulant_tolerance',
+  options: [
+    { value: 'ok', label: 'Добре — пия кафе без проблем' },
+    { value: 'sensitive', label: 'Чувствителен/а съм — сърцебиене, безпокойство или лош сън' },
+    { value: 'avoid', label: 'Искам програма без стимуланти' },
+  ],
+};
+
+const MAIN_BUDGET_STEP = {
+  id: 'budget_band',
+  title: 'Какъв месечен бюджет предвиждате?',
+  hint: 'Ще препоръчаме варианта, който се вписва в него.',
+  type: 'single',
+  field: 'budget_band',
+  options: [
+    { value: 'up30', label: 'До 30 €' },
+    { value: '30-60', label: '30–60 €' },
+    { value: '60-100', label: '60–100 €' },
+    { value: '100+', label: 'Над 100 €' },
+  ],
+};
 
 const LIFE_SYMPTOMS_STEP = {
   id: 'symptoms',
@@ -213,18 +271,24 @@ export function pruneSiteAdvisorAnswers(answers = {}) {
 export function buildSiteAdvisorSteps(siteId = 'life', answers = {}) {
   const meta = SITE_ADVISOR_META[siteId] || SITE_ADVISOR_META.life;
   const steps = [];
+  const isMain = siteId === 'main';
 
   for (const step of BASE_STEPS) {
     const adapted = adaptStepForProfile(step, answers);
-    if (step.id === 'body') {
+    if (step.id === 'age' && !isMain) {
+      steps.push(adapted, LIFE_PRIORITY_STEP);
+    } else if (step.id === 'body') {
       steps.push({ ...adapted, hint: meta.bodyHint });
+      if (isMain) steps.push(MAIN_WEIGHT_GOAL_STEP);
     } else {
       steps.push(adapted);
     }
   }
 
-  steps.push(adaptStepForProfile(siteId === 'main' ? MAIN_SYMPTOMS_STEP : LIFE_SYMPTOMS_STEP, answers));
+  steps.push(adaptStepForProfile(isMain ? MAIN_SYMPTOMS_STEP : LIFE_SYMPTOMS_STEP, answers));
+  if (isMain) steps.push(MAIN_STIMULANT_STEP);
   steps.push(ALLERGIES_STEP);
+  if (isMain) steps.push(MAIN_BUDGET_STEP);
 
   steps.push({
     id: 'contact',

@@ -604,8 +604,9 @@ describe('Portfolio Fitness1 order approval', () => {
 
     const originalFetch = global.fetch;
     let fetchCalled = false;
-    global.fetch = async () => {
-      fetchCalled = true;
+    global.fetch = async (url) => {
+      // Живата проверка на наличността (products_v3?id=) е позволена; B2B поръчка — не.
+      if (String(url).includes('orders/create')) fetchCalled = true;
       return { ok: true, json: async () => ({ status: 'ok', order: { id: 1 } }) };
     };
 

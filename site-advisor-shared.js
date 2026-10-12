@@ -21,11 +21,15 @@ function listClinicalFlags(values = []) {
   return values.filter((v) => v && !CLINICAL_FLAG_VALUES.has(v));
 }
 
+const LIFE_PRIORITIES = new Set(['longevity', 'energy', 'skin', 'sleep', 'cognition', 'joints']);
+
 export function finalizeSiteAnswers(raw = {}, siteId = 'life') {
   const ctx = SITE_ADVISOR_CONTEXT[siteId] || SITE_ADVISOR_CONTEXT.life;
+  // life: клиентът избира фокус; main: целта е зададена от сайта (отслабване).
+  const priority = siteId === 'life' && LIFE_PRIORITIES.has(raw.priority) ? raw.priority : ctx.defaultPriority;
   return {
     ...raw,
-    priority: ctx.defaultPriority,
+    priority,
     site_id: siteId,
   };
 }
@@ -37,6 +41,8 @@ export function hasAdvisorClinicalComplexity(profile = {}) {
   const allergies = listClinicalFlags(profile.allergies);
 
   if (profileHasPregnancyOrBreastfeeding(profile)) return true;
+  // Свободен текст („Друго: варфарин“) не се разпознава от правилата — нужен е AI изборът, не само текст върху готов стек.
+  if (profile.conditions_other || profile.medications_other || profile.allergies_other) return true;
   if (conditions.length >= 2) return true;
   if (conditions.length && (medications.length || allergies.length)) return true;
   if (medications.length >= 2) return true;
@@ -109,6 +115,13 @@ export function buildAdvisorClinicalGuardrails(profile = {}, siteId = 'life') {
   }
   if (siteId === 'main' && (profile.symptoms || []).includes('cravings')) {
     lines.push('Cravings/апетит: приоритет ситост и метаболизъм — без агресивни стимуланти при кардио риск.');
+  }
+  if (profile.stimulant_tolerance === 'avoid') lines.push('Клиентът иска програма БЕЗ стимуланти — без кофеин, термогенни бърнъри, синефрин, йохимбин.');
+  if (profile.stimulant_tolerance === 'sensitive') lines.push('Чувствителност към кофеин — без хардкор стимуланти; най-много един мек термогенен продукт.');
+  if (profile.weight_goal) lines.push(`Цел: −${profile.weight_goal} кг. Реалистично темпо 0.5–1 кг седмично; добавките подпомагат, не заместват дефицита.`);
+  if (profile.budget_band) lines.push(`Месечен бюджет: ${profile.budget_band === 'up30' ? 'до 30 €' : profile.budget_band === '100+' ? 'над 100 €' : profile.budget_band + ' €'}.`);
+  if (siteId === 'life' && profile.priority && profile.priority !== 'longevity') {
+    lines.push(`Избран фокус: ${profile.priority} — основният продукт в стека трябва да е за него.`);
   }
   if (siteId === 'life') {
     lines.push('Anti-aging фокус: антиоксиданти, колаген, NAD/CoQ10, омега-3, сън и когниция — комплементарни роли в стека.');

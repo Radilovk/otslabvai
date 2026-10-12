@@ -35,6 +35,14 @@ function tierTotalEur(tier) {
 }
 
 /** Кумулативни ползи със семантична дедупликация */
+/** Цената е за опаковките; „≈ €/месец“ само когато дозите на всички продукти са известни. */
+function tierPriceSubLabel(tier, count) {
+  const monthly = Number(tier.monthly_cost_eur);
+  return monthly > 0
+    ? `≈ ${formatPriceEur(monthly)} на месец · ${count} продукта`
+    : `за опаковките · ${count} продукта`;
+}
+
 function normalizeBenefitsForDisplay(tiers) {
   return buildCumulativeBenefitTiers(tiers);
 }
@@ -66,7 +74,7 @@ function renderProductCard(product) {
       ${variant}
       ${dose ? `<span class="lpr-product-dose">${escapeHtml(dose)}</span>` : ''}
       ${product.why_for_you ? `<span class="lpr-product-why">${escapeHtml(product.why_for_you)}</span>` : ''}
-      <span class="lpr-product-price">${formatPriceEur(product.price_eur)}</span>
+      <span class="lpr-product-price">${formatPriceEur(product.price_eur)}${product.days_supply ? ` · стига за ~${product.days_supply} дни` : ''}</span>
     </div>
   </a>`;
 }
@@ -82,7 +90,7 @@ function renderTier(key, tier, recommended, benefitMeta) {
     <h3>${escapeHtml(tier.name || key)}</h3>
     <p class="lpr-tagline">${escapeHtml(tier.tagline || '')}</p>
     <div class="lpr-price">${formatPriceEur(totalEur)}</div>
-    <div class="lpr-price-sub">месечен стак · ${products.length} продукта</div>
+    <div class="lpr-price-sub">${tierPriceSubLabel(tier, products.length)}</div>
     <ul class="lpr-benefits">${benefits}</ul>
     ${tier.strategy ? `<p class="lpr-strategy">${escapeHtml(tier.strategy)}</p>` : ''}
     <div class="lpr-products-section">

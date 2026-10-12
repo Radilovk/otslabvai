@@ -1,0 +1,40 @@
+name: Auto-curate site products
+
+# Подбор на продукти с висок марж (без промоция) от B2B каталога за daotslabna и Life.
+# Пуска се ръчно; dry-run само показва избора в лога.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'dry-run (само преглед) или apply (запис в KV)'
+        required: true
+        default: 'dry-run'
+        type: choice
+        options: ['dry-run', 'apply']
+      projects:
+        description: 'Проекти (main,life)'
+        required: true
+        default: 'main,life'
+
+concurrency:
+  group: catalog-light-sync
+  cancel-in-progress: false
+
+jobs:
+  curate:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      FITNESS1_API_KEY: ${{ secrets.FITNESS1_API_KEY }}
+      MODE: ${{ inputs.mode }}
+      PROJECTS: ${{ inputs.projects }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Auto-curate
+        run: node scripts/auto-curate-sites.mjs

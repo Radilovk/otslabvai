@@ -406,6 +406,81 @@ export function refreshImportedProductsInContent(pageContent, groupsById) {
   return { updated, missing };
 }
 
+/**
+ * Продукти без portfolio group_id, но с варианти, вързани към каталога по SKU
+ * (ръчно добавени в daotslabna). Checkout-ът ги таксува по каталожната цена и
+ * проверява наличност/марж от каталога — затова сайтът трябва да показва същото.
+ * Варианти, чийто SKU липсва в каталога, стават неналични. Продукти без SKU не се пипат.
+ * @param {object} pageContent
+ * @param {object[]} groups - актуалните каталожни групи (с b2b_price за марж)
+ * @returns {{ updated: number, missing: number, hidden_low_margin: number }}
+ */
+export function refreshSkuLinkedProductsInContent(pageContent, groups) {
+  const bySku = new Map();
+  for (const group of groups || []) {
+    for (const variant of group.variants || []) {
+      if (variant?.sku_id != null) bySku.set(String(variant.sku_id), variant);
+    }
+  }
+
+  let updated = 0;
+  let missing = 0;
+  let hiddenLowMargin = 0;
+
+  for (const comp of pageContent.page_content || []) {
+    if (comp.type !== 'product_category' || !Array.isArray(comp.products)) continue;
+    for (const product of comp.products) {
+      if (getPortfolioGroupId(product)) continue;
+      const variants = (product.public_data?.variants || []).filter((v) => v?.sku);
+      if (!variants.length) continue;
+
+      product.system_data = product.system_data || {};
+      let found = 0;
+      let availablePrices = [];
+      let marginKnown = false;
+      let hasMargin = false;
+
+      for (const v of variants) {
+        const hit = bySku.get(String(v.sku));
+        if (!hit) {
+          v.available = false;
+          continue;
+        }
+        found += 1;
+        const retail = Number(hit.retail_price) || 0;
+        if (retail > 0) v.price = retail;
+        v.available = !!hit.available;
+        if (v.available && retail > 0) availablePrices.push(retail);
+        if (Number(hit.b2b_price) > 0) {
+          marginKnown = true;
+          if (hit.available !== false && variantHasMargin(hit)) hasMargin = true;
+        }
+      }
+
+      if (!found) {
+        if (product.system_data.inventory !== 0) missing += 1;
+        product.system_data.inventory = 0;
+        continue;
+      }
+
+      if (availablePrices.length) {
+        product.public_data.price = Math.min(...availablePrices);
+        if (!(Number(product.system_data.inventory) > 0)) product.system_data.inventory = 1;
+      } else {
+        product.system_data.inventory = 0;
+      }
+
+      if (marginKnown) {
+        if (!hasMargin && product.system_data.margin_eligible !== false) hiddenLowMargin += 1;
+        product.system_data.margin_eligible = hasMargin;
+      }
+      updated += 1;
+    }
+  }
+
+  return { updated, missing, hidden_low_margin: hiddenLowMargin };
+}
+
 const AI_SELECT_MAX_CATALOG_ENTRIES = 180;
 
 function formatCatalogLine(e) {

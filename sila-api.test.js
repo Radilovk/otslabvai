@@ -63,9 +63,11 @@ describe('Sila API', () => {
     expect(raw.available).toBe(false);
   });
 
-  test('normalizeSilaProduct defaults unknown category to Други', () => {
-    const raw = normalizeSilaProduct({ ...sampleSilaRow, category: 'Sila BG' });
-    expect(raw.category).toBe('Други');
+  test('normalizeSilaProduct: непозната категория → по име, иначе Други', () => {
+    const byName = normalizeSilaProduct({ ...sampleSilaRow, category: 'Sila BG' });
+    expect(byName.category).not.toBe('Други');
+    const unknown = normalizeSilaProduct({ ...sampleSilaRow, category: 'Sila BG', product_name: 'Застраховка на пратката', name: 'Застраховка на пратката' });
+    expect(unknown.category).toBe('Други');
   });
 
   test('normalizeSilaProduct maps protein category to Протеини', () => {
@@ -277,5 +279,90 @@ describe('Sila API', () => {
     expect(capturedBody.data).toEqual([{ model_id: '42', taste_id: '3', qtty: 2 }]);
 
     global.fetch = originalFetch;
+  });
+});
+
+describe('Sila: категории по име и дубли с Fitness1', () => {
+  test('classifySilaProductByName', async () => {
+    const { classifySilaProductByName: c } = await import('./sila-api.js');
+    expect(c('100% Creatine Monohydrate')).toBe('Креатин');
+    expect(c('Iso Whey ZERO')).toBe('Протеини');
+    expect(c('Deluxe Protein Bar Box')).toBe('Функционални храни');
+    expect(c('Carb Blocker with Starchlite')).toBe('Отслабване и контрол на теглото');
+    expect(c('Chela Mag B6 Forte')).toBe('Минерали');
+    expect(c('Shaker Monster Bottle')).toBe('Спортни аксесоари и уреди');
+    expect(c('Collagen Peptides Powder')).toBe('Красота и подмладяване');
+    expect(c('Застраховка на пратката')).toBeNull();
+  });
+
+  test('общ баркод: Sila, ако F1 е изчерпан или Sila е по-евтин; SKU и група остават от F1', async () => {
+    const { mergeCatalogProducts } = await import('./sila-api.js');
+    const f1 = [
+      { id: '1', group_id: '10', barcode: 'A', b2b_price: '10.00', available: false, product_name: 'X', category: 'Протеини' },
+      { id: '2', group_id: '10', barcode: 'B', b2b_price: '10.00', available: true, product_name: 'X', category: 'Протеини' },
+      { id: '3', group_id: '11', barcode: 'C', b2b_price: '10.00', available: true, product_name: 'Y', category: 'Протеини' },
+    ];
+    const sila = [
+      { id: 'A', group_id: '9001', barcode: 'A', b2b_price: '12.00', available: true, distributor_ids: { model_id: 'm1', taste_id: 't1' } },
+      { id: 'B', group_id: '9002', barcode: 'B', b2b_price: '8.00', available: true, distributor_ids: { model_id: 'm2', taste_id: 't2' } },
+      { id: 'C', group_id: '9003', barcode: 'C', b2b_price: '11.00', available: true },
+      { id: 'D', group_id: '9004', barcode: 'D', b2b_price: '5.00', available: true, product_name: 'Iso Whey', category: '' },
+    ];
+    const merged = mergeCatalogProducts(f1, sila);
+    const byId = Object.fromEntries(merged.map((p) => [p.id, p]));
+
+    expect(byId['1']).toMatchObject({ distributor: 'sila', available: true, b2b_price: '12.00', group_id: '10' });
+    expect(byId['2']).toMatchObject({ distributor: 'sila', b2b_price: '8.00' });
+    expect(byId['3']).toMatchObject({ distributor: 'fitness1', b2b_price: '10.00' });
+    expect(byId.A).toBeUndefined();
+    expect(byId.D).toMatchObject({ distributor: 'sila', category: 'Протеини' });
+    expect(merged).toHaveLength(4);
+  });
+});
+
+describe('Sila: реални полета от API-то', () => {
+  test('доставната цена е partner_price', async () => {
+    const { normalizeSilaProduct } = await import('./sila-api.js');
+    const p = normalizeSilaProduct({ model_id: '1', taste_id: '2', size_id: null, available: '1', barcode_ean: '123', product_name: 'Iso Whey', brand_name: 'X', regular_price: '94.990', partner_price: '56.990' });
+    expect(p.b2b_price).toBe('56.99');
+    expect(p.regular_price).toBe('94.99');
+    expect(p.available).toBe(true);
+  });
+
+  test('brandfeed дава категория, описание и етикет по model_id', async () => {
+    const { buildSilaImageLookup, enrichSilaProductRow, normalizeSilaProduct } = await import('./sila-api.js');
+    const lookup = buildSilaImageLookup({ data: [{ id: '9902', model_id: '42015', category: 'Ставно възстановяване', description: '<p>Описание</p>', label: '/uf/stickers/x.jpg', image: '/uf/product/x.jpg', taste: [{ id: 11, ean: '91759' }] }] });
+    const row = enrichSilaProductRow({ model_id: '42015', taste_id: '11', product_name: 'Flex' }, lookup);
+    expect(row.category).toBe('Ставно възстановяване');
+    expect(row.image).toMatch(/x\.jpg$/);
+    const p = normalizeSilaProduct({ ...row, available: '1', partner_price: '10', regular_price: '20' });
+    expect(p.category).toBe('Стави и сухожилия > Ставно възстановяване');
+    expect(p.description).toBe('<p>Описание</p>');
+  });
+
+  test('доставка: изрична настройка, иначе първият реален адрес; без адрес → грешка', async () => {
+    const { resolveSilaDelivery } = await import('./sila-api.js');
+    const types = [
+      { delivery_type: 1, options: [{ id: '1723', address: 'България, Бургас, ул. Александровка 21' }, { id: '17302266', address: 'До офис' }] },
+      { delivery_type: 2, options: { 1: 'ПЛОВДИВ - СКЛАД' } },
+    ];
+    expect(resolveSilaDelivery(types)).toEqual({ delivery_type: 1, address_id: '1723', office: null });
+    expect(resolveSilaDelivery([], { delivery_type: 2, office: '1' })).toEqual({ delivery_type: 2, address_id: null, office: '1' });
+    expect(() => resolveSilaDelivery([{ delivery_type: 1, options: [{ id: '1', address: 'До офис' }] }])).toThrow(/адрес/);
+    expect(() => resolveSilaDelivery([], { delivery_type: 2 })).toThrow(/офис/);
+  });
+
+  test('редът към Sila включва size_id при разфасовки', async () => {
+    const { submitSilaOrder } = await import('./sila-api.js');
+    const original = global.fetch;
+    let body = null;
+    global.fetch = async (url, init) => { body = JSON.parse(init.body); return { ok: true, status: 200, text: async () => JSON.stringify({ status: 200, data: { order_id: 5 } }), json: async () => ({ status: 200, data: { order_id: 5 } }) }; };
+    try {
+      await submitSilaOrder('tok', [{ quantity: 2, distributor_ids: { model_id: '1', taste_id: '2', size_id: '3' } }], { delivery_type: 1, address_id: '1723' });
+    } finally {
+      global.fetch = original;
+    }
+    expect(body.data[0]).toEqual({ model_id: '1', taste_id: '2', size_id: '3', qtty: 2 });
+    expect(body).toMatchObject({ delivery_type: 1, address_id: '1723' });
   });
 });

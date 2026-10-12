@@ -11,10 +11,10 @@ import {
 
 export { scoreCategoryForGoal, scoreProductForGoal, ADVISOR_EXCLUDED_CATEGORY_PATTERNS };
 
-import { FITNESS1_CATALOG_CATEGORIES } from './portfolio-fitness1-categories.js';
+import { FITNESS1_CURRENT_CATEGORIES } from './portfolio-fitness1-categories.js';
 
 /** Fallback категории ако bootstrap още не е зареден (реални Fitness1 имена) */
-export const FALLBACK_CATALOG_CATEGORIES = FITNESS1_CATALOG_CATEGORIES;
+export const FALLBACK_CATALOG_CATEGORIES = FITNESS1_CURRENT_CATEGORIES;
 
 /** Брой категории, маркирани по подразбиране за AI търсене */
 export const DEFAULT_ADVISOR_SEARCH_CATEGORIES = 3;
@@ -201,7 +201,8 @@ export const ADVISOR_STEPS = [
       { value: 'diabetes', label: 'Диабет / инсулинова резистентност' },
       { value: 'thyroid', label: 'Заболяване на щитовидната жлеза' },
       { value: 'autoimmune', label: 'Автоимунно заболяване' },
-      { value: 'kidney', label: 'Бъбречно или чернодробно заболяване' },
+      { value: 'kidney', label: 'Бъбречно заболяване' },
+      { value: 'liver', label: 'Чернодробно заболяване' },
       { value: 'cardiovascular', label: 'Сърдечно-съдово заболяване' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
       { value: 'other', label: 'Друго', allowsText: true },

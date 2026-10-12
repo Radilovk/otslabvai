@@ -9,7 +9,7 @@ import {
   productMatchesAnyKeyword,
   productSearchText,
 } from './protocol-safety-rules.js';
-import { productsConflictInStack } from './portfolio-stack-slots.js';
+import { productsConflictInStack, classifyProductSlot } from './portfolio-stack-slots.js';
 import { getProductPriceEur } from './protocol-quiz-engine.js';
 
 const TIER_LIMITS = {
@@ -170,6 +170,80 @@ export function composeProtocolStacks(profile, rankedEntries, options = {}) {
     tiers,
     meta: {
       ranked_pool_size: rankedEntries.length,
+      must_include_count: mustInclude.length,
+      tier_counts: {
+        basic: tiers.basic.products.length,
+        optimal: tiers.optimal.products.length,
+        premium: tiers.premium.products.length,
+      },
+    },
+  };
+}
+
+const CORE_GOALS = new Set(['weight-loss', 'appetite-control', 'fat-burning', 'fat-metabolism']);
+const CORE_SLOTS = new Set(['fat_burner', 'metabolism']);
+const CORE_POOL_SIZE = 5;
+const SUPPORT_MAX_PRICE_EUR = 45;
+
+/** Основен продукт за отслабване (бърнър, метаболизъм, апетит). */
+export function isWeightLossCoreProduct(product) {
+  const goals = (product.system_data?.goals || []).map((g) => String(g).toLowerCase());
+  if (goals.some((g) => CORE_GOALS.has(g))) return true;
+  return CORE_SLOTS.has(classifyProductSlot(product));
+}
+
+/**
+ * Модел „1 основен продукт + подкрепа“ (daotslabna):
+ *   basic   — най-евтиният от топ основните продукти, сам;
+ *   optimal — най-добрият основен продукт + 1 подкрепа;
+ *   premium — най-добрият основен продукт + 2 подкрепи.
+ * Подкрепата е без конфликт с основния продукт и до разумна цена.
+ * Връща null, ако няма основен продукт (напр. „без стимуланти“) — тогава се ползва общият композитор.
+ */
+export function composeCoreSupportStacks(profile, rankedEntries, options = {}) {
+  const meta = options.tierMeta || TIER_META;
+  const mustInclude = findMustIncludeProducts(profile, rankedEntries);
+  const cores = rankedEntries.filter(({ product }) => isWeightLossCoreProduct(product)).map((e) => e.product);
+  if (!cores.length) return null;
+
+  const bestCore = cores[0];
+  const topCores = cores.slice(0, CORE_POOL_SIZE);
+  const basicCore = topCores.reduce((min, p) => (getProductPriceEur(p) < getProductPriceEur(min) ? p : min), topCores[0]);
+
+  const supports = [];
+  const candidates = [
+    ...mustInclude,
+    ...rankedEntries.map((e) => e.product).filter((p) => !isWeightLossCoreProduct(p)),
+  ];
+  for (const product of candidates) {
+    if (supports.length >= 2) break;
+    if (supports.some((s) => s.product_id === product.product_id)) continue;
+    const isMust = mustInclude.includes(product);
+    if (!isMust && getProductPriceEur(product) > SUPPORT_MAX_PRICE_EUR) continue;
+    if (productsConflictInStack(bestCore, product)) continue;
+    if (supports.some((s) => productsConflictInStack(s, product))) continue;
+    supports.push(product);
+  }
+
+  const withMust = (core) => [core, ...mustInclude.filter((m) => m.product_id !== core.product_id && !productsConflictInStack(core, m))];
+  const tierProducts = {
+    basic: withMust(basicCore).slice(0, 1 + mustInclude.length),
+    optimal: [bestCore, ...supports.slice(0, 1)],
+    premium: [bestCore, ...supports.slice(0, 2)],
+  };
+
+  const tiers = {};
+  for (const key of ['basic', 'optimal', 'premium']) {
+    tiers[key] = { ...meta[key], products: buildTierProducts(tierProducts[key]) };
+  }
+
+  return {
+    recommended_tier: 'optimal',
+    tiers,
+    meta: {
+      mode: 'core_support',
+      ranked_pool_size: rankedEntries.length,
+      core_pool_size: cores.length,
       must_include_count: mustInclude.length,
       tier_counts: {
         basic: tiers.basic.products.length,
