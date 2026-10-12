@@ -432,7 +432,7 @@ async function diagnoseRound4() {
     }
     if (best && best.j >= 0.5) matches.push({ sg, fg: best.c.g, j: best.j });
   }
-  console.log(`Sila групи (налични): ${silaGroups.length}; с марка, която я има и във Fitness1: ${sameBrand}; вероятни дубли по име (Jaccard ≥0.5): ${matches.length}`);
+  console.log(`Sila групи (налични) след сливането: ${silaGroups.length}; с марка, която я има и във Fitness1: ${sameBrand}; останали кандидати по име (Jaccard ≥0.5, за ръчна проверка): ${matches.length}`);
   const buckets = { '0.5-0.6': 0, '0.6-0.75': 0, '0.75-1': 0, '1': 0 };
   for (const m of matches) buckets[m.j === 1 ? '1' : m.j >= 0.75 ? '0.75-1' : m.j >= 0.6 ? '0.6-0.75' : '0.5-0.6'] += 1;
   show('по сходство', buckets);
@@ -467,6 +467,6 @@ async function diagnoseRound4() {
   show('partner_price спрямо regular_price (налични)', hist);
 }
 
-for (const fn of [diagnoseRound3, diagnoseRound4]) {
+for (const fn of [diagnoseRound4]) {
   try { await fn(); } catch (e) { console.log(`!!! ${fn.name}: ${e.stack || e.message}`); }
 }
