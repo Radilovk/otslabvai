@@ -47,7 +47,7 @@ export const SITE_GOAL_KEYWORDS = {
 
 const CATALOG_GOAL_MATCHERS = {
   longevity: ['дълголет', 'антиейдж', 'anti-aging', 'antiaging', 'клетъч', 'регенера', 'longevity', 'brain', 'мозък', 'cognition', 'когнит'],
-  otshalvane: ['отслаб', 'slim', 'weight', 'fat', 'изгар', 'апетит', 'метабол', 'диет', 'detox'],
+  otshalvane: ['отслаб', 'slim', 'weight', 'fat', 'изгар', 'апетит', 'appetite', 'satiety', 'метабол', 'диет', 'detox'],
 };
 
 function scoreCatalogGoalMetadata(product, siteId = 'life') {
@@ -108,6 +108,8 @@ function getSitePriorityKeywordMap(siteId, priority = '') {
 function getStimulantExclusion(profile, product) {
   const tol = profile.stimulant_tolerance;
   if (tol !== 'avoid' && tol !== 'sensitive') return null;
+  // Подбраните „без стимуланти“ продукти (CLA, карнитин, липотропни) имат „burner“ в името — не ги изключваме.
+  if ((product.system_data?.goals || []).includes('stimulant-free')) return null;
   const groups = getProductConflictGroups(product);
   if (groups.includes('stimulant')) return 'stimulant_sensitivity';
   if (tol === 'avoid' && groups.includes('thermogenic')) return 'stimulant_free_requested';

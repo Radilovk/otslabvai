@@ -55,7 +55,7 @@ describe('portfolio-advisor-commerce', () => {
     })).toBe(10);
   });
 
-  test('small client promo with good profit stays eligible', () => {
+  test('client promo is excluded by default; old behaviour available via exclude_client_promo: false', () => {
     const group = makeGroup({
       variants: [{
         sku_id: '1',
@@ -74,7 +74,8 @@ describe('portfolio-advisor-commerce', () => {
     expect(stats.profit_pct).toBeCloseTo(16.7, 1);
     expect(stats.is_on_promo).toBe(true);
     const product = attachAdvisorCommercialStats(portfolioGroupToSiteProduct(group), group);
-    expect(isExcludedByAdvisorCommerce(product)).toBe(false);
+    expect(isExcludedByAdvisorCommerce(product)).toBe(true);
+    expect(isExcludedByAdvisorCommerce(product, { exclude_client_promo: false })).toBe(false);
     expect(scoreAdvisorCommercialBoost(product)).toBeGreaterThan(0);
   });
 

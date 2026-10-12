@@ -36,6 +36,11 @@ export const ADVISOR_COMMERCE_DEFAULTS = {
   profit_pct_weight: 0.18,
   /** Legacy: score boost per 10 percentage points of distributor discount. */
   discount_pct_weight: 0.06,
+  /**
+   * Продукти с видима промо отстъпка за клиента не се препоръчват (търсим пълна цена и висок марж).
+   * Ако без тях пулът стане < 3, prepare се връща към пълния пул.
+   */
+  exclude_client_promo: true,
 };
 
 /** Merge saved KV settings with defaults and clamp to safe ranges. */
@@ -54,6 +59,7 @@ export function normalizeAdvisorCommerceSettings(raw = {}) {
   };
   return {
     enabled: src.enabled !== false,
+    exclude_client_promo: src.exclude_client_promo !== false,
     min_distributor_discount_pct: clamp(
       src.min_distributor_discount_pct,
       0,
@@ -229,6 +235,7 @@ export function isExcludedByAdvisorCommerce(product, options = ADVISOR_COMMERCE_
   if (!stats) return false;
 
   if (isDeepUnprofitablePromo(stats, opts)) return true;
+  if (opts.exclude_client_promo && (stats.customer_discount_pct || 0) > 0) return true;
 
   const dist = stats.distributor_discount_pct || 0;
   const markup = stats.margin_pct || 0;

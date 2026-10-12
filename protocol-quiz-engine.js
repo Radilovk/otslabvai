@@ -58,7 +58,8 @@ const PEPTIDE_KEYWORDS = [
 export function extractProductsFromContent(pageContent) {
   if (!pageContent?.page_content) return [];
   return pageContent.page_content
-    .filter((c) => c.type === 'product_category' && Array.isArray(c.products))
+    // Скритите категории не се виждат от клиентите — консултантът не препоръчва от тях.
+    .filter((c) => c.type === 'product_category' && Array.isArray(c.products) && !c.is_hidden)
     .flatMap((c) => c.products);
 }
 
