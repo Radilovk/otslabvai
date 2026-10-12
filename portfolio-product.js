@@ -440,7 +440,8 @@ async function loadProduct() {
     for (const v of product.variants || []) {
       v.image = v.image || product.image || '';
     }
-    product.variants = (product.variants || []).filter((v) => v.available);
+    const unlocked = isLowMarginPromoUnlocked();
+    product.variants = (product.variants || []).filter((v) => v.available && (v.listed !== false || unlocked));
     if (!product.variants.length) {
       DOM.root.innerHTML = '<div class="pf-error">Продуктът не е наличен в момента.</div>';
       return;

@@ -9,9 +9,10 @@ import { promoIndexStats } from './portfolio-promo-pricing.js';
 import { sanitizeIndexEntryForClient, sanitizeVariantForClient } from './portfolio-api.js';
 
 describe('portfolio-promo-catalog', () => {
-  test('promoUnlocksLowMargin when any promo code is active', () => {
+  test('promoUnlocksLowMargin only for codes the admin flagged show_low_margin', () => {
     expect(promoUnlocksLowMargin(null)).toBe(false);
-    expect(promoUnlocksLowMargin({ code: 'WELCOME10', discountType: 'percentage', discount: 10 })).toBe(true);
+    expect(promoUnlocksLowMargin({ code: 'WELCOME10', discountType: 'percentage', discount: 10 })).toBe(false);
+    expect(promoUnlocksLowMargin({ code: 'VIP', discountType: 'percentage', discount: 10, show_low_margin: true })).toBe(true);
   });
 
   test('server promoIndexStats applies cart percent from client final price', () => {
@@ -42,6 +43,9 @@ describe('portfolio-promo-catalog', () => {
     expect(entry.max_margin).toBeUndefined();
     const v = sanitizeVariantForClient({ sku_id: '1', retail_price: 10, b2b_price: 6, margin_eur: 4, distributor: 'sila' });
     expect(v).toEqual({ sku_id: '1', retail_price: 10 });
+    // марж под прага → само флаг, без числа
+    const low = sanitizeVariantForClient({ sku_id: '2', retail_price: 10, b2b_price: 9 });
+    expect(low).toEqual({ sku_id: '2', retail_price: 10, listed: false });
   });
 
   test('formatIndexPriceHtml shows normal price until server promo prices arrive', async () => {

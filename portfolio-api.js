@@ -431,9 +431,12 @@ export function buildCatalogMeta(groups, settings = null) {
     }
 
     const availableVariants = g.variants.filter((v) => v.available);
-    const priceStats = summarizeGroupPricing(availableVariants);
-    const indexPricing = buildIndexVariantPricing(availableVariants);
-    const packs = collectAvailablePacks(availableVariants);
+    // Цена „от“, разфасовки и промо — само от вариантите с марж (другите не се показват и не се продават).
+    const sellableVariants = availableVariants.filter((v) => variantHasMargin(v));
+    const shownVariants = sellableVariants.length ? sellableVariants : availableVariants;
+    const priceStats = summarizeGroupPricing(shownVariants);
+    const indexPricing = buildIndexVariantPricing(shownVariants);
+    const packs = collectAvailablePacks(shownVariants);
     const marginStats = summarizeGroupMargin(g);
 
     const marginEligible = availableVariants.length > 0 && groupHasMargin(g);
@@ -492,6 +495,9 @@ export function buildCatalogMeta(groups, settings = null) {
 /** Клиентът не получава нищо, от което да се изведе доставната цена или доставчикът. */
 export function sanitizeVariantForClient(variant) {
   if (!variant) return variant;
+  if (Number(variant.b2b_price) > 0 && !variantHasMargin(variant)) {
+    variant = { ...variant, listed: false };
+  }
   const {
     b2b_price,
     markup_percent,
@@ -1366,7 +1372,7 @@ async function promoAllowsLowMargin(code, env) {
   if (!raw) return false;
   const codes = await getPromoCodes(env);
   const promo = codes.find((p) => p.code === raw);
-  return validatePromoRecord(promo).valid;
+  return promo?.show_low_margin === true && validatePromoRecord(promo).valid;
 }
 
 async function handleGetCatalog(request, env) {
@@ -1565,7 +1571,7 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
       errors.push(`${found.group_name} (${found.variant.option || found.variant.pack}) не е наличен.`);
       continue;
     }
-    const allowLowMargin = !!promoRecord;
+    const allowLowMargin = promoRecord?.show_low_margin === true;
     if (!allowLowMargin) {
       if (Number(found.variant.b2b_price) > 0 && !variantHasMargin(found.variant)) {
         errors.push(`${found.group_name} не е наличен за поръчка.`);
