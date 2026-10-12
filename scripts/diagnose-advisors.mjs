@@ -197,3 +197,37 @@ async function diagnosePortfolio() {
 await diagnoseSite('main');
 await diagnoseSite('life');
 await diagnosePortfolio();
+
+/** Снимка на каталозите за офлайн анализ (без клиентски данни, без доставни цени). */
+async function exportSnapshot() {
+  const fs = await import('node:fs');
+  const out = {};
+  const compact = (p) => ({
+    id: p.product_id,
+    name: p.public_data?.name,
+    brand: p.public_data?.brand,
+    cat_top: p.system_data?.portfolio?.category_top || '',
+    cat: p.system_data?.portfolio?.category || '',
+    goals: p.system_data?.goals || [],
+    price: getProductPriceEur(p),
+    inv: p.system_data?.inventory,
+    margin_eligible: p.system_data?.margin_eligible,
+    variants: (p.public_data?.variants || []).map((v) => [v.option_name, v.price, v.available !== false]),
+    packaging: p.public_data?.packaging || null,
+    intake: p.public_data?.recommended_intake || '',
+    ingredients: (p.public_data?.ingredients || []).map((i) => i.name).slice(0, 15),
+    text: String(p.public_data?.description || '').slice(0, 1500),
+    tagline: p.public_data?.tagline || '',
+  });
+  for (const site of ['main', 'life']) {
+    const content = await loadProjectContent(env, site);
+    out[site] = extractProductsFromContent(content || {}).map(compact);
+  }
+  const products = await loadPortfolioCatalogProducts(env);
+  out.portfolio = filterPortfolioEligibleProducts(products, { selectionMode: 'package' }).map(compact);
+  fs.mkdirSync('diag-out', { recursive: true });
+  fs.writeFileSync('diag-out/advisor-catalog-snapshot.json', JSON.stringify(out));
+  console.log(`снимка: main ${out.main.length}, life ${out.life.length}, portfolio ${out.portfolio.length}`);
+}
+
+await exportSnapshot();

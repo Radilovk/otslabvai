@@ -25,3 +25,8 @@ jobs:
       - run: npm ci
       - name: Diagnose
         run: node scripts/diagnose-advisors.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: advisor-catalog-snapshot
+          path: diag-out/
+          retention-days: 3
