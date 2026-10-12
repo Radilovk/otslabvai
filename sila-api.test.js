@@ -367,44 +367,23 @@ describe('Sila: реални полета от API-то', () => {
   });
 });
 
-describe('един продукт при двата доставчика', () => {
-  const cases = [
-    ['Iso-XP Whey Protein Isolate', 'Iso-XP | 100% Whey Isolate', true],
-    ['Animal Flex 44 Packs', 'Animal Flex', true],
-    ['Diet Whey Protein', 'Diet Whey', true],
-    ['Endurance - Energy', 'Endurance Energy | Velocity Fuel Energy', true],
-    ['Burn4All Extreme', 'Burn4All Extreme | High Thermogenesis', true],
-    ['Creatine Monohydrate Unflavoured', 'Creatine Monohydrate', true],
-    ['BCAA Amino-Hydrate', 'BCAA Amino-Hydrate | Next Generation', true],
-    ['3-Creatine Malate Powder', 'Citrulline Malate Powder', false],
-    ['C4 Pre-Workout Shot', 'C4 Original Pre-Workout', false],
-    ['Melatonin Gummies - Strawberry Flavored', 'Kids Melatonin Gummies 1 mg | Strawberry', false],
-    ['Albion Chelated Zinc 30mg.', 'Albion Chelated Calcium 180 mg', false],
-    ['Saw Palmetto - Maximum Strength 320mg.', 'Saw Palmetto 540 mg', false],
-    ['ABE Gel-Ultimate Pre-Workout', 'ABE - All Black Everything | Ultimate Pre-Workout', false],
-  ];
-  test.each(cases)('%s ↔ %s → %s', async (a, b, expected) => {
-    const { productNameTokens: t, isSameProductName } = await import('./sila-api.js');
-    expect(isSameProductName(t(a, 'x'), t(b, 'x'), { nameA: a, nameB: b, mainB: t(b.split('|')[0], 'x') })).toBe(expected);
-  });
-
-  test('сливане: Sila групата става варианти на Fitness1 продукта; общ вариант → по-евтиният под SKU на Fitness1', async () => {
-    const { mergeCrossDistributorGroups } = await import('./sila-api.js');
-    const groups = [
-      { group_id: '100', name: 'Diet Whey', brand: 'Applied Nutrition', variants: [
-        { sku_id: 'f1', option: 'Chocolate', pack: '1 kg', b2b_price: 20, available: true, distributor: 'fitness1' },
-      ] },
-      { group_id: '90000001', name: 'Diet Whey Protein', brand: 'Applied Nutrition', variants: [
-        { sku_id: 's1', option: 'Chocolate', pack: '1 kg', b2b_price: 18, available: true, distributor: 'sila' },
-        { sku_id: 's2', option: 'Banana', pack: '1 kg', b2b_price: 18, available: true, distributor: 'sila' },
-      ] },
-      { group_id: '90000002', name: 'Other', brand: 'Applied Nutrition', variants: [] },
+describe('един каталог по баркод', () => {
+  test('модел на Sila с общ баркод → останалите му варианти влизат в продукта на Fitness1', async () => {
+    const { mergeCatalogProducts } = await import('./sila-api.js');
+    const f1 = [
+      { id: 'f1', group_id: '100', product_id: 'p100', barcode: 'A', b2b_price: '20.00', available: true, product_name: 'Diet Whey', brand_name: 'Applied Nutrition', brand_id: '7', category: 'Протеини > Изолат', option: 'Шоколад', pack: '1 кг' },
     ];
-    const out = mergeCrossDistributorGroups(groups);
-    expect(out.map((g) => g.group_id)).toEqual(['100', '90000002']);
-    const v = out[0].variants;
-    expect(v).toHaveLength(2);
-    expect(v[0]).toMatchObject({ sku_id: 'f1', distributor: 'sila', b2b_price: 18 });
-    expect(v[1]).toMatchObject({ sku_id: 's2', option: 'Banana' });
+    const sila = [
+      { id: 'A', group_id: '90000001', barcode: 'A', b2b_price: '18.00', available: true, product_name: 'Diet Whey Protein', brand_name: 'Applied Nutrition', distributor_ids: { model_id: 'm1', taste_id: 't1' } },
+      { id: 'B', group_id: '90000001', barcode: 'B', b2b_price: '18.00', available: true, product_name: 'Diet Whey Protein', brand_name: 'Applied Nutrition', option: 'Banana', distributor_ids: { model_id: 'm1', taste_id: 't2' } },
+      { id: 'C', group_id: '90000002', barcode: 'C', b2b_price: '9.00', available: true, product_name: 'Iso Whey', brand_name: 'APPLIED NUTRITION', category: '' },
+    ];
+    const merged = mergeCatalogProducts(f1, sila);
+    const byId = Object.fromEntries(merged.map((p) => [p.id, p]));
+
+    expect(byId.f1).toMatchObject({ distributor: 'sila', b2b_price: '18.00', group_id: '100' });
+    expect(byId.A).toBeUndefined();
+    expect(byId.B).toMatchObject({ group_id: '100', product_name: 'Diet Whey', category: 'Протеини > Изолат', option: 'Banana', distributor: 'sila' });
+    expect(byId.C).toMatchObject({ group_id: '90000002', brand_name: 'Applied Nutrition', category: 'Протеини' });
   });
 });

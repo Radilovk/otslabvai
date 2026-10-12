@@ -413,6 +413,8 @@ async function diagnoseRound4() {
   const groups = groupRawProducts(merged, settings);
   const f1Groups = groups.filter((g) => Number(g.group_id) < 90000000);
   const silaGroups = groups.filter((g) => Number(g.group_id) >= 90000000 && g.variants.some((v) => v.available));
+  const linkedGroups = f1Groups.filter((g) => g.variants.some((v) => v.distributor === 'sila') && g.variants.some((v) => v.distributor !== 'sila'));
+  console.log(`Fitness1 продукти, обединени с варианти от Sila по баркод: ${linkedGroups.length}`);
   const byBrand = new Map();
   for (const g of f1Groups) {
     const k = normBrand(g.brand);
@@ -467,6 +469,6 @@ async function diagnoseRound4() {
   show('partner_price спрямо regular_price (налични)', hist);
 }
 
-for (const fn of [diagnoseRound4]) {
+for (const fn of [diagnoseRound4, diagnoseRound3]) {
   try { await fn(); } catch (e) { console.log(`!!! ${fn.name}: ${e.stack || e.message}`); }
 }

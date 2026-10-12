@@ -80,7 +80,6 @@ import {
   submitSilaOrder,
   fetchSilaDeliveryTypes,
   resolveSilaDelivery,
-  mergeCrossDistributorGroups,
   mergeCatalogProducts,
   getSilaApiToken,
   listSilaApiTokenCandidates,
@@ -408,7 +407,7 @@ export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
     g.variants.push(variant);
   }
 
-  const listed = mergeCrossDistributorGroups(Array.from(groups.values()));
+  const listed = Array.from(groups.values());
   for (const g of listed) finalizeGroupImages(g);
   return listed
     .filter((g) => resolveCatalogImage({ image: g.image }))

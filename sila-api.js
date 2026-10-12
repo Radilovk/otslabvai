@@ -797,9 +797,12 @@ export function shouldSourceFromSila(f1Row, silaRow) {
 }
 
 /**
- * Merge catalogs: Fitness1 first, then Sila-only rows (deduped by barcode, brands unified by name).
- * При общ баркод редът остава във Fitness1 групата (SKU, категория, описание не се сменят),
- * но се снабдява от Sila, когато е по-изгодно или единствено налично (shouldSourceFromSila).
+ * Един каталог от двата доставчика, само по баркод:
+ *  1. Общ баркод → един артикул (SKU на Fitness1), снабдяван от по-изгодния: наличен, после
+ *     по-ниска доставна цена (shouldSourceFromSila).
+ *  2. Модел на Sila, от който поне един баркод е във Fitness1 продукт → останалите му варианти
+ *     (разфасовки/вкусове без общ баркод) влизат в същия продукт — една страница за клиента.
+ *  3. Модел без общ баркод → отделен продукт (марката се изписва както при Fitness1).
  */
 export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
   const f1 = (fitness1Products || []).map((p) => ({ ...p, distributor: DISTRIBUTOR_FITNESS1 }));
@@ -817,6 +820,16 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
     const bk = normalizeBrandKey(p.brand_name);
     if (bk && p.brand_id) brandByName.set(bk, String(p.brand_id));
     if (bk && p.brand_name && !brandDisplayByKey.has(bk)) brandDisplayByKey.set(bk, p.brand_name);
+  }
+
+  // Модел на Sila → Fitness1 продукт, по общ баркод на който и да е негов вариант.
+  const f1RowByModel = new Map();
+  for (const raw of silaProducts || []) {
+    const bc = String(raw.barcode || '').trim();
+    const f1Row = bc ? f1ByBarcode.get(bc) : null;
+    if (f1Row && raw.group_id != null && !f1RowByModel.has(String(raw.group_id))) {
+      f1RowByModel.set(String(raw.group_id), f1Row);
+    }
   }
 
   const merged = [...f1];
@@ -838,6 +851,21 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
     if (bc && seenBarcodes.has(bc)) continue;
 
     const item = { ...raw, distributor: raw.distributor || DISTRIBUTOR_SILA };
+    const linked = f1RowByModel.get(String(raw.group_id));
+    if (linked) {
+      // Вариант на същия продукт: страницата, името, марката и категорията са на Fitness1.
+      Object.assign(item, {
+        group_id: linked.group_id,
+        product_id: linked.product_id,
+        product_name: linked.product_name,
+        brand_id: linked.brand_id,
+        brand_name: linked.brand_name,
+        category: linked.category,
+      });
+      merged.push(item);
+      if (bc) seenBarcodes.add(bc);
+      continue;
+    }
     const bk = normalizeBrandKey(item.brand_name);
     if (bk && brandByName.has(bk)) {
       item.brand_id = brandByName.get(bk);
@@ -855,121 +883,6 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
   }
 
   return merged;
-}
-
-const NAME_STOPWORDS = new Set(['with', 'and', 'for', 'the', 'от', 'за', 'със', 'с', 'и']);
-const NAME_UNITS = /\b\d+([.,]\d+)?\s*(caps?|capsules?|softgels?|soft|vcaps?|tabs?|tablets?|serv\w*|g|gr|kg|ml|l|lbs?|mg|mcg|iu|pcs|packs?|sachets?|x)\b\.?/gi;
-/** Форма или аудитория: различна стойност = различен продукт („C4 Shot“ ≠ „C4 Pre-Workout“, „Kids Melatonin“ ≠ „Melatonin“). */
-const DISTINCT_WORDS = new Set(['shot', 'shots', 'gel', 'gels', 'bar', 'bars', 'gummies', 'gummy', 'liquid', 'powder', 'drink', 'cookie', 'cookies', 'box', 'rtd', 'chewable', 'effervescent', 'spray', 'kids', 'kid', 'junior', 'women', 'woman', 'men', 'man', 'vegan', 'night', 'pm', 'zero']);
-const DOSE_RE = /(\d+(?:[.,]\d+)?)\s*(mg|mcg|µg|iu|ie)\b/gi;
-
-/** Токени на името без марка, разфасовка, дозировка и пълнежни думи. */
-export function productNameTokens(name, brand) {
-  const b = normalizeBrandKey(brand).replace(/[^a-z0-9а-я]/g, '');
-  return new Set(String(name || '').toLowerCase()
-    .replace(/\[.*?\]|\(.*?\)/g, ' ')
-    .replace(NAME_UNITS, ' ')
-    .split(/[^a-z0-9а-я+%]+/i)
-    .map((t) => t.trim())
-    .filter((t) => t.length > 1 && !/^\d+$/.test(t) && t !== b && !NAME_STOPWORDS.has(t)));
-}
-
-function tokenJaccard(a, b) {
-  let inter = 0;
-  for (const t of a) if (b.has(t)) inter += 1;
-  return inter / Math.max(1, a.size + b.size - inter);
-}
-
-function doseSet(name) {
-  return new Set([...String(name || '').matchAll(DOSE_RE)].map((m) => `${m[1].replace(',', '.')}${m[2].toLowerCase()}`));
-}
-
-function distinctWords(tokens) {
-  return [...tokens].filter((t) => DISTINCT_WORDS.has(t)).sort().join(',');
-}
-
-/**
- * Същият продукт при двата доставчика (марката се проверява отделно).
- * Fitness1 пише „Име | подзаглавие“ — основното име е частта преди „|“.
- * Различни дози, форма (шот/гел/бар/течен…) или аудитория (деца/жени/веган) → различни продукти.
- */
-export function isSameProductName(a, b, { nameA = '', nameB = '', mainB = null } = {}) {
-  if (!a.size || !b.size) return false;
-  if (distinctWords(a) !== distinctWords(b)) return false;
-  const dosesA = doseSet(nameA);
-  const dosesB = doseSet(nameB);
-  if (dosesA.size && dosesB.size && ![...dosesA].some((d) => dosesB.has(d))) return false;
-
-  let inter = 0;
-  for (const t of a) if (b.has(t)) inter += 1;
-  const symDiff = a.size + b.size - 2 * inter;
-  const j = inter / Math.max(1, a.size + b.size - inter);
-  if (j === 1) return true;
-  if (inter >= 2 && j >= 0.6 && symDiff <= 2) return true;
-  // „Burn4All Extreme“ ↔ „Burn4All Extreme | High Thermogenesis“
-  if (mainB && mainB.size >= 2) {
-    let covered = 0;
-    for (const t of mainB) if (a.has(t)) covered += 1;
-    if (covered === mainB.size && a.size - covered <= 1) return true;
-  }
-  return false;
-}
-
-const variantKey = (v) => `${String(v.option || '').trim().toLowerCase()}|${String(v.pack || '').trim().toLowerCase()}`;
-
-/**
- * Един продукт = една страница, независимо от доставчика. Sila група, която е същият продукт като
- * Fitness1 група (марка + име), се влива в нея: еднакъв вариант → остава по-изгодният за нас
- * (наличен, после по-ниска доставна цена) под SKU-то на Fitness1; нов вариант → добавя се.
- * Клиентът вижда името и марката на Fitness1 групата.
- * @param {object[]} groups - резултат от groupRawProducts (с цени)
- */
-export function mergeCrossDistributorGroups(groups) {
-  const isSilaGroup = (g) => Number(g.group_id) >= SILA_GROUP_ID_OFFSET;
-  const f1ByBrand = new Map();
-  for (const g of groups) {
-    if (isSilaGroup(g)) continue;
-    const key = normalizeBrandKey(g.brand);
-    if (!key) continue;
-    if (!f1ByBrand.has(key)) f1ByBrand.set(key, []);
-    const main = String(g.name || '').split('|')[0];
-    f1ByBrand.get(key).push({ g, tokens: productNameTokens(g.name, g.brand), mainTokens: productNameTokens(main, g.brand) });
-  }
-
-  const absorbed = new Set();
-  for (const sg of groups) {
-    if (!isSilaGroup(sg)) continue;
-    const candidates = f1ByBrand.get(normalizeBrandKey(sg.brand)) || [];
-    if (!candidates.length) continue;
-    const tokens = productNameTokens(sg.name, sg.brand);
-    let best = null;
-    for (const c of candidates) {
-      const j = tokenJaccard(tokens, c.tokens);
-      if (isSameProductName(tokens, c.tokens, { nameA: sg.name, nameB: c.g.name, mainB: c.mainTokens }) && (!best || j > best.j)) best = { j, g: c.g };
-    }
-    if (!best) continue;
-
-    const target = best.g;
-    const byKey = new Map(target.variants.map((v) => [variantKey(v), v]));
-    for (const sv of sg.variants) {
-      const existing = byKey.get(variantKey(sv));
-      if (!existing) {
-        target.variants.push(sv);
-        byKey.set(variantKey(sv), sv);
-        continue;
-      }
-      const silaBetter = sv.available && (!existing.available || (Number(sv.b2b_price) > 0 && Number(sv.b2b_price) < Number(existing.b2b_price)));
-      if (silaBetter) {
-        const { sku_id: keepSku } = existing;
-        Object.assign(existing, sv, { sku_id: keepSku });
-      }
-    }
-    if (!target.image && sg.image) target.image = sg.image;
-    if (!target.description && sg.description) target.description = sg.description;
-    absorbed.add(sg.group_id);
-  }
-
-  return absorbed.size ? groups.filter((g) => !absorbed.has(g.group_id)) : groups;
 }
 
 export function isSilaDistributor(distributor) {
