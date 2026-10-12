@@ -377,6 +377,88 @@ async function diagnoseWorkerLiveStock() {
   show('от worker-а', await res.json().catch(() => null));
 }
 
-for (const fn of [diagnoseWorkerLiveStock, diagnoseRound3]) {
+const normBrand = (b) => String(b || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9а-я]/g, '');
+const UNIT = /\b\d+([.,]\d+)?\s*(caps?|capsules?|softgels?|soft|vcaps?|tabs?|tablets?|serv\w*|g|gr|kg|ml|l|lbs?|mg|mcg|iu|pcs|x)\b\.?/gi;
+function nameTokens(name, brand) {
+  const b = normBrand(brand);
+  return new Set(String(name || '').toLowerCase()
+    .replace(/\[.*?\]|\(.*?\)/g, ' ')
+    .replace(UNIT, ' ')
+    .split(/[^a-z0-9а-я+%]+/i)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 1 && !/^\d+$/.test(t) && normBrand(t) !== b && !['with', 'and', 'for', 'the', 'от', 'за', 'със', 'с', 'и'].includes(t)));
+}
+const jaccard = (a, b) => { let i = 0; for (const t of a) if (b.has(t)) i += 1; return i / Math.max(1, a.size + b.size - i); };
+
+async function diagnoseRound4() {
+  section('ROUND 4: ДУБЛИ МЕЖДУ ДОСТАВЧИЦИТЕ И ПРОМОЦИИ');
+  const settings = mergeSettingsForCatalogSync(DEFAULT_SETTINGS, (await kvGet('portfolio_settings')) || {});
+  show('ценова политика (KV)', settings.pricing_policy || { standard_mode: settings.standard_mode, below_regular_percent: settings.below_regular_percent, min_profit_eur: settings.min_profit_eur });
+  show('настройки на консултанта (KV)', ((await kvGet('portfolio_advisor_settings')) || {}).commerce || '(по подразбиране)');
+  const f1 = await fetchFitness1Products(f1Key);
+  const sila = await fetchSilaProducts(silaToken);
+  const f1Avail = f1.filter((p) => p.available === true);
+  console.log(`Fitness1 налични SKU: ${f1Avail.length}; с баркод: ${f1Avail.filter((p) => String(p.barcode || '').trim()).length}`);
+  console.log(`Sila налични SKU: ${sila.length}; с баркод: ${sila.filter((p) => String(p.barcode || '').trim()).length}`);
+
+  const merged = mergeCatalogProducts(f1, sila);
+  const groups = groupRawProducts(merged, settings);
+  const f1Groups = groups.filter((g) => Number(g.group_id) < 90000000);
+  const silaGroups = groups.filter((g) => Number(g.group_id) >= 90000000 && g.variants.some((v) => v.available));
+  const byBrand = new Map();
+  for (const g of f1Groups) {
+    const k = normBrand(g.brand);
+    if (!byBrand.has(k)) byBrand.set(k, []);
+    byBrand.get(k).push({ g, tokens: nameTokens(g.name, g.brand) });
+  }
+  let sameBrand = 0;
+  const matches = [];
+  for (const sg of silaGroups) {
+    const cands = byBrand.get(normBrand(sg.brand)) || [];
+    if (cands.length) sameBrand += 1;
+    const st = nameTokens(sg.name, sg.brand);
+    let best = null;
+    for (const c of cands) {
+      const j = jaccard(st, c.tokens);
+      if (!best || j > best.j) best = { j, c };
+    }
+    if (best && best.j >= 0.5) matches.push({ sg, fg: best.c.g, j: best.j });
+  }
+  console.log(`Sila групи (налични): ${silaGroups.length}; с марка, която я има и във Fitness1: ${sameBrand}; вероятни дубли по име (Jaccard ≥0.5): ${matches.length}`);
+  const buckets = { '0.5-0.6': 0, '0.6-0.75': 0, '0.75-1': 0, '1': 0 };
+  for (const m of matches) buckets[m.j === 1 ? '1' : m.j >= 0.75 ? '0.75-1' : m.j >= 0.6 ? '0.6-0.75' : '0.5-0.6'] += 1;
+  show('по сходство', buckets);
+  for (const m of matches.sort((a, b) => a.j - b.j).filter((_, i) => i % Math.max(1, Math.floor(matches.length / 30)) === 0).slice(0, 30)) {
+    const sMin = Math.min(...m.sg.variants.filter((v) => v.available).map((v) => v.b2b_price || 999));
+    const fMin = Math.min(...m.fg.variants.filter((v) => v.available).map((v) => v.b2b_price || 999));
+    console.log(`  ${m.j.toFixed(2)} | S: ${m.sg.brand} ${m.sg.name.slice(0, 40)} (${m.sg.variants.length} вар., b2b ${sMin}) | F: ${m.fg.name.slice(0, 40)} (${m.fg.variants.length} вар., b2b ${fMin === 999 ? 'изч.' : fMin})`);
+  }
+
+  section('ROUND 4: ПРОМОЦИИ ПРИ FITNESS1');
+  const f1Vars = f1Groups.flatMap((g) => g.variants).filter((v) => v.available && v.distributor !== 'sila');
+  const modes = {};
+  for (const v of f1Vars) modes[v.pricing_mode] = (modes[v.pricing_mode] || 0) + 1;
+  show('режим на цената (налични варианти Fitness1)', modes);
+  const onF1Sale = f1Avail.filter((p) => Number(p.sale_price) > 0);
+  console.log(`Fitness1 SKU с промо цена при Fitness1 (sale_price): ${onF1Sale.length}`);
+  const pricier = f1Vars.filter((v) => Number(v.f1_reference_price) > 0 && v.retail_price > Number(v.f1_reference_price) + 0.005);
+  console.log(`варианти, където НИЕ сме по-скъпи от клиентската цена на Fitness1: ${pricier.length}`);
+  const lowProfit = f1Vars.filter((v) => v.b2b_price > 0 && (v.retail_price - v.b2b_price) / v.retail_price < 0.10);
+  console.log(`варианти с печалба <10% от продажната цена: ${lowProfit.length} (от тях f1_promo/floor: ${lowProfit.filter((v) => ['f1_promo', 'floor'].includes(v.pricing_mode)).length})`);
+  for (const v of onF1Sale.slice(0, 5)) console.log(`  ${v.product_name?.slice(0, 40)} | regular ${v.regular_price} sale ${v.sale_price} b2b ${v.b2b_price}`);
+
+  section('ROUND 4: SILA ПРОМОЦИИ');
+  const sKeys = new Set();
+  sila.slice(0, 50).forEach((p) => Object.keys(p).forEach((k) => sKeys.add(k)));
+  console.log(`полета след нормализация: ${[...sKeys].join(', ')}`);
+  const silaRaw = await silaGet('product', { method: 'POST', body: JSON.stringify({ brand_id: 0, model_id: 0, taste_id: 0, size_id: 0 }) });
+  const rows = listFrom(silaRaw.data).filter((r) => String(r.available) === '1');
+  const disc = rows.map((r) => (Number(r.regular_price) - Number(r.partner_price)) / Number(r.regular_price) * 100).filter((x) => Number.isFinite(x));
+  const hist = {};
+  for (const d of disc) { const b = `${Math.floor(d / 5) * 5}%`; hist[b] = (hist[b] || 0) + 1; }
+  show('partner_price спрямо regular_price (налични)', hist);
+}
+
+for (const fn of [diagnoseRound4]) {
   try { await fn(); } catch (e) { console.log(`!!! ${fn.name}: ${e.stack || e.message}`); }
 }
