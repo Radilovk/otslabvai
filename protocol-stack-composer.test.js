@@ -44,6 +44,24 @@ describe('compose-then-narrate pipeline', () => {
     expect(composed.meta.ranked_pool_size).toBe(50);
   });
 
+  test('кумулативните нива не натрупват конфликтни продукти (напр. 2+ термогенни)', () => {
+    const burners = Array.from({ length: 4 }, (_, i) => ({
+      product: sampleProduct(`burn${i}`, `Thermo Fat Burner ${i}`, 20, ['weight-loss']),
+      score: 100 - i,
+    }));
+    const others = ['Магнезий', 'Витамин D3', 'Цинк', 'Пробиотик', 'Фибри', 'Хром', 'Зелен чай екстракт'].map((name, i) => ({
+      product: sampleProduct(`o${i}`, name, 10, [`goal${i}`]),
+      score: 50 - i,
+    }));
+    const profile = { priority: 'otshalvane', symptoms: [], conditions: [], medications: [], allergies: [], diet: 'omnivore' };
+    const composed = composeProtocolStacks(profile, [...burners, ...others]);
+
+    for (const key of ['basic', 'optimal', 'premium']) {
+      const ids = composed.tiers[key].products.map((p) => p.product_id);
+      expect(ids.filter((id) => id.startsWith('burn')).length).toBeLessThanOrEqual(1);
+    }
+  });
+
   test('end-to-end с реалния life каталог', () => {
     const all = extractProductsFromContent(lifeContent);
     const eligible = filterEligibleProducts(all);

@@ -60,7 +60,7 @@ function findMustIncludeProducts(profile, ranked) {
   return found;
 }
 
-function pickProducts(ranked, { count, budgetEur, picked, diversify = true }) {
+function pickProducts(ranked, { count, budgetEur, picked, existing = [], diversify = true }) {
   const selected = [];
   const usedGoals = new Set();
   let totalEur = 0;
@@ -68,6 +68,9 @@ function pickProducts(ranked, { count, budgetEur, picked, diversify = true }) {
   const tryPick = (entry, force = false) => {
     const { product } = entry;
     if (picked.has(product.product_id)) return false;
+    // Стековете са кумулативни: проверяваме и срещу продуктите от по-ниските нива,
+    // иначе optimal/premium натрупват няколко термогенни стимуланта или дублирани активни вещества.
+    if (existing.some((p) => productsConflictInStack(p, product))) return false;
     if (selected.some((p) => productsConflictInStack(p, product))) return false;
     const price = getProductPriceEur(product);
     if (!force && selected.length >= 3 && totalEur + price > budgetEur) return false;
@@ -123,6 +126,7 @@ export function composeProtocolStacks(profile, rankedEntries, options = {}) {
       count: limits.basic.max,
       budgetEur: limits.basic.budgetEur,
       picked,
+      existing: mustInclude,
     }),
   ].slice(0, limits.basic.max);
 
@@ -132,6 +136,7 @@ export function composeProtocolStacks(profile, rankedEntries, options = {}) {
     count: Math.max(0, limits.optimal.max - basicCore.length),
     budgetEur: limits.optimal.budgetEur,
     picked,
+    existing: basicCore,
   });
   const optimalProducts = [...basicCore, ...optimalExtra].slice(0, limits.optimal.max);
 
@@ -141,6 +146,7 @@ export function composeProtocolStacks(profile, rankedEntries, options = {}) {
     count: Math.max(0, limits.premium.max - optimalProducts.length),
     budgetEur: limits.premium.budgetEur,
     picked,
+    existing: optimalProducts,
   });
   const premiumProducts = [...optimalProducts, ...premiumExtra].slice(0, limits.premium.max);
 
@@ -224,9 +230,19 @@ export function assembleProtocolFromComposition(composed, narration, productMap,
   return { response, candidates, excludedProductIds };
 }
 
+const PRIORITY_LABELS_BG = {
+  longevity: 'дълголетие и антиейджинг',
+  otshalvane: 'отслабване',
+  skin: 'кожа',
+  joints: 'стави',
+  energy: 'енергия',
+  sleep: 'сън',
+  cognition: 'фокус и памет',
+};
+
 /** Детерминистична narration за mock / fallback */
 export function buildMockNarration(composed, profile) {
-  const priority = profile.priority_other || profile.priority || 'здраве';
+  const priority = profile.priority_other || PRIORITY_LABELS_BG[profile.priority] || profile.priority || 'здраве';
   const tierBenefits = {
     basic: [
       'Подкрепя ежедневната енергия',
@@ -267,7 +283,7 @@ export function buildMockNarration(composed, profile) {
   }
 
   return {
-    analysis: `Профилът ви показва фокус върху ${priority}. Сканирахме ${composed.meta?.ranked_pool_size || 0} налични продукта и съставихме три оптимални стека.`,
+    analysis: `Профилът ви показва фокус върху ${priority}. Сканирахме ${composed.meta?.ranked_pool_size || 0} налични продукта и съставихме персонален протокол.`,
     recommended_tier: composed.recommended_tier || 'optimal',
     tier_copy: {
       basic: { benefits: tierBenefits.basic, strategy: 'Базов протокол с фокус върху ежедневната подкрепа.' },
