@@ -63,10 +63,11 @@ function scoreCatalogGoalMetadata(product, siteId = 'life') {
 }
 
 export const SITE_TIER_LIMITS = {
+  // Цените в life са 20–60 € на продукт — бюджетите са на нивото на biocode, иначе базовото ниво е винаги 1 продукт.
   life: {
-    basic: { min: 3, max: 4, budgetEur: 32 },
-    optimal: { min: 5, max: 6, budgetEur: 68 },
-    premium: { min: 6, max: 8, budgetEur: 100 },
+    basic: { min: 2, max: 3, budgetEur: 55 },
+    optimal: { min: 3, max: 5, budgetEur: 100 },
+    premium: { min: 4, max: 6, budgetEur: 150 },
   },
   main: {
     basic: { min: 2, max: 3, budgetEur: 35 },

@@ -96,7 +96,7 @@ const PREGNANCY_EXCLUSIONS = [
 /** При бременност/кърмене не се предлагат продукти за отслабване, хормони и тренировъчни стимуланти. */
 const PREGNANCY_EXCLUDED_SLOTS = new Set([
   'fat_burner', 'fat_burner_nonstim', 'appetite', 'diuretic', 'glucose', 'cla', 'caffeine', 'preworkout',
-  'hormone_male', 'creatine', 'gainer',
+  'hormone_male', 'creatine', 'gainer', 'carnitine', 'longevity',
 ]);
 
 /** Причина продуктът изобщо да не е за консултанта (не е добавка за възрастен). */
