@@ -15,6 +15,10 @@ import {
 } from '../portfolio-advisor-engine.js';
 import { getAdvisorCommercialStats, filterAdvisorCommercialProducts } from '../portfolio-advisor-commerce.js';
 import { selectCurationCandidates } from '../catalog-auto-curate.js';
+import { DEFAULT_SETTINGS, fetchFitness1Products, groupRawProducts, buildCatalogMeta } from '../portfolio-api.js';
+import { fetchSilaProducts, mergeCatalogProducts } from '../sila-api.js';
+import { mergeSettingsForCatalogSync } from '../catalog-settings-kv.mjs';
+import { checkLiveStock } from '../distributor-live-stock.js';
 
 const SILA = 'https://distro.silabg.com/api/v1';
 const F1 = 'https://fitness1.bg/b2b/api';
@@ -293,6 +297,68 @@ async function diagnoseRound2() {
   }
 }
 
-for (const fn of [diagnoseRound2]) {
+async function diagnoseRound3() {
+  section('ROUND 3: НОВИЯТ ПОТОК С РЕАЛНИ ДАННИ');
+  const settings = mergeSettingsForCatalogSync(DEFAULT_SETTINGS, (await kvGet('portfolio_settings')) || {});
+  const f1 = await timed('Fitness1 каталог', () => fetchFitness1Products(f1Key));
+  const sila = await timed('Sila каталог (нов код)', () => fetchSilaProducts(silaToken));
+  console.log(`Fitness1 SKU: ${f1?.length}; Sila налични SKU: ${sila?.length}; Sila с доставна цена: ${(sila || []).filter((p) => Number(p.b2b_price) > 0).length}`);
+  const silaCats = {};
+  for (const p of sila || []) { const top = String(p.category).split(' > ')[0]; silaCats[top] = (silaCats[top] || 0) + 1; }
+  show('Sila SKU по горно ниво', silaCats);
+
+  const merged = mergeCatalogProducts(f1 || [], sila || []);
+  const switched = merged.filter((p) => p.distributor === 'sila' && Number(p.group_id) < 90000000);
+  console.log(`общи баркодове, снабдявани от Sila (по-евтино или F1 изчерпан): ${switched.length}`);
+
+  const groups = groupRawProducts(merged, settings);
+  const meta = buildCatalogMeta(groups, settings);
+  const isSila = (e) => Number(e.group_id) >= 90000000;
+  const stat = (arr) => ({
+    групи: arr.length,
+    налични: arr.filter((e) => e.available).length,
+    марж_ok: arr.filter((e) => e.available && e.margin_eligible).length,
+    видимо_промо: arr.filter((e) => e.available && e.has_promo).length,
+    ср_печалба_eur: Math.round(arr.filter((e) => e.available && e.max_margin > 0).reduce((s, e) => s + e.max_margin, 0) / Math.max(1, arr.filter((e) => e.available && e.max_margin > 0).length) * 100) / 100,
+    в_Други: arr.filter((e) => e.available && (e.category_top || e.category) === 'Други').length,
+  });
+  show('Fitness1 групи', stat(meta.index.filter((e) => !isSila(e))));
+  show('Sila групи', stat(meta.index.filter(isSila)));
+
+  for (const [project, key] of [['main', 'page_content'], ['life', 'life_page_content']]) {
+    const content = await kvGet(key);
+    const picks = selectCurationCandidates(meta.index, project, content);
+    console.log(`\nподбор ${project}: ${picks.length} (Sila ${picks.filter((p) => isSila(p.entry)).length})`);
+    for (const p of picks) console.log(`  ${p.slot.key.padEnd(17)} ${p.price.toFixed(2).padStart(6)}€ печалба ${p.profit.eur.toFixed(2).padStart(6)}€ ${p.profit.pct.toFixed(1).padStart(5)}% ${isSila(p.entry) ? 'SILA' : 'F1  '} | ${p.entry.brand} | ${p.entry.name.slice(0, 50)}`);
+  }
+
+  const store = new Map([['portfolio_meta', JSON.stringify({ chunk_count: Math.ceil(groups.length / 150) })]]);
+  for (let i = 0; i * 150 < groups.length; i += 1) store.set(`portfolio_chunk_${i}`, JSON.stringify(groups.slice(i * 150, (i + 1) * 150)));
+  store.set('portfolio_settings', JSON.stringify(settings));
+  const env = { PAGE_CONTENT: { get: async (k) => store.get(k) ?? null } };
+  const advisorSettings = (await kvGet('portfolio_advisor_settings')) || {};
+  const products = await loadPortfolioCatalogProducts(env);
+  const eligible = filterPortfolioEligibleProducts(products, { selectionMode: 'package' });
+  const silaP = (p) => Number(p.system_data?.portfolio?.group_id) >= 90000000;
+  console.log(`\nbiocode консултант: допустими ${eligible.length}, от Sila ${eligible.filter(silaP).length}`);
+  for (const goal of ['otshalvane', 'muscle', 'health', 'antiaging', 'energy', 'recovery']) {
+    const profile = buildPortfolioAdvisorProfile({ priority: goal, email: 'a@b.cc', sex: 'female', product_categories: ['all'] });
+    const commerce = getAdvisorCommerceOptionsForProfile(advisorSettings, profile);
+    const pool = filterAdvisorCommercialProducts(eligible, commerce);
+    const { ranked } = rankPortfolioAdvisorProducts(profile, pool.length >= 3 ? pool : eligible, commerce);
+    const top = ranked.slice(0, 40);
+    console.log(`${goal}: пул ${pool.length} (Sila ${pool.filter(silaP).length}); топ40 Sila ${top.filter((e) => silaP(e.product)).length}; топ5: ${top.slice(0, 5).map((e) => `${silaP(e.product) ? '[S]' : '[F]'} ${e.product.public_data?.name?.slice(0, 28)}`).join(' ; ')}`);
+  }
+
+  const liveLines = [
+    ...(f1 || []).filter((p) => p.available === true).slice(0, 2).map((p) => ({ sku_id: String(p.id), distributor: 'fitness1', name: p.product_name })),
+    ...(f1 || []).filter((p) => p.available !== true).slice(0, 1).map((p) => ({ sku_id: String(p.id), distributor: 'fitness1', name: p.product_name })),
+    ...(sila || []).slice(0, 2).map((p) => ({ sku_id: p.id, barcode: p.barcode, distributor: 'sila', name: p.product_name })),
+  ];
+  const live = await timed('жива проверка (5 реда)', () => checkLiveStock(liveLines, { f1Key, silaToken }));
+  show('жива проверка', live?.results);
+}
+
+for (const fn of [diagnoseRound3]) {
   try { await fn(); } catch (e) { console.log(`!!! ${fn.name}: ${e.stack || e.message}`); }
 }

@@ -36,14 +36,15 @@ export const MAIN_SLOTS = [
     category: MAIN_CATS.stimFree,
     target: 4,
     goals: ['weight-loss', 'fat-burning', 'stimulant-free'],
-    match: (e) => pathOf(e).includes('фетбърнъри без стимуланти'),
+    // Fitness1: „Фетбърнъри без стимуланти“; Sila: „Липотропни Фет бърнъри“
+    match: (e) => has(pathOf(e), ['фетбърнъри без стимуланти', 'липотропни фет бърнъри']),
   },
   {
     key: 'cla',
     category: MAIN_CATS.stimFree,
     target: 2,
     goals: ['weight-loss', 'fat-metabolism', 'stimulant-free'],
-    match: (e) => pathOf(e).startsWith('отслабване и контрол на теглото > cla'),
+    match: (e) => /^отслабване и контрол на теглото > cla\b/.test(pathOf(e)),
   },
   {
     key: 'carnitine',
@@ -51,7 +52,8 @@ export const MAIN_SLOTS = [
     target: 2,
     goals: ['weight-loss', 'fat-metabolism', 'stimulant-free'],
     // ALCAR е за мозък, не за отслабване
-    match: (e) => pathOf(e).includes('l-карнитин') && !pathOf(e).includes('ацетил') && !has(nameOf(e), ['acetyl', 'alcar']),
+    // „L-Карнитин“ (Fitness1, латинско L) и „Л-Карнитин“ (Sila, кирилско Л)
+    match: (e) => has(pathOf(e), ['l-карнитин', 'л-карнитин', 'carnipure', 'л-тартрат']) && !pathOf(e).includes('ацетил') && !has(nameOf(e), ['acetyl', 'alcar']),
   },
   {
     key: 'appetite',
@@ -66,7 +68,7 @@ export const MAIN_SLOTS = [
     category: MAIN_CATS.appetite,
     target: 2,
     goals: ['satiety', 'digestion'],
-    match: (e) => pathOf(e).includes('микробиом и храносмилане > фибри'),
+    match: (e) => /(микробиом и храносмилане|добавки по здравна цел) > фибри/.test(pathOf(e)),
   },
   {
     key: 'carb_metabolism',
@@ -82,7 +84,7 @@ export const MAIN_SLOTS = [
     category: MAIN_CATS.water,
     target: 2,
     goals: ['water-retention', 'detox'],
-    match: (e) => has(pathOf(e), ['отслабване и контрол на теглото > диуретици', 'ябълков оцет']),
+    match: (e) => has(pathOf(e), ['отслабване и контрол на теглото > диуретици', 'water-out', 'ябълков оцет']),
   },
   {
     key: 'diet_protein',
@@ -91,7 +93,7 @@ export const MAIN_SLOTS = [
     goals: ['satiety', 'muscle-retention'],
     minPrice: 15,
     match: (e) => (e.category_top === 'Протеини')
-      && has(pathOf(e), ['изолат', 'хидролизиран', 'растителни протеини'])
+      && has(pathOf(e), ['изолат', 'хидролиз', 'растителни', 'грахов', 'веган протеини'])
       && !has(nameOf(e), ['gainer', 'гейнър', 'mass']),
   },
 ];
@@ -124,21 +126,22 @@ export const LIFE_SLOTS = [
     category: LIFE_CATS.longevity,
     target: 2,
     goals: ['cardio', 'cognition', 'longevity'],
-    match: (e) => has(pathOf(e), ['висококонцентрирано рибено масло', 'крилово масло', 'омега-3 от водорасли']),
+    match: (e) => has(pathOf(e), ['висококонцентрирано рибено масло', 'крилово масло', 'омега-3 от водорасли', 'мастни киселини > омега 3'])
+      && !has(nameOf(e), ['3-6-9', '3,6,9']),
   },
   {
     key: 'sleep',
     category: LIFE_CATS.longevity,
     target: 2,
     goals: ['sleep', 'stress', 'recovery'],
-    match: (e) => has(pathOf(e), ['магнезиев бисглицинат', 'магнезиев треонат', 'сън, стрес и релакс > в подкрепа на съня', 'ашваганда ksm-66']),
+    match: (e) => has(pathOf(e), ['магнезиев бисглицинат', 'магнезиев треонат', 'сън, стрес и релакс > в подкрепа на съня', 'ашваганда ksm-66', 'подпомагащи съня']),
   },
   {
     key: 'collagen',
     category: LIFE_CATS.beauty,
     target: 3,
     goals: ['skin', 'joints', 'anti-aging'],
-    match: (e) => pathOf(e).includes('красота и подмладяване > колаген'),
+    match: (e) => pathOf(e).includes('красота и подмладяване > колаген') && !has(nameOf(e), ['shaker', 'шейкър']),
   },
   {
     key: 'skin',
@@ -153,7 +156,7 @@ export const LIFE_SLOTS = [
     category: LIFE_CATS.brain,
     target: 5,
     goals: ['cognition', 'focus', 'memory'],
-    match: (e) => has(pathOf(e), ['формули за памет и фокус', 'lion', 'бакопа', 'гинкго'])
+    match: (e) => has(pathOf(e), ['формули за памет и фокус', 'lion', 'бакопа', 'гинкго', 'стимулиращи мисловната дейност', 'фокус и концентрация'])
       && !has(nameOf(e), ['men\'s', 'for men', 'за мъже']),
   },
 ];

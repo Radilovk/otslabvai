@@ -55,6 +55,7 @@ function finalizeGroupImages(group) {
 }
 import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipping.js';
 import { assertOrderRateLimit } from './order-rate-limit.js';
+import { checkLiveStock } from './distributor-live-stock.js';
 import {
   getOrderRecord,
   listOrderRecords,
@@ -77,6 +78,8 @@ import {
   fetchSilaProducts,
   fetchSilaProductsForEnv,
   submitSilaOrder,
+  fetchSilaDeliveryTypes,
+  resolveSilaDelivery,
   mergeCatalogProducts,
   getSilaApiToken,
   listSilaApiTokenCandidates,
@@ -1630,6 +1633,43 @@ export async function filterOrderableCartSkus(env, skuIds, project) {
   return orderable;
 }
 
+/**
+ * Жива проверка при доставчика за редовете в количката. Изчерпано в момента → 409 с имената;
+ * недостъпен доставчик → продължаваме с кеша (резултатът се пази в поръчката).
+ */
+async function assertLiveStock(env, items) {
+  if (env.MOCK_FITNESS1 === '1' || env.MOCK_FITNESS1 === true || env.LIVE_STOCK_CHECK === '0') return null;
+  const live = await checkLiveStock(items, {
+    f1Key: await getFitness1ApiKey(env),
+    silaToken: await getSilaApiToken(env),
+  });
+  if (live.unavailable.length) {
+    // Кешът е остарял — пускаме синхронизация на каталога (debounced), за да изчезне и от сайта.
+    try { await requestPortfolioCatalogCiSync(env); } catch { /* best effort */ }
+    const names = live.unavailable.map((r) => r.name || r.sku_id).join(', ');
+    throw new PortfolioError(`В момента е изчерпано при доставчика: ${names}. Премахнете го от количката.`, 409);
+  }
+  return {
+    checked_at: live.checked_at,
+    live: live.results.filter((r) => r.status === 'available').length,
+    unknown: live.unknown.map((r) => ({ sku_id: r.sku_id, distributor: r.distributor, error: r.error })),
+  };
+}
+
+async function handleLiveStockDiagnostics(request, env) {
+  const url = new URL(request.url);
+  const lines = [];
+  for (const sku of url.searchParams.getAll('sku')) lines.push({ sku_id: sku, distributor: 'fitness1' });
+  for (const ean of url.searchParams.getAll('ean')) lines.push({ sku_id: ean, barcode: ean, distributor: 'sila' });
+  if (!lines.length) throw new PortfolioError('Подайте ?sku=<Fitness1 SKU> и/или ?ean=<Sila EAN>.', 400);
+  const started = Date.now();
+  const live = await checkLiveStock(lines, {
+    f1Key: await getFitness1ApiKey(env),
+    silaToken: await getSilaApiToken(env),
+  });
+  return jsonResponse({ ...live, elapsed_ms: Date.now() - started });
+}
+
 async function handleValidateCart(request, env) {
   const body = await request.json();
   if (!Array.isArray(body.products) || !body.products.length) {
@@ -1652,12 +1692,14 @@ async function handleValidateCart(request, env) {
   }
 
   const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord, project });
+  const liveStock = await assertLiveStock(env, items);
   const retailTotal = items.reduce((s, i) => s + i.retail_price * i.quantity, 0);
   return jsonResponse({
     valid: true,
     products: items,
     retail_total: roundPrice(retailTotal),
-    stock_checked_at: stockCheckedAt
+    stock_checked_at: liveStock?.checked_at || stockCheckedAt,
+    live_stock: liveStock,
   });
 }
 
@@ -2020,6 +2062,7 @@ async function handleCreateOrder(request, env) {
   }
 
   const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord, project });
+  const liveStock = await assertLiveStock(env, items);
 
   let b2bTotal = 0;
   let retailTotal = 0;
@@ -2075,7 +2118,8 @@ async function handleCreateOrder(request, env) {
     fitness1_order: null,
     sila_order: null,
     admin_note: '',
-    stock_checked_at: stockCheckedAt
+    stock_checked_at: liveStock?.checked_at || stockCheckedAt,
+    live_stock: liveStock,
   };
 
   if (isAutoSubmitB2bEnabled(settings) && orderHasB2bProducts(newOrder)) {
@@ -2183,7 +2227,11 @@ async function submitProductsToSila(env, products) {
   if (!apiToken) throw new PortfolioError('SILA_API_TOKEN не е конфигуриран.', 500);
 
   try {
-    return await submitSilaOrder(apiToken, products);
+    const settings = await getSettings(env);
+    const config = settings.sila_delivery || {};
+    const types = config.delivery_type ? [] : await fetchSilaDeliveryTypes(apiToken);
+    const delivery = resolveSilaDelivery(types, config);
+    return await submitSilaOrder(apiToken, products, delivery);
   } catch (e) {
     if (e instanceof SilaError) {
       throw new PortfolioError(`Доставчикът отказа поръчката: ${e.message}`, e.status >= 400 ? e.status : 400);
@@ -2506,6 +2554,9 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     }
     if (path === '/portfolio/order' && method === 'GET') {
       return await handleGetOrder(request, env);
+    }
+    if (path === '/portfolio/diagnostics/live-stock' && method === 'GET') {
+      return await handleLiveStockDiagnostics(request, env);
     }
 
     throw new PortfolioError('Not Found', 404);

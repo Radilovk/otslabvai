@@ -62,11 +62,11 @@ export function mapSilaCategoryToCatalogTaxonomy(rawCategory) {
     [/витамин/i, 'Витамини'],
     [/минерал|магнезий|цинк|калций/i, 'Минерали'],
     [/аминокиселин|bcaa|eaa|glutamine|глутамин/i, 'Аминокиселини'],
-    [/мазнин|fat\s*burn|термо|липо/i, 'Изгаряне на мазнини'],
+    [/мазнин|fat\s*burn|термо|липо/i, 'Отслабване и контрол на теглото'],
     [/предтрен|pre.?workout/i, 'Предтренировъчни добавки'],
     [/став|колаген|глюкозамин/i, 'Стави и сухожилия'],
-    [/билк|herb/i, 'Билки'],
-    [/анти.?ейдж|anti.?aging/i, 'Anti-Aging / Против стареене'],
+    [/билк|herb/i, 'Билки и растителни екстракти'],
+    [/анти.?ейдж|anti.?aging/i, 'Дълголетие / Anti-Aging'],
     [/маса|gainer|bulk/i, 'Качване на маса и възстановяване'],
     [/аксесоар|шейкър|belt|колан/i, 'Спортни аксесоари и уреди'],
   ];
@@ -75,6 +75,48 @@ export function mapSilaCategoryToCatalogTaxonomy(rawCategory) {
   }
 
   return 'Други';
+}
+
+/**
+ * Категориите от Sila brandfeed (плоски, ~190) → горно ниво на текущото дърво на Fitness1.
+ * Резултатът е „<горно ниво> > <категория от Sila>“, за да работят и филтрите по подкатегория.
+ * @type {[RegExp, string][]}
+ */
+const SILA_FEED_CATEGORY_RULES = [
+  [/продуктови каталози/i, 'Други'],
+  [/ръкавици за бокс|ръкавици за mma|протектори за уста|каски|бойни изкуства|бинтове/i, 'Аксесоари за бокс и ММА'],
+  [/спортни дрехи|тениски|клинове|потници|къси гащи|шапки|текстилни/i, 'Тениски и облекло'],
+  [/шейкъри|бутилки|раници|чанти|сакове|кутии за хапчета|колани|накитници|кинезио|фитнес оборудване|наколенки|ръкавици|подложки|за бедро|фитили|с отделения|без отделения/i, 'Спортни аксесоари и уреди'],
+  [/козмет|лична грижа/i, 'Козметика'],
+  [/барове|фитнес и био храни|фъстъчени масла|сосове|подсладители|чипс|спрейове за готвене|заместители на хранене|високопротеинови/i, 'Функционални храни'],
+  [/изотонични|гелове и желета/i, 'Хидратация и електролити'],
+  [/гейнъри|въглехидрати|vitargo|следтренировъчни|post workout/i, 'Качване на маса и възстановяване'],
+  [/креатин|монохидрат|creapure|кре-алкалин|микронизиран|хидрохлорид|етил естер|magna power/i, 'Креатин'],
+  [/контролиране на теглото|отслабване|фет бърнъри|л-карнитин|carnipure|л-тартрат|\bcla\b|диуретици|water-out|зелено кафе|блокър|малинови кетони|синефрин|инсулинови имитатори/i, 'Отслабване и контрол на теглото'],
+  [/предтренировъчни|pre workout|напомпващи|енергийни|intra workout|по време на тренировка/i, 'Предтренировъчни добавки'],
+  [/хормонно|хардкор|тестостерон|екдистерон|аспарагинова|растежния хормон|естроген|igf|трибулус|либидо/i, 'Хардкор продукти и стимулатори'],
+  [/протеин|суроватъчни|изолат|концентрат|хидролиз|казеин|млечн|телешки|матрич|растителни|грахов|оризов|соев|мицелар/i, 'Протеини'],
+  [/амино|глутамин|bcaa|\d:\d:\d|аргинин|цитрулин|лизин|тирозин|аланин|левцин|заменими|триптофан|цистеин|фенилаланин|пролин|хистидин|еднокомпонентни|all in one/i, 'Аминокиселини'],
+  [/ставно|глюкозамин|метилсулфонилметан|msm/i, 'Стави и сухожилия'],
+  [/колаген|хиалуронова/i, 'Красота и подмладяване'],
+  [/омега|мастни киселини|кокосово масло|ленено масло/i, 'Мастни киселини'],
+  [/антиоксиданти/i, 'Антиоксиданти'],
+  [/детски витамини/i, 'Здраве за цялото семейство'],
+  [/мултивитамини|комплексни формули|формули за мъже|формули за жени|суплементи за жени/i, 'Мултивитамини'],
+  [/витамини/i, 'Витамини'],
+  [/минерали|\bzma\b|ефервесцентни/i, 'Минерали'],
+  [/екстракти|адаптогени|зелени храни|билкови|алое вера/i, 'Билки и растителни екстракти'],
+  [/здраве и тонус|хранителни добавки|имуностимулатори|пробиотици|ензими|сън|черния дроб|сърцето|простата|зрение|мисловната|фокус и концентрация|пчелни|фибри|веган продукти/i, 'Добавки по здравна цел'],
+];
+
+/** Категория от Sila brandfeed → „горно ниво > категория“ в дървото на Fitness1; null ако няма съвпадение. */
+export function mapSilaFeedCategory(rawCategory) {
+  const raw = String(rawCategory || '').trim();
+  if (!raw) return null;
+  for (const [pattern, top] of SILA_FEED_CATEGORY_RULES) {
+    if (pattern.test(raw)) return top === 'Други' ? 'Други' : `${top} > ${raw}`;
+  }
+  return null;
 }
 
 /**
@@ -106,6 +148,15 @@ const SILA_NAME_CATEGORY_RULES = [
   [/extract|екстракт|herb|билк|ginseng|жен-?шен|maca|мака|ginkgo|гинко|turmeric|куркум|curcumin|berberine|берберин|shilajit|шиладжит|mushroom|гъби|lion'?s mane|reishi|рейши|cordyceps|кордицепс|saw palmetto|ashwagandha|ашваганда|rhodiola|родиола|milk thistle|бял трън|garlic|чесън|echinacea|ехинацея|fenugreek|сминдух|nettle|коприва|tongkat|moringa|spirulina|спирулина|chlorella|хлорела|boswellia|босвелия|bromelain|бромелаин|black cohosh|black cumin|черен кимион|walnut|орех|greens|beta glucan|бета глюкан|nigella|chlorophyll|хлорофил/i, 'Билки и растителни екстракти'],
   [/melatonin|мелатонин|\bgaba\b|5-htp|sleep|сън|probiotic|пробиот|acidophilus|enzyme|ензим|digest|храносмил|fiber|фибри|psyllium|псилиум|detox|детокс|liver|черен дроб|vision|зрение|immune|имун|colostrum|коластра|l-theanine|теанин|same\b|sam-e|cranberry|червена боровинка|prostate|простат|estriol|hormone|хормон|betaine|бетаин|pepsin|пепсин|\bhcl\b|choline|холин|inositol|инозитол|cognium|memory|памет|focus/i, 'Добавки по здравна цел'],
 ];
+
+/** brandfeed категория → таксономия на Fitness1 → име на продукта → „Други“. */
+export function resolveSilaCategory(rawCategory, productName) {
+  const fromFeed = mapSilaFeedCategory(rawCategory);
+  if (fromFeed) return fromFeed;
+  const mapped = mapSilaCategoryToCatalogTaxonomy(rawCategory);
+  if (mapped !== 'Други') return mapped;
+  return classifySilaProductByName(productName) || 'Други';
+}
 
 /** Категория по име на продукта; null ако няма съвпадение. */
 export function classifySilaProductByName(name) {
@@ -308,10 +359,6 @@ export function extractSilaImageFromItem(item) {
   return resolveSilaImageUrl(pickFirst(item, SILA_IMAGE_FIELD_KEYS, ''));
 }
 
-function productRowNeedsImage(item) {
-  return !extractSilaImageFromItem(item);
-}
-
 function collectSilaFeedRows(data) {
   /** @type {object[]} */
   const rows = [];
@@ -338,31 +385,48 @@ function collectSilaFeedRows(data) {
 export function buildSilaImageLookup(feedPayload) {
   const byModel = new Map();
   const byBarcode = new Map();
+  /** Категория, описание и етикет на модела — product list на Sila ги няма, brandfeed ги има. */
+  const metaByModel = new Map();
   for (const item of collectSilaFeedRows(feedPayload)) {
+    const modelId = String(pickFirst(item, ['model_id', 'product_model_id', 'id'], '')).trim();
+    const category = String(pickFirst(item, ['category', 'category_name'], '')).trim();
+    const description = String(pickFirst(item, ['description', 'desc'], '')).trim();
+    const label = resolveSilaImageUrl(pickFirst(item, ['label', 'label_url'], ''));
+    if (modelId && item.model_id != null && (category || description || label)) {
+      metaByModel.set(modelId, { category, description, label });
+    }
     const image = extractSilaImageFromItem(item);
     if (!image) continue;
-    const modelId = String(pickFirst(item, ['model_id', 'product_model_id', 'id'], '')).trim();
     const barcode = String(pickFirst(item, ['barcode_ean', 'ean', 'barcode'], '')).trim();
     if (modelId) byModel.set(modelId, image);
     if (barcode) byBarcode.set(barcode, image);
   }
-  return { byModel, byBarcode };
+  return { byModel, byBarcode, metaByModel };
 }
 
 /**
  * @param {object} item
- * @param {{ byModel: Map<string, string>, byBarcode: Map<string, string> }} lookup
+ * @param {{ byModel: Map<string, string>, byBarcode: Map<string, string>, metaByModel?: Map<string, { category: string, description: string, label: string }> }} lookup
  */
 export function enrichSilaProductRow(item, lookup) {
   if (!item || typeof item !== 'object') return item;
-  if (extractSilaImageFromItem(item)) return item;
 
   const modelId = String(pickFirst(item, ['model_id', 'product_model_id', 'id'], '')).trim();
   const barcode = String(pickFirst(item, ['barcode_ean', 'ean', 'barcode'], '')).trim();
-  const image = (modelId && lookup.byModel.get(modelId))
-    || (barcode && lookup.byBarcode.get(barcode))
-    || '';
-  return image ? { ...item, image } : item;
+  const out = { ...item };
+  if (!extractSilaImageFromItem(item)) {
+    const image = (modelId && lookup.byModel?.get(modelId))
+      || (barcode && lookup.byBarcode?.get(barcode))
+      || '';
+    if (image) out.image = image;
+  }
+  const meta = modelId ? lookup.metaByModel?.get(modelId) : null;
+  if (meta) {
+    if (!out.category && meta.category) out.category = meta.category;
+    if (!out.description && meta.description) out.description = meta.description;
+    if (!out.label && meta.label) out.label = meta.label;
+  }
+  return out;
 }
 
 async function mapPool(items, limit, fn) {
@@ -424,8 +488,9 @@ export async function fetchSilaProductByBarcode(apiToken, barcode) {
 }
 
 async function loadSilaImageLookup(apiToken, rawItems) {
-  const lookup = { byModel: new Map(), byBarcode: new Map() };
-  if (!rawItems.some(productRowNeedsImage)) return lookup;
+  const lookup = { byModel: new Map(), byBarcode: new Map(), metaByModel: new Map() };
+  // brandfeed дава и категория/описание/етикет — зареждаме го винаги, не само за липсващи снимки.
+  if (!rawItems.length) return lookup;
 
   const brandIds = new Set();
   for (const item of rawItems) {
@@ -455,6 +520,7 @@ async function loadSilaImageLookup(apiToken, rawItems) {
     const partial = buildSilaImageLookup(feed);
     for (const [key, value] of partial.byModel) lookup.byModel.set(key, value);
     for (const [key, value] of partial.byBarcode) lookup.byBarcode.set(key, value);
+    for (const [key, value] of partial.metaByModel) lookup.metaByModel.set(key, value);
   }
 
   return lookup;
@@ -503,7 +569,8 @@ export function normalizeSilaProduct(item) {
   const barcode = String(pickFirst(item, ['barcode_ean', 'ean', 'barcode'], '')).trim();
   const skuId = barcode || silaSkuId(modelId, tasteId, sizeId);
 
-  const b2b = parsePrice(pickFirst(item, ['price', 'b2b_price', 'dealer_price', 'wholesale_price'], ''));
+  // Sila подава доставната цена като partner_price (без него b2b = 0 и нито един продукт няма марж).
+  const b2b = parsePrice(pickFirst(item, ['partner_price', 'price', 'b2b_price', 'dealer_price', 'wholesale_price'], ''));
   const regular = parsePrice(pickFirst(item, ['price_retail', 'regular_price', 'retail_price', 'rrp'], '')) || b2b;
   const sale = parsePrice(pickFirst(item, ['price_promo', 'sale_price', 'promo_price'], ''));
 
@@ -512,8 +579,7 @@ export function normalizeSilaProduct(item) {
   const tasteName = pickFirst(item, ['taste_name', 'taste', 'flavor_name', 'flavor'], '');
   const sizeName = pickFirst(item, ['size_name', 'size', 'pack', 'packaging'], '');
   const rawCategory = pickFirst(item, ['category', 'category_name', 'group'], '');
-  const mapped = mapSilaCategoryToCatalogTaxonomy(rawCategory);
-  const category = mapped === 'Други' ? (classifySilaProductByName(productName) || 'Други') : mapped;
+  const category = resolveSilaCategory(rawCategory, productName);
 
   return {
     id: skuId,
@@ -576,17 +642,46 @@ function productsToSilaOrderData(products) {
   return products.map((p) => {
     const ids = p.distributor_ids || {};
     if (ids.model_id && ids.taste_id) {
-      return {
+      const line = {
         model_id: String(ids.model_id),
         taste_id: String(ids.taste_id),
         qtty: Number(p.quantity) || 1,
       };
+      // Без size_id при модел с няколко разфасовки Sila може да изпрати грешната.
+      if (ids.size_id && String(ids.size_id) !== '0') line.size_id = String(ids.size_id);
+      return line;
     }
     if (p.barcode) {
       return { ean: String(p.barcode), qtty: Number(p.quantity) || 1 };
     }
     throw new SilaError(`Липсват Sila идентификатори за „${p.name || p.sku_id}".`, 400);
   });
+}
+
+/** GET order/delivery/types — начините на доставка и адресите/офисите в акаунта. */
+export async function fetchSilaDeliveryTypes(apiToken) {
+  const data = await silaRequest(apiToken, 'order/delivery/types', { method: 'GET' });
+  return Array.isArray(data?.data) ? data.data : [];
+}
+
+/**
+ * Доставка за B2B поръчката. Изрична настройка има предимство; иначе „до адрес“ с първия реален
+ * адрес от акаунта (опциите „До офис“ на този тип са служебни). Без адрес → грешка, не празна поръчка.
+ * @param {object[]} types - отговорът на order/delivery/types
+ * @param {{ delivery_type?: number|string, address_id?: string, office?: string }} [config]
+ */
+export function resolveSilaDelivery(types, config = {}) {
+  if (config?.delivery_type) {
+    const type = Number(config.delivery_type);
+    if (type === 2 && !config.office) throw new SilaError('Sila: за доставка до офис е нужен офис (sila_delivery.office).', 400);
+    if (type === 1 && !config.address_id) throw new SilaError('Sila: за доставка до адрес е нужен address_id (sila_delivery.address_id).', 400);
+    return { delivery_type: type, address_id: config.address_id ?? null, office: config.office ?? null };
+  }
+  const toAddress = (types || []).find((t) => Number(t.delivery_type) === 1);
+  const options = Array.isArray(toAddress?.options) ? toAddress.options : [];
+  const real = options.find((o) => o?.id && o.address && !/^до офис$/i.test(String(o.address).trim()));
+  if (!real) throw new SilaError('Sila: в акаунта няма адрес за доставка — задайте sila_delivery в настройките.', 400);
+  return { delivery_type: 1, address_id: String(real.id), office: null };
 }
 
 /**
@@ -663,9 +758,8 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
     }
     if (!item.category || /^sila\b/i.test(item.category) || item.category === 'Други') {
       item.category = classifySilaProductByName(item.product_name) || 'Други';
-    } else {
-      const mapped = mapSilaCategoryToCatalogTaxonomy(item.category);
-      item.category = mapped === 'Други' ? (classifySilaProductByName(item.product_name) || 'Други') : mapped;
+    } else if (!FITNESS1_CATALOG_CATEGORIES.includes(String(item.category).split(' > ')[0])) {
+      item.category = resolveSilaCategory(item.category, item.product_name);
     }
 
     merged.push(item);
