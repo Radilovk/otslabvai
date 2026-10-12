@@ -76,6 +76,11 @@ describe('portfolio-advisor-commerce', () => {
     const product = attachAdvisorCommercialStats(portfolioGroupToSiteProduct(group), group);
     expect(isExcludedByAdvisorCommerce(product)).toBe(true);
     expect(isExcludedByAdvisorCommerce(product, { exclude_client_promo: false })).toBe(false);
+
+    // Стандартните ~3% под препоръчителната цена не са промоция
+    const standard = makeGroup({ variants: [{ sku_id: '2', b2b_price: 60, regular_price: 100, retail_price: 97, compare_at_price: 100, is_on_promo: true, pricing_mode: 'below_regular', available: true }] });
+    const standardProduct = attachAdvisorCommercialStats(portfolioGroupToSiteProduct(standard), standard);
+    expect(isExcludedByAdvisorCommerce(standardProduct)).toBe(false);
     expect(scoreAdvisorCommercialBoost(product)).toBeGreaterThan(0);
   });
 

@@ -11,10 +11,10 @@ import {
 
 export { scoreCategoryForGoal, scoreProductForGoal, ADVISOR_EXCLUDED_CATEGORY_PATTERNS };
 
-import { FITNESS1_CATALOG_CATEGORIES } from './portfolio-fitness1-categories.js';
+import { FITNESS1_CURRENT_CATEGORIES } from './portfolio-fitness1-categories.js';
 
 /** Fallback категории ако bootstrap още не е зареден (реални Fitness1 имена) */
-export const FALLBACK_CATALOG_CATEGORIES = FITNESS1_CATALOG_CATEGORIES;
+export const FALLBACK_CATALOG_CATEGORIES = FITNESS1_CURRENT_CATEGORIES;
 
 /** Брой категории, маркирани по подразбиране за AI търсене */
 export const DEFAULT_ADVISOR_SEARCH_CATEGORIES = 3;

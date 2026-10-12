@@ -77,6 +77,45 @@ export function mapSilaCategoryToCatalogTaxonomy(rawCategory) {
   return 'Други';
 }
 
+/**
+ * Sila API не подава категория → класифициране по име на продукта в текущото дърво на Fitness1.
+ * Редът има значение: аксесоари и храни преди хранителните вещества (напр. „Protein Bar“ е храна).
+ * @type {[RegExp, string][]}
+ */
+const SILA_NAME_CATEGORY_RULES = [
+  [/shaker|шейкър|bottle|бутилка|tumbler|\bcup\b|glove|ръкавиц|belt|колан|wrap|strap|chalk|towel|кърпа|\bbag\b|чанта|раница|pill box|кутия за|jump rope|въже|grip|knee|elbow|wrist|resistance band|booty band|ластик|foam roller/i, 'Спортни аксесоари и уреди'],
+  [/boxing|бокс|\bmma\b|hand wraps/i, 'Аксесоари за бокс и ММА'],
+  [/t-?shirt|тениска|hoodie|суитчър|шорти|shorts|leggings|клин|tank top|\bcap\b|шапка|чорапи|socks/i, 'Тениски и облекло'],
+  [/erythritol|еритритол|stevia|стевия|rice cakes|cream of rice|оризов|\bbar\b|bars|cookie|бисквит|brownie|peanut butter|nut butter|фъстъчено|\boats\b|овес|pancake|палачинк|syrup|сироп|sauce|сос|chips|wafer|вафл|snack|cereal|jam|конфитюр|spread|zero calorie|complete meal|meal replacement|crunchy/i, 'Функционални храни'],
+  [/\bcream\b|крем|serum|серум|lotion|лосион|шампоан|shampoo|body oil|\bbalm\b/i, 'Козметика'],
+  [/creatine|креатин|\bcrea|kre-alkalyn|creakong|creage/i, 'Креатин'],
+  [/electrolyte|електролит|isotonic|изотон|(?<!mono)hydrat|хидрат|\bgel\b|гел|energy drink|sparkling|\bshot\b|shots/i, 'Хидратация и електролити'],
+  [/carb blocker|fat blocker|fat burn|burner|бърнър|carnitine|карнитин|\bcla\b|garcinia|гарциния|\bhca\b|thermo|термо|\blipo|glucomannan|глюкоманан|\bshred|\bcuts?\b|slim|diet|отслаб|green coffee|raspberry ketone|chromium|\bchrom|хром|\bburn|caffeine|кофеин|\bdry\b|chitosan|хитозан|forskohl|форсколин/i, 'Отслабване и контрол на теглото'],
+  [/gainer|гейнър|mass\b|bulk|carb-?x|cluster dextrin|dextrose|maltodextrin|vitargo/i, 'Качване на маса и възстановяване'],
+  [/whey|protein|протеин|isolate|изолат|casein|казеин/i, 'Протеини'],
+  [/pre-?workout|предтрен|\bpump\b|nitric|\bn\.?o\.?\b|\bc4\b|\bstim\b|hardcore|хардкор|dmaa|testo|тесто|\btest\b|tribulus|трибулус|ecdy|екди|anadrol|turkesterone|black blood|blood and guts/i, 'Хардкор продукти и стимулатори'],
+  [/bcaa|\beaa\b|glutamine|глутамин|amino|амино|taurine|таурин|arginine|аргинин|aakg|citrul|цитрулин|beta.?alanine|бета.?аланин|\bhmb\b|leucine|левцин|tyrosine|тирозин/i, 'Аминокиселини'],
+  [/collagen|колаген|hyaluron|хиалурон|biotin|биотин|hair|коса|skin|кожа|nails|нокти|keratin|кератин/i, 'Красота и подмладяване'],
+  [/glucosamine|глюкозамин|chondroitin|хондроитин|\bmsm\b|joint|стави|cartilage|cissus/i, 'Стави и сухожилия'],
+  [/omega|омега|fish oil|рибено|krill|крил|\bdha\b|\bepa\b|\bmct\b|cod liver|flax|ленено|coconut oil|кокосово масло/i, 'Мастни киселини'],
+  [/\bnmn\b|\bnad\b|nad\+|\bpqq\b|spermidine|спермидин|urolithin|уролитин|anti-?aging|антиейдж|longevity|nicotinamide riboside/i, 'Дълголетие / Anti-Aging'],
+  [/coq10|co-q10|q10|ubiquinol|убихинол|resveratrol|ресвератрол|quercetin|кверцетин|alpha lipoic|\bala\b|glutathione|глутатион|astaxanthin|астаксантин|antioxid|антиоксид|grape seed|lycopene|lutein|лутеин|acai|асаи/i, 'Антиоксиданти'],
+  [/multi-?vit|мултивит|active (wo)?man|daily vit|for women|for men|vita-?min pack|animal pak/i, 'Мултивитамини'],
+  [/magnesium|магнез|chela-?mag|\bmag\b|\bzinc\b|цинк|calcium|калций|\biron\b|желязо|selenium|селен|potassium|калий|iodine|йод|\bzma\b|boron|бор\b|copper|мед\b|minerals?\b|cal-?mag|colloidal silver/i, 'Минерали'],
+  [/vitamin|витамин|\bd3\b|\bk2\b|b-?12|b-complex|b complex|folate|folic|фолиева|niacin|ниацин|\bb-?6\b/i, 'Витамини'],
+  [/extract|екстракт|herb|билк|ginseng|жен-?шен|maca|мака|ginkgo|гинко|turmeric|куркум|curcumin|berberine|берберин|shilajit|шиладжит|mushroom|гъби|lion'?s mane|reishi|рейши|cordyceps|кордицепс|saw palmetto|ashwagandha|ашваганда|rhodiola|родиола|milk thistle|бял трън|garlic|чесън|echinacea|ехинацея|fenugreek|сминдух|nettle|коприва|tongkat|moringa|spirulina|спирулина|chlorella|хлорела|boswellia|босвелия|bromelain|бромелаин|black cohosh|black cumin|черен кимион|walnut|орех|greens|beta glucan|бета глюкан|nigella|chlorophyll|хлорофил/i, 'Билки и растителни екстракти'],
+  [/melatonin|мелатонин|\bgaba\b|5-htp|sleep|сън|probiotic|пробиот|acidophilus|enzyme|ензим|digest|храносмил|fiber|фибри|psyllium|псилиум|detox|детокс|liver|черен дроб|vision|зрение|immune|имун|colostrum|коластра|l-theanine|теанин|same\b|sam-e|cranberry|червена боровинка|prostate|простат|estriol|hormone|хормон|betaine|бетаин|pepsin|пепсин|\bhcl\b|choline|холин|inositol|инозитол|cognium|memory|памет|focus/i, 'Добавки по здравна цел'],
+];
+
+/** Категория по име на продукта; null ако няма съвпадение. */
+export function classifySilaProductByName(name) {
+  const text = String(name || '');
+  for (const [pattern, category] of SILA_NAME_CATEGORY_RULES) {
+    if (pattern.test(text)) return category;
+  }
+  return null;
+}
+
 function silaGroupId(modelId) {
   const n = parseInt(String(modelId), 10) || 0;
   return String(SILA_GROUP_ID_OFFSET + n);
@@ -473,7 +512,8 @@ export function normalizeSilaProduct(item) {
   const tasteName = pickFirst(item, ['taste_name', 'taste', 'flavor_name', 'flavor'], '');
   const sizeName = pickFirst(item, ['size_name', 'size', 'pack', 'packaging'], '');
   const rawCategory = pickFirst(item, ['category', 'category_name', 'group'], '');
-  const category = mapSilaCategoryToCatalogTaxonomy(rawCategory);
+  const mapped = mapSilaCategoryToCatalogTaxonomy(rawCategory);
+  const category = mapped === 'Други' ? (classifySilaProductByName(productName) || 'Други') : mapped;
 
   return {
     id: skuId,
@@ -568,15 +608,32 @@ export async function submitSilaOrder(apiToken, products, options = {}) {
   return data;
 }
 
-/** Merge catalogs: Fitness1 first, then Sila-only rows (deduped by barcode, brands unified by name). */
+/** Еднакъв баркод при двата доставчика: Sila, ако Fitness1 е изчерпан или Sila е по-евтин на едро. */
+export function shouldSourceFromSila(f1Row, silaRow) {
+  if (silaRow?.available !== true) return false;
+  if (f1Row?.available !== true) return true;
+  const silaB2b = parsePrice(silaRow.b2b_price);
+  const f1B2b = parsePrice(f1Row.b2b_price);
+  return silaB2b > 0 && f1B2b > 0 && silaB2b < f1B2b - 0.005;
+}
+
+/**
+ * Merge catalogs: Fitness1 first, then Sila-only rows (deduped by barcode, brands unified by name).
+ * При общ баркод редът остава във Fitness1 групата (SKU, категория, описание не се сменят),
+ * но се снабдява от Sila, когато е по-изгодно или единствено налично (shouldSourceFromSila).
+ */
 export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
   const f1 = (fitness1Products || []).map((p) => ({ ...p, distributor: DISTRIBUTOR_FITNESS1 }));
 
   const seenBarcodes = new Set();
+  const f1ByBarcode = new Map();
   const brandByName = new Map();
   for (const p of f1) {
     const bc = String(p.barcode || '').trim();
-    if (bc) seenBarcodes.add(bc);
+    if (bc) {
+      seenBarcodes.add(bc);
+      if (!f1ByBarcode.has(bc)) f1ByBarcode.set(bc, p);
+    }
     const bk = normalizeBrandKey(p.brand_name);
     if (bk && p.brand_id) brandByName.set(bk, String(p.brand_id));
   }
@@ -584,6 +641,19 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
   const merged = [...f1];
   for (const raw of silaProducts || []) {
     const bc = String(raw.barcode || '').trim();
+    const f1Row = bc ? f1ByBarcode.get(bc) : null;
+    if (f1Row) {
+      if (shouldSourceFromSila(f1Row, raw)) {
+        Object.assign(f1Row, {
+          distributor: DISTRIBUTOR_SILA,
+          distributor_ids: raw.distributor_ids || null,
+          b2b_price: raw.b2b_price,
+          available: true,
+        });
+      }
+      f1ByBarcode.delete(bc);
+      continue;
+    }
     if (bc && seenBarcodes.has(bc)) continue;
 
     const item = { ...raw, distributor: raw.distributor || DISTRIBUTOR_SILA };
@@ -591,10 +661,11 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
     if (bk && brandByName.has(bk)) {
       item.brand_id = brandByName.get(bk);
     }
-    if (!item.category || /^sila\b/i.test(item.category)) {
-      item.category = 'Други';
+    if (!item.category || /^sila\b/i.test(item.category) || item.category === 'Други') {
+      item.category = classifySilaProductByName(item.product_name) || 'Други';
     } else {
-      item.category = mapSilaCategoryToCatalogTaxonomy(item.category);
+      const mapped = mapSilaCategoryToCatalogTaxonomy(item.category);
+      item.category = mapped === 'Други' ? (classifySilaProductByName(item.product_name) || 'Други') : mapped;
     }
 
     merged.push(item);

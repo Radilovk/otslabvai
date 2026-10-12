@@ -14,6 +14,8 @@
  * Deep unprofitable pricing is handled naturally via low profit %, not promo heuristics.
  */
 
+import { MIN_PROMO_DISPLAY_DISCOUNT_PCT } from './portfolio-pricing.js';
+
 export const ADVISOR_COMMERCE_DEFAULTS = {
   enabled: true,
   /** Min discount vs RRP (regular vs b2b) to stay in the advisor pool. */
@@ -235,7 +237,9 @@ export function isExcludedByAdvisorCommerce(product, options = ADVISOR_COMMERCE_
   if (!stats) return false;
 
   if (isDeepUnprofitablePromo(stats, opts)) return true;
-  if (opts.exclude_client_promo && (stats.customer_discount_pct || 0) > 0) return true;
+  // Стандартното ценообразуване е ~3% под препоръчителната цена (is_on_promo=true, но без видима отстъпка).
+  // Изключваме само видимите промоции — от прага, при който сайтът показва зачеркната цена.
+  if (opts.exclude_client_promo && (stats.customer_discount_pct || 0) >= MIN_PROMO_DISPLAY_DISCOUNT_PCT) return true;
 
   const dist = stats.distributor_discount_pct || 0;
   const markup = stats.margin_pct || 0;

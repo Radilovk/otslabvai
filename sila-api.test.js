@@ -63,9 +63,11 @@ describe('Sila API', () => {
     expect(raw.available).toBe(false);
   });
 
-  test('normalizeSilaProduct defaults unknown category to Други', () => {
-    const raw = normalizeSilaProduct({ ...sampleSilaRow, category: 'Sila BG' });
-    expect(raw.category).toBe('Други');
+  test('normalizeSilaProduct: непозната категория → по име, иначе Други', () => {
+    const byName = normalizeSilaProduct({ ...sampleSilaRow, category: 'Sila BG' });
+    expect(byName.category).not.toBe('Други');
+    const unknown = normalizeSilaProduct({ ...sampleSilaRow, category: 'Sila BG', product_name: 'Застраховка на пратката', name: 'Застраховка на пратката' });
+    expect(unknown.category).toBe('Други');
   });
 
   test('normalizeSilaProduct maps protein category to Протеини', () => {
@@ -277,5 +279,43 @@ describe('Sila API', () => {
     expect(capturedBody.data).toEqual([{ model_id: '42', taste_id: '3', qtty: 2 }]);
 
     global.fetch = originalFetch;
+  });
+});
+
+describe('Sila: категории по име и дубли с Fitness1', () => {
+  test('classifySilaProductByName', async () => {
+    const { classifySilaProductByName: c } = await import('./sila-api.js');
+    expect(c('100% Creatine Monohydrate')).toBe('Креатин');
+    expect(c('Iso Whey ZERO')).toBe('Протеини');
+    expect(c('Deluxe Protein Bar Box')).toBe('Функционални храни');
+    expect(c('Carb Blocker with Starchlite')).toBe('Отслабване и контрол на теглото');
+    expect(c('Chela Mag B6 Forte')).toBe('Минерали');
+    expect(c('Shaker Monster Bottle')).toBe('Спортни аксесоари и уреди');
+    expect(c('Collagen Peptides Powder')).toBe('Красота и подмладяване');
+    expect(c('Застраховка на пратката')).toBeNull();
+  });
+
+  test('общ баркод: Sila, ако F1 е изчерпан или Sila е по-евтин; SKU и група остават от F1', async () => {
+    const { mergeCatalogProducts } = await import('./sila-api.js');
+    const f1 = [
+      { id: '1', group_id: '10', barcode: 'A', b2b_price: '10.00', available: false, product_name: 'X', category: 'Протеини' },
+      { id: '2', group_id: '10', barcode: 'B', b2b_price: '10.00', available: true, product_name: 'X', category: 'Протеини' },
+      { id: '3', group_id: '11', barcode: 'C', b2b_price: '10.00', available: true, product_name: 'Y', category: 'Протеини' },
+    ];
+    const sila = [
+      { id: 'A', group_id: '9001', barcode: 'A', b2b_price: '12.00', available: true, distributor_ids: { model_id: 'm1', taste_id: 't1' } },
+      { id: 'B', group_id: '9002', barcode: 'B', b2b_price: '8.00', available: true, distributor_ids: { model_id: 'm2', taste_id: 't2' } },
+      { id: 'C', group_id: '9003', barcode: 'C', b2b_price: '11.00', available: true },
+      { id: 'D', group_id: '9004', barcode: 'D', b2b_price: '5.00', available: true, product_name: 'Iso Whey', category: '' },
+    ];
+    const merged = mergeCatalogProducts(f1, sila);
+    const byId = Object.fromEntries(merged.map((p) => [p.id, p]));
+
+    expect(byId['1']).toMatchObject({ distributor: 'sila', available: true, b2b_price: '12.00', group_id: '10' });
+    expect(byId['2']).toMatchObject({ distributor: 'sila', b2b_price: '8.00' });
+    expect(byId['3']).toMatchObject({ distributor: 'fitness1', b2b_price: '10.00' });
+    expect(byId.A).toBeUndefined();
+    expect(byId.D).toMatchObject({ distributor: 'sila', category: 'Протеини' });
+    expect(merged).toHaveLength(4);
   });
 });
