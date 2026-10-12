@@ -858,7 +858,10 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
 }
 
 const NAME_STOPWORDS = new Set(['with', 'and', 'for', 'the', 'от', 'за', 'със', 'с', 'и']);
-const NAME_UNITS = /\b\d+([.,]\d+)?\s*(caps?|capsules?|softgels?|soft|vcaps?|tabs?|tablets?|serv\w*|g|gr|kg|ml|l|lbs?|mg|mcg|iu|pcs|x)\b\.?/gi;
+const NAME_UNITS = /\b\d+([.,]\d+)?\s*(caps?|capsules?|softgels?|soft|vcaps?|tabs?|tablets?|serv\w*|g|gr|kg|ml|l|lbs?|mg|mcg|iu|pcs|packs?|sachets?|x)\b\.?/gi;
+/** Форма или аудитория: различна стойност = различен продукт („C4 Shot“ ≠ „C4 Pre-Workout“, „Kids Melatonin“ ≠ „Melatonin“). */
+const DISTINCT_WORDS = new Set(['shot', 'shots', 'gel', 'gels', 'bar', 'bars', 'gummies', 'gummy', 'liquid', 'powder', 'drink', 'cookie', 'cookies', 'box', 'rtd', 'chewable', 'effervescent', 'spray', 'kids', 'kid', 'junior', 'women', 'woman', 'men', 'man', 'vegan', 'night', 'pm', 'zero']);
+const DOSE_RE = /(\d+(?:[.,]\d+)?)\s*(mg|mcg|µg|iu|ie)\b/gi;
 
 /** Токени на името без марка, разфасовка, дозировка и пълнежни думи. */
 export function productNameTokens(name, brand) {
@@ -877,11 +880,39 @@ function tokenJaccard(a, b) {
   return inter / Math.max(1, a.size + b.size - inter);
 }
 
-/** Същият продукт при двата доставчика: същата марка и (почти) същото име. */
-export function isSameProductName(a, b) {
+function doseSet(name) {
+  return new Set([...String(name || '').matchAll(DOSE_RE)].map((m) => `${m[1].replace(',', '.')}${m[2].toLowerCase()}`));
+}
+
+function distinctWords(tokens) {
+  return [...tokens].filter((t) => DISTINCT_WORDS.has(t)).sort().join(',');
+}
+
+/**
+ * Същият продукт при двата доставчика (марката се проверява отделно).
+ * Fitness1 пише „Име | подзаглавие“ — основното име е частта преди „|“.
+ * Различни дози, форма (шот/гел/бар/течен…) или аудитория (деца/жени/веган) → различни продукти.
+ */
+export function isSameProductName(a, b, { nameA = '', nameB = '', mainB = null } = {}) {
   if (!a.size || !b.size) return false;
-  const j = tokenJaccard(a, b);
-  return j === 1 || (j >= 0.75 && Math.min(a.size, b.size) >= 2);
+  if (distinctWords(a) !== distinctWords(b)) return false;
+  const dosesA = doseSet(nameA);
+  const dosesB = doseSet(nameB);
+  if (dosesA.size && dosesB.size && ![...dosesA].some((d) => dosesB.has(d))) return false;
+
+  let inter = 0;
+  for (const t of a) if (b.has(t)) inter += 1;
+  const symDiff = a.size + b.size - 2 * inter;
+  const j = inter / Math.max(1, a.size + b.size - inter);
+  if (j === 1) return true;
+  if (inter >= 2 && j >= 0.6 && symDiff <= 2) return true;
+  // „Burn4All Extreme“ ↔ „Burn4All Extreme | High Thermogenesis“
+  if (mainB && mainB.size >= 2) {
+    let covered = 0;
+    for (const t of mainB) if (a.has(t)) covered += 1;
+    if (covered === mainB.size && a.size - covered <= 1) return true;
+  }
+  return false;
 }
 
 const variantKey = (v) => `${String(v.option || '').trim().toLowerCase()}|${String(v.pack || '').trim().toLowerCase()}`;
@@ -901,7 +932,8 @@ export function mergeCrossDistributorGroups(groups) {
     const key = normalizeBrandKey(g.brand);
     if (!key) continue;
     if (!f1ByBrand.has(key)) f1ByBrand.set(key, []);
-    f1ByBrand.get(key).push({ g, tokens: productNameTokens(g.name, g.brand) });
+    const main = String(g.name || '').split('|')[0];
+    f1ByBrand.get(key).push({ g, tokens: productNameTokens(g.name, g.brand), mainTokens: productNameTokens(main, g.brand) });
   }
 
   const absorbed = new Set();
@@ -913,7 +945,7 @@ export function mergeCrossDistributorGroups(groups) {
     let best = null;
     for (const c of candidates) {
       const j = tokenJaccard(tokens, c.tokens);
-      if (isSameProductName(tokens, c.tokens) && (!best || j > best.j)) best = { j, g: c.g };
+      if (isSameProductName(tokens, c.tokens, { nameA: sg.name, nameB: c.g.name, mainB: c.mainTokens }) && (!best || j > best.j)) best = { j, g: c.g };
     }
     if (!best) continue;
 

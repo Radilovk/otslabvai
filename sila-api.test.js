@@ -366,3 +366,45 @@ describe('Sila: реални полета от API-то', () => {
     expect(body).toMatchObject({ delivery_type: 1, address_id: '1723' });
   });
 });
+
+describe('един продукт при двата доставчика', () => {
+  const cases = [
+    ['Iso-XP Whey Protein Isolate', 'Iso-XP | 100% Whey Isolate', true],
+    ['Animal Flex 44 Packs', 'Animal Flex', true],
+    ['Diet Whey Protein', 'Diet Whey', true],
+    ['Endurance - Energy', 'Endurance Energy | Velocity Fuel Energy', true],
+    ['Burn4All Extreme', 'Burn4All Extreme | High Thermogenesis', true],
+    ['Creatine Monohydrate Unflavoured', 'Creatine Monohydrate', true],
+    ['BCAA Amino-Hydrate', 'BCAA Amino-Hydrate | Next Generation', true],
+    ['3-Creatine Malate Powder', 'Citrulline Malate Powder', false],
+    ['C4 Pre-Workout Shot', 'C4 Original Pre-Workout', false],
+    ['Melatonin Gummies - Strawberry Flavored', 'Kids Melatonin Gummies 1 mg | Strawberry', false],
+    ['Albion Chelated Zinc 30mg.', 'Albion Chelated Calcium 180 mg', false],
+    ['Saw Palmetto - Maximum Strength 320mg.', 'Saw Palmetto 540 mg', false],
+    ['ABE Gel-Ultimate Pre-Workout', 'ABE - All Black Everything | Ultimate Pre-Workout', false],
+  ];
+  test.each(cases)('%s ↔ %s → %s', async (a, b, expected) => {
+    const { productNameTokens: t, isSameProductName } = await import('./sila-api.js');
+    expect(isSameProductName(t(a, 'x'), t(b, 'x'), { nameA: a, nameB: b, mainB: t(b.split('|')[0], 'x') })).toBe(expected);
+  });
+
+  test('сливане: Sila групата става варианти на Fitness1 продукта; общ вариант → по-евтиният под SKU на Fitness1', async () => {
+    const { mergeCrossDistributorGroups } = await import('./sila-api.js');
+    const groups = [
+      { group_id: '100', name: 'Diet Whey', brand: 'Applied Nutrition', variants: [
+        { sku_id: 'f1', option: 'Chocolate', pack: '1 kg', b2b_price: 20, available: true, distributor: 'fitness1' },
+      ] },
+      { group_id: '90000001', name: 'Diet Whey Protein', brand: 'Applied Nutrition', variants: [
+        { sku_id: 's1', option: 'Chocolate', pack: '1 kg', b2b_price: 18, available: true, distributor: 'sila' },
+        { sku_id: 's2', option: 'Banana', pack: '1 kg', b2b_price: 18, available: true, distributor: 'sila' },
+      ] },
+      { group_id: '90000002', name: 'Other', brand: 'Applied Nutrition', variants: [] },
+    ];
+    const out = mergeCrossDistributorGroups(groups);
+    expect(out.map((g) => g.group_id)).toEqual(['100', '90000002']);
+    const v = out[0].variants;
+    expect(v).toHaveLength(2);
+    expect(v[0]).toMatchObject({ sku_id: 'f1', distributor: 'sila', b2b_price: 18 });
+    expect(v[1]).toMatchObject({ sku_id: 's2', option: 'Banana' });
+  });
+});
