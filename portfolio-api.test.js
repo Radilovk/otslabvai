@@ -133,7 +133,7 @@ describe('Portfolio API', () => {
   test('buildCatalogMeta uses available packs and cheapest variant sku', () => {
     const products = [
       { ...sampleProducts[0], id: '1', pack: '0.9 кг', available: true },
-      { ...sampleProducts[1], id: '2', pack: '2.3 кг', available: true, b2b_price: '18.00' },
+      { ...sampleProducts[1], id: '2', pack: '2.3 кг', available: true, b2b_price: '12.00' },
       { ...sampleProducts[0], id: '3', pack: '5 кг', available: false, b2b_price: '5.00' }
     ];
     const groups = groupRawProducts(products, settings);
@@ -143,6 +143,17 @@ describe('Portfolio API', () => {
     expect(meta.index[0].min_price).toBe(meta.index[0].max_price === meta.index[0].min_price
       ? meta.index[0].min_price
       : Math.min(...groups[0].variants.filter((v) => v.available).map((v) => v.retail_price)));
+  });
+
+  test('buildCatalogMeta: „от“ цена и разфасовки само от вариантите с марж', () => {
+    const products = [
+      { ...sampleProducts[0], id: '1', pack: '0.9 кг', available: true },
+      { ...sampleProducts[1], id: '2', pack: '2.3 кг', available: true, b2b_price: '19.00' }
+    ];
+    const groups = groupRawProducts(products, settings);
+    const meta = buildCatalogMeta(groups);
+    expect(meta.index[0].packs).toEqual(['0.9 кг']);
+    expect(meta.index[0].default_sku_id).toBe('1');
   });
 
   test('summarizeGroupMargin uses best variant margin', () => {

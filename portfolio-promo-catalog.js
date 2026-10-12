@@ -9,9 +9,9 @@ import { formatGroupPriceHtml } from './portfolio-pricing.js';
 
 export const PROMO_CHANGED_EVENT = 'pf-promo-changed';
 
-/** Any applied promo unlocks hidden (<25% margin) catalog products. */
+/** Скритите продукти (марж под прага) се отключват само от код, за който админът го е разрешил. */
 export function promoUnlocksLowMargin(promo) {
-  return !!promo?.code;
+  return !!promo?.code && promo.show_low_margin === true;
 }
 
 export function syncPromoCatalogUnlock(promo) {

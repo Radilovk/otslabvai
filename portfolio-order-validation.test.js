@@ -237,3 +237,42 @@ describe('Portfolio order creation rejects invalid orders', () => {
     expect(data.products[0].sku_id).toBe('prod-lida-green');
   });
 });
+
+describe('Промо код не отключва продукти без марж', () => {
+  const chunk = [{
+    group_id: '200',
+    name: 'Low Margin',
+    brand: 'B',
+    image: '',
+    variants: [{ sku_id: '9', barcode: '999', pack: '1 бр', available: true, b2b_price: 9.5, retail_price: 10 }],
+  }];
+  const meta = { chunk_count: 1, total_groups: 1, index: [], lookup: { 200: 0 }, sku_lookup: { 9: '200' }, synced_at: new Date().toISOString() };
+  const makeEnv = (promo) => {
+    const data = new Map([
+      ['portfolio_meta', JSON.stringify(meta)],
+      ['portfolio_chunk_0', JSON.stringify(chunk)],
+      ['portfolio_promo_codes', JSON.stringify([promo])],
+    ]);
+    return { PAGE_CONTENT: { data, get: async (k) => data.get(k) ?? null, put: async (k, v) => { data.set(k, v); }, delete: async (k) => { data.delete(k); } } };
+  };
+  const validate = async (env) => {
+    const request = new Request('https://example.com/portfolio/validate-cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ products: [{ sku_id: '9', quantity: 1 }], promoCode: 'CODE' }),
+    });
+    const res = await handlePortfolioRoute(request, env, new URL(request.url));
+    return res.json();
+  };
+
+  test('обикновен код → вариантът без марж се отказва', async () => {
+    const data = await validate(makeEnv({ code: 'CODE', active: true, discountType: 'percentage', discount: 10 }));
+    expect(data.valid).not.toBe(true);
+    expect(data.error).toMatch(/не е наличен/);
+  });
+
+  test('код с изрично show_low_margin от админа → допуска се', async () => {
+    const data = await validate(makeEnv({ code: 'CODE', active: true, discountType: 'percentage', discount: 10, show_low_margin: true }));
+    expect(data.valid).toBe(true);
+  });
+});
