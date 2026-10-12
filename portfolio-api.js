@@ -55,6 +55,12 @@ function finalizeGroupImages(group) {
 }
 import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipping.js';
 import { assertOrderRateLimit } from './order-rate-limit.js';
+import {
+  getOrderRecord,
+  listOrderRecords,
+  saveOrderRecord,
+  summarizeOrderRecords,
+} from './portfolio-order-store.js';
 import { decodeHtmlEntities, normalizeCatalogText } from './portfolio-text.js';
 import {
   resolveSiteCartSku,
@@ -108,7 +114,6 @@ export {
 const CHUNK_SIZE = 150;
 const KV_SETTINGS = 'portfolio_settings';
 const KV_META = 'portfolio_meta';
-const KV_ORDERS = 'portfolio_orders';
 const KV_PROMO = 'portfolio_promo_codes';
 const chunkKey = (n) => `portfolio_chunk_${n}`;
 const KV_FITNESS1_KEY = 'fitness1_api_key';
@@ -2059,42 +2064,28 @@ async function handleCreateOrder(request, env) {
     }
   }
 
-  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
-  orders.unshift(newOrder);
-  await env.PAGE_CONTENT.put(KV_ORDERS, JSON.stringify(orders, null, 2));
+  await saveOrderRecord(env, newOrder, { isB2bPending: isOrderB2bPending });
 
   return jsonResponse({ success: true, order: newOrder }, 201);
 }
 
 async function handleGetOrders(request, env) {
-  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
-  const project = new URL(request.url).searchParams.get('project')?.trim();
-  if (project) {
-    orders = orders.filter((o) => String(o.project || 'portfolio') === project);
-  }
+  const project = new URL(request.url).searchParams.get('project')?.trim() || null;
+  const orders = await listOrderRecords(env, { project });
   return jsonResponse(orders);
 }
 
 async function handleGetOrdersSummary(request, env) {
-  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
-  const project = new URL(request.url).searchParams.get('project')?.trim();
-  if (project) {
-    orders = orders.filter((o) => String(o.project || 'portfolio') === project);
-  }
-  const pending = orders.filter((o) => isOrderB2bPending(o)).length;
-  return jsonResponse({ pending, total: orders.length });
+  const project = new URL(request.url).searchParams.get('project')?.trim() || null;
+  const { pending, total } = await summarizeOrderRecords(env, { project, isB2bPending: isOrderB2bPending });
+  return jsonResponse({ pending, total });
 }
 
 async function handleGetOrder(request, env) {
   const id = new URL(request.url).searchParams.get('id')?.trim();
   if (!id) throw new PortfolioError('Липсва ID на поръчка.', 400);
 
-  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  const orders = ordersRaw ? JSON.parse(ordersRaw) : [];
-  const order = orders.find((o) => o.id === id);
+  const order = await getOrderRecord(env, id);
   if (!order) throw new PortfolioError('Поръчката не е намерена.', 404);
 
   return jsonResponse({
@@ -2271,16 +2262,14 @@ async function handleUpdateOrder(request, env) {
   const update = await request.json();
   if (!update?.id) throw new PortfolioError('Липсва ID на поръчка.', 400);
 
-  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
-  const idx = orders.findIndex((o) => o.id === update.id);
-  if (idx === -1) throw new PortfolioError('Поръчката не е намерена.', 404);
+  const order = await getOrderRecord(env, update.id);
+  if (!order) throw new PortfolioError('Поръчката не е намерена.', 404);
 
-  if (update.status) orders[idx].status = update.status;
-  if (update.admin_note != null) orders[idx].admin_note = update.admin_note;
+  if (update.status) order.status = update.status;
+  if (update.admin_note != null) order.admin_note = update.admin_note;
 
-  await env.PAGE_CONTENT.put(KV_ORDERS, JSON.stringify(orders, null, 2));
-  return jsonResponse({ success: true, order: orders[idx] });
+  await saveOrderRecord(env, order, { isB2bPending: isOrderB2bPending });
+  return jsonResponse({ success: true, order });
 }
 
 export function isAutoSubmitB2bEnabled(settings) {
@@ -2345,12 +2334,8 @@ async function handleApproveOrder(request, env) {
   const body = await request.json();
   if (!body?.id) throw new PortfolioError('Липсва ID на поръчка.', 400);
 
-  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
-  const idx = orders.findIndex((o) => o.id === body.id);
-  if (idx === -1) throw new PortfolioError('Поръчката не е намерена.', 404);
-
-  const order = orders[idx];
+  const order = await getOrderRecord(env, body.id);
+  if (!order) throw new PortfolioError('Поръчката не е намерена.', 404);
 
   if (isOrderFullySubmitted(order)) {
     throw new PortfolioError('Поръчката вече е изпратена към дистрибуторите.', 409);
@@ -2361,12 +2346,12 @@ async function handleApproveOrder(request, env) {
   }
 
   const { submitted } = await submitB2bForOrder(env, order, { sourceOrderIds: [order.id] });
-  if (body.admin_note) orders[idx].admin_note = body.admin_note;
+  if (body.admin_note) order.admin_note = body.admin_note;
 
-  await env.PAGE_CONTENT.put(KV_ORDERS, JSON.stringify(orders, null, 2));
+  await saveOrderRecord(env, order, { isB2bPending: isOrderB2bPending });
   return jsonResponse({
     success: true,
-    order: orders[idx],
+    order,
     fitness1: submitted.fitness1?.raw || null,
     sila: submitted.sila?.raw || null,
   });
@@ -2379,18 +2364,15 @@ async function handleApproveBatchOrder(request, env) {
     throw new PortfolioError('Липсват ID-та на поръчки за обобщаване.', 400);
   }
 
-  const ordersRaw = await env.PAGE_CONTENT.get(KV_ORDERS);
-  let orders = ordersRaw ? JSON.parse(ordersRaw) : [];
   const selected = [];
 
   for (const id of ids) {
-    const idx = orders.findIndex((o) => o.id === id);
-    if (idx === -1) throw new PortfolioError(`Поръчка ${id} не е намерена.`, 404);
-    const order = orders[idx];
+    const order = await getOrderRecord(env, id);
+    if (!order) throw new PortfolioError(`Поръчка ${id} не е намерена.`, 404);
     if (isOrderFullySubmitted(order)) {
       throw new PortfolioError(`Поръчка ${id} вече е изпратена към дистрибуторите.`, 409);
     }
-    selected.push({ idx, order });
+    selected.push({ order });
   }
 
   const allSkuIds = selected.flatMap((s) => extractCartSkuIds(s.order.products));
@@ -2408,17 +2390,17 @@ async function handleApproveBatchOrder(request, env) {
   const allProducts = selected.map((s) => getB2bProducts(s.order));
   const submitted = await submitDistributorOrders(env, allProducts, { sourceOrderIds: ids });
 
-  for (const { idx } of selected) {
-    if (submitted.fitness1) orders[idx].fitness1_order = { ...submitted.fitness1 };
-    if (submitted.sila) orders[idx].sila_order = { ...submitted.sila };
-    orders[idx].status = buildOrderStatusLabel(orders[idx]);
-    if (body.admin_note) orders[idx].admin_note = body.admin_note;
+  for (const { order } of selected) {
+    if (submitted.fitness1) order.fitness1_order = { ...submitted.fitness1 };
+    if (submitted.sila) order.sila_order = { ...submitted.sila };
+    order.status = buildOrderStatusLabel(order);
+    if (body.admin_note) order.admin_note = body.admin_note;
   }
 
-  await env.PAGE_CONTENT.put(KV_ORDERS, JSON.stringify(orders, null, 2));
+  await Promise.all(selected.map(({ order }) => saveOrderRecord(env, order, { isB2bPending: isOrderB2bPending })));
   return jsonResponse({
     success: true,
-    orders: selected.map((s) => orders[s.idx]),
+    orders: selected.map((s) => s.order),
     fitness1: submitted.fitness1?.raw || null,
     sila: submitted.sila?.raw || null,
   });

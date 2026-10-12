@@ -33,6 +33,7 @@ const PORT = Number(process.env.PORT || 8790);
 const DATA_DIR = join(ROOT, 'backend', 'portfolio');
 
 const kvStore = new Map();
+const kvMetadata = new Map();
 
 function seedMinimalCatalog() {
   const groups = [
@@ -113,8 +114,15 @@ function createEnv() {
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'kakadu1234',
     PAGE_CONTENT: {
       get: async (key) => kvStore.get(key) ?? null,
-      put: async (key, val) => { kvStore.set(key, val); },
-      delete: async (key) => { kvStore.delete(key); }
+      put: async (key, val, opts) => {
+        kvStore.set(key, val);
+        if (opts?.metadata) kvMetadata.set(key, opts.metadata);
+      },
+      delete: async (key) => { kvStore.delete(key); kvMetadata.delete(key); },
+      list: async ({ prefix = '' } = {}) => ({
+        keys: [...kvStore.keys()].filter((k) => k.startsWith(prefix)).map((name) => ({ name, metadata: kvMetadata.get(name) })),
+        list_complete: true,
+      })
     }
   };
 }

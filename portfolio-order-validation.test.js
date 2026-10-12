@@ -130,8 +130,8 @@ describe('Portfolio order creation rejects invalid orders', () => {
     const data = await res.json();
     expect(data.error).toMatch(/офис/i);
 
-    const orders = JSON.parse(env.PAGE_CONTENT.data.get('portfolio_orders'));
-    expect(orders).toHaveLength(0);
+    const saved = [...env.PAGE_CONTENT.data.keys()].filter((k) => k.startsWith('portfolio_order:'));
+    expect(saved).toHaveLength(0);
   });
 
   test('POST /portfolio/orders accepts valid order with 201', async () => {
@@ -171,8 +171,8 @@ describe('Portfolio order creation rejects invalid orders', () => {
   });
 
   test('GET /portfolio/order returns saved order', async () => {
-    const orders = JSON.parse(env.PAGE_CONTENT.data.get('portfolio_orders'));
-    const id = orders[0].id;
+    const key = [...env.PAGE_CONTENT.data.keys()].find((k) => k.startsWith('portfolio_order:'));
+    const id = JSON.parse(env.PAGE_CONTENT.data.get(key)).id;
     const request = new Request(`https://example.com/portfolio/order?id=${id}`, { method: 'GET' });
     const res = await handlePortfolioRoute(request, env, new URL(request.url));
     expect(res.status).toBe(200);
