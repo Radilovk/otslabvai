@@ -158,7 +158,7 @@ export function productJsonLd(site, product) {
     ...(product.image ? { image: [product.image] } : {}),
     ...(product.category ? { category: product.category } : {}),
     ...(product.id ? { sku: String(product.id) } : {}),
-    brand: { '@type': 'Brand', name: site.name },
+    brand: { '@type': 'Brand', name: product.brand || site.name },
   };
 
   if (product.price != null && product.price > 0) {
@@ -271,7 +271,9 @@ export function productIdScript(product) {
 }
 
 class HeadBodyEnhancer {
-  constructor({ head = [], headPrepend = [], body = [], canonical = null, robotsContent = ROBOTS_META }) {
+  constructor({ head = [], headPrepend = [], body = [], canonical = null, robotsContent = ROBOTS_META, meta = [] }) {
+    this.meta = meta;
+    this.foundMeta = new Set();
     this.head = head;
     this.headPrepend = headPrepend;
     this.body = body;
@@ -285,12 +287,25 @@ class HeadBodyEnhancer {
   headElement(el) {
     for (const h of [...this.headPrepend].reverse()) el.prepend(h, { html: true });
     for (const h of this.head) el.append(h, { html: true });
-    if (this.canonical && !this.foundCanonical) {
-      el.append(`<link rel="canonical" href="${esc(this.canonical)}">`, { html: true });
-    }
-    if (!this.foundRobots && !this.skipRobots) {
-      el.append(`<meta name="robots" content="${esc(this.robotsContent)}">`, { html: true });
-    }
+    // Липсващите тагове се добавят при </head> — едва тогава знаем кои вече съществуват
+    // (иначе canonical/robots се дублират, защото <head> се обработва преди децата си).
+    el.onEndTag((end) => {
+      if (this.canonical && !this.foundCanonical) {
+        end.before(`<link rel="canonical" href="${esc(this.canonical)}">`, { html: true });
+      }
+      if (!this.foundRobots && !this.skipRobots) {
+        end.before(`<meta name="robots" content="${esc(this.robotsContent)}">`, { html: true });
+      }
+      for (const meta of this.meta) {
+        if (this.foundMeta.has(meta) || !meta.content) continue;
+        end.before(`<meta ${meta.attr}="${meta.name}" content="${esc(meta.content)}">`, { html: true });
+      }
+    });
+  }
+
+  metaElement(el, meta) {
+    this.foundMeta.add(meta);
+    if (meta.content) el.setAttribute('content', meta.content);
   }
 
   canonicalElement(el) {
@@ -316,12 +331,40 @@ class HeadBodyEnhancer {
 export function injectSeo(response, options = {}) {
   const enhancer = new HeadBodyEnhancer(options);
   // @ts-ignore HTMLRewriter is a Cloudflare Workers runtime global
-  return new HTMLRewriter()
+  let rewriter = new HTMLRewriter()
     .on('head', { element: (el) => enhancer.headElement(el) })
     .on('link[rel="canonical"]', { element: (el) => enhancer.canonicalElement(el) })
     .on('meta[name="robots"]', { element: (el) => enhancer.robotsElement(el) })
-    .on('body', { element: (el) => enhancer.bodyElement(el) })
-    .transform(response);
+    .on('body', { element: (el) => enhancer.bodyElement(el) });
+  if (options.title) {
+    rewriter = rewriter.on('title', { element: (el) => el.setInnerContent(options.title) });
+  }
+  for (const meta of enhancer.meta) {
+    rewriter = rewriter.on(`meta[${meta.attr}="${meta.name}"]`, { element: (el) => enhancer.metaElement(el, meta) });
+  }
+  return rewriter.transform(response);
+}
+
+/** Title + description + OG/Twitter за продуктова страница (crawler-ите не изпълняват JS). */
+export function productPageMeta(site, product, canonical) {
+  const brand = product.brand && product.brand !== site.name ? ` – ${product.brand}` : '';
+  const title = `${product.title}${brand} | ${site.name}`;
+  const priceLine = product.price != null && product.price > 0 ? ` Цена: ${product.price} ${site.currency}.` : '';
+  const description = `${String(product.description || product.title).slice(0, 140)}${priceLine}`.slice(0, 160);
+  const meta = [
+    { attr: 'name', name: 'description', content: description },
+    { attr: 'property', name: 'og:title', content: title },
+    { attr: 'property', name: 'og:description', content: description },
+    { attr: 'property', name: 'og:url', content: canonical },
+    { attr: 'property', name: 'og:type', content: 'product' },
+    { attr: 'name', name: 'twitter:title', content: title },
+    { attr: 'name', name: 'twitter:description', content: description },
+  ];
+  if (product.image) {
+    meta.push({ attr: 'property', name: 'og:image', content: product.image });
+    meta.push({ attr: 'name', name: 'twitter:image', content: product.image });
+  }
+  return { title, meta };
 }
 
 export function robotsTxt(site) {

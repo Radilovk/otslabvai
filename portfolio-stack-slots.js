@@ -25,6 +25,10 @@ export const STACK_CONFLICT_GROUPS = {
   carnitine: ['carnitine', 'карнитин', 'l-carnitine', 'l карнитин'],
   collagen: ['collagen', 'колаген', 'хиалурон', 'hyaluronic'],
   coq10: ['coq10', 'co-q10', 'убихинол', 'ubiquinol', 'коензим q'],
+  glutathione: ['glutathione', 'глутатион'],
+  astaxanthin: ['astaxanthin', 'астаксантин'],
+  nad_precursor: ['nmn', 'nad+', 'никотинамид мононуклеотид', 'nicotinamide mononucleotide', 'nicotinamide riboside'],
+  pqq: ['pqq', 'pyrroloquinoline'],
 };
 
 /** Слот дефиниции — ключови думи за класификация */

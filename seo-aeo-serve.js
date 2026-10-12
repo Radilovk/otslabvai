@@ -10,6 +10,7 @@ import {
 import {
   SITE_SEO,
   injectSeo,
+  productPageMeta,
   isCatalogHomePath,
   itemListJsonLd,
   ldTag,
@@ -124,10 +125,13 @@ async function serveSeoProductPage(request, env, url, siteId, slug) {
 
   // The template uses relative asset paths (portfolio.css, portfolio-product.js, images/…).
   // Under /products/<slug> they would resolve to /products/… and 404 → blank page.
+  const { title, meta } = productPageMeta(site, product, canonical);
   const enhanced = injectSeo(response, {
     headPrepend: ['<base href="/">'],
     head,
     canonical,
+    title,
+    meta,
   });
 
   const headers = new Headers(enhanced.headers);

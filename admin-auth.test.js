@@ -25,5 +25,7 @@ describe('admin-auth', () => {
     expect(routeRequiresAdmin('/portfolio/validate-cart', 'POST')).toBe(false);
     expect(routeRequiresAdmin('/admin/login', 'POST')).toBe(false);
     expect(routeRequiresAdmin('/api-token', 'GET')).toBe(true);
+    expect(routeRequiresAdmin('/portfolio/orders/approve', 'POST')).toBe(true);
+    expect(routeRequiresAdmin('/portfolio/orders/approve-batch', 'POST')).toBe(true);
   });
 });

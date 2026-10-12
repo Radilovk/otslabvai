@@ -383,8 +383,13 @@ body.lpq-body {
   margin-bottom: 2rem;
 }
 
+/* По-малко варианти, когато каталогът не стига за 3 различни пакета */
+.lpr-tiers[data-count="2"] { grid-template-columns: repeat(2, 1fr); }
+.lpr-tiers[data-count="1"] { grid-template-columns: minmax(0, 560px); justify-content: center; }
+
 @media (max-width: 900px) {
-  .lpr-tiers { grid-template-columns: 1fr; }
+  .lpr-tiers,
+  .lpr-tiers[data-count] { grid-template-columns: 1fr; }
 }
 
 .lpr-tier-hint {

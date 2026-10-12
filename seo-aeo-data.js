@@ -35,8 +35,10 @@ export function extractPageContentProducts(pageContent, categoryFallback = 'Пр
         description: pd.tagline || String(pd.description || '').slice(0, 400),
         price: priceEur > 0 ? Math.round(priceEur * 100) / 100 : null,
         image: pd.image_url || '',
+        brand: pd.brand || p.system_data?.manufacturer || '',
         category,
-        inStock: (p.private_data?.inventory ?? 1) > 0,
+        // Наличността се пази в system_data; private_data е стар ключ.
+        inStock: Number(p.system_data?.inventory ?? p.private_data?.inventory ?? 1) > 0,
         slug: productSlugFromRecord({ ...p, title: pd.name }),
       });
     }
@@ -59,6 +61,7 @@ export function extractPortfolioIndexProducts(meta) {
       description: `${e.name} — ${e.brand || 'BIOCODE'}${e.category_top ? `, ${e.category_top}` : ''}`,
       price: e.min_client_price > 0 ? e.min_client_price : (e.min_price > 0 ? e.min_price : null),
       image: e.image || '',
+      brand: e.brand || '',
       category: e.category_top || e.category || 'Каталог',
       inStock: e.available !== false,
       slug: slugify(e.name) || String(e.group_id),

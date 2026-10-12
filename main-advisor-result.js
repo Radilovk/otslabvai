@@ -187,19 +187,37 @@ function bindTierSelection(tiers, baseSchedule) {
   selectTier(resultData?.recommended_tier || 'optimal');
 }
 
+/** Скрива пакет, който съдържа същите продукти като предишния (малък каталог → еднакви нива). */
+function collapseDuplicateTiers(tiers, rec) {
+  const keys = [];
+  const alias = {};
+  let prevSig = null;
+  for (const key of ['basic', 'optimal', 'premium']) {
+    const sig = (tiers[key]?.products || []).map((p) => p.product_id).sort().join('|');
+    if (!sig) continue;
+    if (sig === prevSig) {
+      alias[key] = keys[keys.length - 1];
+      continue;
+    }
+    keys.push(key);
+    prevSig = sig;
+  }
+  const recKey = keys.includes(rec) ? rec : (alias[rec] || keys[keys.length - 1] || rec);
+  return { keys, recKey };
+}
+
 function renderResult(data) {
   resultData = data;
-  const rec = data.recommended_tier || 'optimal';
   const tiers = data.tiers || {};
   const benefits = normalizeBenefitsForDisplay(tiers);
+  const { keys: tierKeys, recKey: rec } = collapseDuplicateTiers(tiers, data.recommended_tier || 'optimal');
+  data.recommended_tier = rec;
 
   container.innerHTML = `
     <div class="lpr-analysis">${escapeHtml(data.analysis || '')}</div>
     <p class="lpr-tier-hint">Кликнете върху вариант, за да видите дневния график</p>
-    <div class="lpr-tiers">
-      ${renderTier('basic', tiers.basic || {}, rec === 'basic', benefits.basic)}
-      ${renderTier('optimal', tiers.optimal || {}, rec === 'optimal', benefits.optimal)}
-      ${renderTier('premium', tiers.premium || {}, rec === 'premium', benefits.premium)}
+    <div class="lpr-tiers" data-count="${tierKeys.length}">
+      ${tierKeys.map((key) => renderTier(key, tiers[key], rec === key, benefits[key])).join('')}
     </div>
     <section class="lpr-schedule" id="lpr-schedule-panel" aria-live="polite"></section>
     ${(data.lifestyle_tips || []).length ? `<section class="lpr-schedule lpr-lifestyle-tips"><h3>Съвети за начин на живот</h3><ul class="lpr-schedule-list">${data.lifestyle_tips.map((t) => `<li>${escapeHtml(t)}</li>`).join('')}</ul></section>` : ''}
