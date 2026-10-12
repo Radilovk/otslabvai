@@ -80,6 +80,7 @@ import {
   submitSilaOrder,
   fetchSilaDeliveryTypes,
   resolveSilaDelivery,
+  mergeCrossDistributorGroups,
   mergeCatalogProducts,
   getSilaApiToken,
   listSilaApiTokenCandidates,
@@ -407,7 +408,7 @@ export function groupRawProducts(rawProducts, settings, descriptionMap = null) {
     g.variants.push(variant);
   }
 
-  const listed = Array.from(groups.values());
+  const listed = mergeCrossDistributorGroups(Array.from(groups.values()));
   for (const g of listed) finalizeGroupImages(g);
   return listed
     .filter((g) => resolveCatalogImage({ image: g.image }))
@@ -1616,18 +1617,20 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
  * @param {object} env
  * @param {string[]} skuIds
  * @param {string} project
- * @returns {Promise<Set<string>>}
+ * @returns {Promise<Map<string, { profit_eur: number }>>}
  */
 export async function filterOrderableCartSkus(env, skuIds, project) {
   const memoEnv = { ...env, __memo: {} };
-  const orderable = new Set();
+  /** @type {Map<string, { profit_eur: number }>} поръчваемите SKU → печалба на брой (продажна − доставна) */
+  const orderable = new Map();
   for (const sku of skuIds) {
     try {
-      await validateAndNormalizeCartItems(memoEnv, [{ sku_id: sku, quantity: 1 }], { project });
-      orderable.add(sku);
+      const [line] = await validateAndNormalizeCartItems(memoEnv, [{ sku_id: sku, quantity: 1 }], { project });
+      const profit = Number(line?.retail_price) - Number(line?.b2b_price);
+      orderable.set(sku, { profit_eur: Number(line?.b2b_price) > 0 && profit > 0 ? Math.round(profit * 100) / 100 : 0 });
     } catch (e) {
       // Само отказ от валидацията изключва продукта; инфраструктурна грешка не трябва да спира консултанта.
-      if (!(e instanceof PortfolioError)) orderable.add(sku);
+      if (!(e instanceof PortfolioError)) orderable.set(sku, { profit_eur: 0 });
     }
   }
   return orderable;
@@ -1637,11 +1640,12 @@ export async function filterOrderableCartSkus(env, skuIds, project) {
  * Жива проверка при доставчика за редовете в количката. Изчерпано в момента → 409 с имената;
  * недостъпен доставчик → продължаваме с кеша (резултатът се пази в поръчката).
  */
-async function assertLiveStock(env, items) {
+async function assertLiveStock(env, items, { useCache = true } = {}) {
   if (env.MOCK_FITNESS1 === '1' || env.MOCK_FITNESS1 === true || env.LIVE_STOCK_CHECK === '0') return null;
   const live = await checkLiveStock(items, {
     f1Key: await getFitness1ApiKey(env),
     silaToken: await getSilaApiToken(env),
+    useCache,
   });
   if (live.unavailable.length) {
     // Кешът е остарял — пускаме синхронизация на каталога (debounced), за да изчезне и от сайта.
@@ -2062,7 +2066,8 @@ async function handleCreateOrder(request, env) {
   }
 
   const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord, project });
-  const liveStock = await assertLiveStock(env, items);
+  // При поръчката — без кеш: наличността трябва да е от този момент.
+  const liveStock = await assertLiveStock(env, items, { useCache: false });
 
   let b2bTotal = 0;
   let retailTotal = 0;

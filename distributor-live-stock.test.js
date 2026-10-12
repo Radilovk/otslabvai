@@ -1,8 +1,9 @@
-import { checkLiveStock } from './distributor-live-stock.js';
+import { checkLiveStock, clearLiveStockCache } from './distributor-live-stock.js';
 
 const jsonResponse = (body, status = 200) => ({ ok: status < 400, status, text: async () => JSON.stringify(body) });
 
 describe('checkLiveStock', () => {
+  beforeEach(() => clearLiveStockCache());
   test('Fitness1 по ?id=, Sila по EAN; изчерпано → unavailable', async () => {
     const calls = [];
     const fetchImpl = async (url) => {
@@ -42,5 +43,20 @@ describe('checkLiveStock', () => {
       fetchImpl: async () => jsonResponse({ status: 'ok', products: [] }),
     });
     expect(live.unavailable[0].reason).toMatch(/липсва/);
+  });
+});
+
+describe('кеш на живата проверка', () => {
+  beforeEach(() => clearLiveStockCache());
+
+  test('повторна проверка в рамките на 2 минути не вика доставчика; useCache:false вика', async () => {
+    let calls = 0;
+    const fetchImpl = async () => { calls += 1; return { ok: true, status: 200, text: async () => JSON.stringify({ status: 'ok', products: [{ id: '5', available: true }] }) }; };
+    const line = [{ sku_id: '5', distributor: 'fitness1' }];
+    await checkLiveStock(line, { f1Key: 'k', fetchImpl });
+    await checkLiveStock(line, { f1Key: 'k', fetchImpl });
+    expect(calls).toBe(1);
+    await checkLiveStock(line, { f1Key: 'k', fetchImpl, useCache: false });
+    expect(calls).toBe(2);
   });
 });

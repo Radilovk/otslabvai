@@ -73,6 +73,7 @@ import {
   handleAdminSession
 } from './admin-auth.js';
 import { isWorkerApiPath, serveMappedAsset } from './hostname-routing.js';
+import { assertAdvisorRateLimit } from './order-rate-limit.js';
 import { handleSeoRequest } from './seo-aeo-serve.js';
 
 // Cache configuration constants
@@ -175,6 +176,7 @@ export default {
       switch (pathname) {
           case '/life-protocol-submit':
             if (request.method === 'POST') {
+              await assertAdvisorRateLimitOrThrow(request, env);
               response = await handleLifeProtocolSubmit(request, env, ctx);
             } else {
               throw new UserFacingError('Method Not Allowed.', 405);
@@ -217,6 +219,7 @@ export default {
 
           case '/main-advisor-submit':
             if (request.method === 'POST') {
+              await assertAdvisorRateLimitOrThrow(request, env);
               response = await handleMainAdvisorSubmit(request, env, ctx);
             } else {
               throw new UserFacingError('Method Not Allowed.', 405);
@@ -259,6 +262,7 @@ export default {
 
           case '/portfolio-advisor-submit':
             if (request.method === 'POST') {
+              await assertAdvisorRateLimitOrThrow(request, env);
               response = await handlePortfolioAdvisorSubmit(request, env, ctx);
             } else {
               throw new UserFacingError('Method Not Allowed.', 405);
@@ -2239,6 +2243,15 @@ async function runMainAdvisorGeneration(env, rawAnswers, options = {}) {
 /**
  * POST /life-protocol-submit
  */
+async function assertAdvisorRateLimitOrThrow(request, env) {
+  try {
+    await assertAdvisorRateLimit(request, env);
+  } catch (e) {
+    if (e?.name === 'RateLimitError') throw new UserFacingError(e.message, 429);
+    throw e;
+  }
+}
+
 async function handleLifeProtocolSubmit(request, env, ctx) {
   const rawAnswers = await request.json();
 

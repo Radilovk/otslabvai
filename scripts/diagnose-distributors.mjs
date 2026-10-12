@@ -324,6 +324,14 @@ async function diagnoseRound3() {
   });
   show('Fitness1 групи', stat(meta.index.filter((e) => !isSila(e))));
   show('Sila групи', stat(meta.index.filter(isSila)));
+  const silaOnPromo = (sila || []).filter((p) => Number(p.sale_price) > 0);
+  console.log(`Sila SKU с промоция в магазина на Sila: ${silaOnPromo.length}`);
+  const allVars = groups.flatMap((g) => g.variants.map((v) => ({ ...v, sila: Number(g.group_id) >= 90000000 || v.distributor === 'sila' })));
+  const avail = allVars.filter((v) => v.available);
+  const undercut = avail.filter((v) => Number(v.f1_reference_price) > 0 && v.retail_price > Number(v.f1_reference_price) + 0.005);
+  console.log(`налични варианти: ${avail.length}; по-скъпи от магазина на доставчика (скрити): ${undercut.length} (Sila ${undercut.filter((v) => v.sila).length})`);
+  const mixed = groups.filter((g) => g.variants.some((v) => v.distributor === 'sila') && g.variants.some((v) => v.distributor !== 'sila'));
+  console.log(`продукти с варианти и от двата доставчика (една страница): ${mixed.length}`);
 
   for (const [project, key] of [['main', 'page_content'], ['life', 'life_page_content']]) {
     const content = await kvGet(key);
@@ -459,6 +467,6 @@ async function diagnoseRound4() {
   show('partner_price спрямо regular_price (налични)', hist);
 }
 
-for (const fn of [diagnoseRound4]) {
+for (const fn of [diagnoseRound3, diagnoseRound4]) {
   try { await fn(); } catch (e) { console.log(`!!! ${fn.name}: ${e.stack || e.message}`); }
 }

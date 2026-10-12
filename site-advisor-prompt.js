@@ -24,6 +24,7 @@ export function getDefaultSiteAdvisorPrompt(siteId = 'life') {
   const ctx = SITE_PROMPT_CONTEXT[siteId] || SITE_PROMPT_CONTEXT.life;
   return `${ctx.expertLine}
 Избери САМО product_id от candidate_products. БЕЗ reasoning извън JSON.
+candidate_products са подредени по приоритет за магазина: при равна клинична стойност избирай по-напред в списъка.
 
 СПАЗВАЙ client_profile и clinical_guardrails. Целта е зададена от сайта — не питай за нея.
 При противоречие с guardrails избери друг product_id — клинична адекватност пред маркетинг.

@@ -28,7 +28,8 @@ describe('filterOrderableCartSkus', () => {
   test('пропуска само продукти, които checkout приема', async () => {
     const ok = await filterOrderableCartSkus(env, ['1', '2', '3', '999'], 'main');
     // 2 — изчерпан, 3 — марж под 25%, 999 — няма го в каталога
-    expect([...ok]).toEqual(['1']);
+    expect([...ok.keys()]).toEqual(['1']);
+    expect(ok.get('1').profit_eur).toBeGreaterThan(0);
     // метата (няколко MB в продукция) се чете веднъж за цялата проверка
     expect(reads).toBe(1);
   });
