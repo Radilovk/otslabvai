@@ -285,10 +285,12 @@ const STRONG_NAME_RULES = [
   [['fish oil', 'рибено масло', 'krill oil', 'крилово масло'], { slot: 'omega3' }],
   [['melatonin', 'мелатонин'], { slot: 'sleep' }],
   [['coq10', 'co q10', 'ubiquinol', 'убихинол', 'коензим q10'], { slot: 'coq10' }],
+  [['glucosamine', 'глюкозамин', 'chondroitin', 'хондроитин'], { slot: 'joint' }],
+  [['collagen', 'колаген'], { slot: 'collagen' }],
 ];
 
 /** Храни в категории на добавки (протеинови барове, каши, чашки) — по името. */
-const FOOD_NAME = ['bar$', 'bars$', 'бар$', 'барове', 'porridge', 'каша$', 'cups$', 'pancake', 'cookie', 'crunchy'];
+const FOOD_NAME = ['bar$', 'bars$', 'бар$', 'барове', 'porridge', 'каша$', 'cups$', 'pancake', 'cookie', 'crunchy', 'oatmeal', 'oats$', 'овесен', 'овесени'];
 
 /** Една ампула / саше / бар като отделен продукт. */
 const SINGLE_DOSE_NAME = ['1 amp', '1 ампула', '1 бр$', '1 sachet', '1 саше', '1 serving', '1 доза', '1 shot', '1 stick', 'shot$', 'шот$', 'energy gel', 'енергиен гел'];

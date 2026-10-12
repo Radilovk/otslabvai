@@ -34,6 +34,8 @@ const GLOBAL_AVOID = [
   'raspberry ketone', 'малинови кетони', 'hcg', 'vanadyl', 'ванадил', 'гугулстерон', 'guggul',
   'dmaa', 'dmha', 'ephedr', 'ефедр', 'yohimb', 'йохимб', 'anabolic', 'анабол', 'prohormone', 'прохормон',
   'detox tea', 'детокс чай', 'homeopath', 'хомеопат', 'sauna', 'сауна', 'cream', 'крем', 'gel$', 'гел$',
+  // Червеният ориз е естествен статин — не се продава до CoQ10 (който е точно за хората на статини).
+  'red yeast rice', 'червен ориз', 'monacolin', 'монаколин',
 ];
 
 const OMEGA_EVIDENCE = ['omega 3', 'омега 3', 'fish oil', 'рибено', 'epa', 'dha', 'krill', 'крил', 'algae', 'водорасли'];
@@ -108,8 +110,8 @@ export const MAIN_SLOTS = [
     category: MAIN_CATS.support,
     target: 3,
     goals: ['micronutrients', 'energy'],
-    evidence: ['multi', 'мулти', 'vitamins', 'витамини'],
-    avoid: ['kids', 'детск', 'pack$', 'пак$'],
+    evidence: ['multi', 'мулти'],
+    avoid: ['kids', 'детск', 'pack$', 'pak$', 'пак$', 'performance', 'sport'],
     evidenceLevel: 'умерена',
     maxPrice: 35,
     note: 'При калориен дефицит покрива рисковите микроелементи.',
@@ -222,8 +224,8 @@ export const LIFE_SLOTS = [
     category: LIFE_CATS.longevity,
     target: 3,
     goals: ['micronutrients', 'longevity'],
-    evidence: ['multi', 'мулти', '50', 'menopause', 'менопауза', 'women', 'жени', 'men', 'мъже'],
-    avoid: ['kids', 'детск', 'testosterone', 'тестостерон', 'pack$', 'пак$'],
+    evidence: ['50', '40', 'menopause', 'менопауза', 'women', 'woman', 'жени', 'men', 'man', 'мъже', 'senior', 'silver', 'mature'],
+    avoid: ['kids', 'детск', 'testosterone', 'тестостерон', 'pack$', 'pak$', 'пак$', 'performance', 'sport'],
     evidenceLevel: 'умерена',
     maxPrice: 45,
     note: 'Формули за жени и мъже 50+; менопауза.',
@@ -321,7 +323,37 @@ export const CURATION_SLOTS = { main: MAIN_SLOTS, life: LIFE_SLOTS };
 
 const DEFAULT_PRICE = { min: 8, max: 60 };
 const MAX_PER_BRAND_IN_SLOT = 1;
-const SHORTLIST_FACTOR = 4;
+const SHORTLIST_FACTOR = 6;
+
+/**
+ * Разнообразие в едно място: 1 марка; при няколко роли — равен дял за всяка (енергия = креатин + B12 + желязо,
+ * не 3 креатина); до 1 продукт за мъже и 1 за жени; без еднакви имена от различни марки.
+ */
+function createDiversityGuard(slot) {
+  const perBrand = new Map();
+  const perFactSlot = new Map();
+  const perGender = new Map();
+  const names = new Set();
+  const capPerFactSlot = slot.slots.length > 1 ? Math.ceil(slot.target / slot.slots.length) : Infinity;
+  const baseName = (name) => norm(name).replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  return {
+    allows(entry, product) {
+      const facts = getProductFacts(product);
+      if ((perBrand.get(norm(entry.brand)) || 0) >= MAX_PER_BRAND_IN_SLOT) return false;
+      if ((perFactSlot.get(facts.slot) || 0) >= capPerFactSlot) return false;
+      if (facts.gender && (perGender.get(facts.gender) || 0) >= 1) return false;
+      if (names.has(baseName(entry.name))) return false;
+      return true;
+    },
+    add(entry, product) {
+      const facts = getProductFacts(product);
+      perBrand.set(norm(entry.brand), (perBrand.get(norm(entry.brand)) || 0) + 1);
+      perFactSlot.set(facts.slot, (perFactSlot.get(facts.slot) || 0) + 1);
+      if (facts.gender) perGender.set(facts.gender, (perGender.get(facts.gender) || 0) + 1);
+      names.add(baseName(entry.name));
+    },
+  };
+}
 
 /** Печалба в € и % от индекса (налични само в пълния каталог — не в публичния). */
 export function entryProfit(entry) {
@@ -459,14 +491,12 @@ export function finalizeCurationPicks(shortlist, groupsById, descriptions = new 
   const picks = [];
   const rejected = [];
   for (const { slot, need, candidates } of shortlist) {
-    const perBrand = new Map();
+    const guard = createDiversityGuard(slot);
     let added = 0;
     for (const cand of candidates) {
       if (added >= need) break;
       const gid = String(cand.entry.group_id);
       if (taken.has(gid)) continue;
-      const brand = norm(cand.entry.brand);
-      if ((perBrand.get(brand) || 0) >= MAX_PER_BRAND_IN_SLOT) continue;
       const group = groupsById.get(gid);
       if (!group) continue;
       const product = curatedGroupToSiteProduct(group, slot, { description: descriptions.get(gid) });
@@ -475,7 +505,8 @@ export function finalizeCurationPicks(shortlist, groupsById, descriptions = new 
         rejected.push({ slot: slot.key, name: cand.entry.name, reason });
         continue;
       }
-      perBrand.set(brand, (perBrand.get(brand) || 0) + 1);
+      if (!guard.allows(cand.entry, product)) continue;
+      guard.add(cand.entry, product);
       taken.add(gid);
       picks.push({ slot, product, ...cand });
       added += 1;
@@ -489,14 +520,14 @@ export function selectCurationCandidates(index, project, pageContent, opts = {})
   const taken = new Set();
   const picks = [];
   for (const { slot, need, candidates } of shortlistCurationCandidates(index, project, pageContent, opts)) {
-    const perBrand = new Map();
+    const guard = createDiversityGuard(slot);
     let added = 0;
     for (const cand of candidates) {
       if (added >= need) break;
       const gid = String(cand.entry.group_id);
-      const brand = norm(cand.entry.brand);
-      if (taken.has(gid) || (perBrand.get(brand) || 0) >= MAX_PER_BRAND_IN_SLOT) continue;
-      perBrand.set(brand, (perBrand.get(brand) || 0) + 1);
+      const product = entryAsProduct(cand.entry);
+      if (taken.has(gid) || !guard.allows(cand.entry, product)) continue;
+      guard.add(cand.entry, product);
       taken.add(gid);
       picks.push({ slot, ...cand });
       added += 1;
