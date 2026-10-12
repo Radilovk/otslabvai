@@ -16,7 +16,11 @@ export const CONDITION_EXCLUSIONS = {
     'креатин', 'creatine', 'протеин', 'protein', 'whey', 'суроватк', 'казеин', 'casein',
     'mrp', 'meal replacement', 'gainer', 'гейн', 'mass gainer',
   ],
-  liver: ['ниацин', 'niacin', 'желязо', 'iron'],
+  liver: [
+    'ниацин', 'niacin', 'желязо', 'iron',
+    // Високодозов екстракт от зелен чай (EGCG) и усинова киселина — описани случаи на чернодробно увреждане.
+    'egcg', 'green tea extract', 'екстракт от зелен чай', 'usnic', 'усинов',
+  ],
   cardiovascular: [
     'йохимбин', 'yohimbine', 'ефедра', 'ephedra',
     'thermogenic', 'термоген', 'fat burn', 'fat burner', 'изгар', 'бърн', 'burner',

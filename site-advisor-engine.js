@@ -216,7 +216,14 @@ export async function prepareSiteAdvisorSubmission(env, rawAnswers, deps, {
   }
 
   const allProducts = extractProductsFromContent(content);
-  const eligible = filterEligibleProducts(allProducts);
+  let eligible = filterEligibleProducts(allProducts);
+
+  // Препоръчваме само продукти, които checkout-ът реално приема (наличност при доставчика, марж, каталог).
+  if (deps.filterOrderable) {
+    const skuOf = (p) => enrichSiteProductItem({ product_id: p.product_id }, p, siteId).sku_id;
+    const orderable = await deps.filterOrderable(env, eligible.map(skuOf), project);
+    eligible = eligible.filter((p) => orderable.has(skuOf(p)));
+  }
 
   if (eligible.length < 3) {
     throw new Error('Няма достатъчно налични орални продукти за персонална препоръка. Моля, опитайте по-късно.');

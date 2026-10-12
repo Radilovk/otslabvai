@@ -37,6 +37,8 @@ export function hasAdvisorClinicalComplexity(profile = {}) {
   const allergies = listClinicalFlags(profile.allergies);
 
   if (profileHasPregnancyOrBreastfeeding(profile)) return true;
+  // Свободен текст („Друго: варфарин“) не се разпознава от правилата — нужен е AI изборът, не само текст върху готов стек.
+  if (profile.conditions_other || profile.medications_other || profile.allergies_other) return true;
   if (conditions.length >= 2) return true;
   if (conditions.length && (medications.length || allergies.length)) return true;
   if (medications.length >= 2) return true;

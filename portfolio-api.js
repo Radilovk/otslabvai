@@ -558,9 +558,11 @@ export function buildClientCatalogMeta(meta, { includeLowMargin = false } = {}) 
 }
 
 async function getSettings(env) {
+  if (env?.__memo?.settings) return { ...env.__memo.settings };
   const raw = await env.PAGE_CONTENT.get(KV_SETTINGS);
-  if (!raw) return { ...DEFAULT_SETTINGS };
-  return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+  const settings = raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : { ...DEFAULT_SETTINGS };
+  if (env?.__memo) env.__memo.settings = settings;
+  return { ...settings };
 }
 
 async function saveSettings(env, settings) {
@@ -568,8 +570,12 @@ async function saveSettings(env, settings) {
 }
 
 async function getMeta(env) {
+  // __memo: кеш в рамките на една операция (напр. проверка на много продукти) — метата е няколко MB.
+  if (env?.__memo && 'meta' in env.__memo) return env.__memo.meta;
   const raw = await env.PAGE_CONTENT.get(KV_META);
-  return raw ? JSON.parse(raw) : null;
+  const meta = raw ? JSON.parse(raw) : null;
+  if (env?.__memo) env.__memo.meta = meta;
+  return meta;
 }
 
 /** Каталожната мета информация (за portfolio-import.js и worker.js). */
@@ -1599,6 +1605,29 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
   if (errors.length) throw new PortfolioError(errors.join(' '), 400);
   if (!normalized.length) throw new PortfolioError('Количката е празна.', 400);
   return normalized;
+}
+
+/**
+ * Кои SKU-та checkout-ът ще приеме (каталог, наличност, марж) — със същата логика като поръчката.
+ * Ползва се от AI консултантите, за да не препоръчват продукти, които не могат да се поръчат.
+ * @param {object} env
+ * @param {string[]} skuIds
+ * @param {string} project
+ * @returns {Promise<Set<string>>}
+ */
+export async function filterOrderableCartSkus(env, skuIds, project) {
+  const memoEnv = { ...env, __memo: {} };
+  const orderable = new Set();
+  for (const sku of skuIds) {
+    try {
+      await validateAndNormalizeCartItems(memoEnv, [{ sku_id: sku, quantity: 1 }], { project });
+      orderable.add(sku);
+    } catch (e) {
+      // Само отказ от валидацията изключва продукта; инфраструктурна грешка не трябва да спира консултанта.
+      if (!(e instanceof PortfolioError)) orderable.add(sku);
+    }
+  }
+  return orderable;
 }
 
 async function handleValidateCart(request, env) {

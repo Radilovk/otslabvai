@@ -6,7 +6,8 @@ import {
   syncPortfolioCatalog,
   requestPortfolioCatalogCiSync,
   getPortfolioMeta,
-  loadPortfolioGroupsByIds
+  loadPortfolioGroupsByIds,
+  filterOrderableCartSkus
 } from './portfolio-api.js';
 import {
   handlePortfolioImportRoute,
@@ -2154,6 +2155,7 @@ async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
   const deps = {
     loadProjectContent,
     loadGroupsByIds: loadPortfolioGroupsByIds,
+    filterOrderable: filterOrderableCartSkus,
   };
 
   const prepared = await prepareSiteAdvisorSubmission(env, rawAnswers, deps, { siteId, compositionMode });
