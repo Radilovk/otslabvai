@@ -12,6 +12,7 @@ import {
   transformProductForAI,
   enrichProtocolProductItem,
   scoreProduct,
+  computeTierMonthlyCost,
 } from './protocol-quiz-engine.js';
 import {
   getExclusionReasons,
@@ -189,6 +190,7 @@ export function finalizeSiteAdvisorResponse(response, eligibleProducts, excluded
     const totalEur = tier.products.reduce((s, i) => s + (i.price_eur || 0), 0);
     tier.monthly_total_eur = Math.round(totalEur * 100) / 100;
     tier.monthly_total_bgn = Math.round(totalEur * 1.95583 * 100) / 100;
+    tier.monthly_cost_eur = computeTierMonthlyCost(tier.products);
     if (!Array.isArray(tier.benefits)) tier.benefits = [];
   }
 

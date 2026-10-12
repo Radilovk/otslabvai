@@ -112,6 +112,58 @@ export function getProductPriceEur(product) {
   return Number(price) || 0;
 }
 
+const SUPPLY_DAYS_MIN = 7;
+const SUPPLY_DAYS_MAX = 400;
+
+function parseDosesFromText(text) {
+  const m = String(text || '').match(/(\d{1,3})\s*(?:дози|дневни дози|порции|servings)/i);
+  return m ? Number(m[1]) : null;
+}
+
+const UNIT_RE = '(?:капсул|таблет|драже|гел капсул|softgel|caps|tabs)';
+
+/** „60 капсули“ + „по 2 капсули дневно“ → 30. Само при изрично дневен прием. */
+function daysFromUnitsAndIntake(packText, intakeText) {
+  const units = String(packText || '').match(new RegExp(`(\\d{2,3})\\s*${UNIT_RE}`, 'i'));
+  const intake = String(intakeText || '');
+  if (!units || !/дневно|на ден|веднъж|daily/i.test(intake)) return null;
+  const perDay = intake.match(new RegExp(`(\\d)(?:\\s*[-–]\\s*\\d)?\\s*\\(?\\d?\\)?\\s*${UNIT_RE}`, 'i'));
+  const timesDaily = /два пъти дневно|2 пъти дневно/i.test(intake) ? 2 : 1;
+  const n = perDay ? Number(perDay[1]) * timesDaily : null;
+  return n ? Math.floor(Number(units[1]) / n) : null;
+}
+
+/**
+ * За колко дни стига опаковката (≈ брой дози, 1 доза дневно). null, ако не се знае надеждно.
+ * packaging.doses_per_package се ползва само при един вариант — при няколко опаковки
+ * полето описва само една от тях.
+ */
+export function getPackDaysSupply(product, variant = null) {
+  const pd = product?.public_data || {};
+  let days = null;
+  const variants = pd.variants || [];
+  const raw = String(pd.packaging?.doses_per_package ?? '').trim();
+  if (variants.length <= 1 && raw && raw.length <= 14) {
+    const m = raw.match(/^(\d{1,3})(?:\s*(?:дози|порции|servings))?$/i);
+    if (m) days = Number(m[1]);
+  }
+  if (!days) days = parseDosesFromText(variant?.option_name) || parseDosesFromText(pd.name);
+  if (!days && String(pd.recommended_intake || '').length <= 14) days = parseDosesFromText(pd.recommended_intake);
+  if (!days) days = daysFromUnitsAndIntake(variants.length > 1 ? variant?.option_name : (variant?.option_name || pd.packaging?.capsules_or_grams), pd.recommended_intake);
+  return days && days >= SUPPLY_DAYS_MIN && days <= SUPPLY_DAYS_MAX ? days : null;
+}
+
+/** ≈ цена за 30 дни на ниво; null, ако за някой продукт не се знае колко стига. */
+export function computeTierMonthlyCost(items = []) {
+  if (!items.length) return null;
+  let sum = 0;
+  for (const item of items) {
+    if (!(item.days_supply > 0) || !(item.price_eur > 0)) return null;
+    sum += (item.price_eur * 30) / item.days_supply;
+  }
+  return Math.round(sum * 100) / 100;
+}
+
 /** @deprecated използвайте getProductPriceEur */
 export const getProductPriceBgn = getProductPriceEur;
 
@@ -286,6 +338,7 @@ function getCheapestVariant(product) {
 export function enrichProtocolProductItem(item, product, siteId = 'life') {
   const priceEur = getProductPriceEur(product);
   const variant = getCheapestVariant(product);
+  const daysSupply = getPackDaysSupply(product, variant);
   const productPath = siteId === 'main'
     ? `product.html?id=${encodeURIComponent(product.product_id)}`
     : `life-product.html?id=${encodeURIComponent(product.product_id)}`;
@@ -299,6 +352,7 @@ export function enrichProtocolProductItem(item, product, siteId = 'life') {
     variant_name: variant?.option_name || '',
     sku_id: variant?.sku || product.product_id,
     product_url: productPath,
+    days_supply: daysSupply,
   };
 }
 
@@ -462,8 +516,11 @@ export function validateProtocolResponse(response, candidates, excludedProductId
     }
     tier.products = tier.products.map((item) => enrichProtocolProductItem(item, productMap.get(item.product_id)));
     const totalEur = tier.products.reduce((s, i) => s + (i.price_eur || 0), 0);
+    // monthly_total_eur = сума на опаковките (историческо име, ползва се в админа);
+    // monthly_cost_eur = ≈ за 30 дни, само ако дозите на всички продукти са известни.
     tier.monthly_total_eur = Math.round(totalEur * 100) / 100;
     tier.monthly_total_bgn = eurToBgn(totalEur);
+    tier.monthly_cost_eur = computeTierMonthlyCost(tier.products);
     if (!Array.isArray(tier.benefits)) tier.benefits = [];
   }
 
@@ -497,8 +554,11 @@ export function finalizeProtocolResponse(response, eligibleProducts, excludedPro
     }
     tier.products = tier.products.map((item) => enrichProtocolProductItem(item, productMap.get(item.product_id)));
     const totalEur = tier.products.reduce((s, i) => s + (i.price_eur || 0), 0);
+    // monthly_total_eur = сума на опаковките (историческо име, ползва се в админа);
+    // monthly_cost_eur = ≈ за 30 дни, само ако дозите на всички продукти са известни.
     tier.monthly_total_eur = Math.round(totalEur * 100) / 100;
     tier.monthly_total_bgn = eurToBgn(totalEur);
+    tier.monthly_cost_eur = computeTierMonthlyCost(tier.products);
     if (!Array.isArray(tier.benefits)) tier.benefits = [];
   }
 
