@@ -21,7 +21,7 @@ const F1 = 'https://fitness1.bg/b2b/api';
 const silaToken = String(process.env.SILA_API_TOKEN || '').trim();
 const f1Key = String(process.env.FITNESS1_API_KEY || '').trim();
 
-const PII_KEYS = /name|phone|email|mail|address|addr|street|city|town|zip|post|egn|person|contact|first|last|company|vat|eik/i;
+const PII_KEYS = /^(name|first_?name|last_?name|customer.*|client.*)$|phone|email|mail|address|addr|street|city|town|zip|post_?code|egn|person|contact|company|vat|eik/i;
 
 function redact(value, depth = 0) {
   if (Array.isArray(value)) return value.slice(0, 3).map((v) => redact(v, depth + 1));
@@ -244,6 +244,55 @@ async function diagnoseKv() {
   }
 }
 
-for (const fn of [diagnoseSila, diagnoseFitness1, diagnoseKv]) {
+async function diagnoseRound2() {
+  section('ROUND 2: SILA ЦЕНИ И КАТЕГОРИИ');
+  if (silaToken) {
+    const products = await silaGet('product', { method: 'POST', body: JSON.stringify({ brand_id: 0, model_id: 0, taste_id: 0, size_id: 0 }) });
+    const rows = listFrom(products.data);
+    const avail = rows.filter((r) => String(r.available) === '1' || r.available === 1 || r.available === true);
+    const withPartner = avail.filter((r) => Number(r.partner_price) > 0);
+    console.log(`налични ${avail.length}; с partner_price>0: ${withPartner.length}`);
+    for (const r of withPartner.slice(0, 6)) {
+      const m = Number(r.regular_price) > 0 ? ((Number(r.regular_price) - Number(r.partner_price)) / Number(r.regular_price) * 100).toFixed(1) : '-';
+      console.log(`  ${r.brand_name} | ${r.product_name} | ${r.taste_name || ''} ${r.size_name || ''} | partner ${r.partner_price} regular ${r.regular_price} (${m}% под RRP) s=${r.s}`);
+    }
+    const marginDist = {};
+    for (const r of withPartner) {
+      const m = (Number(r.regular_price) - Number(r.partner_price)) / Number(r.regular_price) * 100;
+      const b = m < 15 ? '<15%' : m < 25 ? '15-25%' : m < 35 ? '25-35%' : '35%+';
+      marginDist[b] = (marginDist[b] || 0) + 1;
+    }
+    show('отстъпка от RRP при налични', marginDist);
+    const brandIds = [...new Set(avail.map((r) => r.brand_id))].slice(0, 60);
+    const cats = {};
+    let models = 0;
+    for (const id of brandIds) {
+      const feed = await silaGet('brandfeed', { method: 'POST', body: JSON.stringify({ brand_id: String(id) }) });
+      for (const row of listFrom(feed.data)) {
+        models += 1;
+        cats[row.category || '(празно)'] = (cats[row.category || '(празно)'] || 0) + 1;
+      }
+    }
+    console.log(`brandfeed: ${brandIds.length} марки, ${models} модела, ${Object.keys(cats).length} категории`);
+    console.log(Object.entries(cats).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${v}× ${k}`).join('\n'));
+  }
+
+  section('ROUND 2: FITNESS1 ЖИВА ПРОВЕРКА');
+  if (f1Key) {
+    const key = `key=${encodeURIComponent(f1Key)}`;
+    const full = await f1Fetch(`${F1}/products_v3?${key}&limit=3`);
+    const ids = (full.data?.products || []).map((p) => p.id);
+    for (const q of [`id=${ids.join(',')}`, `id[]=${ids[0]}&id[]=${ids[1]}`, `id=${ids[0]}&id=${ids[1]}`, `limit=2&offset=5`, `limit=2&page=3`]) {
+      const r = await timed(q, () => f1Fetch(`${F1}/products_v3?${key}&${q}`));
+      console.log(`   → ${r?.status} ${r?.bytes} B, продукти ${r?.data?.products?.length ?? '-'}: ${(r?.data?.products || []).map((p) => p.id).join(',')}`);
+    }
+    const orders = await f1Fetch(`${F1}/orders?${key}`);
+    const list = orders.data?.orders || [];
+    console.log(`F1 orders: ${list.length}; pagination ${JSON.stringify(orders.data?.pagination)}`);
+    if (list[0]) show('F1 поръчка (без лични данни)', redact(list[0]));
+  }
+}
+
+for (const fn of [diagnoseRound2]) {
   try { await fn(); } catch (e) { console.log(`!!! ${fn.name}: ${e.stack || e.message}`); }
 }
