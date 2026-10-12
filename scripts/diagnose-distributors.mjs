@@ -359,6 +359,24 @@ async function diagnoseRound3() {
   show('жива проверка', live?.results);
 }
 
-for (const fn of [diagnoseRound3]) {
+async function diagnoseWorkerLiveStock() {
+  section('ЖИВА ПРОВЕРКА ОТ CLOUDFLARE WORKER');
+  const base = process.env.WORKER_URL || 'https://port.radilov-k.workers.dev';
+  if (!process.env.ADMIN_PASSWORD) { console.log('Няма ADMIN_PASSWORD'); return; }
+  const login = await fetch(`${base}/admin/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: process.env.ADMIN_PASSWORD }) });
+  const { token } = await login.json().catch(() => ({}));
+  if (!token) { console.log(`вход: HTTP ${login.status}`); return; }
+  const f1 = f1Key ? await fetchFitness1Products(f1Key) : [];
+  const sila = silaToken ? await fetchSilaProducts(silaToken) : [];
+  const qs = [
+    ...f1.filter((p) => p.available === true).slice(0, 2).map((p) => `sku=${p.id}`),
+    ...sila.slice(0, 2).map((p) => `ean=${p.barcode}`),
+  ].join('&');
+  const res = await fetch(`${base}/portfolio/diagnostics/live-stock?${qs}`, { headers: { Authorization: `Bearer ${token}` } });
+  console.log(`HTTP ${res.status}`);
+  show('от worker-а', await res.json().catch(() => null));
+}
+
+for (const fn of [diagnoseWorkerLiveStock, diagnoseRound3]) {
   try { await fn(); } catch (e) { console.log(`!!! ${fn.name}: ${e.stack || e.message}`); }
 }

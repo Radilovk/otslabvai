@@ -18,6 +18,7 @@ const norm = (s) => String(s || '').toLowerCase();
 /** @typedef {{ key: string, category: { id: string, title: string }, target: number, goals: string[],
  *   match: (e: object) => boolean, maxPrice?: number, minPrice?: number }} CurationSlot */
 
+const STIMULANT_WORDS = ['guarana', 'гуарана', 'caffeine', 'кофеин', 'synephrine', 'синефрин', 'yohimb', 'йохимб', 'ephedr', 'ефедр', 'hardcore', 'хардкор'];
 const pathOf = (e) => norm((e.category_path || []).join(' > ') || e.category);
 const nameOf = (e) => norm(`${e.name} ${e.search_text || ''}`);
 const has = (text, words) => words.some((w) => text.includes(w));
@@ -157,7 +158,7 @@ export const LIFE_SLOTS = [
     target: 5,
     goals: ['cognition', 'focus', 'memory'],
     match: (e) => has(pathOf(e), ['формули за памет и фокус', 'lion', 'бакопа', 'гинкго', 'стимулиращи мисловната дейност', 'фокус и концентрация'])
-      && !has(nameOf(e), ['men\'s', 'for men', 'за мъже']),
+      && !has(nameOf(e), ['men\'s', 'for men', 'за мъже', 'shock therapy', 'pre-workout', 'preworkout', 'pump', 'r-weiler', ...STIMULANT_WORDS]),
   },
 ];
 
@@ -179,7 +180,6 @@ export function entryPrice(entry) {
   return Number(entry.min_client_price) || Number(entry.min_price) || 0;
 }
 
-const STIMULANT_WORDS = ['guarana', 'гуарана', 'caffeine', 'кофеин', 'synephrine', 'синефрин', 'yohimb', 'йохимб', 'ephedr', 'ефедр', 'hardcore', 'хардкор'];
 
 /** Категориите на доставчика не са надеждни: „без стимуланти“ понякога съдържа гуарана. */
 function violatesSlot(entry, slot) {
