@@ -316,6 +316,14 @@ const ANIMAL_KEYWORDS = {
 };
 const VEGAN_MARKERS = ['vegan', 'веган', 'plant based', 'растителен', 'растителни', 'водорасли', 'algae', 'algal', 'ленено', 'flax'];
 
+const NEGATION_PATTERNS = STIM_NEGATIONS.map((n) => normalizeMatchText(n));
+/** Нормализиран текст без фразите-отрицания („без кофеин“ → махнато). */
+function stripNegations(text) {
+  let out = normalizeMatchText(text);
+  for (const neg of NEGATION_PATTERNS) out = out.split(neg).join(' ');
+  return out.replace(/\s+/g, ' ').trim();
+}
+
 const SAMPLE_LABEL_RE = /^(1\s*(бр\.?|pcs?|pc|x\b|порц|доз|dose|serving|shot|stick|сашe|саше)|мостра|sample|проба|trial|tester|single)/i;
 const UNIT_RE = /(\d{1,4})\s*(?:бр\.?\s*)?(капсул|caps|vcaps|softgel|софтгел|таблет|tabs?|драже|дъвчащ|gummies|желир|ампул|amp|сашет|sachet|stick|флакон|дози|порции|servings)/i;
 const MASS_RE = /(\d{2,5}(?:[.,]\d+)?)\s*(кг|kg|грам|гр\.?|g\b|gr\b|мл|ml|л\b|l\b)/i;
@@ -525,10 +533,13 @@ export function getProductFacts(product) {
     || (price > 0 && price < 3);
   const kind = rule.kind || (singleDose ? 'sample' : 'supplement');
   const slot = rule.slot || (kind === 'supplement' ? 'other' : kind);
-  const negated = productMatchesAnyKeyword(`${nameText(product)} ${categoryText(product)} ${descriptionText(product)}`, STIM_NEGATIONS);
-  let stimulant = !!rule.stim && !negated;
-  if (!stimulant && !negated && STIM_CHECK_SLOTS.has(slot)) {
-    stimulant = productMatchesAnyKeyword(`${nameText(product)} ${descriptionText(product)}`, STIMULANT_ACTIVES);
+  // Категорията на доставчика („без стимуланти“) не е надеждна: решават името и описанието.
+  // Отрицанията („без кофеин“, „caffeine free“) се махат от текста, преди да се търсят активните вещества.
+  const nameNoNeg = stripNegations(nameText(product));
+  const nameSaysStimFree = nameNoNeg !== normalizeMatchText(nameText(product));
+  let stimulant = (!!rule.stim && !nameSaysStimFree) || productMatchesAnyKeyword(nameNoNeg, STIMULANT_ACTIVES);
+  if (!stimulant && STIM_CHECK_SLOTS.has(slot)) {
+    stimulant = productMatchesAnyKeyword(stripNegations(descriptionText(product)), STIMULANT_ACTIVES);
   }
   const effectiveSlot = slot === 'fat_burner' && !stimulant ? 'fat_burner_nonstim'
     : slot === 'fat_burner_nonstim' && stimulant ? 'fat_burner'
