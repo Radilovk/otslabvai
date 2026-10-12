@@ -13,6 +13,7 @@ import {
 import { initPortfolioPromoModal, loadActivePromo } from './portfolio-promo-ui.js';
 import {
   formatIndexPriceHtml,
+  fetchPromoPrices,
   syncPromoCatalogUnlock,
   PROMO_CHANGED_EVENT,
 } from './portfolio-promo-catalog.js';
@@ -242,6 +243,16 @@ function loadCatalog() {
   updateFiltersToggleLabel();
   renderActiveFilterChips();
   updateSidebarApplyLabel();
+  refreshPromoPrices(data.items);
+}
+
+/** Промо цените идват от сървъра (зависят от доставната цена) — пререндираме, щом пристигнат. */
+function refreshPromoPrices(items) {
+  const promo = loadActivePromo();
+  if (!promo?.code || !items?.length) return;
+  fetchPromoPrices(promo, { groupIds: items.map((i) => i.group_id) }).then((changed) => {
+    if (changed) loadCatalog();
+  });
 }
 
 function populateFilters(filters) {

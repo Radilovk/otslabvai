@@ -56,6 +56,7 @@ function finalizeGroupImages(group) {
 import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipping.js';
 import { assertOrderRateLimit } from './order-rate-limit.js';
 import { checkLiveStock } from './distributor-live-stock.js';
+import { promoIndexStats, promoVariantPrice } from './portfolio-promo-pricing.js';
 import {
   getOrderRecord,
   listOrderRecords,
@@ -488,22 +489,19 @@ export function buildCatalogMeta(groups, settings = null) {
 }
 
 /** Strip admin-only / internal fields before sending product data to the client. */
+/** Клиентът не получава нищо, от което да се изведе доставната цена или доставчикът. */
 export function sanitizeVariantForClient(variant) {
   if (!variant) return variant;
-  const clientFinal = Number(variant.regular_price) || Number(variant.retail_price) || 0;
-  const wholesale = Number(variant.b2b_price) || 0;
-  const margin_eur = wholesale > 0 && clientFinal > wholesale
-    ? Math.round((clientFinal - wholesale) * 100) / 100
-    : 0;
   const {
     b2b_price,
     markup_percent,
     f1_reference_price,
     distributor,
     distributor_ids,
+    margin_eur,
     ...client
   } = variant;
-  return margin_eur > 0 ? { ...client, margin_eur } : client;
+  return client;
 }
 
 export function sanitizeGroupForClient(group) {
@@ -522,8 +520,11 @@ export function sanitizeIndexEntryForClient(entry) {
     max_margin,
     max_margin_pct,
     markup_percent,
+    vp,
     ...clientEntry
   } = entry;
+  // vp вътрешно е [продажна, клиентска, марж €]; маржът издава доставната цена — не излиза навън.
+  if (Array.isArray(vp)) clientEntry.vp = vp.map((dot) => [dot?.[0], dot?.[1]]);
   return clientEntry;
 }
 
@@ -1981,6 +1982,55 @@ async function handleDeletePromoCode(request, env) {
   return jsonResponse({ success: true });
 }
 
+/**
+ * POST /portfolio/promo-prices { code, group_ids?, sku_ids? } — промо цените за показваните продукти,
+ * сметнати със скритата доставна цена. Връща само крайните цени.
+ */
+async function handlePromoPrices(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const code = String(body?.code || '').toUpperCase().trim();
+  if (!code) throw new PortfolioError('Липсва промо код.', 400);
+  const codes = await getPromoCodes(env);
+  const promo = codes.find((p) => p.code === code);
+  const check = validatePromoRecord(promo);
+  if (!check.valid) throw new PortfolioError(check.error || 'Невалиден промо код.', 400);
+
+  const groupIds = (Array.isArray(body.group_ids) ? body.group_ids : []).map(String).slice(0, 200);
+  const skuIds = (Array.isArray(body.sku_ids) ? body.sku_ids : []).map(String).slice(0, 200);
+  const memoEnv = { ...env, __memo: {} };
+  const meta = await getMeta(memoEnv);
+  if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+
+  const policy = pricingPolicyFromSettings(await getSettings(memoEnv));
+  const indexById = new Map((meta.index || []).map((e) => [String(e.group_id), e]));
+  /** @type {Record<string, object|null>} */
+  const groups = {};
+  for (const id of groupIds) {
+    const entry = indexById.get(id);
+    const stats = entry ? promoIndexStats(entry, promo) : null;
+    groups[id] = stats ? {
+      min_price: stats.min_price,
+      max_price: stats.max_price,
+      compare_at_price: stats.compare_at_price,
+      has_promo: !!stats.has_promo,
+    } : null;
+  }
+
+  /** @type {Record<string, object|null>} */
+  const variants = {};
+  for (const sku of skuIds) {
+    const found = await findVariantInCatalog(memoEnv, sku);
+    const priced = found ? promoVariantPrice(found.variant, promo, policy) : null;
+    variants[sku] = priced ? {
+      retail_price: priced.retail_price,
+      compare_at_price: priced.compare_at_price || 0,
+      is_on_promo: !!priced.is_on_promo,
+    } : null;
+  }
+
+  return jsonResponse({ groups, variants });
+}
+
 async function handleValidatePromo(request, env) {
   const body = await request.json();
   if (!body?.code) throw new PortfolioError('Липсва промо код.', 400);
@@ -2528,6 +2578,9 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     }
     if (path === '/portfolio/validate-promo' && method === 'POST') {
       return await handleValidatePromo(request, env);
+    }
+    if (path === '/portfolio/promo-prices' && method === 'POST') {
+      return await handlePromoPrices(request, env);
     }
     if (path === '/portfolio/fitness1-key-status' && method === 'GET') {
       return await handleFitness1KeyStatus(env);

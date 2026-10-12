@@ -9,7 +9,7 @@ import { bindProductShareButton, replaceProductUrl } from './product-share.js';
 import { resolveOgImageUrl } from './og-share-meta.js';
 import { isCatalogListed } from './portfolio-margin-policy.js';
 import { isLowMarginPromoUnlocked } from './product-visibility.js';
-import { variantDisplayPrice, syncPromoCatalogUnlock, PROMO_CHANGED_EVENT } from './portfolio-promo-catalog.js';
+import { variantDisplayPrice, fetchPromoPrices, syncPromoCatalogUnlock, PROMO_CHANGED_EVENT } from './portfolio-promo-catalog.js';
 import { loadActivePromo } from './portfolio-promo-ui.js';
 
 function imageFromDescription(html) {
@@ -447,6 +447,7 @@ async function loadProduct() {
     }
     pickDefaultVariant();
     render();
+    refreshPromoPrices();
   } catch {
     DOM.root.innerHTML = '<div class="pf-error">Грешка при зареждане.</div>';
   }
@@ -460,9 +461,20 @@ async function init() {
   const savedPromo = loadActivePromo();
   if (savedPromo) syncPromoCatalogUnlock(savedPromo);
   window.addEventListener(PROMO_CHANGED_EVENT, () => {
-    if (product) render();
+    if (!product) return;
+    render();
+    refreshPromoPrices();
   });
   await loadProduct();
+}
+
+/** Промо цените на вариантите идват от сървъра — пререндираме, щом пристигнат. */
+function refreshPromoPrices() {
+  const promo = loadActivePromo();
+  if (!promo?.code || !product?.variants?.length) return;
+  fetchPromoPrices(promo, { skuIds: product.variants.map((v) => v.sku_id) }).then((changed) => {
+    if (changed && product) render();
+  });
 }
 
 function initBackButton() {
