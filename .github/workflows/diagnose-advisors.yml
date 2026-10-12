@@ -9,6 +9,11 @@ on:
     paths:
       - 'scripts/diagnose-advisors.mjs'
       - '.github/workflows/diagnose-advisors.yml'
+      - 'advisor-*.js'
+      - 'protocol-*.js'
+      - 'site-advisor-*.js'
+      - 'portfolio-advisor-*.js'
+      - 'portfolio-stack-slots.js'
 
 jobs:
   diagnose:
