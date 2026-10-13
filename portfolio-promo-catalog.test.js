@@ -74,3 +74,21 @@ describe('portfolio-promo-catalog', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('подредба „Препоръчани“ без марж в браузъра', () => {
+  test('сървърът дава позиция rec: добавки със снимка и по-висок марж отпред, аксесоари накрая', async () => {
+    const { assignRecommendedRank, sanitizeIndexEntryForClient } = await import('./portfolio-api.js');
+    const { sortResults } = await import('./portfolio-filter.js');
+    const e = (name, extra) => ({ name, brand: name, image: 'x.jpg', available: true, category_path: ['Витамини'], max_margin_pct: 30, max_margin: 5, ...extra });
+    const index = [
+      e('Shaker', { category_path: ['Спортни аксесоари и уреди', 'Шейкъри'], max_margin_pct: 90 }),
+      e('Vitamin C', { max_margin_pct: 20 }),
+      e('Omega 3', { max_margin_pct: 45 }),
+      e('No image', { image: '', max_margin_pct: 80 }),
+    ];
+    assignRecommendedRank(index);
+    const client = index.map(sanitizeIndexEntryForClient);
+    expect(client[0].max_margin_pct).toBeUndefined();
+    expect(sortResults(client, 'relevance').map((i) => i.name)).toEqual(['Omega 3', 'Vitamin C', 'No image', 'Shaker']);
+  });
+});

@@ -516,7 +516,7 @@ async function loadCatalogCategories() {
 
 async function checkQuizEnabled() {
   try {
-    const res = await fetch(`${API_URL}/portfolio-advisor/settings`, { cache: 'no-cache' });
+    const res = await fetch(`${API_URL}/portfolio-advisor/status`);
     if (!res.ok) return;
     const data = await res.json();
     if (data.enabled === false) {

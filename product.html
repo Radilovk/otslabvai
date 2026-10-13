@@ -329,6 +329,11 @@
             font-size: 1.1rem;
         }
         
+        /* Съдържанието в края на страницата не остава под лепкавия бутон */
+        body { padding-bottom: 96px; }
+        /* Плаващата количка не застъпва бутона „Добави в количката“ */
+        .cart-icon-fixed-mobile { bottom: 104px !important; }
+
         /* Sticky order button at bottom */
         .sticky-order-button {
             position: fixed;
