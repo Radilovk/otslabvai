@@ -1969,7 +1969,19 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
         const speedySelectedName = document.getElementById('speedy-selected-name');
         const speedySelectedAddr = document.getElementById('speedy-selected-addr');
 
+        // „Смени офиса“: изчистваме стария избор и презареждаме картата, за да започне търсенето отначало.
+        function resetSpeedySelection() {
+            if (!speedyHiddenInput.value) return;
+            speedyHiddenInput.value = '';
+            speedySelectedName.textContent = '';
+            speedySelectedAddr.textContent = '';
+            speedySelectedInfo.style.display = 'none';
+            if (openSpeedyBtn) openSpeedyBtn.textContent = 'Избери от картата';
+            if (speedyMapIframe) speedyMapIframe.src = speedyMapIframe.src;
+        }
+
         function openSpeedyMap() {
+            resetSpeedySelection();
             speedyMapModal.classList.add('active');
             document.body.style.overflow = 'hidden';
         }

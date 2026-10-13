@@ -239,7 +239,22 @@ function toggleCourierWidgets() {
   updateSummary();
 }
 
+// „Смени офиса“: изчистваме стария избор и презареждаме картата, за да започне търсенето отначало.
+function resetSpeedySelection() {
+  const hidden = $('final-speedy-id');
+  if (!hidden?.value) return;
+  hidden.value = '';
+  $('speedy-selected-name').textContent = '';
+  $('speedy-selected-addr').textContent = '';
+  $('speedy-selected-info').style.display = 'none';
+  const openBtn = $('open-speedy-map-btn');
+  if (openBtn) openBtn.textContent = 'Избери от картата';
+  const frame = $('frameOfficeLocator');
+  if (frame) frame.src = frame.src;
+}
+
 function openSpeedyMap() {
+  resetSpeedySelection();
   $('speedy-map-modal').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
