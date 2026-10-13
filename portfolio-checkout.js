@@ -66,6 +66,11 @@ function updateSummary() {
   $('summary-subtotal').textContent = formatPrice(subtotal);
   $('summary-shipping').textContent = shipping === 0 && subtotal > 0 ? 'Безплатна' : formatPrice(shipping);
   $('summary-total').textContent = formatPrice(total);
+  const fab = $('submit-btn-mobile');
+  if (fab) {
+    if (subtotal > 0) fab.dataset.total = formatPrice(total);
+    else delete fab.dataset.total;
+  }
 
   const discountRow = $('discount-row');
   if (discountRow) {
@@ -135,7 +140,14 @@ function hasStockWarning() {
 function renderCart() {
   const list = $('product-list');
   if (!cart.length) {
-    list.innerHTML = '<li class="pf-empty-cart"><p>Количката е празна.</p><a href="portfolio.html" class="pf-btn pf-btn-outline">Към каталога</a></li>';
+    list.innerHTML = `<li class="pf-empty-cart">
+      <span class="pf-empty-cart-icon" aria-hidden="true">${icon('cart', { size: 30 })}</span>
+      <strong>Количката е празна</strong>
+      <p>Разгледайте каталога или оставете AI консултанта да подбере пакет за вас.</p>
+      <a href="portfolio.html" class="pf-btn pf-btn-primary">Към каталога</a>
+      <a href="portfolio-advisor-quiz.html" class="pf-empty-cart-link">AI консултант →</a>
+    </li>`;
+    document.body.classList.add('pf-checkout-empty');
     setStockWarningBanner('');
     syncSubmitButtons({ disabled: true });
     syncFloatingSubmit(false);
@@ -164,6 +176,7 @@ function renderCart() {
     </li>`;
   }).join('');
 
+  document.body.classList.remove('pf-checkout-empty');
   syncSubmitButtons({ disabled: !!hasStockWarning() });
   syncFloatingSubmit(true);
   updateSummary();

@@ -279,6 +279,24 @@ function syncProductFab() {
 
   document.body.classList.add('pf-product-has-fab');
   document.getElementById('add-to-cart-sticky')?.addEventListener('click', addToCart);
+  watchInlineAddButton();
+}
+
+let inlineAddObserver = null;
+
+/** The sticky button shows only while the main "add to cart" button is off screen. */
+function watchInlineAddButton() {
+  const inline = document.getElementById('add-to-cart');
+  const sticky = document.getElementById('add-to-cart-sticky');
+  inlineAddObserver?.disconnect();
+  if (!inline || !sticky || typeof IntersectionObserver === 'undefined') return;
+  sticky.classList.add('pf-fab-hidden');
+  inlineAddObserver = new IntersectionObserver(([entry]) => {
+    const offscreen = !entry.isIntersecting;
+    sticky.classList.toggle('pf-fab-hidden', !offscreen);
+    sticky.tabIndex = offscreen ? 0 : -1;
+  }, { rootMargin: '0px 0px -40px 0px' });
+  inlineAddObserver.observe(inline);
 }
 
 function bindPageEvents() {

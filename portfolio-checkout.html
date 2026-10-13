@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="images/biocode-favicon.png">
-    <link rel="stylesheet" href="portfolio.css">
+    <link rel="stylesheet" href="portfolio.css?v=20261013b">
 </head>
 <body class="pf-body">
     <div id="pf-header-slot"></div>
@@ -104,7 +104,8 @@
                     </div>
                 </section>
 
-                <section class="pf-form-section">
+                <!-- Промо кодът е в резюмето до сумата; полето остава за съвместимост на скрипта -->
+                <section class="pf-form-section" hidden>
                     <h2>Промо код</h2>
                     <div class="pf-promo-row">
                         <input type="text" id="promo-code-input" placeholder="Въведете промо код" autocomplete="off" autocapitalize="characters">
@@ -139,7 +140,7 @@
                 <h2>Вашата поръчка</h2>
                 <ul id="product-list" class="pf-summary-list"></ul>
                 <div class="pf-promo-row pf-promo-row--summary">
-                    <input type="text" id="promo-code-input-summary" placeholder="Промо код" autocomplete="off" autocapitalize="characters">
+                    <input type="text" id="promo-code-input-summary" placeholder="Имате промо код?" aria-label="Промо код" enterkeyhint="done" autocomplete="off" autocapitalize="characters">
                     <button type="button" class="pf-btn pf-btn-outline" id="apply-promo-btn-summary">Приложи</button>
                     <button type="button" class="pf-btn pf-btn-outline" id="remove-promo-btn-summary" hidden>Премахни</button>
                 </div>
