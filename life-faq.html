@@ -11,7 +11,14 @@
     <link rel="canonical" href="https://life-protocols.com/faq.html">
     <meta property="og:title" content="FAQ — Life Protocols">
     <meta property="og:url" content="https://life-protocols.com/faq.html">
-    <link rel="stylesheet" href="life.css?v=20260714c">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="bg_BG">
+    <meta property="og:site_name" content="Life Protocols">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="life.css?v=20261013m">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -52,33 +59,111 @@
       ]
     }
     </script>
+    <script>
+        (function() {
+            try {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } catch (e) {}
+        })();
+    </script>
 </head>
 <body>
-    <main class="container" style="max-width:800px;margin:2rem auto;padding:0 1rem;">
-        <h1>Често задавани въпроси — Life Protocols</h1>
-        <p>Life Protocols (<a href="https://life-protocols.com/">life-protocols.com</a>) е магазин за anti-aging добавки и персонализирани longevity протоколи в България.</p>
+    <a href="#main-faq-content" class="skip-link">Прескочи към основното съдържание</a>
 
-        <section>
-            <h2>Какво е Life Protocols?</h2>
-            <p>Life Protocols е онлайн магазин на life-protocols.com за anti-aging и longevity хранителни добавки, пептиди и протоколи за дълголетие. Цените са в EUR.</p>
-        </section>
+    <header class="main-header">
+        <div class="header-container">
+            <a href="life.html" class="logo-container" id="header-logo-link">
+                <img src="images/life-icons/logo.png" alt="Life Protocols Лого" id="header-logo-img" style="display: block;">
+                <div>
+                    <span class="brand-name" id="header-brand-name">Life Protocols</span>
+                    <span class="brand-slogan" id="header-brand-slogan" style="display: none;"></span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <ul class="nav-links" id="main-nav-links">
+                    <!-- Navigation links will be dynamically added here -->
+                    <li class="cart-link-mobile">
+                        <span class="cart-link-mobile-label">Количка</span>
+                        <a href="life-checkout.html">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span>Виж количката</span>
+                            <span class="cart-badge" id="cart-count-menu">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <a href="life-checkout.html" class="cart-icon-btn" aria-label="Количка">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-badge" id="cart-count">0</span>
+                </a>
+            </div>
+            <button class="menu-toggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    <div class="nav-overlay"></div>
 
-        <section>
-            <h2>Как работи AI протоколът?</h2>
-            <p>Life Protocols предлага AI квиз, който анализира целите ви и предлага персонализиран stack от добавки от каталога.</p>
-        </section>
+    <main class="container life-doc life-faq" id="main-faq-content">
+        <a href="life.html" class="btn-back" aria-label="Обратно към началната страница"></a>
+        <span class="life-doc-eyebrow">Помощ</span>
+        <h1>Често задавани въпроси</h1>
+        <p class="life-doc-lead">Life Protocols (<a href="https://life-protocols.com/">life-protocols.com</a>) е магазин за anti-aging добавки и персонализирани longevity протоколи в България.</p>
 
-        <section>
-            <h2>Доставяте ли в България?</h2>
-            <p>Да. Life Protocols доставя в цяла България с наложен платеж.</p>
-        </section>
+        <div class="life-faq-list">
+            <details class="life-faq-item" open>
+                <summary>Какво е Life Protocols?<span class="life-faq-chevron" aria-hidden="true"></span></summary>
+                <div class="life-faq-answer"><p>Life Protocols е онлайн магазин на life-protocols.com за anti-aging и longevity хранителни добавки, пептиди и протоколи за дълголетие. Цените са в EUR.</p></div>
+            </details>
+            <details class="life-faq-item">
+                <summary>Как работи AI протоколът?<span class="life-faq-chevron" aria-hidden="true"></span></summary>
+                <div class="life-faq-answer"><p>Отговаряте на няколко кратки въпроса за целите си (енергия, сън, клетъчна регенерация и др.), а AI анализът предлага персонализиран стак от добавки от нашия каталог — в три варианта според бюджета.</p></div>
+            </details>
+            <details class="life-faq-item">
+                <summary>Доставяте ли в България?<span class="life-faq-chevron" aria-hidden="true"></span></summary>
+                <div class="life-faq-answer"><p>Да. Доставяме в цяла България до офис на Speedy или Econt, или до адрес — с наложен платеж, плащате при получаване.</p></div>
+            </details>
+            <details class="life-faq-item">
+                <summary>Какви продукти продавате?<span class="life-faq-chevron" aria-hidden="true"></span></summary>
+                <div class="life-faq-answer"><p>Хранителни добавки за антиейджинг, пептиди и протоколи за клетъчно подмладяване — с видими цени в EUR на life-protocols.com.</p></div>
+            </details>
+        </div>
 
-        <section>
-            <h2>Какви продукти продавате?</h2>
-            <p>Life Protocols предлага хранителни добавки за антиейджинг, пептиди и протоколи за клетъчно подмладяване — с цени в EUR на life-protocols.com.</p>
-        </section>
-
-        <p><a href="life.html">← Към началото</a> · <a href="life-contact.html">Контакти</a></p>
+        <div class="life-faq-cta">
+            <p>Не намирате отговор?</p>
+            <div class="life-faq-cta-actions">
+                <a href="life-contact.html" class="btn btn-primary">Пишете ни</a>
+                <a href="life-protocol-quiz.html" class="btn btn-secondary">Подбери ми протокол</a>
+            </div>
+        </div>
     </main>
+
+    <div id="social-feed-section"></div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid" id="footer-grid-container">
+                <!-- Футър колоните ще бъдат генерирани от JS -->
+            </div>
+            <div class="footer-bottom" id="footer-copyright-container">
+                <!-- Copyright текстът ще бъде генериран от JS -->
+            </div>
+        </div>
+    </footer>
+
+    <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
+
+    <script type="module" src="life.js?v=20261013m"></script>
 </body>
 </html>

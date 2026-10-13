@@ -48,3 +48,112 @@ body.life-checkout-page {
     --pf-primary-soft: rgba(0, 196, 200, 0.12);
     --pf-accent: var(--accent-secondary, #d4a843);
 }
+
+/* ─── Mobile polish (scoped to Life; portfolio.css stays untouched) ─── */
+
+/* [hidden] must win over .pf-btn display rules ("Премахни" showed before a code was applied) */
+body.life-checkout-page [hidden] { display: none !important; }
+
+/* Promo: the field gets the room, buttons sit beside it and stretch when they wrap */
+body.life-checkout-page .pf-promo-row { align-items: stretch; }
+body.life-checkout-page .pf-promo-row input {
+    flex: 1 1 9.5rem;
+    min-width: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+body.life-checkout-page .pf-promo-row input::placeholder {
+    text-transform: none;
+    letter-spacing: 0;
+}
+body.life-checkout-page .pf-promo-row .pf-btn {
+    flex: 1 0 auto;
+    min-width: 6.5rem;
+    justify-content: center;
+}
+body.life-checkout-page .pf-promo-msg { font-weight: 600; }
+
+/* Office box only after an office is picked (JS sets display:block) */
+body.life-checkout-page #speedy-selected-info { display: none; }
+body.life-checkout-page #open-speedy-map-btn {
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.35rem;
+}
+body.life-checkout-page .pf-courier-widget > label { display: block; margin-bottom: 0.15rem; }
+
+@media (max-width: 1023px) {
+    /* One order button on phones: the floating one. The in-card copy + trust row are desktop-only. */
+    body.life-checkout-page .pf-checkout-submit--desktop,
+    body.life-checkout-page .pf-checkout-trust--desktop { display: none !important; }
+
+    /* One promo field on phones: the one in the form flow (the summary copy is a desktop shortcut) */
+    body.life-checkout-page .pf-promo-row--summary,
+    body.life-checkout-page #promo-message-summary { display: none !important; }
+
+    /* Compact cart line: photo | name + × / stepper + price */
+    body.life-checkout-page .pf-summary-item {
+        grid-template-columns: 56px minmax(0, 1fr) auto;
+        grid-template-rows: auto auto;
+        grid-template-areas:
+            "img name rm"
+            "img qty price";
+        gap: 0.4rem 0.75rem;
+        align-items: center;
+        padding: 0.9rem 0;
+    }
+    body.life-checkout-page .pf-summary-item > :first-child { grid-area: img; align-self: start; }
+    body.life-checkout-page .pf-summary-img { width: 56px; height: 56px; max-width: 56px; grid-row: auto; }
+    body.life-checkout-page .pf-summary-info { display: contents; }
+    body.life-checkout-page .pf-summary-info > :first-child {
+        grid-area: name;
+        align-self: start;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    body.life-checkout-page .pf-qty-row { grid-area: qty; margin-top: 0; }
+    body.life-checkout-page .pf-summary-price {
+        grid-area: price;
+        grid-column: auto;
+        align-self: center;
+        justify-self: end;
+        font-size: 0.95rem;
+    }
+    body.life-checkout-page .pf-remove-btn {
+        grid-area: rm;
+        grid-column: auto;
+        align-self: start;
+        width: 36px;
+        height: 36px;
+        margin: -6px -6px 0 0;
+        border-radius: 999px;
+    }
+}
+
+/* Quantity stepper as one pill */
+body.life-checkout-page .pf-qty-row {
+    gap: 0;
+    width: max-content;
+    border: 1.5px solid var(--pf-border);
+    border-radius: 999px;
+    background: var(--pf-bg);
+    overflow: hidden;
+}
+body.life-checkout-page .pf-qty-row > span {
+    min-width: 2rem;
+    text-align: center;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+body.life-checkout-page .pf-qty-btn {
+    width: 38px;
+    height: 36px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 1.1rem;
+    color: var(--pf-text);
+}
+body.life-checkout-page .pf-qty-btn:active { background: var(--pf-primary-soft); }

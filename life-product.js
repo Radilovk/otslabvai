@@ -171,11 +171,20 @@ const generateEffectBar = effect => `
 
 function renderProductDetail(product) {
     if (!product?.public_data || !isProductListed(product)) {
+        // No product → no floating "Добави в количката" over the empty state
+        document.querySelector('.sticky-order-button')?.setAttribute('hidden', '');
+        document.body.style.paddingBottom = '0';
         DOM.productContent.innerHTML = `
-            <div style="text-align: center; padding: 60px 20px;">
-                <h2>Продуктът не е наличен</h2>
-                <p>Този продукт в момента не се предлага в каталога.</p>
-                <a href="life.html" class="btn btn-primary">Назад към продуктите</a>
+            <div class="life-empty-state">
+                <div class="life-empty-state__icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a4.95 4.95 0 0 1 7-7l7 7a4.95 4.95 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+                </div>
+                <h2>Този продукт вече не е наличен</h2>
+                <p>Изчерпан е или временно е спрян. Разгледайте подобни продукти или нека подберем протокол за вас.</p>
+                <div class="life-empty-state__actions">
+                    <a href="life.html" class="btn btn-primary">Към всички продукти</a>
+                    <a href="life-protocol-quiz.html" class="btn btn-secondary">Подбери ми протокол</a>
+                </div>
             </div>
         `;
         return;

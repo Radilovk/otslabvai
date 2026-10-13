@@ -917,3 +917,34 @@ body.lpq-body {
   font-family: var(--lpq-display);
   margin-top: 0;
 }
+
+/* ─── Mobile polish ─── */
+.lpq-back-link {
+  min-height: 44px;
+  padding: 0 0.25rem;
+  margin-left: -0.25rem;
+}
+
+.lpr-empty {
+  text-align: center;
+  padding: 2rem 1.5rem;
+}
+
+.lpr-empty p {
+  margin: 0 0 1.25rem;
+  line-height: 1.6;
+  color: var(--lpq-muted);
+}
+
+.lpr-empty .lpq-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.8rem 1.75rem;
+  text-decoration: none;
+}
+
+@media (max-width: 480px) {
+  .lpr-empty .lpq-btn { width: 100%; }
+}
