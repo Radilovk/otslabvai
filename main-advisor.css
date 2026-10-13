@@ -228,3 +228,63 @@
     font-size: 1.45rem;
   }
 }
+
+/* ===== Mobile polish: избор с един допир, ясно избрано състояние ===== */
+.maa-body .lpq-option {
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 54px;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.maa-body .lpq-option:active { transform: scale(0.985); }
+.maa-body .lpq-option input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  border: 2px solid var(--lpq-muted);
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.maa-body .lpq-option input[type="checkbox"] { border-radius: 7px; }
+.maa-body .lpq-option input::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  transform: scale(0);
+  transition: transform 0.15s ease;
+}
+.maa-body .lpq-option input[type="checkbox"]::after {
+  width: 6px;
+  height: 11px;
+  border-radius: 0;
+  background: none;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg) scale(0);
+  margin-top: -2px;
+}
+.maa-body .lpq-option input:checked { border-color: var(--color-primary, #e4007c); background: var(--color-primary, #e4007c); }
+.maa-body .lpq-option input:checked::after { transform: scale(1); }
+.maa-body .lpq-option input[type="checkbox"]:checked::after { transform: rotate(45deg) scale(1); }
+.maa-body .lpq-option.selected,
+.maa-body .lpq-option:has(input:checked) {
+  border-color: var(--color-primary, #e4007c);
+  background: rgba(228, 0, 124, 0.09);
+}
+.maa-body .lpq-option input:focus-visible { outline: 2px solid var(--color-secondary, #00e0e0); outline-offset: 2px; }
+.maa-body .lpq-field input,
+.maa-body .lpq-other-text { font-size: 16px; min-height: 48px; }
+.maa-body .lpq-btn { min-height: 48px; }
+@media (max-width: 480px) {
+  .maa-body .lpq-nav .lpq-btn-primary { flex: 1; }
+}

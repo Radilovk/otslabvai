@@ -270,7 +270,9 @@ async function run(siteKey) {
 
     const products = sortByOrder(cat.products).filter(isCatalogOnly);
     if (!products.length) {
-      grid.innerHTML = `<p class="${emptyClass}">Няма допълнителни продукти. Превключете продукти на „каталог“ от админ панела.</p>`;
+      grid.innerHTML = siteKey === 'life'
+        ? `<p class="${emptyClass}">Няма допълнителни продукти. Превключете продукти на „каталог“ от админ панела.</p>`
+        : `<div class="${emptyClass}"><p>Всички продукти от тази категория вече са на началната страница.</p><a href="${esc(backHref)}" class="catalog-empty-link">Към продуктите</a></div>`;
       markContentLoaded();
       return;
     }

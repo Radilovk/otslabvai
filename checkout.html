@@ -234,8 +234,9 @@
         }
         @media (max-width: 900px) {
             .checkout-container { flex-direction: column-reverse; }
-            .summary-section { position: static; width: 100%; flex: 1 1 auto; }
-            .form-section { width: 100%; }
+            .summary-section { position: static; width: 100%; flex: 1 1 auto; min-width: 0; }
+            /* flex-basis 520px става височина в колона → формата се затваряше в 520px кутия със скрол */
+            .form-section { width: 100%; flex: 1 1 auto; }
         }
         
         /* Courier Widget Styles */
@@ -426,16 +427,13 @@
             }
             
             .checkout-container { 
-                padding: 0 0.5rem;
+                padding: 0 0.75rem;
                 max-width: 100%;
-                overflow-x: hidden; /* Prevent horizontal scroll */
-                overflow-y: visible; /* Allow dropdowns to extend vertically */
+                overflow-x: clip; /* clip ≠ hidden: не прави вътрешен скрол */
             }
             
             .form-section {
                 min-width: 0;
-                overflow-x: hidden; /* Prevent horizontal scroll */
-                overflow-y: visible; /* Allow dropdowns to extend vertically */
             }
             
             .form-row { flex-direction: column; }
@@ -893,6 +891,108 @@
                 transform: none;
             }
         }
+        /* ===== Mobile polish (daotslabna) ===== */
+        .checkout-head { max-width: 1200px; margin: 1.5rem auto 0; padding: 0 1.25rem; display: flex; align-items: center; gap: 0.5rem; }
+        .checkout-head .btn-back { position: static; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-secondary); }
+        .checkout-head .btn-back::before { width: 0.65em; height: 0.65em; margin-left: 0.2em; }
+        .checkout-head .checkout-page-title { margin: 0; line-height: 1.15; }
+        .checkout-container { margin-top: 1.25rem; }
+        .checkout-progress { flex-wrap: nowrap; }
+        .checkout-progress-step { min-width: 0; transition: color .25s, border-color .25s, background .25s; }
+        .checkout-progress-step.done { color: var(--color-secondary); border-color: rgba(0, 224, 224, 0.35); }
+
+        /* Форма: еднакви полета, удобни за пръст */
+        .form-group input,
+        .courier-search-input,
+        .promo-code-form input {
+            width: 100%;
+            min-height: 48px;
+            padding: 0.75rem 0.9rem;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .form-group input:focus,
+        .courier-search-input:focus,
+        .promo-code-form input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0, 224, 224, 0.18); }
+        .courier-search-input { margin-top: 0.5rem; }
+        .courier-status-text { font-size: 0.8rem; color: var(--text-secondary); margin-top: 6px; }
+        .econt-container { font-family: inherit; }
+        .econt-dropdown { border: 1px solid var(--accent); border-radius: 12px; margin-top: 4px; }
+
+        /* Радио-избори като карти: целият ред е за натискане, избраният свети */
+        .checkbox-group { position: relative; padding: 0; min-height: 52px; border-radius: 12px; transition: border-color .2s, background .2s, box-shadow .2s; }
+        .checkbox-group input { margin-left: 0.9rem; width: 20px; height: 20px; flex: 0 0 20px; accent-color: var(--color-primary); }
+        .checkbox-group label { flex: 1; padding: 0.85rem 0.9rem 0.85rem 0; line-height: 1.4; }
+        .checkbox-group:has(input[type="radio"]:checked) { border-color: var(--color-primary); background: rgba(228, 0, 124, 0.08); box-shadow: 0 0 0 1px rgba(228, 0, 124, 0.25) inset; }
+        .checkbox-group:has(input:disabled) { opacity: 0.55; }
+        .checkbox-group:has(input:disabled) label { cursor: not-allowed; }
+        .checkbox-group + .checkbox-group { margin-top: 0.6rem; }
+        .form-step h3, .form-step h4 { font-size: 1rem; }
+
+        /* Куриерски бутон — в стила на сайта, не яркочервен */
+        .speedy-choose-btn { min-height: 46px; margin-top: 0.6rem; padding: 0 1.1rem; border-radius: 12px; background: transparent; color: var(--text-primary); border: 1px solid var(--accent); font-size: 0.95rem; }
+        .speedy-choose-btn:hover { background: rgba(0, 224, 224, 0.1); }
+        .speedy-selected-info { border-left-color: var(--accent); border-radius: 10px; }
+        .speedy-selected-info strong { color: var(--accent); }
+        .courier-widget { border-radius: 12px; }
+
+        /* Промо код: поле + един бутон, никога смачкано */
+        .promo-code-form { display: flex; align-items: stretch; gap: 0.5rem; margin-top: 1rem; }
+        .promo-code-form input { flex: 1 1 auto; min-width: 0; text-transform: uppercase; letter-spacing: 0.04em; }
+        .promo-code-form input::placeholder { text-transform: none; letter-spacing: 0; }
+        .promo-code-form input:disabled { opacity: 1; color: var(--color-secondary); border-color: rgba(0, 224, 224, 0.45); }
+        .promo-code-form button { flex: 0 0 auto; min-height: 48px; padding: 0 1.2rem; border-radius: 12px; white-space: nowrap; }
+        .promo-code-form button[hidden] { display: none; }
+        .promo-code-form #remove-promo { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); }
+        .promo-code-form #remove-promo:hover { color: var(--error-color); border-color: var(--error-color); box-shadow: none; transform: none; }
+        .promo-status { margin: 0.5rem 0 0; font-size: 0.88rem; line-height: 1.4; }
+        .promo-status.is-success { color: var(--color-secondary); }
+        .promo-status.is-error { color: var(--error-color); }
+
+        /* Количка */
+        .quantity-control { border-radius: 10px; overflow: hidden; }
+        .quantity-control button { min-width: 38px; min-height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+        .quantity-control button:active { background: rgba(228, 0, 124, 0.12); }
+        .product-price { color: var(--color-primary); }
+        .remove-item-btn { background: none; border: none; width: 32px; height: 32px; margin: -6px -6px 0 0; font-size: 1.5rem; line-height: 1; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+        .remove-item-btn:hover { background: rgba(255, 82, 82, 0.1); }
+        .summary-section:has(.cart-empty-state) .promo-code-form,
+        .summary-section:has(.cart-empty-state) .promo-status,
+        .summary-section:has(.cart-empty-state) .summary-details { display: none; }
+        .cart-empty-state { text-align: center; padding: 1.75rem 0 1rem; list-style: none; }
+        .cart-empty-state p { margin-bottom: 1rem; color: var(--text-secondary); }
+        .cart-empty-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 1.4rem; border-radius: 999px; background: var(--color-primary); color: #fff; font-weight: 600; text-decoration: none; }
+
+        /* Тост вместо alert */
+        .checkout-toast-host { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10050; display: flex; flex-direction: column; gap: 8px; width: min(92vw, 420px); pointer-events: none; }
+        .checkout-toast { padding: 0.8rem 1rem; border-radius: 12px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,.3); font-size: 0.92rem; opacity: 0; transform: translateY(10px); transition: opacity .25s, transform .25s; }
+        .checkout-toast.show { opacity: 1; transform: none; }
+        .checkout-toast.is-error { border-color: var(--error-color); }
+        .checkout-toast.is-success { border-color: var(--color-secondary); }
+
+        .btn-submit { min-height: 54px; box-shadow: 0 8px 22px rgba(228, 0, 124, 0.28); }
+        .btn-submit:disabled { opacity: 0.7; cursor: progress; transform: none; }
+        .trust-seals { margin-top: 1rem; }
+
+        @media (max-width: 900px) {
+            .checkout-head { margin-top: 1rem; }
+        }
+        @media (max-width: 600px) {
+            .checkout-head { padding: 0 0.75rem; }
+            .checkout-page-title { font-size: 1.45rem; }
+            .checkout-container { margin-top: 1rem; gap: 1.25rem; }
+            .summary-section { padding: 1rem; border-radius: 16px; }
+            .form-step { padding: 1.1rem 1rem; border-radius: 16px; }
+            .checkout-progress { gap: 0.35rem; margin-bottom: 1rem; }
+            .checkout-progress-step { padding: 0.5rem 0.25rem; font-size: 0.75rem; }
+            h2 { font-size: 1.05rem; margin-bottom: 0.9rem; }
+            .success-modal-content { width: calc(100% - 24px); max-height: calc(100vh - 32px); overflow-y: auto; }
+        }
     </style>
 </head>
 <body>
@@ -937,16 +1037,18 @@
         </div>
     </header>
     <div class="nav-overlay"></div>
+    <div class="checkout-head">
+        <a href="index.html" class="btn-back" aria-label="Обратно към магазина"></a>
+        <h1 class="checkout-page-title">Завършване на поръчката</h1>
+    </div>
     <div class="checkout-container">
         <!-- Форма за попълване -->
         <main class="form-section">
-            <h1 class="checkout-page-title">Завършване на поръчката</h1>
             <div class="checkout-progress" aria-hidden="true">
                 <div class="checkout-progress-step active">1. Данни</div>
                 <div class="checkout-progress-step">2. Доставка</div>
                 <div class="checkout-progress-step">3. Плащане</div>
             </div>
-            <a href="index.html" class="btn-back" aria-label="Обратно към магазина"></a>
             <form id="checkout-form" novalidate>
                 <div class="form-step">
                     <h2>Информация за контакт</h2>
@@ -1021,7 +1123,6 @@
                         <!-- Speedy Office Selection Widget -->
                         <div id="speedy-widget" class="courier-widget" style="display: none; margin-top: 1rem;">
                             <label><strong>Избери офис на Спиди:</strong></label>
-                            <br>
                             <button type="button" class="speedy-choose-btn" id="open-speedy-map-btn">
                                 Избери от картата
                             </button>
@@ -1036,13 +1137,12 @@
                         <div id="ekont-widget" class="courier-widget" style="display: none; margin-top: 1rem;">
                             <div class="econt-container">
                                 <label for="ekont-office-search"><strong>Избери офис на Еконт:</strong></label>
-                                <br>
                                 <div class="econt-dropdown-wrapper">
-                                    <input type="text" id="ekont-office-search" placeholder="Град или име на офис..." autocomplete="off" style="width: 100%; padding: 10px; border: 2px solid #0056b3; border-radius: 5px; font-size: 15px; margin-top: 0.5rem;">
+                                    <input type="text" id="ekont-office-search" class="courier-search-input" placeholder="Град или име на офис..." autocomplete="off">
                                     <div id="econt-offices-dropdown" class="econt-dropdown" style="display: none;"></div>
                                 </div>
                                 <input type="hidden" id="final-office-id" name="office_id">
-                                <div id="ekont-status-text" style="font-size: 12px; color: gray; margin-top: 5px;">Зареждане...</div>
+                                <div id="ekont-status-text" class="courier-status-text">Зареждане...</div>
                             </div>
                         </div>
                     </div>
@@ -1097,10 +1197,11 @@
                 <!-- Продуктите ще се заредят тук от JS -->
             </ul>
             <div class="promo-code-form">
-                <input type="text" id="promo-code" placeholder="Промо код">
-                <button id="apply-promo">Приложи</button>
+                <input type="text" id="promo-code" placeholder="Промо код" autocomplete="off" autocapitalize="characters" enterkeyhint="done" aria-label="Промо код">
+                <button type="button" id="apply-promo">Приложи</button>
                 <button type="button" id="remove-promo" hidden>Премахни</button>
             </div>
+            <p class="promo-status" id="promo-status" role="status" aria-live="polite" hidden></p>
             <div class="summary-details">
                 <div class="summary-row">
                     <span>Междинна сума</span>
@@ -1207,6 +1308,29 @@
     } from './cart-image.js';
 import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-visibility.js';
     import { calculateCheckoutShipping } from './checkout-shipping.js';
+
+    // Неблокиращо съобщение вместо alert() — изчезва само.
+    function notify(message, type = 'info') {
+        if (!message) return;
+        let host = document.getElementById('checkout-toast-host');
+        if (!host) {
+            host = document.createElement('div');
+            host.id = 'checkout-toast-host';
+            host.className = 'checkout-toast-host';
+            host.setAttribute('role', 'status');
+            host.setAttribute('aria-live', 'polite');
+            document.body.appendChild(host);
+        }
+        const toast = document.createElement('div');
+        toast.className = `checkout-toast is-${type}`;
+        toast.textContent = message;
+        host.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3600);
+    }
     
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -1542,7 +1666,7 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
                 promoCode: activePromoCode?.code,
                 project: 'main',
                 silent,
-                showToast: (msg) => alert(msg),
+                showToast: (msg) => notify(msg),
                 onPriceSync: (serverProducts) => {
                     if (syncCartFromServer(cartData, serverProducts)) {
                         saveCart();
@@ -1567,7 +1691,7 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
         function renderProducts() {
             productListEl.innerHTML = '';
             if (cartData.length === 0) {
-                productListEl.innerHTML = '<p style="text-align:center; padding: 2rem 0;">Кошницата е празна.</p>';
+                productListEl.innerHTML = '<li class="cart-empty-state"><p>Кошницата е празна.</p><a href="index.html" class="cart-empty-link">Разгледай продуктите</a></li>';
                 return;
             }
 
@@ -1595,13 +1719,13 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
                     </div>
                     <div class="product-controls">
                         <div class="quantity-control">
-                            <button class="quantity-btn" data-action="decrease">-</button>
+                            <button type="button" class="quantity-btn" data-action="decrease" aria-label="Намали">&minus;</button>
                             <span class="quantity">${product.quantity}</span>
-                            <button class="quantity-btn" data-action="increase">+</button>
+                            <button type="button" class="quantity-btn" data-action="increase" aria-label="Увеличи">+</button>
                         </div>
                         <span class="product-price">${(product.price * product.quantity).toFixed(2)} €</span>
                     </div>
-                    <span class="remove-item-btn" title="Премахни">✖</span>
+                    <button type="button" class="remove-item-btn" title="Премахни" aria-label="Премахни ${safeName}">&times;</button>
                 `;
                 productListEl.appendChild(itemEl);
             });
@@ -1671,7 +1795,7 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
                     if (cartData[productIndex].quantity < max) {
                         cartData[productIndex].quantity++;
                     } else {
-                        alert('Няма повече наличности.');
+                        notify('Няма повече наличности.', 'error');
                     }
                 } else if (action === 'decrease' && cartData[productIndex].quantity > 1) {
                     cartData[productIndex].quantity--;
@@ -1691,10 +1815,23 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
             }
         });
 
+        const promoStatusEl = document.getElementById('promo-status');
+        function setPromoStatus(msg, type) {
+            if (!promoStatusEl) return;
+            promoStatusEl.textContent = msg;
+            promoStatusEl.hidden = !msg;
+            promoStatusEl.className = 'promo-status' + (type ? ' is-' + type : '');
+        }
+        promoInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); applyPromoBtn.click(); }
+        });
+        promoInput.addEventListener('input', () => setPromoStatus('', ''));
+
         applyPromoBtn.addEventListener('click', async () => {
             const code = promoInput.value.trim().toUpperCase();
             if (!code) {
-                alert('Моля, въведете промо код.');
+                setPromoStatus('Въведи промо код.', 'error');
+                promoInput.focus();
                 return;
             }
             
@@ -1723,21 +1860,22 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
                         }
                         await validateCartOnServer({ silent: true });
                         updateSummary();
-                        alert(`Промо кодът е приложен! Персонални цени (${modeLabel}).`);
+                        setPromoStatus(`Кодът е приложен ✓ Персонални цени (${modeLabel}).`, 'success');
                     } else if (result.promoCode.discountType === 'percentage') {
                         activeDiscount = result.promoCode.discount / 100;
                         updateSummary();
-                        alert(`Промо кодът е приложен! ${result.promoCode.description || ''}`);
+                        setPromoStatus(`Кодът е приложен ✓ ${result.promoCode.description || ''}`.trim(), 'success');
                     } else {
                         activeDiscount = result.promoCode.discount;
                         updateSummary();
-                        alert(`Промо кодът е приложен! ${result.promoCode.description || ''}`);
+                        setPromoStatus(`Кодът е приложен ✓ ${result.promoCode.description || ''}`.trim(), 'success');
                     }
                     promoInput.disabled = true;
                     applyPromoBtn.disabled = true;
+                    applyPromoBtn.hidden = true;
                     if (removePromoBtn) removePromoBtn.hidden = false;
                 } else {
-                    alert(result.error || 'Невалиден промо код.');
+                    setPromoStatus(result.error || 'Този код не е валиден.', 'error');
                     activeDiscount = 0;
                     activePromoCode = null;
                     clearLowMarginPromoUnlock();
@@ -1745,7 +1883,7 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
                 }
             } catch (err) {
                 console.error('Грешка при валидация на промо код:', err);
-                alert('Възникна грешка при валидация на промо кода.');
+                setPromoStatus('Не успяхме да проверим кода. Опитай пак.', 'error');
             }
         });
 
@@ -1756,7 +1894,9 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
             promoInput.value = '';
             promoInput.disabled = false;
             applyPromoBtn.disabled = false;
+            applyPromoBtn.hidden = false;
             removePromoBtn.hidden = true;
+            setPromoStatus('', '');
             await validateCartOnServer({ silent: true });
             updateSummary();
         });
@@ -1985,7 +2125,14 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
         // --- 5. ВАЛИДАЦИЯ И ИЗПРАЩАНЕ НА ФОРМАТА ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!validateForm()) return;
+            if (!validateForm()) {
+                const firstInvalid = form.querySelector('.is-invalid') || form.querySelector('.error-message[style*="block"]');
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (firstInvalid.matches('input')) setTimeout(() => firstInvalid.focus({ preventScroll: true }), 350);
+                }
+                return;
+            }
 
             const submitBtn = form.querySelector('.btn-submit');
             const originalLabel = submitBtn ? submitBtn.textContent : '';
@@ -2068,7 +2215,7 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
                 showSuccessModal();
             } catch (err) {
                 console.error('Грешка при изпращане на поръчката:', err);
-                alert(err.message || 'Възникна грешка. Опитайте по-късно.');
+                notify(err.message || 'Възникна грешка. Опитай пак след малко.', 'error');
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalLabel;
@@ -2109,7 +2256,7 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
             if (deliveryCourierRadio.checked) {
                 // Check if a courier is selected
                 if (!speedyRadio.checked && !ekontRadio.checked) {
-                    alert('Моля, изберете куриерска фирма (Speedy или Еконт).');
+                    notify('Избери куриер – Speedy или Еконт.', 'error');
                     isValid = false;
                 }
                 
@@ -2117,13 +2264,13 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
                 if (speedyRadio.checked) {
                     const speedyOfficeId = document.getElementById('final-speedy-id').value;
                     if (!speedyOfficeId) {
-                        alert('Моля, изберете офис на Speedy от картата.');
+                        notify('Избери офис на Speedy от картата.', 'error');
                         isValid = false;
                     }
                 } else if (ekontRadio.checked) {
                     const ekontOfficeId = document.getElementById('final-office-id').value;
                     if (!ekontOfficeId) {
-                        alert('Моля, изберете офис на Еконт от списъка.');
+                        notify('Избери офис на Еконт от списъка.', 'error');
                         isValid = false;
                     }
                 }
@@ -2201,6 +2348,26 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
             }
         }
         
+        // --- Прогрес: Данни → Доставка → Плащане според видимата секция ---
+        const progressSteps = document.querySelectorAll('.checkout-progress-step');
+        const formSteps = document.querySelectorAll('#checkout-form .form-step');
+        if (progressSteps.length === 3 && formSteps.length >= 3 && 'IntersectionObserver' in window) {
+            const stepIndexFor = (el) => {
+                const i = Array.prototype.indexOf.call(formSteps, el);
+                return i <= 0 ? 0 : (i === 1 ? 1 : 2);
+            };
+            const setActive = (idx) => progressSteps.forEach((el, i) => {
+                el.classList.toggle('active', i === idx);
+                el.classList.toggle('done', i < idx);
+            });
+            const io = new IntersectionObserver((entries) => {
+                const visible = entries.filter(en => en.isIntersecting)
+                    .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+                if (visible.length) setActive(stepIndexFor(visible[0].target));
+            }, { rootMargin: '-35% 0px -45% 0px' });
+            formSteps.forEach(el => io.observe(el));
+        }
+
         // --- Back to top button ---
         const backToTopBtn = document.getElementById('back-to-top');
         if (backToTopBtn) {

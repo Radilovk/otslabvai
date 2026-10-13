@@ -680,6 +680,38 @@
             text-decoration: underline;
         }
 
+        /* ===== Mobile polish (daotslabna) ===== */
+        .product-missing-state { text-align: center; padding: 72px 20px 40px; }
+        .product-missing-state h2 { margin-bottom: 0.5rem; }
+        .product-missing-state p { margin-bottom: 1.75rem; color: var(--text-secondary); }
+        body.product-missing .sticky-order-button { display: none; }
+        .variant-dropdown {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+            font-size: 1rem;
+            min-height: 48px;
+            border-radius: 12px;
+        }
+        .variant-dropdown option { background: var(--bg-secondary); color: var(--text-primary); }
+        @media (max-width: 768px) {
+            .sticky-back-button { position: absolute; }
+            .product-detail-container { padding-top: 64px; }
+            #product-detail-content { display: flex; flex-direction: column; }
+            #product-detail-content > * { min-width: 0; }
+            #product-detail-content .product-detail-image { order: -2; margin: 0 auto 18px; width: 100%; }
+            #product-detail-content .product-detail-header { order: -1; text-align: left; margin-bottom: 8px; }
+            #product-detail-content .product-variant-selector { order: -1; margin: 0 0 20px; }
+            .product-detail-header h1 { margin-bottom: 6px; }
+            .product-detail-header .tagline { margin-bottom: 14px; }
+            .product-detail-meta { flex-direction: row; align-items: center; gap: 10px 12px; margin-bottom: 12px; }
+            .product-detail-meta .price-group { flex: 1 1 100%; }
+            .product-detail-stock { padding: 6px 12px; font-size: 0.85rem; border-radius: 999px; }
+            .share-product-btn { min-height: 36px; padding: 6px 12px; border-radius: 999px; }
+            .product-variant-selector h2,
+            .variant-section-heading { font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-secondary); }
+            .variant-dropdown-wrapper { max-width: 100%; }
+        }
     </style>
 </head>
 <body>
