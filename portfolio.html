@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="images/biocode-favicon.png">
-    <link rel="stylesheet" href="portfolio.css">
+    <link rel="stylesheet" href="portfolio.css?v=20261013a">
 </head>
 <body class="pf-body">
     <div id="sync-banner" class="pf-sync-banner" style="display:none;" role="alert"></div>
@@ -82,7 +82,7 @@
                 </button>
             </div>
             <div class="pf-hero-stats" id="hero-stats" style="display:none">
-                <div class="pf-hero-stat"><strong id="stat-products">—</strong><span>продуктови групи</span></div>
+                <div class="pf-hero-stat"><strong id="stat-products">—</strong><span>продукта</span></div>
                 <div class="pf-hero-stat"><strong id="stat-brands">—</strong><span>марки</span></div>
             </div>
         </div>
@@ -100,6 +100,25 @@
                 <h2>Филтри</h2>
                 <button type="button" class="pf-sidebar-close" id="sidebar-close" aria-label="Затвори филтрите"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
             </div>
+            
+                <div class="pf-filter-group pf-filter-field">
+                    <label class="pf-filter-label" for="filter-category">Категория</label>
+                    <select id="filter-category" class="pf-filter-select" aria-label="Категория">
+                        <option value="">Всички категории</option>
+                    </select>
+                </div>
+                <div class="pf-filter-group pf-filter-field">
+                    <label class="pf-filter-label" for="filter-goal">Цел</label>
+                    <select id="filter-goal" class="pf-filter-select" aria-label="Цел на продукта">
+                        <option value="">Всички цели</option>
+                    </select>
+                </div>
+                <div class="pf-filter-group pf-filter-field pf-filter-field--brand">
+                    <label class="pf-filter-label" for="filter-brand">Марка</label>
+                    <select id="filter-brand" class="pf-filter-select" aria-label="Марка">
+                        <option value="">Всички марки</option>
+                    </select>
+                </div>
             <div class="pf-filter-group">
                 <h3>Цена (€)</h3>
                 <div class="pf-filter-price-row">
@@ -134,26 +153,6 @@
                 <input type="search" id="search-input" placeholder="Търси продукт, марка, категория..." aria-label="Търсене в каталога">
             </div>
 
-            <div class="pf-filter-bar" aria-label="Бързи филтри">
-                <div class="pf-filter-field">
-                    <label class="pf-filter-label" for="filter-category">Категория</label>
-                    <select id="filter-category" class="pf-filter-select" aria-label="Категория">
-                        <option value="">Всички категории</option>
-                    </select>
-                </div>
-                <div class="pf-filter-field">
-                    <label class="pf-filter-label" for="filter-goal">Цел</label>
-                    <select id="filter-goal" class="pf-filter-select" aria-label="Цел на продукта">
-                        <option value="">Всички цели</option>
-                    </select>
-                </div>
-                <div class="pf-filter-field pf-filter-field--brand">
-                    <label class="pf-filter-label" for="filter-brand">Марка</label>
-                    <select id="filter-brand" class="pf-filter-select" aria-label="Марка">
-                        <option value="">Всички марки</option>
-                    </select>
-                </div>
-            </div>
             <div class="pf-active-filters" id="active-filters" aria-live="polite"></div>
 
             <div id="catalog-grid" class="pf-grid" aria-live="polite"></div>

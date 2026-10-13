@@ -307,6 +307,8 @@ export function getFiltersFromCache() {
     categories: meta.categories,
     goals: meta.goals || [],
     total_groups: meta.total_groups,
+    // Продуктите, които клиентът реално вижда (налични, с марж) — за числото в hero.
+    total_listed: (meta.index || []).filter((i) => i.available !== false && i.margin_eligible !== false).length,
     synced_at: meta.synced_at
   };
 }

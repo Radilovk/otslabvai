@@ -3,6 +3,7 @@
 // =======================================================
 
 import { API_URL } from './config.js';
+import { splitProductName, cardTaglineText, decodeEntities } from './product-card-text.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import {
     getFeatureIconSVG, iconChevronDown, iconCheck, getLifeIconImg, statFrostedIcon,
@@ -148,9 +149,11 @@ const generateProductCard = (product) => {
         ? `<span class="brand-label">${escapeHtml(publicData.brand)}</span>`
         : '';
 
-    // Кратък текст под името: слоган или начало на описанието (за импортирани продукти без слоган)
-    const cardTagline = publicData.tagline
-        || (publicData.description ? `${String(publicData.description).split(/[\n]/)[0].slice(0, 90)}` : '');
+    // Чисто име (без „| …“ и „[60 капсули]“), разфасовка отделно; кратък текст до цяла дума.
+    const nameParts = splitProductName(publicData.name);
+    const cardTagline = cardTaglineText(publicData) || nameParts.subtitle;
+    const packChip = nameParts.pack ? `<span class="pack-chip">${escapeHtml(nameParts.pack)}</span>` : '';
+    const effects = publicData.effects || [];
 
     // Sale / promotion price (only applies when no variant price overrides publicData.price)
     const salePrice = publicData.sale_price;
@@ -179,14 +182,14 @@ const generateProductCard = (product) => {
     return `
     <a href="life-product.html?id=${encodeURIComponent(productId)}" class="product-card fade-in-up" data-product-id="${escapeHtml(productId)}" data-brand="${escapeHtml(publicData.brand || '')}" data-price="${dataPrice}" data-sale="${hasSale ? 'true' : ''}" data-goals="${escapeHtml((product.system_data?.goals || []).join(','))}">
         ${publicData.image_url
-            ? `<div class="product-image"><img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(publicData.name)}${cardTagline ? ' - ' + escapeHtml(cardTagline) : ''}" loading="lazy" decoding="async">${priceBlock}</div>`
+            ? `<div class="product-image"><img src="${escapeHtml(publicData.image_url)}" alt="${escapeHtml(decodeEntities(publicData.name))}" loading="lazy" decoding="async">${priceBlock}</div>`
             : priceBlock}
         <div class="card-content">
             ${brandLabel}
-            <div class="product-title"><h3>${escapeHtml(publicData.name)}</h3><p>${escapeHtml(cardTagline)}</p></div>
-            <div class="effects-container">
-                ${(publicData.effects || []).map(generateEffectBar).join('')}
-            </div>
+            <div class="product-title"><h3>${escapeHtml(nameParts.title)}</h3>${packChip}${cardTagline ? `<p>${escapeHtml(cardTagline)}</p>` : ''}</div>
+            ${effects.length ? `<div class="effects-container">
+                ${effects.map(generateEffectBar).join('')}
+            </div>` : ''}
         </div>
     </a>`;
 }
@@ -345,9 +348,22 @@ const generateHeroHTML = (component, pageContent = []) => {
         icon: def.icon,
         category_id: def.id
     }));
-    const features = (component.features && component.features.length)
+    const baseFeatures = (component.features && component.features.length)
         ? component.features
         : defaultFeatures;
+    // Всяка видима категория с продукти има плочка (и новите — сън, енергия, стави).
+    const EXTRA_CATEGORY_ICONS = { 'sleep-stress': 'hourglass', 'energy-vitality': 'flask', 'joints-mobility': 'molecule' };
+    const featureIds = new Set(baseFeatures.map((f) => f.category_id || String(f.link || '').replace(/^#/, '')));
+    const extraFeatures = (Array.isArray(pageContent) ? pageContent : (pageContent?.page_content || []))
+        .filter((c) => c?.type === 'product_category' && !c.is_hidden && (c.products || []).length)
+        .filter((c) => !featureIds.has(c.id) && !featureIds.has(c.category_id))
+        .map((c) => ({
+            title: String(c.title || '').toUpperCase(),
+            description: c.description || '',
+            icon: EXTRA_CATEGORY_ICONS[c.id] || 'capsule',
+            category_id: c.id,
+        }));
+    const features = [...baseFeatures, ...extraFeatures];
 
     const featuresHTML = `
     <section class="hero-features-section">
@@ -1092,15 +1108,26 @@ function renderPromoBanner(settings) {
     if (!promoContent) return;
     
     // Get the promo text from settings
-    const promoText = settings.promo_banner?.text || 'СПЕЦИАЛНА ОФЕРТА: До 30% отстъпка при поръчка над 100 €!';
+    // Без текст от админа лентата не се показва (няма вграден „подразбиращ се“ промо текст).
+    const promoText = String(settings.promo_banner?.text || '').trim();
+    if (!promoText) {
+        promoBanner.hidden = true;
+        return;
+    }
+    // Таймер само при реална крайна дата на офертата (settings.promo_banner.ends_at, ISO).
+    const endsAt = Date.parse(settings.promo_banner?.ends_at || '');
+    const timerAttr = Number.isFinite(endsAt) && endsAt > Date.now() ? ` data-ends-at="${endsAt}"` : '';
+    promoBanner.hidden = false;
     
     // Keep the icon and strong tag, update only the text
     promoContent.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
             <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
         </svg>
-        ${escapeHtml(promoText)} <span class="promo-timer" id="promo-timer"></span>
+        ${escapeHtml(promoText)} <span class="promo-timer" id="promo-timer"${timerAttr}></span>
     `;
+    initPromoTimer();
+    if (typeof updatePromoBannerOffset === 'function') updatePromoBannerOffset();
 }
 
 // Helper function to initialize logo from cached settings
@@ -2001,33 +2028,34 @@ function initializeMarketingFeatures() {
 }
 
 // Promo Timer - Shows countdown to create urgency
+let promoTimerInterval = null;
 function initPromoTimer() {
     const timerElement = document.getElementById('promo-timer');
     if (!timerElement) return;
-    
-    // Set end time to midnight today (or customize)
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0);
-    
+    const endsAt = Number(timerElement.dataset.endsAt);
+    if (!Number.isFinite(endsAt) || endsAt <= Date.now()) {
+        timerElement.remove();
+        return;
+    }
+
     function updateTimer() {
-        const now = new Date();
-        const diff = midnight - now;
-        
+        const diff = endsAt - Date.now();
         if (diff <= 0) {
-            timerElement.textContent = 'Офертата изтече!';
+            timerElement.textContent = 'Офертата изтече';
+            clearInterval(promoTimerInterval);
             return;
         }
-        
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        
-        timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        const hms = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        timerElement.textContent = days > 0 ? `${days} д. ${hms}` : hms;
     }
-    
+
+    clearInterval(promoTimerInterval);
     updateTimer();
-    setInterval(updateTimer, 1000);
+    promoTimerInterval = setInterval(updateTimer, 1000);
 }
 
 // Sticky CTA - Shows when user scrolls past hero

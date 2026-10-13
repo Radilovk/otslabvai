@@ -283,7 +283,7 @@ function populateFilters(filters) {
     const showStats = filters.total_groups > 0;
     if (showStats) {
       DOM.heroStats.style.display = 'flex';
-      const products = filters.total_groups.toLocaleString('bg-BG');
+      const products = (filters.total_listed || filters.total_groups).toLocaleString('bg-BG');
       const brands = filters.brands.length.toLocaleString('bg-BG');
       if (DOM.statProducts.textContent !== products) DOM.statProducts.textContent = products;
       if (DOM.statBrands.textContent !== brands) DOM.statBrands.textContent = brands;

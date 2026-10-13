@@ -3323,3 +3323,7 @@ html[data-pf-cart] .pf-fab-cart { display: grid; }
 }
 
 .pf-legal a:hover { color: var(--pf-primary-hover); }
+
+/* Всички филтри в страничната колона (десктоп) / чекмеджето (телефон) */
+.pf-sidebar .pf-filter-field { margin-bottom: 1rem; }
+.pf-sidebar .pf-filter-label { margin-bottom: 0.15rem; }

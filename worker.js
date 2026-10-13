@@ -263,6 +263,18 @@ export default {
             }
             break;
 
+          case '/portfolio-advisor/status':
+            // Публично: само дали консултантът е включен (настройките с промптовете са за админа).
+            if (request.method === 'GET') {
+              const advisorSettings = await loadPortfolioAdvisorSettings(env);
+              response = new Response(JSON.stringify({ enabled: advisorSettings.enabled !== false }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' },
+              });
+            } else {
+              throw new UserFacingError('Method Not Allowed.', 405);
+            }
+            break;
           case '/portfolio-advisor/settings':
             if (request.method === 'GET') {
               response = await handleGetPortfolioAdvisorSettings(env);

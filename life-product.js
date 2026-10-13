@@ -293,16 +293,18 @@ function renderProductDetail(product) {
     ` : '';
 
     // Determine stock status class
+    // Продуктите от доставчик имат служебна наличност (не е реален брой) — без „Само N бр.“.
+    const syntheticStock = systemData?.source === 'portfolio' || Boolean(systemData?.portfolio?.group_id);
     let stockClass = '';
     let stockText = '';
     if (inventory <= 0) {
         stockClass = 'out-of-stock';
         stockText = 'Изчерпано';
-    } else if (inventory <= 30) {
+    } else if (!syntheticStock && inventory <= 5) {
         stockClass = 'low-stock';
         stockText = `⚠️ Само ${inventory} бр. налични!`;
     } else {
-        stockText = `Налично: ${inventory} бр.`;
+        stockText = 'В наличност';
     }
 
     // Prepare image gallery

@@ -30,6 +30,7 @@ import {
   ceilRetailPrice,
 } from './portfolio-pricing.js';
 import { groupHasMargin, variantHasMargin, isCatalogListed } from './portfolio-margin-policy.js';
+import { getProductFacts, isSampleVariantLabel } from './advisor-product-facts.js';
 import { normalizeHeroImagePath } from './portfolio-hero-path.js';
 
 const CATALOG_IMG_URL_RE = /^https?:\/\//i;
@@ -433,7 +434,10 @@ export function buildCatalogMeta(groups, settings = null) {
     const availableVariants = g.variants.filter((v) => v.available);
     // Цена „от“, разфасовки и промо — само от вариантите с марж (другите не се показват и не се продават).
     const sellableVariants = availableVariants.filter((v) => variantHasMargin(v));
-    const shownVariants = sellableVariants.length ? sellableVariants : availableVariants;
+    const withMargin = sellableVariants.length ? sellableVariants : availableVariants;
+    // Мостра/единична порция (30 г, 1 бар) не определя цената „от“ на картата.
+    const fullPacks = withMargin.filter((v) => !isSampleVariantLabel(v.pack || v.option || ''));
+    const shownVariants = fullPacks.length ? fullPacks : withMargin;
     const priceStats = summarizeGroupPricing(shownVariants);
     const indexPricing = buildIndexVariantPricing(shownVariants);
     const packs = collectAvailablePacks(shownVariants);
@@ -475,6 +479,8 @@ export function buildCatalogMeta(groups, settings = null) {
     categoryMap.set(topCat, (categoryMap.get(topCat) || 0) + 1);
   });
 
+  assignRecommendedRank(index);
+
   return {
     version: 1,
     chunk_size: CHUNK_SIZE,
@@ -493,6 +499,46 @@ export function buildCatalogMeta(groups, settings = null) {
 
 /** Strip admin-only / internal fields before sending product data to the client. */
 /** Клиентът не получава нищо, от което да се изведе доставната цена или доставчикът. */
+/**
+ * Позиция в подредбата „Препоръчани“ (`rec`, 0 = първи) — изчислява се на сървъра, защото зависи от маржа,
+ * който не излиза към браузъра. Към клиента отива само позицията.
+ * Ред: добавки (не аксесоари/храни/мостри) със снимка → по-висок марж % → по-висока печалба €,
+ * с разнообразие: до 2 продукта от марка във всеки 12 поредни.
+ */
+export function assignRecommendedRank(index) {
+  const score = (e) => {
+    const facts = getProductFacts({
+      public_data: { name: e.name, variants: (e.packs || ['']).map((pack) => ({ option_name: pack, price: e.min_price, available: true })) },
+      system_data: { portfolio: { category: (e.category_path || []).join(' > ') || e.category } },
+    });
+    return [
+      facts.kind === 'supplement' ? 0 : 1,
+      e.image ? 0 : 1,
+      e.available === false ? 1 : 0,
+      -(Number(e.max_margin_pct) || 0),
+      -(Number(e.max_margin) || 0),
+    ];
+  };
+  const keyed = index.map((e) => ({ e, k: score(e) }));
+  keyed.sort((a, b) => {
+    for (let i = 0; i < a.k.length; i += 1) if (a.k[i] !== b.k[i]) return a.k[i] - b.k[i];
+    return String(a.e.name).localeCompare(String(b.e.name), 'bg');
+  });
+  const ordered = [];
+  const pending = keyed.map((x) => x.e);
+  const recent = [];
+  while (pending.length) {
+    let pick = pending.findIndex((e) => recent.filter((b) => b === e.brand).length < 2);
+    if (pick < 0 || ordered.length > 600) pick = 0;
+    const [e] = pending.splice(pick, 1);
+    ordered.push(e);
+    recent.push(e.brand);
+    if (recent.length > 12) recent.shift();
+  }
+  ordered.forEach((e, i) => { e.rec = i; });
+  return index;
+}
+
 export function sanitizeVariantForClient(variant) {
   if (!variant) return variant;
   if (Number(variant.b2b_price) > 0 && !variantHasMargin(variant)) {

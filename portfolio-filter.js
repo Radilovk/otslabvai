@@ -54,6 +54,8 @@ export function applyFilters(index, params, meta = {}) {
 }
 
 export function compareByMarginDesc(a, b) {
+  // Към браузъра маржът не излиза — подредбата идва готова от сървъра като позиция `rec`.
+  if (Number.isFinite(a.rec) && Number.isFinite(b.rec)) return a.rec - b.rec;
   const marginPctDiff = (b.max_margin_pct ?? 0) - (a.max_margin_pct ?? 0);
   if (marginPctDiff !== 0) return marginPctDiff;
   const marginDiff = (b.max_margin ?? 0) - (a.max_margin ?? 0);
