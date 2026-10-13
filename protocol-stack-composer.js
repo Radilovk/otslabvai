@@ -4,13 +4,8 @@
  * AI не избира product_id — само генерира текст върху фиксирани стекове.
  */
 
-import {
-  getMustIncludeKeywords,
-  productMatchesAnyKeyword,
-  productSearchText,
-} from './protocol-safety-rules.js';
-import { productsConflictInStack, classifyProductSlot } from './portfolio-stack-slots.js';
-import { getProductPriceEur } from './protocol-quiz-engine.js';
+import { composeAdvisorStacks } from './advisor-composer.js';
+import { getProductFacts } from './advisor-product-facts.js';
 
 const TIER_LIMITS = {
   basic: { min: 3, max: 4, budgetEur: 32 },
@@ -24,234 +19,36 @@ const TIER_META = {
   premium: { name: 'Премиум регенерация', tagline: 'Пълен клетъчен протокол' },
 };
 
-function productGoalKey(product) {
-  const goals = product.system_data?.goals || [];
-  if (goals.length) return goals[0];
-  const text = productSearchText(product);
-  if (text.includes('сън') || text.includes('sleep')) return 'sleep';
-  if (text.includes('кож') || text.includes('skin')) return 'skin';
-  if (text.includes('став') || text.includes('joint')) return 'joints';
-  if (text.includes('енерги') || text.includes('energy')) return 'energy';
-  return product.product_id;
-}
-
-function toStackItem(product, index) {
-  return {
-    product_id: product.product_id,
-    role: index === 0 ? 'core' : 'support',
-    dose: 'Според етикета',
-    timing: index % 2 === 0 ? 'сутрин с храна' : 'вечер',
-  };
-}
-
-function findMustIncludeProducts(profile, ranked) {
-  const keywords = getMustIncludeKeywords(profile);
-  if (!keywords.length) return [];
-
-  const found = [];
-  const seen = new Set();
-  for (const { product } of ranked) {
-    const text = productSearchText(product);
-    if (keywords.some((kw) => productMatchesAnyKeyword(text, [kw])) && !seen.has(product.product_id)) {
-      found.push(product);
-      seen.add(product.product_id);
-    }
-  }
-  return found;
-}
-
-function pickProducts(ranked, { count, budgetEur, picked, existing = [], diversify = true }) {
-  const selected = [];
-  const usedGoals = new Set();
-  let totalEur = 0;
-
-  const tryPick = (entry, force = false) => {
-    const { product } = entry;
-    if (picked.has(product.product_id)) return false;
-    // Стековете са кумулативни: проверяваме и срещу продуктите от по-ниските нива,
-    // иначе optimal/premium натрупват няколко термогенни стимуланта или дублирани активни вещества.
-    if (existing.some((p) => productsConflictInStack(p, product))) return false;
-    if (selected.some((p) => productsConflictInStack(p, product))) return false;
-    const price = getProductPriceEur(product);
-    if (!force && selected.length >= 3 && totalEur + price > budgetEur) return false;
-
-    const goalKey = productGoalKey(product);
-    if (diversify && selected.length < count && usedGoals.has(goalKey) && selected.length < count - 1) {
-      return false;
-    }
-
-    selected.push(product);
-    picked.add(product.product_id);
-    usedGoals.add(goalKey);
-    totalEur += price;
-    return true;
-  };
-
-  for (const entry of ranked) {
-    if (selected.length >= count) break;
-    tryPick(entry);
-  }
-
-  if (selected.length < count) {
-    for (const entry of ranked) {
-      if (selected.length >= count) break;
-      tryPick(entry, true);
-    }
-  }
-
-  return selected;
-}
-
-function buildTierProducts(products) {
-  return products.map((product, index) => toStackItem(product, index));
-}
-
 /**
- * Кумулативни стекове: basic ⊂ optimal ⊂ premium
- * Сканира целия ranked pool (стотици продукти).
+ * Кумулативни стекове basic ⊂ optimal ⊂ premium по плана от слотове за приоритета на профила.
+ * (Обвивка за съвместимост — логиката е в advisor-composer.js.)
  */
 export function composeProtocolStacks(profile, rankedEntries, options = {}) {
-  const limits = options.tierLimits || TIER_LIMITS;
-  const meta = options.tierMeta || TIER_META;
-  const picked = new Set();
-  const mustInclude = findMustIncludeProducts(profile, rankedEntries);
-
-  for (const product of mustInclude) {
-    picked.add(product.product_id);
-  }
-
-  const basicCore = [
-    ...mustInclude,
-    ...pickProducts(rankedEntries, {
-      count: limits.basic.max,
-      budgetEur: limits.basic.budgetEur,
-      picked,
-      existing: mustInclude,
-    }),
-  ].slice(0, limits.basic.max);
-
-  for (const p of basicCore) picked.add(p.product_id);
-
-  const optimalExtra = pickProducts(rankedEntries, {
-    count: Math.max(0, limits.optimal.max - basicCore.length),
-    budgetEur: limits.optimal.budgetEur,
-    picked,
-    existing: basicCore,
+  return composeAdvisorStacks(profile, rankedEntries, {
+    tierLimits: options.tierLimits || TIER_LIMITS,
+    tierMeta: options.tierMeta || TIER_META,
+    goal: options.goal || profile.priority || 'longevity',
+    siteId: options.siteId || 'life',
   });
-  const optimalProducts = [...basicCore, ...optimalExtra].slice(0, limits.optimal.max);
-
-  for (const p of optimalProducts) picked.add(p.product_id);
-
-  const premiumExtra = pickProducts(rankedEntries, {
-    count: Math.max(0, limits.premium.max - optimalProducts.length),
-    budgetEur: limits.premium.budgetEur,
-    picked,
-    existing: optimalProducts,
-  });
-  const premiumProducts = [...optimalProducts, ...premiumExtra].slice(0, limits.premium.max);
-
-  const tiers = {
-    basic: {
-      ...meta.basic,
-      products: buildTierProducts(basicCore),
-    },
-    optimal: {
-      ...meta.optimal,
-      products: buildTierProducts(optimalProducts),
-    },
-    premium: {
-      ...meta.premium,
-      products: buildTierProducts(premiumProducts),
-    },
-  };
-
-  return {
-    recommended_tier: 'optimal',
-    tiers,
-    meta: {
-      ranked_pool_size: rankedEntries.length,
-      must_include_count: mustInclude.length,
-      tier_counts: {
-        basic: tiers.basic.products.length,
-        optimal: tiers.optimal.products.length,
-        premium: tiers.premium.products.length,
-      },
-    },
-  };
 }
-
-const CORE_GOALS = new Set(['weight-loss', 'appetite-control', 'fat-burning', 'fat-metabolism']);
-const CORE_SLOTS = new Set(['fat_burner', 'metabolism']);
-const CORE_POOL_SIZE = 5;
-const SUPPORT_MAX_PRICE_EUR = 45;
 
 /** Основен продукт за отслабване (бърнър, метаболизъм, апетит). */
 export function isWeightLossCoreProduct(product) {
-  const goals = (product.system_data?.goals || []).map((g) => String(g).toLowerCase());
-  if (goals.some((g) => CORE_GOALS.has(g))) return true;
-  return CORE_SLOTS.has(classifyProductSlot(product));
+  return ['fat_burner', 'fat_burner_nonstim', 'appetite', 'carnitine', 'cla', 'glucose'].includes(getProductFacts(product).slot);
 }
 
 /**
- * Модел „1 основен продукт + подкрепа“ (daotslabna):
- *   basic   — най-евтиният от топ основните продукти, сам;
- *   optimal — най-добрият основен продукт + 1 подкрепа;
- *   premium — най-добрият основен продукт + 2 подкрепи.
- * Подкрепата е без конфликт с основния продукт и до разумна цена.
- * Връща null, ако няма основен продукт (напр. „без стимуланти“) — тогава се ползва общият композитор.
+ * daotslabna: основен продукт за отслабване + подкрепа по плана „отслабване“.
+ * Без нито един продукт за отслабване → null (тогава се ползва общият композитор).
  */
 export function composeCoreSupportStacks(profile, rankedEntries, options = {}) {
-  const meta = options.tierMeta || TIER_META;
-  const mustInclude = findMustIncludeProducts(profile, rankedEntries);
-  const cores = rankedEntries.filter(({ product }) => isWeightLossCoreProduct(product)).map((e) => e.product);
-  if (!cores.length) return null;
-
-  const bestCore = cores[0];
-  const topCores = cores.slice(0, CORE_POOL_SIZE);
-  const basicCore = topCores.reduce((min, p) => (getProductPriceEur(p) < getProductPriceEur(min) ? p : min), topCores[0]);
-
-  const supports = [];
-  const candidates = [
-    ...mustInclude,
-    ...rankedEntries.map((e) => e.product).filter((p) => !isWeightLossCoreProduct(p)),
-  ];
-  for (const product of candidates) {
-    if (supports.length >= 2) break;
-    if (supports.some((s) => s.product_id === product.product_id)) continue;
-    const isMust = mustInclude.includes(product);
-    if (!isMust && getProductPriceEur(product) > SUPPORT_MAX_PRICE_EUR) continue;
-    if (productsConflictInStack(bestCore, product)) continue;
-    if (supports.some((s) => productsConflictInStack(s, product))) continue;
-    supports.push(product);
-  }
-
-  const withMust = (core) => [core, ...mustInclude.filter((m) => m.product_id !== core.product_id && !productsConflictInStack(core, m))];
-  const tierProducts = {
-    basic: withMust(basicCore).slice(0, 1 + mustInclude.length),
-    optimal: [bestCore, ...supports.slice(0, 1)],
-    premium: [bestCore, ...supports.slice(0, 2)],
-  };
-
-  const tiers = {};
-  for (const key of ['basic', 'optimal', 'premium']) {
-    tiers[key] = { ...meta[key], products: buildTierProducts(tierProducts[key]) };
-  }
-
-  return {
-    recommended_tier: 'optimal',
-    tiers,
-    meta: {
-      mode: 'core_support',
-      ranked_pool_size: rankedEntries.length,
-      core_pool_size: cores.length,
-      must_include_count: mustInclude.length,
-      tier_counts: {
-        basic: tiers.basic.products.length,
-        optimal: tiers.optimal.products.length,
-        premium: tiers.premium.products.length,
-      },
-    },
-  };
+  if (!rankedEntries.some(({ product }) => isWeightLossCoreProduct(product))) return null;
+  return composeAdvisorStacks(profile, rankedEntries, {
+    tierLimits: options.tierLimits || TIER_LIMITS,
+    tierMeta: options.tierMeta || TIER_META,
+    goal: 'otshalvane',
+    siteId: 'main',
+  });
 }
 
 /** Слива AI narration с детерминистично съставените стекове */
@@ -304,73 +101,117 @@ export function assembleProtocolFromComposition(composed, narration, productMap,
   return { response, candidates, excludedProductIds };
 }
 
+
+/** Кратка, честна полза на слот (без медицински обещания) — за резервния текст без AI. */
+const SLOT_BENEFITS = {
+  fat_burner: 'Подкрепа на енергийния разход',
+  fat_burner_nonstim: 'Подкрепа на метаболизма на мазнините без стимуланти',
+  carnitine: 'Подкрепа на използването на мазнини за енергия',
+  cla: 'Подкрепа на телесната композиция',
+  appetite: 'По-лесен контрол на апетита',
+  glucose: 'По-стабилна кръвна захар между храненията',
+  diuretic: 'Намалява задържането на вода',
+  caffeine: 'Енергия и концентрация',
+  preworkout: 'Повече енергия за тренировката',
+  pump: 'По-добро кръвоснабдяване на мускулите при тренировка',
+  protein: 'Ситост и запазване на мускулите',
+  meal: 'Лесно контролирано хранене',
+  gainer: 'Допълнителни калории за покачване на тегло',
+  carbs: 'Енергия по време на натоварване',
+  creatine: 'Сила и мощност при тренировка',
+  aminos: 'По-бързо възстановяване на мускулите',
+  electrolytes: 'Хидратация при натоварване',
+  multivitamin: 'Покрива основните витамини и минерали',
+  vitamin_d: 'Подкрепа на имунитета, костите и мускулите',
+  vitamin_c: 'Подкрепа на имунитета',
+  b_complex: 'Подкрепа на енергийния метаболизъм',
+  vitamins: 'Допълва хранителния прием на витамини',
+  magnesium: 'По-спокоен сън и по-малко крампи',
+  iron: 'Подкрепа при умора, свързана с ниско желязо',
+  minerals: 'Допълва минералите в храненето',
+  omega3: 'Подкрепа на сърцето и мозъка',
+  mct: 'Бърз източник на енергия',
+  collagen: 'Подкрепа на кожата и съединителната тъкан',
+  beauty: 'Подкрепа на косата, кожата и ноктите',
+  joint: 'Подкрепа на ставите и подвижността',
+  coq10: 'Клетъчна енергия',
+  antioxidant: 'Защита от оксидативен стрес',
+  longevity: 'Подкрепа на клетъчната енергия и дълголетието',
+  adaptogen: 'По-добра устойчивост на стрес',
+  sleep: 'По-лесно заспиване и по-качествен сън',
+  cognition: 'Подкрепа на фокуса и паметта',
+  gut: 'Подкрепа на храносмилането',
+  immune: 'Подкрепа на имунната система',
+  liver: 'Подкрепа на черния дроб',
+  heart: 'Подкрепа на сърдечно-съдовата система',
+  hormone_male: 'Подкрепа на мъжкия хормонален баланс',
+  womens: 'Подкрепа на женския хормонален баланс',
+  mens: 'Подкрепа на мъжкото здраве',
+};
+
 const PRIORITY_LABELS_BG = {
   longevity: 'дълголетие и антиейджинг',
+  antiaging: 'антиейджинг',
   otshalvane: 'отслабване',
   skin: 'кожа',
   joints: 'стави',
   energy: 'енергия',
   sleep: 'сън',
   cognition: 'фокус и памет',
+  muscle: 'мускулна маса',
+  health: 'здраве и имунитет',
+  recovery: 'възстановяване',
 };
 
-/** Детерминистична narration за mock / fallback */
-export function buildMockNarration(composed, profile) {
-  const priority = profile.priority_other || PRIORITY_LABELS_BG[profile.priority] || profile.priority || 'здраве';
-  const tierBenefits = {
-    basic: [
-      'Подкрепя ежедневната енергия',
-      'Укрепва имунната защита',
-      'Защитава клетките от оксидативен стрес',
-    ],
-    optimal: [
-      'Подкрепя ежедневната енергия',
-      'Укрепва имунната защита',
-      'Защитава клетките от оксидативен стрес',
-      'Подобрява качеството на съня',
-      'Подпомага възстановяването след натоварване',
-      'Подкрепя кожата отвътре',
-    ],
-    premium: [
-      'Подкрепя ежедневната енергия',
-      'Укрепва имунната защита',
-      'Защитава клетките от оксидативен стрес',
-      'Подобрява качеството на съня',
-      'Подпомага възстановяването след натоварване',
-      'Подкрепя кожата отвътре',
-      'Стимулира клетъчната регенерация',
-      'Подобрява когнитивната острота и фокуса',
-      'Максимална антиейджинг защита',
-      'Пълна подкрепа за дълголетие',
-    ],
-  };
+function itemSlot(item, productMap) {
+  if (item.slot) return item.slot;
+  const product = productMap?.get?.(item.product_id);
+  return product ? getProductFacts(product).slot : 'other';
+}
 
+/** Детерминистична narration за mock / fallback — ползите идват от слотовете в пакета. */
+export function buildMockNarration(composed, profile, productMap = null) {
+  const priority = profile.priority_other || PRIORITY_LABELS_BG[profile.priority] || profile.priority || 'здраве';
   const product_copy = {};
+  const tier_copy = {};
   for (const key of ['basic', 'optimal', 'premium']) {
-    for (const item of composed.tiers[key].products) {
+    const items = composed.tiers[key].products;
+    const benefits = [...new Set(items.map((i) => SLOT_BENEFITS[itemSlot(i, productMap)]).filter(Boolean))];
+    tier_copy[key] = {
+      benefits,
+      strategy: composed.meta?.mode === 'alternatives'
+        ? 'Един основен продукт — различна цена и формула.'
+        : `${items.length} ${items.length === 1 ? 'продукт' : 'продукта'} с различни роли, без дублиране на активни вещества.`,
+    };
+    for (const item of items) {
+      const slot = itemSlot(item, productMap);
       product_copy[item.product_id] = {
-        why_for_you: `Подкрепя приоритет „${priority}"`,
+        why_for_you: SLOT_BENEFITS[slot] || `Подкрепя приоритет „${priority}“`,
         dose: item.dose,
         timing: item.timing,
       };
     }
   }
 
+  const morning = [];
+  const evening = [];
+  for (const item of composed.tiers.premium.products) {
+    (/вечер|сън/.test(item.timing || '') ? evening : morning).push(item.timing);
+  }
+
   return {
-    analysis: `Профилът ви показва фокус върху ${priority}. Сканирахме ${composed.meta?.ranked_pool_size || 0} налични продукта и съставихме персонален протокол.`,
+    analysis: `Профилът ви е насочен към: ${priority}. Подбрахме продукти с допълващи се роли от ${composed.meta?.ranked_pool_size || 0} подходящи за вас.`,
     recommended_tier: composed.recommended_tier || 'optimal',
-    tier_copy: {
-      basic: { benefits: tierBenefits.basic, strategy: 'Базов протокол с фокус върху ежедневната подкрепа.' },
-      optimal: { benefits: tierBenefits.optimal, strategy: 'Балансиран стек с по-широко покритие на целите.' },
-      premium: { benefits: tierBenefits.premium, strategy: 'Максимално покритие и клетъчна подкрепа.' },
-    },
+    tier_copy,
     product_copy,
     protocol_schedule: {
-      morning: ['Основните добавки със закуска'],
-      evening: ['Поддържащи добавки преди сън'],
-      weekly_notes: 'Пийте достатъчно вода и поддържайте редовен режим.',
+      morning: morning.length ? ['Сутрешните продукти — със закуска или преди тренировка'] : [],
+      evening: evening.length ? ['Вечерните продукти — 30–60 мин преди сън'] : [],
+      weekly_notes: 'Приемайте всеки ден поне 4–6 седмици, преди да оцените ефекта.',
     },
-    lifestyle_tips: ['Движение 30 мин дневно', '7–8 часа сън', 'Балансирана храна'],
+    lifestyle_tips: profile.priority === 'otshalvane'
+      ? ['Умерен калориен дефицит — добавките не го заместват', 'Протеин на всяко хранене', '7–8 часа сън']
+      : ['Движение поне 30 мин дневно', '7–8 часа сън', 'Разнообразно хранене'],
     disclaimer: 'Информацията не замества лекарска консултация.',
   };
 }

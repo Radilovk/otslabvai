@@ -2,7 +2,7 @@ import {
   classifyProductSlot,
   getProductConflictGroups,
   productsConflictInStack,
-  GOAL_SLOT_ORDER,
+  getGoalSlotOrder,
 } from './portfolio-stack-slots.js';
 import { portfolioGroupToSiteProduct } from './portfolio-import.js';
 
@@ -51,11 +51,27 @@ describe('portfolio-stack-slots', () => {
     const preworkout = makeProduct('Preworkout Booster Caffeine', 'Предтренировъчни добавки');
     const sleep = makeProduct('Melatonin 3mg', 'Билки');
     expect(getProductConflictGroups(preworkout)).toContain('stimulant');
-    expect(getProductConflictGroups(sleep)).toContain('melatonin');
+    expect(getProductConflictGroups(sleep)).toContain('sleep');
     expect(productsConflictInStack(preworkout, sleep)).toBe(true);
   });
 
   test('otshalvane slot order започва с fat_burner', () => {
-    expect(GOAL_SLOT_ORDER.otshalvane[0]).toBe('fat_burner');
+    expect(getGoalSlotOrder('otshalvane')[0]).toBe('fat_burner');
+  });
+
+  test('категорията на доставчика печели над думи в описанието', () => {
+    const vitamin = makeProduct('Vitamin C 1000', 'Витамини > Витамин C', { description: 'Стимулира имунитета и изгарянето на свободни радикали.' });
+    expect(classifyProductSlot(vitamin)).toBe('vitamin_c');
+    expect(getProductConflictGroups(vitamin)).not.toContain('stimulant');
+  });
+
+  test('скрит кофеин в аминокиселини се хваща от описанието', () => {
+    const amino = makeProduct('Energy Amino', 'Аминокиселини > EAA', { description: 'Съдържа 100 mg кофеин на доза.' });
+    expect(getProductConflictGroups(amino)).toContain('stimulant');
+  });
+
+  test('аксесоари и тениски не са добавки', () => {
+    const shaker = makeProduct('Shaker 700 ml', 'Спортни аксесоари и уреди > Шейкъри');
+    expect(classifyProductSlot(shaker)).toBe('gear');
   });
 });

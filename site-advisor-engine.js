@@ -8,14 +8,14 @@ import {
   extractProductsFromContent,
   filterEligibleProducts,
   refreshLifeProductsAvailability,
-  transformProductForAI,
   enrichProtocolProductItem,
   scoreProduct,
   computeTierMonthlyCost,
   PRIORITY_GOAL_KEYWORDS,
 } from './protocol-quiz-engine.js';
-import { getProductConflictGroups } from './portfolio-stack-slots.js';
 import { rerankByProfitWithinRelevance } from './portfolio-advisor-commerce.js';
+import { composeAdvisorStacks } from './advisor-composer.js';
+import { buildProductCard, buildReviewCandidates, sanitizeProfileForAI, summarizeComposedForAI } from './advisor-ai.js';
 import {
   getExclusionReasons,
   getMustIncludeKeywords,
@@ -63,10 +63,11 @@ function scoreCatalogGoalMetadata(product, siteId = 'life') {
 }
 
 export const SITE_TIER_LIMITS = {
+  // Цените в life са 20–60 € на продукт — бюджетите са на нивото на biocode, иначе базовото ниво е винаги 1 продукт.
   life: {
-    basic: { min: 3, max: 4, budgetEur: 32 },
-    optimal: { min: 5, max: 6, budgetEur: 68 },
-    premium: { min: 6, max: 8, budgetEur: 100 },
+    basic: { min: 2, max: 3, budgetEur: 55 },
+    optimal: { min: 3, max: 5, budgetEur: 100 },
+    premium: { min: 4, max: 6, budgetEur: 150 },
   },
   main: {
     basic: { min: 2, max: 3, budgetEur: 35 },
@@ -102,18 +103,6 @@ function getSitePriorityKeywordMap(siteId, priority = '') {
     return { [priority]: PRIORITY_GOAL_KEYWORDS[priority] };
   }
   return { longevity: SITE_GOAL_KEYWORDS.longevity };
-}
-
-/** Изключване по поносимост към стимуланти (повечето бърнъри съдържат кофеин). */
-function getStimulantExclusion(profile, product) {
-  const tol = profile.stimulant_tolerance;
-  if (tol !== 'avoid' && tol !== 'sensitive') return null;
-  // Подбраните „без стимуланти“ продукти (CLA, карнитин, липотропни) имат „burner“ в името — не ги изключваме.
-  if ((product.system_data?.goals || []).includes('stimulant-free')) return null;
-  const groups = getProductConflictGroups(product);
-  if (groups.includes('stimulant')) return 'stimulant_sensitivity';
-  if (tol === 'avoid' && groups.includes('thermogenic')) return 'stimulant_free_requested';
-  return null;
 }
 
 export function buildSiteAdvisorProfile(rawAnswers, siteId = 'life') {
@@ -163,9 +152,8 @@ export function rankSiteAdvisorProducts(profile, products, siteId = 'life') {
   const ranked = [];
 
   for (const product of products) {
+    // Стимуланти, вид продукт, пол, хранителен модел — всичко е в getExclusionReasons (по факти за продукта).
     const reasons = getExclusionReasons(profile, product);
-    const stimulantReason = getStimulantExclusion(profile, product);
-    if (stimulantReason) reasons.push(stimulantReason);
     if (reasons.length) {
       excluded.set(product.product_id, reasons);
       continue;
@@ -267,104 +255,53 @@ export async function prepareSiteAdvisorSubmission(env, rawAnswers, deps, {
     profitOf = (p) => orderable.get(skuOf(p))?.profit_eur || 0;
   }
 
-  if (eligible.length < 3) {
-    throw new Error('Няма достатъчно налични орални продукти за персонална препоръка. Моля, опитайте по-късно.');
+  if (!eligible.length) {
+    throw new Error('Няма налични продукти за персонална препоръка в момента. Моля, опитайте по-късно.');
   }
 
   const rankedResult = rankSiteAdvisorProducts(profile, eligible, siteId);
   // Между еднакво подходящите продукти печели по-печелившият за магазина.
   rankedResult.ranked = rerankByProfitWithinRelevance(rankedResult.ranked, profitOf);
 
-  if (rankedResult.ranked.length < 3) {
-    throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
+  if (!rankedResult.ranked.length) {
+    if (profileHasPregnancyOrBreastfeeding(profile)) {
+      throw new Error(siteId === 'main'
+        ? 'При бременност и кърмене не препоръчваме добавки за отслабване. Консултирайте се с лекар.'
+        : 'При бременност и кърмене подборът на добавки трябва да е с лекар — нямаме безопасна препоръка от каталога.');
+    }
+    throw new Error('Няма подходящи продукти за този профил в момента. Опитайте по-късно или се свържете с нас.');
   }
 
-  const mustIncludeKws = getMustIncludeKeywords(profile);
   const tierLimits = SITE_TIER_LIMITS[siteId] || SITE_TIER_LIMITS.life;
-  const tierCounts = {
-    basic: `${tierLimits.basic.min}-${tierLimits.basic.max}`,
-    optimal: `${tierLimits.optimal.min}-${tierLimits.optimal.max}`,
-    premium: `${tierLimits.premium.min}-${tierLimits.premium.max}`,
-  };
-  const priceCeiling = {
-    basic_target: tierLimits.basic.budgetEur,
-    premium_max: tierLimits.premium.budgetEur,
-  };
-
-  if (compositionMode === 'ai_pick') {
-    // Същият списък като при compose: safety + стимуланти + точкуване на сайта + печалба между равностойните.
-    const candidates = rankedResult.ranked.slice(0, 18).map((e) => e.product);
-    const candidateIds = new Set(candidates.map((p) => p.product_id));
-    for (const { product } of rankedResult.ranked) {
-      if (candidateIds.has(product.product_id)) continue;
-      if (mustIncludeKws.some((kw) => productMatchesAnyKeyword(productSearchText(product), [kw]))) {
-        candidates.push(product);
-        candidateIds.add(product.product_id);
-      }
-    }
-    const { excluded_product_ids, exclusion_map } = rankedResult;
-
-    if (candidates.length < 3) {
-      throw new Error('Няма достатъчно подходящи продукти след safety филтъра. Опитайте с по-общ профил.');
-    }
-
-    const payload = {
-      client_profile: profile,
-      clinical_guardrails: buildAdvisorClinicalGuardrails(profile, siteId),
-      site_id: siteId,
-      priority_summary: profile.priority,
-      composition_mode: 'ai_pick',
-      candidate_products: candidates.map(transformProductForAI),
-      constraints: {
-        excluded_product_ids,
-        must_include_keywords: mustIncludeKws,
-        oral_only: true,
-        price_ceiling_eur: priceCeiling,
-        tier_product_counts: tierCounts,
-      },
-      exclusion_map,
-      catalog_stats: {
-        total_in_catalog: allProducts.length,
-        eligible_available: eligible.length,
-        ranked_pool_size: rankedResult.ranked.length,
-        candidates_sent_to_ai: candidates.length,
-        site_id: siteId,
-      },
-    };
-
-    return {
-      profile,
-      payload,
-      candidates,
-      eligible,
-      ranked: rankedResult.ranked,
-      excluded_product_ids,
-      exclusion_map,
-      compositionMode,
-      content,
-      siteId,
-    };
-  }
+  // Алгоритъмът съставя пакетите винаги; AI пише текста (или при сложен профил — преглежда и сменя в рамките на алтернативите).
+  const composed = composeAdvisorStacks(profile, rankedResult.ranked, {
+    ...getSiteComposeOptions(siteId),
+    siteId,
+    goal: profile.priority,
+  });
+  const candidates = compositionMode === 'ai_pick'
+    ? buildReviewCandidates(composed, rankedResult.ranked)
+    : [];
 
   const payload = {
-    client_profile: profile,
+    client_profile: sanitizeProfileForAI(profile),
     clinical_guardrails: buildAdvisorClinicalGuardrails(profile, siteId),
     site_id: siteId,
-    priority_summary: profile.priority,
-    composition_mode: 'compose_narrate',
+    composition_mode: compositionMode,
+    suggested_tiers: summarizeComposedForAI(composed),
+    candidate_products: candidates.map(buildProductCard),
     constraints: {
-      excluded_product_ids: rankedResult.excluded_product_ids,
-      must_include_keywords: mustIncludeKws,
-      oral_only: true,
-      price_ceiling_eur: priceCeiling,
-      tier_product_counts: tierCounts,
+      must_include_keywords: getMustIncludeKeywords(profile),
+      tier_product_counts: Object.fromEntries(['basic', 'optimal', 'premium']
+        .map((k) => [k, `${tierLimits[k].min}-${tierLimits[k].max}`])),
     },
-    exclusion_map: rankedResult.exclusion_map,
     catalog_stats: {
       total_in_catalog: allProducts.length,
       eligible_available: eligible.length,
       ranked_pool_size: rankedResult.ranked.length,
-      candidates_sent_to_ai: 0,
+      excluded_count: rankedResult.excluded_product_ids.length,
+      candidates_sent_to_ai: candidates.length,
+      composition: composed.meta?.mode,
       site_id: siteId,
     },
   };
@@ -372,6 +309,8 @@ export async function prepareSiteAdvisorSubmission(env, rawAnswers, deps, {
   return {
     profile,
     payload,
+    composed,
+    candidates,
     eligible,
     ranked: rankedResult.ranked,
     excluded_product_ids: rankedResult.excluded_product_ids,

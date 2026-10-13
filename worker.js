@@ -21,25 +21,19 @@ import {
 import {
   assembleProtocolFromComposition,
   buildMockNarration,
-  composeProtocolStacks,
-  composeCoreSupportStacks,
 } from './protocol-stack-composer.js';
+import { repairAiTiers } from './advisor-ai.js';
 import {
   preparePortfolioAdvisorSubmission,
   finalizePortfolioAdvisorResponse,
   getPortfolioComposeOptions,
-  composePortfolioAdvisorStacks,
   buildPortfolioAdvisorProfile,
 } from './portfolio-advisor-engine.js';
 import {
   loadPortfolioAdvisorSettings,
   savePortfolioAdvisorSettings,
 } from './portfolio-advisor-settings.js';
-import {
-  validateProtocolResponse,
-  buildMockProtocolResponse,
-  normalizeCumulativeBenefits,
-} from './protocol-quiz-engine.js';
+import { normalizeCumulativeBenefits } from './protocol-quiz-engine.js';
 import {
   loadLifeProtocolSettings,
   saveLifeProtocolSettings,
@@ -50,7 +44,7 @@ import {
   prepareSiteAdvisorSubmission,
   buildSiteAdvisorProfile,
   finalizeSiteAdvisorResponse,
-  getSiteComposeOptions,
+  SITE_TIER_LIMITS,
 } from './site-advisor-engine.js';
 import {
   getDefaultSiteAdvisorPrompt,
@@ -2134,10 +2128,6 @@ const PROTOCOL_QUIZ_AI_OVERRIDES = {
     disableThinking: true,
 };
 
-function isProtocolAIRecoverableError(err) {
-    const msg = String(err?.message || err || '');
-    return msg.includes('токен') || msg.includes('JSON') || msg.includes('празен');
-}
 
 async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
   useMockAi = false,
@@ -2166,51 +2156,41 @@ async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
   const prepared = await prepareSiteAdvisorSubmission(env, rawAnswers, deps, { siteId, compositionMode });
   const {
     payload,
-    ranked,
+    composed,
     eligible,
     excluded_product_ids: excludedProductIds,
     candidates,
   } = prepared;
 
   const finalize = (response) => finalizeSiteAdvisorResponse(response, eligible, excludedProductIds, siteId, profile);
-
-  if (compositionMode === 'ai_pick') {
-    if (useMockAi) {
-      const mock = buildMockProtocolResponse(candidates, profile, { ranked });
-      const recommendation = finalize(normalizeCumulativeBenefits(mock));
-      return { profile, payload, candidates, recommendation, mock: true };
-    }
-
-    const promptTemplate = settings.prompt || getDefaultSiteAdvisorPrompt(siteId);
-    const messages = buildSiteAdvisorMessages(promptTemplate, payload, profile, siteId);
-
-    try {
-      const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
-      let recommendation = parseJsonFromAI(aiRaw);
-      recommendation = validateProtocolResponse(recommendation, candidates, excludedProductIds);
-      recommendation = finalize(normalizeCumulativeBenefits(recommendation));
-      return { profile, payload, candidates, recommendation, mock: false };
-    } catch (e) {
-      console.warn(`${siteId} advisor AI failed, using deterministic fallback:`, e.message || e);
-      if (!isProtocolAIRecoverableError(e)) throw e;
-      const mock = buildMockProtocolResponse(candidates, profile, { ranked });
-      const recommendation = finalize(normalizeCumulativeBenefits(mock));
-      return { profile, payload, candidates, recommendation, mock: true, ai_fallback: true };
-    }
-  }
-
-  const composeOptions = getSiteComposeOptions(siteId);
-  // daotslabna: 1 основен продукт в 3 ценови нива + подкрепа; без основен продукт → общ композитор.
-  const composed = (siteId === 'main' && composeCoreSupportStacks(profile, ranked, composeOptions))
-    || composeProtocolStacks(profile, ranked, composeOptions);
   const productMap = new Map(eligible.map((p) => [p.product_id, p]));
   payload.composed_meta = composed.meta;
+  // Резервен вариант без AI: пакетите на алгоритъма + текст от слотовете. Винаги валиден.
+  const fallback = () => {
+    const narration = buildMockNarration(composed, profile, productMap);
+    const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
+    return finalize(normalizeCumulativeBenefits(response));
+  };
 
   if (useMockAi) {
-    const narration = buildMockNarration(composed, profile);
-    const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
-    const recommendation = finalize(normalizeCumulativeBenefits(response));
-    return { profile, payload, composed, recommendation, mock: true };
+    return { profile, payload, composed, candidates, recommendation: fallback(), mock: true };
+  }
+
+  if (compositionMode === 'ai_pick') {
+    // Сложен клиничен профил: AI преглежда пакетите и може да сменя продукти само с алтернативите от списъка.
+    const promptTemplate = settings.prompt || getDefaultSiteAdvisorPrompt(siteId);
+    const messages = buildSiteAdvisorMessages(promptTemplate, payload, profile, siteId);
+    try {
+      const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+      const candidateMap = new Map(candidates.map((p) => [p.product_id, p]));
+      const { response, changes } = repairAiTiers(parseJsonFromAI(aiRaw), composed, candidateMap, SITE_TIER_LIMITS[siteId]);
+      if (changes.length) payload.ai_repairs = changes;
+      const recommendation = finalize(normalizeCumulativeBenefits(response));
+      return { profile, payload, composed, candidates, recommendation, mock: false };
+    } catch (e) {
+      console.warn(`${siteId} advisor AI failed, using deterministic fallback:`, e.message || e);
+      return { profile, payload, composed, candidates, recommendation: fallback(), mock: true, ai_fallback: true };
+    }
   }
 
   const promptTemplate = settings.narrator_prompt || getDefaultSiteNarratorPrompt(siteId);
@@ -2224,11 +2204,7 @@ async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
     return { profile, payload, composed, recommendation, mock: false };
   } catch (e) {
     console.warn(`${siteId} advisor narrator AI failed, using deterministic fallback:`, e.message || e);
-    if (!isProtocolAIRecoverableError(e)) throw e;
-    const narration = buildMockNarration(composed, profile);
-    const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
-    const recommendation = finalize(normalizeCumulativeBenefits(response));
-    return { profile, payload, composed, recommendation, mock: true, ai_fallback: true };
+    return { profile, payload, composed, recommendation: fallback(), mock: true, ai_fallback: true };
   }
 }
 
@@ -2537,66 +2513,54 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
   const {
     profile,
     payload,
-    ranked,
+    composed,
     eligible,
     excluded_product_ids: excludedProductIds,
     candidates,
   } = prepared;
 
   const composeOptions = getPortfolioComposeOptions(profile);
+  // Пакетът е вложен (basic ⊂ optimal ⊂ premium); при „един продукт“ нивата са алтернативи.
   const finalizeOpts = {
     selection_mode: profile.selection_mode,
-    independent_tiers: true,
+    independent_tiers: profile.selection_mode === 'single',
   };
-  let recommendation;
-
-  if (compositionMode === 'ai_pick') {
-    if (useMockAi) {
-      const mock = buildMockProtocolResponse(candidates, profile, { ranked });
-      recommendation = finalizePortfolioAdvisorResponse(mock, eligible, excludedProductIds, finalizeOpts);
-    } else {
-      const promptTemplate = settings.prompt || getDefaultPortfolioAdvisorPrompt();
-      const messages = buildPortfolioAdvisorMessages(promptTemplate, payload, profile);
-
-      try {
-        const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
-        let parsed = parseJsonFromAI(aiRaw);
-        parsed = validateProtocolResponse(parsed, candidates, excludedProductIds);
-        recommendation = finalizePortfolioAdvisorResponse(parsed, eligible, excludedProductIds, finalizeOpts);
-      } catch (e) {
-        console.warn('Portfolio advisor AI failed, using deterministic fallback:', e.message || e);
-        const mock = buildMockProtocolResponse(candidates, profile, { ranked });
-        recommendation = finalizePortfolioAdvisorResponse(mock, eligible, excludedProductIds, finalizeOpts);
-      }
-    }
-  } else if (useMockAi) {
-    const composed = composePortfolioAdvisorStacks(profile, ranked, composeOptions);
-    const productMap = new Map(eligible.map((p) => [p.product_id, p]));
-    payload.composed_meta = composed.meta;
+  const productMap = new Map(eligible.map((p) => [p.product_id, p]));
+  payload.composed_meta = composed.meta;
+  const fallback = () => {
     const narration = buildPortfolioAdvisorNarration(composed, profile, productMap);
     const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
-    recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts);
-  } else {
-    const composed = composePortfolioAdvisorStacks(profile, ranked, composeOptions);
-    const productMap = new Map(eligible.map((p) => [p.product_id, p]));
-    payload.composed_meta = composed.meta;
-    const promptTemplate = settings.narrator_prompt || getDefaultPortfolioNarratorPrompt();
-    const messages = buildPortfolioNarratorMessages(promptTemplate, profile, composed, eligible);
+    return finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts);
+  };
 
+  if (useMockAi) return { profile, payload, recommendation: fallback() };
+
+  if (compositionMode === 'ai_pick') {
+    const promptTemplate = settings.prompt || getDefaultPortfolioAdvisorPrompt();
+    const messages = buildPortfolioAdvisorMessages(promptTemplate, payload, profile);
     try {
       const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
-      const narration = parseJsonFromAI(aiRaw);
-      const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
-      recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts);
+      const candidateMap = new Map(candidates.map((p) => [p.product_id, p]));
+      const { response, changes } = repairAiTiers(parseJsonFromAI(aiRaw), composed, candidateMap, composeOptions.tierLimits);
+      if (changes.length) payload.ai_repairs = changes;
+      return { profile, payload, recommendation: finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts) };
     } catch (e) {
-      console.warn('Portfolio advisor narrator AI failed, using deterministic fallback:', e.message || e);
-      const narration = buildPortfolioAdvisorNarration(composed, profile, productMap);
-      const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
-      recommendation = finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts);
+      console.warn('Portfolio advisor AI failed, using deterministic fallback:', e.message || e);
+      return { profile, payload, recommendation: fallback() };
     }
   }
 
-  return { profile, payload, recommendation };
+  const promptTemplate = settings.narrator_prompt || getDefaultPortfolioNarratorPrompt();
+  const messages = buildPortfolioNarratorMessages(promptTemplate, profile, composed, eligible);
+  try {
+    const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+    const narration = parseJsonFromAI(aiRaw);
+    const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
+    return { profile, payload, recommendation: finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts) };
+  } catch (e) {
+    console.warn('Portfolio advisor narrator AI failed, using deterministic fallback:', e.message || e);
+    return { profile, payload, recommendation: fallback() };
+  }
 }
 
 /**

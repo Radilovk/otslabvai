@@ -145,16 +145,19 @@ export function htmlToStructuredContent(html, productName = '') {
  */
 export function portfolioGroupToSiteProduct(group) {
   const rawVariants = group.variants || [];
+  const marginEligible = groupHasMargin(group);
+  // Вариант без марж (или по-скъп от магазина на доставчика) не се продава — не го показваме като наличен,
+  // иначе консултантът/сайтът го предлага, а checkout-ът го отказва.
+  const sellable = (v) => v.available !== false && (!marginEligible || !(Number(v.b2b_price) > 0) || variantHasMargin(v));
   const variants = rawVariants.map((v) => ({
     option_name: decodeName([v.pack, v.option].filter(Boolean).join(' • ')),
     sku: String(v.sku_id || ''),
     price: Number(v.retail_price) || 0,
     ean: v.barcode || '',
     image_url: v.image || '',
-    available: v.available !== false
+    available: sellable(v)
   }));
 
-  const marginEligible = groupHasMargin(group);
   const marginOkAvailable = rawVariants.filter(
     (v) => v.available !== false && variantHasMargin(v)
   );

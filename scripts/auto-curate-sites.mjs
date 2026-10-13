@@ -12,7 +12,7 @@ import { kvGet, kvPut } from '../catalog-kv-client.mjs';
 import { SITE_CONTENT_KEYS } from '../portfolio-site-products.js';
 import { mergeProductsIntoContent } from '../portfolio-import.js';
 import { fetchDescriptionMap } from '../portfolio-api.js';
-import { selectCurationCandidates, curatedGroupToSiteProduct } from '../catalog-auto-curate.js';
+import { shortlistCurationCandidates, finalizeCurationPicks, countExistingBySlot, CURATION_SLOTS } from '../catalog-auto-curate.js';
 
 const MODE = process.env.MODE === 'apply' ? 'apply' : 'dry-run';
 const PROJECTS = String(process.env.PROJECTS || 'main,life').split(',').map((s) => s.trim()).filter(Boolean);
@@ -56,24 +56,33 @@ async function main() {
     const content = (await kvGet(keys.kvKey)) || (await kvGet(keys.fallback));
     if (!content?.page_content) { console.warn(`${project}: няма съдържание`); continue; }
 
-    const picks = selectCurationCandidates(meta.index, project, content);
+    const slots = CURATION_SLOTS[project] || [];
+    const existing = countExistingBySlot(content, slots);
+    const shortlist = shortlistCurationCandidates(meta.index, project, content);
+    const groups = await loadGroups(meta, shortlist.flatMap((s) => s.candidates.map((c) => String(c.entry.group_id))));
+    const { picks, rejected } = finalizeCurationPicks(shortlist, groups, descriptions);
+
     console.log(`\n=== ${project}: ${picks.length} нови продукта ===`);
-    console.log('слот | категория | цена € | печалба € | печалба % | марка | продукт');
+    console.log('място | доказателства | вече има | цел | добавени');
+    for (const slot of slots) {
+      const added = picks.filter((p) => p.slot.key === slot.key).length;
+      console.log([slot.key, slot.evidenceLevel, existing.get(slot.key) || 0, slot.target, added].join(' | '));
+    }
+    console.log('\nмясто | цена € | печалба € | печалба % | марка | продукт');
     for (const p of picks) {
-      console.log([p.slot.key, p.slot.category.title, p.price.toFixed(2), p.profit.eur.toFixed(2),
-        p.profit.pct.toFixed(1), p.entry.brand, p.entry.name].join(' | '));
+      console.log([p.slot.key, p.price.toFixed(2), p.profit.eur.toFixed(2), p.profit.pct.toFixed(1), p.entry.brand, p.entry.name].join(' | '));
+    }
+    if (rejected.length) {
+      console.log(`\nотхвърлени при проверка с описанието (${rejected.length}):`);
+      for (const r of rejected.slice(0, 30)) console.log(`  ${r.slot} | ${r.reason} | ${r.name}`);
     }
     if (!picks.length || MODE !== 'apply') continue;
 
-    const groups = await loadGroups(meta, picks.map((p) => String(p.entry.group_id)));
     const byCategory = new Map();
     for (const p of picks) {
-      const group = groups.get(String(p.entry.group_id));
-      if (!group) { console.warn(`  липсва група ${p.entry.group_id} в chunk-овете — пропуснат`); continue; }
-      const product = curatedGroupToSiteProduct(group, p.slot, { description: descriptions.get(String(group.group_id)) });
       const key = p.slot.category.id;
       if (!byCategory.has(key)) byCategory.set(key, { category: p.slot.category, products: [] });
-      byCategory.get(key).products.push(product);
+      byCategory.get(key).products.push(p.product);
     }
 
     const backupKey = `${keys.kvKey}_backup_${new Date().toISOString().replace(/[:.]/g, '-')}`;

@@ -47,7 +47,6 @@ export function hasAdvisorClinicalComplexity(profile = {}) {
   if (conditions.length && (medications.length || allergies.length)) return true;
   if (medications.length >= 2) return true;
   if (profile.diet && profile.diet !== 'omnivore' && (conditions.length || medications.length)) return true;
-  if (profile.priority === 'otshalvane' && Number(profile.bmi) >= 30) return true;
   return false;
 }
 
@@ -117,7 +116,7 @@ export function buildAdvisorClinicalGuardrails(profile = {}, siteId = 'life') {
     lines.push('Cravings/апетит: приоритет ситост и метаболизъм — без агресивни стимуланти при кардио риск.');
   }
   if (profile.stimulant_tolerance === 'avoid') lines.push('Клиентът иска програма БЕЗ стимуланти — без кофеин, термогенни бърнъри, синефрин, йохимбин.');
-  if (profile.stimulant_tolerance === 'sensitive') lines.push('Чувствителност към кофеин — без хардкор стимуланти; най-много един мек термогенен продукт.');
+  if (profile.stimulant_tolerance === 'sensitive') lines.push('Чувствителност към кофеин — без продукти с кофеин и термогенни бърнъри (вече изключени от алгоритъма).');
   if (profile.weight_goal) lines.push(`Цел: −${profile.weight_goal} кг. Реалистично темпо 0.5–1 кг седмично; добавките подпомагат, не заместват дефицита.`);
   if (profile.budget_band) lines.push(`Месечен бюджет: ${profile.budget_band === 'up30' ? 'до 30 €' : profile.budget_band === '100+' ? 'над 100 €' : profile.budget_band + ' €'}.`);
   if (siteId === 'life' && profile.priority && profile.priority !== 'longevity') {

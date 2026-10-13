@@ -19,17 +19,26 @@ describe('site advisor', () => {
     expect(pickTierForBudget({ basic: { monthly_total_eur: 50 } }, 'up30')).toBe('basic');
   });
 
-  test('„без стимуланти“ изключва бърнъри; „чувствителен“ — само стимулантите', () => {
+  test('„без стимуланти“ и „чувствителен“ изключват стимулантите, но не бърнърите без стимуланти', () => {
     const products = [
       product('burn', 'Thermo Fat Burner'),
-      product('caff', 'Energy caffeine shot'),
+      product('caff', 'Caffeine 200 mg капсули'),
+      product('lipo', 'Lipotropic Fat Burner Stim Free'),
       product('mag', 'Магнезий'),
     ];
     const base = { sex: 'female', email: 'a@b.cc' };
-    const avoid = rankSiteAdvisorProducts(buildSiteAdvisorProfile({ ...base, stimulant_tolerance: 'avoid' }, 'main'), products, 'main');
-    expect(avoid.ranked.map((r) => r.product.product_id)).toEqual(['mag']);
-    const sens = rankSiteAdvisorProducts(buildSiteAdvisorProfile({ ...base, stimulant_tolerance: 'sensitive' }, 'main'), products, 'main');
-    expect(sens.ranked.map((r) => r.product.product_id).sort()).toEqual(['burn', 'mag']);
+    for (const tolerance of ['avoid', 'sensitive']) {
+      const res = rankSiteAdvisorProducts(buildSiteAdvisorProfile({ ...base, stimulant_tolerance: tolerance }, 'main'), products, 'main');
+      expect(res.ranked.map((r) => r.product.product_id).sort()).toEqual(['lipo', 'mag']);
+    }
+    const ok = rankSiteAdvisorProducts(buildSiteAdvisorProfile({ ...base, stimulant_tolerance: 'ok' }, 'main'), products, 'main');
+    expect(ok.ranked).toHaveLength(4);
+  });
+
+  test('кърмене: без продукти за отслабване и стимуланти', () => {
+    const products = [product('burn', 'Thermo Fat Burner'), product('lipo', 'Lipotropic Fat Burner Stim Free'), product('mag', 'Магнезий')];
+    const res = rankSiteAdvisorProducts(buildSiteAdvisorProfile({ sex: 'female', email: 'a@b.cc', conditions: ['breastfeeding'] }, 'main'), products, 'main');
+    expect(res.ranked.map((r) => r.product.product_id)).toEqual(['mag']);
   });
 
   test('life приема избрания фокус; main винаги е отслабване', () => {

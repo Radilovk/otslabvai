@@ -1,5 +1,5 @@
 /**
- * Narration за Portfolio AI консултант — независими tier съвети (single и package).
+ * Резервен текст (без AI) за Portfolio консултанта: пакет — по слотовете; един продукт — по продукт.
  */
 
 import { buildMockNarration } from './protocol-stack-composer.js';
@@ -85,8 +85,9 @@ function buildPackageTierNarration(tierKey, tier, profile, productMap) {
 }
 
 export function buildPortfolioAdvisorNarration(composed, profile, productMap = new Map()) {
-  if (profile.selection_mode !== 'single' && composed.meta?.mode !== 'complementary_independent') {
-    return buildMockNarration(composed, profile);
+  // Пакет (вложени нива) → общият текст по слотовете; „един продукт“ → съвет за всеки продукт поотделно.
+  if (profile.selection_mode !== 'single') {
+    return buildMockNarration(composed, profile, productMap);
   }
 
   const priority = profile.priority_other || profile.priority || 'здраве';
