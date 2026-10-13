@@ -147,8 +147,9 @@ const generateEffectBar = effect => `
 
 function renderProductDetail(product) {
     if (!product?.public_data || !isProductListed(product)) {
+        document.body.classList.add('product-missing');
         DOM.productContent.innerHTML = `
-            <div style="text-align: center; padding: 60px 20px;">
+            <div class="product-missing-state">
                 <h2>Продуктът не е наличен</h2>
                 <p>Този продукт в момента не се предлага в каталога.</p>
                 <a href="index.html" class="btn btn-primary">Назад към продуктите</a>
