@@ -1695,7 +1695,7 @@ function initializeGlobalScripts() {
             scrollTicking = true;
             requestAnimationFrame(() => {
                 handleStickyHeader();
-                DOM.backToTopBtn.classList.toggle('visible', window.scrollY > 300);
+                DOM.backToTopBtn?.classList.toggle('visible', window.scrollY > 300);
                 scrollTicking = false;
             });
         }

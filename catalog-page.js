@@ -1,5 +1,5 @@
 import { API_URL } from './config.js';
-import { findCategory, isCatalogOnly, sortByOrder } from './product-visibility.js';
+import { findCategory, isCatalogOnly, isProductListed, sortByOrder } from './product-visibility.js';
 import { rewriteAllProductImages } from './life-img.js';
 
 const SITES = {
@@ -29,6 +29,11 @@ function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+/** Catalog text sometimes arrives HTML-encoded ("Collagen &amp; HA") — decode before esc() so it isn't shown double-encoded. */
+function decodeBasicEntities(s) {
+  return String(s ?? '').replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (m, e) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", nbsp: ' ' })[e]);
+}
+
 function priceHtml(d) {
   const variants = (d.variants || []).filter((v) => v.available !== false && typeof v.price === 'number');
   const sale = d.sale_price;
@@ -56,8 +61,8 @@ function cardHtml(product, productPage, siteKey) {
       <div class="life-catalog-image">${d.image_url ? `<img src="${esc(d.image_url)}" alt="${esc(d.name)}" loading="lazy" decoding="async">` : '<div class="life-catalog-no-image" aria-hidden="true"></div>'}</div>
       <div class="life-catalog-body">
         ${d.brand ? `<span class="life-catalog-brand">${esc(d.brand)}</span>` : ''}
-        <h3 class="life-catalog-title">${esc(d.name)}</h3>
-        ${tag ? `<p class="life-catalog-tagline">${esc(tag)}</p>` : ''}
+        <h3 class="life-catalog-title">${esc(decodeBasicEntities(d.name))}</h3>
+        ${tag ? `<p class="life-catalog-tagline">${esc(decodeBasicEntities(tag))}</p>` : ''}
         <div class="life-catalog-price">${price}</div>
       </div>
     </a>`;
@@ -268,7 +273,15 @@ async function run(siteKey) {
     const backHref = cat.id ? `${cfg.homePage}#${cat.id}` : cfg.homePage;
     if (backEl) backEl.href = backHref;
 
-    const products = sortByOrder(cat.products).filter(isCatalogOnly);
+    let products = sortByOrder(cat.products).filter(isCatalogOnly);
+    // Life: a shared/bookmarked category link must never land on an empty page or show admin hints —
+    // fall back to every listed product in the category.
+    if (!products.length && siteKey === 'life') products = sortByOrder(cat.products).filter(isProductListed);
+    if (!products.length && siteKey === 'life') {
+      grid.innerHTML = `<p class="${emptyClass}">В момента няма налични продукти в тази категория. <a href="${cfg.homePage}">Към всички продукти</a></p>`;
+      markContentLoaded();
+      return;
+    }
     if (!products.length) {
       grid.innerHTML = `<p class="${emptyClass}">Няма допълнителни продукти. Превключете продукти на „каталог“ от админ панела.</p>`;
       markContentLoaded();

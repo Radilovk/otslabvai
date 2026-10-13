@@ -117,6 +117,8 @@ function renderEmpty() {
     <a href="life-protocol-quiz.html" class="btn-hero-primary">Започнете вашия протокол</a>
   </div>`;
   disclaimerEl.textContent = '';
+  // "Поръчай отново" / "Създай нов" mean nothing without a protocol — one clear CTA instead
+  document.querySelector('.lmp-actions')?.setAttribute('hidden', '');
 }
 
 function initHeaderScroll() {

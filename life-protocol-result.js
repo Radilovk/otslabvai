@@ -337,7 +337,12 @@ function addTierToCart(tier, btn) {
 
 const data = loadResult();
 if (!data?.tiers) {
-  container.innerHTML = `<div class="lpq-card"><p>Няма наличен резултат. <a href="life-protocol-quiz.html">Попълнете въпросника</a>.</p></div>`;
+  const sub = document.getElementById('lpr-subtitle');
+  if (sub) sub.textContent = 'Още нямаме вашия профил — отнема около 2 минути.';
+  container.innerHTML = `<div class="lpq-card lpr-empty">
+    <p>Отговорете на няколко кратки въпроса и ще ви предложим три варианта на протокол — по цел и бюджет.</p>
+    <a href="life-protocol-quiz.html" class="lpq-btn lpq-btn-primary">Започни въпросника</a>
+  </div>`;
 } else {
   renderResult(data);
 }
