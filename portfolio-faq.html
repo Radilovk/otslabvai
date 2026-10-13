@@ -11,7 +11,10 @@
     <link rel="canonical" href="https://biocode-bg.com/faq.html">
     <meta property="og:title" content="FAQ — BIOCODE Nutrition Science">
     <meta property="og:url" content="https://biocode-bg.com/faq.html">
-    <link rel="stylesheet" href="portfolio.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="portfolio.css?v=20261013b">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -54,31 +57,40 @@
     </script>
 </head>
 <body class="pf-body">
-    <main class="pf-container" style="max-width:800px;margin:2rem auto;padding:0 1rem;">
-        <h1>Често задавани въпроси — BIOCODE</h1>
+    <div id="pf-header-slot"></div>
+
+    <main class="pf-legal" id="main-faq-content">
+        <a href="portfolio.html" class="pf-back-link">← Към каталога</a>
+        <h1>Често задавани въпроси</h1>
         <p>BIOCODE Nutrition Science (<a href="https://biocode-bg.com/">biocode-bg.com</a>) е каталог за хранителни добавки с доставка в България.</p>
 
-        <section>
-            <h2>Какво е BIOCODE?</h2>
-            <p>BIOCODE Nutrition Science е онлайн каталог на biocode-bg.com за протеини, витамини, аминокиселини и добавки. Цените са в EUR.</p>
-        </section>
+        <div class="pf-faq-list">
+            <details class="pf-faq-item" open>
+                <summary>Какво е BIOCODE?</summary>
+                <p>BIOCODE Nutrition Science е онлайн каталог на biocode-bg.com за протеини, витамини, аминокиселини и добавки. Цените са в EUR.</p>
+            </details>
+            <details class="pf-faq-item">
+                <summary>Какви категории продукти има?</summary>
+                <p>BIOCODE предлага протеини, витамини, аминокиселини, минерали и спортни добавки с филтриране по категория.</p>
+            </details>
+            <details class="pf-faq-item">
+                <summary>Има ли AI консултант?</summary>
+                <p>Да. BIOCODE на biocode-bg.com включва <a href="portfolio-advisor-quiz.html">AI консултант</a> за персонализиран избор на добавки.</p>
+            </details>
+            <details class="pf-faq-item">
+                <summary>Как се плаща?</summary>
+                <p>BIOCODE приема наложен платеж при доставка. Цените в каталога са в EUR.</p>
+            </details>
+        </div>
 
-        <section>
-            <h2>Какви категории продукти има?</h2>
-            <p>BIOCODE предлага протеини, витамини, аминокиселини, минерали и спортни добавки с филтриране по категория.</p>
-        </section>
-
-        <section>
-            <h2>Има ли AI консултант?</h2>
-            <p>Да. BIOCODE на biocode-bg.com включва AI консултант за персонализиран избор на добавки.</p>
-        </section>
-
-        <section>
-            <h2>Как се плаща?</h2>
-            <p>BIOCODE приема наложен платеж при доставка. Цените в каталога са в EUR.</p>
-        </section>
-
-        <p><a href="portfolio.html">← Към каталога</a></p>
+        <p>Вижте още <a href="portfolio-shipping.html">условията за доставка</a> и <a href="portfolio-terms.html">общите условия</a>.</p>
     </main>
+
+    <div id="pf-footer-slot"></div>
+
+    <script type="module">
+        import { initPortfolioPage } from './portfolio-shared.js';
+        initPortfolioPage({ settingsOnly: true });
+    </script>
 </body>
 </html>

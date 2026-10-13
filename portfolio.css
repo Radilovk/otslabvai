@@ -3327,3 +3327,223 @@ html[data-pf-cart] .pf-fab-cart { display: grid; }
 /* Всички филтри в страничната колона (десктоп) / чекмеджето (телефон) */
 .pf-sidebar .pf-filter-field { margin-bottom: 1rem; }
 .pf-sidebar .pf-filter-label { margin-bottom: 0.15rem; }
+
+/* ═══════════════════════════════════════════
+   BIOCODE – mobile polish (2026-10-13)
+   Scoped with :not(.life-checkout-page) where life-checkout.html also loads this file.
+   ═══════════════════════════════════════════ */
+
+/* The hidden attribute must win over .pf-btn { display:inline-flex } (e.g. "Премахни" before a code is applied) */
+.pf-body:not(.life-checkout-page) [hidden] { display: none !important; }
+
+/* Promo row: the field keeps a usable width, buttons wrap under it instead of crushing it */
+.pf-body:not(.life-checkout-page) .pf-promo-row { flex-wrap: wrap; align-items: stretch; }
+.pf-body:not(.life-checkout-page) .pf-promo-row input {
+  flex: 1 1 11rem;
+  width: auto;
+  font-size: 16px; /* no iOS zoom on focus */
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--pf-bg);
+}
+.pf-body:not(.life-checkout-page) .pf-promo-row input::placeholder { text-transform: none; letter-spacing: 0; }
+.pf-body:not(.life-checkout-page) .pf-promo-row .pf-btn { flex: 0 0 auto; padding: 0.65rem 1.1rem; }
+.pf-body:not(.life-checkout-page) .pf-promo-row #apply-promo-btn-summary,
+.pf-body:not(.life-checkout-page) .pf-promo-row #apply-promo-btn {
+  border-color: var(--pf-primary);
+  color: var(--pf-primary);
+}
+.pf-body:not(.life-checkout-page) .pf-promo-msg {
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--pf-radius-sm);
+  background: var(--pf-primary-soft);
+}
+.pf-body:not(.life-checkout-page) .pf-promo-msg.error { background: rgba(220, 53, 69, 0.08); }
+
+/* Checkout summary item: picture | name + qty | price over remove */
+.pf-body:not(.life-checkout-page) .pf-summary-item {
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: start;
+}
+.pf-body:not(.life-checkout-page) .pf-summary-item > .pf-summary-img,
+.pf-body:not(.life-checkout-page) .pf-summary-item > .pf-summary-product-link:first-child { grid-column: 1; grid-row: 1 / 3; align-self: start; }
+.pf-body:not(.life-checkout-page) .pf-summary-item .pf-summary-img { width: 56px; height: 56px; max-width: 56px; }
+.pf-body:not(.life-checkout-page) .pf-summary-info { grid-column: 2; grid-row: 1 / 3; }
+.pf-body:not(.life-checkout-page) .pf-summary-price { grid-column: 3; grid-row: 1; align-self: start; justify-self: end; font-size: 0.95rem; }
+.pf-body:not(.life-checkout-page) .pf-remove-btn { grid-column: 3; grid-row: 2; align-self: end; justify-self: end; margin-right: -0.5rem; }
+.pf-body:not(.life-checkout-page) .pf-qty-row span { min-width: 1.6rem; text-align: center; font-weight: 700; }
+.pf-body:not(.life-checkout-page) .pf-qty-btn { width: 40px; height: 40px; }
+
+/* Empty cart: one clear message, nothing else around it */
+.pf-checkout-empty:not(.life-checkout-page) .pf-checkout-form,
+.pf-checkout-empty:not(.life-checkout-page) .pf-promo-row--summary,
+.pf-checkout-empty:not(.life-checkout-page) #promo-message-summary,
+.pf-checkout-empty:not(.life-checkout-page) .pf-summary-rows,
+.pf-checkout-empty:not(.life-checkout-page) .pf-checkout-summary > .pf-btn,
+.pf-checkout-empty:not(.life-checkout-page) .pf-checkout-summary > .pf-trust { display: none !important; }
+.pf-body:not(.life-checkout-page) .pf-empty-cart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 0.5rem 1rem;
+  text-align: center;
+}
+.pf-body:not(.life-checkout-page) .pf-empty-cart-icon {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--pf-primary-soft);
+  color: var(--pf-primary);
+  margin-bottom: 0.35rem;
+}
+.pf-body:not(.life-checkout-page) .pf-empty-cart strong { font-family: var(--pf-display); font-size: 1.15rem; }
+.pf-body:not(.life-checkout-page) .pf-empty-cart p { margin: 0 0 0.5rem; color: var(--pf-muted); font-size: 0.92rem; }
+.pf-body:not(.life-checkout-page) .pf-empty-cart .pf-btn { width: 100%; max-width: 280px; }
+.pf-body:not(.life-checkout-page) .pf-empty-cart .pf-empty-cart-link { color: var(--pf-primary); font-weight: 700; font-size: 0.9rem; text-decoration: none; padding: 0.5rem; }
+
+/* Mobile order button: one solid bar with the total, never a see-through button over the form */
+#submit-btn-mobile {
+  width: min(calc(100% - 2rem), 440px);
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0 1.1rem;
+  font-size: 0.95rem;
+}
+#submit-btn-mobile[data-total]::after {
+  content: attr(data-total);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--pf-radius-pill);
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+#submit-btn-mobile:disabled {
+  opacity: 1;
+  background: var(--pf-surface);
+  color: var(--pf-muted);
+  box-shadow: var(--pf-shadow-lg), 0 0 0 1.5px var(--pf-border);
+}
+#submit-btn-mobile:disabled::after { background: var(--pf-bg); }
+
+@media (max-width: 899px) {
+  /* The summary button is for desktop; on a phone the bottom bar is the one order button */
+  .pf-body:not(.life-checkout-page) .pf-checkout-summary > .pf-checkout-submit--desktop,
+  .pf-body:not(.life-checkout-page) .pf-checkout-summary > .pf-checkout-trust--desktop { display: none !important; }
+  .pf-body--checkout.pf-checkout-has-fab:not(.life-checkout-page) .pf-checkout-page {
+    padding-bottom: calc(48px + var(--pf-fab-offset) + 1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Courier: the map button and the chosen office read as one block */
+.pf-body:not(.life-checkout-page) #open-speedy-map-btn { width: 100%; margin: 0.35rem 0 0.6rem; border-color: var(--pf-primary); color: var(--pf-primary); }
+.pf-body:not(.life-checkout-page) .pf-courier-widget > label { display: block; margin-top: 0.85rem; font-size: 0.92rem; }
+.pf-body:not(.life-checkout-page) .pf-selected-office:not(.has-office) #speedy-selected-name:empty::after { content: 'още не е избран'; font-weight: 400; color: var(--pf-muted); }
+
+/* Order result icon: the error state gets a red ring, not a green one */
+.pf-success-icon[style*="c0392b"] {
+  background: linear-gradient(145deg, rgba(192, 57, 43, 0.1), rgba(192, 57, 43, 0.18));
+  box-shadow: 0 8px 24px rgba(192, 57, 43, 0.18);
+}
+
+/* Product page */
+@media (max-width: 639px) {
+  /* The back button scrolls with the page instead of floating over the breadcrumb and title */
+  .pf-body--product .pf-floating-back {
+    position: absolute;
+    top: calc(var(--pf-header-h) + 0.6rem);
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  .pf-body--product .pf-breadcrumb { padding-left: 2.75rem; min-height: 2.25rem; }
+  /* The category is already in the breadcrumb */
+  .pf-body--product .pf-product-cat { display: none; }
+}
+
+/* Sticky "add to cart" only appears once the main button has scrolled away */
+.pf-body--product .pf-fab-add {
+  transition: transform 0.25s var(--pf-ease), opacity 0.25s;
+}
+.pf-body--product .pf-fab-add.pf-fab-hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(140%);
+  pointer-events: none;
+}
+
+/* Catalog: two cards per row on every phone */
+@media (max-width: 479px) {
+  .pf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+  .pf-card-body { padding: 0.55rem 0.65rem 0.7rem; }
+  .pf-card-brand { font-size: 0.62rem; }
+  .pf-card-title { font-size: 0.8rem; line-height: 1.3; }
+  .pf-badge--promo { font-size: 0.65rem; padding: 0.2rem 0.5rem; }
+}
+
+/* Legal / FAQ pages: the header is sticky, so no extra header-height gap */
+.pf-legal { padding-top: var(--pf-space-lg); }
+@media (max-width: 639px) {
+  .pf-legal { width: 100%; padding: 1.1rem max(1rem, env(safe-area-inset-right, 0px)) 2rem max(1rem, env(safe-area-inset-left, 0px)); }
+  .pf-legal h1 { font-size: 1.6rem; }
+  .pf-legal h2 { font-size: 1.05rem; margin-top: 1.5rem; }
+  .pf-legal p, .pf-legal li { font-size: 0.95rem; line-height: 1.6; }
+}
+.pf-back-link { display: inline-flex; align-items: center; gap: 0.3rem; min-height: 40px; font-weight: 600; text-decoration: none !important; }
+
+/* FAQ accordion */
+.pf-faq-list { display: grid; gap: 0.6rem; margin: 1.25rem 0 1.5rem; }
+.pf-faq-item {
+  border: 1px solid var(--pf-border);
+  border-radius: var(--pf-radius-sm);
+  background: var(--pf-surface);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pf-faq-item[open] { border-color: var(--pf-primary); box-shadow: 0 6px 20px rgba(var(--pf-primary-rgb), 0.1); }
+.pf-faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 52px;
+  padding: 0.8rem 1rem;
+  font-family: var(--pf-display);
+  font-weight: 700;
+  font-size: 1rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.pf-faq-item summary::-webkit-details-marker { display: none; }
+.pf-faq-item summary::after {
+  content: '+';
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--pf-primary-soft);
+  color: var(--pf-primary);
+  font-size: 1.1rem;
+  transition: transform 0.25s var(--pf-ease);
+}
+.pf-faq-item[open] summary::after { transform: rotate(45deg); }
+.pf-faq-item summary:active { background: var(--pf-primary-soft); }
+.pf-faq-item p { margin: 0; padding: 0 1rem 1rem; color: var(--pf-text-secondary); }
+
+@media (max-width: 639px) {
+  /* Long category paths: one swipeable line instead of four wrapped ones */
+  .pf-body--product .pf-breadcrumb {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+            mask-image: linear-gradient(90deg, #000 85%, transparent);
+  }
+  .pf-body--product .pf-breadcrumb::-webkit-scrollbar { display: none; }
+  .pf-body--product .pf-breadcrumb > * { flex: 0 0 auto; }
+}
