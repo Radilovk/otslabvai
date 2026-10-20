@@ -53,19 +53,33 @@ export function buildNutriPlanHandoff(siteId, answers, result) {
   };
 }
 
+const LINK_KEY = 'nutriplanHandoffLink';
+
 async function createLink(siteId, result) {
   const src = NUTRIPLAN_SOURCE[siteId];
   const fallback = `${NUTRIPLAN_SITE}/questionnaire2.html?from=${src}&utm_source=${src}&utm_medium=quiz_result`;
   const answers = readQuizAnswers(siteId);
   if (!answers) return fallback;
+  // Повторен клик за същия резултат — същата пратка (не нов запис и нов брояч).
+  const resultId = String(result?.sessionId || '');
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(LINK_KEY) || 'null');
+    if (saved && saved.site === siteId && saved.resultId === resultId && saved.url) return saved.url;
+  } catch {
+    // без sessionStorage — нова пратка
+  }
   try {
     const res = await fetch(NUTRIPLAN_HANDOFF_URL, {
+      signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(buildNutriPlanHandoff(siteId, answers, result)),
     });
     const data = await res.json().catch(() => ({}));
-    if (res.ok && typeof data.url === 'string' && data.url.startsWith(`${NUTRIPLAN_SITE}/`)) return data.url;
+    if (res.ok && typeof data.url === 'string' && data.url.startsWith(`${NUTRIPLAN_SITE}/`)) {
+      try { sessionStorage.setItem(LINK_KEY, JSON.stringify({ site: siteId, resultId, url: data.url })); } catch { /* без кеш */ }
+      return data.url;
+    }
   } catch {
     // към въпросника без пратка
   }
@@ -82,11 +96,12 @@ export function renderNutriPlanCta() {
       <h3 id="lpr-np-title">Индивидуален хранителен план към протокола</h3>
       <p>Добавките дават най-много, когато храненето е наред. NutriPlan съставя меню по вашите цели и здраве, а отговорите от този тест се пренасят автоматично.</p>
       <ul class="lpr-np-list">
-        <li>${check}Без повторни въпроси за пол, ръст, тегло, активност и режим</li>
+        <li>${check}Без повторни въпроси за това, което вече отговорихте (пол, ръст, тегло и др.)</li>
         <li>${check}Седмично меню и замени за всяко ястие</li>
         <li>${check}Асистент, който отговаря на въпроси за храната</li>
       </ul>
       <button type="button" class="lpr-np-btn" data-action="nutriplan">Направи ми хранителен план${arrow}</button>
+      <p class="lpr-np-fine">С бутона отговорите от теста (вкл. име и имейл) се пренасят в NutriPlan, само за да попълнят въпросника.</p>
     </section>`;
 }
 
@@ -163,11 +178,11 @@ export function renderNutriPlanPromo(component, siteId) {
     ? `<div class="sf-np__phone"><img class="sf-np__img" src="${esc(c.image)}" alt="NutriPlan" loading="lazy"></div>`
     : nutriPlanPhone();
   return `
-  <section ${c.id ? `id="${esc(c.id)}"` : ''} class="sf sf--${esc(siteId)} sf-np nutriplan-promo" aria-labelledby="sf-np-title">
+  <section ${c.id ? `id="${esc(c.id)}"` : ''} class="sf sf--${esc(siteId)} sf-np nutriplan-promo" aria-labelledby="sf-np-title-${esc(c.component_id || 'auto')}">
     <div class="container sf-np__inner">
       <div class="sf-np__head">
         <span class="sf-eyebrow sf-eyebrow--np"><span class="sf-np__logo">N</span>${esc(d.eyebrow)}</span>
-        <h2 class="sf-title" id="sf-np-title">${esc(c.title || d.title)}</h2>
+        <h2 class="sf-title" id="sf-np-title-${esc(c.component_id || 'auto')}">${esc(c.title || d.title)}</h2>
         <p class="sf-lead">${esc(c.content || d.content)}</p>
       </div>
       ${visual}

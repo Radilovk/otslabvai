@@ -2592,7 +2592,7 @@ function handleAction(action, target, id) {
             if (!component) return;
             const correctedType = component.type.replace(/_/g, '-');
             const editTemplateId = `form-${correctedType}-template`;
-            openModal(`Редакция на: ${component.title}`, editTemplateId, component,
+            openModal(`Редакция на: ${component.title || (component.type === 'nutriplan_cta' ? 'Реклама: NutriPlan' : component.type)}`, editTemplateId, component,
                 (form) => {
                     const updatedData = serializeForm(form);
                     // Debug: console.log('Updating component:', component.component_id, 'with data:', updatedData);

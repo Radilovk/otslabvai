@@ -970,6 +970,7 @@ body.lpq-body {
 .lpr-np-btn { display: flex; width: 100%; min-height: 54px; align-items: center; justify-content: center; gap: .55rem; border: 0; border-radius: 999px; background: #fff; color: #0b4f4a; font: inherit; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 10px 24px rgba(0, 0, 0, .25); -webkit-tap-highlight-color: transparent; }
 .lpr-np-btn:active { transform: scale(.98); }
 .lpr-np-btn:disabled { opacity: .75; cursor: progress; }
+.lpr-np-fine { margin: .7rem 0 0 !important; font-size: .74rem !important; color: rgba(236, 253, 248, .6) !important; }
 @media (min-width: 640px) {
   .lpr-nutriplan { padding: 2rem 2rem 1.8rem; }
   .lpr-nutriplan h3 { font-size: 1.55rem; }

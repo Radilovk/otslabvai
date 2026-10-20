@@ -1248,7 +1248,9 @@ function renderMainContent(pageContent) {
         return contentHtml;
     };
 
-    DOM.mainContainer.innerHTML = renderWithFeatures(pageContent, 'life', renderComponent);
+    DOM.mainContainer.innerHTML = renderWithFeatures(pageContent, 'life', renderComponent, {
+        advisorCta: getPremiumCta('Получи своя протокол', 'life-protocol-quiz.html'),
+    });
 }
 
 function renderFooter(settings, footer) {

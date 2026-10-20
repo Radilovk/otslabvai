@@ -41,3 +41,24 @@ describe('акцентите на началната страница', () => {
     expect(html).toContain('life-protocol-quiz.html');
   });
 });
+
+describe('коя карта се заменя от секцията на протокола', () => {
+  test('само картите към теста; карта без бутон и чужди линкове остават', async () => {
+    const { isAdvisorInfoCard } = await import('./site-features.js');
+    const card = (button) => ({ type: 'info_card', button });
+    expect(isAdvisorInfoCard(card({ text: 'Започни', url: 'https://radilovk.github.io/port/quest.html' }))).toBe(true);
+    expect(isAdvisorInfoCard(card({ text: 'Протокол', url: 'life-protocol-quiz.html?replace=1' }))).toBe(true);
+    expect(isAdvisorInfoCard(card({ text: 'Започни', url: '' }))).toBe(true);
+    expect(isAdvisorInfoCard(card(undefined))).toBe(false);
+    expect(isAdvisorInfoCard(card({ text: '', url: '' }))).toBe(false);
+    expect(isAdvisorInfoCard(card({ text: 'Виж', url: 'request.html' }))).toBe(false);
+    expect(isAdvisorInfoCard(card({ text: 'Виж', url: '/port/questions.html' }))).toBe(false);
+  });
+
+  test('life: бутонът на секцията може да е „Създай нов протокол“', async () => {
+    const { renderAdvisorFeature } = await import('./site-features.js');
+    const html = renderAdvisorFeature('life', { text: 'Създай нов протокол', url: 'life-protocol-quiz.html?replace=1' });
+    expect(html).toContain('Създай нов протокол');
+    expect(html).toContain('life-protocol-quiz.html?replace=1');
+  });
+});

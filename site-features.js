@@ -71,8 +71,9 @@ export const ADVISOR_CONTENT = {
   },
 };
 
-export function renderAdvisorFeature(siteId) {
-  const c = ADVISOR_CONTENT[siteId] || ADVISOR_CONTENT.main;
+export function renderAdvisorFeature(siteId, cta = null) {
+  // cta — друг текст/линк на бутона (life: „Създай нов протокол“ за купувач на протокол).
+  const c = { ...(ADVISOR_CONTENT[siteId] || ADVISOR_CONTENT.main), ...(cta?.url ? { url: cta.url, cta: cta.text || ADVISOR_CONTENT[siteId]?.cta } : {}) };
   const m = c.mock;
   return `
   <section class="sf sf--${esc(siteId)} sf-advisor" id="individual-protocol" aria-labelledby="sf-advisor-title">
@@ -115,10 +116,14 @@ export function renderAdvisorFeature(siteId) {
 }
 
 /** Картите, които водят към теста, се заместват от секцията на модула за протокол. */
+const QUIZ_URL = /(^|\/)(main-advisor-quiz|life-protocol-quiz|quest)\.html(\?|#|$)/i;
+
 export function isAdvisorInfoCard(component) {
   if (component?.type !== 'info_card') return false;
-  const url = String(component.button?.url || '');
-  return !url || /advisor-quiz|protocol-quiz|quest\.html|\/port\/quest/i.test(url);
+  const url = String(component.button?.url || '').trim();
+  // Бутон с текст, но без линк — сайтът го водеше към теста; карта без бутон остава.
+  if (!url) return !!component.button?.text;
+  return QUIZ_URL.test(url);
 }
 
 /**
@@ -128,8 +133,9 @@ export function isAdvisorInfoCard(component) {
  * @param {object[]} pageContent
  * @param {'main'|'life'} siteId
  * @param {(component: object, index: number) => string} renderComponent
+ * @param {{ advisorCta?: { text?: string, url?: string } }} [opts]
  */
-export function renderWithFeatures(pageContent, siteId, renderComponent) {
+export function renderWithFeatures(pageContent, siteId, renderComponent, opts = {}) {
   const list = Array.isArray(pageContent) ? pageContent : [];
   const hasNutriPlan = list.some((c) => c?.type === 'nutriplan_cta');
   let advisorDone = false;
@@ -140,7 +146,7 @@ export function renderWithFeatures(pageContent, siteId, renderComponent) {
     const out = renderComponent(component, index) || '';
     html += out;
     if (!advisorDone && component?.type === 'hero_banner') {
-      html += renderAdvisorFeature(siteId);
+      html += renderAdvisorFeature(siteId, opts.advisorCta);
       advisorDone = true;
     }
     if (!nutriDone && component?.type === 'product_category' && out) {
@@ -148,7 +154,7 @@ export function renderWithFeatures(pageContent, siteId, renderComponent) {
       nutriDone = true;
     }
   });
-  if (!advisorDone) html = renderAdvisorFeature(siteId) + html;
+  if (!advisorDone) html = renderAdvisorFeature(siteId, opts.advisorCta) + html;
   if (!nutriDone) html += renderNutriPlanPromo({}, siteId);
   return html;
 }
