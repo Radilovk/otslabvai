@@ -63,7 +63,7 @@ function formatPrice(item) {
   return formatIndexPriceHtml(item, loadActivePromo());
 }
 
-const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect fill='%23eef2f0' width='300' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.35em' fill='%235f6f66' font-family='sans-serif' font-size='14'%3EНяма снимка%3C/text%3E%3C/svg%3E";
+const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27300%27 viewBox=%270 0 300 300%27%3E%3Crect fill=%27%23eef2f0%27 width=%27300%27 height=%27300%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.35em%27 fill=%27%235f6f66%27 font-family=%27sans-serif%27 font-size=%2714%27%3EНяма снимка%3C/text%3E%3C/svg%3E";
 
 function renderCardTitle(item) {
   const packsLabel = formatPacksDisplay(item.packs);

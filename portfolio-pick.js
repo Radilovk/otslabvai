@@ -8,8 +8,10 @@ import {
   formatPrice, buildPortfolioProductUrl,
 } from './portfolio-shared.js';
 import { API_URL } from './config.js';
+import { variantDisplayPrice, fetchPromoPrices } from './portfolio-promo-catalog.js';
+import { loadActivePromo } from './portfolio-promo-ui.js';
 
-const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect fill='%23eef2f0' width='300' height='300'/%3E%3C/svg%3E";
+const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27300%27%3E%3Crect fill=%27%23eef2f0%27 width=%27300%27 height=%27300%27/%3E%3C/svg%3E";
 const SOURCES = { nutriplan: 'NutriPlan', airis: 'AIRIS', emoeat: 'EmoEat' };
 
 const params = new URLSearchParams(window.location.search);
@@ -31,8 +33,11 @@ function catalogUrl() {
   return q ? `portfolio.html?q=${encodeURIComponent(q)}` : 'portfolio.html';
 }
 
+/** Вариантът с цената за активния промо код (както на продуктовата страница). */
+const pricedVariant = (item) => variantDisplayPrice(item.pick_variant, loadActivePromo()) || item.pick_variant || {};
+
 function renderCard(item, i) {
-  const v = item.pick_variant || {};
+  const v = pricedVariant(item);
   const img = v.image || item.image || PLACEHOLDER_IMG;
   const pack = [v.pack, v.option].filter(Boolean).join(' · ');
   const url = buildPortfolioProductUrl(item.group_id, v.sku_id);
@@ -57,7 +62,7 @@ function renderCard(item, i) {
 
 function addToCart(i) {
   const item = items[i];
-  const v = item?.pick_variant;
+  const v = item && pricedVariant(item);
   if (!v?.sku_id) return;
   const cart = getCart();
   const idx = cart.findIndex((c) => c.sku_id === v.sku_id);
@@ -111,6 +116,10 @@ async function load() {
     return;
   }
   DOM.grid.innerHTML = items.map(renderCard).join('');
+  const promo = loadActivePromo();
+  fetchPromoPrices(promo, { skuIds: items.map((it) => it.pick_variant.sku_id) }).then((changed) => {
+    if (changed) DOM.grid.innerHTML = items.map(renderCard).join('');
+  });
   DOM.more.hidden = false;
   DOM.more.innerHTML = `<a class="pf-btn pf-btn-outline" href="${catalogUrl()}">Виж всички резултати</a>`;
   DOM.note.hidden = false;

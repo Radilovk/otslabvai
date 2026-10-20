@@ -1484,18 +1484,33 @@ async function handlePickProducts(request, env) {
   const vegan = url.searchParams.get('vegan') === '1';
   if (!q) throw new PortfolioError('Липсва търсеща дума.', 400);
 
+  // Кеш на ръба за 2 минути: еднаквите линкове от плановете не товарят доставчика всеки път.
+  const edge = typeof caches !== 'undefined' ? /** @type {any} */ (caches).default : null;
+  const cacheKey = new Request(`https://pick.cache/${encodeURIComponent(q.toLowerCase())}?l=${limit}&v=${vegan ? 1 : 0}`);
+  if (edge) {
+    const hit = await edge.match(cacheKey).catch(() => null);
+    // Копие: заглавките на отговора от кеша са заключени, а worker.js добавя CORS.
+    if (hit) return new Response(hit.body, hit);
+  }
+
   const meta = await getMeta(env);
   if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
   const listed = (meta.index || []).filter((e) => e.available && isCatalogListed(e));
-  const { slot, candidates } = rankSupplementCandidates(listed, q, { vegan, max: 6 });
+  const { slot, candidates } = rankSupplementCandidates(listed, q, { vegan, max: 8 });
 
-  // Вариант за всеки кандидат (от групата), после жива наличност при доставчика.
-  const withVariant = [];
-  for (const entry of candidates) {
-    const group = await getGroupFromChunks(env, meta, entry.group_id);
-    const variant = pickVariantForQuickAdd(group, entry.default_sku_id);
-    if (variant) withVariant.push({ entry, variant, group });
-  }
+  // Вариантът за бързо добавяне (той отива в количката) — и маржът се гледа по него.
+  const groups = await loadPortfolioGroupsByIds(env, candidates.map((c) => c.group_id));
+  const margin = (v) => (Number(v.retail_price) || 0) - (Number(v.b2b_price) || 0);
+  const withVariant = candidates
+    .map((entry, rank) => {
+      const group = groups.get(String(entry.group_id));
+      const variant = group && pickVariantForQuickAdd(group, entry.default_sku_id);
+      return variant ? { entry, variant, group, rank } : null;
+    })
+    .filter(Boolean)
+    // Кандидатите вече са еднакво подходящи (в допуска) — подредбата е по маржа на избрания вариант.
+    .sort((a, b) => margin(b.variant) - margin(a.variant) || a.rank - b.rank);
+
   let checkedAt = null;
   let available = withVariant;
   const liveOff = env.MOCK_FITNESS1 === '1' || env.MOCK_FITNESS1 === true || env.LIVE_STOCK_CHECK === '0';
@@ -1511,6 +1526,8 @@ async function handlePickProducts(request, env) {
       const out = new Set(live.unavailable.map((r) => String(r.sku_id)));
       // Изчерпано в момента — отпада; без отговор от доставчика — остава (кешът от синхронизацията).
       available = withVariant.filter(({ variant }) => !out.has(String(variant.sku_id)));
+      // Каталогът показва изчерпаното като налично — пускаме синхронизация (сама се ограничава по време).
+      if (out.size) requestPortfolioCatalogCiSync(env).catch(() => {});
     } catch {
       // доставчикът не отговаря — показваме по последната синхронизация
     }
@@ -1520,13 +1537,15 @@ async function handlePickProducts(request, env) {
     ...sanitizeIndexEntryForClient(entry),
     pick_variant: sanitizeVariantForClient({ ...variant, image: variant.image || group?.image }),
   }));
-  return jsonResponse({
+  const response = jsonResponse({
     q,
     slot,
     items,
     live_checked_at: checkedAt,
     synced_at: meta.synced_at,
   }, 200, { 'Cache-Control': 'public, max-age=120' });
+  if (edge) await edge.put(cacheKey, response.clone()).catch(() => {});
+  return response;
 }
 
 async function handleGetProduct(request, env) {

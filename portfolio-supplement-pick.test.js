@@ -1,4 +1,4 @@
-import { rankSupplementCandidates, slotForQuery, fitScore, SUPPLEMENT_SLOTS } from './portfolio-supplement-pick.js';
+import { rankSupplementCandidates, slotForQuery, fitScore, SUPPLEMENT_SLOTS, normalizeSupplementQuery } from './portfolio-supplement-pick.js';
 import { enrichIndexEntry } from './portfolio-search.js';
 
 let n = 0;
@@ -63,5 +63,54 @@ describe('portfolio-supplement-pick', () => {
   test('всеки слот има задължителни думи', () => {
     for (const s of SUPPLEMENT_SLOTS) expect(s.must).toBeInstanceOf(RegExp);
     expect(fitScore(SUPPLEMENT_SLOTS[0], { name: '' }, { q: 'x' })).toBe(-1);
+  });
+
+  test('кирилски букви вместо латински: „Витамин С“, „В12“, „Д3“, „К2“', () => {
+    expect(slotForQuery('Витамин С').key).toBe('vitamin_c');
+    expect(slotForQuery('Витамин В12').key).toBe('b12');
+    expect(slotForQuery('Витамин Д3').key).toBe('vitamin_d');
+    expect(slotForQuery('Витамин D3 + К2').key).toBe('d3k2');
+    expect(slotForQuery('Витамин К2').key).toBe('vitamin_k2');
+    // предлогът „с“ не става буква на витамин
+    expect(normalizeSupplementQuery('Колаген с витамин С')).toBe('Колаген с витамин c');
+  });
+
+  test('желязо, калий, цинк — кирилските окончания', () => {
+    expect(slotForQuery('Желязо').key).toBe('iron');
+    expect(slotForQuery('Желязен бисглицинат').key).toBe('iron');
+    expect(slotForQuery('Калий').key).toBe('potassium');
+    expect(slotForQuery('Калиев цитрат').key).toBe('potassium');
+    expect(slotForQuery('Цинк').key).toBe('zinc');
+  });
+
+  test('едно вещество: комбинациите отпадат, щом има самостоятелен продукт; „ / “ не е комбинация', () => {
+    const idx = [entry('NOW Foods NAC | with Quercetin & Zinc', 9), entry('C-1000 Zinc Immune | Vitamin C + Zinc', 8), entry('Zinc Picolinate 50 mg', 1)];
+    expect(names(rankSupplementCandidates(idx, 'Цинк'))).toEqual(['Zinc Picolinate 50 mg']);
+    const th = [entry('Sleep Regimen 3-in-1 | Melatonin, 5-HTP and Theanine', 9), entry('L-Theanine 200 mg / Double Strength', 2)];
+    expect(names(rankSupplementCandidates(th, 'L-теанин'))).toEqual(['L-Theanine 200 mg / Double Strength']);
+    const d3 = [entry('Omega + D3 Liquid', 9), entry('Vitamin D-3 5000 IU', 1)];
+    expect(names(rankSupplementCandidates(d3, 'Витамин D3'))).toEqual(['Vitamin D-3 5000 IU']);
+  });
+
+  test('две вещества: основното е първото написано, комбинацията печели', () => {
+    expect(slotForQuery('Колаген с витамин C').key).toBe('collagen');
+    expect(slotForQuery('Желязо + витамин C').key).toBe('iron');
+    const idx = [entry('Vitamin C 1000', 9), entry('Collagen Peptides', 3), entry('Collagen Peptides + Vitamin C', 2)];
+    expect(names(rankSupplementCandidates(idx, 'Колаген с витамин C'))[0]).toBe('Collagen Peptides + Vitamin C');
+  });
+
+  test('D3 + K2 изисква и двете; без омега и калций', () => {
+    const idx = [entry('Omega 3 / D3 + K2', 9), entry('Calcium + D3 + K2', 8), entry('Vitamin D3 2000', 7), entry('D3 + K2 Drops', 1)];
+    expect(names(rankSupplementCandidates(idx, 'Витамин D3 + K2'))).toEqual(['D3 + K2 Drops']);
+  });
+
+  test('веган: животинските съставки отпадат (колаген, D3 от ланолин)', () => {
+    const idx = [entry('Marine Collagen', 9), entry('Collagen Vegan Booster', 1)];
+    expect(names(rankSupplementCandidates(idx, 'Колаген', { vegan: true }))).toEqual(['Collagen Vegan Booster']);
+    expect(rankSupplementCandidates([entry('Vitamin D-3 5000 IU', 5)], 'Витамин D3', { vegan: true }).candidates).toEqual([]);
+  });
+
+  test('кремове и гелове не са добавка', () => {
+    expect(names(rankSupplementCandidates([entry('Vitamin E Cream', 9), entry('Vitamin E-400', 1)], 'Витамин E'))).toEqual(['Vitamin E-400']);
   });
 });
