@@ -57,6 +57,7 @@ function finalizeGroupImages(group) {
 import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipping.js';
 import { assertOrderRateLimit } from './order-rate-limit.js';
 import { checkLiveStock } from './distributor-live-stock.js';
+import { rankSupplementCandidates } from './portfolio-supplement-pick.js';
 import { promoIndexStats, promoVariantPrice } from './portfolio-promo-pricing.js';
 import {
   getOrderRecord,
@@ -1458,6 +1459,76 @@ async function handleGetCatalog(request, env) {
   });
 }
 
+/** Вариантът за бързо добавяне: показваният по подразбиране, иначе с най-голям марж. */
+function pickVariantForQuickAdd(group, defaultSkuId) {
+  const ok = (group?.variants || []).filter((v) => v.available !== false && variantHasMargin(v));
+  if (!ok.length) return null;
+  const byDefault = ok.find((v) => String(v.sku_id) === String(defaultSkuId));
+  if (byDefault) return byDefault;
+  return ok.reduce((best, v) => (
+    (Number(v.retail_price) - Number(v.b2b_price)) > (Number(best.retail_price) - Number(best.b2b_price)) ? v : best
+  ), ok[0]);
+}
+
+/**
+ * GET /portfolio/pick?q=<търсеща дума>&limit=3&vegan=1
+ * Линк от друго приложение (NutriPlan, AIRIS) с името на добавка → до 3
+ * продукта: най-подходящите по вещество и форма, между тях — с най-голям
+ * марж, с проверка на наличността при доставчика в момента. Маржът не
+ * излиза към клиента.
+ */
+async function handlePickProducts(request, env) {
+  const url = new URL(request.url);
+  const q = String(url.searchParams.get('q') || '').trim().slice(0, 80);
+  const limit = Math.min(3, Math.max(1, parseInt(url.searchParams.get('limit') || '3', 10) || 3));
+  const vegan = url.searchParams.get('vegan') === '1';
+  if (!q) throw new PortfolioError('Липсва търсеща дума.', 400);
+
+  const meta = await getMeta(env);
+  if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+  const listed = (meta.index || []).filter((e) => e.available && isCatalogListed(e));
+  const { slot, candidates } = rankSupplementCandidates(listed, q, { vegan, max: 6 });
+
+  // Вариант за всеки кандидат (от групата), после жива наличност при доставчика.
+  const withVariant = [];
+  for (const entry of candidates) {
+    const group = await getGroupFromChunks(env, meta, entry.group_id);
+    const variant = pickVariantForQuickAdd(group, entry.default_sku_id);
+    if (variant) withVariant.push({ entry, variant, group });
+  }
+  let checkedAt = null;
+  let available = withVariant;
+  const liveOff = env.MOCK_FITNESS1 === '1' || env.MOCK_FITNESS1 === true || env.LIVE_STOCK_CHECK === '0';
+  if (withVariant.length && !liveOff) {
+    try {
+      const live = await checkLiveStock(withVariant.map(({ variant, group }) => ({
+        sku_id: variant.sku_id,
+        barcode: variant.barcode,
+        distributor: variant.distributor || group?.distributor,
+        name: group?.name,
+      })), { f1Key: await getFitness1ApiKey(env), silaToken: await getSilaApiToken(env) });
+      checkedAt = live.checked_at;
+      const out = new Set(live.unavailable.map((r) => String(r.sku_id)));
+      // Изчерпано в момента — отпада; без отговор от доставчика — остава (кешът от синхронизацията).
+      available = withVariant.filter(({ variant }) => !out.has(String(variant.sku_id)));
+    } catch {
+      // доставчикът не отговаря — показваме по последната синхронизация
+    }
+  }
+
+  const items = available.slice(0, limit).map(({ entry, variant, group }) => ({
+    ...sanitizeIndexEntryForClient(entry),
+    pick_variant: sanitizeVariantForClient({ ...variant, image: variant.image || group?.image }),
+  }));
+  return jsonResponse({
+    q,
+    slot,
+    items,
+    live_checked_at: checkedAt,
+    synced_at: meta.synced_at,
+  }, 200, { 'Cache-Control': 'public, max-age=120' });
+}
+
 async function handleGetProduct(request, env) {
   const url = new URL(request.url);
   const groupId = url.searchParams.get('group_id');
@@ -2609,6 +2680,9 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     }
     if (path === '/portfolio/product' && method === 'GET') {
       return await handleGetProduct(request, env);
+    }
+    if (path === '/portfolio/pick' && method === 'GET') {
+      return await handlePickProducts(request, env);
     }
     if (path === '/portfolio/product/description' && method === 'GET') {
       return await handleGetProductDescription(request, env);
