@@ -1,6 +1,6 @@
 /**
  * Акцентни секции на началните страници (daotslabna.com и life-protocols.com):
- * AI съветникът (тестът за протокол) веднага под банера и лентата на NutriPlan.
+ * Модулът за индивидуален протокол (тестът) веднага под банера и лентата на NutriPlan.
  *
  * Визията е изградена в интерфейса (примерен резултат, телефон с плана), не
  * със снимки — за да показва точно какво получава човек. Стилът е в
@@ -25,9 +25,9 @@ const ICON = {
 export const ADVISOR_CONTENT = {
   main: {
     url: 'main-advisor-quiz.html',
-    eyebrow: 'AI съветник · безплатно · 2 минути',
+    eyebrow: 'Персонална програма · безплатно · 2 минути',
     title: 'Протокол за отслабване, <em>подбран за вас</em>',
-    lead: 'Отговорете на кратък въпросник. AI съветникът отчита целта, тялото, здравословното състояние и лекарствата ви и подбира добавки в три варианта — с точен прием през деня.',
+    lead: 'Отговорете на кратък въпросник — програмата отчита целта, тялото, здравословното състояние и лекарствата ви и подбира добавки в три варианта, с точен прием през деня.',
     steps: [
       ['Въпросник', 'цел, тяло, навици, здраве'],
       ['Анализ', 'ИТМ, противопоказания, лекарства'],
@@ -35,6 +35,7 @@ export const ADVISOR_CONTENT = {
     ],
     trust: ['Проверка за несъвместимост с лекарства', 'Три варианта според бюджета', 'Без регистрация'],
     cta: 'Започни теста',
+    mockLabel: 'Персонална програма',
     mock: {
       title: 'Вашият протокол',
       rows: [
@@ -47,9 +48,9 @@ export const ADVISOR_CONTENT = {
   },
   life: {
     url: 'life-protocol-quiz.html',
-    eyebrow: 'AI протокол · безплатно · 2 минути',
+    eyebrow: 'Индивидуален протокол · безплатно · 2 минути',
     title: 'Персонален протокол <em>за дълголетие</em>',
-    lead: 'Изберете приоритет — енергия, сън, кожа, памет или стави. AI съветникът съставя протокол според възрастта, състоянията и лекарствата ви, в три нива и с график на приема.',
+    lead: 'Изберете приоритет — енергия, сън, кожа, памет или стави. Протоколът се съставя според възрастта, състоянията и лекарствата ви, в три нива и с график на приема.',
     steps: [
       ['Приоритет', 'какво искате да подобрите'],
       ['Анализ', 'възраст, здраве, лекарства'],
@@ -57,6 +58,7 @@ export const ADVISOR_CONTENT = {
     ],
     trust: ['Проверка за несъвместимост с лекарства', 'Научно обосновани съставки', 'Без регистрация'],
     cta: 'Получи своя протокол',
+    mockLabel: 'Индивидуален протокол',
     mock: {
       title: 'Вашият протокол',
       rows: [
@@ -73,7 +75,7 @@ export function renderAdvisorFeature(siteId) {
   const c = ADVISOR_CONTENT[siteId] || ADVISOR_CONTENT.main;
   const m = c.mock;
   return `
-  <section class="sf sf--${esc(siteId)} sf-advisor" id="ai-advisor" aria-labelledby="sf-advisor-title">
+  <section class="sf sf--${esc(siteId)} sf-advisor" id="individual-protocol" aria-labelledby="sf-advisor-title">
     <div class="container sf-advisor__grid">
       <div class="sf-advisor__head">
         <span class="sf-eyebrow">${ICON.spark}${esc(c.eyebrow)}</span>
@@ -88,7 +90,7 @@ export function renderAdvisorFeature(siteId) {
         <div class="sf-mock">
           <div class="sf-mock__head">
             <span class="sf-mock__ai">${ICON.spark}</span>
-            <span class="sf-mock__title">${esc(m.title)}<small>AI съветник</small></span>
+            <span class="sf-mock__title">${esc(m.title)}<small>${esc(c.mockLabel)}</small></span>
             <span class="sf-mock__badge">Препоръчан</span>
           </div>
           <div class="sf-mock__tiers"><span>Базов</span><span class="is-active">Оптимален</span><span>Премиум</span></div>
@@ -112,7 +114,7 @@ export function renderAdvisorFeature(siteId) {
   </section>`;
 }
 
-/** Картите, които водят към теста, се заместват от секцията на AI съветника. */
+/** Картите, които водят към теста, се заместват от секцията на модула за протокол. */
 export function isAdvisorInfoCard(component) {
   if (component?.type !== 'info_card') return false;
   const url = String(component.button?.url || '');
@@ -121,7 +123,7 @@ export function isAdvisorInfoCard(component) {
 
 /**
  * Компонентите на началната страница + акцентите:
- * AI съветникът веднага след банера; NutriPlan след първата продуктова категория
+ * Модулът за протокол веднага след банера; NutriPlan след първата продуктова категория
  * (ако админът не е поставил блока сам).
  * @param {object[]} pageContent
  * @param {'main'|'life'} siteId

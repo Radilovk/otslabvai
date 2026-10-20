@@ -239,6 +239,8 @@ export function createSiteAdvisorQuiz(options) {
     }
 
     prevBtn.hidden = index === 0;
+    // Бележката за NutriPlan — само на първата стъпка, после не разсейва.
+    document.querySelector('.lpq-np-note')?.toggleAttribute('hidden', index !== 0);
     const lastStep = activeSteps[activeSteps.length - 1];
     if (index === activeSteps.length - 1) {
       nextBtn.textContent = lastStep?.ctaLabel || 'Виж резултата';
