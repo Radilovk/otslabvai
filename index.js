@@ -4,6 +4,7 @@
 
 import { API_URL } from './config.js';
 import { renderNutriPlanPromo } from './nutriplan-link.js';
+import { renderWithFeatures } from './site-features.js';
 import { splitProductName, cardTaglineText, decodeEntities } from './product-card-text.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import { isOnHomepage, isCatalogOnly, isProductListed, sortByOrder, catalogLink } from './product-visibility.js';
@@ -1007,8 +1008,8 @@ function updateLogoForTheme() {
 function renderMainContent(pageContent) {
     if (!DOM.mainContainer) return;
     
-    let contentHtml = '';
-    pageContent.forEach((component, index) => {
+    const renderComponent = (component, index) => {
+        let contentHtml = '';
         // Skip hidden product categories
         if (component.type === 'product_category' && component.is_hidden) {
             return;
@@ -1051,9 +1052,10 @@ function renderMainContent(pageContent) {
             default:
                 console.warn('Unknown component type:', component.type);
         }
-    });
+        return contentHtml;
+    };
 
-    DOM.mainContainer.innerHTML = contentHtml;
+    DOM.mainContainer.innerHTML = renderWithFeatures(pageContent, 'main', renderComponent);
 }
 
 function renderFooter(settings, footer) {

@@ -1,0 +1,541 @@
+/*
+ * Акцентни секции на началните страници: AI съветник и NutriPlan (site-features.js,
+ * nutriplan-link.js). Mobile first: основата е за телефон, по-широките екрани
+ * надграждат с min-width.
+ */
+
+.sf {
+  --sf-accent: #E4007C;
+  --sf-accent-2: #FF2D9B;
+  --sf-accent-rgb: 228, 0, 124;
+  --sf-ink: #17171f;
+  --sf-muted: #5b6070;
+  --sf-surface: #ffffff;
+  --sf-border: rgba(23, 23, 31, 0.08);
+  --sf-bg: radial-gradient(600px 360px at 100% 0%, rgba(228, 0, 124, 0.08), transparent 65%), linear-gradient(180deg, #ffffff 0%, #fff6fa 100%);
+  --sf-display: 'Poppins', system-ui, sans-serif;
+  --sf-body: 'Montserrat', system-ui, sans-serif;
+  --sf-title-weight: 700;
+  --sf-title-size: clamp(1.75rem, 1.1rem + 3vw, 3rem);
+  --sf-title-tracking: -0.02em;
+  --sf-pad: 3.5rem;
+  font-family: var(--sf-body);
+  color: var(--sf-ink);
+}
+
+.sf--life {
+  --sf-accent: #00a3a8;
+  --sf-accent-2: #00c4c8;
+  --sf-accent-rgb: 0, 163, 168;
+  --sf-ink: #0f2540;
+  --sf-muted: #4a6a85;
+  --sf-border: rgba(15, 37, 64, 0.09);
+  --sf-bg: radial-gradient(600px 380px at 100% 0%, rgba(0, 196, 200, 0.11), transparent 65%), linear-gradient(180deg, #f8fbfc 0%, #eef7f8 100%);
+  --sf-display: 'Cormorant Garamond', Georgia, serif;
+  --sf-body: 'DM Sans', system-ui, sans-serif;
+  --sf-title-weight: 500;
+  --sf-title-size: clamp(2.1rem, 1.3rem + 3.4vw, 3.5rem);
+  --sf-title-tracking: -0.01em;
+}
+
+[data-theme="dark"] .sf {
+  --sf-ink: #f1f5f9;
+  --sf-muted: #a3b0c2;
+  --sf-surface: #171d26;
+  --sf-border: rgba(148, 163, 184, 0.16);
+  --sf-bg: radial-gradient(600px 380px at 100% 0%, rgba(var(--sf-accent-rgb), 0.16), transparent 65%), linear-gradient(180deg, #0f1419 0%, #141a23 100%);
+}
+
+/* ── Общи ── */
+.sf-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.38rem 0.8rem 0.38rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(var(--sf-accent-rgb), 0.09);
+  color: var(--sf-accent);
+  font: 600 0.78rem/1.2 var(--sf-body);
+  letter-spacing: 0.01em;
+}
+
+.sf-title {
+  margin: 0.9rem 0 0.75rem;
+  font-family: var(--sf-display);
+  font-weight: var(--sf-title-weight);
+  font-size: var(--sf-title-size);
+  line-height: 1.1;
+  letter-spacing: var(--sf-title-tracking);
+  color: var(--sf-ink);
+  text-wrap: balance;
+}
+
+.sf-title em {
+  font-style: normal;
+  background: linear-gradient(120deg, var(--sf-accent), var(--sf-accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sf--life .sf-title em { font-style: italic; }
+
+.sf-lead {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--sf-muted);
+}
+
+.sf-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+  margin-top: 1.4rem;
+}
+
+.sf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 54px;
+  padding: 0 1.6rem;
+  border-radius: 999px;
+  font: 600 1rem/1 var(--sf-body);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.sf-btn:active { transform: scale(0.98); }
+.sf-btn svg { transition: transform 0.2s ease; }
+.sf-btn:focus-visible { outline: 3px solid rgba(var(--sf-accent-rgb), 0.45); outline-offset: 3px; }
+
+.sf-btn--primary {
+  background: linear-gradient(135deg, var(--sf-accent) 0%, var(--sf-accent-2) 100%);
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(var(--sf-accent-rgb), 0.3);
+}
+
+.sf-btn--primary:hover,
+.sf-btn--primary:focus { color: #fff; }
+
+.sf-note { font-size: 0.8rem; color: var(--sf-muted); text-align: center; }
+
+/* ── AI съветник (телефон: текст и бутон → примерен резултат → стъпки) ── */
+.sf-advisor {
+  position: relative;
+  padding: var(--sf-pad) 0;
+  background: var(--sf-bg);
+  overflow: hidden;
+}
+
+.sf-advisor__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "visual" "more";
+  gap: 2rem;
+}
+
+.sf-advisor__head { grid-area: head; }
+.sf-advisor__visual { grid-area: visual; }
+.sf-advisor__more { grid-area: more; }
+
+.sf-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0.95rem 0.25rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-radius: 18px;
+  background: var(--sf-surface);
+  border: 1px solid var(--sf-border);
+}
+
+.sf-steps li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.45rem;
+  text-align: center;
+}
+
+.sf-steps li + li { border-left: 1px solid var(--sf-border); }
+
+.sf-steps__n {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(var(--sf-accent-rgb), 0.1);
+  color: var(--sf-accent);
+  font: 700 0.85rem/1 var(--sf-body);
+}
+
+.sf-steps strong { display: block; font-size: 0.86rem; color: var(--sf-ink); }
+.sf-steps small { display: block; margin-top: 0.15rem; font-size: 0.72rem; line-height: 1.35; color: var(--sf-muted); }
+
+.sf-trust {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.sf-trust li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: var(--sf-muted);
+}
+
+.sf-trust svg { flex: none; color: var(--sf-accent); }
+
+/* Примерният резултат */
+.sf-advisor__visual {
+  position: relative;
+  display: block;
+  padding: 2.4rem 0 2.2rem;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sf-advisor__visual::before {
+  content: '';
+  position: absolute;
+  inset: 12% 6% 14%;
+  border-radius: 32px;
+  background: linear-gradient(140deg, rgba(var(--sf-accent-rgb), 0.16), rgba(var(--sf-accent-rgb), 0.03));
+  transform: rotate(-3deg);
+}
+
+.sf-mock {
+  position: relative;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 1rem;
+  border-radius: 22px;
+  background: var(--sf-surface);
+  border: 1px solid var(--sf-border);
+  box-shadow: 0 24px 48px -20px rgba(15, 23, 42, 0.28), 0 8px 16px -10px rgba(15, 23, 42, 0.12);
+}
+
+.sf-mock__head { display: flex; align-items: center; gap: 0.65rem; }
+
+.sf-mock__ai {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--sf-accent), var(--sf-accent-2));
+  color: #fff;
+}
+
+.sf-mock__title { flex: 1; min-width: 0; font: 700 0.95rem/1.25 var(--sf-body); color: var(--sf-ink); }
+.sf-mock__title small { display: block; font-weight: 500; font-size: 0.72rem; color: var(--sf-muted); }
+
+.sf-mock__badge {
+  flex: none;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #0f9a6c;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.sf-mock__tiers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  margin: 0.85rem 0;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgba(var(--sf-accent-rgb), 0.06);
+}
+
+.sf-mock__tiers span {
+  padding: 0.45rem 0;
+  border-radius: 9px;
+  text-align: center;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--sf-muted);
+}
+
+.sf-mock__tiers .is-active {
+  background: var(--sf-surface);
+  color: var(--sf-accent);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.sf-mock__rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+
+.sf-mock__rows li {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 13px;
+  background: rgba(var(--sf-accent-rgb), 0.04);
+  border: 1px solid var(--sf-border);
+}
+
+.sf-mock__when { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.74rem; font-weight: 600; color: var(--sf-accent); }
+.sf-mock__what strong { display: block; font-size: 0.86rem; color: var(--sf-ink); }
+.sf-mock__what small { display: block; font-size: 0.72rem; color: var(--sf-muted); }
+
+.sf-mock__foot {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed var(--sf-border);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f9a6c;
+}
+
+.sf-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.42rem 0.7rem;
+  border-radius: 999px;
+  background: var(--sf-surface);
+  border: 1px solid var(--sf-border);
+  box-shadow: 0 10px 22px -10px rgba(15, 23, 42, 0.28);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--sf-ink);
+  white-space: nowrap;
+  animation: sf-float 6s ease-in-out infinite;
+}
+
+.sf-chip svg { color: var(--sf-accent); }
+.sf-chip--1 { top: 0.4rem; left: 0.25rem; }
+.sf-chip--2 { bottom: 1.6rem; right: 0.25rem; animation-delay: -3s; }
+
+.sf-mock__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  text-align: center;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sf-muted);
+  opacity: 0.8;
+}
+
+@keyframes sf-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* ── NutriPlan (телефон: текст → екран на плана → предимства и бутон) ── */
+.sf-np {
+  --np-muted: rgba(236, 253, 248, 0.76);
+  --np-mint: #5eead4;
+  position: relative;
+  padding: var(--sf-pad) 0;
+  background:
+    radial-gradient(520px 360px at 100% 0%, rgba(94, 234, 212, 0.2), transparent 62%),
+    radial-gradient(480px 340px at 0% 100%, rgba(13, 148, 136, 0.38), transparent 62%),
+    linear-gradient(160deg, #062b2a 0%, #0b3f3c 55%, #0d4d48 100%);
+  color: #ecfdf8;
+  overflow: hidden;
+}
+
+.sf-np .sf-title { color: #fff; }
+.sf-np .sf-lead,
+.sf-np .sf-note { color: var(--np-muted); }
+
+.sf-np__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "phone" "more";
+  gap: 2rem;
+}
+
+.sf-np__head { grid-area: head; }
+.sf-np__phone { grid-area: phone; }
+.sf-np__more { grid-area: more; }
+
+.sf-eyebrow--np { background: rgba(94, 234, 212, 0.12); color: var(--np-mint); padding-left: 0.35rem; }
+
+.sf-np__logo {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: var(--np-mint);
+  color: #063230;
+  font: 800 0.75rem/1 var(--sf-body);
+}
+
+.sf-np__features { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.85rem; }
+.sf-np__features li { display: flex; gap: 0.7rem; align-items: flex-start; }
+.sf-np__features strong { display: block; font-size: 0.95rem; color: #fff; }
+.sf-np__features small { display: block; margin-top: 0.1rem; font-size: 0.82rem; color: var(--np-muted); }
+
+.sf-np__ic {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(94, 234, 212, 0.16);
+  color: var(--np-mint);
+}
+
+.sf-btn--np { background: #fff; color: #0b4f4a; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28); }
+.sf-btn--np:hover,
+.sf-btn--np:focus { background: #f0fdfa; color: #0b4f4a; }
+
+.sf-np__phone { position: relative; display: flex; justify-content: center; }
+.sf-np__phone::before {
+  content: '';
+  position: absolute;
+  width: 90%;
+  aspect-ratio: 1;
+  top: 6%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(94, 234, 212, 0.32), transparent 65%);
+  filter: blur(8px);
+}
+
+.sf-np__img { position: relative; max-width: 100%; border-radius: 22px; }
+
+.sf-phone {
+  position: relative;
+  width: min(256px, 72vw);
+  padding: 9px;
+  border-radius: 40px;
+  background: #0a0f14;
+  box-shadow: 0 30px 60px -18px rgba(0, 0, 0, 0.6), inset 0 0 0 1.5px rgba(255, 255, 255, 0.08);
+}
+
+.sf-phone__notch {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  width: 78px;
+  height: 20px;
+  border-radius: 999px;
+  background: #0a0f14;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.sf-phone__screen {
+  border-radius: 31px;
+  padding: 42px 14px 16px;
+  background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 40%);
+  color: #0f2f2e;
+  font-family: var(--sf-body);
+}
+
+.sf-phone__top { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; font-size: 1rem; }
+.sf-phone__day { font-size: 0.68rem; font-weight: 600; color: #0d9488; }
+
+.sf-phone__ring { position: relative; width: 120px; margin: 0.8rem auto 0.7rem; }
+.sf-phone__ring svg { display: block; width: 100%; transform: rotate(-90deg); }
+.sf-ring-track { fill: none; stroke: rgba(13, 148, 136, 0.12); stroke-width: 10; }
+.sf-ring-val { fill: none; stroke: #0d9488; stroke-width: 10; stroke-linecap: round; }
+.sf-phone__ring > span { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.sf-phone__ring strong { font-size: 1.3rem; line-height: 1; }
+.sf-phone__ring small { margin-top: 0.2rem; font-size: 0.58rem; color: #4b6b69; }
+
+.sf-phone__meals { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+
+.sf-phone__meals li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border-radius: 13px;
+  background: #fff;
+  border: 1px solid rgba(13, 148, 136, 0.12);
+}
+
+.sf-phone__meals li.is-done { background: #ecfdf5; }
+.sf-phone__time { font-size: 0.62rem; font-weight: 700; color: #0d9488; }
+.sf-phone__meals strong { display: block; font-size: 0.72rem; }
+.sf-phone__meals small { display: block; font-size: 0.6rem; color: #4b6b69; line-height: 1.3; }
+.sf-phone__tick { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #10b981; color: #fff; }
+
+.sf-phone__chat { display: grid; gap: 5px; margin-top: 9px; }
+.sf-bubble { max-width: 88%; padding: 6px 9px; border-radius: 13px 13px 13px 4px; background: #e6f6f4; font-size: 0.62rem; line-height: 1.35; }
+.sf-bubble--me { justify-self: end; border-radius: 13px 13px 4px 13px; background: #0d9488; color: #fff; }
+
+/* ── Таблет ── */
+@media (min-width: 600px) {
+  .sf { --sf-pad: 4.5rem; }
+  .sf-actions { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; }
+  .sf-note { text-align: left; }
+  .sf-steps { padding: 1.1rem 0.5rem; }
+  .sf-steps strong { font-size: 0.95rem; }
+  .sf-steps small { font-size: 0.78rem; }
+  .sf-trust { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; }
+  .sf-np__features { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.5rem; }
+  .sf-chip--1 { left: 1rem; }
+  .sf-chip--2 { right: 1rem; }
+  .sf-phone { width: 290px; transform: rotate(3deg); }
+}
+
+/* ── Десктоп: текстът вляво, визията вдясно ── */
+@media (min-width: 960px) {
+  .sf { --sf-pad: 6.5rem; }
+  .sf-lead { font-size: 1.06rem; max-width: 34rem; }
+
+  .sf-advisor__grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    grid-template-areas: "head visual" "more visual";
+    column-gap: 4.5rem;
+    row-gap: 2rem;
+    align-items: center;
+  }
+
+  .sf-advisor__head { align-self: end; }
+  .sf-advisor__more { align-self: start; }
+  .sf-advisor__visual { padding: 2.5rem 1rem 2.5rem; }
+  .sf-mock { max-width: 420px; padding: 1.25rem; }
+  .sf-mock:hover { transform: translateY(-4px); }
+  .sf-mock { transition: transform 0.35s ease; }
+
+  .sf-np__inner {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    grid-template-areas: "head phone" "more phone";
+    column-gap: 4.5rem;
+    row-gap: 2rem;
+    align-items: center;
+  }
+
+  .sf-np__head { align-self: end; }
+  .sf-np__more { align-self: start; }
+  .sf-btn--primary:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(var(--sf-accent-rgb), 0.38); }
+  .sf-btn--np:hover { transform: translateY(-2px); }
+  .sf-btn:hover svg { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-chip { animation: none; }
+  .sf-btn, .sf-mock, .sf-btn svg { transition: none; }
+}

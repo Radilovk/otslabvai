@@ -4,6 +4,7 @@
 
 import { API_URL } from './config.js';
 import { renderNutriPlanPromo } from './nutriplan-link.js';
+import { renderWithFeatures } from './site-features.js';
 import { splitProductName, cardTaglineText, decodeEntities } from './product-card-text.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import {
@@ -1189,8 +1190,8 @@ function renderMainContent(pageContent) {
     // Пренаписваме блокираните продуктови изображения (fitness1 hotlink protection)
     rewriteAllProductImages(pageContent);
 
-    let contentHtml = '';
-    pageContent.forEach((component, index) => {
+    const renderComponent = (component, index) => {
+        let contentHtml = '';
         // Filter out the individual analysis info card (containing analyzis.png image)
         // Note: The filename 'analyzis.png' is intentionally kept as-is to match the existing asset
         if (component.type === 'info_card' && component.image && component.image.includes('analyzis.png')) {
@@ -1244,9 +1245,10 @@ function renderMainContent(pageContent) {
             default:
                 console.warn('Unknown component type:', component.type);
         }
-    });
+        return contentHtml;
+    };
 
-    DOM.mainContainer.innerHTML = contentHtml;
+    DOM.mainContainer.innerHTML = renderWithFeatures(pageContent, 'life', renderComponent);
 }
 
 function renderFooter(settings, footer) {

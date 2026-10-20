@@ -72,13 +72,21 @@ async function createLink(siteId, result) {
   return fallback;
 }
 
-/** Блок за страницата с резултата. */
+/** Блок за страницата с резултата — предложението за индивидуален хранителен план. */
 export function renderNutriPlanCta() {
+  const check = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+  const arrow = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
   return `
-    <section class="lpr-schedule lpr-nutriplan" aria-label="Персонален хранителен план">
-      <h3>Добавките работят най-добре с правилното хранене</h3>
-      <p>NutriPlan съставя персонален хранителен план по вашите цели и здравословно състояние. Отговорите от този тест ще попълнят въпросника — няма да ги въвеждате отново.</p>
-      <button type="button" class="lpq-btn lpq-btn-primary" data-action="nutriplan">Направи ми хранителен план</button>
+    <section class="lpr-nutriplan" aria-labelledby="lpr-np-title">
+      <span class="lpr-np-eyebrow"><span class="lpr-np-logo">N</span>Следваща стъпка · NutriPlan</span>
+      <h3 id="lpr-np-title">Индивидуален хранителен план към протокола</h3>
+      <p>Добавките дават най-много, когато храненето е наред. NutriPlan съставя меню по вашите цели и здраве, а отговорите от този тест се пренасят автоматично.</p>
+      <ul class="lpr-np-list">
+        <li>${check}Без повторни въпроси за пол, ръст, тегло, активност и режим</li>
+        <li>${check}Седмично меню и замени за всяко ястие</li>
+        <li>${check}Асистент, който отговаря на въпроси за храната</li>
+      </ul>
+      <button type="button" class="lpr-np-btn" data-action="nutriplan">Направи ми хранителен план${arrow}</button>
     </section>`;
 }
 
@@ -87,43 +95,91 @@ export function bindNutriPlanCta(root, siteId, result) {
   if (!btn) return;
   btn.addEventListener('click', async () => {
     btn.disabled = true;
-    const label = btn.textContent;
+    const label = btn.innerHTML;
     btn.textContent = 'Подготвяме…';
     const url = await createLink(siteId, result);
     window.location.href = url;
-    setTimeout(() => { btn.disabled = false; btn.textContent = label; }, 4000);
+    setTimeout(() => { btn.disabled = false; btn.innerHTML = label; }, 4000);
   });
 }
 
 const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 export const NUTRIPLAN_PROMO_DEFAULTS = {
-  title: 'Персонален хранителен план — NutriPlan',
-  content: 'Хранителен режим по вашите цели, здраве и навици: седмично меню, замени, списък за пазаруване и асистент, който отговаря денонощно. Добавките работят най-добре с правилното хранене.',
-  image: `${NUTRIPLAN_SITE}/icon-512x512.png`,
+  eyebrow: 'NutriPlan · персонален хранителен план',
+  title: 'Хранене, което работи заедно с добавките',
+  content: 'Добавките дават най-много, когато храненето е наред. NutriPlan съставя меню по вашите цели, здраве и вкус — и го променя заедно с вас.',
   button: { text: 'Създай моя план' },
 };
 
+const NP_FEATURES = [
+  ['Седмично меню', 'по цели, здраве и предпочитания'],
+  ['Замени за всяко ястие', 'без да излизате от плана'],
+  ['Асистент 24/7', 'отговаря на въпроси за храната'],
+  ['Седмичен преглед', 'планът се коригира по напредъка'],
+];
+
+const NP_CHECK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+const NP_ARROW = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+
+/** Телефонът с примерен ден от плана (илюстрация, не реални данни). */
+function nutriPlanPhone() {
+  const meals = [
+    ['08:00', 'Закуска', 'Овесена каша с боровинки и орехи'],
+    ['13:00', 'Обяд', 'Пиле на скара, киноа и зеленчуци'],
+    ['19:00', 'Вечеря', 'Сьомга с печени тиквички'],
+  ];
+  return `
+      <div class="sf-np__phone" aria-hidden="true">
+        <div class="sf-phone">
+          <div class="sf-phone__notch"></div>
+          <div class="sf-phone__screen">
+            <div class="sf-phone__top"><span>Днес</span><span class="sf-phone__day">Ден 3 от 7</span></div>
+            <div class="sf-phone__ring">
+              <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" class="sf-ring-track"/><circle cx="60" cy="60" r="50" class="sf-ring-val" pathLength="100" stroke-dasharray="64 100"/></svg>
+              <span><strong>64%</strong><small>от дневния план</small></span>
+            </div>
+            <ul class="sf-phone__meals">
+              ${meals.map(([t, n, d], i) => `<li class="${i === 0 ? 'is-done' : ''}"><span class="sf-phone__time">${t}</span><span><strong>${n}</strong><small>${d}</small></span>${i === 0 ? `<span class="sf-phone__tick">${NP_CHECK}</span>` : ''}</li>`).join('')}
+            </ul>
+            <div class="sf-phone__chat">
+              <span class="sf-bubble sf-bubble--me">Мога ли да заменя сьомгата?</span>
+              <span class="sf-bubble">Да — пъстърва или скумрия, същото количество.</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+}
+
 /**
- * Рекламен блок за страниците на сайтовете (тип компонент „nutriplan_cta“).
- * Празните полета взимат стойности по подразбиране; линкът носи utm на сайта.
+ * Лентата на NutriPlan за страниците на сайтовете (и компонентът „nutriplan_cta“
+ * от админа). Празните полета взимат стойности по подразбиране; линкът носи utm на сайта.
  */
 export function renderNutriPlanPromo(component, siteId) {
   const c = component || {};
   const d = NUTRIPLAN_PROMO_DEFAULTS;
   const url = c.button?.url || nutriPlanUrl(siteId, 'page');
-  const align = c.options?.image_align === 'right' ? 'right' : 'left';
+  const visual = c.image
+    ? `<div class="sf-np__phone"><img class="sf-np__img" src="${esc(c.image)}" alt="NutriPlan" loading="lazy"></div>`
+    : nutriPlanPhone();
   return `
-    <section ${c.id ? `id="${esc(c.id)}"` : ''} class="info-card-section nutriplan-promo fade-in-up image-align-${align}">
-        <div class="container">
-            <div class="info-card-image">
-                <img src="${esc(c.image || d.image)}" alt="NutriPlan" loading="lazy">
-            </div>
-            <div class="info-card-content">
-                <h2>${esc(c.title || d.title)}</h2>
-                <p>${esc(c.content || d.content)}</p>
-                <a href="${esc(url)}" class="btn btn-hero-primary" target="_blank" rel="noopener">${esc(c.button?.text || d.button.text)}</a>
-            </div>
+  <section ${c.id ? `id="${esc(c.id)}"` : ''} class="sf sf--${esc(siteId)} sf-np nutriplan-promo" aria-labelledby="sf-np-title">
+    <div class="container sf-np__inner">
+      <div class="sf-np__head">
+        <span class="sf-eyebrow sf-eyebrow--np"><span class="sf-np__logo">N</span>${esc(d.eyebrow)}</span>
+        <h2 class="sf-title" id="sf-np-title">${esc(c.title || d.title)}</h2>
+        <p class="sf-lead">${esc(c.content || d.content)}</p>
+      </div>
+      ${visual}
+      <div class="sf-np__more">
+        <ul class="sf-np__features">
+          ${NP_FEATURES.map(([t, s]) => `<li><span class="sf-np__ic">${NP_CHECK}</span><span><strong>${t}</strong><small>${s}</small></span></li>`).join('')}
+        </ul>
+        <div class="sf-actions">
+          <a class="sf-btn sf-btn--np" href="${esc(url)}" target="_blank" rel="noopener">${esc(c.button?.text || d.button.text)}${NP_ARROW}</a>
+          <span class="sf-note">biocode.website · на телефон и в браузър</span>
         </div>
-    </section>`;
+      </div>
+    </div>
+  </section>`;
 }
