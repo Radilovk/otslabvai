@@ -858,6 +858,7 @@ function renderPageContent() {
         hero_banner: 'Hero Banner',
         product_category: 'Продуктова Категория',
         info_card: 'Информационен Кард',
+        nutriplan_cta: 'Реклама: NutriPlan',
         benefits: 'Ползи',
         timeline: 'Времева линия',
         ingredients: 'Съставки',
@@ -1249,6 +1250,7 @@ function populateAddComponentMenu() {
     const componentTemplates = {
         'hero_banner': { label: 'Hero Banner', templateId: 'form-hero-banner-template' },
         'info_card': { label: 'Инфо Кард', templateId: 'form-info-card-template' },
+        'nutriplan_cta': { label: 'Реклама: NutriPlan', templateId: 'form-nutriplan-cta-template' },
         'product_category': { label: 'Продуктова Категория', templateId: 'form-product-category-template' },
         'benefits': { label: 'Ползи', templateId: 'form-benefits-template' },
         'timeline': { label: 'Времева линия', templateId: 'form-timeline-template' },
@@ -2579,7 +2581,7 @@ function handleAction(action, target, id) {
                     const newComponent = serializeForm(form);
                     newComponent.type = componentType;
                     newComponent.component_id = `comp_${Date.now()}`;
-                    if(!newComponent.title) newComponent.title = `Нова ${componentType.replace(/_/g, ' ')}`;
+                    if(!newComponent.title && componentType !== 'nutriplan_cta') newComponent.title = `Нова ${componentType.replace(/_/g, ' ')}`;
                     appData.page_content.push(newComponent);
                     DOM.addComponentDropdown.classList.remove('show');
                     return true;

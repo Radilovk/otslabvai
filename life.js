@@ -3,6 +3,7 @@
 // =======================================================
 
 import { API_URL } from './config.js';
+import { renderNutriPlanPromo } from './nutriplan-link.js';
 import { splitProductName, cardTaglineText, decodeEntities } from './product-card-text.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import {
@@ -1212,6 +1213,9 @@ function renderMainContent(pageContent) {
                 break;
             case 'product_category':
                 contentHtml += generateProductCategoryHTML(component, index);
+                break;
+            case 'nutriplan_cta':
+                contentHtml += renderNutriPlanPromo(component, 'life');
                 break;
             case 'info_card':
                 contentHtml += generateInfoCardHTML(component);

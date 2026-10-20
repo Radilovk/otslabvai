@@ -948,3 +948,7 @@ body.lpq-body {
 @media (max-width: 480px) {
   .lpr-empty .lpq-btn { width: 100%; }
 }
+
+/* Връзка към NutriPlan след резултата */
+.lpr-nutriplan p { margin: 0 0 1rem; line-height: 1.55; color: inherit; opacity: .85; }
+.lpr-nutriplan .lpq-btn { width: 100%; max-width: 360px; }

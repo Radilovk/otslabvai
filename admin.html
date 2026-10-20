@@ -1428,6 +1428,46 @@
     </template>
 
     <!-- Форма: Информационен кард -->
+    <template id="form-nutriplan-cta-template">
+        <form class="modal-form">
+            <p class="form-hint">Блок към NutriPlan (biocode.website). Празно поле = текстът по подразбиране; линкът носи utm на сайта, за да се вижда в таблото за насочвания на NutriPlan.</p>
+            <div class="form-group">
+                <label for="np_title">Заглавие</label>
+                <input type="text" id="np_title" data-field="title" placeholder="Персонален хранителен план — NutriPlan">
+            </div>
+            <div class="form-group">
+                <label for="np_image">URL на изображение</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="np_image" data-field="image" style="flex: 1;" placeholder="https://biocode.website/icon-512x512.png">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="image">
+                        Качи
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="np_content">Текст</label>
+                <textarea id="np_content" data-field="content" rows="4"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="np_button_text">Текст на бутона</label>
+                    <input type="text" id="np_button_text" data-field="button.text" placeholder="Създай моя план">
+                </div>
+                <div class="form-group">
+                    <label for="np_button_url">URL (празно = NutriPlan с utm)</label>
+                    <input type="text" id="np_button_url" data-field="button.url">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="np_image_align">Подравняване на картинката</label>
+                <select id="np_image_align" data-field="options.image_align">
+                    <option value="left">Ляво</option>
+                    <option value="right">Дясно</option>
+                </select>
+            </div>
+        </form>
+    </template>
+
     <template id="form-info-card-template">
         <form class="modal-form">
             <div class="form-group">

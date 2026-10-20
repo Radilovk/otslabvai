@@ -2,6 +2,7 @@ import { API_URL } from './config.js';
 import { ProtocolAnalysisAnimator } from './life-protocol-analysis.js';
 import { persistProtocolResult } from './life-protocol-store.js';
 import { createSiteAdvisorQuiz } from './site-advisor-quiz-ui.js';
+import { rememberQuizAnswers } from './nutriplan-link.js';
 
 createSiteAdvisorQuiz({
   siteId: 'life',
@@ -10,7 +11,8 @@ createSiteAdvisorQuiz({
   leadStorageKey: 'lifeProtocolLead',
   resultStorageKey: 'lifeProtocolResult',
   AnimatorClass: ProtocolAnalysisAnimator,
-  onBeforeSubmit(data) {
+  onBeforeSubmit(data, payload) {
     persistProtocolResult(data);
+    rememberQuizAnswers('life', payload);
   },
 });

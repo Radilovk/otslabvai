@@ -1,4 +1,5 @@
 import { formatPriceEur, buildCumulativeBenefitTiers } from './protocol-quiz-engine.js';
+import { renderNutriPlanCta, bindNutriPlanCta } from './nutriplan-link.js';
 import { persistAdvisorResult } from './main-advisor-store.js';
 import { resolveImageUrl } from './life-img.js';
 
@@ -229,11 +230,13 @@ function renderResult(data) {
     </div>
     <section class="lpr-schedule" id="lpr-schedule-panel" aria-live="polite"></section>
     ${(data.lifestyle_tips || []).length ? `<section class="lpr-schedule lpr-lifestyle-tips"><h3>Съвети за начин на живот</h3><ul class="lpr-schedule-list">${data.lifestyle_tips.map((t) => `<li>${escapeHtml(t)}</li>`).join('')}</ul></section>` : ''}
+    ${renderNutriPlanCta()}
   `;
 
   disclaimerEl.textContent = data.disclaimer || 'Информацията не замества лекарска консултация.';
   bindTierToggles();
   bindTierSelection(tiers, data.protocol_schedule);
+  bindNutriPlanCta(container, 'main', data);
 
   container.querySelectorAll('[data-action="add-tier"]').forEach((btn) => {
     btn.addEventListener('click', (e) => { e.stopPropagation(); addTierToCart(tiers[btn.dataset.tier], btn); });
