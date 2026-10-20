@@ -6489,7 +6489,7 @@ async function fetchMainAdvisorSettings() {
         if (narrEl && data.narrator_prompt) narrEl.value = data.narrator_prompt;
     } catch (e) {
         console.error('Main advisor settings:', e);
-        showNotification('Грешка при зареждане на настройките за AI консултант.', 'error');
+        showNotification('Грешка при зареждане на настройките за персоналната програма.', 'error');
     }
 }
 
@@ -6504,7 +6504,7 @@ async function saveMainAdvisorSettingsAdmin() {
             body: JSON.stringify({ enabled, prompt, narrator_prompt }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        showNotification('Настройките за AI консултант са запазени.', 'success');
+        showNotification('Настройките за персоналната програма са запазени.', 'success');
     } catch (e) {
         showNotification('Грешка при запазване на настройките.', 'error');
     }
