@@ -6943,3 +6943,16 @@ async function init() {
 
 // Старт на приложението
 init();
+
+
+// Промптовете: празно поле = текущият промпт от кода (с всички подобрения).
+// Бутонът изчиства полето; при „Запази“ се пази само собствен (различен) текст.
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest?.('[data-reset-prompt]');
+    if (!btn) return;
+    const el = document.getElementById(btn.dataset.resetPrompt);
+    if (!el) return;
+    if (!confirm('Да се ползва подразбиращият се промпт от кода? Собственият текст в полето ще бъде изчистен (запазете след това).')) return;
+    el.value = '';
+    el.placeholder = 'Подразбиращият се промпт от кода — запазете, за да важи.';
+});

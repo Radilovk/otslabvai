@@ -8,12 +8,13 @@ export {
   resolveAdvisorCompositionStrategy,
   buildAdvisorClinicalGuardrails,
 } from './site-advisor-shared.js';
-import { buildAdvisorClinicalGuardrails } from './site-advisor-shared.js';
+import { buildAdvisorClinicalGuardrails, ADVISOR_AI_RULES, stripProtocolDataMarker } from './site-advisor-shared.js';
 
 function withClinicalGuardrails(template, profile) {
   const guardrails = buildAdvisorClinicalGuardrails(profile, 'portfolio');
-  if (!guardrails) return template;
-  return `${template}\n\nКЛИНИЧНИ GUARDRAILS ЗА ТОЗИ КЛИЕНТ (приоритет над маркетинг):\n${guardrails}`;
+  const base = `${stripProtocolDataMarker(template)}\n\n${ADVISOR_AI_RULES}`;
+  if (!guardrails) return base;
+  return `${base}\n\nКЛИНИЧНИ GUARDRAILS ЗА ТОЗИ КЛИЕНТ (приоритет над маркетинг):\n${guardrails}`;
 }
 
 export function getDefaultPortfolioAdvisorPrompt() {
@@ -25,34 +26,23 @@ export function getDefaultPortfolioAdvisorPrompt() {
 - Два продукта със stimulant:true не влизат в едно ниво; не повтаряй един продукт в ниво.
 - Ако selection_mode е "single" — всеки tier съдържа ТОЧНО 1 продукт (различни ценови нива).
 - Пакетите са вложени: optimal = basic + продукти; premium = optimal + продукти. Ползите са кумулативни.
-- dose = по intake/serving от картата; ако липсва — „Според етикета“. Не измисляй дози.
+- Дозата и часът на прием се попълват от системата по етикета — не ги пиши.
 Кратки why_for_you (макс. 12 думи).
 
 Върни САМО JSON:
-{"analysis":"2 изречения","recommended_tier":"optimal","tiers":{"basic":{"name":"...","tagline":"...","benefits":["..."],"strategy":"...","products":[{"product_id":"...","role":"core","dose":"...","timing":"сутрин","why_for_you":"..."}]},"optimal":{...},"premium":{...}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."],"disclaimer":"Информацията не замества лекарска консултация."}`;
+{"analysis":"до 2 изречения","recommended_tier":"basic|optimal|premium","tiers":{"basic":{"name":"...","tagline":"...","benefits":["..."],"strategy":"...","products":[{"product_id":"...","role":"core","why_for_you":"..."}]},"optimal":{...},"premium":{...}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."]}`;
 }
 
 export function getDefaultPortfolioNarratorPrompt() {
-  return `Copywriter и клиничен ревизор за персонални препоръки за хранителни добавки.
-Продуктите в пакета са ФИКСИРАНИ — НЕ добавяй, махай или сменяй product_id.
-
-Прочети profile и clinical_guardrails. Ако някой фиксиран продукт противоречи на профила, не го представяй като идеален избор:
-- why_for_you: честно, с умерен тон (напр. „подкрепя целта, но при вашите ограничения консултирайте лекар").
-- disclaimer: спомени нужда от лекарска консултация за конкретното ограничение.
-- lifestyle_tips: практичен съвет (храна, сън, движение), не само добавки.
+  return `Copywriter за персонални препоръки за хранителни добавки.
+Продуктите в пакета са ФИКСИРАНИ и вече проверени за безопасност спрямо профила — НЕ добавяй, махай или сменяй product_id.
+Всеки продукт има карта: role (роля), actives/category, stimulant, days.
+Обясни ролята на всеки продукт като допълваща другите и свързана с профила (цел, симптоми, хранене).
+lifestyle_tips: практични съвети за храна, сън и движение — не за добавки.
+Пакетите са вложени: optimal = basic + нови продукти; premium = optimal + нови. Ползите са кумулативни, без повторение и без синоними.
 
 Върни САМО JSON:
-{"analysis":"2 изречения","recommended_tier":"optimal","tier_copy":{"basic":{"benefits":["..."],"strategy":"кратко"},"optimal":{"benefits":["..."],"strategy":"..."},"premium":{"benefits":["..."],"strategy":"..."}},"product_copy":{"PRODUCT_ID":{"why_for_you":"макс 12 думи","dose":"...","timing":"сутрин|вечер"}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."],"disclaimer":"Информацията не замества лекарска консултация."}
-
-ВАЖНО за dose:
-- Пиши САМО дозата от етикета на конкретния продукт (напр. „1 капсула дневно").
-- НИКОГА не увеличавай доза защото има друг продукт в пакета.
-- Ако не знаеш точната доза — пиши „Според етикета".
-
-Пакетите са вложени: optimal = basic + нови продукти; premium = optimal + нови. Ползите са кумулативни, без повторение.
-Всеки продукт има карта: role (роля), actives/category, intake/serving (етикет), stimulant, days.
-Обясни ролята на всеки продукт като допълващ другите.
-БЕЗ синонимно повторение.`;
+{"analysis":"до 2 изречения","recommended_tier":"basic|optimal|premium","tier_copy":{"basic":{"benefits":["..."],"strategy":"кратко"},"optimal":{"benefits":["..."],"strategy":"..."},"premium":{"benefits":["..."],"strategy":"..."}},"product_copy":{"PRODUCT_ID":{"why_for_you":"до 12 думи"}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."]}`;
 }
 
 export function buildPortfolioNarratorPayload(profile, composed, eligibleProducts) {
@@ -91,9 +81,6 @@ export function buildPortfolioNarratorMessages(template, profile, composed, elig
     `${template}${singleModeNote}\n\nВАЖНО: Без chain-of-thought. Само финален JSON. Не променяй product_id.`,
     profile,
   );
-  if (template.includes('{{protocolData}}')) {
-    return [{ role: 'user', content: template.replace('{{protocolData}}', () => dataJson) }];
-  }
   return [
     { role: 'system', content: system },
     { role: 'user', content: dataJson },
@@ -110,11 +97,8 @@ export function buildPortfolioAdvisorMessages(template, payload, profile = null)
     must_include: payload.constraints?.must_include_keywords || [],
     tier_product_counts: payload.constraints?.tier_product_counts,
   });
-  const base = profile ? withClinicalGuardrails(template, profile) : template;
+  const base = withClinicalGuardrails(template, profile || {});
   const system = `${base}\n\nВАЖНО: Без chain-of-thought. Само финален JSON.`;
-  if (template.includes('{{protocolData}}')) {
-    return [{ role: 'user', content: template.replace('{{protocolData}}', () => dataJson) }];
-  }
   return [
     { role: 'system', content: system },
     { role: 'user', content: dataJson },

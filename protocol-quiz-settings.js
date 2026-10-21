@@ -57,11 +57,18 @@ export async function loadMainAdvisorSettings(env) {
   }
 }
 
+
+/** Пази се само промпт, различен от подразбиращия се; иначе празно → винаги текущият от кода. */
+function customOnly(value, def) {
+  const v = String(value || '').trim();
+  return v && v !== String(def || '').trim() ? v : '';
+}
+
 export async function saveLifeProtocolSettings(env, settings, ctx) {
   const toSave = {
     enabled: settings.enabled !== false,
-    prompt: String(settings.prompt || getDefaultSiteAdvisorPrompt('life')),
-    narrator_prompt: String(settings.narrator_prompt || getDefaultSiteNarratorPrompt('life')),
+    prompt: customOnly(settings.prompt, getDefaultSiteAdvisorPrompt('life')),
+    narrator_prompt: customOnly(settings.narrator_prompt, getDefaultSiteNarratorPrompt('life')),
   };
   const put = env.PAGE_CONTENT.put('life_protocol_settings', JSON.stringify(toSave, null, 2));
   if (ctx?.waitUntil) ctx.waitUntil(put);
@@ -72,8 +79,8 @@ export async function saveLifeProtocolSettings(env, settings, ctx) {
 export async function saveMainAdvisorSettings(env, settings, ctx) {
   const toSave = {
     enabled: settings.enabled !== false,
-    prompt: String(settings.prompt || getDefaultSiteAdvisorPrompt('main')),
-    narrator_prompt: String(settings.narrator_prompt || getDefaultSiteNarratorPrompt('main')),
+    prompt: customOnly(settings.prompt, getDefaultSiteAdvisorPrompt('main')),
+    narrator_prompt: customOnly(settings.narrator_prompt, getDefaultSiteNarratorPrompt('main')),
   };
   const put = env.PAGE_CONTENT.put('main_advisor_settings', JSON.stringify(toSave, null, 2));
   if (ctx?.waitUntil) ctx.waitUntil(put);

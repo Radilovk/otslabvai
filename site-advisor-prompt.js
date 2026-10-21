@@ -2,7 +2,7 @@
  * AI prompts за site-specific консултанти (life, main).
  */
 
-import { withClinicalGuardrails } from './site-advisor-shared.js';
+import { withClinicalGuardrails, stripProtocolDataMarker } from './site-advisor-shared.js';
 import { buildProductCard, sanitizeProfileForAI } from './advisor-ai.js';
 
 const SITE_PROMPT_CONTEXT = {
@@ -29,31 +29,26 @@ export function getDefaultSiteAdvisorPrompt(siteId = 'life') {
   и то само с product_id от products (алтернативите са със същата роля).
 - Не добавяй продукти извън products. Не повтаряй един и същ продукт в ниво.
 - Два продукта със stimulant:true не влизат в едно ниво.
-- dose = по intake/serving от картата; ако липсва — „Според етикета“. Не измисляй дози.
+- Дозата и часът на прием се попълват от системата по етикета — не ги пиши.
 ${ctx.tierLine}
 ${ctx.benefitLine}
 Кратки why_for_you (макс. 12 думи), свързани с профила.
 
 Върни САМО JSON:
-{"analysis":"2 изречения","recommended_tier":"optimal","tiers":{"basic":{"name":"...","tagline":"...","benefits":["..."],"strategy":"...","products":[{"product_id":"...","role":"core","dose":"...","timing":"сутрин","why_for_you":"..."}]},"optimal":{...},"premium":{...}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."],"disclaimer":"Информацията не замества лекарска консултация."}`;
+{"analysis":"до 2 изречения","recommended_tier":"basic|optimal|premium","tiers":{"basic":{"name":"...","tagline":"...","benefits":["..."],"strategy":"...","products":[{"product_id":"...","role":"core","why_for_you":"..."}]},"optimal":{...},"premium":{...}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."]}`;
 }
 
 export function getDefaultSiteNarratorPrompt(siteId = 'life') {
   const ctx = SITE_PROMPT_CONTEXT[siteId] || SITE_PROMPT_CONTEXT.life;
-  return `Copywriter и клиничен ревизор за ${siteId === 'main' ? 'програми за отслабване' : 'anti-aging протоколи'}.
-Продуктите в пакетите са ФИКСИРАНИ от алгоритъма — НЕ добавяй, махай или сменяй product_id.
-Всеки продукт има карта: role (роля в пакета), actives/category, intake/serving (етикет), stimulant, days.
-
-Ако фиксиран продукт противоречи на профила:
-- why_for_you: честно, с умерен тон
-- disclaimer: спомени нужда от лекарска консултация
-
+  return `Copywriter за ${siteId === 'main' ? 'програми за отслабване' : 'anti-aging протоколи'}.
+Продуктите в пакетите са ФИКСИРАНИ и вече проверени за безопасност спрямо профила — НЕ добавяй, махай или сменяй product_id.
+Всеки продукт има карта: role (роля в пакета), actives/category, stimulant, days.
+Обясни ролята на всеки продукт, свързана с профила (цел, симптоми, хранене, сън).
+lifestyle_tips: практични съвети за храна, сън и движение — не за добавки.
 ${ctx.benefitLine}
-dose = по intake/serving от картата; ако липсва — „Според етикета“. Не измисляй дози.
-timing = според ролята (сън → вечер, стимулант → сутрин).
 
 Върни САМО JSON:
-{"analysis":"2 изречения","recommended_tier":"optimal","tier_copy":{"basic":{"benefits":["..."],"strategy":"кратко"},"optimal":{"benefits":["..."],"strategy":"..."},"premium":{"benefits":["..."],"strategy":"..."}},"product_copy":{"PRODUCT_ID":{"why_for_you":"макс 12 думи","dose":"...","timing":"сутрин|вечер"}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."],"disclaimer":"Информацията не замества лекарска консултация."}
+{"analysis":"до 2 изречения","recommended_tier":"basic|optimal|premium","tier_copy":{"basic":{"benefits":["..."],"strategy":"кратко"},"optimal":{"benefits":["..."],"strategy":"..."},"premium":{"benefits":["..."],"strategy":"..."}},"product_copy":{"PRODUCT_ID":{"why_for_you":"до 12 думи"}},"protocol_schedule":{"morning":["..."],"evening":["..."],"weekly_notes":"..."},"lifestyle_tips":["..."]}
 
 БЕЗ синонимно повторение на ползи.`;
 }
@@ -89,13 +84,10 @@ export function buildSiteNarratorMessages(template, profile, composed, eligibleP
   const payload = buildSiteNarratorPayload(profile, composed, eligibleProducts, siteId);
   const dataJson = JSON.stringify(payload);
   const system = withClinicalGuardrails(
-    `${template}\n\nВАЖНО: Без chain-of-thought. Само финален JSON. Не променяй product_id.`,
+    `${stripProtocolDataMarker(template)}\n\nВАЖНО: Без chain-of-thought. Само финален JSON. Не променяй product_id.`,
     profile,
     siteId,
   );
-  if (template.includes('{{protocolData}}')) {
-    return [{ role: 'user', content: template.replace('{{protocolData}}', () => dataJson) }];
-  }
   return [
     { role: 'system', content: system },
     { role: 'user', content: dataJson },
@@ -113,13 +105,10 @@ export function buildSiteAdvisorMessages(template, payload, profile, siteId = 'l
   });
   // Клиничните правила са в system съобщението (withClinicalGuardrails) — не ги дублираме в данните.
   const system = withClinicalGuardrails(
-    `${template}\n\nВАЖНО: Без chain-of-thought. Само финален JSON.`,
+    `${stripProtocolDataMarker(template)}\n\nВАЖНО: Без chain-of-thought. Само финален JSON.`,
     profile,
     siteId,
   );
-  if (template.includes('{{protocolData}}')) {
-    return [{ role: 'user', content: template.replace('{{protocolData}}', () => dataJson) }];
-  }
   return [
     { role: 'system', content: system },
     { role: 'user', content: dataJson },

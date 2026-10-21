@@ -43,7 +43,7 @@ function buildLogSequence(answers, siteId = 'life') {
   ];
 
   if (bmi) {
-    lines.push({ type: 'data', text: `ИТМ: ${bmi} — корекция на дозови насоки`, delay: 420 });
+    lines.push({ type: 'data', text: `ИТМ: ${bmi} — отчетен в профила`, delay: 420 });
   }
 
   lines.push(
