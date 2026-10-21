@@ -226,6 +226,7 @@ function renderResult(data) {
     <div class="lpr-analysis">${escapeHtml(data.analysis || '')}</div>
     ${renderNutriPlanTeaser()}
     <p class="lpr-tier-hint">Кликнете върху вариант, за да видите дневния график</p>
+    ${data.budget_note ? `<p class="lpr-budget-note">${escapeHtml(data.budget_note)}</p>` : ''}
     <div class="lpr-tiers" data-count="${tierKeys.length}">
       ${tierKeys.map((key) => renderTier(key, tiers[key], rec === key, benefits[key])).join('')}
     </div>

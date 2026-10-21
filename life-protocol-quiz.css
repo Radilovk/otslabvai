@@ -1026,3 +1026,5 @@ body.lpq-body {
 .lpr-np-teaser .lpr-np-logo { flex: none; }
 .lpr-np-teaser__go { margin-left: auto; flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, .12); font-weight: 700; }
 .lpr-nutriplan { scroll-margin-top: 1rem; }
+
+.lpr-budget-note { margin: -.4rem 0 1rem; padding: .6rem .85rem; border-radius: 12px; background: rgba(201, 162, 39, .12); border: 1px solid rgba(201, 162, 39, .3); font-size: .86rem; }

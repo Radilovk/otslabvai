@@ -89,7 +89,8 @@ export const MAIN_SLOTS = [
     category: MAIN_CATS.stimFree,
     target: 4,
     goals: ['weight-loss', 'fat-metabolism', 'stimulant-free'],
-    evidence: ['green tea', 'зелен чай', 'egcg', 'capsaicin', 'капсаицин', 'cayenne', 'лют червен пипер', 'cla', 'carnitine', 'карнитин', 'lipotropic', 'липотроп', 'choline', 'холин', 'chromium', 'хром'],
+    // Без зелен чай / EGCG — съдържат кофеин, мястото е „без стимуланти“.
+    evidence: ['capsaicin', 'капсаицин', 'cayenne', 'лют червен пипер', 'cla', 'carnitine', 'карнитин', 'lipotropic', 'липотроп', 'choline', 'холин', 'chromium', 'хром'],
     evidenceLevel: 'ниска',
     note: 'Основен продукт за клиенти без стимуланти (хипертония, чувствителност). Ефектът е малък — подкрепа, не заместител на дефицита.',
   },

@@ -22,6 +22,7 @@ import {
   productSearchText,
   productMatchesAnyKeyword,
   profileHasPregnancyOrBreastfeeding,
+  enforceStimulantRules,
 } from './protocol-safety-rules.js';
 import { composePortfolioAdvisorStacks } from './portfolio-advisor-compose.js';
 import { codeDoseTiming } from './advisor-composer.js';
@@ -271,6 +272,8 @@ export function finalizePortfolioAdvisorResponse(response, eligibleProducts, exc
   // Дозите и часовете на прием — от данните на продукта; съвети за прием на вещества
   // извън подбраните продукти отпадат; предупреждението е фиксирано (advisor-ai-guard.js).
   guardAdvisorResponse(response, (pid) => (productMap.get(pid) ? codeDoseTiming(productMap.get(pid)) : null));
+  const stimRemoved = enforceStimulantRules(response, productMap, options.profile || null);
+  if (stimRemoved.length) response.safety_removed = stimRemoved;
 
   for (const key of ['basic', 'optimal', 'premium']) {
     const tier = response.tiers[key];

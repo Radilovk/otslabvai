@@ -7,7 +7,7 @@
  * описанието (само за конкретни активни вещества, напр. кофеин, и само при слотове, където има смисъл).
  * Изчислява се веднъж на продукт (WeakMap кеш).
  */
-import { normalizeMatchText, productMatchesAnyKeyword } from './text-match.js';
+import { normalizeMatchText, productMatchesAnyKeyword, aboutContentText } from './text-match.js';
 
 /** Слотове: роля в пакета, кога се приема, конфликтна група (по един продукт от група в пакет). */
 export const SLOT_META = {
@@ -61,7 +61,7 @@ export const SLOT_META = {
 /** Стимулантни слотове — изключват се при „без стимуланти“, хипертония, бременност и т.н. */
 const STIM_SLOTS = new Set(['fat_burner', 'caffeine', 'preworkout']);
 /** Слотове, при които описанието се проверява за скрит кофеин/синефрин. */
-const STIM_CHECK_SLOTS = new Set(['fat_burner', 'fat_burner_nonstim', 'caffeine', 'preworkout', 'pump', 'appetite', 'glucose', 'carnitine', 'cla', 'other', 'herbal', 'cognition', 'aminos', 'electrolytes']);
+const STIM_CHECK_SLOTS = new Set(['fat_burner', 'fat_burner_nonstim', 'caffeine', 'preworkout', 'pump', 'appetite', 'glucose', 'carnitine', 'cla', 'diuretic', 'other', 'herbal', 'cognition', 'aminos', 'electrolytes', 'energy', 'fatigue']);
 
 /**
  * @typedef {{ kind?: string, slot?: string, stim?: boolean, gender?: 'male'|'female', animal?: string[], generic?: boolean }} FactRule
@@ -231,11 +231,11 @@ const NAME_RULES = [
   [['stim free', 'stimulant free', 'non stim', 'без стимуланти', 'caffeine free', 'lipotropic', 'липотроп'], { slot: 'fat_burner_nonstim' }],
   [['thermo', 'термоген', 'fat burn', 'fatburn', 'фетбърн', 'lipo 6', 'hardcore', 'хардкор', 'shred', 'lida', 'лида'], { slot: 'fat_burner', stim: true }],
   [['l carnitine', 'l карнитин', 'карнитин', 'carnitine'], { slot: 'carnitine' }],
+  [['birch', 'бреза', 'diuretic', 'диуретик', 'water away', 'отводн'], { slot: 'diuretic' }],
+  [['cayenne', 'лют червен пипер', 'slim', 'слим', 'отслаб'], { slot: 'fat_burner_nonstim' }],
   [[' cla'], { slot: 'cla' }],
   [['glucomannan', 'глюкоманан', 'garcinia', 'гарциния', 'appetite', 'апетит', 'fiber', 'фибри', 'psyllium', 'псилиум'], { slot: 'appetite' }],
-  [['birch', 'бреза', 'diuretic', 'диуретик', 'water away', 'отводн'], { slot: 'diuretic' }],
   [['berberine', 'берберин', 'chromium', 'хром$'], { slot: 'glucose' }],
-  [['cayenne', 'лют червен пипер', 'slim', 'слим', 'отслаб'], { slot: 'fat_burner_nonstim' }],
   [['pre workout', 'preworkout', 'предтрен'], { slot: 'preworkout', stim: true }],
   [['caffeine', 'кофеин', 'energy shot', 'energy drink'], { slot: 'caffeine', stim: true }],
   [['gainer', 'гейнър'], { slot: 'gainer' }],
@@ -300,7 +300,13 @@ const STIMULANT_ACTIVES = [
   'кофеин', 'caffeine', 'гуарана', 'guarana', 'синефрин', 'synephrine', 'йохимбин', 'yohimbine',
   'ефедр', 'ephedr', 'dmaa', 'dmha', 'теакрин', 'teacrine', 'паулиния', 'paullinia',
   'зелено кафе', 'green coffee', 'кола нут', 'kola nut', 'теобромин', 'theobromine',
+  // Липсваха: заради тях Lipo Burn (кофеин + синефрин) влизаше заедно с MeiziMax (зелен чай),
+  // а при „без стимуланти“ / хипертония — два продукта със зелен чай.
+  'зелен чай', 'green tea', 'egcg', 'горчив портокал', 'citrus aurantium', 'bitter orange', 'daidaihua',
+  'мате', 'yerba mate', 'hordenine', 'хордеин', 'octopamine', 'октопамин', 'rauwolscine', 'рауволсцин',
 ];
+// Термогенни без да са стимуланти (капсаицин) — пак само един „бърнър“ в пакет.
+const THERMOGENIC_ACTIVES = ['capsaicin', 'капсаицин', 'cayenne', 'лют червен пипер', 'capsimax'];
 const STIM_NEGATIONS = [
   'без кофеин', 'caffeine free', 'stim free', 'stimulant free', 'non stim', 'без стимуланти',
   'нестимулант', 'decaf', 'безкофеин', 'не съдържа кофеин', 'не съдържа стимуланти',
@@ -343,7 +349,7 @@ function nameText(product) {
 
 function descriptionText(product) {
   const pd = product.public_data || {};
-  return [pd.description, pd.about_content, ...(pd.ingredients || []).map((i) => i?.description)].filter(Boolean).join(' ');
+  return [pd.description, aboutContentText(pd), ...(pd.ingredients || []).map((i) => i?.description)].filter(Boolean).join(' ');
 }
 
 /** @type {Array<[string, FactRule]>} */
@@ -500,6 +506,11 @@ function goalsRule(product) {
 
 const factsCache = new WeakMap();
 
+/** Червен ориз (монаколин K — същото като ловастатин): лекарство, не добавка за подбор. */
+export function isRedYeastRice(product) {
+  return productMatchesAnyKeyword(`${nameText(product)} ${categoryText(product)}`, ['red yeast', 'червен ориз', 'червена ферментирала', 'monacolin', 'монаколин']);
+}
+
 /**
  * kind: supplement | food | gear | kids | sample; source: category | name | none.
  * @returns {{ kind: string, slot: string, group: string|null, stimulant: boolean,
@@ -517,7 +528,9 @@ export function getProductFacts(product) {
   let rule = byCategory || byName || {};
   if (generic && byName) rule = byName.kind && byCategory?.slot ? byCategory : byName;
   if (byCategory?.slot && !byCategory.kind) {
-    const strong = STRONG_NAME_RULES.find(([keywords]) => productMatchesAnyKeyword(nameText(product), keywords));
+    const strong = STRONG_NAME_RULES.find(([keywords]) => productMatchesAnyKeyword(nameText(product), keywords)
+      // „Червен ориз + CoQ10“ не е коензим: червеният ориз е монаколин K (= ловастатин).
+      && !(keywords.includes('coq10') && isRedYeastRice(product)));
     if (strong && strong[1].slot !== byCategory.slot) rule = { ...byCategory, ...strong[1] };
   }
   if (!rule.kind && (!rule.slot || rule.slot === 'other')) rule = { ...rule, ...goalsRule(product) };
@@ -553,7 +566,8 @@ export function getProductFacts(product) {
     slot: effectiveSlot,
     group: SLOT_META[effectiveSlot]?.group ?? null,
     stimulant,
-    thermogenic: stimulant || effectiveSlot === 'fat_burner',
+    thermogenic: stimulant || effectiveSlot === 'fat_burner'
+      || productMatchesAnyKeyword(stripNegations(`${nameText(product)} ${descriptionText(product)}`), THERMOGENIC_ACTIVES),
     animal: detectAnimal(product, effectiveSlot, rule.animal),
     gender: detectGender(product, rule.gender),
     variant,
@@ -576,6 +590,8 @@ export function factsConflict(a, b) {
   const fb = getProductFacts(b);
   if (fa.group && fa.group === fb.group) return true;
   if (fa.stimulant && fb.stimulant) return true;
+  // Един „бърнър“ в пакет (и термогенните без кофеин — напр. с капсаицин).
+  if (fa.thermogenic && fb.thermogenic) return true;
   if ((fa.stimulant && fb.slot === 'sleep') || (fb.stimulant && fa.slot === 'sleep')) return true;
   if (fa.slot === 'fat_burner_nonstim' && fb.slot === 'fat_burner') return true;
   if (fb.slot === 'fat_burner_nonstim' && fa.slot === 'fat_burner') return true;

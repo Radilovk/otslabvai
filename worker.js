@@ -2550,6 +2550,7 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
   const finalizeOpts = {
     selection_mode: profile.selection_mode,
     independent_tiers: profile.selection_mode === 'single',
+    profile,
   };
   const productMap = new Map(eligible.map((p) => [p.product_id, p]));
   payload.composed_meta = composed.meta;
