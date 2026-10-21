@@ -350,6 +350,8 @@ export function createSiteAdvisorQuiz(options) {
 
     try {
       const res = await fetch(submitUrl, {
+        // Сървърът чака AI до 25 s и минава на резервния вариант — 60 s е горната граница.
+        signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(60000) : undefined,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -381,7 +383,9 @@ export function createSiteAdvisorQuiz(options) {
       animator.stop();
       loadingCard.hidden = true;
       formCard.hidden = false;
-      showError('contact', e.message || 'Възникна грешка. Опитайте отново.');
+      showError('contact', e?.name === 'TimeoutError' || e?.name === 'AbortError'
+      ? 'Връзката е бавна — резултатът не дойде навреме. Опитайте отново.'
+      : (e.message || 'Възникна грешка. Опитайте отново.'));
       stepIndex = activeSteps.findIndex((s) => s.id === 'contact');
       showStep(stepIndex);
     }

@@ -1773,13 +1773,15 @@ async function callCloudflareAI(env, settings, messages) {
     const payload = {
         messages: messages,
         max_tokens: settings.maxTokens || 4096,
-        temperature: settings.temperature || 0.3,
+        temperature: settings.temperature ?? 0.3,
         // Instruct the model's sampler to produce only valid JSON tokens.
         // This is the primary prevention: invalid JSON cannot be generated.
         response_format: { type: 'json_object' }
     };
     
     const response = await fetch(cfEndpoint, {
+        // Без отговор до timeoutMs — грешка (протоколите минават на резервния вариант), не безкраен спинер.
+        signal: AbortSignal.timeout(settings.timeoutMs || 45000),
         method: 'POST',
         headers: { 
             'Authorization': `Bearer ${env.AI_TOKEN}`, 
@@ -1814,12 +1816,14 @@ async function callOpenAI(settings, messages) {
         model: model,
         messages: messages,
         max_tokens: settings.maxTokens || 4096,
-        temperature: settings.temperature || 0.3,
+        temperature: settings.temperature ?? 0.3,
         // Force the model to output only valid JSON — primary prevention mechanism.
         response_format: { type: 'json_object' }
     };
     
     const response = await fetch(endpoint, {
+        // Без отговор до timeoutMs — грешка (протоколите минават на резервния вариант), не безкраен спинер.
+        signal: AbortSignal.timeout(settings.timeoutMs || 45000),
         method: 'POST',
         headers: { 
             'Authorization': `Bearer ${settings.apiKey}`, 
@@ -1874,7 +1878,7 @@ async function callGoogleAI(settings, messages) {
             parts: [{ text: m.content }]
         })),
         generationConfig: {
-            temperature: settings.temperature || 0.3,
+            temperature: settings.temperature ?? 0.3,
             maxOutputTokens: settings.maxTokens || 4096,
             responseMimeType: 'application/json',
             ...(settings.disableThinking ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
@@ -1882,6 +1886,8 @@ async function callGoogleAI(settings, messages) {
     };
     
     const response = await fetch(endpoint, {
+        // Без отговор до timeoutMs — грешка (протоколите минават на резервния вариант), не безкраен спинер.
+        signal: AbortSignal.timeout(settings.timeoutMs || 45000),
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json' 
@@ -2138,6 +2144,8 @@ const PROTOCOL_QUIZ_AI_OVERRIDES = {
     maxTokens: 8192,
     temperature: 0.15,
     disableThinking: true,
+    // Клиентът чака на екрана — след 25 s се показва резервният вариант на кода.
+    timeoutMs: 25000,
 };
 
 
@@ -2268,6 +2276,9 @@ async function handleLifeProtocolSubmit(request, env, ctx) {
     email: profile.email,
     recommendation,
     catalog_stats: payload.catalog_stats,
+    // Без AI (грешка / таймаут) — резервният вариант на кода; поправките след AI — за прегледа в админа.
+    ai_fallback: !!result.ai_fallback,
+    ai_repairs: payload.ai_repairs || [],
   };
 
   ctx.waitUntil(saveLifeProtocolLead(env, leadRecord));
@@ -2361,7 +2372,7 @@ async function handleLifeProtocolSimulate(request, env) {
       mock: result.mock,
       catalog_stats: result.payload.catalog_stats,
       candidates_count: result.candidates?.length || 0,
-      excluded_count: result.payload.constraints.excluded_product_ids.length,
+      excluded_count: (result.payload?.constraints?.excluded_product_ids || result.payload?.excluded_product_ids || []).length,
       profile: result.profile,
       recommendation: result.recommendation,
     }), {
@@ -2409,6 +2420,9 @@ async function handleMainAdvisorSubmit(request, env, ctx) {
     email: profile.email,
     recommendation,
     catalog_stats: payload.catalog_stats,
+    // Без AI (грешка / таймаут) — резервният вариант на кода; поправките след AI — за прегледа в админа.
+    ai_fallback: !!result.ai_fallback,
+    ai_repairs: payload.ai_repairs || [],
   };
 
   ctx.waitUntil(saveMainAdvisorLead(env, leadRecord));
@@ -2495,7 +2509,7 @@ async function handleMainAdvisorSimulate(request, env) {
       mock: result.mock,
       catalog_stats: result.payload.catalog_stats,
       candidates_count: result.candidates?.length || 0,
-      excluded_count: result.payload.constraints.excluded_product_ids.length,
+      excluded_count: (result.payload?.constraints?.excluded_product_ids || result.payload?.excluded_product_ids || []).length,
       profile: result.profile,
       recommendation: result.recommendation,
     }), {
@@ -2558,7 +2572,7 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
       return { profile, payload, recommendation: finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts) };
     } catch (e) {
       console.warn('Portfolio advisor AI failed, using deterministic fallback:', e.message || e);
-      return { profile, payload, recommendation: fallback() };
+      return { profile, payload, recommendation: fallback(), ai_fallback: true };
     }
   }
 
@@ -2571,7 +2585,7 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
     return { profile, payload, recommendation: finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts) };
   } catch (e) {
     console.warn('Portfolio advisor narrator AI failed, using deterministic fallback:', e.message || e);
-    return { profile, payload, recommendation: fallback() };
+    return { profile, payload, recommendation: fallback(), ai_fallback: true };
   }
 }
 
@@ -2607,6 +2621,8 @@ async function handlePortfolioAdvisorSubmit(request, env, ctx) {
     email: profile.email,
     recommendation,
     catalog_stats: catalogStats,
+    ai_fallback: !!result.ai_fallback,
+    ai_repairs: payload.ai_repairs || [],
   };
   ctx.waitUntil(savePortfolioAdvisorLead(env, leadRecord));
   ctx.waitUntil(savePortfolioAdvisorResult(env, resultRecord));
