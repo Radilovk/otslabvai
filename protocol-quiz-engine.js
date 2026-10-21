@@ -435,43 +435,26 @@ export function filterNovelBenefits(candidates, existing = []) {
   return novel;
 }
 
-const DEFAULT_BASIC_BENEFITS = [
-  'Подкрепя ежедневната енергия',
-  'Укрепва имунната защита',
-  'Защитава клетките от оксидативен стрес',
-];
-
-const DEFAULT_OPTIMAL_ADDITIONS = [
-  'Подобрява качеството на съня',
-  'Подпомага възстановяването след натоварване',
-  'Подкрепя кожата отвътре',
-];
-
-const DEFAULT_PREMIUM_ADDITIONS = [
-  'Стимулира клетъчната регенерация',
-  'Подобрява когнитивната острота и фокуса',
-  'Максимална антиейджинг защита',
-  'Пълна подкрепа за дълголетие',
-];
-
 export function buildCumulativeBenefitTiers(tiers) {
   const dedupe = (arr) => [...new Set((arr || []).map((s) => String(s).trim()).filter(Boolean))];
 
   const basicPool = dedupe(tiers?.basic?.benefits);
-  const basicFinal = (basicPool.length ? filterNovelBenefits(basicPool) : DEFAULT_BASIC_BENEFITS).slice(0, 4);
+  // Само ползите от отговора — без готови общи текстове (те бяха за life-protocols и
+  // показваха „антиейджинг“ / „дълголетие“ на daotslabna, без връзка с продуктите).
+  const basicFinal = filterNovelBenefits(basicPool).slice(0, 4);
 
   const optimalPool = dedupe(tiers?.optimal?.benefits);
   const optimalAdd = filterNovelBenefits(optimalPool, basicFinal);
   const optimalFinal = [
     ...basicFinal,
-    ...(optimalAdd.length ? optimalAdd : filterNovelBenefits(DEFAULT_OPTIMAL_ADDITIONS, basicFinal)).slice(0, 3),
+    ...optimalAdd.slice(0, 3),
   ];
 
   const premiumPool = dedupe(tiers?.premium?.benefits);
   const premiumAdd = filterNovelBenefits(premiumPool, optimalFinal);
   const premiumFinal = [
     ...optimalFinal,
-    ...(premiumAdd.length ? premiumAdd : filterNovelBenefits(DEFAULT_PREMIUM_ADDITIONS, optimalFinal)).slice(0, 4),
+    ...premiumAdd.slice(0, 4),
   ];
 
   return {

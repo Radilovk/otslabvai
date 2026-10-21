@@ -86,6 +86,16 @@ async function createLink(siteId, result) {
   return fallback;
 }
 
+/** Препратка в горната част на резултата — към блока за хранителен план (видима без превъртане). */
+export function renderNutriPlanTeaser() {
+  return `
+    <a class="lpr-np-teaser" href="#lpr-np-title">
+      <span class="lpr-np-logo">N</span>
+      <span><strong>Безплатно към протокола:</strong> персонален хранителен план в NutriPlan</span>
+      <span class="lpr-np-teaser__go" aria-hidden="true">↓</span>
+    </a>`;
+}
+
 /** Блок за страницата с резултата — предложението за индивидуален хранителен план. */
 export function renderNutriPlanCta() {
   const check = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';

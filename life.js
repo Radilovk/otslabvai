@@ -13,7 +13,8 @@ import {
 } from './life-icons.js';
 import {
     getHeroPrimaryCta,
-    getPremiumCta
+    getPremiumCta,
+    getCtaButtonTarget
 } from './life-protocol-store.js';
 import { LIFE_CATEGORY_DEFS } from './life-category-assign.js';
 import { rewriteAllProductImages } from './life-img.js';
@@ -2070,7 +2071,24 @@ function initPromoTimer() {
 function initStickyCTA() {
     const stickyCTA = document.getElementById('sticky-cta');
     if (!stickyCTA) return;
-    
+
+    // Купувач на протокол — към неговия протокол.
+    if (getCtaButtonTarget() !== 'life-protocol-quiz.html') {
+        const link = document.getElementById('sticky-cta-link');
+        const text = document.getElementById('sticky-cta-text');
+        if (link) link.href = getCtaButtonTarget();
+        if (text) text.textContent = 'Моят протокол';
+    }
+    // Докато секцията на протокола е на екрана, бутонът е излишен.
+    let protocolInView = false;
+    const protocolSection = document.getElementById('individual-protocol');
+    if (protocolSection && 'IntersectionObserver' in window) {
+        new IntersectionObserver(([e]) => {
+            protocolInView = e.isIntersecting;
+            if (protocolInView) stickyCTA.classList.remove('visible');
+        }, { threshold: 0.15 }).observe(protocolSection);
+    }
+
     let lastScrollY = window.scrollY;
     
     function checkScroll() {
@@ -2078,7 +2096,7 @@ function initStickyCTA() {
         const heroHeight = document.querySelector('.hero-section')?.offsetHeight || 600;
         
         // Show when scrolled past hero and scrolling up
-        if (currentScrollY > heroHeight && currentScrollY < lastScrollY) {
+        if (!protocolInView && currentScrollY > heroHeight && currentScrollY < lastScrollY) {
             stickyCTA.classList.add('visible');
         } else if (currentScrollY <= heroHeight || currentScrollY > lastScrollY + 50) {
             stickyCTA.classList.remove('visible');

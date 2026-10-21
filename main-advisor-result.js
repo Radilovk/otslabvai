@@ -1,5 +1,5 @@
 import { formatPriceEur, buildCumulativeBenefitTiers } from './protocol-quiz-engine.js';
-import { renderNutriPlanCta, bindNutriPlanCta } from './nutriplan-link.js';
+import { renderNutriPlanCta, renderNutriPlanTeaser, bindNutriPlanCta } from './nutriplan-link.js';
 import { persistAdvisorResult } from './main-advisor-store.js';
 import { resolveImageUrl } from './life-img.js';
 
@@ -224,6 +224,7 @@ function renderResult(data) {
 
   container.innerHTML = `
     <div class="lpr-analysis">${escapeHtml(data.analysis || '')}</div>
+    ${renderNutriPlanTeaser()}
     <p class="lpr-tier-hint">Кликнете върху вариант, за да видите дневния график</p>
     <div class="lpr-tiers" data-count="${tierKeys.length}">
       ${tierKeys.map((key) => renderTier(key, tiers[key], rec === key, benefits[key])).join('')}

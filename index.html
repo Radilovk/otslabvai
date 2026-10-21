@@ -35,7 +35,7 @@
     <link rel="preload" as="image" href="https://radilovk.github.io/face/assets/logoblack.png" type="image/png">
     
     <link rel="stylesheet" href="index.css?v=20261013m">
-    <link rel="stylesheet" href="site-features.css?v=20261020b">
+    <link rel="stylesheet" href="site-features.css?v=20261021a">
 
     <script>
         (function() {
@@ -281,15 +281,14 @@
     <a href="#" id="back-to-top" aria-label="Back to top">↑</a>
 
     <!-- Sticky CTA Button -->
+    <!-- Плаващ бутон: основната цел на сайта — персоналния протокол (тестът), не общият каталог. -->
     <div class="sticky-cta" id="sticky-cta">
-        <button class="sticky-cta-btn" onclick="document.getElementById('products')?.scrollIntoView({behavior: 'smooth'})">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <circle cx="12" cy="12" r="6"></circle>
-                <circle cx="12" cy="12" r="2"></circle>
+        <a class="sticky-cta-btn" id="sticky-cta-link" href="main-advisor-quiz.html">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9z"/>
             </svg>
-            <span>Виж продуктите</span>
-        </button>
+            <span id="sticky-cta-text">Персонална програма</span>
+        </a>
     </div>
 
     <div id="quest-modal-backdrop" class="modal-backdrop"></div>

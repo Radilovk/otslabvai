@@ -983,3 +983,46 @@ body.lpq-body {
 .lpq-np-note__logo { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: #0d9488; color: #fff; font-size: .75rem; font-weight: 800; }
 [data-theme="dark"] .lpq-np-note strong { color: #5eead4; }
 .lpq-np-note[hidden] { display: none; }
+
+/* ── Тъмна тема: вариантите на протокола ──
+   Светлите фонове на картите (бяло / cyan / крем) оставаха и в тъмна тема,
+   докато текстът става светъл → имената на продуктите не се четяха. */
+[data-theme="dark"] .lpr-tier[data-tier="basic"] {
+  --tier-surface: linear-gradient(165deg, #182029 0%, #141b23 100%);
+  --tier-border: rgba(138, 163, 179, 0.3);
+  --tier-accent-dim: rgba(138, 163, 179, 0.16);
+}
+[data-theme="dark"] .lpr-tier[data-tier="optimal"] {
+  --tier-surface: linear-gradient(165deg, #0f2529 0%, #0c1e22 100%);
+  --tier-border: rgba(0, 196, 200, 0.42);
+  --tier-accent-dim: rgba(0, 196, 200, 0.16);
+}
+[data-theme="dark"] .lpr-tier[data-tier="premium"] {
+  --tier-surface: linear-gradient(155deg, #251f12 0%, #1c170d 100%);
+  --tier-border: rgba(212, 168, 67, 0.45);
+  --tier-accent-dim: rgba(212, 168, 67, 0.16);
+}
+[data-theme="dark"] .lpr-tier h3,
+[data-theme="dark"] .lpr-tier[data-tier="premium"] h3,
+[data-theme="dark"] .lpr-tier .lpr-product-name,
+[data-theme="dark"] .lpr-tier[data-tier="optimal"] .lpr-benefit-new,
+[data-theme="dark"] .lpr-tier[data-tier="premium"] .lpr-benefit-new { color: #f1f5f9; }
+[data-theme="dark"] .lpr-tier .lpr-tagline,
+[data-theme="dark"] .lpr-tier .lpr-benefits li,
+[data-theme="dark"] .lpr-tier .lpr-product-brand,
+[data-theme="dark"] .lpr-tier .lpr-product-variant,
+[data-theme="dark"] .lpr-tier .lpr-product-dose,
+[data-theme="dark"] .lpr-tier .lpr-product-why { color: #b6c2d1; }
+[data-theme="dark"] .lpr-tier[data-tier="basic"] .lpr-price { color: #9fbccd; }
+[data-theme="dark"] .lpr-tier[data-tier="optimal"] .lpr-price { color: #4dd9dc; }
+[data-theme="dark"] .lpr-tier[data-tier="premium"] .lpr-price,
+[data-theme="dark"] .lpr-tier[data-tier="premium"] .lpr-product-price { color: #e8c547; }
+[data-theme="dark"] .lpr-tier .lpr-products-toggle { color: #e8eef5; border-color: var(--tier-border); background: rgba(255, 255, 255, 0.04); }
+[data-theme="dark"] .lpr-tier .lpr-product-card { border-color: rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); }
+
+/* Препратка към NutriPlan под анализа */
+.lpr-np-teaser { display: flex; align-items: center; gap: .7rem; margin: 0 0 1.1rem; padding: .8rem 1rem; border-radius: 14px; background: linear-gradient(135deg, #0b3f3c, #0d4d48); color: #ecfdf8; text-decoration: none; font-size: .9rem; line-height: 1.4; box-shadow: 0 10px 24px -14px rgba(6, 43, 42, .7); }
+.lpr-np-teaser strong { color: #5eead4; }
+.lpr-np-teaser .lpr-np-logo { flex: none; }
+.lpr-np-teaser__go { margin-left: auto; flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, .12); font-weight: 700; }
+.lpr-nutriplan { scroll-margin-top: 1rem; }

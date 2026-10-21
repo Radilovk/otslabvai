@@ -539,3 +539,18 @@
   .sf-chip { animation: none; }
   .sf-btn, .sf-mock, .sf-btn svg { transition: none; }
 }
+
+/* Плаващият бутон вече е линк към теста за протокол */
+a.sticky-cta-btn,
+a.sticky-cta-btn:hover,
+a.sticky-cta-btn:focus { text-decoration: none; color: #fff; }
+a.sticky-cta-btn { white-space: nowrap; }
+@media (max-width: 480px) {
+  a.sticky-cta-btn { font-size: 0.98rem; padding: 14px 22px; }
+}
+/* Телефон: бутонът вляво от плаващите бутони (количка, нагоре), без застъпване. */
+@media (max-width: 768px) {
+  .sticky-cta { right: auto; left: 16px; transform: translateY(100px); }
+  .sticky-cta.visible { transform: translateY(0); }
+  .sticky-cta a.sticky-cta-btn { max-width: calc(100vw - 100px); }
+}
