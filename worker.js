@@ -1881,7 +1881,8 @@ async function callGoogleAI(settings, messages) {
             temperature: settings.temperature ?? 0.3,
             maxOutputTokens: settings.maxTokens || 4096,
             responseMimeType: 'application/json',
-            ...(settings.disableThinking ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+            // thinkingBudget: 0 се приема от Gemini 2.5 Flash / Flash-Lite; други модели (2.5 Pro, 3.x) го отказват.
+            ...(settings.disableThinking && /2\.5-flash/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
         }
     };
     
@@ -2149,6 +2150,41 @@ const PROTOCOL_QUIZ_AI_OVERRIDES = {
 };
 
 
+/**
+ * Моделът за протоколите (daotslabna, life-protocols, biocode-bg.com): Gemini 2.5 Flash с ключа
+ * на проекта — AI тук само пише текста (продуктите, дозите и безопасността са на кода), затова
+ * бърз и евтин модел е достатъчен. Отделно от общите AI настройки (те са и за описанията на
+ * продуктите). Без ключ за Gemini или при грешка — общите настройки; при грешка и там —
+ * резервният вариант на кода (в извикващия код).
+ */
+const ADVISOR_GEMINI_MODEL = 'gemini-2.5-flash';
+
+async function callAdvisorAI(env, messages) {
+    // Само ключ за Google: секрет на Worker-а, ключ, запазен за Google в админа, или общите
+    // настройки, ако там е избран Google (не общият ключ — може да е за друг доставчик).
+    let geminiKey = env.GOOGLE_AI_API_KEY || env.GEMINI_API_KEY || await env.PAGE_CONTENT?.get('ai_google_api_key') || '';
+    if (!geminiKey) {
+        try {
+            const stored = JSON.parse((await env.PAGE_CONTENT?.get('ai_settings')) || 'null');
+            if (stored?.provider === 'google' && stored.apiKey) geminiKey = stored.apiKey;
+        } catch { /* повредени настройки — без Gemini */ }
+    }
+    if (geminiKey) {
+        try {
+            return await callGoogleAI({
+                ...PROTOCOL_QUIZ_AI_OVERRIDES,
+                timeoutMs: 20000,
+                provider: 'google',
+                model: ADVISOR_GEMINI_MODEL,
+                apiKey: geminiKey,
+            }, messages);
+        } catch (e) {
+            console.warn('Advisor Gemini failed, trying stored AI settings:', e.message || e);
+        }
+    }
+    return callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+}
+
 async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
   useMockAi = false,
   settingsOverride = null,
@@ -2201,7 +2237,7 @@ async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
     const promptTemplate = settings.prompt || getDefaultSiteAdvisorPrompt(siteId);
     const messages = buildSiteAdvisorMessages(promptTemplate, payload, profile, siteId);
     try {
-      const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+      const aiRaw = await callAdvisorAI(env, messages);
       const candidateMap = new Map(candidates.map((p) => [p.product_id, p]));
       const { response, changes } = repairAiTiers(parseJsonFromAI(aiRaw), composed, candidateMap, SITE_TIER_LIMITS[siteId]);
       if (changes.length) payload.ai_repairs = changes;
@@ -2217,7 +2253,7 @@ async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
   const messages = buildSiteNarratorMessages(promptTemplate, profile, composed, eligible, siteId);
 
   try {
-    const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+    const aiRaw = await callAdvisorAI(env, messages);
     const narration = parseJsonFromAI(aiRaw);
     const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
     const recommendation = finalize(normalizeCumulativeBenefits(response));
@@ -2566,7 +2602,7 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
     const promptTemplate = settings.prompt || getDefaultPortfolioAdvisorPrompt();
     const messages = buildPortfolioAdvisorMessages(promptTemplate, payload, profile);
     try {
-      const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+      const aiRaw = await callAdvisorAI(env, messages);
       const candidateMap = new Map(candidates.map((p) => [p.product_id, p]));
       const { response, changes } = repairAiTiers(parseJsonFromAI(aiRaw), composed, candidateMap, composeOptions.tierLimits);
       if (changes.length) payload.ai_repairs = changes;
@@ -2580,7 +2616,7 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
   const promptTemplate = settings.narrator_prompt || getDefaultPortfolioNarratorPrompt();
   const messages = buildPortfolioNarratorMessages(promptTemplate, profile, composed, eligible);
   try {
-    const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+    const aiRaw = await callAdvisorAI(env, messages);
     const narration = parseJsonFromAI(aiRaw);
     const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
     return { profile, payload, recommendation: finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts) };
