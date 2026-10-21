@@ -3,6 +3,7 @@
  */
 
 import { PORTFOLIO_GOALS } from './portfolio-goals.js';
+import { DIABETES_MEDS_STEP, IRON_STATUS_STEP, PORTFOLIO_STIMULANT_STEP } from './site-advisor-config.js';
 import {
   ADVISOR_EXCLUDED_CATEGORY_PATTERNS,
   scoreCategoryForGoal,
@@ -20,6 +21,7 @@ export const FALLBACK_CATALOG_CATEGORIES = FITNESS1_CURRENT_CATEGORIES;
 export const DEFAULT_ADVISOR_SEARCH_CATEGORIES = 3;
 
 const FEMALE_ONLY_CONDITIONS = [
+  { value: 'pcos', label: 'Поликистозни яйчници (PCOS)' },
   { value: 'pregnancy', label: 'Бременност' },
   { value: 'breastfeeding', label: 'Кърмене' },
 ];
@@ -92,7 +94,7 @@ function shouldShowBodyStep(answers = {}) {
 
 function adaptStepForProfile(step, answers = {}) {
   if (step.id === 'conditions') {
-    const base = step.options.filter((option) => !['pregnancy', 'breastfeeding'].includes(option.value));
+    const base = step.options.filter((option) => !['pcos', 'pregnancy', 'breastfeeding'].includes(option.value));
     const insertAt = base.findIndex((option) => option.exclusive);
     const femaleOptions = answers.sex === 'female' ? FEMALE_ONLY_CONDITIONS : [];
     const options = insertAt >= 0
@@ -102,10 +104,10 @@ function adaptStepForProfile(step, answers = {}) {
   }
 
   if (step.id === 'medications') {
-    const options = step.options.filter((option) => {
-      if (option.value === 'hormone_therapy') return answers.sex === 'female';
-      return true;
-    });
+    // Хормонална терапия — и за мъже (тестостерон).
+    const options = step.options.map((option) => (option.value === 'hormone_therapy' && answers.sex === 'male'
+      ? { ...option, label: 'Хормонална терапия (вкл. тестостерон)' }
+      : option));
     return { ...step, options };
   }
 
@@ -203,7 +205,9 @@ export const ADVISOR_STEPS = [
       { value: 'autoimmune', label: 'Автоимунно заболяване' },
       { value: 'kidney', label: 'Бъбречно заболяване' },
       { value: 'liver', label: 'Чернодробно заболяване' },
-      { value: 'cardiovascular', label: 'Сърдечно-съдово заболяване' },
+      { value: 'cardiovascular', label: 'Сърдечно-съдово заболяване / аритмия' },
+      { value: 'anxiety', label: 'Тревожност / панически атаки' },
+      { value: 'epilepsy', label: 'Епилепсия' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
       { value: 'other', label: 'Друго', allowsText: true },
     ],
@@ -219,6 +223,8 @@ export const ADVISOR_STEPS = [
       { value: 'ssri', label: 'SSRI / SNRI (антидепресанти)' },
       { value: 'hormone_therapy', label: 'Хормонална терапия / контрацепция' },
       { value: 'thyroid_meds', label: 'Медикаменти за щитовидна жлеза' },
+      { value: 'bp_meds', label: 'Лекарства за кръвно налягане' },
+      { value: 'adhd_stimulants', label: 'Лекарства за ADHD / стимуланти' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
       { value: 'other', label: 'Друго', allowsText: true },
     ],
@@ -235,6 +241,7 @@ export const ADVISOR_STEPS = [
       { value: 'hair_nails', label: 'Косопад / чупливи нокти' },
       { value: 'concentration', label: 'Затруднена концентрация' },
       { value: 'low_appetite', label: 'Слаб апетит / трудно хранене' },
+      { value: 'poor_sleep', label: 'Лош или неспокоен сън' },
       { value: 'joint_pain', label: 'Болка или скованост в ставите' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
       { value: 'other', label: 'Друго', allowsText: true },
@@ -325,6 +332,12 @@ export function buildActiveAdvisorSteps(answers = {}, catalogCategories = []) {
   for (const step of ADVISOR_STEPS) {
     if (step.id === 'body' && !shouldShowBodyStep(answers)) continue;
     steps.push(adaptStepForProfile(step, answers));
+    // Условни въпроси — само когато предишните отговори ги правят нужни.
+    if (step.id === 'conditions' && DIABETES_MEDS_STEP.showWhen(answers)) steps.push(DIABETES_MEDS_STEP);
+    if (step.id === 'symptoms') {
+      if (IRON_STATUS_STEP.showWhen(answers)) steps.push(IRON_STATUS_STEP);
+      if (PORTFOLIO_STIMULANT_STEP.showWhen(answers)) steps.push(PORTFOLIO_STIMULANT_STEP);
+    }
     if (step.field === 'priority') {
       steps.push(buildCategoryStep(catalogCategories, {
         singleSelect: answers.selection_mode === 'single',

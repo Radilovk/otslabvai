@@ -139,11 +139,19 @@ describe('portfolio-advisor-config', () => {
     expect(male.options.some((o) => o.value === 'pregnancy')).toBe(false);
   });
 
-  test('medications скрива хормонална терапия при мъж', () => {
+  test('хормонална терапия — и за мъже (тестостерон), иначе продуктите за мъжки хормони остават допустими', () => {
     const male = buildActiveAdvisorSteps({ sex: 'male' }).find((s) => s.id === 'medications');
     const female = buildActiveAdvisorSteps({ sex: 'female' }).find((s) => s.id === 'medications');
-    expect(male.options.some((o) => o.value === 'hormone_therapy')).toBe(false);
+    expect(male.options.find((o) => o.value === 'hormone_therapy').label).toMatch(/тестостерон/);
     expect(female.options.some((o) => o.value === 'hormone_therapy')).toBe(true);
+  });
+
+  test('условни въпроси: кофеин при отслабване/енергия/мускули без изключващо състояние; лекарства при диабет', () => {
+    const ids = (a) => buildActiveAdvisorSteps(a).map((s) => s.id);
+    expect(ids({ priority: 'otshalvane' })).toContain('stimulant_tolerance');
+    expect(ids({ priority: 'health' })).not.toContain('stimulant_tolerance');
+    expect(ids({ priority: 'otshalvane', conditions: ['hypertension'] })).not.toContain('stimulant_tolerance');
+    expect(ids({ priority: 'health', conditions: ['diabetes'] })).toContain('diabetes_meds');
   });
 
   test('body стъпка само при отслабване или мускулна маса', () => {

@@ -25,6 +25,7 @@ import {
   enforceStimulantRules,
 } from './protocol-safety-rules.js';
 import { composePortfolioAdvisorStacks } from './portfolio-advisor-compose.js';
+import { pruneHiddenAnswers } from './site-advisor-config.js';
 import { codeDoseTiming } from './advisor-composer.js';
 import { guardAdvisorResponse } from './advisor-ai-guard.js';
 import { buildProductCard, buildReviewCandidates, sanitizeProfileForAI, summarizeComposedForAI } from './advisor-ai.js';
@@ -135,7 +136,8 @@ export function normalizeAdvisorCategories(raw) {
 
 /** Portfolio профил с категории за търсене */
 export function buildPortfolioAdvisorProfile(raw) {
-  const profile = buildClientProfile(raw);
+  // Отговори на скрити условни въпроси отпадат (напр. кофеин при цел „здраве“).
+  const profile = buildClientProfile(pruneHiddenAnswers({ ...(raw || {}), site_id: 'portfolio' }));
   if (!profile.priority || profile.priority === 'longevity') {
     profile.priority = raw.priority || 'health';
   }

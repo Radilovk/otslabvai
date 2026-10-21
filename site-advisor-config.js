@@ -189,7 +189,7 @@ const MAIN_DIGESTION_STEP = {
 };
 
 /** Само при диабет: някои лекарства изключват продукти (GLP-1 → без средства за апетит). */
-const DIABETES_MEDS_STEP = {
+export const DIABETES_MEDS_STEP = {
   id: 'diabetes_meds',
   title: 'Какво лечение за кръвната захар получавате?',
   type: 'single',
@@ -204,7 +204,7 @@ const DIABETES_MEDS_STEP = {
 };
 
 /** Желязо само при доказан дефицит — без изследване не се предлага. */
-const IRON_STATUS_STEP = {
+export const IRON_STATUS_STEP = {
   id: 'iron_status',
   title: 'Изследвано ли е желязото / феритинът ви?',
   hint: 'Добавка с желязо даваме само при доказан недостиг.',
@@ -259,6 +259,21 @@ const LIFE_JOINT_STEP = {
     { value: 'wear', label: 'При натоварване / с възрастта' },
     { value: 'sport', label: 'След тренировки' },
     { value: 'inflammatory', label: 'Подуване, зачервяване или сутрешна скованост над 30 мин' },
+  ],
+};
+
+/** biocode-bg.com: кофеинът се пита при отслабване, енергия и мускули (там има стимулантни продукти). */
+export const PORTFOLIO_STIMULANT_STEP = {
+  id: 'stimulant_tolerance',
+  title: 'Как понасяте кофеин?',
+  hint: 'Фет бърнърите и предтренировъчните продукти често съдържат кофеин или други стимуланти.',
+  type: 'single',
+  field: 'stimulant_tolerance',
+  showWhen: (a) => ['otshalvane', 'energy', 'muscle'].includes(a.priority) && !answersExcludeStimulants(a),
+  options: [
+    { value: 'ok', label: 'Добре — пия кафе без проблем' },
+    { value: 'sensitive', label: 'Чувствителен/а съм — сърцебиене, безпокойство или лош сън' },
+    { value: 'avoid', label: 'Без стимуланти' },
   ],
 };
 
@@ -399,13 +414,16 @@ function adaptStepForProfile(step, answers = {}) {
   return step;
 }
 
-const CONDITIONAL_STEPS = () => [DIABETES_MEDS_STEP, IRON_STATUS_STEP, LIFE_SLEEP_STEP, LIFE_SKIN_STEP, LIFE_JOINT_STEP, MAIN_STIMULANT_STEP];
+const CONDITIONAL_STEPS = () => [DIABETES_MEDS_STEP, IRON_STATUS_STEP, LIFE_SLEEP_STEP, LIFE_SKIN_STEP, LIFE_JOINT_STEP];
+// Кофеинът: main и biocode имат различни условия — отпада, ако нито едното не важи.
+const stimulantStepVisible = (a) => MAIN_STIMULANT_STEP.showWhen(a) && (a.site_id !== 'portfolio' || PORTFOLIO_STIMULANT_STEP.showWhen(a));
 
 /** Отговори на условни въпроси, които вече не се показват (напр. махнат „диабет“), отпадат. */
 export function pruneHiddenAnswers(answers = {}) {
   for (const step of CONDITIONAL_STEPS()) {
     if (step.showWhen && !step.showWhen(answers)) delete answers[step.field];
   }
+  if (!stimulantStepVisible(answers)) delete answers.stimulant_tolerance;
   return answers;
 }
 
