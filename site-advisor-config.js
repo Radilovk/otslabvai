@@ -4,9 +4,11 @@
  */
 
 const FEMALE_ONLY_CONDITIONS = [
+  { value: 'pcos', label: 'Поликистозни яйчници (PCOS)' },
   { value: 'pregnancy', label: 'Бременност' },
   { value: 'breastfeeding', label: 'Кърмене' },
 ];
+const FEMALE_ONLY_CONDITION_VALUES = FEMALE_ONLY_CONDITIONS.map((o) => o.value);
 
 export const SITE_ADVISOR_META = {
   life: {
@@ -100,7 +102,9 @@ const BASE_STEPS = [
       { value: 'autoimmune', label: 'Автоимунно заболяване' },
       { value: 'kidney', label: 'Бъбречно заболяване' },
       { value: 'liver', label: 'Чернодробно заболяване' },
-      { value: 'cardiovascular', label: 'Сърдечно-съдово заболяване' },
+      { value: 'cardiovascular', label: 'Сърдечно-съдово заболяване / аритмия' },
+      { value: 'anxiety', label: 'Тревожност / панически атаки' },
+      { value: 'epilepsy', label: 'Епилепсия' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
       { value: 'other', label: 'Друго', allowsText: true },
     ],
@@ -116,6 +120,8 @@ const BASE_STEPS = [
       { value: 'ssri', label: 'SSRI / SNRI (антидепресанти)' },
       { value: 'hormone_therapy', label: 'Хормонална терапия / контрацепция' },
       { value: 'thyroid_meds', label: 'Медикаменти за щитовидна жлеза' },
+      { value: 'bp_meds', label: 'Лекарства за кръвно налягане' },
+      { value: 'adhd_stimulants', label: 'Лекарства за ADHD / стимуланти' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
       { value: 'other', label: 'Друго', allowsText: true },
     ],
@@ -151,9 +157,115 @@ const MAIN_WEIGHT_GOAL_STEP = {
   ],
 };
 
+/** main: какво стои зад наддаването — определя ролите в програмата (апетит, кръвна захар, стрес). */
+const MAIN_EATING_STEP = {
+  id: 'eating_pattern',
+  title: 'Кое се отнася за храненето ви?',
+  hint: 'Изберете всичко приложимо.',
+  type: 'multi',
+  field: 'eating_pattern',
+  options: [
+    { value: 'big_portions', label: 'Големи порции / трудно се засищам' },
+    { value: 'snacking', label: 'Чести хапвания между храненията' },
+    { value: 'sweet_cravings', label: 'Силен глад за сладко' },
+    { value: 'night_eating', label: 'Хранене късно вечер или нощем' },
+    { value: 'emotional', label: 'Хапвам при стрес, умора или скука' },
+    { value: 'none', label: 'Нищо от изброените', exclusive: true },
+  ],
+};
+
+/** main: храносмилането решава дали фибрите (глюкоманан) са подходящи. */
+const MAIN_DIGESTION_STEP = {
+  id: 'digestion',
+  title: 'Имате ли някое от следните?',
+  type: 'multi',
+  field: 'digestion',
+  options: [
+    { value: 'bloating', label: 'Чести подувания / газове' },
+    { value: 'constipation', label: 'Запек' },
+    { value: 'reflux', label: 'Киселини / рефлукс' },
+    { value: 'none', label: 'Нищо от изброените', exclusive: true },
+  ],
+};
+
+/** Само при диабет: някои лекарства изключват продукти (GLP-1 → без средства за апетит). */
+const DIABETES_MEDS_STEP = {
+  id: 'diabetes_meds',
+  title: 'Какво лечение за кръвната захар получавате?',
+  type: 'single',
+  field: 'diabetes_meds',
+  showWhen: (a) => (a.conditions || []).includes('diabetes'),
+  options: [
+    { value: 'none', label: 'Без лекарства (диета / движение)' },
+    { value: 'metformin', label: 'Метформин' },
+    { value: 'insulin_su', label: 'Инсулин или сулфонилурея (напр. гликлазид)' },
+    { value: 'glp1', label: 'GLP-1 (Ozempic, Wegovy, Mounjaro, Saxenda)' },
+  ],
+};
+
+/** Желязо само при доказан дефицит — без изследване не се предлага. */
+const IRON_STATUS_STEP = {
+  id: 'iron_status',
+  title: 'Изследвано ли е желязото / феритинът ви?',
+  hint: 'Добавка с желязо даваме само при доказан недостиг.',
+  type: 'single',
+  field: 'iron_status',
+  showWhen: (a) => a.sex === 'female' && (a.symptoms || []).includes('fatigue'),
+  options: [
+    { value: 'low', label: 'Да — ниско' },
+    { value: 'normal', label: 'Да — в норма' },
+    { value: 'unknown', label: 'Не съм изследвал(а)' },
+  ],
+};
+
+/** life → сън: мелатонинът помага при заспиване и смяна на режима, не при ранно будене. */
+const LIFE_SLEEP_STEP = {
+  id: 'sleep_issue',
+  title: 'Какъв е проблемът със съня?',
+  type: 'single',
+  field: 'sleep_issue',
+  showWhen: (a) => a.priority === 'sleep' || (a.symptoms || []).includes('poor_sleep'),
+  options: [
+    { value: 'falling_asleep', label: 'Трудно заспиване' },
+    { value: 'waking', label: 'Будя се през нощта' },
+    { value: 'early_waking', label: 'Будя се твърде рано' },
+    { value: 'shift_work', label: 'Нощни смени / смяна на часови пояси' },
+  ],
+};
+
+/** life → кожа: какво точно — решава колаген / биотин / антиоксиданти. */
+const LIFE_SKIN_STEP = {
+  id: 'skin_concern',
+  title: 'Какво искате да подобрите?',
+  type: 'single',
+  field: 'skin_concern',
+  showWhen: (a) => a.priority === 'skin',
+  options: [
+    { value: 'wrinkles', label: 'Бръчки и еластичност' },
+    { value: 'dryness', label: 'Сухота' },
+    { value: 'hair_nails', label: 'Коса и нокти' },
+    { value: 'acne', label: 'Акне / мазна кожа' },
+  ],
+};
+
+/** life → стави: възпалителната болка е за лекар, не за добавки. */
+const LIFE_JOINT_STEP = {
+  id: 'joint_type',
+  title: 'Как бихте описали болката в ставите?',
+  type: 'single',
+  field: 'joint_type',
+  showWhen: (a) => a.priority === 'joints' || (a.symptoms || []).includes('joint_pain'),
+  options: [
+    { value: 'wear', label: 'При натоварване / с възрастта' },
+    { value: 'sport', label: 'След тренировки' },
+    { value: 'inflammatory', label: 'Подуване, зачервяване или сутрешна скованост над 30 мин' },
+  ],
+};
+
 /** Повечето бърнъри са стимулантни — този отговор реално изключва продукти. */
 const MAIN_STIMULANT_STEP = {
   id: 'stimulant_tolerance',
+  showWhen: (a) => !answersExcludeStimulants(a),
   title: 'Как понасяте кофеин?',
   hint: 'Повечето фет бърнъри съдържат кофеин или други стимуланти.',
   type: 'single',
@@ -205,7 +317,6 @@ const MAIN_SYMPTOMS_STEP = {
   field: 'symptoms',
   options: [
     { value: 'fatigue', label: 'Постоянна умора' },
-    { value: 'cravings', label: 'Трудно контролиран апетит' },
     { value: 'poor_sleep', label: 'Лош сън' },
     { value: 'joint_pain', label: 'Болки в ставите при движение' },
     { value: 'concentration', label: 'Липса на фокус / мотивация' },
@@ -230,9 +341,45 @@ const ALLERGIES_STEP = {
   ],
 };
 
+/** Отговори, при които стимулантите така или иначе отпадат — тогава не питаме за кофеина. */
+export function answersExcludeStimulants(a = {}) {
+  const conditions = a.conditions || [];
+  const meds = a.medications || [];
+  return ['hypertension', 'cardiovascular', 'thyroid', 'anxiety', 'epilepsy', 'pregnancy', 'breastfeeding'].some((c) => conditions.includes(c))
+    || ['ssri', 'bp_meds', 'adhd_stimulants'].some((m) => meds.includes(m))
+    || (a.symptoms || []).includes('poor_sleep')
+    || (a.digestion || []).includes('reflux')
+    || a.age_band === '65+';
+}
+
+const bmiOf = (a) => {
+  const h = Number(a.height_cm) / 100;
+  const w = Number(a.weight_kg);
+  return h > 0 && w > 0 ? w / (h * h) : null;
+};
+
+/**
+ * Профил, за който програма за отслабване с добавки не е подходяща (daotslabna).
+ * @returns {string|null} — причината за клиента
+ */
+export function mainStopReason(a = {}) {
+  const conditions = a.conditions || [];
+  const bmiEarly = bmiOf(a);
+  if (bmiEarly && bmiEarly < 18.5) {
+    return `Индексът на телесна маса (${bmiEarly.toFixed(1)}) е под нормата — отслабване не е препоръчително. Ако имате цел за форма или енергия, вижте протоколите ни за здраве.`;
+  }
+  if (conditions.includes('pregnancy') || conditions.includes('breastfeeding')) {
+    return 'По време на бременност и кърмене не препоръчваме програма за отслабване с добавки. Храненето в този период е най-добре да се съгласува с лекар.';
+  }
+  if (conditions.includes('eating_disorder')) {
+    return 'При хранително разстройство (сега или в миналото) програма за отслабване с добавки не е подходяща. Най-добрата следваща стъпка е разговор със специалист.';
+  }
+  return null;
+}
+
 function adaptStepForProfile(step, answers = {}) {
   if (step.id === 'conditions') {
-    const base = step.options.filter((option) => !['pregnancy', 'breastfeeding'].includes(option.value));
+    const base = step.options.filter((option) => !FEMALE_ONLY_CONDITION_VALUES.includes(option.value));
     const insertAt = base.findIndex((option) => option.exclusive);
     const femaleOptions = answers.sex === 'female' ? FEMALE_ONLY_CONDITIONS : [];
     const options = insertAt >= 0
@@ -242,26 +389,34 @@ function adaptStepForProfile(step, answers = {}) {
   }
 
   if (step.id === 'medications') {
-    const options = step.options.filter((option) => {
-      if (option.value === 'hormone_therapy') return answers.sex === 'female';
-      return true;
-    });
+    // Хормонална терапия — и за мъже (тестостерон); при жени включва и контрацепцията.
+    const options = step.options.map((option) => (option.value === 'hormone_therapy' && answers.sex === 'male'
+      ? { ...option, label: 'Хормонална терапия (вкл. тестостерон)' }
+      : option));
     return { ...step, options };
   }
 
   return step;
 }
 
+const CONDITIONAL_STEPS = () => [DIABETES_MEDS_STEP, IRON_STATUS_STEP, LIFE_SLEEP_STEP, LIFE_SKIN_STEP, LIFE_JOINT_STEP, MAIN_STIMULANT_STEP];
+
+/** Отговори на условни въпроси, които вече не се показват (напр. махнат „диабет“), отпадат. */
+export function pruneHiddenAnswers(answers = {}) {
+  for (const step of CONDITIONAL_STEPS()) {
+    if (step.showWhen && !step.showWhen(answers)) delete answers[step.field];
+  }
+  return answers;
+}
+
 export function pruneSiteAdvisorAnswers(answers = {}) {
   if (answers.sex !== 'female') {
     if (Array.isArray(answers.conditions)) {
-      answers.conditions = answers.conditions.filter((value) => !['pregnancy', 'breastfeeding'].includes(value));
-    }
-    if (Array.isArray(answers.medications)) {
-      answers.medications = answers.medications.filter((value) => value !== 'hormone_therapy');
+      answers.conditions = answers.conditions.filter((value) => !FEMALE_ONLY_CONDITION_VALUES.includes(value));
     }
   }
   delete answers.pregnancy;
+  pruneHiddenAnswers(answers);
 }
 
 /**
@@ -274,18 +429,29 @@ export function buildSiteAdvisorSteps(siteId = 'life', answers = {}) {
   const isMain = siteId === 'main';
 
   for (const step of BASE_STEPS) {
-    const adapted = adaptStepForProfile(step, answers);
+    let adapted = adaptStepForProfile(step, answers);
+    if (step.id === 'conditions' && isMain) {
+      // daotslabna: хранително разстройство — програмата спира (вж. mainStopReason).
+      const i = adapted.options.findIndex((o) => o.exclusive);
+      adapted = { ...adapted, options: [...adapted.options.slice(0, i), { value: 'eating_disorder', label: 'Хранително разстройство (сега или в миналото)' }, ...adapted.options.slice(i)] };
+    }
     if (step.id === 'age' && !isMain) {
-      steps.push(adapted, LIFE_PRIORITY_STEP);
+      steps.push(adapted, LIFE_PRIORITY_STEP, LIFE_SKIN_STEP);
     } else if (step.id === 'body') {
       steps.push({ ...adapted, hint: meta.bodyHint });
-      if (isMain) steps.push(MAIN_WEIGHT_GOAL_STEP);
+      if (isMain) steps.push(MAIN_WEIGHT_GOAL_STEP, MAIN_EATING_STEP);
+    } else if (step.id === 'diet' && isMain) {
+      steps.push(adapted, MAIN_DIGESTION_STEP);
+    } else if (step.id === 'conditions') {
+      steps.push(adapted, DIABETES_MEDS_STEP);
     } else {
       steps.push(adapted);
     }
   }
 
   steps.push(adaptStepForProfile(isMain ? MAIN_SYMPTOMS_STEP : LIFE_SYMPTOMS_STEP, answers));
+  steps.push(IRON_STATUS_STEP);
+  if (!isMain) steps.push(LIFE_SLEEP_STEP, LIFE_JOINT_STEP);
   if (isMain) steps.push(MAIN_STIMULANT_STEP);
   steps.push(ALLERGIES_STEP);
   if (isMain) steps.push(MAIN_BUDGET_STEP);
@@ -298,7 +464,18 @@ export function buildSiteAdvisorSteps(siteId = 'life', answers = {}) {
     ctaLabel: meta.contactCta,
   });
 
-  return steps;
+  // Условните въпроси — само ако предишните отговори ги правят нужни.
+  const visible = steps.filter((step) => !step.showWhen || step.showWhen(answers));
+
+  // daotslabna: при неподходящ профил след съответния въпрос идва спиране, без следващите въпроси.
+  const stop = isMain ? mainStopReason(answers) : null;
+  if (stop) {
+    const lowBmi = (bmiOf(answers) || 99) < 18.5;
+    const at = visible.findIndex((s) => s.id === (lowBmi ? 'body' : 'conditions'));
+    const cut = at >= 0 ? at + 1 : visible.length;
+    return [...visible.slice(0, cut), { id: 'stop', type: 'stop', title: 'Програмата не е подходяща за вас', hint: stop }];
+  }
+  return visible;
 }
 
 export function getSiteAdvisorDraftKey(siteId = 'life') {

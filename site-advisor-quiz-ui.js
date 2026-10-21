@@ -7,6 +7,7 @@ import {
   getSiteAdvisorDraftKey,
   getSiteAdvisorMeta,
   pruneSiteAdvisorAnswers,
+  pruneHiddenAnswers,
 } from './site-advisor-config.js';
 import { finalizeSiteAnswers } from './site-advisor-shared.js';
 
@@ -62,6 +63,15 @@ export function createSiteAdvisorQuiz(options) {
   }
 
   function syncOtherInputs() {
+    ['height_cm', 'weight_kg'].forEach((id) => {
+      const input = document.getElementById(id);
+      input?.addEventListener('input', () => {
+        const v = Number(input.value);
+        if (v > 0) answers[id] = v; else delete answers[id];
+        saveDraft();
+      });
+    });
+
     form.querySelectorAll('.lpq-other-text').forEach((input) => {
       const field = input.dataset.otherField;
       if (field) answers[otherFieldKey(field)] = input.value.trim();
@@ -110,6 +120,14 @@ export function createSiteAdvisorQuiz(options) {
   }
 
   function renderStep(step) {
+    if (step.type === 'stop') {
+      // Профилът не е подходящ: обяснение и изход, без следващи въпроси.
+      return `<div class="lpq-step lpq-step-stop" id="step-${step.id}">
+      <h2>${escapeHtml(step.title)}</h2>
+      <p class="lpq-stop-text">${escapeHtml(step.hint)}</p>
+      <a class="lpq-btn lpq-btn-ghost" href="${siteId === 'main' ? 'index.html' : 'life.html'}">Към началната страница</a>
+    </div>`;
+    }
     let inner = step.hint ? `<p class="lpq-hint">${step.hint}</p>` : '';
 
     if (step.type === 'single' || step.type === 'multi') {
@@ -214,8 +232,8 @@ export function createSiteAdvisorQuiz(options) {
 
   function showStep(index) {
     activeSteps = getActiveSteps();
-    const domStepCount = form.querySelectorAll('.lpq-step').length;
-    if (domStepCount !== activeSteps.length) {
+    const domIds = [...form.querySelectorAll('.lpq-step')].map((el) => el.id).join(',');
+    if (domIds !== activeSteps.map((st) => `step-${st.id}`).join(',')) {
       renderSteps();
       index = Math.min(index, activeSteps.length - 1);
     }
@@ -239,6 +257,8 @@ export function createSiteAdvisorQuiz(options) {
     }
 
     prevBtn.hidden = index === 0;
+    // Спиране: няма „Напред“ — само „Назад“ (да поправи отговор) или изход.
+    nextBtn.hidden = activeSteps[index]?.type === 'stop';
     // Бележката за NutriPlan — само на първата стъпка, после не разсейва.
     document.querySelector('.lpq-np-note')?.toggleAttribute('hidden', index !== 0);
     const lastStep = activeSteps[activeSteps.length - 1];
@@ -338,6 +358,7 @@ export function createSiteAdvisorQuiz(options) {
     formCard.hidden = true;
     loadingCard.hidden = false;
 
+    pruneHiddenAnswers(answers);
     const payload = finalizeSiteAnswers(answers, siteId);
     const animator = new AnimatorClass({
       logEl: document.getElementById('lpq-analysis-log'),

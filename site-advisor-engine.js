@@ -3,6 +3,7 @@
  */
 
 import { finalizeSiteAnswers, buildAdvisorClinicalGuardrails } from './site-advisor-shared.js';
+import { pruneHiddenAnswers, mainStopReason } from './site-advisor-config.js';
 import {
   buildClientProfile,
   extractProductsFromContent,
@@ -108,7 +109,13 @@ function getSitePriorityKeywordMap(siteId, priority = '') {
 }
 
 export function buildSiteAdvisorProfile(rawAnswers, siteId = 'life') {
-  const finalized = finalizeSiteAnswers(rawAnswers, siteId);
+  // Отговори на скрити въпроси отпадат и тук — сървърът не разчита на браузъра.
+  const finalized = finalizeSiteAnswers(pruneHiddenAnswers({ ...(rawAnswers || {}) }), siteId);
+  // daotslabna: бременност, кърмене, хранително разстройство, ИТМ под 18.5 — без програма за отслабване.
+  if (siteId === 'main') {
+    const stop = mainStopReason(finalized);
+    if (stop) throw new Error(stop);
+  }
   return buildClientProfile(finalized);
 }
 

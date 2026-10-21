@@ -54,3 +54,26 @@ describe('стимуланти: разпознаване и правила', () 
     expect(getExclusionReasons({}, p).some((r) => /червен ориз/.test(r))).toBe(true);
   });
 });
+
+describe('новите въпроси изключват продукти', () => {
+  const p = (name, category) => ({ product_id: name, public_data: { name, price: 20, variants: [{ option_name: '60 капс.', price: 20, available: true }] }, system_data: { portfolio: { category } } });
+  const has = (profile, product, re) => getExclusionReasons(profile, product).some((r) => re.test(r));
+
+  test('GLP-1 → без средства за апетит; инсулин → без продукти за кръвна захар', () => {
+    expect(has({ diabetes_meds: 'glp1' }, p('Glucomannan', 'Отслабване > Потискане на апетита'), /GLP-1/)).toBe(true);
+    expect(has({ diabetes_meds: 'insulin_su' }, p('Berberine 500', 'Здраве > Кръвна захар'), /инсулин/)).toBe(true);
+  });
+
+  test('подуване → без фибри; будене нощем → без мелатонин; акне → без биотин', () => {
+    expect(has({ digestion: ['bloating'] }, p('Psyllium Husk', 'Отслабване > Потискане на апетита'), /фибри/)).toBe(true);
+    expect(has({ sleep_issue: 'waking' }, p('Melatonin 1 mg', 'Сън'), /мелатонин/)).toBe(true);
+    expect(has({ sleep_issue: 'falling_asleep' }, p('Melatonin 1 mg', 'Сън'), /мелатонин/)).toBe(false);
+    expect(has({ skin_concern: 'acne' }, p('Biotin 10000', 'Красота'), /биотин/)).toBe(true);
+  });
+
+  test('рефлукс, тревожност, епилепсия → без стимуланти', () => {
+    expect(profileExcludesStimulants({ digestion: ['reflux'] })).toBe(true);
+    expect(profileExcludesStimulants({ conditions: ['anxiety'] })).toBe(true);
+    expect(profileExcludesStimulants({ conditions: ['epilepsy'] })).toBe(true);
+  });
+});

@@ -1028,3 +1028,6 @@ body.lpq-body {
 .lpr-nutriplan { scroll-margin-top: 1rem; }
 
 .lpr-budget-note { margin: -.4rem 0 1rem; padding: .6rem .85rem; border-radius: 12px; background: rgba(201, 162, 39, .12); border: 1px solid rgba(201, 162, 39, .3); font-size: .86rem; }
+
+/* Спиране на теста при неподходящ профил */
+.lpq-step-stop .lpq-stop-text { margin: .5rem 0 1.25rem; line-height: 1.6; color: var(--lpq-text); }

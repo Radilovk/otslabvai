@@ -48,6 +48,8 @@ const SYMPTOM_KEYWORDS = {
   poor_sleep: ['sleep', 'сън', 'melatonin', 'мелатонин', 'магнезий', 'magnesium'],
   cravings: ['appetite', 'апетит', 'ситост', 'craving', 'fiber', 'фибри', 'garcinia', 'гарциния', 'chromium', 'хром'],
   low_appetite: ['mass', 'гейн', 'gainer', 'протеин', 'protein'],
+  sugar_cravings: ['chromium', 'хром', 'berberine', 'берберин', 'inositol', 'инозитол', 'cinnamon', 'канела'],
+  stress_eating: ['магнезий', 'magnesium', 'ашваганда', 'ashwagandha', 'rhodiola', 'родиола', 'l-theanine', 'теанин'],
 };
 
 const PEPTIDE_KEYWORDS = [
@@ -182,6 +184,17 @@ export function buildClientProfile(raw) {
   const menopauseContext = sex === 'female' && ['45-54', '55-64', '65+'].includes(ageBand);
 
   const pickOther = (field) => String(raw[`${field}_other`] || '').trim();
+  const pickList = (v, allowed) => (Array.isArray(v) ? v.filter((x) => allowed.includes(x)) : []);
+  const pickOne = (v, allowed) => (allowed.includes(v) ? v : '');
+
+  // Новите въпроси → роли в програмата: апетитът и храненето вечер — средство за апетит;
+  // глад за сладко — кръвна захар; хапване при стрес — магнезий / адаптоген; запек — фибри.
+  const eating = pickList(raw.eating_pattern, ['big_portions', 'snacking', 'sweet_cravings', 'night_eating', 'emotional']);
+  const digestion = pickList(raw.digestion, ['bloating', 'constipation', 'reflux']);
+  const symptoms = Array.isArray(raw.symptoms) ? [...raw.symptoms] : [];
+  if (eating.some((e) => ['big_portions', 'snacking', 'night_eating'].includes(e)) || digestion.includes('constipation')) symptoms.push('cravings');
+  if (eating.includes('sweet_cravings')) symptoms.push('sugar_cravings');
+  if (eating.includes('emotional')) symptoms.push('stress_eating');
 
   return {
     sex,
@@ -201,7 +214,14 @@ export function buildClientProfile(raw) {
     activity: raw.activity || 'rare',
     diet: raw.diet || 'omnivore',
     diet_other: pickOther('diet'),
-    symptoms: Array.isArray(raw.symptoms) ? raw.symptoms : [],
+    symptoms: [...new Set(symptoms)].filter((x) => x !== 'none' || symptoms.length === 1),
+    eating_pattern: eating,
+    digestion,
+    diabetes_meds: pickOne(raw.diabetes_meds, ['none', 'metformin', 'insulin_su', 'glp1']),
+    iron_status: pickOne(raw.iron_status, ['low', 'normal', 'unknown']),
+    sleep_issue: pickOne(raw.sleep_issue, ['falling_asleep', 'waking', 'early_waking', 'shift_work']),
+    skin_concern: pickOne(raw.skin_concern, ['wrinkles', 'dryness', 'hair_nails', 'acne']),
+    joint_type: pickOne(raw.joint_type, ['wear', 'sport', 'inflammatory']),
     symptoms_other: pickOther('symptoms'),
     allergies: Array.isArray(raw.allergies) ? raw.allergies : [],
     allergies_other: pickOther('allergies'),
@@ -240,7 +260,7 @@ export function scoreProduct(product, profile, priorityKeywordsMap = PRIORITY_GO
   }
 
   if (profile.menopause_context) {
-    if (productMatchesAnyKeyword(text, ['колаген', 'collagen', 'магнезий', 'magnesium', 'сън', 'sleep', 'dhea'])) {
+    if (productMatchesAnyKeyword(text, ['колаген', 'collagen', 'магнезий', 'magnesium', 'сън', 'sleep'])) {
       score += 2;
     }
   }
