@@ -199,6 +199,12 @@ function pickCore(candidates, basicBudget) {
   return top.reduce((min, e) => (priceOf(e.product) < priceOf(min.product) ? e : min)).product;
 }
 
+/** Дозата и часът на прием по данните на продукта (етикет, роля) — тях не ги решава AI. */
+export function codeDoseTiming(product) {
+  const { dose, timing } = toItem(product, 'support');
+  return { dose, timing };
+}
+
 function toItem(product, role) {
   const facts = getProductFacts(product);
   const packaging = product.public_data?.packaging || {};

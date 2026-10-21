@@ -14,7 +14,8 @@ import {
   PRIORITY_GOAL_KEYWORDS,
 } from './protocol-quiz-engine.js';
 import { rerankByProfitWithinRelevance } from './portfolio-advisor-commerce.js';
-import { composeAdvisorStacks } from './advisor-composer.js';
+import { composeAdvisorStacks, codeDoseTiming } from './advisor-composer.js';
+import { guardAdvisorResponse } from './advisor-ai-guard.js';
 import { buildProductCard, buildReviewCandidates, sanitizeProfileForAI, summarizeComposedForAI } from './advisor-ai.js';
 import {
   getExclusionReasons,
@@ -197,6 +198,10 @@ export function finalizeSiteAdvisorResponse(response, eligibleProducts, excluded
   if (!response?.tiers?.basic || !response?.tiers?.optimal || !response?.tiers?.premium) {
     throw new Error('Липсват трите ценови класа в отговора.');
   }
+
+  // Дозите и часовете на прием — от данните на продукта; съвети за прием на вещества
+  // извън подбраните продукти отпадат; предупреждението е фиксирано (advisor-ai-guard.js).
+  guardAdvisorResponse(response, (pid) => (productMap.get(pid) ? codeDoseTiming(productMap.get(pid)) : null));
 
   for (const key of ['basic', 'optimal', 'premium']) {
     const tier = response.tiers[key];

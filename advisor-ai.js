@@ -146,17 +146,21 @@ export function repairAiTiers(response, composed, productMap, limits) {
       }
       out.push({
         ...baseItem(product, out.length === 0 ? 'core' : 'support'),
-        ...(item.dose ? { dose: String(item.dose) } : {}),
-        ...(item.timing ? { timing: String(item.timing) } : {}),
         ...(item.why_for_you ? { why_for_you: String(item.why_for_you) } : {}),
       });
     }
     const min = Math.min(limits?.[key]?.min ?? 1, base.products.length);
     const max = limits?.[key]?.max ?? base.products.length;
+    // Продукт, който AI е махнал от пакета на алгоритъма (напр. омега-3 при „Друго: варфарин“),
+    // не се връща при допълването — иначе прегледът за сложен профил губи смисъл.
+    // Само ако AI е дал поне един валиден продукт — иначе списъкът му е счупен и не означава „махни“.
+    const aiValid = out.length > 0;
+    const aiIds = new Set((Array.isArray(aiTier.products) ? aiTier.products : []).map((i) => i?.product_id));
+    const removedByAi = (pid) => aiValid && !aiIds.has(pid);
     for (const item of base.products) {
       if (out.length >= Math.max(min, 1)) break;
       const product = productMap.get(item.product_id);
-      if (!product || conflicts(product)) continue;
+      if (!product || conflicts(product) || removedByAi(item.product_id)) continue;
       out.push({ ...item });
       changes.push(`${key}: допълнен от алгоритъма ${item.product_id}`);
     }
