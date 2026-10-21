@@ -1860,8 +1860,19 @@ async function callOpenAI(settings, messages) {
 /**
  * Call Google AI (Gemini)
  */
+/**
+ * Актуалният модел на Gemini за текст и JSON (стабилен, препоръчан от Google за нови проекти;
+ * „мисленето“ е на минимум по подразбиране — без излишни токени). Проверено: 21.10.2026,
+ * https://ai.google.dev/gemini-api/docs/models
+ */
+const GEMINI_CURRENT_MODEL = 'gemini-3.5-flash-lite';
+// Спрени модели (Google ги изключи) — запазени в настройките, те чупят всяка AI заявка.
+const GEMINI_SHUT_DOWN = /^(gemini-1\.|gemini-2\.0-|gemini-3-pro-preview|gemini-3\.1-flash-lite-preview)/;
+
 async function callGoogleAI(settings, messages) {
-    const model = settings.model || 'gemini-2.0-flash';
+    const requested = settings.model || GEMINI_CURRENT_MODEL;
+    const model = GEMINI_SHUT_DOWN.test(requested) ? GEMINI_CURRENT_MODEL : requested;
+    if (model !== requested) console.warn(`Gemini модел ${requested} е спрян — ползва се ${model}.`);
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${settings.apiKey}`;
 
     // Map the messages array to Google's format.
@@ -2151,13 +2162,13 @@ const PROTOCOL_QUIZ_AI_OVERRIDES = {
 
 
 /**
- * Моделът за протоколите (daotslabna, life-protocols, biocode-bg.com): Gemini 2.5 Flash с ключа
+ * Моделът за протоколите (daotslabna, life-protocols, biocode-bg.com): Gemini 3.5 Flash-Lite с ключа
  * на проекта — AI тук само пише текста (продуктите, дозите и безопасността са на кода), затова
  * бърз и евтин модел е достатъчен. Отделно от общите AI настройки (те са и за описанията на
  * продуктите). Без ключ за Gemini или при грешка — общите настройки; при грешка и там —
  * резервният вариант на кода (в извикващия код).
  */
-const ADVISOR_GEMINI_MODEL = 'gemini-2.5-flash';
+const ADVISOR_GEMINI_MODEL = GEMINI_CURRENT_MODEL;
 
 async function callAdvisorAI(env, messages) {
     // Само ключ за Google: секрет на Worker-а, ключ, запазен за Google в админа, или общите

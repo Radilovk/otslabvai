@@ -4798,7 +4798,7 @@ function updateModelPlaceholder() {
     const placeholders = {
         'cloudflare': '@cf/meta/llama-3.1-70b-instruct',
         'openai': 'gpt-4 or gpt-3.5-turbo',
-        'google': 'gemini-2.0-flash'
+        'google': 'gemini-3.5-flash-lite'
     };
     
     if (modelInput) {
