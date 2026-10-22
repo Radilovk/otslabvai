@@ -8847,3 +8847,281 @@ main.container > .btn-back:active { transform: scale(0.97); }
     .product-grid .effects-container { display: none; }
     .product-grid .product-card:active { transform: scale(0.98); }
 }
+
+/* ======================================================= */
+/*   REFINE 2026-10-22 — симетричен хедър, лента с офертата  */
+/*   за протокол, компактни статистики и категории (телефон) */
+/* ======================================================= */
+
+/* ── Лента: покана за персонален антиейджинг протокол ── */
+.promo-banner {
+    padding: 0;
+    background: linear-gradient(90deg, #0b3b4a 0%, #0e5563 55%, #0b3b4a 100%);
+    border-bottom: 0;
+    animation: none;
+}
+[data-theme] .promo-banner { background: linear-gradient(90deg, #0b3b4a 0%, #0e5563 55%, #0b3b4a 100%); }
+.promo-banner::before,
+.promo-banner::after { content: none; display: none; }
+.promo-offer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 8px 16px;
+    color: #e8fbfc;
+    text-decoration: none;
+    font-size: 0.88rem;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+    -webkit-tap-highlight-color: transparent;
+}
+.promo-banner .promo-offer strong { color: #ffffff; font-weight: 600; }
+.promo-offer__note { color: rgba(232, 251, 252, 0.72); }
+.promo-offer__spark {
+    flex: 0 0 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: #0b3b4a;
+    background: #6fe3e6;
+}
+.promo-banner .promo-offer__spark svg { color: #0b3b4a; stroke: none; }
+.promo-offer__go {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.8rem;
+    transition: background 0.2s ease;
+}
+.promo-banner .promo-offer__go svg { color: currentColor; stroke: currentColor; }
+.promo-offer:hover .promo-offer__go { background: rgba(255, 255, 255, 0.24); }
+@media (max-width: 420px) {
+    .promo-offer { justify-content: space-between; font-size: 0.82rem; padding: 8px 12px; }
+    .promo-offer__note { display: none; }
+}
+
+/* ── Хедър на телефон: лого вляво, три еднакви кръгли бутона вдясно ── */
+@media (max-width: 992px) {
+    .main-header .header-container {
+        gap: 8px;
+        padding: 0 max(14px, env(safe-area-inset-left)) 0 max(14px, env(safe-area-inset-right));
+    }
+    .main-header .logo-container { min-width: 0; flex: 1 1 auto; }
+    .main-header .logo-container .brand-name {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .main-header .header-actions,
+    .main-header .header-actions:not(:has(.search-container)) {
+        display: flex;
+        gap: 8px;
+        padding: 0;
+        margin: 0;
+        background: none;
+        border: 0;
+        border-radius: 0;
+        order: 2;
+    }
+    .main-header .menu-toggle { order: 3; }
+    .main-header .header-actions .search-toggle-btn,
+    .main-header .header-actions .cart-icon-btn,
+    .main-header .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        margin: 0;
+        gap: 0;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 150, 160, 0.22);
+        background: rgba(255, 255, 255, 0.85);
+        color: #0e5563;
+        box-shadow: 0 1px 2px rgba(15, 37, 64, 0.06);
+        transform: none;
+    }
+    .main-header .header-actions .search-toggle-btn:hover,
+    .main-header .header-actions .cart-icon-btn:hover {
+        transform: none;
+        background: rgba(255, 255, 255, 0.85);
+        color: #0e5563;
+        box-shadow: 0 1px 2px rgba(15, 37, 64, 0.06);
+    }
+    .main-header .header-actions .search-toggle-btn[aria-expanded="true"] {
+        background: #0e5563;
+        border-color: #0e5563;
+        color: #fff;
+        box-shadow: none;
+    }
+    .main-header .header-actions .search-toggle-btn svg,
+    .main-header .header-actions .cart-icon-btn svg { width: 19px; height: 19px; }
+    .main-header .header-actions .cart-icon-btn .cart-badge {
+        top: -4px;
+        right: -4px;
+        width: 18px;
+        height: 18px;
+        font-size: 0.65rem;
+    }
+    /* Хамбургер: три равни черти, точно в центъра на кръга */
+    .main-header .menu-toggle { flex-direction: column; }
+    .main-header .menu-toggle span {
+        display: block;
+        flex: 0 0 auto;
+        width: 18px;
+        height: 2px;
+        margin: 2px 0;
+        border-radius: 2px;
+        background: currentColor;
+    }
+    .main-header .menu-toggle.active span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .main-header .menu-toggle.active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+    /* Количката е в хедъра — без втори плаващ бутон, който се бие с „Получи своя протокол“ */
+    .cart-icon-fixed-mobile { display: none !important; }
+    .search-dropdown { right: -96px; width: min(320px, calc(100vw - 28px)); }
+}
+/* Количката е и в хедъра — менюто не я повтаря */
+@media (max-width: 992px) {
+    .main-nav .cart-link-mobile { display: none !important; }
+}
+
+/* ── Hero статистики: един ред с три колони вместо 2 + 1 ── */
+@media (max-width: 640px) {
+    .hero-stats,
+    [data-theme] .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .hero-stats .stat-item,
+    [data-theme] .hero-stats .stat-item {
+        min-width: 0;
+        padding: 14px 6px 12px;
+        border-radius: 16px;
+        gap: 4px;
+    }
+    .hero-stats .stat-item .life-icon-img,
+    .hero-stats .stat-item .stat-icon { width: 32px; height: 32px; }
+    .hero-stats .stat-item strong { font-size: 1.35rem; line-height: 1.1; }
+    .hero-stats .stat-item span { font-size: 0.72rem; line-height: 1.25; }
+    /* Значките на доверие — в един ред, без да заемат половин екран */
+    .hero-trust-badges {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+    }
+    .hero-trust-badges > *,
+    [data-theme] .hero-trust-badges .trust-badge {
+        padding: 5px 10px;
+        font-size: 0.74rem;
+        gap: 4px;
+        box-shadow: none;
+    }
+    .hero-trust-badges svg { width: 13px; height: 13px; }
+    /* Главният бутон — на един ред, иконата до текста */
+    .hero-cta-group .btn-hero-primary,
+    .hero-cta-group .btn-hero-secondary,
+    [data-theme] .hero-cta-group .btn-hero-primary,
+    [data-theme] .hero-cta-group .btn-hero-secondary {
+        justify-content: center;
+        gap: 8px;
+        min-height: 54px;
+        padding: 0 16px;
+        letter-spacing: 0.04em;
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
+    .hero-cta-group .btn-hero-primary svg,
+    .hero-cta-group .btn-hero-secondary svg { margin-right: 0 !important; flex: 0 0 auto; }
+    /* „Нагоре“ се бие с плаващия бутон за протокола */
+    #back-to-top { display: none !important; }
+}
+
+/* ── Категории: компактни редове (икона · текст · стрелка) вместо високи карти ── */
+@media (max-width: 640px) {
+    .hero-features-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .hero-features-grid .hex-feature-card {
+        display: grid;
+        grid-template-columns: 56px 1fr 20px;
+        grid-template-rows: auto auto;
+        column-gap: 14px;
+        row-gap: 2px;
+        align-items: center;
+        min-height: 0;
+        padding: 14px 16px;
+        border-radius: 18px;
+        text-align: left;
+    }
+    .hero-features-grid .hex-feature-card::after { display: none; }
+    .hero-features-grid .hex-icon-outer {
+        grid-row: 1 / 3;
+        width: 56px;
+        height: 56px;
+        margin: 0;
+    }
+    .hero-features-grid .hex-icon-inner img,
+    .hero-features-grid .hex-icon-inner .life-icon-img { width: 32px; height: 32px; }
+    .hero-features-grid .hex-feature-card h3 {
+        grid-column: 2;
+        margin: 0;
+        font-size: 1.02rem;
+        line-height: 1.2;
+        letter-spacing: 0.02em;
+    }
+    .hero-features-grid .hex-feature-card p {
+        grid-column: 2;
+        margin: 0;
+        font-size: 0.82rem;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .hero-features-grid .hex-feature-card .btn-learn-more {
+        grid-column: 3;
+        grid-row: 1 / 3;
+        width: 20px;
+        height: 20px;
+        min-height: 0;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        background: none;
+        box-shadow: none;
+        font-size: 0;
+        color: transparent;
+        position: relative;
+    }
+    .hero-features-grid .hex-feature-card .btn-learn-more::after {
+        content: '';
+        position: absolute;
+        inset: 4px 6px 4px 2px;
+        border-right: 2px solid #0e8a92;
+        border-top: 2px solid #0e8a92;
+        transform: rotate(45deg);
+        width: 8px;
+        height: 8px;
+    }
+}
+
+/* ── Леко зареждане: тежките декорации само при мишка и голям екран ── */
+@media (max-width: 992px), (hover: none) {
+    .bg-orbs, .cursor-glow { display: none !important; }
+}

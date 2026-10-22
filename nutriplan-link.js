@@ -32,9 +32,15 @@ function readQuizAnswers(siteId) {
   }
 }
 
+/**
+ * Life Protocols води към антиейджинг протокола на NutriPlan (лендинг на готовото
+ * състояние „longevity“), останалите сайтове — към началната страница.
+ */
+const NUTRIPLAN_LANDING = { life: 'protocol-longevity.html' };
+
 export function nutriPlanUrl(siteId, medium = 'cta') {
   const src = NUTRIPLAN_SOURCE[siteId] || 'site';
-  return `${NUTRIPLAN_SITE}/?utm_source=${src}&utm_medium=${encodeURIComponent(medium)}`;
+  return `${NUTRIPLAN_SITE}/${NUTRIPLAN_LANDING[siteId] || ''}?utm_source=${src}&utm_medium=${encodeURIComponent(medium)}`;
 }
 
 /** Пратката: отговорите (без бюджета) и продуктите от препоръчания вариант. */
@@ -57,7 +63,9 @@ const LINK_KEY = 'nutriplanHandoffLink';
 
 async function createLink(siteId, result) {
   const src = NUTRIPLAN_SOURCE[siteId];
-  const fallback = `${NUTRIPLAN_SITE}/questionnaire2.html?from=${src}&utm_source=${src}&utm_medium=quiz_result`;
+  // Антиейджинг тестът → въпросникът директно с протокола „longevity“ (и без пратка).
+  const protocol = siteId === 'life' ? 'protocol=longevity&' : '';
+  const fallback = `${NUTRIPLAN_SITE}/questionnaire2.html?${protocol}from=${src}&utm_source=${src}&utm_medium=quiz_result`;
   const answers = readQuizAnswers(siteId);
   if (!answers) return fallback;
   // Повторен клик за същия резултат — същата пратка (не нов запис и нов брояч).
@@ -137,6 +145,14 @@ export const NUTRIPLAN_PROMO_DEFAULTS = {
   button: { text: 'Създай моя план' },
 };
 
+/** Life Protocols: хранителният план стъпва на готовия антиейджинг протокол на NutriPlan. */
+const NUTRIPLAN_PROMO_LIFE = {
+  eyebrow: 'NutriPlan · антиейджинг протокол',
+  title: 'Антиейджинг хранене към вашия протокол',
+  content: 'NutriPlan съставя меню по антиейджинг протокола — храни за клетъчно обновяване, баланс на белтъчините и прозорец за хранене — съобразено с вашето здраве и вкус.',
+  button: { text: 'Виж антиейджинг протокола' },
+};
+
 const NP_FEATURES = [
   ['Седмично меню', 'по цели, здраве и предпочитания'],
   ['Замени за всяко ястие', 'без да излизате от плана'],
@@ -182,7 +198,7 @@ function nutriPlanPhone() {
  */
 export function renderNutriPlanPromo(component, siteId) {
   const c = component || {};
-  const d = NUTRIPLAN_PROMO_DEFAULTS;
+  const d = siteId === 'life' ? NUTRIPLAN_PROMO_LIFE : NUTRIPLAN_PROMO_DEFAULTS;
   const url = c.button?.url || nutriPlanUrl(siteId, 'page');
   const visual = c.image
     ? `<div class="sf-np__phone"><img class="sf-np__img" src="${esc(c.image)}" alt="NutriPlan" loading="lazy"></div>`
