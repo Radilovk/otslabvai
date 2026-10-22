@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="life-protocol-quiz.css?v=20261021b">
+  <link rel="stylesheet" href="life-protocol-quiz.css?v=20261022a">
   <script>
     (function() {
       try {
@@ -21,8 +21,13 @@
   </script>
 </head>
 <body class="lpq-body">
+    <!-- Лентата на сайта: назад (към предишния въпрос / към сайта), лого към началото, изход. -->
+  <header class="lpq-topbar" role="banner">
+    <button type="button" class="lpq-topbar__btn" id="lpq-top-back" aria-label="Назад" data-home="life.html"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <a class="lpq-topbar__home" href="life.html" aria-label="Life Protocols — начало"><img class="lpq-topbar__logo" src="images/life-icons/logo.png" alt="Life Protocols"><span class="lpq-topbar__brand">Life Protocols</span></a>
+    <a class="lpq-topbar__btn" href="life.html" aria-label="Изход към сайта"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></a>
+  </header>
   <div class="lpq-wrap">
-    <a href="life.html" class="lpq-back-link">← Обратно към Life Protocols</a>
     <header class="lpq-header">
       <h1>Вашият персонален протокол</h1>
       <p>Кратък профил → индивидуален anti-aging стак</p>
