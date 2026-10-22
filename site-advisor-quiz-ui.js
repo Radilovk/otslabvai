@@ -416,6 +416,15 @@ export function createSiteAdvisorQuiz(options) {
     if (stepIndex > 0) showStep(stepIndex - 1);
   });
 
+  // Горната лента: „назад“ = предишният въпрос; от първия — обратно към сайта.
+  const topBack = document.getElementById('lpq-top-back');
+  topBack?.addEventListener('click', () => {
+    if (!loadingCard.hidden) return;
+    if (stepIndex > 0) showStep(stepIndex - 1);
+    else if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) history.back();
+    else location.href = topBack.dataset.home || '/';
+  });
+
   nextBtn.addEventListener('click', async () => {
     if (!validateCurrentStep()) return;
     if (stepIndex < activeSteps.length - 1) {

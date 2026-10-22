@@ -91,7 +91,7 @@ export function renderNutriPlanTeaser() {
   return `
     <a class="lpr-np-teaser" href="#lpr-np-title">
       <span class="lpr-np-logo">N</span>
-      <span><strong>Безплатно към протокола:</strong> персонален хранителен план в NutriPlan</span>
+      <span><strong>Следваща стъпка:</strong> персонален хранителен план към протокола в NutriPlan</span>
       <span class="lpr-np-teaser__go" aria-hidden="true">↓</span>
     </a>`;
 }

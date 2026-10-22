@@ -1031,3 +1031,52 @@ body.lpq-body {
 
 /* Спиране на теста при неподходящ профил */
 .lpq-step-stop .lpq-stop-text { margin: .5rem 0 1.25rem; line-height: 1.6; color: var(--lpq-text); }
+
+/* ── Лентата на сайта в теста и резултата (daotslabna, life) ── */
+.lpq-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: .5rem;
+  height: 60px;
+  padding: 0 12px;
+  padding-top: env(safe-area-inset-top);
+  background: color-mix(in srgb, var(--lpq-bg) 86%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: 1px solid var(--lpq-border);
+}
+.lpq-topbar__btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--lpq-border);
+  background: var(--lpq-card);
+  color: var(--lpq-text);
+  cursor: pointer;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color .2s, color .2s;
+}
+.lpq-topbar__btn:hover { border-color: var(--lpq-accent); color: var(--lpq-accent); }
+.lpq-topbar__btn:focus-visible { outline: 3px solid var(--lpq-accent-dim); outline-offset: 2px; }
+.lpq-topbar__home { display: flex; align-items: center; justify-content: center; gap: .5rem; min-width: 0; text-decoration: none; color: var(--lpq-text); }
+.lpq-topbar__logo { display: block; height: 34px; width: auto; max-width: 100%; object-fit: contain; }
+.lpq-topbar__brand { font-family: var(--lpq-display); font-size: 1.15rem; font-weight: 600; white-space: nowrap; }
+.lpq-logo-dark { display: none; }
+[data-theme="dark"] .lpq-logo-light { display: none; }
+[data-theme="dark"] .lpq-logo-dark { display: block; }
+.lpq-embed .lpq-topbar { display: none; }
+@media (min-width: 768px) {
+  .lpq-topbar { height: 68px; padding-left: max(16px, calc((100% - 1100px) / 2)); padding-right: max(16px, calc((100% - 1100px) / 2)); }
+  .lpq-topbar__logo { height: 40px; }
+}
+
+/* daotslabna: името до логото, както в лентата на сайта; index.css (резултатът) добавя отстъп за фиксираната лента на сайта — тук не е нужен */
+.lpq-topbar__brand--main { font-family: 'Poppins', var(--lpq-font); font-weight: 700; font-size: 1.05rem; letter-spacing: .01em; background: linear-gradient(90deg, #E4007C, #00A99D); -webkit-background-clip: text; background-clip: text; color: transparent; }
+body.maa-body { padding-top: 0; }

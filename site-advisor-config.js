@@ -135,7 +135,7 @@ export const LIFE_PRIORITY_STEP = {
   type: 'single',
   field: 'priority',
   options: [
-    { value: 'longevity', label: 'Общо дълголетие и антиейджинг' },
+    { value: 'longevity', label: 'Цялостен антиейджинг — младост отвътре' },
     { value: 'energy', label: 'Енергия и издръжливост' },
     { value: 'skin', label: 'Кожа, коса, нокти' },
     { value: 'sleep', label: 'Сън и възстановяване' },

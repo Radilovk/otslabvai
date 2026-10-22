@@ -164,7 +164,7 @@ export const MAIN_SLOTS = [
 ];
 
 const LIFE_CATS = {
-  longevity: { id: 'health-longevity', title: 'Здраве и дълголетие' },
+  longevity: { id: 'health-longevity', title: 'Енергия и регенерация' },
   beauty: { id: 'anti-aging-beauty', title: 'Антиейджинг и Красота' },
   brain: { id: 'brain-cognition', title: 'Мозъчна дейност' },
   sleep: { id: 'sleep-stress', title: 'Сън и стрес' },

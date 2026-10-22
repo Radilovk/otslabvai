@@ -32,7 +32,7 @@ export const LIFE_CATEGORY_DEFS = [
   {
     id: 'health-longevity',
     category_id: 'health-longevity',
-    title: 'Здраве и дълголетие',
+    title: 'Енергия и регенерация',
     description: 'Подкрепа за митохондриална енергия, имунитет и дългосрочно благосъстояние.',
     icon: 'mitochondria',
     goalPattern: /дълголетие|longevity|имун|енергия|виталност|клетъчна регенерация|здраве|митохондри|wellness/i,
