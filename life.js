@@ -3,6 +3,8 @@
 // =======================================================
 
 import { API_URL } from './config.js';
+import { renderNutriPlanPromo } from './nutriplan-link.js';
+import { renderWithFeatures } from './site-features.js';
 import { splitProductName, cardTaglineText, decodeEntities } from './product-card-text.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import {
@@ -11,7 +13,8 @@ import {
 } from './life-icons.js';
 import {
     getHeroPrimaryCta,
-    getPremiumCta
+    getPremiumCta,
+    getCtaButtonTarget
 } from './life-protocol-store.js';
 import { LIFE_CATEGORY_DEFS } from './life-category-assign.js';
 import { rewriteAllProductImages } from './life-img.js';
@@ -1188,8 +1191,8 @@ function renderMainContent(pageContent) {
     // Пренаписваме блокираните продуктови изображения (fitness1 hotlink protection)
     rewriteAllProductImages(pageContent);
 
-    let contentHtml = '';
-    pageContent.forEach((component, index) => {
+    const renderComponent = (component, index) => {
+        let contentHtml = '';
         // Filter out the individual analysis info card (containing analyzis.png image)
         // Note: The filename 'analyzis.png' is intentionally kept as-is to match the existing asset
         if (component.type === 'info_card' && component.image && component.image.includes('analyzis.png')) {
@@ -1212,6 +1215,9 @@ function renderMainContent(pageContent) {
                 break;
             case 'product_category':
                 contentHtml += generateProductCategoryHTML(component, index);
+                break;
+            case 'nutriplan_cta':
+                contentHtml += renderNutriPlanPromo(component, 'life');
                 break;
             case 'info_card':
                 contentHtml += generateInfoCardHTML(component);
@@ -1240,9 +1246,12 @@ function renderMainContent(pageContent) {
             default:
                 console.warn('Unknown component type:', component.type);
         }
-    });
+        return contentHtml;
+    };
 
-    DOM.mainContainer.innerHTML = contentHtml;
+    DOM.mainContainer.innerHTML = renderWithFeatures(pageContent, 'life', renderComponent, {
+        advisorCta: getPremiumCta('Получи своя протокол', 'life-protocol-quiz.html'),
+    });
 }
 
 function renderFooter(settings, footer) {
@@ -2062,7 +2071,24 @@ function initPromoTimer() {
 function initStickyCTA() {
     const stickyCTA = document.getElementById('sticky-cta');
     if (!stickyCTA) return;
-    
+
+    // Купувач на протокол — към неговия протокол.
+    if (getCtaButtonTarget() !== 'life-protocol-quiz.html') {
+        const link = document.getElementById('sticky-cta-link');
+        const text = document.getElementById('sticky-cta-text');
+        if (link) link.href = getCtaButtonTarget();
+        if (text) text.textContent = 'Моят протокол';
+    }
+    // Докато секцията на протокола е на екрана, бутонът е излишен.
+    let protocolInView = false;
+    const protocolSection = document.getElementById('individual-protocol');
+    if (protocolSection && 'IntersectionObserver' in window) {
+        new IntersectionObserver(([e]) => {
+            protocolInView = e.isIntersecting;
+            if (protocolInView) stickyCTA.classList.remove('visible');
+        }, { threshold: 0.15 }).observe(protocolSection);
+    }
+
     let lastScrollY = window.scrollY;
     
     function checkScroll() {
@@ -2070,7 +2096,7 @@ function initStickyCTA() {
         const heroHeight = document.querySelector('.hero-section')?.offsetHeight || 600;
         
         // Show when scrolled past hero and scrolling up
-        if (currentScrollY > heroHeight && currentScrollY < lastScrollY) {
+        if (!protocolInView && currentScrollY > heroHeight && currentScrollY < lastScrollY) {
             stickyCTA.classList.add('visible');
         } else if (currentScrollY <= heroHeight || currentScrollY > lastScrollY + 50) {
             stickyCTA.classList.remove('visible');

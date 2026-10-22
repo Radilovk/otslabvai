@@ -22,8 +22,12 @@ import {
   productSearchText,
   productMatchesAnyKeyword,
   profileHasPregnancyOrBreastfeeding,
+  enforceStimulantRules,
 } from './protocol-safety-rules.js';
 import { composePortfolioAdvisorStacks } from './portfolio-advisor-compose.js';
+import { pruneHiddenAnswers } from './site-advisor-config.js';
+import { codeDoseTiming } from './advisor-composer.js';
+import { guardAdvisorResponse } from './advisor-ai-guard.js';
 import { buildProductCard, buildReviewCandidates, sanitizeProfileForAI, summarizeComposedForAI } from './advisor-ai.js';
 import { classifyProductSlot, getGoalSlotOrder } from './portfolio-stack-slots.js';
 import {
@@ -132,7 +136,8 @@ export function normalizeAdvisorCategories(raw) {
 
 /** Portfolio профил с категории за търсене */
 export function buildPortfolioAdvisorProfile(raw) {
-  const profile = buildClientProfile(raw);
+  // Отговори на скрити условни въпроси отпадат (напр. кофеин при цел „здраве“).
+  const profile = buildClientProfile(pruneHiddenAnswers({ ...(raw || {}), site_id: 'portfolio' }));
   if (!profile.priority || profile.priority === 'longevity') {
     profile.priority = raw.priority || 'health';
   }
@@ -265,6 +270,12 @@ export function finalizePortfolioAdvisorResponse(response, eligibleProducts, exc
   if (!response?.tiers?.basic || !response?.tiers?.optimal || !response?.tiers?.premium) {
     throw new Error('Липсват трите ценови класа в отговора.');
   }
+
+  // Дозите и часовете на прием — от данните на продукта; съвети за прием на вещества
+  // извън подбраните продукти отпадат; предупреждението е фиксирано (advisor-ai-guard.js).
+  guardAdvisorResponse(response, (pid) => (productMap.get(pid) ? codeDoseTiming(productMap.get(pid)) : null));
+  const stimRemoved = enforceStimulantRules(response, productMap, options.profile || null);
+  if (stimRemoved.length) response.safety_removed = stimRemoved;
 
   for (const key of ['basic', 'optimal', 'premium']) {
     const tier = response.tiers[key];

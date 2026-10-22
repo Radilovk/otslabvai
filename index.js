@@ -3,6 +3,8 @@
 // =======================================================
 
 import { API_URL } from './config.js';
+import { renderNutriPlanPromo } from './nutriplan-link.js';
+import { renderWithFeatures } from './site-features.js';
 import { splitProductName, cardTaglineText, decodeEntities } from './product-card-text.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import { isOnHomepage, isCatalogOnly, isProductListed, sortByOrder, catalogLink } from './product-visibility.js';
@@ -1006,8 +1008,8 @@ function updateLogoForTheme() {
 function renderMainContent(pageContent) {
     if (!DOM.mainContainer) return;
     
-    let contentHtml = '';
-    pageContent.forEach((component, index) => {
+    const renderComponent = (component, index) => {
+        let contentHtml = '';
         // Skip hidden product categories
         if (component.type === 'product_category' && component.is_hidden) {
             return;
@@ -1019,6 +1021,9 @@ function renderMainContent(pageContent) {
                 break;
             case 'product_category':
                 contentHtml += generateProductCategoryHTML(component, index);
+                break;
+            case 'nutriplan_cta':
+                contentHtml += renderNutriPlanPromo(component, 'main');
                 break;
             case 'info_card':
                 contentHtml += generateInfoCardHTML(component);
@@ -1047,9 +1052,10 @@ function renderMainContent(pageContent) {
             default:
                 console.warn('Unknown component type:', component.type);
         }
-    });
+        return contentHtml;
+    };
 
-    DOM.mainContainer.innerHTML = contentHtml;
+    DOM.mainContainer.innerHTML = renderWithFeatures(pageContent, 'main', renderComponent);
 }
 
 function renderFooter(settings, footer) {
@@ -1876,7 +1882,17 @@ function initPromoTimer() {
 function initStickyCTA() {
     const stickyCTA = document.getElementById('sticky-cta');
     if (!stickyCTA) return;
-    
+
+    // Докато секцията на протокола е на екрана, бутонът е излишен.
+    let protocolInView = false;
+    const protocolSection = document.getElementById('individual-protocol');
+    if (protocolSection && 'IntersectionObserver' in window) {
+        new IntersectionObserver(([e]) => {
+            protocolInView = e.isIntersecting;
+            if (protocolInView) stickyCTA.classList.remove('visible');
+        }, { threshold: 0.15 }).observe(protocolSection);
+    }
+
     let lastScrollY = window.scrollY;
     
     function checkScroll() {
@@ -1884,7 +1900,7 @@ function initStickyCTA() {
         const heroHeight = document.querySelector('.hero-section')?.offsetHeight || 600;
         
         // Show when scrolled past hero and scrolling up
-        if (currentScrollY > heroHeight && currentScrollY < lastScrollY) {
+        if (!protocolInView && currentScrollY > heroHeight && currentScrollY < lastScrollY) {
             stickyCTA.classList.add('visible');
         } else if (currentScrollY <= heroHeight || currentScrollY > lastScrollY + 50) {
             stickyCTA.classList.remove('visible');

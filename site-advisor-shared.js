@@ -9,7 +9,7 @@ const CLINICAL_FLAG_VALUES = new Set(['none', 'all', 'other']);
 export const SITE_ADVISOR_CONTEXT = {
   life: {
     defaultPriority: 'longevity',
-    siteLine: 'Контекст: Life Protocols — антиейджинг, дълголетие, клетъчна регенерация. Продуктите в каталога са за този фокус; не питай за „цел“ — тя е зададена от сайта.',
+    siteLine: 'Контекст: Life Protocols — антиейджинг, дълголетие, клетъчна регенерация. Фокусът (priority) е избран от клиента — съобрази програмата с него.',
   },
   main: {
     defaultPriority: 'otshalvane',
@@ -133,8 +133,29 @@ export function buildAdvisorClinicalGuardrails(profile = {}, siteId = 'life') {
   return lines.join('\n');
 }
 
+/**
+ * Задължителните правила за AI — в кода, не в редактируемия промпт: важат и за промптове,
+ * запазени по-рано в админа. Кодът решава продуктите, дозите и часовете; AI пише текста.
+ */
+export const ADVISOR_AI_RULES = `ЗАДЪЛЖИТЕЛНИ ПРАВИЛА (над всичко в промпта):
+- Пиши на български, учтиво, с „Вие“. analysis — до 2 изречения; why_for_you — до 12 думи; lifestyle_tips — до 4 кратки съвета.
+- Дозата и часът на прием се определят от системата по етикета — не ги пиши и не ги променяй.
+- Не споменавай и не препоръчвай вещества, лекарства или продукти, които не са в подадените продукти.
+- Без медицински твърдения („лекува“, „премахва“, „гарантирано“) и без обещания за брой килограми или срокове.
+- Не променяй предупреждението; не давай съвети за спиране или промяна на лекарства.
+- recommended_tier избери по профила (бюджет, сложност), не по подразбиране.`;
+
 export function withClinicalGuardrails(template, profile, siteId = 'life') {
   const guardrails = buildAdvisorClinicalGuardrails(profile, siteId);
-  if (!guardrails) return template;
-  return `${template}\n\nКЛИНИЧНИ GUARDRAILS (приоритет над маркетинг):\n${guardrails}`;
+  const base = `${template}\n\n${ADVISOR_AI_RULES}`;
+  if (!guardrails) return base;
+  return `${base}\n\nКЛИНИЧНИ GUARDRAILS (приоритет над маркетинг):\n${guardrails}`;
+}
+
+/**
+ * Стар формат на промпт с {{protocolData}} изпращаше всичко като едно потребителско съобщение
+ * и губеше правилата. Сега: шаблонът (без маркера) + правилата → system, данните → user.
+ */
+export function stripProtocolDataMarker(template) {
+  return String(template || '').replace('{{protocolData}}', '').trim();
 }

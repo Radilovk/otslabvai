@@ -948,3 +948,86 @@ body.lpq-body {
 @media (max-width: 480px) {
   .lpr-empty .lpq-btn { width: 100%; }
 }
+
+/* Връзка към NutriPlan след резултата (mobile first) */
+.lpr-nutriplan {
+  margin: 1.5rem 0 0;
+  padding: 1.4rem 1.2rem 1.25rem;
+  border-radius: 22px;
+  background:
+    radial-gradient(360px 240px at 100% 0%, rgba(94, 234, 212, 0.22), transparent 62%),
+    linear-gradient(160deg, #062b2a 0%, #0b3f3c 60%, #0d4d48 100%);
+  color: #ecfdf8;
+  box-shadow: 0 20px 40px -20px rgba(6, 43, 42, 0.6);
+}
+.lpr-np-eyebrow { display: inline-flex; align-items: center; gap: .45rem; padding: .32rem .75rem .32rem .35rem; border-radius: 999px; background: rgba(94, 234, 212, .12); color: #5eead4; font-size: .76rem; font-weight: 600; }
+.lpr-np-logo { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: #5eead4; color: #063230; font-size: .7rem; font-weight: 800; }
+.lpr-nutriplan h3 { margin: .8rem 0 .5rem; font-size: 1.3rem; line-height: 1.2; color: #fff; }
+.lpr-nutriplan p { margin: 0 0 .9rem; font-size: .95rem; line-height: 1.55; color: rgba(236, 253, 248, .78); }
+.lpr-np-list { list-style: none; margin: 0 0 1.1rem; padding: 0; display: grid; gap: .5rem; }
+.lpr-np-list li { display: flex; gap: .55rem; align-items: flex-start; font-size: .88rem; line-height: 1.4; color: #ecfdf8; }
+.lpr-np-list svg { flex: none; margin-top: .15rem; color: #5eead4; }
+.lpr-np-btn { display: flex; width: 100%; min-height: 54px; align-items: center; justify-content: center; gap: .55rem; border: 0; border-radius: 999px; background: #fff; color: #0b4f4a; font: inherit; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 10px 24px rgba(0, 0, 0, .25); -webkit-tap-highlight-color: transparent; }
+.lpr-np-btn:active { transform: scale(.98); }
+.lpr-np-btn:disabled { opacity: .75; cursor: progress; }
+.lpr-np-fine { margin: .7rem 0 0 !important; font-size: .74rem !important; color: rgba(236, 253, 248, .6) !important; }
+@media (min-width: 640px) {
+  .lpr-nutriplan { padding: 2rem 2rem 1.8rem; }
+  .lpr-nutriplan h3 { font-size: 1.55rem; }
+  .lpr-np-btn { width: auto; display: inline-flex; padding: 0 1.8rem; }
+}
+
+/* Бележка за NutriPlan в началото на теста */
+.lpq-np-note { display: flex; gap: .7rem; align-items: flex-start; margin: 1rem 0 0; padding: .85rem 1rem; border-radius: 16px; background: rgba(13, 148, 136, .08); border: 1px solid rgba(13, 148, 136, .18); color: inherit; font-size: .85rem; line-height: 1.45; text-decoration: none; }
+.lpq-np-note strong { color: #0b6b63; }
+.lpq-np-note__logo { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: #0d9488; color: #fff; font-size: .75rem; font-weight: 800; }
+[data-theme="dark"] .lpq-np-note strong { color: #5eead4; }
+.lpq-np-note[hidden] { display: none; }
+
+/* ── Тъмна тема: вариантите на протокола ──
+   Светлите фонове на картите (бяло / cyan / крем) оставаха и в тъмна тема,
+   докато текстът става светъл → имената на продуктите не се четяха. */
+[data-theme="dark"] .lpr-tier[data-tier="basic"] {
+  --tier-surface: linear-gradient(165deg, #182029 0%, #141b23 100%);
+  --tier-border: rgba(138, 163, 179, 0.3);
+  --tier-accent-dim: rgba(138, 163, 179, 0.16);
+}
+[data-theme="dark"] .lpr-tier[data-tier="optimal"] {
+  --tier-surface: linear-gradient(165deg, #0f2529 0%, #0c1e22 100%);
+  --tier-border: rgba(0, 196, 200, 0.42);
+  --tier-accent-dim: rgba(0, 196, 200, 0.16);
+}
+[data-theme="dark"] .lpr-tier[data-tier="premium"] {
+  --tier-surface: linear-gradient(155deg, #251f12 0%, #1c170d 100%);
+  --tier-border: rgba(212, 168, 67, 0.45);
+  --tier-accent-dim: rgba(212, 168, 67, 0.16);
+}
+[data-theme="dark"] .lpr-tier h3,
+[data-theme="dark"] .lpr-tier[data-tier="premium"] h3,
+[data-theme="dark"] .lpr-tier .lpr-product-name,
+[data-theme="dark"] .lpr-tier[data-tier="optimal"] .lpr-benefit-new,
+[data-theme="dark"] .lpr-tier[data-tier="premium"] .lpr-benefit-new { color: #f1f5f9; }
+[data-theme="dark"] .lpr-tier .lpr-tagline,
+[data-theme="dark"] .lpr-tier .lpr-benefits li,
+[data-theme="dark"] .lpr-tier .lpr-product-brand,
+[data-theme="dark"] .lpr-tier .lpr-product-variant,
+[data-theme="dark"] .lpr-tier .lpr-product-dose,
+[data-theme="dark"] .lpr-tier .lpr-product-why { color: #b6c2d1; }
+[data-theme="dark"] .lpr-tier[data-tier="basic"] .lpr-price { color: #9fbccd; }
+[data-theme="dark"] .lpr-tier[data-tier="optimal"] .lpr-price { color: #4dd9dc; }
+[data-theme="dark"] .lpr-tier[data-tier="premium"] .lpr-price,
+[data-theme="dark"] .lpr-tier[data-tier="premium"] .lpr-product-price { color: #e8c547; }
+[data-theme="dark"] .lpr-tier .lpr-products-toggle { color: #e8eef5; border-color: var(--tier-border); background: rgba(255, 255, 255, 0.04); }
+[data-theme="dark"] .lpr-tier .lpr-product-card { border-color: rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); }
+
+/* Препратка към NutriPlan под анализа */
+.lpr-np-teaser { display: flex; align-items: center; gap: .7rem; margin: 0 0 1.1rem; padding: .8rem 1rem; border-radius: 14px; background: linear-gradient(135deg, #0b3f3c, #0d4d48); color: #ecfdf8; text-decoration: none; font-size: .9rem; line-height: 1.4; box-shadow: 0 10px 24px -14px rgba(6, 43, 42, .7); }
+.lpr-np-teaser strong { color: #5eead4; }
+.lpr-np-teaser .lpr-np-logo { flex: none; }
+.lpr-np-teaser__go { margin-left: auto; flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, .12); font-weight: 700; }
+.lpr-nutriplan { scroll-margin-top: 1rem; }
+
+.lpr-budget-note { margin: -.4rem 0 1rem; padding: .6rem .85rem; border-radius: 12px; background: rgba(201, 162, 39, .12); border: 1px solid rgba(201, 162, 39, .3); font-size: .86rem; }
+
+/* Спиране на теста при неподходящ профил */
+.lpq-step-stop .lpq-stop-text { margin: .5rem 0 1.25rem; line-height: 1.6; color: var(--lpq-text); }

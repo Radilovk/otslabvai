@@ -35,10 +35,27 @@ describe('site advisor', () => {
     expect(ok.ranked).toHaveLength(4);
   });
 
-  test('кърмене: без продукти за отслабване и стимуланти', () => {
+  test('daotslabna: при кърмене / бременност / хранително разстройство / ИТМ < 18.5 — без програма', () => {
+    expect(() => buildSiteAdvisorProfile({ sex: 'female', email: 'a@b.cc', conditions: ['breastfeeding'] }, 'main')).toThrow(/кърмене/);
+    expect(() => buildSiteAdvisorProfile({ sex: 'female', conditions: ['eating_disorder'] }, 'main')).toThrow(/хранително разстройство/);
+    expect(() => buildSiteAdvisorProfile({ sex: 'female', height_cm: 170, weight_kg: 48 }, 'main')).toThrow(/под нормата/);
+  });
+
+  test('life: при кърмене — без продукти за отслабване и стимуланти', () => {
     const products = [product('burn', 'Thermo Fat Burner'), product('lipo', 'Lipotropic Fat Burner Stim Free'), product('mag', 'Магнезий')];
-    const res = rankSiteAdvisorProducts(buildSiteAdvisorProfile({ sex: 'female', email: 'a@b.cc', conditions: ['breastfeeding'] }, 'main'), products, 'main');
-    expect(res.ranked.map((r) => r.product.product_id)).toEqual(['mag']);
+    const res = rankSiteAdvisorProducts(buildSiteAdvisorProfile({ sex: 'female', email: 'a@b.cc', conditions: ['breastfeeding'] }, 'life'), products, 'life');
+    expect(res.ranked.map((r) => r.product.product_id)).not.toContain('burn');
+  });
+
+  test('отговор на скрит въпрос отпада (лекарства за диабет без диабет)', () => {
+    expect(buildSiteAdvisorProfile({ sex: 'female', conditions: ['none'], diabetes_meds: 'glp1' }, 'main').diabetes_meds).toBe('');
+    expect(buildSiteAdvisorProfile({ sex: 'female', conditions: ['diabetes'], diabetes_meds: 'glp1' }, 'main').diabetes_meds).toBe('glp1');
+  });
+
+  test('храненето определя ролите: големи порции → апетит; сладко → кръвна захар; стрес → магнезий', () => {
+    const p = buildSiteAdvisorProfile({ sex: 'female', eating_pattern: ['big_portions', 'sweet_cravings', 'emotional'], symptoms: ['none'] }, 'main');
+    expect(p.symptoms).toEqual(expect.arrayContaining(['cravings', 'sugar_cravings', 'stress_eating']));
+    expect(p.symptoms).not.toContain('none');
   });
 
   test('life приема избрания фокус; main винаги е отслабване', () => {

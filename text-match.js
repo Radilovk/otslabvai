@@ -2,6 +2,24 @@
  * Търсене по думи в текста на продукт — общо за правилата за безопасност, класификацията и точкуването.
  */
 
+/**
+ * „За продукта“ при внесените продукти е обект { title, description, benefits: [{ title, description }] } —
+ * там е съставът. Досега се четеше като „[object Object]“ и стимулантите в него не се виждаха.
+ */
+export function aboutContentText(pd = {}) {
+  const ac = pd.about_content;
+  const parts = [];
+  if (typeof ac === 'string') parts.push(ac);
+  else if (ac && typeof ac === 'object') {
+    parts.push(ac.title, ac.description);
+    for (const b of Array.isArray(ac.benefits) ? ac.benefits : []) parts.push(b?.title, b?.description);
+  }
+  for (const k of ['additional_advice', 'contraindications', 'warnings']) {
+    if (typeof pd[k] === 'string') parts.push(pd[k]);
+  }
+  return parts.filter(Boolean).join(' ');
+}
+
 /** Текстов пул от продукт за keyword matching */
 export function productSearchText(product) {
   const pd = product.public_data || {};
@@ -9,6 +27,7 @@ export function productSearchText(product) {
     pd.name,
     pd.tagline,
     pd.description,
+    aboutContentText(pd),
     product.system_data?.target_profile,
     product.system_data?.portfolio?.category,
     ...(pd.ingredients || []).map((i) => `${i.name} ${i.description || ''}`),

@@ -66,8 +66,9 @@ export function assembleProtocolFromComposition(composed, narration, productMap,
       const aiItem = narration?.product_copy?.[item.product_id] || {};
       return {
         ...item,
-        dose: aiItem.dose || item.dose,
-        timing: aiItem.timing || item.timing,
+        // Дозата и часът — от кода (етикет / роля); AI пише само „защо за вас“.
+        dose: item.dose,
+        timing: item.timing,
         why_for_you: aiItem.why_for_you || '',
       };
     });

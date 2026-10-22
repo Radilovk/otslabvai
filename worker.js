@@ -1773,13 +1773,15 @@ async function callCloudflareAI(env, settings, messages) {
     const payload = {
         messages: messages,
         max_tokens: settings.maxTokens || 4096,
-        temperature: settings.temperature || 0.3,
+        temperature: settings.temperature ?? 0.3,
         // Instruct the model's sampler to produce only valid JSON tokens.
         // This is the primary prevention: invalid JSON cannot be generated.
         response_format: { type: 'json_object' }
     };
     
     const response = await fetch(cfEndpoint, {
+        // Без отговор до timeoutMs — грешка (протоколите минават на резервния вариант), не безкраен спинер.
+        signal: AbortSignal.timeout(settings.timeoutMs || 45000),
         method: 'POST',
         headers: { 
             'Authorization': `Bearer ${env.AI_TOKEN}`, 
@@ -1814,12 +1816,14 @@ async function callOpenAI(settings, messages) {
         model: model,
         messages: messages,
         max_tokens: settings.maxTokens || 4096,
-        temperature: settings.temperature || 0.3,
+        temperature: settings.temperature ?? 0.3,
         // Force the model to output only valid JSON — primary prevention mechanism.
         response_format: { type: 'json_object' }
     };
     
     const response = await fetch(endpoint, {
+        // Без отговор до timeoutMs — грешка (протоколите минават на резервния вариант), не безкраен спинер.
+        signal: AbortSignal.timeout(settings.timeoutMs || 45000),
         method: 'POST',
         headers: { 
             'Authorization': `Bearer ${settings.apiKey}`, 
@@ -1856,8 +1860,19 @@ async function callOpenAI(settings, messages) {
 /**
  * Call Google AI (Gemini)
  */
+/**
+ * Актуалният модел на Gemini за текст и JSON (стабилен, препоръчан от Google за нови проекти;
+ * „мисленето“ е на минимум по подразбиране — без излишни токени). Проверено: 21.10.2026,
+ * https://ai.google.dev/gemini-api/docs/models
+ */
+const GEMINI_CURRENT_MODEL = 'gemini-3.5-flash-lite';
+// Спрени модели (Google ги изключи) — запазени в настройките, те чупят всяка AI заявка.
+const GEMINI_SHUT_DOWN = /^(gemini-1\.|gemini-2\.0-|gemini-3-pro-preview|gemini-3\.1-flash-lite-preview)/;
+
 async function callGoogleAI(settings, messages) {
-    const model = settings.model || 'gemini-2.0-flash';
+    const requested = settings.model || GEMINI_CURRENT_MODEL;
+    const model = GEMINI_SHUT_DOWN.test(requested) ? GEMINI_CURRENT_MODEL : requested;
+    if (model !== requested) console.warn(`Gemini модел ${requested} е спрян — ползва се ${model}.`);
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${settings.apiKey}`;
 
     // Map the messages array to Google's format.
@@ -1874,14 +1889,17 @@ async function callGoogleAI(settings, messages) {
             parts: [{ text: m.content }]
         })),
         generationConfig: {
-            temperature: settings.temperature || 0.3,
+            temperature: settings.temperature ?? 0.3,
             maxOutputTokens: settings.maxTokens || 4096,
             responseMimeType: 'application/json',
-            ...(settings.disableThinking ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+            // thinkingBudget: 0 се приема от Gemini 2.5 Flash / Flash-Lite; други модели (2.5 Pro, 3.x) го отказват.
+            ...(settings.disableThinking && /2\.5-flash/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
         }
     };
     
     const response = await fetch(endpoint, {
+        // Без отговор до timeoutMs — грешка (протоколите минават на резервния вариант), не безкраен спинер.
+        signal: AbortSignal.timeout(settings.timeoutMs || 45000),
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json' 
@@ -2138,8 +2156,45 @@ const PROTOCOL_QUIZ_AI_OVERRIDES = {
     maxTokens: 8192,
     temperature: 0.15,
     disableThinking: true,
+    // Клиентът чака на екрана — след 25 s се показва резервният вариант на кода.
+    timeoutMs: 25000,
 };
 
+
+/**
+ * Моделът за протоколите (daotslabna, life-protocols, biocode-bg.com): Gemini 3.5 Flash-Lite с ключа
+ * на проекта — AI тук само пише текста (продуктите, дозите и безопасността са на кода), затова
+ * бърз и евтин модел е достатъчен. Отделно от общите AI настройки (те са и за описанията на
+ * продуктите). Без ключ за Gemini или при грешка — общите настройки; при грешка и там —
+ * резервният вариант на кода (в извикващия код).
+ */
+const ADVISOR_GEMINI_MODEL = GEMINI_CURRENT_MODEL;
+
+async function callAdvisorAI(env, messages) {
+    // Само ключ за Google: секрет на Worker-а, ключ, запазен за Google в админа, или общите
+    // настройки, ако там е избран Google (не общият ключ — може да е за друг доставчик).
+    let geminiKey = env.GOOGLE_AI_API_KEY || env.GEMINI_API_KEY || await env.PAGE_CONTENT?.get('ai_google_api_key') || '';
+    if (!geminiKey) {
+        try {
+            const stored = JSON.parse((await env.PAGE_CONTENT?.get('ai_settings')) || 'null');
+            if (stored?.provider === 'google' && stored.apiKey) geminiKey = stored.apiKey;
+        } catch { /* повредени настройки — без Gemini */ }
+    }
+    if (geminiKey) {
+        try {
+            return await callGoogleAI({
+                ...PROTOCOL_QUIZ_AI_OVERRIDES,
+                timeoutMs: 20000,
+                provider: 'google',
+                model: ADVISOR_GEMINI_MODEL,
+                apiKey: geminiKey,
+            }, messages);
+        } catch (e) {
+            console.warn('Advisor Gemini failed, trying stored AI settings:', e.message || e);
+        }
+    }
+    return callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+}
 
 async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
   useMockAi = false,
@@ -2193,7 +2248,7 @@ async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
     const promptTemplate = settings.prompt || getDefaultSiteAdvisorPrompt(siteId);
     const messages = buildSiteAdvisorMessages(promptTemplate, payload, profile, siteId);
     try {
-      const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+      const aiRaw = await callAdvisorAI(env, messages);
       const candidateMap = new Map(candidates.map((p) => [p.product_id, p]));
       const { response, changes } = repairAiTiers(parseJsonFromAI(aiRaw), composed, candidateMap, SITE_TIER_LIMITS[siteId]);
       if (changes.length) payload.ai_repairs = changes;
@@ -2209,7 +2264,7 @@ async function runSiteAdvisorGeneration(env, rawAnswers, siteId = 'life', {
   const messages = buildSiteNarratorMessages(promptTemplate, profile, composed, eligible, siteId);
 
   try {
-    const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+    const aiRaw = await callAdvisorAI(env, messages);
     const narration = parseJsonFromAI(aiRaw);
     const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
     const recommendation = finalize(normalizeCumulativeBenefits(response));
@@ -2268,6 +2323,9 @@ async function handleLifeProtocolSubmit(request, env, ctx) {
     email: profile.email,
     recommendation,
     catalog_stats: payload.catalog_stats,
+    // Без AI (грешка / таймаут) — резервният вариант на кода; поправките след AI — за прегледа в админа.
+    ai_fallback: !!result.ai_fallback,
+    ai_repairs: payload.ai_repairs || [],
   };
 
   ctx.waitUntil(saveLifeProtocolLead(env, leadRecord));
@@ -2361,7 +2419,7 @@ async function handleLifeProtocolSimulate(request, env) {
       mock: result.mock,
       catalog_stats: result.payload.catalog_stats,
       candidates_count: result.candidates?.length || 0,
-      excluded_count: result.payload.constraints.excluded_product_ids.length,
+      excluded_count: (result.payload?.constraints?.excluded_product_ids || result.payload?.excluded_product_ids || []).length,
       profile: result.profile,
       recommendation: result.recommendation,
     }), {
@@ -2409,6 +2467,9 @@ async function handleMainAdvisorSubmit(request, env, ctx) {
     email: profile.email,
     recommendation,
     catalog_stats: payload.catalog_stats,
+    // Без AI (грешка / таймаут) — резервният вариант на кода; поправките след AI — за прегледа в админа.
+    ai_fallback: !!result.ai_fallback,
+    ai_repairs: payload.ai_repairs || [],
   };
 
   ctx.waitUntil(saveMainAdvisorLead(env, leadRecord));
@@ -2495,7 +2556,7 @@ async function handleMainAdvisorSimulate(request, env) {
       mock: result.mock,
       catalog_stats: result.payload.catalog_stats,
       candidates_count: result.candidates?.length || 0,
-      excluded_count: result.payload.constraints.excluded_product_ids.length,
+      excluded_count: (result.payload?.constraints?.excluded_product_ids || result.payload?.excluded_product_ids || []).length,
       profile: result.profile,
       recommendation: result.recommendation,
     }), {
@@ -2536,6 +2597,7 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
   const finalizeOpts = {
     selection_mode: profile.selection_mode,
     independent_tiers: profile.selection_mode === 'single',
+    profile,
   };
   const productMap = new Map(eligible.map((p) => [p.product_id, p]));
   payload.composed_meta = composed.meta;
@@ -2551,27 +2613,27 @@ async function runPortfolioAdvisorGeneration(env, rawAnswers, { useMockAi = fals
     const promptTemplate = settings.prompt || getDefaultPortfolioAdvisorPrompt();
     const messages = buildPortfolioAdvisorMessages(promptTemplate, payload, profile);
     try {
-      const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+      const aiRaw = await callAdvisorAI(env, messages);
       const candidateMap = new Map(candidates.map((p) => [p.product_id, p]));
       const { response, changes } = repairAiTiers(parseJsonFromAI(aiRaw), composed, candidateMap, composeOptions.tierLimits);
       if (changes.length) payload.ai_repairs = changes;
       return { profile, payload, recommendation: finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts) };
     } catch (e) {
       console.warn('Portfolio advisor AI failed, using deterministic fallback:', e.message || e);
-      return { profile, payload, recommendation: fallback() };
+      return { profile, payload, recommendation: fallback(), ai_fallback: true };
     }
   }
 
   const promptTemplate = settings.narrator_prompt || getDefaultPortfolioNarratorPrompt();
   const messages = buildPortfolioNarratorMessages(promptTemplate, profile, composed, eligible);
   try {
-    const aiRaw = await callAIWithStoredSettings(env, messages, PROTOCOL_QUIZ_AI_OVERRIDES);
+    const aiRaw = await callAdvisorAI(env, messages);
     const narration = parseJsonFromAI(aiRaw);
     const { response } = assembleProtocolFromComposition(composed, narration, productMap, excludedProductIds);
     return { profile, payload, recommendation: finalizePortfolioAdvisorResponse(response, eligible, excludedProductIds, finalizeOpts) };
   } catch (e) {
     console.warn('Portfolio advisor narrator AI failed, using deterministic fallback:', e.message || e);
-    return { profile, payload, recommendation: fallback() };
+    return { profile, payload, recommendation: fallback(), ai_fallback: true };
   }
 }
 
@@ -2607,6 +2669,8 @@ async function handlePortfolioAdvisorSubmit(request, env, ctx) {
     email: profile.email,
     recommendation,
     catalog_stats: catalogStats,
+    ai_fallback: !!result.ai_fallback,
+    ai_repairs: payload.ai_repairs || [],
   };
   ctx.waitUntil(savePortfolioAdvisorLead(env, leadRecord));
   ctx.waitUntil(savePortfolioAdvisorResult(env, resultRecord));

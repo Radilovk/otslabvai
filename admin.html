@@ -101,7 +101,7 @@
             <!-- Комуникация -->
             <button class="tab-btn tab-main-life" data-tab="tab-contacts">Контакти</button>
             <button class="tab-btn tab-life-only" data-tab="tab-life-protocol" style="display:none;">Протоколи</button>
-            <button class="tab-btn tab-main-only" data-tab="tab-main-advisor" style="display:none;">AI консултант</button>
+            <button class="tab-btn tab-main-only" data-tab="tab-main-advisor" style="display:none;">Персонална програма</button>
             <span class="tab-nav-divider" aria-hidden="true"></span>
             <!-- Система -->
             <button class="tab-btn tab-main-life" data-tab="tab-ai-settings">AI Настройки</button>
@@ -307,10 +307,12 @@
                     <div class="form-group" style="margin-bottom:1rem;">
                         <label for="lp-prompt" style="font-weight:600;display:block;margin-bottom:0.5rem;">AI промпт (ai_pick режим)</label>
                         <textarea id="lp-prompt" rows="6" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);"></textarea>
+                        <button type="button" class="btn btn-sm btn-secondary" data-reset-prompt="lp-prompt" style="margin-top:.4rem">Подразбиращ се промпт (от кода)</button>
                     </div>
                     <div class="form-group" style="margin-bottom:1rem;">
                         <label for="lp-narrator-prompt" style="font-weight:600;display:block;margin-bottom:0.5rem;">Narrator промпт (compose_narrate)</label>
                         <textarea id="lp-narrator-prompt" rows="6" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);"></textarea>
+                        <button type="button" class="btn btn-sm btn-secondary" data-reset-prompt="lp-narrator-prompt" style="margin-top:.4rem">Подразбиращ се промпт (от кода)</button>
                     </div>
                     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
                         <button type="button" id="lp-save-settings-btn" class="btn btn-success">Запази настройки</button>
@@ -362,10 +364,10 @@
                 </details>
             </section>
 
-            <!-- Main: AI консултант за отслабване -->
+            <!-- Main: персонална програма за отслабване -->
             <section id="tab-main-advisor" class="tab-pane tab-main-only">
                 <div class="orders-header">
-                    <h2>ДА ОТСЛАБНА – AI консултант</h2>
+                    <h2>ДА ОТСЛАБНА – Персонална програма</h2>
                     <div class="orders-controls">
                         <a href="main-advisor-quiz.html" target="_blank" rel="noopener" class="btn btn-secondary">Отвори въпросника</a>
                         <button type="button" id="ma-refresh-btn" class="btn btn-secondary">Опресни</button>
@@ -376,7 +378,7 @@
                     <h3 style="margin-top:0;">Контрол на функцията</h3>
                     <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;cursor:pointer;">
                         <input type="checkbox" id="ma-enabled" checked>
-                        <span>AI консултантът е активен</span>
+                        <span>Персоналната програма е активна</span>
                     </label>
                     <p class="hint" style="margin:0 0 1rem;font-size:0.88rem;color:var(--text-muted);">
                         Отслабване контекст от сайта — без въпрос за цел или категории. Автоматичен compose / AI pick.
@@ -384,10 +386,12 @@
                     <div class="form-group" style="margin-bottom:1rem;">
                         <label for="ma-prompt" style="font-weight:600;display:block;margin-bottom:0.5rem;">AI промпт (ai_pick)</label>
                         <textarea id="ma-prompt" rows="6" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);"></textarea>
+                        <button type="button" class="btn btn-sm btn-secondary" data-reset-prompt="ma-prompt" style="margin-top:.4rem">Подразбиращ се промпт (от кода)</button>
                     </div>
                     <div class="form-group" style="margin-bottom:1rem;">
                         <label for="ma-narrator-prompt" style="font-weight:600;display:block;margin-bottom:0.5rem;">Narrator промпт (compose_narrate)</label>
                         <textarea id="ma-narrator-prompt" rows="6" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);"></textarea>
+                        <button type="button" class="btn btn-sm btn-secondary" data-reset-prompt="ma-narrator-prompt" style="margin-top:.4rem">Подразбиращ се промпт (от кода)</button>
                     </div>
                     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
                         <button type="button" id="ma-save-settings-btn" class="btn btn-success">Запази настройки</button>
@@ -714,10 +718,12 @@
                     <div class="form-group" style="margin-bottom:1rem;">
                         <label for="pfa-prompt" style="font-weight:600;display:block;margin-bottom:0.5rem;">AI промпт (ai_pick режим)</label>
                         <textarea id="pfa-prompt" rows="6" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);"></textarea>
+                        <button type="button" class="btn btn-sm btn-secondary" data-reset-prompt="pfa-prompt" style="margin-top:.4rem">Подразбиращ се промпт (от кода)</button>
                     </div>
                     <div class="form-group" style="margin-bottom:1rem;">
                         <label for="pfa-narrator-prompt" style="font-weight:600;display:block;margin-bottom:0.5rem;">Narrator промпт (compose_narrate)</label>
                         <textarea id="pfa-narrator-prompt" rows="6" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);"></textarea>
+                        <button type="button" class="btn btn-sm btn-secondary" data-reset-prompt="pfa-narrator-prompt" style="margin-top:.4rem">Подразбиращ се промпт (от кода)</button>
                     </div>
                     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
                         <button type="button" id="pfa-save-settings-btn" class="btn btn-success">Запази настройки</button>
@@ -1428,6 +1434,39 @@
     </template>
 
     <!-- Форма: Информационен кард -->
+    <template id="form-nutriplan-cta-template">
+        <form class="modal-form">
+            <p class="form-hint">Блок към NutriPlan (biocode.website). Празно поле = текстът по подразбиране; линкът носи utm на сайта, за да се вижда в таблото за насочвания на NutriPlan.</p>
+            <div class="form-group">
+                <label for="np_title">Заглавие</label>
+                <input type="text" id="np_title" data-field="title" placeholder="Персонален хранителен план — NutriPlan">
+            </div>
+            <div class="form-group">
+                <label for="np_image">URL на изображение</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="np_image" data-field="image" style="flex: 1;" placeholder="https://biocode.website/icon-512x512.png">
+                    <button type="button" class="btn btn-sm btn-secondary" data-action="upload-simple-image" data-target-field="image">
+                        Качи
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="np_content">Текст</label>
+                <textarea id="np_content" data-field="content" rows="4"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="np_button_text">Текст на бутона</label>
+                    <input type="text" id="np_button_text" data-field="button.text" placeholder="Създай моя план">
+                </div>
+                <div class="form-group">
+                    <label for="np_button_url">URL (празно = NutriPlan с utm)</label>
+                    <input type="text" id="np_button_url" data-field="button.url">
+                </div>
+            </div>
+        </form>
+    </template>
+
     <template id="form-info-card-template">
         <form class="modal-form">
             <div class="form-group">

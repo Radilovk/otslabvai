@@ -48,7 +48,7 @@ function buildLogSequence(answers) {
   ];
 
   if (bmi) {
-    lines.push({ type: 'data', text: `ИТМ: ${bmi} — корекция на препоръките`, delay: 420 });
+    lines.push({ type: 'data', text: `ИТМ: ${bmi} — отчетен в профила`, delay: 420 });
   }
 
   lines.push(

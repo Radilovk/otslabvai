@@ -54,4 +54,24 @@ describe('advisor-ai', () => {
     expect(response.tiers.premium.products.find((p) => p.product_id === 'app').why_for_you).toBe('апетит');
     expect(changes.some((c) => c.includes('hack'))).toBe(true);
   });
+
+  test('махнатото от AI не се връща при допълването (напр. омега-3 при варфарин)', () => {
+    const ranked = [
+      product('burn', 'Thermo Fat Burner', 25),
+      product('app', 'Glucomannan Appetite', 15),
+      product('omega', 'Omega 3 Fish Oil', 12),
+      product('multi', 'Multivitamin', 10),
+    ].map((p, i) => ({ product: p, score: 10 - i }));
+    const composed = composeAdvisorStacks({ priority: 'otshalvane' }, ranked, { tierLimits: LIMITS, goal: 'otshalvane' });
+    const map = new Map(buildReviewCandidates(composed, ranked).map((p) => [p.product_id, p]));
+    const premiumIds = composed.tiers.premium.products.map((p) => p.product_id);
+    const kept = premiumIds.filter((id) => id !== 'omega');
+    const ai = { tiers: { basic: { products: [{ product_id: kept[0] }] }, optimal: { products: [{ product_id: kept[0] }] }, premium: { products: kept.map((product_id) => ({ product_id, dose: '9 капсули', timing: 'вечер' })) } } };
+    const { response } = repairAiTiers(ai, composed, map, LIMITS);
+    for (const key of ['basic', 'optimal', 'premium']) {
+      expect(response.tiers[key].products.map((p) => p.product_id)).not.toContain('omega');
+    }
+    // дозата и часът не идват от AI
+    expect(response.tiers.premium.products.every((p) => p.dose !== '9 капсули')).toBe(true);
+  });
 });

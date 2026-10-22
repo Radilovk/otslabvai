@@ -114,6 +114,8 @@ const SYMPTOM_SLOTS = {
   joint_pain: [['joint']],
   cravings: [['appetite']],
   low_appetite: [['gainer']],
+  sugar_cravings: [['glucose']],
+  stress_eating: [['magnesium', 'adaptogen']],
 };
 
 /** Ако няма нищо от плана — безопасни универсални добавки, за да има пълен пакет. */
@@ -136,10 +138,17 @@ export function buildSlotPlan(goal, profile = {}, { siteId = 'portfolio' } = {})
   for (const symptom of profile.symptoms || []) {
     for (const slots of SYMPTOM_SLOTS[symptom] || []) symptomSteps.push({ slots, reason: `symptom:${symptom}` });
   }
-  // Желязо само при жени с умора и без чернодробно заболяване.
-  if ((profile.symptoms || []).includes('fatigue') && profile.sex === 'female' && !(profile.conditions || []).includes('liver')) {
-    symptomSteps.push({ slots: ['iron'], reason: 'symptom:fatigue' });
+  // Желязо: при въпрос за изследване — само при доказан недостиг; без въпроса (biocode) — жени с умора.
+  // Никога при чернодробно заболяване или лекарства за щитовидна жлеза (пречи на усвояването им).
+  const ironAsked = Boolean(profile.iron_status);
+  const ironOk = ironAsked ? profile.iron_status === 'low'
+    : (profile.symptoms || []).includes('fatigue') && profile.sex === 'female';
+  if (ironOk && !(profile.conditions || []).includes('liver') && !(profile.medications || []).includes('thyroid_meds')) {
+    symptomSteps.push({ slots: ['iron'], reason: ironAsked ? 'iron:low' : 'symptom:fatigue' });
   }
+  // PCOS — кръвна захар / инсулинова чувствителност (инозитол, хром).
+  if ((profile.conditions || []).includes('pcos')) symptomSteps.push({ slots: ['glucose'], reason: 'pcos' });
+  if (profile.skin_concern === 'hair_nails') symptomSteps.push({ slots: ['beauty', 'collagen'], reason: 'skin:hair_nails' });
   if (profile.menopause_context && ['health', 'longevity', 'energy', 'skin', 'sleep'].includes(key)) {
     symptomSteps.push({ slots: ['womens'], reason: 'menopause' });
   }
@@ -197,6 +206,12 @@ function pickCore(candidates, basicBudget) {
   const fits = top.find((e) => priceOf(e.product) <= basicBudget);
   if (fits) return fits.product;
   return top.reduce((min, e) => (priceOf(e.product) < priceOf(min.product) ? e : min)).product;
+}
+
+/** Дозата и часът на прием по данните на продукта (етикет, роля) — тях не ги решава AI. */
+export function codeDoseTiming(product) {
+  const { dose, timing } = toItem(product, 'support');
+  return { dose, timing };
 }
 
 function toItem(product, role) {

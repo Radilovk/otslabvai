@@ -756,3 +756,54 @@ describe('Portfolio Fitness1 order approval', () => {
     }
   });
 });
+
+describe('GET /portfolio/pick', () => {
+  const v = (sku, retail, b2b, extra = {}) => ({ sku_id: sku, barcode: `b${sku}`, pack: '60 капс.', available: true, retail_price: retail, b2b_price: b2b, ...extra });
+  const groups = [
+    { group_id: '1', name: 'Magnesium Citrate', brand: 'A', image: 'a.jpg', variants: [v('11', 10, 7)] },
+    { group_id: '2', name: 'Magnesium Bisglycinate', brand: 'B', image: 'b.jpg', variants: [v('21', 20, 10)] },
+    { group_id: '3', name: 'Magnesium Glycinate', brand: 'C', image: 'c.jpg', variants: [v('31', 18, 10)] },
+    { group_id: '4', name: 'Alkaline System | Sodium & Magnesium', brand: 'D', image: 'd.jpg', variants: [v('41', 30, 5)] },
+  ];
+  const index = groups.map((g) => ({
+    group_id: g.group_id, name: g.name, brand: g.brand, category: 'Витамини', available: true,
+    margin_eligible: true, max_margin: g.variants[0].retail_price - g.variants[0].b2b_price, default_sku_id: g.variants[0].sku_id,
+  }));
+  const store = new Map([
+    ['portfolio_meta', JSON.stringify({ chunk_count: 1, total_groups: 4, index, lookup: { 1: 0, 2: 0, 3: 0, 4: 0 }, synced_at: 'x' })],
+    ['portfolio_chunk_0', JSON.stringify(groups)],
+  ]);
+  const env = (extra = {}) => ({ PAGE_CONTENT: { get: async (k) => store.get(k) ?? null, put: async () => {} }, ...extra });
+  const call = async (qs, e) => {
+    const req = new Request(`https://example.com/portfolio/pick?${qs}`);
+    const res = await handlePortfolioRoute(req, e, new URL(req.url));
+    return { status: res.status, data: await res.json() };
+  };
+
+  test('подходящите по марж, без алкалната смес и без марж към клиента', async () => {
+    const { status, data } = await call(`q=${encodeURIComponent('Магнезиев бисглицинат')}`, env({ LIVE_STOCK_CHECK: '0' }));
+    expect(status).toBe(200);
+    expect(data.slot).toBe('magnesium');
+    expect(data.items.map((i) => i.name)).toEqual(['Magnesium Bisglycinate', 'Magnesium Glycinate']);
+    expect(data.items[0].pick_variant).toMatchObject({ sku_id: '21', retail_price: 20, image: 'b.jpg' });
+    const raw = JSON.stringify(data);
+    expect(raw).not.toMatch(/max_margin|b2b_price/);
+  });
+
+  test('изчерпаното при доставчика отпада', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = async (url) => {
+      const id = new URL(String(url)).searchParams.get('id');
+      const body = JSON.stringify({ status: 'ok', products: [{ id, available: id !== '21', b2b_price: 10 }] });
+      return { ok: true, status: 200, text: async () => body, json: async () => JSON.parse(body) };
+    };
+    const { data } = await call(`q=${encodeURIComponent('Магнезиев бисглицинат')}`, env({ FITNESS1_API_KEY: 'k' }));
+    global.fetch = originalFetch;
+    expect(data.items.map((i) => i.name)).toEqual(['Magnesium Glycinate']);
+    expect(data.live_checked_at).toBeTruthy();
+  });
+
+  test('без дума → 400', async () => {
+    expect((await call('q=', env({ LIVE_STOCK_CHECK: '0' }))).status).toBe(400);
+  });
+});

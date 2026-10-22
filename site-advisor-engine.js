@@ -3,6 +3,7 @@
  */
 
 import { finalizeSiteAnswers, buildAdvisorClinicalGuardrails } from './site-advisor-shared.js';
+import { pruneHiddenAnswers, mainStopReason } from './site-advisor-config.js';
 import {
   buildClientProfile,
   extractProductsFromContent,
@@ -14,7 +15,8 @@ import {
   PRIORITY_GOAL_KEYWORDS,
 } from './protocol-quiz-engine.js';
 import { rerankByProfitWithinRelevance } from './portfolio-advisor-commerce.js';
-import { composeAdvisorStacks } from './advisor-composer.js';
+import { composeAdvisorStacks, codeDoseTiming } from './advisor-composer.js';
+import { guardAdvisorResponse } from './advisor-ai-guard.js';
 import { buildProductCard, buildReviewCandidates, sanitizeProfileForAI, summarizeComposedForAI } from './advisor-ai.js';
 import {
   getExclusionReasons,
@@ -22,6 +24,7 @@ import {
   productMatchesAnyKeyword,
   productSearchText,
   profileHasPregnancyOrBreastfeeding,
+  enforceStimulantRules,
 } from './protocol-safety-rules.js';
 
 /** Ключови думи по сайт — продуктите вече са филтрирани по каталог, това е scoring hint. */
@@ -106,7 +109,13 @@ function getSitePriorityKeywordMap(siteId, priority = '') {
 }
 
 export function buildSiteAdvisorProfile(rawAnswers, siteId = 'life') {
-  const finalized = finalizeSiteAnswers(rawAnswers, siteId);
+  // Отговори на скрити въпроси отпадат и тук — сървърът не разчита на браузъра.
+  const finalized = finalizeSiteAnswers(pruneHiddenAnswers({ ...(rawAnswers || {}) }), siteId);
+  // daotslabna: бременност, кърмене, хранително разстройство, ИТМ под 18.5 — без програма за отслабване.
+  if (siteId === 'main') {
+    const stop = mainStopReason(finalized);
+    if (stop) throw new Error(stop);
+  }
   return buildClientProfile(finalized);
 }
 
@@ -198,6 +207,12 @@ export function finalizeSiteAdvisorResponse(response, eligibleProducts, excluded
     throw new Error('Липсват трите ценови класа в отговора.');
   }
 
+  // Дозите и часовете на прием — от данните на продукта; съвети за прием на вещества
+  // извън подбраните продукти отпадат; предупреждението е фиксирано (advisor-ai-guard.js).
+  guardAdvisorResponse(response, (pid) => (productMap.get(pid) ? codeDoseTiming(productMap.get(pid)) : null));
+  const stimRemoved = enforceStimulantRules(response, productMap, profile);
+  if (stimRemoved.length) response.safety_removed = stimRemoved;
+
   for (const key of ['basic', 'optimal', 'premium']) {
     const tier = response.tiers[key];
     if (!Array.isArray(tier.products) || !tier.products.length) {
@@ -223,6 +238,12 @@ export function finalizeSiteAdvisorResponse(response, eligibleProducts, excluded
   }
   const byBudget = profile?.budget_band ? pickTierForBudget(response.tiers, profile.budget_band) : null;
   if (byBudget) response.recommended_tier = byBudget;
+  // Ако и базовият пакет е над бюджета — казваме го, вместо да го премълчим.
+  const maxBudget = BUDGET_MAX_EUR[profile?.budget_band];
+  const basicCost = Number(response.tiers.basic.monthly_cost_eur) > 0 ? response.tiers.basic.monthly_cost_eur : response.tiers.basic.monthly_total_eur;
+  if (Number.isFinite(maxBudget) && basicCost > maxBudget) {
+    response.budget_note = `Най-малкият подходящ за вас пакет е ${basicCost.toFixed(2)} € — малко над посочения бюджет до ${maxBudget} €.`;
+  }
 
   return response;
 }
@@ -274,8 +295,17 @@ export async function prepareSiteAdvisorSubmission(env, rawAnswers, deps, {
 
   const tierLimits = SITE_TIER_LIMITS[siteId] || SITE_TIER_LIMITS.life;
   // Алгоритъмът съставя пакетите винаги; AI пише текста (или при сложен профил — преглежда и сменя в рамките на алтернативите).
+  // Бюджетът от теста: базовият пакет се събира в него (досега само избираше препоръчания пакет).
+  const composeOpts = getSiteComposeOptions(siteId);
+  const budgetMax = BUDGET_MAX_EUR[profile.budget_band];
+  if (Number.isFinite(budgetMax) && composeOpts.tierLimits?.basic) {
+    composeOpts.tierLimits = {
+      ...composeOpts.tierLimits,
+      basic: { ...composeOpts.tierLimits.basic, budgetEur: Math.min(composeOpts.tierLimits.basic.budgetEur, budgetMax) },
+    };
+  }
   const composed = composeAdvisorStacks(profile, rankedResult.ranked, {
-    ...getSiteComposeOptions(siteId),
+    ...composeOpts,
     siteId,
     goal: profile.priority,
   });

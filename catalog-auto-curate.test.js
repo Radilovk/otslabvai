@@ -64,7 +64,7 @@ describe('catalog-auto-curate', () => {
 
   test('скрит кофеин в описанието се хваща при окончателната проверка', () => {
     const index = [
-      entry('1', 'Green Tea Lean', STIM_FREE, { max_margin: 9 }),
+      entry('1', 'Lean Choline', STIM_FREE, { max_margin: 9 }),
       entry('2', 'Lipotropic Choline', STIM_FREE, { max_margin: 4 }),
     ];
     const shortlist = shortlistCurationCandidates(index, 'main', emptySite, { slots: [slot(MAIN_SLOTS, 'stim_free_core')] });
@@ -75,7 +75,7 @@ describe('catalog-auto-curate', () => {
     }]));
     const { picks, rejected } = finalizeCurationPicks(shortlist, groups);
     expect(picks.map((p) => p.entry.group_id)).toEqual(['2']);
-    expect(rejected[0].name).toBe('Green Tea Lean');
+    expect(rejected[0].name).toBe('Lean Choline');
     expect(rejected[0].reason).toMatch(/стимулант|fat_burner/);
   });
 

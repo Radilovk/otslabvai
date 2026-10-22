@@ -42,8 +42,9 @@ export async function loadPortfolioAdvisorSettings(env) {
 export async function savePortfolioAdvisorSettings(env, settings, ctx) {
   const toSave = {
     enabled: settings.enabled !== false,
-    prompt: String(settings.prompt || getDefaultPortfolioAdvisorPrompt()),
-    narrator_prompt: String(settings.narrator_prompt || getDefaultPortfolioNarratorPrompt()),
+    // Пази се само промпт, различен от подразбиращия се — иначе подобренията в кода не стигат до сайта.
+    prompt: (String(settings.prompt || '').trim() === getDefaultPortfolioAdvisorPrompt().trim() ? '' : String(settings.prompt || '').trim()),
+    narrator_prompt: (String(settings.narrator_prompt || '').trim() === getDefaultPortfolioNarratorPrompt().trim() ? '' : String(settings.narrator_prompt || '').trim()),
     commerce: normalizeAdvisorCommerceSettings(settings),
   };
   const put = env.PAGE_CONTENT.put('portfolio_advisor_settings', JSON.stringify(toSave, null, 2));

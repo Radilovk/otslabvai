@@ -858,6 +858,7 @@ function renderPageContent() {
         hero_banner: 'Hero Banner',
         product_category: 'Продуктова Категория',
         info_card: 'Информационен Кард',
+        nutriplan_cta: 'Реклама: NutriPlan',
         benefits: 'Ползи',
         timeline: 'Времева линия',
         ingredients: 'Съставки',
@@ -1249,6 +1250,7 @@ function populateAddComponentMenu() {
     const componentTemplates = {
         'hero_banner': { label: 'Hero Banner', templateId: 'form-hero-banner-template' },
         'info_card': { label: 'Инфо Кард', templateId: 'form-info-card-template' },
+        'nutriplan_cta': { label: 'Реклама: NutriPlan', templateId: 'form-nutriplan-cta-template' },
         'product_category': { label: 'Продуктова Категория', templateId: 'form-product-category-template' },
         'benefits': { label: 'Ползи', templateId: 'form-benefits-template' },
         'timeline': { label: 'Времева линия', templateId: 'form-timeline-template' },
@@ -2579,7 +2581,7 @@ function handleAction(action, target, id) {
                     const newComponent = serializeForm(form);
                     newComponent.type = componentType;
                     newComponent.component_id = `comp_${Date.now()}`;
-                    if(!newComponent.title) newComponent.title = `Нова ${componentType.replace(/_/g, ' ')}`;
+                    if(!newComponent.title && componentType !== 'nutriplan_cta') newComponent.title = `Нова ${componentType.replace(/_/g, ' ')}`;
                     appData.page_content.push(newComponent);
                     DOM.addComponentDropdown.classList.remove('show');
                     return true;
@@ -2590,7 +2592,7 @@ function handleAction(action, target, id) {
             if (!component) return;
             const correctedType = component.type.replace(/_/g, '-');
             const editTemplateId = `form-${correctedType}-template`;
-            openModal(`Редакция на: ${component.title}`, editTemplateId, component,
+            openModal(`Редакция на: ${component.title || (component.type === 'nutriplan_cta' ? 'Реклама: NutriPlan' : component.type)}`, editTemplateId, component,
                 (form) => {
                     const updatedData = serializeForm(form);
                     // Debug: console.log('Updating component:', component.component_id, 'with data:', updatedData);
@@ -4796,7 +4798,7 @@ function updateModelPlaceholder() {
     const placeholders = {
         'cloudflare': '@cf/meta/llama-3.1-70b-instruct',
         'openai': 'gpt-4 or gpt-3.5-turbo',
-        'google': 'gemini-2.0-flash'
+        'google': 'gemini-3.5-flash-lite'
     };
     
     if (modelInput) {
@@ -6487,7 +6489,7 @@ async function fetchMainAdvisorSettings() {
         if (narrEl && data.narrator_prompt) narrEl.value = data.narrator_prompt;
     } catch (e) {
         console.error('Main advisor settings:', e);
-        showNotification('Грешка при зареждане на настройките за AI консултант.', 'error');
+        showNotification('Грешка при зареждане на настройките за персоналната програма.', 'error');
     }
 }
 
@@ -6502,7 +6504,7 @@ async function saveMainAdvisorSettingsAdmin() {
             body: JSON.stringify({ enabled, prompt, narrator_prompt }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        showNotification('Настройките за AI консултант са запазени.', 'success');
+        showNotification('Настройките за персоналната програма са запазени.', 'success');
     } catch (e) {
         showNotification('Грешка при запазване на настройките.', 'error');
     }
@@ -6941,3 +6943,16 @@ async function init() {
 
 // Старт на приложението
 init();
+
+
+// Промптовете: празно поле = текущият промпт от кода (с всички подобрения).
+// Бутонът изчиства полето; при „Запази“ се пази само собствен (различен) текст.
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest?.('[data-reset-prompt]');
+    if (!btn) return;
+    const el = document.getElementById(btn.dataset.resetPrompt);
+    if (!el) return;
+    if (!confirm('Да се ползва подразбиращият се промпт от кода? Собственият текст в полето ще бъде изчистен (запазете след това).')) return;
+    el.value = '';
+    el.placeholder = 'Подразбиращият се промпт от кода — запазете, за да важи.';
+});
