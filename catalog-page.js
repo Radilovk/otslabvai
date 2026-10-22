@@ -1,6 +1,7 @@
 import { API_URL } from './config.js';
 import { findCategory, isCatalogOnly, isProductListed, sortByOrder } from './product-visibility.js';
 import { rewriteAllProductImages } from './life-img.js';
+import { polishLifeContent } from './life-copy.js';
 
 const SITES = {
   main: {
@@ -258,7 +259,10 @@ async function run(siteKey) {
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     if (cfg.rewriteImages) rewriteAllProductImages(data.page_content);
-    if (siteKey === 'life') renderLifeChrome(data, cfg);
+    if (siteKey === 'life') {
+      polishLifeContent(data);
+      renderLifeChrome(data, cfg);
+    }
 
     const cat = findCategory(data.page_content, categoryId, componentId);
     if (!cat) {

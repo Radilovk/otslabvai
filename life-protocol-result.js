@@ -96,7 +96,7 @@ function renderTier(key, tier, recommended, benefitMeta) {
     ${tier.strategy ? `<p class="lpr-strategy">${escapeHtml(tier.strategy)}</p>` : ''}
     <div class="lpr-products-section">
       <button type="button" class="lpr-products-toggle open" data-tier-toggle="${key}" aria-expanded="true" aria-controls="lpr-products-${key}">
-        <span>Продукти в стака (${products.length})</span>
+        <span>Продукти в комплекта (${products.length})</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       <div class="lpr-product-grid" id="lpr-products-${key}">${productCards}</div>
@@ -171,7 +171,7 @@ function renderSchedulePanel(schedule, tier, tierKey) {
     </div>
     ${blocks ? `<div class="lpr-schedule-blocks">${blocks}</div>` : '<p class="lpr-schedule-empty">Няма зададен график за този вариант.</p>'}
     ${schedule.weekly_notes ? `<div class="lpr-schedule-notes"><strong>Седмична бележка:</strong> ${escapeHtml(schedule.weekly_notes)}</div>` : ''}
-    ${productLinks.length ? `<div class="lpr-schedule-products"><strong>Продукти в стака:</strong> ${productLinks.join('<span class="lpr-schedule-sep">·</span>')}</div>` : ''}
+    ${productLinks.length ? `<div class="lpr-schedule-products"><strong>Продукти в комплекта:</strong> ${productLinks.join('<span class="lpr-schedule-sep">·</span>')}</div>` : ''}
   `;
 }
 
@@ -290,7 +290,7 @@ function renderResult(data) {
   });
 
   if (subtitleEl) {
-    subtitleEl.textContent = 'Изберете вариант за график · продуктите са видими във всеки стак';
+    subtitleEl.textContent = 'Изберете вариант, за да видите графика на прием';
   }
 }
 

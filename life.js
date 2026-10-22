@@ -18,6 +18,7 @@ import {
 } from './life-protocol-store.js';
 import { LIFE_CATEGORY_DEFS } from './life-category-assign.js';
 import { rewriteAllProductImages, resolveImageUrl, localizeOwnAsset } from './life-img.js';
+import { polishLifeContent } from './life-copy.js';
 import { isOnHomepage, isCatalogOnly, isProductListed, sortByOrder, catalogLink } from './product-visibility.js';
 import { attachSitePageVisibilitySync } from './site-page-sync.js';
 
@@ -249,7 +250,7 @@ const generateHeroHTML = (component, pageContent = []) => {
     
     // Hero CTA — протокол или „Моят протокол“ след покупка
     const buttons = component.buttons || {};
-    const defaultPrimary = buttons.primary || { text: 'Започнете вашия протокол', action: 'link', target: 'life-protocol-quiz.html' };
+    const defaultPrimary = buttons.primary || { text: 'Създай своя протокол', action: 'link', target: 'life-protocol-quiz.html' };
     const primaryCta = getHeroPrimaryCta(defaultPrimary.text);
     let primaryBtn = {
         ...defaultPrimary,
@@ -570,7 +571,7 @@ const generateProductCategoryHTML = (component, index) => {
             </div>` : ''}
             ${catalogOnlyCount > 0 ? `
             <div class="category-view-more">
-                <p class="category-view-more-hint">На началната страница са показани избраните продукти. В пълния каталог има още <strong>${catalogOnlyCount}</strong>.</p>
+                <p class="category-view-more-hint">Тук са подбраните продукти. В каталога има още <strong>${catalogOnlyCount}</strong>.</p>
                 <a href="${catalogLink('life-category.html', component, categorySlug)}" class="category-view-more-btn">
                     Виж всички в каталога (${catalogOnlyCount})
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
@@ -1895,6 +1896,7 @@ async function main() {
             data = await response.json();
         }
 
+        polishLifeContent(data);
         pageContentLoadedAt = Date.now();
 
         // Check if this is the index page (has main-content-container)

@@ -13,10 +13,10 @@ const FEMALE_ONLY_CONDITION_VALUES = FEMALE_ONLY_CONDITIONS.map((o) => o.value);
 export const SITE_ADVISOR_META = {
   life: {
     siteId: 'life',
-    pageTitle: 'Персонален anti-aging протокол',
-    pageSubtitle: 'Кратък профил → индивидуален стак с точни продукти и дози',
+    pageTitle: 'Персонален антиейджинг протокол',
+    pageSubtitle: 'Няколко въпроса — и получавате протокол с точни продукти и дози',
     bodyHint: 'Ръст и тегло ни помагат да подберем дозите и интензитета.',
-    contactTitle: 'Готов е вашият протокол',
+    contactTitle: 'Протоколът ви е готов',
     contactHint: 'Оставете имейл, за да видите трите варианта и да поръчате директно.',
     contactCta: 'Виж моя протокол',
     draftKey: 'lifeProtocolDraft',
@@ -25,9 +25,9 @@ export const SITE_ADVISOR_META = {
   main: {
     siteId: 'main',
     pageTitle: 'Персонална програма за отслабване',
-    pageSubtitle: 'Кратък профил → три готови варианта с продукти, дози и график',
+    pageSubtitle: 'Няколко въпроса — и получавате три варианта с продукти, дози и график',
     bodyHint: 'Ръст и тегло ни помагат да насочим програмата към вашите цели.',
-    contactTitle: 'Готова е вашата програма',
+    contactTitle: 'Програмата ви е готова',
     contactHint: 'Оставете имейл, за да видите трите варианта и да поръчате директно.',
     contactCta: 'Виж моята програма',
     draftKey: 'mainAdvisorDraft',
@@ -78,11 +78,11 @@ const BASE_STEPS = [
   },
   {
     id: 'diet',
-    title: 'Хранителен модел',
+    title: 'Как се храните?',
     type: 'single',
     field: 'diet',
     options: [
-      { value: 'omnivore', label: 'Всеяден' },
+      { value: 'omnivore', label: 'Ям от всичко' },
       { value: 'vegetarian', label: 'Вегетарианец' },
       { value: 'vegan', label: 'Веган' },
       { value: 'keto', label: 'Кето / нисковъглехидратен' },
@@ -91,8 +91,8 @@ const BASE_STEPS = [
   },
   {
     id: 'conditions',
-    title: 'Здравен статус',
-    hint: 'Отбележете всички приложими състояния.',
+    title: 'Здравословни състояния',
+    hint: 'Отбележете всички, които се отнасят за вас.',
     type: 'multi',
     field: 'conditions',
     options: [
@@ -111,7 +111,7 @@ const BASE_STEPS = [
   },
   {
     id: 'medications',
-    title: 'Медикаменти',
+    title: 'Лекарства',
     type: 'multi',
     field: 'medications',
     options: [
@@ -119,7 +119,7 @@ const BASE_STEPS = [
       { value: 'statins', label: 'Статини' },
       { value: 'ssri', label: 'SSRI / SNRI (антидепресанти)' },
       { value: 'hormone_therapy', label: 'Хормонална терапия / контрацепция' },
-      { value: 'thyroid_meds', label: 'Медикаменти за щитовидна жлеза' },
+      { value: 'thyroid_meds', label: 'Лекарства за щитовидната жлеза' },
       { value: 'bp_meds', label: 'Лекарства за кръвно налягане' },
       { value: 'adhd_stimulants', label: 'Лекарства за ADHD / стимуланти' },
       { value: 'none', label: 'Нищо от изброените', exclusive: true },
@@ -161,7 +161,7 @@ const MAIN_WEIGHT_GOAL_STEP = {
 const MAIN_EATING_STEP = {
   id: 'eating_pattern',
   title: 'Кое се отнася за храненето ви?',
-  hint: 'Изберете всичко приложимо.',
+  hint: 'Изберете всичко, което се отнася за вас.',
   type: 'multi',
   field: 'eating_pattern',
   options: [
@@ -266,7 +266,7 @@ const LIFE_JOINT_STEP = {
 export const PORTFOLIO_STIMULANT_STEP = {
   id: 'stimulant_tolerance',
   title: 'Как понасяте кофеин?',
-  hint: 'Фет бърнърите и предтренировъчните продукти често съдържат кофеин или други стимуланти.',
+  hint: 'Продуктите за горене на мазнини и преди тренировка често съдържат кофеин или други стимуланти.',
   type: 'single',
   field: 'stimulant_tolerance',
   showWhen: (a) => ['otshalvane', 'energy', 'muscle'].includes(a.priority) && !answersExcludeStimulants(a),
@@ -282,7 +282,7 @@ const MAIN_STIMULANT_STEP = {
   id: 'stimulant_tolerance',
   showWhen: (a) => !answersExcludeStimulants(a),
   title: 'Как понасяте кофеин?',
-  hint: 'Повечето фет бърнъри съдържат кофеин или други стимуланти.',
+  hint: 'Повечето продукти за горене на мазнини съдържат кофеин или други стимуланти.',
   type: 'single',
   field: 'stimulant_tolerance',
   options: [
@@ -308,8 +308,8 @@ const MAIN_BUDGET_STEP = {
 
 const LIFE_SYMPTOMS_STEP = {
   id: 'symptoms',
-  title: 'Симптоми и нужди',
-  hint: 'Помага ни да подберем правилните активни вещества.',
+  title: 'Какво ви притеснява?',
+  hint: 'Така подбираме правилните съставки.',
   type: 'multi',
   field: 'symptoms',
   options: [
@@ -327,7 +327,7 @@ const LIFE_SYMPTOMS_STEP = {
 const MAIN_SYMPTOMS_STEP = {
   id: 'symptoms',
   title: 'Какво ви затруднява най-много?',
-  hint: 'Изберете всичко приложимо — така насочваме програмата.',
+  hint: 'Изберете всичко, което се отнася за вас — така насочваме програмата.',
   type: 'multi',
   field: 'symptoms',
   options: [

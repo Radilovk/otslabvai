@@ -84,7 +84,7 @@ export function clearPurchasedProtocol() {
   localStorage.removeItem(MY_PROTOCOL_KEY);
 }
 
-export function getHeroPrimaryCta(defaultText = 'Започнете вашия протокол') {
+export function getHeroPrimaryCta(defaultText = 'Създай своя протокол') {
   if (hasPurchasedProtocol()) {
     return {
       text: 'Моят протокол',
