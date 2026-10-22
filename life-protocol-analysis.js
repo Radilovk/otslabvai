@@ -4,7 +4,7 @@
  */
 
 const SITE_FOCUS = {
-  life: { engine: 'Life Protocol Engine v3.0', catalog: 'anti-aging каталог', focus: 'антиейджинг и дълголетие', tiers: 'Basic (3–4) · Optimal (5–6) · Premium (6–8)' },
+  life: { engine: 'Life Protocol Engine v3.0', catalog: 'anti-aging каталог', focus: 'антиейджинг', tiers: 'Basic (3–4) · Optimal (5–6) · Premium (6–8)' },
   main: { engine: 'ДА ОТСЛАБНА Advisor v3.0', catalog: 'каталог за отслабване', focus: 'отслабване и метаболизъм', tiers: 'Basic (2–3) · Optimal (3–5) · Premium (4–6)' },
 };
 

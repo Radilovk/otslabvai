@@ -43,7 +43,7 @@ export const SITE_SEO = {
     siteId: 'life',
     origin: 'https://life-protocols.com',
     name: 'Life Protocols',
-    description: 'Персонализирани anti-aging протоколи, хранителни добавки за дълголетие и клетъчна регенерация. AI персонален протокол, цени в EUR.',
+    description: 'Персонализирани антиейджинг протоколи и хранителни добавки за кожа, енергия и клетъчна регенерация. Персонален протокол, цени в EUR.',
     currency: 'EUR',
     lang: 'bg',
     storeType: 'OnlineStore',

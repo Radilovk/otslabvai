@@ -7,7 +7,7 @@ import { buildProductCard, sanitizeProfileForAI } from './advisor-ai.js';
 
 const SITE_PROMPT_CONTEXT = {
   life: {
-    expertLine: 'Експерт по anti-aging протоколи и хранителни добавки за дълголетие.',
+    expertLine: 'Експерт по антиейджинг протоколи и хранителни добавки — за хора, които искат да останат или отново да се почувстват млади.',
     tierLine: '3 tier-а: basic (2-3 продукта), optimal (3-5, препоръчан), premium (4-6).',
     benefitLine: 'Ползите (benefits) са КУМУЛАТИВНИ: basic = базови ползи; optimal = basic + нови теми; premium = optimal + премиум ползи. Без синоними.',
     focusLine: 'Фокус: антиоксиданти, колаген, клетъчна регенерация, сън, когниция, стави — комплементарни роли.',

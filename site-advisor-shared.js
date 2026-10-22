@@ -9,7 +9,7 @@ const CLINICAL_FLAG_VALUES = new Set(['none', 'all', 'other']);
 export const SITE_ADVISOR_CONTEXT = {
   life: {
     defaultPriority: 'longevity',
-    siteLine: 'Контекст: Life Protocols — антиейджинг, дълголетие, клетъчна регенерация. Фокусът (priority) е избран от клиента — съобрази програмата с него.',
+    siteLine: 'Контекст: Life Protocols — антиейджинг за хора, които искат да останат или отново да се почувстват млади (кожа, енергия, тонус, клетъчна регенерация). Не говори за „дълголетие“ или старост. Фокусът (priority) е избран от клиента — съобрази програмата с него.',
   },
   main: {
     defaultPriority: 'otshalvane',
