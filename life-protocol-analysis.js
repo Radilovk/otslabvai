@@ -4,8 +4,8 @@
  */
 
 const SITE_FOCUS = {
-  life: { engine: 'Life Protocol Engine v3.0', catalog: 'anti-aging каталог', focus: 'антиейджинг', tiers: 'Basic (3–4) · Optimal (5–6) · Premium (6–8)' },
-  main: { engine: 'ДА ОТСЛАБНА Advisor v3.0', catalog: 'каталог за отслабване', focus: 'отслабване и метаболизъм', tiers: 'Basic (2–3) · Optimal (3–5) · Premium (4–6)' },
+  life: { engine: 'подбора на Life Protocols', catalog: 'антиейджинг каталога', focus: 'антиейджинг', tiers: 'Базов (3–4) · Оптимален (5–6) · Премиум (6–8)' },
+  main: { engine: 'подбора на „Да отслабна“', catalog: 'каталога за отслабване', focus: 'отслабване и метаболизъм', tiers: 'Базов (2–3) · Оптимален (3–5) · Премиум (4–6)' },
 };
 
 const ACTIVITY_LABELS = {
@@ -36,37 +36,37 @@ function buildLogSequence(answers, siteId = 'life') {
   const allergies = formatAnswerList(answers.allergies, answers.allergies_other);
 
   const lines = [
-    { type: 'system', text: `Инициализиране на ${site.engine}…`, delay: 200 },
-    { type: 'info', text: `Зареждане на ${site.catalog} (орални добавки)…`, delay: 280 },
-    { type: 'ok', text: 'Синхронизация с наличности — активна', delay: 220 },
+    { type: 'system', text: `Стартиране на ${site.engine}…`, delay: 200 },
+    { type: 'info', text: `Зареждане на ${site.catalog} (добавки за прием през устата)…`, delay: 280 },
+    { type: 'ok', text: 'Наличностите са проверени', delay: 220 },
     { type: 'info', text: `Профил: ${answers.sex === 'male' ? 'мъж' : 'жена'}, ${answers.age_band || '—'} г.`, delay: 180 },
   ];
 
   if (bmi) {
-    lines.push({ type: 'data', text: `ИТМ: ${bmi} — отчетен в профила`, delay: 420 });
+    lines.push({ type: 'data', text: `Индекс на телесна маса: ${bmi}`, delay: 420 });
   }
 
   lines.push(
-    { type: 'info', text: `Сайт фокус: ${site.focus}`, delay: 380 },
+    { type: 'info', text: `Насоченост: ${site.focus}`, delay: 380 },
     { type: 'info', text: `Физическа активност: ${activity}`, delay: 300 },
-    { type: 'warn', text: 'Прилагане на safety матрица (лекарства × алергии × състояния)…', delay: 520 },
+    { type: 'warn', text: 'Проверка за безопасност: лекарства, алергии и състояния…', delay: 520 },
   );
 
   if (meds.length) {
-    lines.push({ type: 'warn', text: `Медикаментни взаимодействия: ${meds.length} филтъра`, delay: 340 });
+    lines.push({ type: 'warn', text: `Взаимодействия с лекарства: ${meds.length} проверки`, delay: 340 });
   }
   if (conditions.length) {
-    lines.push({ type: 'warn', text: `Клинични ограничения: ${conditions.length} правила`, delay: 340 });
+    lines.push({ type: 'warn', text: `Ограничения заради здравословни състояния: ${conditions.length}`, delay: 340 });
   }
 
   lines.push(
-    { type: 'info', text: 'Изключване на пептиди и инжектируеми форми…', delay: 400 },
-    { type: 'ok', text: 'Орални кандидати — филтрирани', delay: 450 },
-    { type: 'info', text: 'Скориране по цели, симптоми и ефект-профил…', delay: 500 },
+    { type: 'info', text: 'Само добавки за прием през устата — без инжекции…', delay: 400 },
+    { type: 'ok', text: 'Подходящите продукти са отделени', delay: 450 },
+    { type: 'info', text: 'Оценка по цели, оплаквания и действие…', delay: 500 },
   );
 
   if (symptoms.length) {
-    lines.push({ type: 'data', text: `Симптомна корелация: ${symptoms.join(', ')}`, delay: 380 });
+    lines.push({ type: 'data', text: `Оплаквания: ${symptoms.join(', ')}`, delay: 380 });
   }
   if (allergies.length) {
     lines.push({ type: 'warn', text: `Алергии / непоносимости: ${allergies.join(', ')}`, delay: 320 });
@@ -76,14 +76,14 @@ function buildLogSequence(answers, siteId = 'life') {
   }
 
   lines.push(
-    { type: 'info', text: 'Ранжиране на топ 25 кандидата за AI стак…', delay: 460 },
-    { type: 'system', text: 'Обмисляне на синергии между активни вещества…', delay: 540 },
-    { type: 'info', text: `Оптимизация: ${site.tiers}`, delay: 480 },
-    { type: 'info', text: 'Калкулиране на месечен бюджет в EUR…', delay: 400 },
-    { type: 'info', text: 'Балансиране на сутрешен / вечерен прием…', delay: 420 },
-    { type: 'system', text: 'AI анализ на персонални корелации…', delay: 600 },
-    { type: 'info', text: 'Валидиране на product_id срещу каталог…', delay: 450 },
-    { type: 'info', text: 'Финализиране на 3-tier препоръка…', delay: 500 },
+    { type: 'info', text: 'Подреждане на 25-те най-подходящи продукта…', delay: 460 },
+    { type: 'system', text: 'Проверка как съставките действат заедно…', delay: 540 },
+    { type: 'info', text: `Три варианта: ${site.tiers}`, delay: 480 },
+    { type: 'info', text: 'Изчисляване на месечната цена в евро…', delay: 400 },
+    { type: 'info', text: 'Разпределяне на приема сутрин и вечер…', delay: 420 },
+    { type: 'system', text: 'Съпоставяне с вашия профил…', delay: 600 },
+    { type: 'info', text: 'Сверяване с каталога…', delay: 450 },
+    { type: 'info', text: 'Подготовка на трите варианта…', delay: 500 },
     { type: 'ok', text: 'Протоколът е готов за преглед', delay: 400 },
   );
 

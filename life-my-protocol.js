@@ -79,7 +79,7 @@ function renderProtocol(protocol) {
     ?? (tier.products || []).reduce((s, p) => s + (Number(p.price_eur) || 0), 0);
 
   titleEl.textContent = protocol.tierName || 'Моят протокол';
-  subtitleEl.textContent = tier.tagline || 'Вашият персонализиран стак за прием — структуриран по време на деня.';
+  subtitleEl.textContent = tier.tagline || 'Вашите добавки и кога да ги приемате през деня.';
 
   metaEl.innerHTML = [
     `<span class="lmp-meta-chip">${productCount} продукта</span>`,
@@ -99,7 +99,7 @@ function renderProtocol(protocol) {
       ${protocol.protocol_schedule?.weekly_notes ? `<p class="lmp-subtitle" style="margin-top:1rem;margin-bottom:0;">${escapeHtml(protocol.protocol_schedule.weekly_notes)}</p>` : ''}
     </section>
     <section class="lmp-section" aria-labelledby="lmp-products-title">
-      <h2 id="lmp-products-title">Продукти във вашия стак</h2>
+      <h2 id="lmp-products-title">Продукти във вашия комплект</h2>
       <div class="lmp-products">${(tier.products || []).map(renderProduct).join('')}</div>
     </section>
     ${(protocol.lifestyle_tips || []).length ? `<section class="lmp-section lmp-tips"><h2>Съвети за начин на живот</h2><ul>${protocol.lifestyle_tips.map((t) => `<li>${escapeHtml(t)}</li>`).join('')}</ul></section>` : ''}
@@ -110,11 +110,11 @@ function renderProtocol(protocol) {
 
 function renderEmpty() {
   titleEl.textContent = 'Все още нямате активен протокол';
-  subtitleEl.textContent = 'Попълнете въпросника, изберете стак и завършете поръчката, за да видите пълния си протокол тук.';
+  subtitleEl.textContent = 'Попълнете теста, изберете вариант и завършете поръчката — тогава протоколът ви ще е тук.';
   metaEl.innerHTML = '';
   contentEl.innerHTML = `<div class="lmp-empty">
-    <p>След закупуване на персонален стак, вашият график на прием и продукти ще се показват на тази страница.</p>
-    <a href="life-protocol-quiz.html" class="btn-hero-primary">Започнете вашия протокол</a>
+    <p>След поръчката тук ще виждате продуктите си и графика на прием.</p>
+    <a href="life-protocol-quiz.html" class="btn-hero-primary">Създай своя протокол</a>
   </div>`;
   disclaimerEl.textContent = '';
   // "Поръчай отново" / "Създай нов" mean nothing without a protocol — one clear CTA instead

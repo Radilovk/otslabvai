@@ -157,7 +157,7 @@ const NP_FEATURES = [
   ['Седмично меню', 'по цели, здраве и предпочитания'],
   ['Замени за всяко ястие', 'без да излизате от плана'],
   ['Асистент 24/7', 'отговаря на въпроси за храната'],
-  ['Седмичен преглед', 'планът се коригира по напредъка'],
+  ['Седмичен преглед', 'планът се променя според напредъка ви'],
 ];
 
 const NP_CHECK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';

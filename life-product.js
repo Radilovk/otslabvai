@@ -5,6 +5,7 @@
 import { API_URL } from './config.js';
 import { normalizeEffectLabel } from './effect-labels.js';
 import { rewriteProductImages } from './life-img.js';
+import { polishLifeContent } from './life-copy.js';
 import { isProductListed } from './product-visibility.js';
 import { bindProductShareButton, shareIconSvg, absoluteProductUrl } from './product-share.js';
 import { resolveOgImageUrl } from './og-share-meta.js';
@@ -1214,6 +1215,7 @@ async function main() {
             data = await response.json();
         }
 
+        polishLifeContent(data);
         // Render header and footer
         renderHeader(data.settings, data.navigation, data.page_content);
         renderFooter(data.settings, data.footer);
