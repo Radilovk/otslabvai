@@ -24,22 +24,22 @@ export function iconCheck(size = 16) {
  * във hex feature картите; останалите са налични за употреба по име.
  */
 export const LIFE_ICON_IMAGES = {
-  flask: 'images/life-icons/flask.png',
-  dna: 'images/life-icons/dna.png',
-  brain: 'images/life-icons/brain.png',
-  molecule: 'images/life-icons/molecule.png',
-  capsule: 'images/life-icons/capsule.png',
-  hourglass: 'images/life-icons/hourglass.png',
-  microscope: 'images/life-icons/microscope.png',
-  longevity: 'images/life-icons/longevity.png',
-  formula: 'images/life-icons/formula.png',
-  data: 'images/life-icons/data.png',
-  trophy: 'images/life-icons/trophy.png',
-  cross: 'images/life-icons/cross.png',
-  logo: 'images/life-icons/logo.png',
-  star: 'images/life-icons/star.png',
+  flask: 'images/life-icons/flask.webp',
+  dna: 'images/life-icons/dna.webp',
+  brain: 'images/life-icons/brain.webp',
+  molecule: 'images/life-icons/molecule.webp',
+  capsule: 'images/life-icons/capsule.webp',
+  hourglass: 'images/life-icons/hourglass.webp',
+  microscope: 'images/life-icons/microscope.webp',
+  longevity: 'images/life-icons/longevity.webp',
+  formula: 'images/life-icons/formula.webp',
+  data: 'images/life-icons/data.webp',
+  trophy: 'images/life-icons/trophy.webp',
+  cross: 'images/life-icons/cross.webp',
+  logo: 'images/life-icons/logo.webp',
+  star: 'images/life-icons/star.webp',
   // Псевдоним за името, използвано в съществуващото съдържание (feature карти)
-  mitochondria: 'images/life-icons/capsule.png'
+  mitochondria: 'images/life-icons/capsule.webp'
 };
 
 /**

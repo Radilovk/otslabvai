@@ -17,13 +17,13 @@ import {
     getCtaButtonTarget
 } from './life-protocol-store.js';
 import { LIFE_CATEGORY_DEFS } from './life-category-assign.js';
-import { rewriteAllProductImages } from './life-img.js';
+import { rewriteAllProductImages, resolveImageUrl, localizeOwnAsset } from './life-img.js';
 import { isOnHomepage, isCatalogOnly, isProductListed, sortByOrder, catalogLink } from './product-visibility.js';
 import { attachSitePageVisibilitySync } from './site-page-sync.js';
 
 let pageContentLoadedAt = 0;
 
-const LOGO_FALLBACK = 'images/life-icons/logo.png';
+const LOGO_FALLBACK = 'images/life-icons/logo.webp';
 const LOGO_FALLBACK_ALT = 'images/lifelogo3.png';
 
 function resolveCategoryAnchor(categoryId, pageContent = []) {
@@ -263,10 +263,8 @@ const generateHeroHTML = (component, pageContent = []) => {
     let primaryButtonHTML = '';
     if (primaryBtn.action === 'link') {
         primaryButtonHTML = `<a href="${escapeHtml(primaryBtn.target)}" class="btn-hero-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
-                <circle cx="9" cy="21" r="1"></circle>
-                <circle cx="20" cy="21" r="1"></circle>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="margin-right: 8px;">
+                <path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9z"/>
             </svg>
             ${escapeHtml(primaryBtn.text)}
         </a>`;
@@ -274,10 +272,8 @@ const generateHeroHTML = (component, pageContent = []) => {
         // Validate selector for security before using in onclick
         const safeSelector = validateSelector(primaryBtn.target);
         primaryButtonHTML = `<button class="btn-hero-primary" onclick="document.querySelector('${safeSelector}')?.scrollIntoView({behavior: 'smooth'})">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
-                <circle cx="9" cy="21" r="1"></circle>
-                <circle cx="20" cy="21" r="1"></circle>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="margin-right: 8px;">
+                <path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9z"/>
             </svg>
             ${escapeHtml(primaryBtn.text)}
         </button>`;
@@ -396,7 +392,7 @@ const generateHeroHTML = (component, pageContent = []) => {
     const vialImg = heroImages.vial || '';
     const labImg = heroImages.lab || '';
     const faceImg = heroImages.face || '';
-    const visualBgRaw = heroImages.visual_bg || '';
+    const visualBgRaw = resolveImageUrl(heroImages.visual_bg || '', 1100);
     let heroVisualStyle = '';
     if (visualBgRaw) {
         const vbUrl = escapeHtml(visualBgRaw);
@@ -424,7 +420,7 @@ const generateHeroHTML = (component, pageContent = []) => {
                 (rawUrl.startsWith('/') && (rawUrl.startsWith('/images/') || rawUrl.startsWith('/assets/')))
             );
             if (isSafe) {
-                return `<div class="hex-frame ${cls}"><img src="${escapeHtml(rawUrl)}" alt="${escapeHtml(altText)}" loading="lazy"></div>`;
+                return `<div class="hex-frame ${cls}"><img src="${escapeHtml(resolveImageUrl(rawUrl, 480))}" alt="${escapeHtml(altText)}" loading="lazy" decoding="async"></div>`;
             }
         }
         // Без fallback икони: hero показва само реално зададени изображения
@@ -457,7 +453,7 @@ const generateHeroHTML = (component, pageContent = []) => {
         if (isSafe) {
             heroSideHTML = `
     <div class="hero-banner-panel" aria-hidden="true">
-        <img src="${escapeHtml(rawUrl)}" alt="" class="hero-banner-img" loading="eager">
+        <img src="${escapeHtml(resolveImageUrl(rawUrl, 900))}" alt="" class="hero-banner-img" loading="eager" fetchpriority="high" decoding="async">
     </div>`;
         }
     }
@@ -616,7 +612,7 @@ const generateInfoCardHTML = (component) => {
     <section ${component.id ? `id="${component.id}"` : ''} class="info-card-section fade-in-up ${'image-align-' + (component.options?.image_align || 'left')}">
         <div class="container">
             <div class="info-card-image">
-                <img src="${component.image}" alt="${component.title}" loading="lazy">
+                <img src="${escapeHtml(resolveImageUrl(component.image, 900))}" alt="${escapeHtml(component.title)}" loading="lazy" decoding="async">
             </div>
             <div class="info-card-content">
                 <h2>${component.title}</h2>
@@ -1103,33 +1099,29 @@ function initNavDropdowns() {
     }
 }
 
-function renderPromoBanner(settings) {
+// Лентата отгоре е поканата за основната цел на сайта — персоналния антиейджинг
+// протокол (тестът). Продуктови оферти (напр. пептиди) не се показват тук.
+const PROTOCOL_OFFER = {
+    title: 'Персонален антиейджинг протокол',
+    note: 'тест за 2 минути',
+    action: 'Започни',
+    url: 'life-protocol-quiz.html',
+};
+
+function renderPromoBanner() {
     const promoBanner = document.querySelector('.promo-banner');
     if (!promoBanner) return;
-    
-    const promoContent = promoBanner.querySelector('.promo-content p');
+    const promoContent = promoBanner.querySelector('.promo-content');
     if (!promoContent) return;
-    
-    // Get the promo text from settings
-    // Без текст от админа лентата не се показва (няма вграден „подразбиращ се“ промо текст).
-    const promoText = String(settings.promo_banner?.text || '').trim();
-    if (!promoText) {
-        promoBanner.hidden = true;
-        return;
-    }
-    // Таймер само при реална крайна дата на офертата (settings.promo_banner.ends_at, ISO).
-    const endsAt = Date.parse(settings.promo_banner?.ends_at || '');
-    const timerAttr = Number.isFinite(endsAt) && endsAt > Date.now() ? ` data-ends-at="${endsAt}"` : '';
     promoBanner.hidden = false;
-    
-    // Keep the icon and strong tag, update only the text
     promoContent.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
-        </svg>
-        ${escapeHtml(promoText)} <span class="promo-timer" id="promo-timer"${timerAttr}></span>
-    `;
-    initPromoTimer();
+        <a class="promo-offer" href="${PROTOCOL_OFFER.url}">
+            <span class="promo-offer__spark" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9z"/></svg>
+            </span>
+            <span class="promo-offer__text"><strong>${PROTOCOL_OFFER.title}</strong><span class="promo-offer__note"> · ${PROTOCOL_OFFER.note}</span></span>
+            <span class="promo-offer__go">${PROTOCOL_OFFER.action}<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>`;
     if (typeof updatePromoBannerOffset === 'function') updatePromoBannerOffset();
 }
 
@@ -1148,7 +1140,7 @@ function initializeLogoFromCache() {
 
 function applyLogoWithFallback(img, logoUrl) {
     if (!img) return;
-    const nextSrc = logoUrl ? encodeURI(logoUrl) : LOGO_FALLBACK;
+    const nextSrc = logoUrl ? encodeURI(localizeOwnAsset(logoUrl)) : LOGO_FALLBACK;
     const current = img.getAttribute('src') || '';
     if (current === nextSrc || img.dataset.logoSrc === nextSrc) {
         return;
@@ -1913,7 +1905,7 @@ async function main() {
         }
         
         renderHeader(data.settings, data.navigation, data.page_content);
-        renderPromoBanner(data.settings);
+        renderPromoBanner();
         
         if (isIndexPage) {
             renderMainContent(data.page_content);

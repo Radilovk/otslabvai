@@ -61,4 +61,9 @@ describe('коя карта се заменя от секцията на про�
     expect(html).toContain('Създай нов протокол');
     expect(html).toContain('life-protocol-quiz.html?replace=1');
   });
+
+  test('Life Protocols води към антиейджинг протокола на NutriPlan', () => {
+    expect(nutriPlanUrl('life', 'page')).toBe('https://biocode.website/protocol-longevity.html?utm_source=lifeprotocols&utm_medium=page');
+    expect(nutriPlanUrl('main', 'page')).toBe('https://biocode.website/?utm_source=daotslabna&utm_medium=page');
+  });
 });
