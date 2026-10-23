@@ -234,7 +234,7 @@ function advancedIntegrationCases(site, origin, skillId, mcpToolNeedle = 'get_ll
       id: `${site}-oauth-as`,
       site,
       path: '/.well-known/oauth-authorization-server',
-      bodyIncludes: [`"issuer": "${origin}"`, 'authorization_endpoint', 'jwks_uri', 'agent_auth', '"skill"'],
+      bodyIncludes: [`"issuer": "${origin}"`, 'authorization_endpoint', 'jwks_uri', 'agent_auth', '"skill"', '"claim_uri"'],
     },
     {
       id: `${site}-oauth-prm`,
@@ -270,8 +270,9 @@ function advancedIntegrationCases(site, origin, skillId, mcpToolNeedle = 'get_ll
       id: `${site}-ai-catalog`,
       site,
       path: '/.well-known/ai-catalog.json',
-      contentTypeIncludes: ['application/ai-catalog+json'],
-      bodyIncludes: ['specVersion', 'representativeQueries', 'application/mcp-server-card+json'],
+      contentTypeIncludes: ['application/json'],
+      bodyIncludes: ['specVersion', 'displayName', 'representativeQueries', 'application/mcp-server-card+json'],
+      headerIncludes: ['access-control-allow-origin'],
     },
     {
       id: `${site}-web-bot-auth`,

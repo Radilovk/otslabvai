@@ -1,6 +1,7 @@
 import {
   a2aAgentCard,
   agentSkillsIndex,
+  aiCatalogManifest,
   authMd,
   mcpServerCard,
   oauthAuthorizationServer,
@@ -16,8 +17,10 @@ describe('seo-aeo-advanced-integration', () => {
     expect(doc.authorization_endpoint).toContain('/admin.html');
     expect(doc.token_endpoint).toContain('/admin/session');
     expect(doc.jwks_uri).toContain('/.well-known/jwks.json');
-    expect(doc.agent_auth.skill).toBe('https://daotslabna.com/.well-known/agent-skills/storefront/SKILL.md');
-    expect(doc.agent_auth.register_uri).toBe('https://daotslabna.com/auth.md');
+    expect(doc.agent_auth.skill).toBe('https://daotslabna.com/auth.md');
+    expect(doc.agent_auth.register_uri).toBe('https://daotslabna.com/.well-known/agent-skills/index.json');
+    expect(doc.agent_auth.claim_uri).toBe('https://daotslabna.com/auth.md#anonymous-flow');
+    expect(doc.agent_auth.credential_types_supported).toEqual(['none']);
   });
 
   test('oauthProtectedResource references site origin as resource and auth server', () => {
@@ -46,6 +49,17 @@ describe('seo-aeo-advanced-integration', () => {
   test('auth.md includes auth.md heading', () => {
     expect(authMd(SITE_SEO.main)).toMatch(/^# .*auth\.md/m);
     expect(authMd(SITE_SEO.main)).toContain('anonymous-flow');
+    expect(authMd(SITE_SEO.main)).toContain('Step 1');
+    expect(authMd(SITE_SEO.main)).toContain('agent-skills/index.json');
+  });
+
+  test('aiCatalogManifest entries include displayName', () => {
+    const manifest = aiCatalogManifest(SITE_SEO.main);
+    expect(manifest.host.displayName).toBeTruthy();
+    for (const entry of manifest.entries) {
+      expect(entry.displayName).toBeTruthy();
+      expect(entry.representativeQueries.length).toBeGreaterThanOrEqual(2);
+    }
   });
 
   test('agentSkillsIndex v0.2.0 schema with digest', async () => {
@@ -76,6 +90,10 @@ describe('seo-aeo-advanced-integration', () => {
       if (path === '/auth.md') expect(ct).toContain('text/markdown');
       if (path === '/.well-known/http-message-signatures-directory') {
         expect(ct).toContain('application/http-message-signatures-directory+json');
+      }
+      if (path === '/.well-known/ai-catalog.json') {
+        expect(ct).toContain('application/json');
+        expect(res.headers.get('access-control-allow-origin')).toBe('*');
       }
     }
   });

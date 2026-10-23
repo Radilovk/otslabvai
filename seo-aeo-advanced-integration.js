@@ -6,6 +6,13 @@
 const JSON_HEADERS = {
   'content-type': 'application/json; charset=utf-8',
   'cache-control': 'public, max-age=3600',
+  'access-control-allow-origin': '*',
+};
+
+const AI_CATALOG_HEADERS = {
+  'content-type': 'application/json; charset=utf-8',
+  'cache-control': 'public, max-age=3600',
+  'access-control-allow-origin': '*',
 };
 
 const MARKDOWN_HEADERS = {
@@ -48,9 +55,11 @@ export function oauthAuthorizationServer(site) {
     scopes_supported: ['catalog:read', 'storefront:read', 'content:read', 'admin:write'],
     code_challenge_methods_supported: ['S256'],
     agent_auth: {
-      skill: `${origin}/.well-known/agent-skills/storefront/SKILL.md`,
-      register_uri: `${origin}/auth.md`,
+      skill: `${origin}/auth.md`,
+      register_uri: `${origin}/.well-known/agent-skills/index.json`,
       identity_types_supported: ['anonymous'],
+      credential_types_supported: ['none'],
+      claim_uri: `${origin}/auth.md#anonymous-flow`,
       anonymous: {
         credential_types_supported: ['none'],
         claim_uri: `${origin}/auth.md#anonymous-flow`,
@@ -104,9 +113,28 @@ export function httpMessageSignaturesDirectory() {
 export function authMd(site) {
   return `# ${site.name} auth.md
 
-Machine-readable agent registration and API auth for **${site.origin}**.
+You are an agent. This document describes how to register for **anonymous read-only** access to **${site.origin}** and which APIs require user consent.
 
-## Public read APIs (no auth)
+Supported identity type: **anonymous**. Credential type: **none** (no \`Authorization\` header on public read routes).
+
+## Machine-readable metadata
+
+- Protected Resource Metadata: \`${site.origin}/.well-known/oauth-protected-resource\`
+- Authorization Server (includes \`agent_auth\`): \`${site.origin}/.well-known/oauth-authorization-server\`
+- Agent skills index (registration/discovery): \`${site.origin}/.well-known/agent-skills/index.json\`
+
+## Step 1 — Register (anonymous discovery)
+
+No account or API key is issued. Discover capabilities from the agent skills index:
+
+\`\`\`http
+GET /.well-known/agent-skills/index.json HTTP/1.1
+Host: ${new URL(site.origin).host}
+\`\`\`
+
+Response (200): JSON skills index with \`sha256:\` digests. Use the linked \`SKILL.md\` for storefront tools.
+
+## Step 2 — Use public read APIs (credential: none)
 
 These endpoints are open to AI crawlers and agents (see \`robots.txt\` Content-Signal):
 
@@ -119,6 +147,13 @@ These endpoints are open to AI crawlers and agents (see \`robots.txt\` Content-S
 
 Send \`Accept: text/markdown\` on HTML URLs for agent-readable markdown.
 
+\`\`\`http
+GET /llms.txt HTTP/1.1
+Host: ${new URL(site.origin).host}
+\`\`\`
+
+No request body. No authentication. Credential type supported: **none**.
+
 ## Protected admin & commerce APIs
 
 Write/admin routes require a session from \`POST /admin/login\` or OAuth token per:
@@ -128,12 +163,14 @@ Write/admin routes require a session from \`POST /admin/login\` or OAuth token p
 
 Scopes: \`catalog:read\`, \`storefront:read\`, \`content:read\`, \`admin:write\`.
 
+Do not call checkout, admin, or advisor submit endpoints without explicit user consent in the browser.
+
 ## Anonymous flow {#anonymous-flow}
 
 Agents may use **anonymous** identity for read-only catalog discovery:
 
 1. Fetch this \`auth.md\` and \`/.well-known/agent-skills/index.json\`
-2. Use public GET endpoints above (no registration required)
+2. Use public GET endpoints above (no registration POST required)
 3. Do not call checkout, admin, or advisor submit endpoints without user consent
 
 Contact: ${site.securityContact || 'office@biocode.com'}
@@ -305,9 +342,9 @@ export function aiCatalogManifest(site) {
     entries: [
       {
         identifier: `urn:air:${hostId}:mcp:storefront`,
+        displayName: `${site.name} MCP Server Card`,
         type: 'application/mcp-server-card+json',
         url: `${site.origin}/.well-known/mcp/server-card.json`,
-        title: `${site.name} MCP Server Card`,
         description: 'Public read-only storefront MCP tool metadata.',
         representativeQueries: [
           'List catalog discovery tools',
@@ -317,9 +354,9 @@ export function aiCatalogManifest(site) {
       },
       {
         identifier: `urn:air:${hostId}:a2a:storefront`,
+        displayName: `${site.name} A2A Agent Card`,
         type: 'application/a2a-agent-card+json',
         url: `${site.origin}/.well-known/agent-card.json`,
-        title: `${site.name} A2A Agent Card`,
         description: 'Agent-to-agent discovery for catalog search and FAQ.',
         representativeQueries: [
           'Discover agent skills for this shop',
@@ -328,9 +365,9 @@ export function aiCatalogManifest(site) {
       },
       {
         identifier: `urn:air:${hostId}:auth:authmd`,
+        displayName: 'auth.md agent registration',
         type: 'text/markdown',
         url: `${site.origin}/auth.md`,
-        title: 'auth.md agent registration',
         description: 'Agent authentication and public vs protected API scopes.',
         representativeQueries: [
           'How do agents authenticate?',
@@ -339,9 +376,9 @@ export function aiCatalogManifest(site) {
       },
       {
         identifier: `urn:air:${hostId}:api:catalog`,
+        displayName: 'RFC 9727 API Catalog',
         type: 'application/linkset+json',
         url: `${site.origin}/.well-known/api-catalog`,
-        title: 'RFC 9727 API Catalog',
         description: 'Machine-readable HTTP API discovery linkset.',
         representativeQueries: [
           'List public HTTP APIs',
@@ -406,10 +443,7 @@ export async function serveAdvancedIntegrationAsset(site, pathname) {
   }
   if (pathname === '/.well-known/ai-catalog.json') {
     return new Response(JSON.stringify(aiCatalogManifest(site), null, 2), {
-      headers: {
-        'content-type': 'application/ai-catalog+json; charset=utf-8',
-        'cache-control': 'public, max-age=3600',
-      },
+      headers: AI_CATALOG_HEADERS,
     });
   }
   return null;
