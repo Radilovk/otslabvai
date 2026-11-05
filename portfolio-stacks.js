@@ -1074,8 +1074,7 @@ export function stackProfit(slots) {
 }
 
 /**
- * Сравнение по реална печалба (по-голямо — по-добре):
- * пълнота → места над прага (не резерва) → места с утвърдена марка → печалба в евро.
+ * Показатели на пакета: [пълнота, места над прага (не резерва), места с утвърдена марка, печалба в евро].
  */
 export function stackProfitKey(slots) {
   const picks = slots.map((s) => s.pick).filter(Boolean);
@@ -1090,8 +1089,8 @@ export function stackProfitKey(slots) {
 /**
  * Сглобява стака изцяло от ЕДИН доставчик — никога смесено.
  * preferred = 'profit' (по подразбиране): пакетът се сглобява и при двата доставчика и печели
- *   по-добрият по stackProfitKey (пълнота → качество → утвърдени марки → печалба в евро);
- *   при сходна печалба (разлика под PROFIT_TIE_SHARE) остава Fitness1.
+ *   по-добрият: пълнота → качество (места над прага) → реална печалба в евро;
+ *   при сходна печалба (разлика под PROFIT_TIE_SHARE) — повече утвърдени марки, после Fitness1.
  * preferred = 'fitness1' / 'sila': този доставчик, а другият — само ако първият не е пълен.
  * @param {object[]} index
  * @param {string} stackId
@@ -1131,13 +1130,16 @@ export function resolveStack(index, stackId, getGroup, opts = {}) {
 
   const f1 = build(DISTRIBUTOR_FITNESS1);
   const sila = build(DISTRIBUTOR_SILA);
-  // Пълнота, качество и утвърдени марки решават първо; при равенство — печалбата.
-  for (let i = 0; i < 3; i += 1) {
+  // Пълнота и качество (места над прага) решават първо.
+  for (let i = 0; i < 2; i += 1) {
     if (f1.key[i] !== sila.key[i]) return done(f1.key[i] > sila.key[i] ? f1 : sila);
   }
+  // После реалната печалба — ако разликата е осезаема (поне PROFIT_TIE_SHARE).
   const top = Math.max(f1.profit, sila.profit);
   const similar = top <= 0 || Math.abs(f1.profit - sila.profit) / top < PROFIT_TIE_SHARE;
-  return done(similar || f1.profit >= sila.profit ? f1 : sila);
+  if (!similar) return done(f1.profit > sila.profit ? f1 : sila);
+  // Сходна печалба: повече утвърдени марки; при равенство — Fitness1.
+  return done(sila.key[2] > f1.key[2] ? sila : f1);
 }
 
 /**

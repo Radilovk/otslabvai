@@ -264,4 +264,27 @@ describe('portfolio-stacks', () => {
     for (const b of ['Swedish Nutra', 'Swedish Collagen', 'MagHerbs', 'Osavi', 'Grewia']) expect(brandTrust(b)).toBeLessThan(0.8);
     expect(brandTrust('Bioherba')).toBeLessThan(0.6);
   });
+
+  test('по реална печалба: осезаемо по-голямата печалба печели пред повече утвърдени марки', () => {
+    // Fitness1: местни марки, +3 € печалба на продукт; Sila: утвърдени марки, по-малка печалба.
+    const f1 = [
+      product('Ashwagandha KSM-66 300 mg', 'Forcelab', { b2b: 10, retail: 22, ref: 23 }),
+      product('Magnesium Bisglycinate 200 mg', 'Swedish Essentials', { b2b: 8, retail: 18, ref: 19 }),
+      product('GABA 750 mg', 'Trec Nutrition', { b2b: 6, retail: 15, ref: 16 }),
+    ];
+    const sila = [
+      product('Ashwagandha 600 | KSM-66', 'Olimp Sport Nutrition', { b2b: 13, retail: 22, ref: 23, distributor: 'sila' }),
+      product('Magnesium Bisglycinate 200 mg', 'NOW Foods', { b2b: 11, retail: 18, ref: 19, distributor: 'sila' }),
+      product('GABA 750 mg', 'NOW Foods', { b2b: 9, retail: 15, ref: 16, distributor: 'sila' }),
+    ];
+    let c = catalog([...f1, ...sila]);
+    expect(resolveStack(c.index, 'antistress', c.getGroup).distributor).toBe('fitness1');
+    // Сходна печалба → утвърдените марки решават.
+    c = catalog([...f1, ...[
+      product('Ashwagandha 600 | KSM-66', 'Olimp Sport Nutrition', { b2b: 10.2, retail: 22, ref: 23, distributor: 'sila' }),
+      product('Magnesium Bisglycinate 200 mg', 'NOW Foods', { b2b: 8.2, retail: 18, ref: 19, distributor: 'sila' }),
+      product('GABA 750 mg', 'NOW Foods', { b2b: 6.2, retail: 15, ref: 16, distributor: 'sila' }),
+    ]]);
+    expect(resolveStack(c.index, 'antistress', c.getGroup).distributor).toBe('sila');
+  });
 });
