@@ -17,8 +17,8 @@
  * Качеството: доверие към марката (MARKA_TRUST, настройка `stack_brand_trust`)
  * + съвпадение по форма (бисглицинат, пептиди, монохидрат…).
  *
- * Един пакет се сглобява само от един доставчик — приоритетно Fitness1; Sila само ако
- * Fitness1 не може да запълни пакета. Никога смесено.
+ * Един пакет се сглобява само от един доставчик — този, при когото пакетът носи повече
+ * реална печалба (при сходна — Fitness1). Никога смесено.
  *
  * Маржът и доставната цена не излизат към клиента.
  */
@@ -1056,42 +1056,90 @@ const stronger = (a, b) => {
   return false;
 };
 
-/** Приоритетният доставчик за пакетите (настройка `stack_preferred_distributor`). */
-export const DEFAULT_PREFERRED_DISTRIBUTOR = DISTRIBUTOR_FITNESS1;
+/**
+ * Как се избира доставчикът на пакета (настройка `stack_preferred_distributor`):
+ *  'profit' (по подразбиране) — по реална печалба; 'fitness1' / 'sila' — фиксиран приоритет.
+ */
+export const DEFAULT_PREFERRED_DISTRIBUTOR = 'profit';
+/** При разлика в печалбата под този дял вариантите са „сходни“ — остава Fitness1. */
+export const PROFIT_TIE_SHARE = 0.05;
+
+/**
+ * Реалната печалба на пакета: Σ (наша цена − доставна) в евро.
+ * Нашата цена е малко под цената в магазина на доставчика (с неговите намаления),
+ * затова това е маржът спрямо реалната пазарна цена, не спрямо препоръчителната.
+ */
+export function stackProfit(slots) {
+  return slots.reduce((sum, s) => sum + (s.pick ? variantValue(s.pick.variant).abs : 0), 0);
+}
+
+/**
+ * Показатели на пакета: [пълнота, места над прага (не резерва), места с утвърдена марка, печалба в евро].
+ */
+export function stackProfitKey(slots) {
+  const picks = slots.map((s) => s.pick).filter(Boolean);
+  return [
+    picks.length,
+    picks.filter((p) => p.band !== 'reserve').length,
+    picks.filter((p) => p.solid).length,
+    stackProfit(slots),
+  ];
+}
 
 /**
  * Сглобява стака изцяло от ЕДИН доставчик — никога смесено.
- * Приоритет: Fitness1. Пакетът се сглобява от него (основно вещество → заместители,
- * между продуктите — качество × марж). Sila се ползва САМО ако Fitness1 не може
- * да запълни и трите места (изчерпано без заместител) — тогава целият пакет минава към Sila.
- * Ако никой не е пълен — по-пълният (stackStrength).
+ * preferred = 'profit' (по подразбиране): пакетът се сглобява и при двата доставчика и печели
+ *   по-добрият: пълнота → качество (места над прага) → реална печалба в евро;
+ *   при сходна печалба (разлика под PROFIT_TIE_SHARE) — повече утвърдени марки, после Fitness1.
+ * preferred = 'fitness1' / 'sila': този доставчик, а другият — само ако първият не е пълен.
  * @param {object[]} index
  * @param {string} stackId
  * @param {(groupId: string) => object|null} getGroup
  * @param {{ unavailable?: Set<string>, trust?: object|null, distributor?: string, preferred?: string }} [opts]
- * unavailable: sku_id-та, изчерпани при живата проверка; distributor: само този доставчик;
- * preferred: приоритетният доставчик (по подразбиране fitness1).
- * @returns {{ distributor: string|null, fallback: boolean, slots: Array<{ slot: object, pick: object|null, primary: boolean }> }}
+ * unavailable: sku_id-та, изчерпани при живата проверка; distributor: само този доставчик.
+ * @returns {{ distributor: string|null, fallback: boolean, profit: number, slots: Array<{ slot: object, pick: object|null, primary: boolean }> }}
  */
 export function resolveStack(index, stackId, getGroup, opts = {}) {
   const stack = STACK_RULES[stackId];
-  if (!stack) return { distributor: null, fallback: false, slots: [] };
+  if (!stack) return { distributor: null, fallback: false, profit: 0, slots: [] };
   const unavailable = opts.unavailable || new Set();
-  const preferred = STACK_DISTRIBUTORS.includes(String(opts.preferred)) ? String(opts.preferred) : DEFAULT_PREFERRED_DISTRIBUTOR;
-  const order = opts.distributor
-    ? [opts.distributor]
-    : [preferred, ...STACK_DISTRIBUTORS.filter((d) => d !== preferred)];
-  let best = null;
-  for (const distributor of order) {
+  const mode = opts.preferred === 'fitness1' || opts.preferred === 'sila' ? opts.preferred : DEFAULT_PREFERRED_DISTRIBUTOR;
+  const build = (distributor) => {
     const slots = resolveForDistributor(index, stack, getGroup, distributor, unavailable, opts.trust);
-    if (slots.every((s) => s.pick)) {
-      return { distributor, fallback: distributor !== order[0], slots };
+    return { distributor, slots, complete: slots.every((s) => s.pick), key: stackProfitKey(slots), profit: stackProfit(slots) };
+  };
+  const done = (v, fallback = false) => ({
+    distributor: v && v.key[0] > 0 ? v.distributor : null,
+    fallback,
+    profit: v ? Math.round(v.profit * 100) / 100 : 0,
+    slots: v ? v.slots : [],
+  });
+
+  if (opts.distributor) return done(build(opts.distributor));
+
+  if (mode !== 'profit') {
+    const order = [mode, ...STACK_DISTRIBUTORS.filter((d) => d !== mode)];
+    let best = null;
+    for (const distributor of order) {
+      const v = build(distributor);
+      if (v.complete) return done(v, distributor !== order[0]);
+      if (!best || stronger(v.key, best.key)) best = v;
     }
-    const strength = stackStrength(slots);
-    if (!best || stronger(strength, best.strength)) best = { distributor, slots, strength };
+    return done(best, !!best && best.distributor !== order[0]);
   }
-  const empty = !best || best.strength[0] === 0;
-  return { distributor: empty ? null : best.distributor, fallback: !empty && best.distributor !== order[0], slots: best.slots };
+
+  const f1 = build(DISTRIBUTOR_FITNESS1);
+  const sila = build(DISTRIBUTOR_SILA);
+  // Пълнота и качество (места над прага) решават първо.
+  for (let i = 0; i < 2; i += 1) {
+    if (f1.key[i] !== sila.key[i]) return done(f1.key[i] > sila.key[i] ? f1 : sila);
+  }
+  // После реалната печалба — ако разликата е осезаема (поне PROFIT_TIE_SHARE).
+  const top = Math.max(f1.profit, sila.profit);
+  const similar = top <= 0 || Math.abs(f1.profit - sila.profit) / top < PROFIT_TIE_SHARE;
+  if (!similar) return done(f1.profit > sila.profit ? f1 : sila);
+  // Сходна печалба: повече утвърдени марки; при равенство — Fitness1.
+  return done(sila.key[2] > f1.key[2] ? sila : f1);
 }
 
 /**

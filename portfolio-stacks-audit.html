@@ -114,10 +114,16 @@
       const res = await fetch(`${API_URL}/portfolio/stacks/audit${id ? `?id=${id}` : ''}`, { headers: { Authorization: `Bearer ${t}` } });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `Грешка ${res.status}`);
-      $('meta').textContent = `Приоритетен доставчик: ${DIST[data.preferred]} · каталог от ${new Date(data.synced_at).toLocaleString('bg-BG')}`;
+      const mode = data.preferred === 'profit' ? 'по реална печалба (при сходна — Fitness1)' : `приоритет ${DIST[data.preferred]}`;
+      $('meta').textContent = `Избор на доставчик: ${mode} · каталог от ${new Date(data.synced_at).toLocaleString('bg-BG')}`;
       $('out').innerHTML = data.stacks.map((s) => `
         <section class="stack">
           <h2>${esc(STACK_CONTENT[s.id]?.name || s.id)} — ${esc(STACK_CONTENT[s.id]?.goal || '')} · избран доставчик: ${DIST[s.distributor] || '—'}</h2>
+          <p class="lead" style="margin:0 0 .5rem">${['fitness1', 'sila'].map((d) => {
+            const b = s.by_distributor?.[d];
+            if (!b) return '';
+            return `<strong>${DIST[d]}</strong>: печалба ${eur(b.profit)} от пакет за ${eur(b.total)}${b.complete ? '' : ' (непълен)'}`;
+          }).filter(Boolean).join(' · ')}</p>
           ${s.slots.map(renderSlot).join('')}
         </section>`).join('');
     } catch (e) {

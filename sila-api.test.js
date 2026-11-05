@@ -3,6 +3,7 @@ import {
   normalizeSilaProducts,
   submitSilaOrder,
   mergeCatalogProducts,
+  applyLowestMarketPrice,
   isSilaDistributor,
   isFitness1Distributor,
   mapSilaCategoryToCatalogTaxonomy,
@@ -149,6 +150,25 @@ describe('Sila API', () => {
     );
     expect(merged).toHaveLength(2);
     expect(merged[1].brand_id).toBe('749');
+  });
+
+  test('общ продукт: пазарната цена е най-ниската от двата магазина', () => {
+    const f1 = () => ({ id: '1', group_id: '100', barcode: '555', regular_price: '30.00', sale_price: '0.00', b2b_price: '20.00', available: true });
+    // Sila продава по-евтино (промо 26.50) → това е пазарната цена, независимо от кого купуваме.
+    let merged = mergeCatalogProducts([f1()], [{ group_id: 's1', barcode: '555', regular_price: '31.00', sale_price: '26.50', b2b_price: '21.00', available: true }]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].sale_price).toBe('26.50');
+    expect(merged[0].regular_price).toBe('30.00');
+    expect(merged[0].distributor).toBe('fitness1'); // доставната на Fitness1 е по-ниска
+    expect(merged[0].market_price_source).toBe('sila');
+    // Fitness1 е по-евтин в магазина си → цените му остават.
+    merged = mergeCatalogProducts([f1()], [{ group_id: 's1', barcode: '555', regular_price: '33.00', sale_price: '0.00', b2b_price: '19.00', available: true }]);
+    expect(merged[0].sale_price).toBe('0.00');
+    expect(merged[0].distributor).toBe('sila'); // по-ниска доставна при Sila
+    // Промо при Fitness1 по-ниско от Sila → остава промото на Fitness1.
+    const row = { ...f1(), sale_price: '24.00' };
+    applyLowestMarketPrice(row, { regular_price: '28.00', sale_price: '0.00' });
+    expect(row.sale_price).toBe('24.00');
   });
 
   test('isSilaDistributor and isFitness1Distributor', () => {
