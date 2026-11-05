@@ -17,7 +17,7 @@ const groups = [
   group('3', 'Ashwagandha KSM-66 600 mg', 'NOW Foods', 'Билки', [variant('103', 25, 10)], 'sila'),
   group('4', 'Magnesium Bisglycinate 200 mg', 'NOW Foods', 'Минерали', [variant('104', 20, 11)]),
   group('5', 'GABA 750 mg', 'NOW Foods', 'Добавки', [variant('105', 17.2, 9)]),
-  group('6', 'Rhodiola Rosea 500 mg', 'Olimp Sport Nutrition', 'Билки', [variant('106', 18, 9)]),
+  group('6', 'Rhodiola Rosea 500 mg', 'Grewia', 'Билки', [variant('106', 18, 9)]),
 ];
 
 function makeEnv() {

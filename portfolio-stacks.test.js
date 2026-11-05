@@ -62,7 +62,7 @@ describe('portfolio-stacks', () => {
   test('изчерпан продукт се заменя със следващия; без основното вещество — заместителят', () => {
     const carnA = product('L-Carnitine 1000 mg', 'Biotech USA', { b2b: 6, retail: 12, ref: 13 });
     const carnB = product('L-Carnitine 500 mg', 'Everbuild', { b2b: 6, retail: 9, ref: 10 });
-    const cla = product('CLA 1000 mg', 'Nutrend', { b2b: 8, retail: 14, ref: 15 });
+    const cla = product('CLA 1000 mg', 'Biotech USA', { b2b: 8, retail: 14, ref: 15 });
     const chrom = product('Chromium Picolinate', 'Biotech USA', { b2b: 3, retail: 6, ref: 7 });
     const thistle = product('Milk Thistle', 'Biotech USA', { b2b: 5, retail: 10, ref: 11 });
     const { index, getGroup } = catalog([carnA, carnB, cla, chrom, thistle]);
@@ -196,16 +196,20 @@ describe('portfolio-stacks', () => {
     expect(proof).toEqual([
       '200 мг в доза — силна доза',
       'Бисглицинат — най-добре поносимата форма',
-      'Елитна марка — фармацевтичен стандарт',
+      'Водеща международна марка',
     ]);
-    expect(stackProof('coq10', 'Liposomal Coenzyme Q10 100 mg', 'MagHerbs')[2]).toMatch(/Премиум/);
+    expect(stackProof('creatine', 'Creatine Monohydrate Creapure', 'Nutrend')).toContain('Утвърдена марка');
+    // Местна марка — без етикет за марката (не твърдим нищо непроверено).
+    expect(stackProof('coq10', 'Liposomal Coenzyme Q10 100 mg', 'MagHerbs').join(' ')).not.toMatch(/марка/i);
+    // Никакви твърдения за производство / сертификати.
+    expect(JSON.stringify(stackProof('magnesium', 'Magnesium Bisglycinate 200 mg', 'NOW Foods'))).not.toMatch(/GMP|фармацевт/i);
   });
 
   test('замяна в количката: същото място, същият доставчик, без изчерпаното и без продуктите от пакета', () => {
     const forcelab = product('Ashwagandha KSM-66 300 mg', 'Forcelab', { b2b: 12, retail: 22.4, ref: 24 });
     const trec = product('Ashwagandha KSM-66 200 mg', 'Trec Nutrition', { b2b: 6, retail: 11, ref: 12 });
     const silaAsh = product('Ashwagandha KSM-66 600 mg', 'NOW Foods', { b2b: 10, retail: 25, ref: 27, distributor: 'sila' });
-    const rhodiola = product('Rhodiola Rosea 500 mg', 'Olimp Sport Nutrition', { b2b: 9, retail: 18, ref: 19 });
+    const rhodiola = product('Rhodiola Rosea 500 mg', 'Grewia', { b2b: 9, retail: 18, ref: 19 });
     const { index, getGroup } = catalog([forcelab, trec, silaAsh, rhodiola]);
 
     const list = slotReplacementCandidates(index, 'antistress', 'cortisol', getGroup, {
@@ -225,5 +229,26 @@ describe('portfolio-stacks', () => {
     });
     expect(without[0].entry.group_id).toBe(rhodiola.entry.group_id);
     expect(slotReplacementCandidates(index, 'antistress', 'no-such-slot', getGroup)).toEqual([]);
+  });
+
+  test('утвърдена марка изпреварва местна — дори със заместващото вещество', () => {
+    const localAsh = product('Ashwagandha KSM-66 300 mg', 'Forcelab', { b2b: 10, retail: 22.4, ref: 24 });
+    const solidAsh = product('Ashwagandha 600 Sport | KSM-66', 'Olimp Sport Nutrition', { b2b: 7, retail: 13.9, ref: 15 });
+    const solidRhod = product('Rhodiola Rosea 500 mg', 'NOW Foods', { b2b: 9, retail: 18, ref: 19 });
+    let c = catalog([localAsh, solidAsh]);
+    let ranked = rankSlotCandidates(c.index, STACK_RULES.antistress.slots[0], c.getGroup);
+    expect(ranked[0].entry.brand).toBe('Olimp Sport Nutrition');
+    expect(ranked[0].solid).toBe(true);
+    // Няма утвърдена марка с ашваганда → утвърдената със заместителя (родиола) е преди местната ашваганда.
+    c = catalog([localAsh, solidRhod]);
+    ranked = rankSlotCandidates(c.index, STACK_RULES.antistress.slots[0], c.getGroup);
+    expect(ranked.map((r) => r.entry.brand)).toEqual(['NOW Foods', 'Forcelab']);
+  });
+
+  test('класове на марките: местните марки не са „елит“', () => {
+    expect(brandTrust('NOW Foods')).toBe(1);
+    expect(brandTrust('Olimp Sport Nutrition')).toBe(0.85);
+    for (const b of ['Swedish Nutra', 'Swedish Collagen', 'MagHerbs', 'Osavi', 'Grewia']) expect(brandTrust(b)).toBeLessThan(0.8);
+    expect(brandTrust('Bioherba')).toBeLessThan(0.6);
   });
 });
