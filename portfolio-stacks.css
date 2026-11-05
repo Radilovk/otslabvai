@@ -159,7 +159,7 @@
 .sk-home-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
 .sk-tile {
   position: relative; display: flex; flex-direction: column; justify-content: center; gap: .1rem;
-  min-height: 64px; padding: .7rem .8rem .7rem 1rem; border-radius: var(--pf-radius-sm);
+  min-height: 58px; padding: .7rem .8rem .7rem 1rem; border-radius: var(--pf-radius-sm);
   background: var(--pf-surface); border: 1px solid var(--pf-border); text-decoration: none;
   overflow: hidden; -webkit-tap-highlight-color: transparent; transition: border-color .2s, transform .2s var(--pf-ease);
 }
@@ -174,8 +174,8 @@
 @media (min-width: 640px) { .sk-home-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1040px) {
   .sk-home { margin-top: 1.75rem; }
-  .sk-home-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .75rem; }
-  .sk-tile { min-height: 76px; }
+  .sk-home-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; }
+  .sk-tile { min-height: 72px; }
 }
 
 /* Обосновка на избора: доза, форма, марка */

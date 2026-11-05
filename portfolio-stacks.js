@@ -376,6 +376,258 @@ export const STACK_RULES = {
       },
     ],
   },
+
+  joints: {
+    id: 'joints',
+    slots: [
+      {
+        id: 'cartilage',
+        title: 'Хрущял',
+        options: [
+          {
+            key: 'glucosamine', label: 'Глюкозамин и хондроитин',
+            why: 'Градивните вещества на хрущяла — подпомагат възстановяването му и смазката на ставата.',
+            rule: { must: /glucosam|chondroit|глюкозам|хондроит/i, avoid: /women.?s beauty|flexi move|kids/i, prefer: /chondroit|msm|1500|1600|sulfat/i },
+            allowCombo: true,
+          },
+          {
+            key: 'joint_formula', label: 'Комплексна ставна формула',
+            why: 'Съчетава няколко вещества за хрущяла, сухожилията и подвижността в една доза.',
+            rule: { must: /flex|joint|arthro|artro|стави|ставн/i, avoid: /drink|kids|women.?s beauty/i, prefer: /collagen|hyalur|msm|boswell|curcum/i },
+            allowCombo: true,
+          },
+          {
+            key: 'collagen', label: 'Колагенови пептиди', q: 'колагенови пептиди',
+            why: 'Колагенът изгражда хрущяла и сухожилията — пептидите се усвояват бързо.',
+            rule: { ...ref('collagen'), avoid: /drinks|multivitamin|hair|beauty|skin/i },
+            allowCombo: true,
+          },
+        ],
+      },
+      {
+        id: 'inflammation',
+        title: 'Възпаление и болка',
+        options: [
+          {
+            key: 'curcumin', label: 'Куркумин', maxPrice: 90,
+            why: 'Подпомага естествения контрол на възпалението в ставите — с пиперин за усвояване.',
+            rule: { ...ref('curcumin'), avoid: /ginger|berberin|джинджиф/i },
+            allowCombo: true,
+          },
+          {
+            key: 'boswellia', label: 'Босвелия',
+            why: 'Босвелиевите киселини подпомагат подвижността и комфорта на ставите.',
+            rule: { must: /boswell|босвел/i },
+            allowCombo: true,
+          },
+          {
+            key: 'omega3', label: 'Омега-3 (EPA/DHA)',
+            why: 'EPA подпомага естествения контрол на възпалението.',
+            rule: { ...ref('omega3') },
+          },
+        ],
+      },
+      {
+        id: 'mobility',
+        title: 'Подвижност и смазка',
+        options: [
+          {
+            key: 'msm', label: 'MSM (органична сяра)',
+            why: 'Сярата е нужна за изграждането на хрущял и съединителна тъкан.',
+            rule: { must: /(^|[^a-z])msm([^a-z]|$)/i, avoid: /glucosam|chondroit|women|beauty/i },
+          },
+          {
+            key: 'hyaluronic', label: 'Хиалуронова киселина',
+            why: 'Основен компонент на ставната течност — смазва ставата.',
+            rule: { must: /hyalur|хиалур/i, avoid: /collagen|колаген|multivitamin|beauty|skin/i },
+            allowCombo: true,
+          },
+        ],
+      },
+    ],
+  },
+
+  immunity: {
+    id: 'immunity',
+    slots: [
+      {
+        id: 'vitamin_c',
+        title: 'Първа линия на защита',
+        options: [
+          {
+            key: 'vitamin_c', label: 'Витамин C',
+            why: 'Натрупва се в имунните клетки и се изразходва бързо при инфекция и стрес.',
+            rule: { ...ref('vitamin_c'), avoid: /multi|мулти|complex|collagen|колаген|theanin|charger|powder|glutath|kids/i, prefer: /liposom|липозом|1000/i },
+          },
+        ],
+      },
+      {
+        id: 'vitamin_d',
+        title: 'Регулация на имунитета',
+        options: [
+          {
+            key: 'vitamin_d', label: 'Витамин D3',
+            why: 'Регулира имунния отговор — дефицитът е честа причина за чести настинки през зимата.',
+            rule: { ...ref('vitamin_d'), avoid: /k-?2|mk-?7|k1|multi|мулти|calcium|калций|complex|omega|fish|humic|400 iu|kids|zinc|vitamin c/i },
+          },
+          {
+            key: 'd3k2', label: 'Витамин D3 + K2',
+            why: 'D3 за имунитета, K2 насочва калция правилно.',
+            rule: { ...ref('d3k2'), avoid: /omega|fish|calcium|калций|(^|[^a-z])ca([^a-z]|$)|multi|мулти|k1/i },
+            allowCombo: true,
+          },
+        ],
+      },
+      {
+        id: 'defence',
+        title: 'Защитни клетки',
+        options: [
+          {
+            key: 'zinc', label: 'Цинк',
+            why: 'Нужен за развитието и работата на имунните клетки.',
+            rule: { ...ref('zinc') },
+          },
+          {
+            key: 'selenium', label: 'Селен',
+            why: 'Антиоксидант, нужен за нормалната работа на имунната система.',
+            rule: { ...ref('selenium') },
+          },
+          {
+            key: 'colostrum', label: 'Коластра (имуноглобулини)',
+            why: 'Естествени имуноглобулини и фактори, които подпомагат защитата на лигавиците.',
+            rule: { must: /colostr|коластр|колостр/i },
+            allowCombo: true,
+          },
+          {
+            key: 'echinacea', label: 'Ехинацея',
+            why: 'Билка, традиционно ползвана за подкрепа на имунитета в сезона на настинките.',
+            rule: { must: /echinac|ехинац/i },
+            allowCombo: true,
+          },
+        ],
+      },
+    ],
+  },
+
+  menopause: {
+    id: 'menopause',
+    slots: [
+      {
+        id: 'balance',
+        title: 'Горещи вълни и баланс',
+        options: [
+          {
+            key: 'black_cohosh', label: 'Грозниче (Black Cohosh)',
+            why: 'Най-изследваната билка при горещи вълни и нощно изпотяване.',
+            rule: { must: /cohosh|cimicif|грозниче/i },
+            allowCombo: true,
+          },
+          {
+            key: 'menopause_formula', label: 'Формула за менопауза',
+            why: 'Билки и витамини, подбрани за горещите вълни, настроението и енергията в менопаузата.',
+            rule: { must: /menopaus|менопауз|климакс|hormonal balance|evapro|femi health|dong quai|wild yam|red clover|isoflav/i, avoid: /fat burner|shaper/i },
+            allowCombo: true,
+          },
+        ],
+      },
+      {
+        id: 'bones',
+        title: 'Кости',
+        options: [
+          {
+            key: 'd3k2', label: 'Витамин D3 + K2',
+            why: 'След менопаузата костната плътност спада бързо — D3 и K2 насочват калция към костите.',
+            rule: { ...ref('d3k2'), avoid: /omega|fish|multi|мулти|k1/i },
+            allowCombo: true,
+          },
+          {
+            key: 'calcium_d', label: 'Калций с витамин D3 / K2',
+            why: 'Калций с витамините, които го насочват към костите.',
+            rule: { must: /calcium|калций/i, prefer: /k-?2|d-?3|citrat/i, avoid: /kids|zinc|akg|ketoglut/i },
+            allowCombo: true,
+          },
+        ],
+      },
+      {
+        id: 'sleep',
+        title: 'Сън и настроение',
+        options: [
+          {
+            key: 'magnesium', label: 'Магнезий бисглицинат', q: 'магнезиев бисглицинат',
+            why: 'Подобрява съня, намалява раздразнителността и мускулните крампи.',
+            rule: { ...ref('magnesium'), avoid: /alkaline|calcium|zinc|zma|\bca\b|sodium|натрий|калций|drinks|gumm/i },
+          },
+          {
+            key: 'gaba', label: 'GABA',
+            why: 'Основният успокояващ невротрансмитер — за по-лесно заспиване.',
+            rule: { must: /(^|[^a-z])gaba([^a-z]|$)/i, avoid: /melatonin|tryptophan|ashwagandha sleep/i },
+          },
+        ],
+      },
+    ],
+  },
+
+  antistress: {
+    id: 'antistress',
+    slots: [
+      {
+        id: 'cortisol',
+        title: 'Хормонът на стреса',
+        options: [
+          {
+            key: 'ashwagandha', label: 'Ашваганда KSM-66',
+            why: 'Адаптоген, който в изследвания понижава кортизола и усещането за стрес.',
+            rule: { ...ref('ashwagandha'), avoid: /shilajit|tribulus|maca|ginseng|sleep|melatonin|sport/i, prefer: /ksm|sensoril/i },
+          },
+          {
+            key: 'rhodiola', label: 'Родиола (златен корен)',
+            why: 'Адаптоген срещу умора и изтощение при продължителен стрес.',
+            rule: { must: /rhodiol|родиол|golden root|златен корен/i, avoid: /ginseng|shilajit/i },
+          },
+        ],
+      },
+      {
+        id: 'nerves',
+        title: 'Нервна система',
+        options: [
+          {
+            key: 'magnesium', label: 'Магнезий бисглицинат', q: 'магнезиев бисглицинат',
+            why: 'Стресът изразходва магнезия, а дефицитът засилва тревожността — порочен кръг.',
+            rule: { ...ref('magnesium'), avoid: /alkaline|calcium|zinc|zma|\bca\b|sodium|натрий|калций|drinks|gumm/i },
+          },
+          {
+            key: 'b_complex', label: 'B-комплекс',
+            why: 'Витамините от група B поддържат нервната система и енергията при натоварване.',
+            rule: { ...ref('b_complex'), avoid: /iron|желяз|kids|calcium|ms hope/i },
+            allowCombo: true,
+          },
+        ],
+      },
+      {
+        id: 'calm',
+        title: 'Спокойствие без сънливост',
+        options: [
+          {
+            key: 'theanine', label: 'L-теанин',
+            why: 'Аминокиселина от зеления чай — спокойна концентрация, без сънливост.',
+            rule: { ...ref('theanine'), avoid: /ms hope|happylls|vitamin c|zma|valerian/i },
+            allowCombo: true,
+          },
+          {
+            key: 'gaba', label: 'GABA',
+            why: 'Основният успокояващ невротрансмитер.',
+            rule: { must: /(^|[^a-z])gaba([^a-z]|$)/i, avoid: /melatonin|tryptophan|ashwagandha sleep/i },
+          },
+          {
+            key: 'valerian', label: 'Валериана',
+            why: 'Билка за успокоение и по-лесно заспиване.',
+            rule: { must: /valerian|валериан/i, avoid: /zma|theanin/i },
+            allowCombo: true,
+          },
+        ],
+      },
+    ],
+  },
 };
 
 export const STACK_IDS = Object.keys(STACK_RULES);
@@ -449,6 +701,21 @@ export const POTENCY = {
   biotin: { unit: 'mcg', strong: 10000 },
   hair_skin_nails: { premium: /biotin|collagen|keratin/i },
   zinc: { unit: 'mg', strong: 25, premium: /picolinat|bisglycin/i },
+  glucosamine: { unit: 'mg', strong: 1500, premium: /chondroit|msm|sulfat/i },
+  joint_formula: { premium: /collagen|hyalur|msm|boswell|curcum|uc-?ii/i },
+  boswellia: { unit: 'mg', strong: 400, premium: /65\s?%|75\s?%|akba|5-loxin/i },
+  msm: { unit: 'mg', strong: 1000, premium: /optimsm/i },
+  selenium: { unit: 'mcg', strong: 100, premium: /selenomethion|methionin/i },
+  colostrum: { unit: 'mg', strong: 1000, premium: /igg|immunoglob|имуноглоб/i },
+  echinacea: { unit: 'mg', strong: 400 },
+  black_cohosh: { unit: 'mg', strong: 40 },
+  menopause_formula: {},
+  calcium_d: { premium: /k-?2|d-?3|citrat|chela/i },
+  gaba: { unit: 'mg', strong: 500 },
+  ashwagandha: { unit: 'mg', strong: 300, premium: /ksm|sensoril/i },
+  rhodiola: { unit: 'mg', strong: 300, premium: /3\s?%|rosavin|salidros/i },
+  theanine: { unit: 'mg', strong: 200, premium: /suntheanine/i },
+  valerian: { unit: 'mg', strong: 400 },
 };
 
 const UNIT_RE = {
