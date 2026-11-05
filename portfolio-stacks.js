@@ -17,11 +17,25 @@
  * Качеството: доверие към марката (MARKA_TRUST, настройка `stack_brand_trust`)
  * + съвпадение по форма (бисглицинат, пептиди, монохидрат…).
  *
+ * Един пакет се сглобява само от един доставчик (Sila или Fitness1) — никога смесено.
+ *
  * Маржът и доставната цена не излизат към клиента.
  */
 import { SUPPLEMENT_SLOTS, fitScore, isComboName, FIT_TOLERANCE } from './portfolio-supplement-pick.js';
 import { isSampleVariantLabel } from './advisor-product-facts.js';
 import { variantHasMargin } from './portfolio-margin-policy.js';
+import { isSilaDistributor, DISTRIBUTOR_SILA, DISTRIBUTOR_FITNESS1 } from './sila-api.js';
+
+/**
+ * Един пакет — един доставчик (Sila или Fitness1), никога смесено:
+ * поръчката към доставчика е една, без две пратки и две минимални суми.
+ */
+export const STACK_DISTRIBUTORS = [DISTRIBUTOR_FITNESS1, DISTRIBUTOR_SILA];
+
+/** Доставчикът на варианта (по подразбиране Fitness1, както в каталога). */
+export function variantDistributor(variant, group = null) {
+  return isSilaDistributor(variant?.distributor || group?.distributor) ? DISTRIBUTOR_SILA : DISTRIBUTOR_FITNESS1;
+}
 
 const ref = (key) => {
   const slot = SUPPLEMENT_SLOTS.find((s) => s.key === key);
@@ -423,9 +437,10 @@ export function variantValue(variant) {
  * Най-добрият вариант на групата за стак (наличен, с марж, не мостра, под тавана на цената)
  * — по марж спрямо цената при доставчика.
  */
-export function pickStackVariant(group, maxPrice = DEFAULT_MAX_PRICE) {
+export function pickStackVariant(group, maxPrice = DEFAULT_MAX_PRICE, distributor = null) {
   const ok = (group?.variants || []).filter((v) => v.available !== false && variantHasMargin(v)
-    && !isStackUnfitPack(v) && (!(maxPrice > 0) || Number(v.retail_price) <= maxPrice));
+    && !isStackUnfitPack(v) && (!(maxPrice > 0) || Number(v.retail_price) <= maxPrice)
+    && (!distributor || variantDistributor(v, group) === distributor));
   if (!ok.length) return null;
   return ok.reduce((best, v) => {
     const a = variantValue(v);
@@ -487,7 +502,8 @@ export function rankByValue(rows, trustOverrides = null) {
  * @param {object[]} index
  * @param {{ options: StackOption[] }} slot
  * @param {(groupId: string) => object|null} getGroup
- * @param {{ exclude?: Set<string>, trust?: object|null }} [opts]
+ * @param {{ exclude?: Set<string>, trust?: object|null, distributor?: string|null }} [opts]
+ * distributor — само продукти от този доставчик.
  * @returns {Array<any>}
  */
 export function rankSlotCandidates(index, slot, getGroup, opts = {}) {
@@ -498,7 +514,7 @@ export function rankSlotCandidates(index, slot, getGroup, opts = {}) {
       .filter(({ entry }) => !exclude.has(String(entry.group_id)))
       .map(({ entry, fit, tier }) => {
         const group = getGroup(String(entry.group_id));
-        const variant = group && pickStackVariant(group, option.maxPrice ?? DEFAULT_MAX_PRICE);
+        const variant = group && pickStackVariant(group, option.maxPrice ?? DEFAULT_MAX_PRICE, opts.distributor || null);
         return variant ? { entry, fit, tier, group, variant } : null;
       })
       .filter(Boolean);
@@ -521,34 +537,79 @@ export function stackCandidateGroupIds(index, stackId) {
 }
 
 /**
- * Сглобява стака: за всяко място — първият наличен кандидат.
+ * Сглобява стака от един доставчик: за всяко място — първият наличен кандидат.
  * Един продукт не може да заеме две места.
- * @param {object[]} index
- * @param {string} stackId
- * @param {(groupId: string) => object|null} getGroup
- * @param {{ unavailable?: Set<string>, trust?: object|null }} [opts] unavailable: sku_id-та, изчерпани при живата проверка
  * @returns {Array<{ slot: object, pick: object|null, primary: boolean }>}
  */
-export function resolveStack(index, stackId, getGroup, opts = {}) {
-  const stack = STACK_RULES[stackId];
-  if (!stack) return [];
-  const unavailable = opts.unavailable || new Set();
+function resolveForDistributor(index, stack, getGroup, distributor, unavailable, trust) {
   const used = new Set();
   return stack.slots.map((slot) => {
-    const ranked = rankSlotCandidates(index, slot, getGroup, { exclude: used, trust: opts.trust });
+    const ranked = rankSlotCandidates(index, slot, getGroup, { exclude: used, trust, distributor });
     const pick = ranked.find((c) => !unavailable.has(String(c.variant.sku_id))) || null;
     if (pick) used.add(String(pick.entry.group_id));
     return { slot, pick, primary: !!pick && pick.option === slot.options[0] };
   });
 }
 
-/** Кандидатите за жива проверка: първите N на всяко място. */
+/**
+ * Сравнение на два варианта на пакета (по-голямо — по-добре):
+ * пълнота → брой основни вещества → качество × марж спрямо цените при доставчика.
+ */
+export function stackStrength(slots) {
+  const picks = slots.map((s) => s.pick).filter(Boolean);
+  let abs = 0;
+  let official = 0;
+  let quality = 0;
+  for (const p of picks) {
+    const v = variantValue(p.variant);
+    abs += v.abs;
+    official += Number(p.variant.f1_reference_price) || Number(p.variant.retail_price) || 0;
+    quality += p.quality || DEFAULT_BRAND_TRUST;
+  }
+  const value = picks.length && official > 0 ? (quality / picks.length) * (abs / official) : 0;
+  return [picks.length, slots.filter((s) => s.primary).length, value];
+}
+
+const stronger = (a, b) => {
+  for (let i = 0; i < a.length; i += 1) if (a[i] !== b[i]) return a[i] > b[i];
+  return false;
+};
+
+/**
+ * Сглобява стака изцяло от ЕДИН доставчик — Sila или Fitness1, никога смесено.
+ * Сглобява се поотделно за всеки и печели по-силният вариант (stackStrength).
+ * @param {object[]} index
+ * @param {string} stackId
+ * @param {(groupId: string) => object|null} getGroup
+ * @param {{ unavailable?: Set<string>, trust?: object|null, distributor?: string }} [opts]
+ * unavailable: sku_id-та, изчерпани при живата проверка; distributor: само този доставчик.
+ * @returns {{ distributor: string|null, slots: Array<{ slot: object, pick: object|null, primary: boolean }> }}
+ */
+export function resolveStack(index, stackId, getGroup, opts = {}) {
+  const stack = STACK_RULES[stackId];
+  if (!stack) return { distributor: null, slots: [] };
+  const unavailable = opts.unavailable || new Set();
+  const candidates = opts.distributor ? [opts.distributor] : STACK_DISTRIBUTORS;
+  let best = null;
+  for (const distributor of candidates) {
+    const slots = resolveForDistributor(index, stack, getGroup, distributor, unavailable, opts.trust);
+    const strength = stackStrength(slots);
+    if (!best || stronger(strength, best.strength)) best = { distributor, slots, strength };
+  }
+  const empty = !best || best.strength[0] === 0;
+  return { distributor: empty ? null : best.distributor, slots: best.slots };
+}
+
+/** Кандидатите за жива проверка: първите N на всяко място — за всеки доставчик. */
 export function liveCheckCandidates(index, stackId, getGroup, opts = {}) {
   const stack = STACK_RULES[stackId];
   if (!stack) return [];
   const rows = [];
-  for (const slot of stack.slots) {
-    rows.push(...rankSlotCandidates(index, slot, getGroup, { trust: opts.trust }).slice(0, opts.perSlot || LIVE_BACKUPS_PER_SLOT));
+  for (const distributor of STACK_DISTRIBUTORS) {
+    for (const slot of stack.slots) {
+      rows.push(...rankSlotCandidates(index, slot, getGroup, { trust: opts.trust, distributor })
+        .slice(0, opts.perSlot || LIVE_BACKUPS_PER_SLOT));
+    }
   }
   return rows;
 }

@@ -1615,7 +1615,9 @@ async function handleGetStacks(request, env) {
   }
 
   const stacks = ids.map((id) => {
-    const slots = resolveStack(listed, id, getGroup, { unavailable, trust }).map(({ slot, pick, primary }) => ({
+    // Целият пакет е от един доставчик; кой — не излиза към клиента.
+    const resolved = resolveStack(listed, id, getGroup, { unavailable, trust });
+    const slots = resolved.slots.map(({ slot, pick, primary }) => ({
       id: slot.id,
       title: slot.title,
       substance: pick ? { key: pick.option.key, label: pick.option.label, why: pick.option.why } : null,
