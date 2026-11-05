@@ -340,6 +340,130 @@ function initScrollEffects() {
   onScroll();
 }
 
+const MENU_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+const CLOSE_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+
+/** Вторични страници в мобилното меню. */
+const MENU_INFO_LINKS = [
+  ['portfolio-shipping.html', 'Доставка'],
+  ['portfolio-faq.html', 'Въпроси'],
+  ['portfolio-terms.html', 'Общи условия'],
+  ['portfolio-policy.html', 'Поверителност'],
+];
+
+/**
+ * Мобилно меню (под 900px горното меню е скрито): бутон ☰ в хедъра → панел отдясно.
+ * Линковете се вземат от .pf-nav — едно място за всички страници (и статичния хедър в portfolio.html).
+ */
+function initMobileMenu(headerSlot) {
+  const actions = headerSlot?.querySelector('.pf-header-actions');
+  const nav = headerSlot?.querySelector('.pf-nav');
+  if (!actions || !nav || actions.querySelector('.pf-menu-btn')) return;
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'pf-menu-btn';
+  btn.setAttribute('aria-label', 'Меню');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-controls', 'pf-mobile-menu');
+  btn.innerHTML = MENU_ICON;
+  actions.appendChild(btn);
+
+  const here = (location.pathname.split('/').pop() || 'portfolio.html').toLowerCase();
+  const isHere = (href) => {
+    const file = String(href).split('?')[0].toLowerCase();
+    return file === here || `portfolio-${here}` === file;
+  };
+  const mainLinks = [...nav.querySelectorAll('a')].map((a) => {
+    const href = a.getAttribute('href') || '#';
+    // Хедърът по подразбиране маркира „Каталог“ — на информационните страници това не важи.
+    const onInfoPage = MENU_INFO_LINKS.some(([h]) => isHere(h));
+    const active = isHere(href) || (!onInfoPage && a.classList.contains('active'));
+    return `<a href="${escapeHtml(href)}" class="pf-menu-link${active ? ' active' : ''}"${active ? ' aria-current="page"' : ''}>${escapeHtml(a.textContent.trim())}</a>`;
+  }).join('');
+  const hasPromo = !!document.querySelector('[data-pf-promo-open]');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'pf-menu-overlay';
+  overlay.hidden = true;
+  const panel = document.createElement('nav');
+  panel.id = 'pf-mobile-menu';
+  panel.className = 'pf-menu';
+  panel.setAttribute('aria-label', 'Меню');
+  panel.hidden = true;
+  panel.innerHTML = `
+    <div class="pf-menu-head">
+      <span class="pf-menu-title">Меню</span>
+      <button type="button" class="pf-menu-close" aria-label="Затвори менюто">${CLOSE_ICON}</button>
+    </div>
+    <div class="pf-menu-main">${mainLinks}</div>
+    <a href="portfolio-checkout.html" class="pf-menu-cart">
+      <span>Количка</span>
+      <span class="pf-menu-cart-count" data-pf-cart-count ${getCartCount() === 0 ? 'style="display:none"' : ''}>${getCartCount()}</span>
+    </a>
+    <div class="pf-menu-tools">
+      ${hasPromo ? '<button type="button" class="pf-menu-tool" data-menu-promo>Промо код</button>' : ''}
+      <button type="button" class="pf-menu-tool" data-menu-theme>Тъмна тема</button>
+    </div>
+    <div class="pf-menu-info">
+      ${MENU_INFO_LINKS.map(([href, text]) => `<a href="${href}"${isHere(href) ? ' aria-current="page"' : ''}>${text}</a>`).join('')}
+    </div>`;
+  document.body.append(overlay, panel);
+
+  const themeBtn = panel.querySelector('[data-menu-theme]');
+  const syncTheme = () => {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    themeBtn.textContent = dark ? 'Светла тема' : 'Тъмна тема';
+  };
+  syncTheme();
+
+  let lastFocus = null;
+  const open = () => {
+    lastFocus = document.activeElement;
+    overlay.hidden = false;
+    panel.hidden = false;
+    requestAnimationFrame(() => {
+      overlay.classList.add('pf-open');
+      panel.classList.add('pf-open');
+    });
+    btn.setAttribute('aria-expanded', 'true');
+    document.documentElement.classList.add('pf-menu-locked');
+    panel.querySelector('.pf-menu-link, a')?.focus({ preventScroll: true });
+  };
+  const close = () => {
+    overlay.classList.remove('pf-open');
+    panel.classList.remove('pf-open');
+    btn.setAttribute('aria-expanded', 'false');
+    document.documentElement.classList.remove('pf-menu-locked');
+    setTimeout(() => {
+      if (!panel.classList.contains('pf-open')) { overlay.hidden = true; panel.hidden = true; }
+    }, 260);
+    if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus({ preventScroll: true });
+  };
+
+  btn.addEventListener('click', () => (panel.classList.contains('pf-open') ? close() : open()));
+  overlay.addEventListener('click', close);
+  panel.querySelector('.pf-menu-close').addEventListener('click', close);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && panel.classList.contains('pf-open')) close();
+  });
+  // Линк към същата страница (напр. „Каталог“ от каталога) — само затваря.
+  panel.addEventListener('click', (e) => {
+    const a = e.target.closest('a');
+    if (a && a.getAttribute('aria-current') === 'page') { e.preventDefault(); close(); }
+  });
+  themeBtn.addEventListener('click', () => {
+    document.getElementById('pf-theme-toggle')?.click();
+    syncTheme();
+  });
+  panel.querySelector('[data-menu-promo]')?.addEventListener('click', () => {
+    close();
+    document.querySelector('[data-pf-promo-open]:not([data-menu-promo])')?.click();
+  });
+  // Ако екранът се разшири до десктоп, менюто не остава отворено.
+  window.matchMedia?.('(min-width: 900px)').addEventListener?.('change', (mq) => { if (mq.matches) close(); });
+}
+
 function setActiveNav(headerSlot, active) {
   headerSlot?.querySelectorAll('.pf-nav-link').forEach((link) => {
     const href = link.getAttribute('href') || '';
@@ -370,6 +494,7 @@ export async function initPortfolioPage({
     mobileBarSlot.innerHTML = renderFloatingCartFab();
   }
   initPortfolioTheme();
+  initMobileMenu(headerSlot);
   updateCartBadges();
   initScrollEffects();
 

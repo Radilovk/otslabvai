@@ -7,21 +7,21 @@
   color: var(--sk-accent, var(--pf-primary-dark));
 }
 .sk-eyebrow::before { content: ''; width: 18px; height: 2px; background: currentColor; border-radius: 2px; }
-.sk-h1 { font-family: var(--pf-display); font-weight: 800; font-size: clamp(1.9rem, 5vw, 3rem); line-height: 1.08; margin: .5rem 0 .75rem; color: var(--pf-text); letter-spacing: -.01em; }
+.sk-h1 { font-family: var(--pf-display); font-weight: 800; font-size: clamp(1.65rem, 6.5vw, 3rem); line-height: 1.08; margin: .5rem 0 .75rem; color: var(--pf-text); letter-spacing: -.01em; }
 .sk-h2 { font-family: var(--pf-display); font-weight: 700; font-size: clamp(1.3rem, 3vw, 1.75rem); margin: 0 0 1rem; color: var(--pf-text); }
-.sk-lead { font-size: clamp(1rem, 2vw, 1.12rem); line-height: 1.6; color: var(--pf-text-secondary); max-width: 62ch; margin: 0; }
+.sk-lead { font-size: clamp(.95rem, 2vw, 1.12rem); line-height: 1.6; color: var(--pf-text-secondary); max-width: 62ch; margin: 0; }
 .sk-section { padding: clamp(2rem, 5vw, 3.5rem) 0; }
 .sk-section + .sk-section { border-top: 1px solid var(--pf-border); }
 .sk-muted { color: var(--pf-muted); }
 
 /* ---------- Обзор ---------- */
-.sk-hub-head { padding: clamp(2rem, 6vw, 4rem) 0 1.5rem; }
+.sk-hub-head { padding: clamp(1.25rem, 6vw, 4rem) 0 1.25rem; }
 .sk-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; padding-bottom: 3rem; }
 @media (min-width: 720px) { .sk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1040px) { .sk-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 .sk-card {
-  position: relative; display: flex; flex-direction: column; gap: .9rem;
+  position: relative; display: flex; flex-direction: column; gap: .75rem;
   background: var(--pf-surface); border: 1px solid var(--pf-border); border-radius: var(--pf-radius-lg);
   padding: 1.35rem; box-shadow: var(--pf-shadow); text-decoration: none; color: inherit;
   transition: transform .25s var(--pf-ease), box-shadow .25s var(--pf-ease), border-color .25s;
@@ -29,7 +29,7 @@
 }
 .sk-card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--sk-accent, var(--pf-primary)); }
 .sk-card:hover { transform: translateY(-3px); box-shadow: var(--pf-shadow-md); border-color: var(--pf-border-strong); }
-.sk-card h2 { font-family: var(--pf-display); font-size: 1.45rem; margin: .1rem 0 0; color: var(--pf-text); }
+.sk-card h2 { font-family: var(--pf-display); font-size: 1.3rem; margin: .1rem 0 0; color: var(--pf-text); }
 .sk-card p { margin: 0; color: var(--pf-muted); line-height: 1.5; font-size: .95rem; }
 .sk-card-slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
 .sk-card-slot { display: flex; flex-direction: column; align-items: center; gap: .35rem; text-align: center; min-width: 0; }
@@ -48,22 +48,36 @@
 @keyframes sk-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
 /* ---------- Лендинг ---------- */
-.sk-back { display: inline-flex; align-items: center; gap: .35rem; margin-top: 1.25rem; font-size: .88rem; font-weight: 600; color: var(--pf-muted); text-decoration: none; }
+.sk-back { display: inline-flex; align-items: center; gap: .35rem; margin-top: 1rem; min-height: 44px; font-size: .88rem; font-weight: 600; color: var(--pf-muted); text-decoration: none; }
 .sk-back:hover { color: var(--pf-primary-dark); }
-.sk-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.75rem; padding: 1.5rem 0 clamp(2rem, 5vw, 3rem); align-items: center; }
-@media (min-width: 900px) { .sk-hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 3rem; } }
+.sk-hero {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 1rem 0 clamp(1.75rem, 5vw, 3rem);
+  grid-template-areas: "head" "box" "lead";
+}
+.sk-hero-head { grid-area: head; }
+.sk-hero-head .sk-h1 { margin-bottom: 0; }
+.sk-hero-lead { grid-area: lead; }
+.sk-buybox { grid-area: box; }
+@media (min-width: 900px) {
+  .sk-hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); column-gap: 3rem; row-gap: 1rem; padding-top: 1.5rem;
+    grid-template-areas: "head box" "lead box"; align-items: start;
+  }
+  .sk-hero-head { align-self: end; }
+}
 .sk-buybox {
   background: var(--pf-surface); border: 1px solid var(--pf-border); border-radius: var(--pf-radius-lg);
-  padding: 1.25rem; box-shadow: var(--pf-shadow-md);
+  padding: .9rem 1rem 1rem; box-shadow: var(--pf-shadow-md);
 }
+@media (min-width: 640px) { .sk-buybox { padding: 1.25rem; } }
 .sk-buybox-row { display: flex; align-items: center; gap: .75rem; padding: .6rem 0; border-bottom: 1px dashed var(--pf-border); }
 .sk-buybox-row:last-of-type { border-bottom: 0; }
 .sk-buybox-row .sk-thumb { width: 52px; flex: none; }
 .sk-buybox-row div { min-width: 0; flex: 1; }
-.sk-buybox-row strong { display: block; font-size: .9rem; color: var(--pf-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sk-buybox-row strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: .9rem; line-height: 1.25; color: var(--pf-text); overflow: hidden; }
 .sk-buybox-row span { font-size: .78rem; color: var(--pf-muted); }
 .sk-buybox-row b { font-family: var(--pf-numeric); font-size: .92rem; color: var(--pf-text); white-space: nowrap; }
-.sk-buybox-total { display: flex; justify-content: space-between; align-items: baseline; margin: .85rem 0 1rem; font-weight: 700; color: var(--pf-text); }
+.sk-buybox-total { display: flex; justify-content: space-between; align-items: baseline; margin: .6rem 0 .75rem; font-weight: 700; color: var(--pf-text); }
 .sk-buybox-total .sk-total { font-size: 1.6rem; }
 .sk-buybox-note { margin: .75rem 0 0; font-size: .78rem; color: var(--pf-muted); text-align: center; }
 
@@ -137,9 +151,29 @@
 .sk-bar .pf-btn { margin-left: auto; }
 @media (min-width: 900px) { .sk-bar { display: none; } }
 
-/* Лента с пакетите в каталога */
-.sk-strip { max-width: 1400px; margin: 1.25rem auto 0; padding: 0 16px; }
-.sk-strip-inner { display: flex; align-items: center; gap: .6rem; overflow-x: auto; scrollbar-width: none; padding-bottom: .25rem; }
-.sk-strip-inner::-webkit-scrollbar { display: none; }
-.sk-strip-label { font-weight: 800; font-size: .85rem; color: var(--pf-text); white-space: nowrap; margin-right: .25rem; }
-.sk-strip .sk-chip { white-space: nowrap; flex: none; }
+/* Блок „Готови пакети“ в каталога — mobile first: 2 колони, всичко видимо без плъзгане */
+.sk-home { max-width: 1400px; margin: 1.25rem auto 0; padding: 0 16px; }
+.sk-home-head { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; margin-bottom: .65rem; }
+.sk-home-head h2 { margin: 0; font-family: var(--pf-display); font-size: 1.15rem; color: var(--pf-text); }
+.sk-home-head span { font-size: .8rem; color: var(--pf-muted); }
+.sk-home-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.sk-tile {
+  position: relative; display: flex; flex-direction: column; justify-content: center; gap: .1rem;
+  min-height: 64px; padding: .7rem .8rem .7rem 1rem; border-radius: var(--pf-radius-sm);
+  background: var(--pf-surface); border: 1px solid var(--pf-border); text-decoration: none;
+  overflow: hidden; -webkit-tap-highlight-color: transparent; transition: border-color .2s, transform .2s var(--pf-ease);
+}
+.sk-tile::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--sk-chip, var(--pf-primary)); }
+.sk-tile:active { transform: scale(.98); }
+.sk-tile:hover { border-color: var(--sk-chip, var(--pf-primary)); }
+.sk-tile strong { font-size: .95rem; line-height: 1.2; color: var(--pf-text); }
+.sk-tile span { font-size: .78rem; line-height: 1.25; color: var(--pf-muted); }
+.sk-tile--all { background: var(--pf-primary-soft); border-color: var(--pf-border-strong); }
+.sk-tile--all::before { display: none; }
+.sk-tile--all span { color: var(--pf-primary-dark); font-weight: 700; }
+@media (min-width: 640px) { .sk-home-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1040px) {
+  .sk-home { margin-top: 1.75rem; }
+  .sk-home-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .75rem; }
+  .sk-tile { min-height: 76px; }
+}

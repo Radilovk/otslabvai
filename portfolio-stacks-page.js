@@ -194,13 +194,24 @@ function renderStaticStack(id) {
   }).join('');
 }
 
+/** Лентата с цената се показва, когато бутонът в кутията не се вижда (над или под екрана). */
 function initStickyBar() {
   const bar = document.getElementById('sk-bar');
   const box = document.getElementById('sk-buybox');
-  if (!bar || !box || !('IntersectionObserver' in window)) return;
-  new IntersectionObserver(([e]) => {
-    bar.classList.toggle('sk-visible', !e.isIntersecting && e.boundingClientRect.top < 0);
-  }).observe(box);
+  if (!bar || !box) return;
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const btn = box.querySelector('[data-add-stack]');
+    if (!btn) return bar.classList.remove('sk-visible');
+    const r = btn.getBoundingClientRect();
+    bar.classList.toggle('sk-visible', r.bottom > window.innerHeight || r.bottom < 0);
+  };
+  const schedule = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  new MutationObserver(schedule).observe(box, { childList: true });
+  schedule();
 }
 
 async function refreshPromo(render) {
