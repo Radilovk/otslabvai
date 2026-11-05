@@ -1402,7 +1402,7 @@ async function handleSaveSettings(request, env) {
     stack_brand_trust: incoming.stack_brand_trust && typeof incoming.stack_brand_trust === 'object'
       ? incoming.stack_brand_trust : current.stack_brand_trust,
     // Приоритетен доставчик за пакетите: 'fitness1' (по подразбиране) или 'sila'.
-    stack_preferred_distributor: ['fitness1', 'sila'].includes(incoming.stack_preferred_distributor)
+    stack_preferred_distributor: ['profit', 'fitness1', 'sila'].includes(incoming.stack_preferred_distributor)
       ? incoming.stack_preferred_distributor : current.stack_preferred_distributor,
     pricing_policy: incoming.pricing_policy
       ? { ...current.pricing_policy, ...incoming.pricing_policy }
@@ -1630,7 +1630,7 @@ async function buildStacksBody(env, ids, { live = true } = {}) {
   if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
   const settings = await getSettings(env);
   const trust = settings?.stack_brand_trust || null;
-  const preferred = settings?.stack_preferred_distributor === 'sila' ? 'sila' : 'fitness1';
+  const preferred = ['fitness1', 'sila'].includes(settings?.stack_preferred_distributor) ? settings.stack_preferred_distributor : 'profit';
   const listed = (meta.index || []).filter((e) => e.available && isCatalogListed(e));
 
   const groupIds = new Set();
@@ -1671,10 +1671,14 @@ async function buildStacksBody(env, ids, { live = true } = {}) {
   };
 
   const resolveAll = () => ids.map((id) => resolveStack(listed, id, getGroup, { unavailable, trust, preferred }));
-  if (!liveOff) await runLiveCheck([preferred]);
+  if (!liveOff) {
+    // По печалба се сравняват и двата доставчика — проверяват се и двата; при фиксиран — първо той.
+    if (preferred === 'profit') await runLiveCheck(['fitness1', 'sila']);
+    else await runLiveCheck([preferred]);
+  }
   let resolved = resolveAll();
-  // Пакет, минал към другия доставчик, се проверява и при него.
-  if (!liveOff && resolved.some((r) => r.distributor && r.distributor !== preferred)) {
+  // Фиксиран доставчик: пакет, минал към другия, се проверява и при него.
+  if (!liveOff && preferred !== 'profit' && resolved.some((r) => r.distributor && r.distributor !== preferred)) {
     await runLiveCheck([preferred === 'sila' ? 'fitness1' : 'sila']);
     resolved = resolveAll();
   }
@@ -1712,7 +1716,7 @@ async function handleStacksAudit(request, env) {
   if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
   const settings = await getSettings(env);
   const trust = settings?.stack_brand_trust || null;
-  const preferred = settings?.stack_preferred_distributor === 'sila' ? 'sila' : 'fitness1';
+  const preferred = ['fitness1', 'sila'].includes(settings?.stack_preferred_distributor) ? settings.stack_preferred_distributor : 'profit';
   const listed = (meta.index || []).filter((e) => e.available && isCatalogListed(e));
   const groupIds = new Set();
   for (const id of ids) for (const gid of stackCandidateGroupIds(listed, id)) groupIds.add(gid);
@@ -1722,9 +1726,15 @@ async function handleStacksAudit(request, env) {
 
   const stacks = ids.map((id) => {
     const resolved = resolveStack(listed, id, getGroup, { trust, preferred });
+    const byDist = Object.fromEntries(['fitness1', 'sila'].map((d) => {
+      const r = resolveStack(listed, id, getGroup, { trust, distributor: d });
+      return [d, { profit: r.profit, complete: r.slots.every((x) => x.pick), total: Math.round(r.slots.reduce((t, x) => t + (Number(x.pick?.variant.retail_price) || 0), 0) * 100) / 100 }];
+    }));
     return {
       id,
       distributor: resolved.distributor,
+      profit: resolved.profit,
+      by_distributor: byDist,
       slots: STACK_RULES[id].slots.map((slot, i) => ({
         id: slot.id,
         title: slot.title,
