@@ -157,6 +157,7 @@ function renderSlots(id) {
       <article class="sk-slot">
         <div class="sk-slot-head"><h3>${escapeHtml(slot.title)}</h3></div>
         ${slot.substance ? `<p class="sk-substance">${escapeHtml(slot.substance.label)}</p><p class="sk-why">${escapeHtml(slot.substance.why)}</p>` : ''}
+        ${item && slot.proof?.length ? `<ul class="sk-proof" aria-label="Защо този продукт">${slot.proof.map((t) => `<li>${escapeHtml(t)}</li>`).join('')}</ul>` : ''}
         ${item ? `
           <a class="sk-product" href="${buildPortfolioProductUrl(item.group_id, v.sku_id)}">
             ${thumb(item, item.name)}

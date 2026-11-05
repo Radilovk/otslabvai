@@ -58,7 +58,7 @@ import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipp
 import { assertOrderRateLimit } from './order-rate-limit.js';
 import { checkLiveStock } from './distributor-live-stock.js';
 import { rankSupplementCandidates } from './portfolio-supplement-pick.js';
-import { STACK_IDS, stackCandidateGroupIds, resolveStack, liveCheckCandidates } from './portfolio-stacks.js';
+import { STACK_IDS, stackCandidateGroupIds, resolveStack, liveCheckCandidates, stackProof } from './portfolio-stacks.js';
 import { promoIndexStats, promoVariantPrice } from './portfolio-promo-pricing.js';
 import {
   getOrderRecord,
@@ -1627,6 +1627,8 @@ async function handleGetStacks(request, env) {
       title: slot.title,
       substance: pick ? { key: pick.option.key, label: pick.option.label, why: pick.option.why } : null,
       primary,
+      // Защо е избран: доза, форма, клас на марката — без марж.
+      proof: pick ? stackProof(pick.option.key, pick.entry.name, pick.entry.brand, trust) : [],
       item: pick ? {
         ...sanitizeIndexEntryForClient(pick.entry),
         pick_variant: sanitizeVariantForClient({ ...pick.variant, image: pick.variant.image || pick.group?.image }),
