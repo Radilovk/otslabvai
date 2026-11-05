@@ -1,3 +1,4 @@
+import { productImgTag, setProductImg } from './portfolio-img.js';
 import {
   escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage, icon,
   buildPortfolioProductUrl,
@@ -119,10 +120,10 @@ function renderGallery() {
   const images = getGalleryImages();
   return `
     <div class="pf-gallery">
-      <img id="product-image" src="${escapeHtml(selectedImage)}" alt="${escapeHtml(product.name)}" sizes="(max-width: 900px) 100vw, 50vw" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+      ${productImgTag(selectedImage || PLACEHOLDER_IMG, { preset: 'hero', alt: product.name, id: 'product-image', eager: true })}
       ${images.length > 1 ? `
       <div class="pf-gallery-thumbs">
-        ${images.map((img) => `<button type="button" class="pf-gallery-thumb ${img === selectedImage ? 'active' : ''}" data-img="${escapeHtml(img)}"><img src="${escapeHtml(img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"></button>`).join('')}
+        ${images.map((img) => `<button type="button" class="pf-gallery-thumb ${img === selectedImage ? 'active' : ''}" data-img="${escapeHtml(img)}">${productImgTag(img, { preset: 'thumb' })}</button>`).join('')}
       </div>` : ''}
       ${product.label ? `<p class="pf-label-link"><a href="${escapeHtml(product.label)}" target="_blank" rel="noopener noreferrer" class="pf-btn pf-btn-outline">Етикет / състав</a></p>` : ''}
     </div>`;
@@ -167,7 +168,7 @@ function renderRelated() {
         ${related.map((item) => `
           <a href="${productPageUrl(item)}" class="pf-card-link">
             <div class="pf-card-image">
-              <img src="${escapeHtml(item.image || PLACEHOLDER_IMG)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" sizes="(max-width: 640px) 45vw, 160px" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+              ${productImgTag(item.image || PLACEHOLDER_IMG, { preset: 'card', alt: item.name })}
             </div>
             <div class="pf-card-body">
               <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
@@ -323,7 +324,7 @@ function bindPageEvents() {
     btn.addEventListener('click', () => {
       selectedImage = btn.dataset.img;
       const img = document.getElementById('product-image');
-      if (img) img.src = selectedImage;
+      setProductImg(img, selectedImage, 'hero');
       document.querySelectorAll('.pf-gallery-thumb').forEach((t) => t.classList.toggle('active', t === btn));
     });
   });

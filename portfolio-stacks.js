@@ -1076,12 +1076,15 @@ export function resolveStack(index, stackId, getGroup, opts = {}) {
   return { distributor: empty ? null : best.distributor, fallback: !empty && best.distributor !== order[0], slots: best.slots };
 }
 
-/** Кандидатите за жива проверка: първите N на всяко място — за всеки доставчик. */
+/**
+ * Кандидатите за жива проверка: първите N на всяко място.
+ * opts.distributors — само за тези доставчици (по подразбиране и двата).
+ */
 export function liveCheckCandidates(index, stackId, getGroup, opts = {}) {
   const stack = STACK_RULES[stackId];
   if (!stack) return [];
   const rows = [];
-  for (const distributor of STACK_DISTRIBUTORS) {
+  for (const distributor of opts.distributors || STACK_DISTRIBUTORS) {
     for (const slot of stack.slots) {
       rows.push(...rankSlotCandidates(index, slot, getGroup, { trust: opts.trust, distributor })
         .slice(0, opts.perSlot || LIVE_BACKUPS_PER_SLOT));

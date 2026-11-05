@@ -1,3 +1,4 @@
+import { productImgTag } from './portfolio-img.js';
 import { API_URL } from './config.js';
 import {
   CART_KEY, getCart, saveCart, updateCartBadges, showToast, formatPrice, initPortfolioPage, icon, escapeHtml,
@@ -119,7 +120,7 @@ function bindSubmitButtons() {
 function renderCartItemMedia(item, productUrl) {
   const safeName = escapeHtml(item.name);
   if (item.image) {
-    const img = `<img src="${escapeHtml(item.image)}" alt="" class="pf-summary-img" loading="lazy" decoding="async">`;
+    const img = productImgTag(item.image, { preset: 'thumb', cls: 'pf-summary-img' });
     return productUrl
       ? `<a href="${escapeHtml(productUrl)}" class="pf-summary-product-link" aria-label="Преглед: ${safeName}">${img}</a>`
       : img;
