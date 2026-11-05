@@ -58,7 +58,10 @@ import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipp
 import { assertOrderRateLimit } from './order-rate-limit.js';
 import { checkLiveStock } from './distributor-live-stock.js';
 import { rankSupplementCandidates } from './portfolio-supplement-pick.js';
-import { STACK_IDS, stackCandidateGroupIds, resolveStack, liveCheckCandidates } from './portfolio-stacks.js';
+import {
+  STACK_IDS, STACK_RULES, stackCandidateGroupIds, resolveStack, liveCheckCandidates, stackProof,
+  slotReplacementCandidates, variantDistributor,
+} from './portfolio-stacks.js';
 import { promoIndexStats, promoVariantPrice } from './portfolio-promo-pricing.js';
 import {
   getOrderRecord,
@@ -230,10 +233,16 @@ export const DEFAULT_SETTINGS = {
 };
 
 export class PortfolioError extends Error {
-  constructor(message, status = 500) {
+  /**
+   * @param {string} message
+   * @param {number} [status]
+   * @param {object|null} [details] допълнителни полета в JSON отговора, напр. unavailable_sku_ids
+   */
+  constructor(message, status = 500, details = null) {
     super(message);
     this.name = 'PortfolioError';
     this.status = status;
+    this.details = details;
   }
 }
 
@@ -1627,6 +1636,8 @@ async function handleGetStacks(request, env) {
       title: slot.title,
       substance: pick ? { key: pick.option.key, label: pick.option.label, why: pick.option.why } : null,
       primary,
+      // Защо е избран: доза, форма, клас на марката — без марж.
+      proof: pick ? stackProof(pick.option.key, pick.entry.name, pick.entry.brand, trust) : [],
       item: pick ? {
         ...sanitizeIndexEntryForClient(pick.entry),
         pick_variant: sanitizeVariantForClient({ ...pick.variant, image: pick.variant.image || pick.group?.image }),
@@ -1643,6 +1654,86 @@ async function handleGetStacks(request, env) {
   }, 200, { 'Cache-Control': 'public, max-age=300' });
   if (edge) await edge.put(cacheKey, response.clone()).catch(() => {});
   return response;
+}
+
+/**
+ * POST /portfolio/stacks/replace — замяна с един клик в количката.
+ * Тяло: { stack_id, slot_id, unavailable_sku_ids: [...], keep_sku_ids: [...] }
+ *  - keep_sku_ids: другите продукти от същия пакет в количката — заместителят е от ТЕХНИЯ доставчик
+ *    (пакетът не се смесва) и не повтаря никой от тях.
+ * Връща първия наличен (жива проверка) заместител за мястото или { item: null }.
+ */
+async function handleStackReplace(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const stackId = String(body.stack_id || '').toLowerCase();
+  const slotId = String(body.slot_id || '');
+  const slot = STACK_RULES[stackId]?.slots.find((s) => s.id === slotId);
+  if (!slot) throw new PortfolioError('Няма такова място в пакет.', 404);
+  const ids = (list) => (Array.isArray(list) ? list : []).map((x) => String(x || '').trim()).filter(Boolean).slice(0, 20);
+  const unavailableSkus = new Set(ids(body.unavailable_sku_ids));
+  const keepSkus = ids(body.keep_sku_ids);
+
+  const meta = await getMeta(env);
+  if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+  const settings = await getSettings(env);
+  const trust = settings?.stack_brand_trust || null;
+  const listed = (meta.index || []).filter((e) => e.available && isCatalogListed(e));
+
+  // Групите и доставчикът на останалите продукти от пакета.
+  const keepGroupIds = keepSkus.map((sku) => meta.sku_lookup?.[sku]).filter(Boolean).map(String);
+  const unavailableGroupIds = [...unavailableSkus].map((sku) => meta.sku_lookup?.[sku]).filter(Boolean).map(String);
+  const candidateIds = new Set(keepGroupIds);
+  for (const option of slot.options) {
+    // Само индекс → id-та; групите се зареждат наведнъж.
+    for (const e of listed) if (option.rule.must.test(String(e.name || ''))) candidateIds.add(String(e.group_id));
+  }
+  const groups = await loadPortfolioGroupsByIds(env, [...candidateIds]);
+  const getGroup = (gid) => groups.get(String(gid)) || null;
+
+  let distributor = null;
+  for (const sku of keepSkus) {
+    const g = getGroup(meta.sku_lookup?.[sku]);
+    const v = g?.variants?.find((x) => String(x.sku_id) === sku);
+    if (v) { distributor = variantDistributor(v, g); break; }
+  }
+
+  const candidates = slotReplacementCandidates(listed, stackId, slotId, getGroup, {
+    distributor,
+    excludeGroups: new Set([...keepGroupIds, ...unavailableGroupIds]),
+    excludeSkus: unavailableSkus,
+    trust,
+  }).slice(0, 6);
+
+  let available = candidates;
+  const liveOff = env.MOCK_FITNESS1 === '1' || env.MOCK_FITNESS1 === true || env.LIVE_STOCK_CHECK === '0';
+  if (candidates.length && !liveOff) {
+    try {
+      const live = await checkLiveStock(candidates.map((c) => ({
+        sku_id: c.variant.sku_id,
+        barcode: c.variant.barcode,
+        distributor: c.variant.distributor || c.group?.distributor,
+        name: c.group?.name,
+      })), { f1Key: await getFitness1ApiKey(env), silaToken: await getSilaApiToken(env) });
+      const out = new Set(live.unavailable.map((r) => String(r.sku_id)));
+      available = candidates.filter((c) => !out.has(String(c.variant.sku_id)));
+      if (out.size) requestPortfolioCatalogCiSync(env).catch(() => {});
+    } catch {
+      // доставчикът не отговаря — по последната синхронизация
+    }
+  }
+
+  const pick = available[0];
+  if (!pick) return jsonResponse({ stack_id: stackId, slot_id: slotId, item: null });
+  return jsonResponse({
+    stack_id: stackId,
+    slot_id: slotId,
+    substance: { key: pick.option.key, label: pick.option.label, why: pick.option.why },
+    proof: stackProof(pick.option.key, pick.entry.name, pick.entry.brand, trust),
+    item: {
+      ...sanitizeIndexEntryForClient(pick.entry),
+      pick_variant: sanitizeVariantForClient({ ...pick.variant, image: pick.variant.image || pick.group?.image }),
+    },
+  });
 }
 
 async function handleGetProduct(request, env) {
@@ -1786,6 +1877,8 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
   const policy = pricingPolicyFromSettings(settings);
   const normalized = [];
   const errors = [];
+  /** SKU-та, които не могат да се поръчат — за замяната с един клик в количката. */
+  const unavailableSkus = [];
 
   for (const p of products) {
     const skuId = String(p.sku_id || p.id || '');
@@ -1798,20 +1891,24 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
     const found = await resolveCartSkuForProject(env, skuId, project);
     if (!found) {
       errors.push(`Продукт ${skuId} не е намерен в каталога.`);
+      unavailableSkus.push(String(skuId));
       continue;
     }
     if (!found.variant.available) {
       errors.push(`${found.group_name} (${found.variant.option || found.variant.pack}) не е наличен.`);
+      unavailableSkus.push(String(skuId));
       continue;
     }
     const allowLowMargin = promoRecord?.show_low_margin === true;
     if (!allowLowMargin) {
       if (Number(found.variant.b2b_price) > 0 && !variantHasMargin(found.variant)) {
         errors.push(`${found.group_name} не е наличен за поръчка.`);
+        unavailableSkus.push(String(skuId));
         continue;
       }
       if (!isCatalogListed(found)) {
         errors.push(`${found.group_name} не е наличен за поръчка.`);
+        unavailableSkus.push(String(skuId));
         continue;
       }
     }
@@ -1845,7 +1942,9 @@ async function validateAndNormalizeCartItems(env, products, { promoRecord = null
     });
   }
 
-  if (errors.length) throw new PortfolioError(errors.join(' '), 400);
+  if (errors.length) {
+    throw new PortfolioError(errors.join(' '), 400, unavailableSkus.length ? { unavailable_sku_ids: unavailableSkus } : null);
+  }
   if (!normalized.length) throw new PortfolioError('Количката е празна.', 400);
   return normalized;
 }
@@ -1890,7 +1989,9 @@ async function assertLiveStock(env, items, { useCache = true } = {}) {
     // Кешът е остарял — пускаме синхронизация на каталога (debounced), за да изчезне и от сайта.
     try { await requestPortfolioCatalogCiSync(env); } catch { /* best effort */ }
     const names = live.unavailable.map((r) => r.name || r.sku_id).join(', ');
-    throw new PortfolioError(`В момента е изчерпано при доставчика: ${names}. Премахнете го от количката.`, 409);
+    throw new PortfolioError(`В момента е изчерпано при доставчика: ${names}. Премахнете го от количката.`, 409, {
+      unavailable_sku_ids: live.unavailable.map((r) => String(r.sku_id)),
+    });
   }
   return {
     checked_at: live.checked_at,
@@ -2800,6 +2901,9 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     if (path === '/portfolio/stacks' && method === 'GET') {
       return await handleGetStacks(request, env);
     }
+    if (path === '/portfolio/stacks/replace' && method === 'POST') {
+      return await handleStackReplace(request, env);
+    }
     if (path === '/portfolio/pick' && method === 'GET') {
       return await handlePickProducts(request, env);
     }
@@ -2864,7 +2968,7 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     throw new PortfolioError('Not Found', 404);
   } catch (e) {
     if (e instanceof PortfolioError) {
-      return jsonResponse({ error: e.message }, e.status);
+      return jsonResponse({ error: e.message, ...(e.details || {}) }, e.status);
     }
     console.error('Portfolio API error:', e);
     return jsonResponse({ error: 'Вътрешна грешка в Portfolio API.' }, 500);

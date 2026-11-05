@@ -111,7 +111,7 @@ export const STACK_RULES = {
           {
             key: 'milk_thistle', label: 'Бял трън (силимарин)',
             why: 'Подпомага черния дроб — органът, който преработва мазнините и токсините.',
-            rule: { ...ref('silymarin'), avoid: /detox|debloat|charcoal|nettle|green tea/i },
+            rule: { ...ref('silymarin'), must: /milk thistle|thistle|silymarin|бял трън|силимарин/i, avoid: /detox|debloat|charcoal|nettle|green tea/i },
           },
           {
             key: 'ala', label: 'Алфа-липоева киселина',
@@ -121,7 +121,8 @@ export const STACK_RULES = {
           {
             key: 'choline_inositol', label: 'Холин и инозитол',
             why: 'Липотропни вещества — подпомагат изнасянето на мазнините от черния дроб.',
-            rule: { must: /cholin|холин/i, prefer: /inosit|инозит/i },
+            // Липотропен холин (битартрат + инозитол), не цитиколин / Alpha-GPC — те са за мозъка.
+            rule: { must: /cholin|холин/i, prefer: /inosit|инозит/i, avoid: /citicolin|цитиколин|cdp|gpc/i },
             allowCombo: true,
           },
         ],
@@ -142,7 +143,7 @@ export const STACK_RULES = {
             rule: { must: /q-?10|ubiquin|коензим/i, avoid: /multivitamin|мулти|collagen|колаген|hair/i, prefer: /ubiquinol|liposom|100 ?mg|120 ?mg/i },
           },
           {
-            key: 'nmn', label: 'NMN / NAD+', maxPrice: 70,
+            key: 'nmn', label: 'NMN / NAD+', maxPrice: 120,
             why: 'Прекурсор на NAD+ — молекулата на клетъчната енергия и възстановяване.',
             rule: { must: /(^|[^a-z])nmn([^a-z]|$)|nicotinamide ribos|nad\+/i },
             allowCombo: true,
@@ -191,7 +192,7 @@ export const STACK_RULES = {
             rule: { ...ref('omega3') },
           },
           {
-            key: 'curcumin', label: 'Куркумин', maxPrice: 55,
+            key: 'curcumin', label: 'Куркумин', maxPrice: 90,
             why: 'Подпомага естествения контрол на възпалението.',
             rule: { ...ref('curcumin'), avoid: /boswell|ginger|berberin|джинджиф/i },
           },
@@ -208,13 +209,13 @@ export const STACK_RULES = {
         title: 'Строителен материал',
         options: [
           {
-            key: 'whey_isolate', label: 'Суроватъчен изолат', maxPrice: 65,
+            key: 'whey_isolate', label: 'Суроватъчен изолат', maxPrice: 140,
             why: 'Чист протеин с минимум въглехидрати и мазнини — за мускул без излишни калории.',
             rule: { must: /isolat|изолат|(^|[^a-z])iso([^a-z]|$)/i, avoid: /soy|соев|gainer|mass|bar\b|water|isotonic|isoton/i, prefer: /whey|суроват|hydro/i },
             allowCombo: true,
           },
           {
-            key: 'whey', label: 'Суроватъчен протеин', maxPrice: 55,
+            key: 'whey', label: 'Суроватъчен протеин', maxPrice: 120,
             why: 'Бързо усвоим протеин след тренировка.',
             rule: { must: /whey|суроват/i, avoid: /gainer|mass|bar\b|crisp|cookie|wafer|chips/i },
             allowCombo: true,
@@ -375,33 +376,455 @@ export const STACK_RULES = {
       },
     ],
   },
+
+  joints: {
+    id: 'joints',
+    slots: [
+      {
+        id: 'cartilage',
+        title: 'Хрущял',
+        options: [
+          {
+            key: 'glucosamine', label: 'Глюкозамин и хондроитин',
+            why: 'Градивните вещества на хрущяла — подпомагат възстановяването му и смазката на ставата.',
+            rule: { must: /glucosam|chondroit|глюкозам|хондроит/i, avoid: /women.?s beauty|flexi move|kids/i, prefer: /chondroit|msm|1500|1600|sulfat/i },
+            allowCombo: true,
+          },
+          {
+            key: 'joint_formula', label: 'Комплексна ставна формула',
+            why: 'Съчетава няколко вещества за хрущяла, сухожилията и подвижността в една доза.',
+            rule: { must: /flex|joint|arthro|artro|стави|ставн/i, avoid: /drink|kids|women.?s beauty/i, prefer: /collagen|hyalur|msm|boswell|curcum/i },
+            allowCombo: true,
+          },
+          {
+            key: 'collagen', label: 'Колагенови пептиди', q: 'колагенови пептиди',
+            why: 'Колагенът изгражда хрущяла и сухожилията — пептидите се усвояват бързо.',
+            rule: { ...ref('collagen'), avoid: /drinks|multivitamin|hair|beauty|skin/i },
+            allowCombo: true,
+          },
+        ],
+      },
+      {
+        id: 'inflammation',
+        title: 'Възпаление и болка',
+        options: [
+          {
+            key: 'curcumin', label: 'Куркумин', maxPrice: 90,
+            why: 'Подпомага естествения контрол на възпалението в ставите — с пиперин за усвояване.',
+            rule: { ...ref('curcumin'), avoid: /ginger|berberin|джинджиф/i },
+            allowCombo: true,
+          },
+          {
+            key: 'boswellia', label: 'Босвелия',
+            why: 'Босвелиевите киселини подпомагат подвижността и комфорта на ставите.',
+            rule: { must: /boswell|босвел/i },
+            allowCombo: true,
+          },
+          {
+            key: 'omega3', label: 'Омега-3 (EPA/DHA)',
+            why: 'EPA подпомага естествения контрол на възпалението.',
+            rule: { ...ref('omega3') },
+          },
+        ],
+      },
+      {
+        id: 'mobility',
+        title: 'Подвижност и смазка',
+        options: [
+          {
+            key: 'msm', label: 'MSM (органична сяра)',
+            why: 'Сярата е нужна за изграждането на хрущял и съединителна тъкан.',
+            rule: { must: /(^|[^a-z])msm([^a-z]|$)/i, avoid: /glucosam|chondroit|women|beauty/i },
+          },
+          {
+            key: 'hyaluronic', label: 'Хиалуронова киселина',
+            why: 'Основен компонент на ставната течност — смазва ставата.',
+            rule: { must: /hyalur|хиалур/i, avoid: /collagen|колаген|multivitamin|beauty|skin/i },
+            allowCombo: true,
+          },
+        ],
+      },
+    ],
+  },
+
+  immunity: {
+    id: 'immunity',
+    slots: [
+      {
+        id: 'vitamin_c',
+        title: 'Първа линия на защита',
+        options: [
+          {
+            key: 'vitamin_c', label: 'Витамин C',
+            why: 'Натрупва се в имунните клетки и се изразходва бързо при инфекция и стрес.',
+            rule: { ...ref('vitamin_c'), avoid: /multi|мулти|complex|collagen|колаген|theanin|charger|powder|glutath|kids/i, prefer: /liposom|липозом|1000/i },
+          },
+        ],
+      },
+      {
+        id: 'vitamin_d',
+        title: 'Регулация на имунитета',
+        options: [
+          {
+            key: 'vitamin_d', label: 'Витамин D3',
+            why: 'Регулира имунния отговор — дефицитът е честа причина за чести настинки през зимата.',
+            rule: { ...ref('vitamin_d'), avoid: /k-?2|mk-?7|k1|multi|мулти|calcium|калций|complex|omega|fish|humic|400 iu|kids|zinc|vitamin c/i },
+          },
+          {
+            key: 'd3k2', label: 'Витамин D3 + K2',
+            why: 'D3 за имунитета, K2 насочва калция правилно.',
+            rule: { ...ref('d3k2'), avoid: /omega|fish|calcium|калций|(^|[^a-z])ca([^a-z]|$)|multi|мулти|k1/i },
+            allowCombo: true,
+          },
+        ],
+      },
+      {
+        id: 'defence',
+        title: 'Защитни клетки',
+        options: [
+          {
+            key: 'zinc', label: 'Цинк',
+            why: 'Нужен за развитието и работата на имунните клетки.',
+            rule: { ...ref('zinc') },
+          },
+          {
+            key: 'selenium', label: 'Селен',
+            why: 'Антиоксидант, нужен за нормалната работа на имунната система.',
+            rule: { ...ref('selenium') },
+          },
+          {
+            key: 'colostrum', label: 'Коластра (имуноглобулини)',
+            why: 'Естествени имуноглобулини и фактори, които подпомагат защитата на лигавиците.',
+            rule: { must: /colostr|коластр|колостр/i },
+            allowCombo: true,
+          },
+          {
+            key: 'echinacea', label: 'Ехинацея',
+            why: 'Билка, традиционно ползвана за подкрепа на имунитета в сезона на настинките.',
+            rule: { must: /echinac|ехинац/i },
+            allowCombo: true,
+          },
+        ],
+      },
+    ],
+  },
+
+  menopause: {
+    id: 'menopause',
+    slots: [
+      {
+        id: 'balance',
+        title: 'Горещи вълни и баланс',
+        options: [
+          {
+            key: 'black_cohosh', label: 'Грозниче (Black Cohosh)',
+            why: 'Най-изследваната билка при горещи вълни и нощно изпотяване.',
+            rule: { must: /cohosh|cimicif|грозниче/i },
+            allowCombo: true,
+          },
+          {
+            key: 'menopause_formula', label: 'Формула за менопауза',
+            why: 'Билки и витамини, подбрани за горещите вълни, настроението и енергията в менопаузата.',
+            rule: { must: /menopaus|менопауз|климакс|hormonal balance|evapro|femi health|dong quai|wild yam|red clover|isoflav/i, avoid: /fat burner|shaper/i },
+            allowCombo: true,
+          },
+        ],
+      },
+      {
+        id: 'bones',
+        title: 'Кости',
+        options: [
+          {
+            key: 'd3k2', label: 'Витамин D3 + K2',
+            why: 'След менопаузата костната плътност спада бързо — D3 и K2 насочват калция към костите.',
+            rule: { ...ref('d3k2'), avoid: /omega|fish|multi|мулти|k1/i },
+            allowCombo: true,
+          },
+          {
+            key: 'calcium_d', label: 'Калций с витамин D3 / K2',
+            why: 'Калций с витамините, които го насочват към костите.',
+            rule: { must: /calcium|калций/i, prefer: /k-?2|d-?3|citrat/i, avoid: /kids|zinc|akg|ketoglut/i },
+            allowCombo: true,
+          },
+        ],
+      },
+      {
+        id: 'sleep',
+        title: 'Сън и настроение',
+        options: [
+          {
+            key: 'magnesium', label: 'Магнезий бисглицинат', q: 'магнезиев бисглицинат',
+            why: 'Подобрява съня, намалява раздразнителността и мускулните крампи.',
+            rule: { ...ref('magnesium'), avoid: /alkaline|calcium|zinc|zma|\bca\b|sodium|натрий|калций|drinks|gumm/i },
+          },
+          {
+            key: 'gaba', label: 'GABA',
+            why: 'Основният успокояващ невротрансмитер — за по-лесно заспиване.',
+            rule: { must: /(^|[^a-z])gaba([^a-z]|$)/i, avoid: /melatonin|tryptophan|ashwagandha sleep/i },
+          },
+        ],
+      },
+    ],
+  },
+
+  antistress: {
+    id: 'antistress',
+    slots: [
+      {
+        id: 'cortisol',
+        title: 'Хормонът на стреса',
+        options: [
+          {
+            key: 'ashwagandha', label: 'Ашваганда KSM-66',
+            why: 'Адаптоген, който в изследвания понижава кортизола и усещането за стрес.',
+            rule: { ...ref('ashwagandha'), avoid: /shilajit|tribulus|maca|ginseng|sleep|melatonin|sport/i, prefer: /ksm|sensoril/i },
+          },
+          {
+            key: 'rhodiola', label: 'Родиола (златен корен)',
+            why: 'Адаптоген срещу умора и изтощение при продължителен стрес.',
+            rule: { must: /rhodiol|родиол|golden root|златен корен/i, avoid: /ginseng|shilajit/i },
+          },
+        ],
+      },
+      {
+        id: 'nerves',
+        title: 'Нервна система',
+        options: [
+          {
+            key: 'magnesium', label: 'Магнезий бисглицинат', q: 'магнезиев бисглицинат',
+            why: 'Стресът изразходва магнезия, а дефицитът засилва тревожността — порочен кръг.',
+            rule: { ...ref('magnesium'), avoid: /alkaline|calcium|zinc|zma|\bca\b|sodium|натрий|калций|drinks|gumm/i },
+          },
+          {
+            key: 'b_complex', label: 'B-комплекс',
+            why: 'Витамините от група B поддържат нервната система и енергията при натоварване.',
+            rule: { ...ref('b_complex'), avoid: /iron|желяз|kids|calcium|ms hope/i },
+            allowCombo: true,
+          },
+        ],
+      },
+      {
+        id: 'calm',
+        title: 'Спокойствие без сънливост',
+        options: [
+          {
+            key: 'theanine', label: 'L-теанин',
+            why: 'Аминокиселина от зеления чай — спокойна концентрация, без сънливост.',
+            rule: { ...ref('theanine'), avoid: /ms hope|happylls|vitamin c|zma|valerian/i },
+            allowCombo: true,
+          },
+          {
+            key: 'gaba', label: 'GABA',
+            why: 'Основният успокояващ невротрансмитер.',
+            rule: { must: /(^|[^a-z])gaba([^a-z]|$)/i, avoid: /melatonin|tryptophan|ashwagandha sleep/i },
+          },
+          {
+            key: 'valerian', label: 'Валериана',
+            why: 'Билка за успокоение и по-лесно заспиване.',
+            rule: { must: /valerian|валериан/i, avoid: /zma|theanin/i },
+            allowCombo: true,
+          },
+        ],
+      },
+    ],
+  },
 };
 
 export const STACK_IDS = Object.keys(STACK_RULES);
 
 /**
- * Доверие към марката (качество): 1 — производители с фармацевтичен GMP стандарт
- * и независим контрол, 0.9 — утвърдени марки, по подразбиране 0.8.
- * Админът може да го промени с настройката `stack_brand_trust` ({ "Марка": 0.95 }).
+ * Клас на марката (елитност и качество), 0–1:
+ *  1    — елит: фармацевтичен стандарт, клинични дози, независим контрол (NOW, Doctor's Best, Natrol…);
+ *  0.85 — премиум: европейски GMP производители, патентовани форми (Olimp, Nutrend, MagHerbs…);
+ *  0.65 — масови спортни марки;
+ *  0.35 — бюджетни марки; непозната марка — 0.45.
+ * Админът го променя с настройката `stack_brand_trust` ({ "Марка": 0.9 }).
  */
-export const BRAND_TRUST = {
-  'now foods': 1, natrol: 1, biovea: 1, 'optimum nutrition': 1, 'olimp sport nutrition': 1, olimp: 1,
-  nutrend: 1, 'swedish nutra': 1, osavi: 1, 'holland and barrett': 1, grassberg: 1, 'applied nutrition': 1,
-  forcelab: 0.95, 'yava labs': 0.95, myprotein: 0.95,
-  'biotech usa': 0.9, scitec: 0.9, 'trec nutrition': 0.9, 'haya labs': 0.9, vplab: 0.9, ostrovit: 0.9,
-  everbuild: 0.9, magherbs: 0.9, bioherba: 0.9, 'kevin levrone': 0.9, 'swedish collagen': 0.9,
-  'swedish essentials': 0.9, 'extrifit sports nutrition': 0.9, 'core champs by kai greene': 0.85,
+export const BRAND_TIER = {
+  'now foods': 1, now: 1, "doctor's best": 1, 'life extension': 1, 'jarrow formulas': 1, solgar: 1, thorne: 1,
+  'nordic naturals': 1, natrol: 1, osavi: 1, 'optimum nutrition': 1, 'swedish nutra': 1, 'swedish collagen': 1,
+  'garden of life': 1,
+  'olimp sport nutrition': 0.85, olimp: 0.85, nutrend: 0.85, magherbs: 0.85, biovea: 0.85, 'holland and barrett': 0.85,
+  biovital: 0.85, forcelab: 0.85, grassberg: 0.85, 'applied nutrition': 0.85, 'yava labs': 0.85,
+  'gaspari nutrition': 0.85, 'universal nutrition': 0.85,
+  'trec nutrition': 0.65, 'biotech usa': 0.65, scitec: 0.65, myprotein: 0.65, 'extrifit sports nutrition': 0.65,
+  ostrovit: 0.65, 'kevin levrone': 0.65, vplab: 0.65, everbuild: 0.65, grewia: 0.65, freelife: 0.65,
+  'swedish essentials': 0.65, 'swedish supplements': 0.65, allnutrition: 0.65, cellucor: 0.65, mutant: 0.65,
+  'core champs by kai greene': 0.6,
+  bioherba: 0.35, 'haya labs': 0.35, kfd: 0.35, battery: 0.35, vemoherb: 0.35, 'natura vita': 0.35,
+  naturalico: 0.35, celipharm: 0.35, 'biliana yotovska': 0.35, 'cvetita herbal': 0.35,
 };
-export const DEFAULT_BRAND_TRUST = 0.8;
+export const DEFAULT_BRAND_TIER = 0.45;
+/** Марка от този клас нагоре се показва като „премиум марка“. */
+export const PREMIUM_BRAND_TIER = 0.85;
+/** @deprecated старото име */
+export const DEFAULT_BRAND_TRUST = DEFAULT_BRAND_TIER;
+
+/**
+ * Сила на действие по вещество: силна доза (в единицата от името на продукта)
+ * и форми с по-високо усвояване / клинично изследвани (premium).
+ * @type {Record<string, { unit?: 'mg'|'mcg'|'iu'|'g', strong?: number, premium?: RegExp }>}
+ */
+export const POTENCY = {
+  carnitine: { unit: 'mg', strong: 1000, premium: /carnipure|acetyl|ацетил|tartrat/i },
+  cla: { unit: 'mg', strong: 1000, premium: /tonalin|80\s?%/i },
+  green_tea: { unit: 'mg', strong: 500, premium: /egcg|98\s?%|50\s?%|standard/i },
+  chromium: { unit: 'mcg', strong: 200, premium: /picolinat|chromax/i },
+  berberine: { unit: 'mg', strong: 500, premium: /phytosome|dihydro/i },
+  glucomannan: { unit: 'mg', strong: 600 },
+  inositol: { unit: 'mg', strong: 600, premium: /myo/i },
+  milk_thistle: { unit: 'mg', strong: 300, premium: /80\s?%|silybin|phytosome|standard/i },
+  ala: { unit: 'mg', strong: 600, premium: /r-?alpha|r-?ala\b|time release|sustain/i },
+  choline_inositol: { unit: 'mg', strong: 500 },
+  coq10: { unit: 'mg', strong: 100, premium: /ubiquinol|liposom|kaneka/i },
+  nmn: { unit: 'mg', strong: 300, premium: /riboside|uthever/i },
+  glutathione: { unit: 'mg', strong: 250, premium: /liposom|setria|reduced/i },
+  resveratrol: { unit: 'mg', strong: 250, premium: /trans|liposom/i },
+  astaxanthin: { unit: 'mg', strong: 6 },
+  quercetin: { unit: 'mg', strong: 500, premium: /bromelain|phytosome/i },
+  omega3: { premium: /triple|ultra|krill|gold|concentr|\btg\b|epa|dha|premium|molecular/i },
+  curcumin: { unit: 'mg', strong: 500, premium: /meriva|bcm|longvida|piperin|bioperine|black pepper|95\s?%/i },
+  whey_isolate: { premium: /hydro|pure|zero|cfm|9[05]/i },
+  whey: { premium: /isolat|hydro|gold|cfm/i },
+  eaa: {},
+  creatine: { premium: /creapure|micronized|микронизир/i },
+  hmb: { unit: 'mg', strong: 1000 },
+  magnesium: { unit: 'mg', strong: 200, premium: /bisglycin|glycinat|threonat|liposom|magtein/i },
+  zma: {},
+  glutamine: {},
+  d3k2: { unit: 'iu', strong: 2000, premium: /mk-?7|drops|liquid/i },
+  vitamin_d: { unit: 'iu', strong: 2000 },
+  b_complex: { premium: /methyl|active|b-?50|b-?100|coenzym/i },
+  collagen: { premium: /verisol|peptan|peptid|hydrolyz|marine|fish/i },
+  hyaluronic: { unit: 'mg', strong: 100 },
+  vitamin_c: { unit: 'mg', strong: 1000, premium: /liposom|ester|buffer/i },
+  biotin: { unit: 'mcg', strong: 10000 },
+  hair_skin_nails: { premium: /biotin|collagen|keratin/i },
+  zinc: { unit: 'mg', strong: 25, premium: /picolinat|bisglycin/i },
+  glucosamine: { unit: 'mg', strong: 1500, premium: /chondroit|msm|sulfat/i },
+  joint_formula: { premium: /collagen|hyalur|msm|boswell|curcum|uc-?ii/i },
+  boswellia: { unit: 'mg', strong: 400, premium: /65\s?%|75\s?%|akba|5-loxin/i },
+  msm: { unit: 'mg', strong: 1000, premium: /optimsm/i },
+  selenium: { unit: 'mcg', strong: 100, premium: /selenomethion|methionin/i },
+  colostrum: { unit: 'mg', strong: 1000, premium: /igg|immunoglob|имуноглоб/i },
+  echinacea: { unit: 'mg', strong: 400 },
+  black_cohosh: { unit: 'mg', strong: 40 },
+  menopause_formula: {},
+  calcium_d: { premium: /k-?2|d-?3|citrat|chela/i },
+  gaba: { unit: 'mg', strong: 500 },
+  ashwagandha: { unit: 'mg', strong: 300, premium: /ksm|sensoril/i },
+  rhodiola: { unit: 'mg', strong: 300, premium: /3\s?%|rosavin|salidros/i },
+  theanine: { unit: 'mg', strong: 200, premium: /suntheanine/i },
+  valerian: { unit: 'mg', strong: 400 },
+};
+
+const UNIT_RE = {
+  mg: /(\d[\d.,]*)\s*(?:mg|мг)(?![a-zа-я])/gi,
+  mcg: /(\d[\d.,]*)\s*(?:mcg|µg|мкг)(?![a-zа-я])/gi,
+  iu: /(\d[\d.,]*)\s*(?:iu|ме|ie)(?![a-zа-я])|d-?3\s*(\d{3,5})(?!\d)/gi,
+  g: /(\d[\d.,]*)\s*(?:g|гр?)(?![a-zа-я])/gi,
+};
+
+function parseNumber(raw) {
+  let t = String(raw || '').trim();
+  // 10,000 / 1.000 — разделител на хилядите; 2,5 / 2.5 — десетична запетая.
+  if (/^\d{1,3}([.,]\d{3})+$/.test(t)) t = t.replace(/[.,]/g, '');
+  else t = t.replace(',', '.');
+  const n = parseFloat(t);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Най-голямата доза в името в дадената единица (1000 mg, 10,000 mcg, D3 4000), или 0. */
+export function parseDose(name, unit) {
+  const re = UNIT_RE[unit];
+  if (!re) return 0;
+  let best = 0;
+  for (const m of String(name || '').matchAll(re)) best = Math.max(best, parseNumber(m[1] || m[2]));
+  return best;
+}
+
+/**
+ * Сила на действие 0–1: доза спрямо силната доза + премиум форма.
+ * Без посочена доза в името — 0.7 (неизвестно, не се наказва като слабо).
+ */
+export function potencyScore(optionKey, name) {
+  const spec = POTENCY[optionKey] || {};
+  const prem = spec.premium ? (spec.premium.test(String(name || '')) ? 1 : 0) : null;
+  let dose = null;
+  if (spec.unit && spec.strong) {
+    const d = parseDose(name, spec.unit);
+    // Без доза в името (капки, течности) — 0.7: не се наказва като слаб продукт.
+    dose = d > 0 ? Math.min(1, d / spec.strong) : 0.7;
+  }
+  // Вещества без мерило за доза (ZMA, EAA, B-комплекс…) — средно-силни по подразбиране.
+  if (dose == null && prem == null) return 0.65;
+  if (dose == null) return 0.6 + 0.4 * prem;
+  if (prem == null) return dose;
+  return 0.6 * dose + 0.4 * prem;
+}
+
+/** Форми с доказано по-добро усвояване / клинично изследвани — за обосновката на продукта. */
+/** @type {Array<[RegExp, string]>} */
+const FORM_LABELS = [
+  [/liposom|липозом/i, 'Липозомна форма — по-високо усвояване'],
+  [/ubiquinol/i, 'Убихинол — активната форма на Q10'],
+  [/creapure/i, 'Creapure® — германски стандарт за чистота'],
+  [/verisol/i, 'VERISOL® — клинично изследвани пептиди'],
+  [/phytosome/i, 'Фитозомна форма — по-високо усвояване'],
+  [/bisglycin|glycinat/i, 'Бисглицинат — най-добре поносимата форма'],
+  [/threonat|magtein/i, 'Треонат — преминава в мозъка'],
+  [/methyl|метил/i, 'Метилирана (активна) форма'],
+  [/r-?alpha|r-?ala\b/i, 'R-ALA — биологично активният изомер'],
+  [/krill|крил/i, 'Крил — омега-3 във фосфолипидна форма'],
+  [/mk-?7/i, 'K2 като MK-7 — най-дълго действащата форма'],
+  [/picolinat|пиколин/i, 'Пиколинат — най-изследваната форма'],
+  [/hydro|hydrolyz|хидролиз|peptid|пептид/i, 'Хидролизирани пептиди — бързо усвояване'],
+  [/isolat|изолат/i, 'Изолат — протеин без излишни въглехидрати и мазнини'],
+  [/acetyl|ацетил/i, 'Ацетил форма — преминава в мозъка'],
+  [/piperin|bioperine|black pepper/i, 'С пиперин за по-високо усвояване'],
+  [/marine|fish|морск|рибен/i, 'Морски колаген — тип I, като в кожата'],
+];
+
+const UNIT_LABEL = { mg: 'мг', mcg: 'мкг', iu: 'IU', g: 'г' };
+
+/**
+ * Обосновка на избора за клиента (без марж): доза, форма, клас на марката.
+ * @returns {string[]}
+ */
+export function stackProof(optionKey, name, brand, trustOverrides = null) {
+  const out = [];
+  const spec = POTENCY[optionKey] || {};
+  if (spec.unit) {
+    const d = parseDose(name, spec.unit);
+    if (d > 0) {
+      const strong = spec.strong && d >= spec.strong;
+      out.push(`${d.toLocaleString('bg-BG')} ${UNIT_LABEL[spec.unit]} в доза${strong ? ' — силна доза' : ''}`);
+    }
+  }
+  const form = FORM_LABELS.find(([re]) => re.test(String(name || '')));
+  if (form) out.push(form[1]);
+  const tier = brandTrust(brand, trustOverrides);
+  if (tier >= 1) out.push('Елитна марка — фармацевтичен стандарт');
+  else if (tier >= PREMIUM_BRAND_TIER) out.push('Премиум марка — GMP производство');
+  return out.slice(0, 3);
+}
 
 /** Категории, които не са добавки (аксесоари, облекло, храни, хардкор стимуланти). */
 const NON_STACK_CATEGORY = /аксесоари|облекло|тениски|уреди|козметика|функционални храни|хардкор|стимулатор/i;
 
-/** Таван на цената за място в стака (евро), за да остане пакетът достъпен; протеините имат свой. */
-export const DEFAULT_MAX_PRICE = 45;
+/** Таван на цената на разфасовка (евро) — само срещу кашони и абсурдни разфасовки; протеините имат свой. */
+export const DEFAULT_MAX_PRICE = 90;
 
-/** Тегла на стойността: маржът спрямо цената при доставчика тежи повече от маржа в евро. */
+/** Тегла на маржа: спрямо цената при доставчика тежи повече от маржа в евро. */
 export const VALUE_WEIGHTS = { relative: 0.65, absolute: 0.35 };
+/** Сила на действие: в силната група влизат продуктите до толкова под най-силния. */
+export const POTENCY_BAND = 0.25;
+/** Праг за елит: марка поне от масовия клас и поне средна сила (иначе — само резерва). */
+export const ELITE_GATE = { brand: 0.6, potency: 0.6 };
+/** Висок марж: в групата влизат продуктите с поне толкова от най-високия относителен марж. */
+export const MARGIN_BAND = 0.75;
+/** Вътре в елитната група: тегла на марката и на цената. */
+export const PRESTIGE_WEIGHTS = { brand: 0.55, price: 0.45 };
 /** Колко кандидата на място се проверяват на живо при доставчика. */
 export const LIVE_BACKUPS_PER_SLOT = 4;
 
@@ -411,7 +834,7 @@ export function brandTrust(brand, overrides = null) {
   const key = norm(brand);
   const custom = overrides && Object.entries(overrides).find(([b]) => norm(b) === key);
   if (custom && Number(custom[1]) > 0) return Math.min(1.2, Number(custom[1]));
-  return BRAND_TRUST[key] ?? DEFAULT_BRAND_TRUST;
+  return BRAND_TIER[key] ?? DEFAULT_BRAND_TIER;
 }
 
 /** Опаковка, неподходяща за стак: мостра, сашета, кашон „60 x 15“. */
@@ -475,27 +898,58 @@ export function optionCandidates(index, option) {
 }
 
 /**
- * Подрежда кандидатите на едно вещество по стойност = качество × марж.
- * Маржовете се нормират спрямо най-добрия кандидат в същото вещество.
+ * Подрежда кандидатите на едно вещество — три нива:
+ *  0. Праг: марка поне ELITE_GATE.brand и сила поне ELITE_GATE.potency (иначе — резерва).
+ *  1. Най-подходящи (tier 0) с най-силно действие (доза и форма, до POTENCY_BAND под най-силния).
+ *  2. Сред тях — висок марж (поне MARGIN_BAND от най-високия марж спрямо цената при доставчика).
+ *  3. В тази елитна група първи са по-скъпите продукти на елитни марки
+ *     (PRESTIGE_WEIGHTS: марка 55%, цена 45%), при равенство — по-високият марж.
+ * Останалите са резерва при изчерпване: подредени по марж, сила и марка.
  * @param {Array<{ entry: any, fit: number, tier?: number, group?: any, variant: any }>} rows
  * @param {object|null} trustOverrides
+ * @param {string} [optionKey]
  */
-export function rankByValue(rows, trustOverrides = null) {
+export function rankByValue(rows, trustOverrides = null, optionKey = '') {
   if (!rows.length) return [];
-  const values = rows.map((r) => variantValue(r.variant));
-  const maxRel = Math.max(...values.map((v) => v.rel), 1e-9);
-  const maxAbs = Math.max(...values.map((v) => v.abs), 1e-9);
-  const maxFit = Math.max(...rows.map((r) => r.fit), 0);
-  return rows
-    .map((r, i) => {
-      const margin = VALUE_WEIGHTS.relative * (values[i].rel / maxRel) + VALUE_WEIGHTS.absolute * (values[i].abs / maxAbs);
-      // Съвпадение по форма: до +10% за най-подходящата форма.
-      const fitBonus = maxFit > 0 ? 1 + 0.1 * (r.fit / maxFit) : 1;
-      const quality = brandTrust(r.entry.brand, trustOverrides) * fitBonus;
-      return { ...r, score: quality * margin, quality, rel: values[i].rel };
-    })
-    .sort((a, b) => (a.tier || 0) - (b.tier || 0) || b.score - a.score
-      || String(a.entry.name).localeCompare(String(b.entry.name), 'bg'));
+  /** @type {any[]} */
+  const scored = rows.map((r) => {
+    const v = variantValue(r.variant);
+    return {
+      ...r,
+      rel: v.rel,
+      abs: v.abs,
+      price: Number(r.variant.retail_price) || 0,
+      potency: potencyScore(optionKey, r.entry.name),
+      quality: brandTrust(r.entry.brand, trustOverrides),
+    };
+  });
+  // Само минаващите прага за марка и сила могат да са в елитната група.
+  // Формата вече е в силата (potency), затова и продукти извън предпочитаната форма (tier 1) могат да минат.
+  const gated = scored.filter((r) => r.quality >= ELITE_GATE.brand && r.potency >= ELITE_GATE.potency);
+  const maxPot = Math.max(...gated.map((r) => r.potency), 0);
+  const strong = gated.filter((r) => r.potency >= maxPot - POTENCY_BAND);
+  const maxRelStrong = Math.max(...strong.map((r) => r.rel), 0);
+  const elite = strong.filter((r) => r.rel > 0 && r.rel >= MARGIN_BAND * maxRelStrong);
+  const maxPrice = Math.max(...elite.map((r) => r.price), 1e-9);
+  for (const r of elite) {
+    r.band = 'elite';
+    r.score = PRESTIGE_WEIGHTS.brand * r.quality + PRESTIGE_WEIGHTS.price * (r.price / maxPrice);
+  }
+  elite.sort((a, b) => b.score - a.score || b.rel - a.rel || String(a.entry.name).localeCompare(String(b.entry.name), 'bg'));
+
+  const rest = scored.filter((r) => !elite.includes(r));
+  const maxRel = Math.max(...rest.map((r) => r.rel), 1e-9);
+  const maxAbs = Math.max(...rest.map((r) => r.abs), 1e-9);
+  for (const r of rest) {
+    const margin = VALUE_WEIGHTS.relative * (r.rel / maxRel) + VALUE_WEIGHTS.absolute * (r.abs / maxAbs);
+    // „strong“ — минава прага за марка и сила, но не е в групата на най-високия марж.
+    r.band = gated.includes(r) ? 'strong' : 'reserve';
+    r.score = 0.45 * margin + 0.3 * r.potency + 0.25 * r.quality;
+  }
+  const bandOrder = { strong: 0, reserve: 1 };
+  rest.sort((a, b) => bandOrder[a.band] - bandOrder[b.band] || (a.tier || 0) - (b.tier || 0) || b.score - a.score
+    || String(a.entry.name).localeCompare(String(b.entry.name), 'bg'));
+  return [...elite, ...rest];
 }
 
 /**
@@ -509,6 +963,7 @@ export function rankByValue(rows, trustOverrides = null) {
  */
 export function rankSlotCandidates(index, slot, getGroup, opts = {}) {
   const exclude = opts.exclude || new Set();
+  /** @type {any[]} */
   const out = [];
   for (const option of slot.options) {
     const rows = optionCandidates(index, option)
@@ -519,9 +974,16 @@ export function rankSlotCandidates(index, slot, getGroup, opts = {}) {
         return variant ? { entry, fit, tier, group, variant } : null;
       })
       .filter(Boolean);
-    for (const row of rankByValue(rows, opts.trust)) out.push({ option, ...row });
+    for (const row of rankByValue(rows, opts.trust, option.key)) out.push({ option, ...row });
   }
-  return out;
+  // Първо всички продукти над прага (по реда на веществата: елит, после силни),
+  // едва после резервата — бюджетен продукт с основното вещество не изпреварва
+  // елитен продукт със заместителя.
+  const rank = { elite: 0, strong: 0, reserve: 1 };
+  return out
+    .map((row, i) => ({ row, i }))
+    .sort((a, b) => rank[a.row.band] - rank[b.row.band] || a.i - b.i)
+    .map(({ row }) => row);
 }
 
 /** group_id-тата, които трябва да се заредят за стака (всички кандидати на всички места). */
@@ -565,7 +1027,7 @@ export function stackStrength(slots) {
     const v = variantValue(p.variant);
     abs += v.abs;
     official += Number(p.variant.f1_reference_price) || Number(p.variant.retail_price) || 0;
-    quality += p.quality || DEFAULT_BRAND_TRUST;
+    quality += p.quality || DEFAULT_BRAND_TIER;
   }
   const value = picks.length && official > 0 ? (quality / picks.length) * (abs / official) : 0;
   return [picks.length, slots.filter((s) => s.primary).length, value];
@@ -626,4 +1088,27 @@ export function liveCheckCandidates(index, stackId, getGroup, opts = {}) {
     }
   }
   return rows;
+}
+
+/**
+ * Заместители за едно място в пакета — за замяната с един клик в количката.
+ * Подредени както при сглобяването (праг → сила → марж → елит и цена → резерва).
+ * Само от `distributor` (доставчикът на останалите продукти от пакета — пакетът не се смесва),
+ * без изчерпаните SKU-та и без продуктите, които вече са в пакета.
+ * @param {object[]} index
+ * @param {string} stackId
+ * @param {string} slotId
+ * @param {(groupId: string) => object|null} getGroup
+ * @param {{ distributor?: string|null, excludeGroups?: Set<string>, excludeSkus?: Set<string>, trust?: object|null }} [opts]
+ * @returns {Array<any>}
+ */
+export function slotReplacementCandidates(index, stackId, slotId, getGroup, opts = {}) {
+  const slot = STACK_RULES[stackId]?.slots.find((s) => s.id === slotId);
+  if (!slot) return [];
+  const excludeSkus = opts.excludeSkus || new Set();
+  return rankSlotCandidates(index, slot, getGroup, {
+    exclude: opts.excludeGroups || new Set(),
+    trust: opts.trust,
+    distributor: opts.distributor || null,
+  }).filter((c) => !excludeSkus.has(String(c.variant.sku_id)));
 }

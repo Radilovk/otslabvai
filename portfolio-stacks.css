@@ -159,7 +159,7 @@
 .sk-home-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
 .sk-tile {
   position: relative; display: flex; flex-direction: column; justify-content: center; gap: .1rem;
-  min-height: 64px; padding: .7rem .8rem .7rem 1rem; border-radius: var(--pf-radius-sm);
+  min-height: 58px; padding: .7rem .8rem .7rem 1rem; border-radius: var(--pf-radius-sm);
   background: var(--pf-surface); border: 1px solid var(--pf-border); text-decoration: none;
   overflow: hidden; -webkit-tap-highlight-color: transparent; transition: border-color .2s, transform .2s var(--pf-ease);
 }
@@ -174,6 +174,16 @@
 @media (min-width: 640px) { .sk-home-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1040px) {
   .sk-home { margin-top: 1.75rem; }
-  .sk-home-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .75rem; }
-  .sk-tile { min-height: 76px; }
+  .sk-home-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; }
+  .sk-tile { min-height: 72px; }
+}
+
+/* Обосновка на избора: доза, форма, марка */
+.sk-proof { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; }
+.sk-proof li {
+  position: relative; padding-left: 1.35rem; font-size: .84rem; line-height: 1.4; font-weight: 600; color: var(--pf-text);
+}
+.sk-proof li::before {
+  content: ''; position: absolute; left: 0; top: .2em; width: .9rem; height: .9rem; border-radius: 50%;
+  background: var(--sk-accent, var(--pf-primary)) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12 4 4 8-8'/%3E%3C/svg%3E") center / 70% no-repeat;
 }

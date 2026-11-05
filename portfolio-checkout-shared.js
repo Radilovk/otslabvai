@@ -39,6 +39,7 @@ export function setStockWarningBanner(text, listId = 'product-list') {
  * @param {boolean} [opts.silent]
  * @param {function} [opts.showToast]
  * @param {function} [opts.onPriceSync] - (serverProducts) => void
+ * @param {function} [opts.onUnavailable] - (skuIds: string[]) => void — кои продукти не могат да се поръчат ([] при успех)
  * @returns {Promise<boolean>}
  */
 export async function validateCartOnServer({
@@ -48,7 +49,8 @@ export async function validateCartOnServer({
   project,
   silent = false,
   showToast,
-  onPriceSync
+  onPriceSync,
+  onUnavailable
 } = {}) {
   if (!Array.isArray(products) || !products.length) {
     setStockWarningBanner('');
@@ -68,10 +70,13 @@ export async function validateCartOnServer({
     const data = await res.json();
     if (!res.ok) {
       const msg = data.error || 'Някои продукти вече не са налични.';
+      const unavailable = Array.isArray(data.unavailable_sku_ids) ? data.unavailable_sku_ids.map(String) : [];
+      onUnavailable?.(unavailable);
       setStockWarningBanner(msg);
       if (!silent && showToast) showToast(msg, 'error');
       return false;
     }
+    onUnavailable?.([]);
 
     if (Array.isArray(data.products) && onPriceSync) {
       onPriceSync(data.products);

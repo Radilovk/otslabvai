@@ -26,6 +26,10 @@ import {
 import { syncPromoCatalogUnlock } from './portfolio-promo-catalog.js';
 let cart = [];
 let activePromoCode = null;
+/** SKU-та, които сървърът отказа (изчерпани / не могат да се поръчат). */
+let unavailableSkus = new Set();
+/** Заместители за продукти от пакет: sku → { state: 'loading' | 'ready' | 'none', item?, substance? } */
+const replacements = new Map();
 
 const els = {};
 
@@ -137,6 +141,95 @@ function hasStockWarning() {
   return banner && !banner.hidden && banner.textContent;
 }
 
+const skuOf = (item) => String(item.sku_id || item.id || '');
+
+/** Изчерпаните продукти от пакет: търсим заместител за мястото им (един заявка на продукт). */
+async function loadReplacement(item) {
+  const sku = skuOf(item);
+  if (!item.stack_id || !item.stack_slot || replacements.has(sku)) return;
+  replacements.set(sku, { state: 'loading' });
+  renderCart();
+  try {
+    const keep = cart
+      .filter((c) => c.stack_id === item.stack_id && skuOf(c) !== sku && !unavailableSkus.has(skuOf(c)))
+      .map(skuOf);
+    const res = await fetch(`${API_URL}/portfolio/stacks/replace`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stack_id: item.stack_id,
+        slot_id: item.stack_slot,
+        unavailable_sku_ids: [...unavailableSkus],
+        keep_sku_ids: keep,
+      }),
+    });
+    const data = res.ok ? await res.json() : null;
+    // Заместител, който вече е в количката, не става.
+    const replacementSku = String(data?.item?.pick_variant?.sku_id || '');
+    const ok = replacementSku && !cart.some((c) => skuOf(c) === replacementSku);
+    replacements.set(sku, ok ? { state: 'ready', item: data.item, substance: data.substance } : { state: 'none' });
+  } catch {
+    replacements.set(sku, { state: 'none' });
+  }
+  renderCart();
+}
+
+function markUnavailable(skuIds) {
+  unavailableSkus = new Set((skuIds || []).map(String));
+  for (const sku of [...replacements.keys()]) if (!unavailableSkus.has(sku)) replacements.delete(sku);
+  renderCart();
+  for (const item of cart) if (unavailableSkus.has(skuOf(item))) loadReplacement(item);
+}
+
+/** Замяна с един клик: същото място в пакета, същото количество. */
+async function applyReplacement(idx) {
+  const old = cart[idx];
+  const rep = old && replacements.get(skuOf(old));
+  if (!rep || rep.state !== 'ready') return;
+  const v = rep.item.pick_variant;
+  cart[idx] = {
+    sku_id: v.sku_id,
+    group_id: rep.item.group_id,
+    barcode: v.barcode,
+    id: v.sku_id,
+    name: [rep.item.name, v.pack, v.option].filter(Boolean).join(' – '),
+    pack: v.pack,
+    option: v.option,
+    price: v.retail_price,
+    quantity: old.quantity,
+    image: v.image || rep.item.image,
+    stack_id: old.stack_id,
+    stack_slot: old.stack_slot,
+  };
+  replacements.delete(skuOf(old));
+  unavailableSkus.delete(skuOf(old));
+  saveCart(cart);
+  renderCart();
+  showToast(`Заменено с ${rep.item.brand ? `${rep.item.brand} ` : ''}${rep.item.name}`, 'success');
+  await validateCartOnServer({ silent: true });
+}
+
+function renderUnavailableNote(item, idx) {
+  const sku = skuOf(item);
+  if (!unavailableSkus.has(sku)) return '';
+  const rep = replacements.get(sku);
+  let action = '<span class="pf-out-hint">Премахнете го, за да продължите.</span>';
+  if (item.stack_id && (!rep || rep.state === 'loading')) {
+    action = '<span class="pf-out-hint">Търсим наличен заместител за пакета…</span>';
+  } else if (rep?.state === 'ready') {
+    const v = rep.item.pick_variant;
+    const label = [rep.item.brand, rep.item.name].filter(Boolean).join(' ');
+    action = `<button type="button" class="pf-replace-btn" data-action="replace" data-idx="${idx}">
+        <span class="pf-replace-label">Замени с наличен заместител</span>
+        <span class="pf-replace-name">${escapeHtml(label)}${v.pack ? ` · ${escapeHtml(v.pack)}` : ''}</span>
+        <span class="pf-replace-price">${formatPrice(v.retail_price)}${item.quantity > 1 ? ` × ${item.quantity}` : ''}</span>
+      </button>`;
+  } else if (item.stack_id && rep?.state === 'none') {
+    action = '<span class="pf-out-hint">Няма наличен заместител за това място — премахнете продукта.</span>';
+  }
+  return `<div class="pf-out-note" role="status"><strong>Изчерпан при доставчика</strong>${action}</div>`;
+}
+
 function renderCart() {
   const list = $('product-list');
   if (!cart.length) {
@@ -159,8 +252,9 @@ function renderCart() {
     const productUrl = item.group_id
       ? buildPortfolioProductUrl(item.group_id, item.sku_id || item.id)
       : null;
+    const out = unavailableSkus.has(skuOf(item));
     return `
-    <li class="pf-summary-item" data-idx="${idx}">
+    <li class="pf-summary-item${out ? ' pf-summary-item--out' : ''}" data-idx="${idx}">
       ${renderCartItemMedia(item, productUrl)}
       <div class="pf-summary-info">
         ${renderCartItemTitle(item, productUrl)}
@@ -173,6 +267,7 @@ function renderCart() {
       </div>
       <div class="pf-summary-price">${formatPrice(item.price * item.quantity)}</div>
       <button type="button" class="pf-remove-btn" data-action="remove" data-idx="${idx}" aria-label="Премахни">${icon('x', { size: 16 })}</button>
+      ${renderUnavailableNote(item, idx)}
     </li>`;
   }).join('');
 
@@ -186,6 +281,12 @@ function renderCart() {
     btn.addEventListener('click', () => {
       const i = parseInt(btn.dataset.idx, 10);
       const action = btn.dataset.action;
+      if (action === 'replace') {
+        btn.disabled = true;
+        applyReplacement(i);
+        return;
+      }
+      const removedSku = action === 'remove' || (action === 'minus' && cart[i].quantity <= 1) ? skuOf(cart[i]) : null;
       if (action === 'plus') cart[i].quantity++;
       else if (action === 'minus') {
         cart[i].quantity--;
@@ -193,6 +294,12 @@ function renderCart() {
       } else if (action === 'remove') cart.splice(i, 1);
       saveCart(cart);
       renderCart();
+      // Премахнат изчерпан продукт → проверяваме пак, за да се отключи поръчката.
+      if (removedSku && unavailableSkus.has(removedSku)) {
+        unavailableSkus.delete(removedSku);
+        replacements.delete(removedSku);
+        validateCartOnServer({ silent: true });
+      }
     });
   });
 }
@@ -205,6 +312,7 @@ async function validateCartOnServer({ silent = false } = {}) {
     project: 'portfolio',
     silent,
     showToast,
+    onUnavailable: markUnavailable,
     onPriceSync: (serverProducts) => {
       if (syncCartPricesFromServer(cart, serverProducts)) {
         saveCart(cart);
@@ -485,6 +593,12 @@ async function submitOrder(e) {
     });
     const data = await res.json();
     if (res.status !== 201 || !data.success || !data.order?.id) {
+      // Изчерпано между проверката и поръчката — показваме замяната до продукта.
+      if (Array.isArray(data.unavailable_sku_ids) && data.unavailable_sku_ids.length) {
+        markUnavailable(data.unavailable_sku_ids);
+        setStockWarningBanner(data.error || 'Някои продукти вече не са налични.');
+        document.querySelector('.pf-summary-item--out')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       throw new Error(data.error || 'Поръчката не беше приета. Проверете данните и опитайте отново.');
     }
 

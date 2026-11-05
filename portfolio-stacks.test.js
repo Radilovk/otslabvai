@@ -1,6 +1,7 @@
 import {
   STACK_IDS, STACK_RULES, resolveStack, rankSlotCandidates, variantValue, brandTrust,
-  pickStackVariant, isStackUnfitPack, stackCandidateGroupIds,
+  pickStackVariant, isStackUnfitPack, stackCandidateGroupIds, parseDose, potencyScore, stackProof,
+  slotReplacementCandidates,
 } from './portfolio-stacks.js';
 import { STACK_CONTENT, STACK_ORDER } from './portfolio-stacks-content.js';
 
@@ -70,8 +71,10 @@ describe('portfolio-stacks', () => {
     expect(r.map((x) => x.pick?.entry.group_id)).toEqual([carnA.entry.group_id, chrom.entry.group_id, thistle.entry.group_id]);
     expect(r.every((x) => x.primary)).toBe(true);
 
+    // Изчерпан е силният карнитин; слабият (500 mg) е под прага за сила —
+    // по-напред е силният заместител (CLA 1000 mg) от същото място.
     r = resolveStack(index, 'slim', getGroup, { unavailable: new Set([carnA.group.variants[0].sku_id]) }).slots;
-    expect(r[0].pick.entry.group_id).toBe(carnB.entry.group_id);
+    expect(r[0].pick.option.key).toBe('cla');
 
     const gone = new Set([carnA.group.variants[0].sku_id, carnB.group.variants[0].sku_id]);
     r = resolveStack(index, 'slim', getGroup, { unavailable: gone }).slots;
@@ -147,5 +150,80 @@ describe('portfolio-stacks', () => {
     // Изчерпан продукт при Fitness1 без заместител там → целият пакет минава към Sila.
     const res3 = resolveStack(c2.index, 'slim', c2.getGroup, { unavailable: new Set([f1Thistle.group.variants[0].sku_id]) });
     expect(res3.distributor).toBe('sila');
+  });
+
+  test('доза от името и сила на действие', () => {
+    expect(parseDose('Biotin Maximum Strength 10,000 mcg.', 'mcg')).toBe(10000);
+    expect(parseDose('Vitamin D3 4000 + K2 MK-7 100 mcg', 'iu')).toBe(4000);
+    expect(parseDose('Liposomal Coenzyme Q10 100 mg', 'mg')).toBe(100);
+    expect(potencyScore('biotin', 'Biotin 500 mcg')).toBeLessThan(0.1);
+    expect(potencyScore('coq10', 'Liposomal Coenzyme Q10 100 mg')).toBe(1);
+    expect(potencyScore('magnesium', 'Magnesium Bisglycinate 200 mg')).toBe(1);
+  });
+
+  test('в групата с най-силно действие и висок марж първи са по-скъпите елитни марки', () => {
+    // Трите са силни (Creapure); маржът е сходен (в групата). Евтиният е с малко по-висок марж,
+    // но елитната марка с по-висока цена е първа.
+    const cheap = product('Creatine Monohydrate Creapure', 'Trec Nutrition', { b2b: 10, retail: 20, ref: 21, pack: '300 грама' });
+    const elite = product('Creatine Monohydrate Creapure', 'NOW Foods', { b2b: 30, retail: 50, ref: 54, pack: '500 грама' });
+    const premium = product('Creatine 100% Creapure', 'Nutrend', { b2b: 24, retail: 40, ref: 42, pack: '500 грама' });
+    const { index, getGroup } = catalog([cheap, premium, elite]);
+    const ranked = rankSlotCandidates(index, STACK_RULES.tone.slots[1], getGroup);
+    expect(ranked.map((r) => r.entry.brand)).toEqual(['NOW Foods', 'Nutrend', 'Trec Nutrition']);
+    expect(ranked[0].band).toBe('elite');
+  });
+
+  test('нисък марж не влиза в елитната група дори при елитна марка', () => {
+    const lowMargin = product('Creatine Creapure', 'NOW Foods', { b2b: 37, retail: 50, ref: 70, pack: '500 грама' });
+    const goodMargin = product('Creatine Creapure', 'Nutrend', { b2b: 22, retail: 40, ref: 42, pack: '500 грама' });
+    const { index, getGroup } = catalog([lowMargin, goodMargin]);
+    const ranked = rankSlotCandidates(index, STACK_RULES.tone.slots[1], getGroup);
+    expect(ranked[0].entry.brand).toBe('Nutrend');
+    expect(ranked[1].band).toBe('strong');
+  });
+
+  test('бюджетна марка / слаба доза не изпреварва елитен заместител', () => {
+    const weakBiotin = product('Biotin 500 mcg', 'Bioherba', { b2b: 3, retail: 8, ref: 9 });
+    const eliteHair = product('Perfect Skin Hydro-Complex', 'Olimp Sport Nutrition', { b2b: 7, retail: 11.5, ref: 12 });
+    const { index, getGroup } = catalog([weakBiotin, eliteHair]);
+    const ranked = rankSlotCandidates(index, STACK_RULES.beauty.slots[2], getGroup);
+    expect(ranked[0].entry.group_id).toBe(eliteHair.entry.group_id);
+    expect(ranked[ranked.length - 1].band).toBe('reserve');
+  });
+
+  test('обосновка: доза, форма, марка — без марж', () => {
+    const proof = stackProof('magnesium', 'Magnesium Bisglycinate 200 mg', 'NOW Foods');
+    expect(proof).toEqual([
+      '200 мг в доза — силна доза',
+      'Бисглицинат — най-добре поносимата форма',
+      'Елитна марка — фармацевтичен стандарт',
+    ]);
+    expect(stackProof('coq10', 'Liposomal Coenzyme Q10 100 mg', 'MagHerbs')[2]).toMatch(/Премиум/);
+  });
+
+  test('замяна в количката: същото място, същият доставчик, без изчерпаното и без продуктите от пакета', () => {
+    const forcelab = product('Ashwagandha KSM-66 300 mg', 'Forcelab', { b2b: 12, retail: 22.4, ref: 24 });
+    const trec = product('Ashwagandha KSM-66 200 mg', 'Trec Nutrition', { b2b: 6, retail: 11, ref: 12 });
+    const silaAsh = product('Ashwagandha KSM-66 600 mg', 'NOW Foods', { b2b: 10, retail: 25, ref: 27, distributor: 'sila' });
+    const rhodiola = product('Rhodiola Rosea 500 mg', 'Olimp Sport Nutrition', { b2b: 9, retail: 18, ref: 19 });
+    const { index, getGroup } = catalog([forcelab, trec, silaAsh, rhodiola]);
+
+    const list = slotReplacementCandidates(index, 'antistress', 'cortisol', getGroup, {
+      distributor: 'fitness1',
+      excludeSkus: new Set([forcelab.group.variants[0].sku_id]),
+      excludeGroups: new Set([forcelab.entry.group_id]),
+    });
+    const ids = list.map((c) => c.entry.group_id);
+    expect(ids).not.toContain(forcelab.entry.group_id);
+    expect(ids).not.toContain(silaAsh.entry.group_id); // друг доставчик — пакетът не се смесва
+    expect(ids[0]).toBe(trec.entry.group_id); // същото вещество първо
+    expect(ids).toContain(rhodiola.entry.group_id); // после заместващото вещество
+
+    // Продукт, който вече е в пакета, не се предлага.
+    const without = slotReplacementCandidates(index, 'antistress', 'cortisol', getGroup, {
+      distributor: 'fitness1', excludeGroups: new Set([forcelab.entry.group_id, trec.entry.group_id]),
+    });
+    expect(without[0].entry.group_id).toBe(rhodiola.entry.group_id);
+    expect(slotReplacementCandidates(index, 'antistress', 'no-such-slot', getGroup)).toEqual([]);
   });
 });
