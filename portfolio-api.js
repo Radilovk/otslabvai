@@ -58,6 +58,7 @@ import { calculateCheckoutShipping, formatShippingLabel } from './checkout-shipp
 import { assertOrderRateLimit } from './order-rate-limit.js';
 import { checkLiveStock } from './distributor-live-stock.js';
 import { rankSupplementCandidates } from './portfolio-supplement-pick.js';
+import { STACK_IDS, stackCandidateGroupIds, resolveStack, liveCheckCandidates } from './portfolio-stacks.js';
 import { promoIndexStats, promoVariantPrice } from './portfolio-promo-pricing.js';
 import {
   getOrderRecord,
@@ -1388,6 +1389,9 @@ async function handleSaveSettings(request, env) {
     hero_slides: heroSlides,
     hero_carousel_interval: Number(incoming.hero_carousel_interval ?? current.hero_carousel_interval) || 6000,
     footer: incoming.footer ?? current.footer,
+    // Доверие към марка за готовите стакове: { "NOW Foods": 1, "Марка": 0.85 }.
+    stack_brand_trust: incoming.stack_brand_trust && typeof incoming.stack_brand_trust === 'object'
+      ? incoming.stack_brand_trust : current.stack_brand_trust,
     pricing_policy: incoming.pricing_policy
       ? { ...current.pricing_policy, ...incoming.pricing_policy }
       : current.pricing_policy,
@@ -1544,6 +1548,92 @@ async function handlePickProducts(request, env) {
     live_checked_at: checkedAt,
     synced_at: meta.synced_at,
   }, 200, { 'Cache-Control': 'public, max-age=120' });
+  if (edge) await edge.put(cacheKey, response.clone()).catch(() => {});
+  return response;
+}
+
+/**
+ * GET /portfolio/stacks            — всички готови стакове
+ * GET /portfolio/stacks?id=slim    — един стак
+ * За всяко място: първият наличен продукт по реда „основно вещество → заместители“,
+ * а между продуктите на едно вещество — по качество × марж (спрямо цената при доставчика).
+ * Кандидатите се проверяват на живо при доставчика; изчерпаният се заменя автоматично.
+ * Маржът не излиза към клиента.
+ */
+async function handleGetStacks(request, env) {
+  const url = new URL(request.url);
+  const one = String(url.searchParams.get('id') || '').trim().toLowerCase();
+  if (one && !STACK_IDS.includes(one)) throw new PortfolioError('Няма такъв пакет.', 404);
+  const ids = one ? [one] : STACK_IDS;
+
+  const edge = typeof caches !== 'undefined' ? /** @type {any} */ (caches).default : null;
+  const cacheKey = new Request(`https://stacks.cache/${ids.join(',')}`);
+  if (edge) {
+    const hit = await edge.match(cacheKey).catch(() => null);
+    if (hit) return new Response(hit.body, hit);
+  }
+
+  const meta = await getMeta(env);
+  if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+  const settings = await getSettings(env);
+  const trust = settings?.stack_brand_trust || null;
+  const listed = (meta.index || []).filter((e) => e.available && isCatalogListed(e));
+
+  const groupIds = new Set();
+  for (const id of ids) for (const gid of stackCandidateGroupIds(listed, id)) groupIds.add(gid);
+  const groups = await loadPortfolioGroupsByIds(env, [...groupIds]);
+  const getGroup = (gid) => groups.get(String(gid)) || null;
+
+  // Жива проверка: първите кандидати на всяко място (основният + резервите).
+  const unavailable = new Set();
+  let checkedAt = null;
+  const liveOff = env.MOCK_FITNESS1 === '1' || env.MOCK_FITNESS1 === true || env.LIVE_STOCK_CHECK === '0';
+  if (!liveOff) {
+    const bySku = new Map();
+    for (const id of ids) {
+      for (const c of liveCheckCandidates(listed, id, getGroup, { trust })) {
+        bySku.set(String(c.variant.sku_id), {
+          sku_id: c.variant.sku_id,
+          barcode: c.variant.barcode,
+          distributor: c.variant.distributor || c.group?.distributor,
+          name: c.group?.name,
+        });
+      }
+    }
+    if (bySku.size) {
+      try {
+        const live = await checkLiveStock([...bySku.values()], {
+          f1Key: await getFitness1ApiKey(env), silaToken: await getSilaApiToken(env),
+        });
+        checkedAt = live.checked_at;
+        for (const r of live.unavailable) unavailable.add(String(r.sku_id));
+        if (unavailable.size) requestPortfolioCatalogCiSync(env).catch(() => {});
+      } catch {
+        // доставчикът не отговаря — по последната синхронизация
+      }
+    }
+  }
+
+  const stacks = ids.map((id) => {
+    const slots = resolveStack(listed, id, getGroup, { unavailable, trust }).map(({ slot, pick, primary }) => ({
+      id: slot.id,
+      title: slot.title,
+      substance: pick ? { key: pick.option.key, label: pick.option.label, why: pick.option.why } : null,
+      primary,
+      item: pick ? {
+        ...sanitizeIndexEntryForClient(pick.entry),
+        pick_variant: sanitizeVariantForClient({ ...pick.variant, image: pick.variant.image || pick.group?.image }),
+      } : null,
+    }));
+    const total = slots.reduce((sum, s) => sum + (Number(s.item?.pick_variant?.retail_price) || 0), 0);
+    return { id, slots, total: Math.round(total * 100) / 100, complete: slots.every((s) => s.item) };
+  });
+
+  const response = jsonResponse({
+    stacks,
+    live_checked_at: checkedAt,
+    synced_at: meta.synced_at,
+  }, 200, { 'Cache-Control': 'public, max-age=300' });
   if (edge) await edge.put(cacheKey, response.clone()).catch(() => {});
   return response;
 }
@@ -2699,6 +2789,9 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     }
     if (path === '/portfolio/product' && method === 'GET') {
       return await handleGetProduct(request, env);
+    }
+    if (path === '/portfolio/stacks' && method === 'GET') {
+      return await handleGetStacks(request, env);
     }
     if (path === '/portfolio/pick' && method === 'GET') {
       return await handlePickProducts(request, env);

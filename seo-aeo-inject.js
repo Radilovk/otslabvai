@@ -71,6 +71,12 @@ export const SITE_SEO = {
     staticPaths: [
       '/portfolio-advisor-quiz.html',
       '/faq.html',
+      '/stacks.html',
+      '/stack.html?id=slim',
+      '/stack.html?id=antiaging',
+      '/stack.html?id=tone',
+      '/stack.html?id=postpartum',
+      '/stack.html?id=beauty',
     ],
     llmsIntro: 'BIOCODE Nutrition Science (biocode-bg.com) — каталог хранителни добавки за България. Цени в EUR.',
     securityContact: 'office@biocode.com',

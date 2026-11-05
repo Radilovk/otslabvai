@@ -285,6 +285,7 @@ export function renderHeader(active = 'catalog') {
         </a>
         <nav class="pf-nav" aria-label="Основна навигация">
           <a href="portfolio.html" class="pf-nav-link ${active === 'catalog' ? 'active' : ''}">Каталог</a>
+          <a href="portfolio-stacks.html" class="pf-nav-link ${active === 'stacks' ? 'active' : ''}">Пакети</a>
           <a href="portfolio-advisor-quiz.html" class="pf-nav-link ${active === 'advisor' ? 'active' : ''}">AI консултант</a>
         </nav>
         <div class="pf-header-actions">
@@ -345,7 +346,8 @@ function setActiveNav(headerSlot, active) {
     const isCatalog = active === 'catalog' && href.includes('portfolio.html') && !href.includes('advisor');
     const isAdvisor = active === 'advisor' && href.includes('advisor');
     const isCheckout = active === 'checkout' && href.includes('checkout');
-    link.classList.toggle('active', isCatalog || isAdvisor || isCheckout);
+    const isStacks = active === 'stacks' && href.includes('stacks');
+    link.classList.toggle('active', isCatalog || isAdvisor || isCheckout || isStacks);
   });
 }
 
