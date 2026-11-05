@@ -1,3 +1,4 @@
+import { productImgTag } from './portfolio-img.js';
 import {
   escapeHtml, debounce, initPortfolioPage, icon
 } from './portfolio-shared.js';
@@ -84,14 +85,14 @@ function itemShowsPromoBadge(item) {
   return !!flagged && shouldDisplayPromoPrice(compare, min);
 }
 
-function renderCard(item) {
+function renderCard(item, i = 99) {
   const promoBadge = itemShowsPromoBadge(item) ? '<span class="pf-badge pf-badge--promo">Промо</span>' : '';
   const img = item.image || PLACEHOLDER_IMG;
   return `
     <div class="pf-product-card">
       <a href="${productCardUrl(item)}" class="pf-card-link">
         <div class="pf-card-image">${promoBadge}
-          <img src="${escapeHtml(img)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" sizes="(max-width: 640px) 45vw, 210px" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+          ${productImgTag(img, { preset: 'card', alt: item.name, eager: i < 4 })}
         </div>
         <div class="pf-card-body">
           <span class="pf-card-brand">${escapeHtml(item.brand)}</span>
@@ -230,7 +231,7 @@ function loadCatalog() {
     DOM.resultsMeta.textContent = `${data.total.toLocaleString('bg-BG')} продукта`;
   }
   DOM.grid.innerHTML = data.items.length
-    ? data.items.map(renderCard).join('')
+    ? data.items.map((item, i) => renderCard(item, i)).join('')
     : `<div class="pf-empty">
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <p>Няма продукти с тези филтри.</p>

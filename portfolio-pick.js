@@ -3,6 +3,7 @@
  * Препоръка от NutriPlan / AIRIS идва само като търсеща дума; изборът (наличност
  * при доставчика, съвпадение, марж) е на сървъра — /portfolio/pick.
  */
+import { productImgTag } from './portfolio-img.js';
 import {
   escapeHtml, getCart, saveCart, updateCartBadges, showToast, initPortfolioPage,
   formatPrice, buildPortfolioProductUrl,
@@ -45,7 +46,7 @@ function renderCard(item, i) {
     <div class="pf-product-card pf-pick-card">
       <a href="${url}" class="pf-card-link">
         <div class="pf-card-image">
-          <img src="${escapeHtml(img)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+          ${productImgTag(img, { preset: 'pick', alt: item.name, eager: i === 0 })}
         </div>
         <div class="pf-card-body">
           ${i === 0 ? '<span class="pf-pick-badge">Най-подходящ</span>' : ''}

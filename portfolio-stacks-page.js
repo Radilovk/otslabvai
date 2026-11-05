@@ -1,3 +1,4 @@
+import { productImgTag } from './portfolio-img.js';
 /**
  * stacks.html — обзор на готовите стакове; stack.html?id=<id> — лендинг на един стак.
  * Продуктите идват от /portfolio/stacks: изборът (наличност при доставчика, замяна,
@@ -26,21 +27,43 @@ const stackTotal = (stack) => (stack?.slots || []).reduce((s, slot) => s + (slot
 const stackItems = (stack) => (stack?.slots || []).map((s) => s.item).filter(Boolean);
 const img = (item) => {
   const v = priced(item);
-  return escapeHtml(v.image || item.image || PLACEHOLDER_IMG);
+  return v.image || item.image || PLACEHOLDER_IMG;
 };
-const thumb = (item, alt = '') => `<span class="sk-thumb"><img src="${item ? img(item) : PLACEHOLDER_IMG}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'"></span>`;
+const thumb = (item, alt = '', eager = false) => `<span class="sk-thumb">${productImgTag(item ? img(item) : PLACEHOLDER_IMG, { preset: 'thumb', alt, eager })}</span>`;
 const productName = (item) => {
   const v = priced(item);
   return [item.name, v.pack].filter(Boolean).join(' · ');
 };
+
+/** Последните пакети за сесията — обзор → пакет се показва веднага, после тихо се обновява. */
+const SESSION_KEY = 'pf_stacks_v1';
+const SESSION_MAX_AGE_MS = 15 * 60 * 1000;
+
+function loadSessionStacks() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+    if (!saved || Date.now() - saved.at > SESSION_MAX_AGE_MS) return false;
+    Object.assign(stacks, saved.stacks || {});
+    return Object.keys(saved.stacks || {}).length > 0;
+  } catch {
+    return false;
+  }
+}
+
+function saveSessionStacks() {
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ at: Date.now(), stacks }));
+  } catch { /* частен режим */ }
+}
 
 async function fetchStacks(id = '') {
   try {
     const res = await fetch(`${API_URL}/portfolio/stacks${id ? `?id=${encodeURIComponent(id)}` : ''}`);
     const data = res.ok ? await res.json() : null;
     for (const s of data?.stacks || []) stacks[s.id] = s;
+    if (data?.stacks?.length) saveSessionStacks();
   } catch {
-    /* показваме текста без продукти */
+    /* показваме последното известно или текста без продукти */
   }
 }
 
@@ -237,6 +260,8 @@ document.addEventListener('click', (e) => {
 
 initPortfolioPage({ active: 'stacks', settingsOnly: true }).catch(() => {});
 
+const fromSession = loadSessionStacks();
+
 if (hubRoot) {
   renderHub();
   fetchStacks().then(() => {
@@ -250,8 +275,10 @@ if (hubRoot) {
   } else {
     renderStaticStack(id);
     initStickyBar();
+    const render = () => { renderBuybox(id); renderSlots(id); renderSchedule(id); };
+    // Вече зареден от обзора — показваме веднага; живата проверка идва след това.
+    if (fromSession && stacks[id]) render();
     fetchStacks(id).then(() => {
-      const render = () => { renderBuybox(id); renderSlots(id); renderSchedule(id); };
       render();
       refreshPromo(render);
     });

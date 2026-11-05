@@ -1572,23 +1572,65 @@ async function handlePickProducts(request, env) {
  * Кандидатите се проверяват на живо при доставчика; изчерпаният се заменя автоматично.
  * Маржът не излиза към клиента.
  */
-async function handleGetStacks(request, env) {
+/** Колко време отговорът за пакетите е „пресен“; след това се показва веднага и се обновява на заден план. */
+const STACKS_FRESH_MS = 5 * 60 * 1000;
+/** До колко стар отговор се показва, докато се обновява (по-стар — изчаква се новият). */
+const STACKS_STALE_MS = 6 * 60 * 60 * 1000;
+
+async function handleGetStacks(request, env, ctx) {
   const url = new URL(request.url);
   const one = String(url.searchParams.get('id') || '').trim().toLowerCase();
   if (one && !STACK_IDS.includes(one)) throw new PortfolioError('Няма такъв пакет.', 404);
   const ids = one ? [one] : STACK_IDS;
 
+  // Кеш на ръба: „покажи веднага, обнови на заден план“ — посетителят не чака
+  // каталога и живата проверка при доставчика.
   const edge = typeof caches !== 'undefined' ? /** @type {any} */ (caches).default : null;
-  const cacheKey = new Request(`https://stacks.cache/${ids.join(',')}`);
+  const cacheKey = new Request(`https://stacks.cache/v2/${ids.join(',')}`);
+  const respond = (body, ageMs = 0) => jsonResponse(body, 200, {
+    'Cache-Control': 'public, max-age=60, stale-while-revalidate=600',
+    'X-Stacks-Age': String(Math.round(ageMs / 1000)),
+  });
+  const store = async (body) => {
+    if (!edge) return;
+    const res = new Response(JSON.stringify(body), {
+      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': `public, max-age=${STACKS_STALE_MS / 1000}`, 'X-Built-At': String(Date.now()) },
+    });
+    await edge.put(cacheKey, res).catch(() => {});
+  };
+  // Обзорът на всички пакети е само преглед — без жива проверка (тя е на страницата на пакета и в количката).
+  const live = !!one;
+
   if (edge) {
     const hit = await edge.match(cacheKey).catch(() => null);
-    if (hit) return new Response(hit.body, hit);
+    if (hit) {
+      const age = Date.now() - (Number(hit.headers.get('X-Built-At')) || 0);
+      if (age < STACKS_STALE_MS) {
+        const body = await hit.json();
+        if (age > STACKS_FRESH_MS && ctx?.waitUntil) {
+          ctx.waitUntil(buildStacksBody(env, ids, { live }).then(store).catch(() => {}));
+        }
+        return respond(body, age);
+      }
+    }
   }
 
+  const body = await buildStacksBody(env, ids, { live });
+  if (ctx?.waitUntil) ctx.waitUntil(store(body));
+  else await store(body);
+  return respond(body);
+}
+
+/**
+ * Сглобява пакетите. live — жива проверка при доставчика: първо само кандидатите
+ * на приоритетния доставчик (Fitness1); другият се проверява само ако пакетът минава към него.
+ */
+async function buildStacksBody(env, ids, { live = true } = {}) {
   const meta = await getMeta(env);
   if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
   const settings = await getSettings(env);
   const trust = settings?.stack_brand_trust || null;
+  const preferred = settings?.stack_preferred_distributor === 'sila' ? 'sila' : 'fitness1';
   const listed = (meta.index || []).filter((e) => e.available && isCatalogListed(e));
 
   const groupIds = new Set();
@@ -1596,15 +1638,17 @@ async function handleGetStacks(request, env) {
   const groups = await loadPortfolioGroupsByIds(env, [...groupIds]);
   const getGroup = (gid) => groups.get(String(gid)) || null;
 
-  // Жива проверка: първите кандидати на всяко място (основният + резервите).
   const unavailable = new Set();
   let checkedAt = null;
-  const liveOff = env.MOCK_FITNESS1 === '1' || env.MOCK_FITNESS1 === true || env.LIVE_STOCK_CHECK === '0';
-  if (!liveOff) {
+  const liveOff = !live || env.MOCK_FITNESS1 === '1' || env.MOCK_FITNESS1 === true || env.LIVE_STOCK_CHECK === '0';
+  const checked = new Set();
+  const runLiveCheck = async (distributors) => {
     const bySku = new Map();
     for (const id of ids) {
-      for (const c of liveCheckCandidates(listed, id, getGroup, { trust })) {
-        bySku.set(String(c.variant.sku_id), {
+      for (const c of liveCheckCandidates(listed, id, getGroup, { trust, distributors })) {
+        const sku = String(c.variant.sku_id);
+        if (checked.has(sku)) continue;
+        bySku.set(sku, {
           sku_id: c.variant.sku_id,
           barcode: c.variant.barcode,
           distributor: c.variant.distributor || c.group?.distributor,
@@ -1612,26 +1656,32 @@ async function handleGetStacks(request, env) {
         });
       }
     }
-    if (bySku.size) {
-      try {
-        const live = await checkLiveStock([...bySku.values()], {
-          f1Key: await getFitness1ApiKey(env), silaToken: await getSilaApiToken(env),
-        });
-        checkedAt = live.checked_at;
-        for (const r of live.unavailable) unavailable.add(String(r.sku_id));
-        if (unavailable.size) requestPortfolioCatalogCiSync(env).catch(() => {});
-      } catch {
-        // доставчикът не отговаря — по последната синхронизация
-      }
+    if (!bySku.size) return;
+    for (const sku of bySku.keys()) checked.add(sku);
+    try {
+      const res = await checkLiveStock([...bySku.values()], {
+        f1Key: await getFitness1ApiKey(env), silaToken: await getSilaApiToken(env),
+      });
+      checkedAt = res.checked_at;
+      for (const r of res.unavailable) unavailable.add(String(r.sku_id));
+      if (res.unavailable.length) requestPortfolioCatalogCiSync(env).catch(() => {});
+    } catch {
+      // доставчикът не отговаря — по последната синхронизация
     }
+  };
+
+  const resolveAll = () => ids.map((id) => resolveStack(listed, id, getGroup, { unavailable, trust, preferred }));
+  if (!liveOff) await runLiveCheck([preferred]);
+  let resolved = resolveAll();
+  // Пакет, минал към другия доставчик, се проверява и при него.
+  if (!liveOff && resolved.some((r) => r.distributor && r.distributor !== preferred)) {
+    await runLiveCheck([preferred === 'sila' ? 'fitness1' : 'sila']);
+    resolved = resolveAll();
   }
 
-  const stacks = ids.map((id) => {
+  const stacks = ids.map((id, i) => {
     // Целият пакет е от един доставчик; кой — не излиза към клиента.
-    const resolved = resolveStack(listed, id, getGroup, {
-      unavailable, trust, preferred: settings?.stack_preferred_distributor,
-    });
-    const slots = resolved.slots.map(({ slot, pick, primary }) => ({
+    const slots = resolved[i].slots.map(({ slot, pick, primary }) => ({
       id: slot.id,
       title: slot.title,
       substance: pick ? { key: pick.option.key, label: pick.option.label, why: pick.option.why } : null,
@@ -1647,13 +1697,7 @@ async function handleGetStacks(request, env) {
     return { id, slots, total: Math.round(total * 100) / 100, complete: slots.every((s) => s.item) };
   });
 
-  const response = jsonResponse({
-    stacks,
-    live_checked_at: checkedAt,
-    synced_at: meta.synced_at,
-  }, 200, { 'Cache-Control': 'public, max-age=300' });
-  if (edge) await edge.put(cacheKey, response.clone()).catch(() => {});
-  return response;
+  return { stacks, live_checked_at: checkedAt, synced_at: meta.synced_at };
 }
 
 /**
@@ -2899,7 +2943,7 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
       return await handleGetProduct(request, env);
     }
     if (path === '/portfolio/stacks' && method === 'GET') {
-      return await handleGetStacks(request, env);
+      return await handleGetStacks(request, env, ctx);
     }
     if (path === '/portfolio/stacks/replace' && method === 'POST') {
       return await handleStackReplace(request, env);
