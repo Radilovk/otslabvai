@@ -17,7 +17,8 @@
  * Качеството: доверие към марката (MARKA_TRUST, настройка `stack_brand_trust`)
  * + съвпадение по форма (бисглицинат, пептиди, монохидрат…).
  *
- * Един пакет се сглобява само от един доставчик (Sila или Fitness1) — никога смесено.
+ * Един пакет се сглобява само от един доставчик — приоритетно Fitness1; Sila само ако
+ * Fitness1 не може да запълни пакета. Никога смесено.
  *
  * Маржът и доставната цена не излизат към клиента.
  */
@@ -575,29 +576,42 @@ const stronger = (a, b) => {
   return false;
 };
 
+/** Приоритетният доставчик за пакетите (настройка `stack_preferred_distributor`). */
+export const DEFAULT_PREFERRED_DISTRIBUTOR = DISTRIBUTOR_FITNESS1;
+
 /**
- * Сглобява стака изцяло от ЕДИН доставчик — Sila или Fitness1, никога смесено.
- * Сглобява се поотделно за всеки и печели по-силният вариант (stackStrength).
+ * Сглобява стака изцяло от ЕДИН доставчик — никога смесено.
+ * Приоритет: Fitness1. Пакетът се сглобява от него (основно вещество → заместители,
+ * между продуктите — качество × марж). Sila се ползва САМО ако Fitness1 не може
+ * да запълни и трите места (изчерпано без заместител) — тогава целият пакет минава към Sila.
+ * Ако никой не е пълен — по-пълният (stackStrength).
  * @param {object[]} index
  * @param {string} stackId
  * @param {(groupId: string) => object|null} getGroup
- * @param {{ unavailable?: Set<string>, trust?: object|null, distributor?: string }} [opts]
- * unavailable: sku_id-та, изчерпани при живата проверка; distributor: само този доставчик.
- * @returns {{ distributor: string|null, slots: Array<{ slot: object, pick: object|null, primary: boolean }> }}
+ * @param {{ unavailable?: Set<string>, trust?: object|null, distributor?: string, preferred?: string }} [opts]
+ * unavailable: sku_id-та, изчерпани при живата проверка; distributor: само този доставчик;
+ * preferred: приоритетният доставчик (по подразбиране fitness1).
+ * @returns {{ distributor: string|null, fallback: boolean, slots: Array<{ slot: object, pick: object|null, primary: boolean }> }}
  */
 export function resolveStack(index, stackId, getGroup, opts = {}) {
   const stack = STACK_RULES[stackId];
-  if (!stack) return { distributor: null, slots: [] };
+  if (!stack) return { distributor: null, fallback: false, slots: [] };
   const unavailable = opts.unavailable || new Set();
-  const candidates = opts.distributor ? [opts.distributor] : STACK_DISTRIBUTORS;
+  const preferred = STACK_DISTRIBUTORS.includes(String(opts.preferred)) ? String(opts.preferred) : DEFAULT_PREFERRED_DISTRIBUTOR;
+  const order = opts.distributor
+    ? [opts.distributor]
+    : [preferred, ...STACK_DISTRIBUTORS.filter((d) => d !== preferred)];
   let best = null;
-  for (const distributor of candidates) {
+  for (const distributor of order) {
     const slots = resolveForDistributor(index, stack, getGroup, distributor, unavailable, opts.trust);
+    if (slots.every((s) => s.pick)) {
+      return { distributor, fallback: distributor !== order[0], slots };
+    }
     const strength = stackStrength(slots);
     if (!best || stronger(strength, best.strength)) best = { distributor, slots, strength };
   }
   const empty = !best || best.strength[0] === 0;
-  return { distributor: empty ? null : best.distributor, slots: best.slots };
+  return { distributor: empty ? null : best.distributor, fallback: !empty && best.distributor !== order[0], slots: best.slots };
 }
 
 /** Кандидатите за жива проверка: първите N на всяко място — за всеки доставчик. */

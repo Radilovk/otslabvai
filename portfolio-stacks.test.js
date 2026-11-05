@@ -99,6 +99,30 @@ describe('portfolio-stacks', () => {
     expect(pickStackVariant({ variants: [{ ...mg.group.variants[0], retail_price: 200 }] })).toBeNull();
   });
 
+  test('Fitness1 е приоритет, дори Sila да има по-висок марж; Sila — само ако Fitness1 не е пълен', () => {
+    const f1 = [
+      product('L-Carnitine 1000 mg', 'Biotech USA', { b2b: 8.5, retail: 12, ref: 13 }),
+      product('Chromium Picolinate', 'Biotech USA', { b2b: 4.4, retail: 6, ref: 7 }),
+      product('Milk Thistle', 'Biotech USA', { b2b: 6.5, retail: 9, ref: 10 }),
+    ];
+    const sila = [
+      product('L-Carnitine 500 mg', 'NOW Foods', { b2b: 3, retail: 11, ref: 12, distributor: 'sila' }),
+      product('Chromium Picolinate 200', 'NOW Foods', { b2b: 1, retail: 6, ref: 7, distributor: 'sila' }),
+      product('Milk Thistle 300', 'NOW Foods', { b2b: 2, retail: 9, ref: 10, distributor: 'sila' }),
+    ];
+    const { index, getGroup } = catalog([...f1, ...sila]);
+    let res = resolveStack(index, 'slim', getGroup);
+    expect(res.distributor).toBe('fitness1');
+    expect(res.fallback).toBe(false);
+
+    res = resolveStack(index, 'slim', getGroup, { unavailable: new Set([f1[2].group.variants[0].sku_id]) });
+    expect(res.distributor).toBe('sila');
+    expect(res.fallback).toBe(true);
+
+    res = resolveStack(index, 'slim', getGroup, { preferred: 'sila' });
+    expect(res.distributor).toBe('sila');
+  });
+
   test('целият пакет е от един доставчик — никога Sila + Fitness1', () => {
     // Fitness1 има най-добрите продукти за 2 места, Sila — пълен пакет.
     const f1Carn = product('L-Carnitine 1000 mg', 'NOW Foods', { b2b: 4, retail: 12, ref: 13 });

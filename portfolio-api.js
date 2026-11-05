@@ -1392,6 +1392,9 @@ async function handleSaveSettings(request, env) {
     // Доверие към марка за готовите стакове: { "NOW Foods": 1, "Марка": 0.85 }.
     stack_brand_trust: incoming.stack_brand_trust && typeof incoming.stack_brand_trust === 'object'
       ? incoming.stack_brand_trust : current.stack_brand_trust,
+    // Приоритетен доставчик за пакетите: 'fitness1' (по подразбиране) или 'sila'.
+    stack_preferred_distributor: ['fitness1', 'sila'].includes(incoming.stack_preferred_distributor)
+      ? incoming.stack_preferred_distributor : current.stack_preferred_distributor,
     pricing_policy: incoming.pricing_policy
       ? { ...current.pricing_policy, ...incoming.pricing_policy }
       : current.pricing_policy,
@@ -1616,7 +1619,9 @@ async function handleGetStacks(request, env) {
 
   const stacks = ids.map((id) => {
     // Целият пакет е от един доставчик; кой — не излиза към клиента.
-    const resolved = resolveStack(listed, id, getGroup, { unavailable, trust });
+    const resolved = resolveStack(listed, id, getGroup, {
+      unavailable, trust, preferred: settings?.stack_preferred_distributor,
+    });
     const slots = resolved.slots.map(({ slot, pick, primary }) => ({
       id: slot.id,
       title: slot.title,
