@@ -1089,3 +1089,26 @@ export function liveCheckCandidates(index, stackId, getGroup, opts = {}) {
   }
   return rows;
 }
+
+/**
+ * Заместители за едно място в пакета — за замяната с един клик в количката.
+ * Подредени както при сглобяването (праг → сила → марж → елит и цена → резерва).
+ * Само от `distributor` (доставчикът на останалите продукти от пакета — пакетът не се смесва),
+ * без изчерпаните SKU-та и без продуктите, които вече са в пакета.
+ * @param {object[]} index
+ * @param {string} stackId
+ * @param {string} slotId
+ * @param {(groupId: string) => object|null} getGroup
+ * @param {{ distributor?: string|null, excludeGroups?: Set<string>, excludeSkus?: Set<string>, trust?: object|null }} [opts]
+ * @returns {Array<any>}
+ */
+export function slotReplacementCandidates(index, stackId, slotId, getGroup, opts = {}) {
+  const slot = STACK_RULES[stackId]?.slots.find((s) => s.id === slotId);
+  if (!slot) return [];
+  const excludeSkus = opts.excludeSkus || new Set();
+  return rankSlotCandidates(index, slot, getGroup, {
+    exclude: opts.excludeGroups || new Set(),
+    trust: opts.trust,
+    distributor: opts.distributor || null,
+  }).filter((c) => !excludeSkus.has(String(c.variant.sku_id)));
+}

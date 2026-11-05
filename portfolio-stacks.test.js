@@ -1,6 +1,7 @@
 import {
   STACK_IDS, STACK_RULES, resolveStack, rankSlotCandidates, variantValue, brandTrust,
   pickStackVariant, isStackUnfitPack, stackCandidateGroupIds, parseDose, potencyScore, stackProof,
+  slotReplacementCandidates,
 } from './portfolio-stacks.js';
 import { STACK_CONTENT, STACK_ORDER } from './portfolio-stacks-content.js';
 
@@ -198,5 +199,31 @@ describe('portfolio-stacks', () => {
       'Елитна марка — фармацевтичен стандарт',
     ]);
     expect(stackProof('coq10', 'Liposomal Coenzyme Q10 100 mg', 'MagHerbs')[2]).toMatch(/Премиум/);
+  });
+
+  test('замяна в количката: същото място, същият доставчик, без изчерпаното и без продуктите от пакета', () => {
+    const forcelab = product('Ashwagandha KSM-66 300 mg', 'Forcelab', { b2b: 12, retail: 22.4, ref: 24 });
+    const trec = product('Ashwagandha KSM-66 200 mg', 'Trec Nutrition', { b2b: 6, retail: 11, ref: 12 });
+    const silaAsh = product('Ashwagandha KSM-66 600 mg', 'NOW Foods', { b2b: 10, retail: 25, ref: 27, distributor: 'sila' });
+    const rhodiola = product('Rhodiola Rosea 500 mg', 'Olimp Sport Nutrition', { b2b: 9, retail: 18, ref: 19 });
+    const { index, getGroup } = catalog([forcelab, trec, silaAsh, rhodiola]);
+
+    const list = slotReplacementCandidates(index, 'antistress', 'cortisol', getGroup, {
+      distributor: 'fitness1',
+      excludeSkus: new Set([forcelab.group.variants[0].sku_id]),
+      excludeGroups: new Set([forcelab.entry.group_id]),
+    });
+    const ids = list.map((c) => c.entry.group_id);
+    expect(ids).not.toContain(forcelab.entry.group_id);
+    expect(ids).not.toContain(silaAsh.entry.group_id); // друг доставчик — пакетът не се смесва
+    expect(ids[0]).toBe(trec.entry.group_id); // същото вещество първо
+    expect(ids).toContain(rhodiola.entry.group_id); // после заместващото вещество
+
+    // Продукт, който вече е в пакета, не се предлага.
+    const without = slotReplacementCandidates(index, 'antistress', 'cortisol', getGroup, {
+      distributor: 'fitness1', excludeGroups: new Set([forcelab.entry.group_id, trec.entry.group_id]),
+    });
+    expect(without[0].entry.group_id).toBe(rhodiola.entry.group_id);
+    expect(slotReplacementCandidates(index, 'antistress', 'no-such-slot', getGroup)).toEqual([]);
   });
 });
