@@ -1701,6 +1701,65 @@ async function buildStacksBody(env, ids, { live = true } = {}) {
 }
 
 /**
+ * GET /portfolio/stacks/audit?id=<пакет> — САМО за админ: за всяко място първите кандидати
+ * (при всеки доставчик) с клас на марката, сила, марж и цена при доставчика — за да се провери изборът.
+ */
+async function handleStacksAudit(request, env) {
+  const url = new URL(request.url);
+  const one = String(url.searchParams.get('id') || '').trim().toLowerCase();
+  const ids = one && STACK_IDS.includes(one) ? [one] : STACK_IDS;
+  const meta = await getMeta(env);
+  if (!meta) throw new PortfolioError('Каталогът не е синхронизиран.', 404);
+  const settings = await getSettings(env);
+  const trust = settings?.stack_brand_trust || null;
+  const preferred = settings?.stack_preferred_distributor === 'sila' ? 'sila' : 'fitness1';
+  const listed = (meta.index || []).filter((e) => e.available && isCatalogListed(e));
+  const groupIds = new Set();
+  for (const id of ids) for (const gid of stackCandidateGroupIds(listed, id)) groupIds.add(gid);
+  const groups = await loadPortfolioGroupsByIds(env, [...groupIds]);
+  const getGroup = (gid) => groups.get(String(gid)) || null;
+  const round = (n) => Math.round(n * 100) / 100;
+
+  const stacks = ids.map((id) => {
+    const resolved = resolveStack(listed, id, getGroup, { trust, preferred });
+    return {
+      id,
+      distributor: resolved.distributor,
+      slots: STACK_RULES[id].slots.map((slot, i) => ({
+        id: slot.id,
+        title: slot.title,
+        picked_sku: resolved.slots[i]?.pick ? String(resolved.slots[i].pick.variant.sku_id) : null,
+        candidates: ['fitness1', 'sila'].flatMap((distributor) => slotReplacementCandidates(listed, id, slot.id, getGroup, { distributor, trust })
+          .slice(0, 6)
+          .map((c) => {
+            const retail = Number(c.variant.retail_price) || 0;
+            const b2b = Number(c.variant.b2b_price) || 0;
+            const official = Number(c.variant.f1_reference_price) || 0;
+            return {
+              distributor,
+              substance: c.option.label,
+              brand: c.entry.brand,
+              brand_tier: c.quality,
+              name: c.entry.name,
+              pack: c.variant.pack,
+              sku_id: String(c.variant.sku_id),
+              retail_price: retail,
+              b2b_price: b2b,
+              official_price: official,
+              margin_eur: round(retail - b2b),
+              margin_pct: retail > 0 ? round(((retail - b2b) / retail) * 100) : 0,
+              margin_vs_official_pct: round((c.rel || 0) * 100),
+              potency: round(c.potency || 0),
+              band: c.band,
+            };
+          })),
+      })),
+    };
+  });
+  return jsonResponse({ preferred, stacks, synced_at: meta.synced_at }, 200, { 'Cache-Control': 'no-store' });
+}
+
+/**
  * POST /portfolio/stacks/replace — замяна с един клик в количката.
  * Тяло: { stack_id, slot_id, unavailable_sku_ids: [...], keep_sku_ids: [...] }
  *  - keep_sku_ids: другите продукти от същия пакет в количката — заместителят е от ТЕХНИЯ доставчик
@@ -2944,6 +3003,9 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     }
     if (path === '/portfolio/stacks' && method === 'GET') {
       return await handleGetStacks(request, env, ctx);
+    }
+    if (path === '/portfolio/stacks/audit' && method === 'GET') {
+      return await handleStacksAudit(request, env);
     }
     if (path === '/portfolio/stacks/replace' && method === 'POST') {
       return await handleStackReplace(request, env);

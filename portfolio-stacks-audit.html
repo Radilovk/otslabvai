@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="bg" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://biocode-bg.com/stacks-audit.html">
+    <title>Пакети — справка за марки и марж | BIOCODE админ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      :root { --ink: #0f2540; --muted: #4b5f72; --line: #dfe7ee; --bg: #f7f9fb; --pick: #00a8ac; --pick-soft: #e3f7f7; --warn: #b45309; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Manrope, system-ui, sans-serif; color: var(--ink); background: var(--bg); }
+      main { max-width: 1180px; margin: 0 auto; padding: 16px; }
+      h1 { font-size: 1.35rem; margin: .5rem 0 .25rem; }
+      .lead { color: var(--muted); margin: 0 0 1rem; font-size: .92rem; line-height: 1.5; }
+      .bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: 1rem; }
+      select, button { font: inherit; padding: .5rem .75rem; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
+      .legend { display: flex; flex-wrap: wrap; gap: .4rem .9rem; font-size: .8rem; color: var(--muted); margin-bottom: 1rem; }
+      .stack { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 16px; }
+      .stack h2 { font-size: 1.1rem; margin: 0 0 .5rem; }
+      .slot h3 { font-size: .92rem; margin: .9rem 0 .4rem; }
+      .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: .82rem; }
+      th, td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+      td.name { white-space: normal; min-width: 220px; }
+      th { color: var(--muted); font-weight: 700; font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; }
+      tr.picked td { background: var(--pick-soft); font-weight: 700; }
+      tr.picked td:first-child { box-shadow: inset 3px 0 0 var(--pick); }
+      .tier { display: inline-block; min-width: 2.6em; text-align: center; padding: .05rem .35rem; border-radius: 6px; font-weight: 800; }
+      .t1 { background: #d1fae5; } .t2 { background: #e0f2fe; } .t3 { background: #f1f5f9; } .t4 { background: #fee2e2; }
+      .band-reserve { color: var(--warn); }
+      .note { padding: .8rem 1rem; border-radius: 10px; background: #fff7ed; color: #7c2d12; font-size: .88rem; }
+      .num { text-align: right; font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Готови пакети — справка за марки и марж</h1>
+    <p class="lead">За всяко място: първите кандидати при всеки доставчик, в реда, в който ги подрежда системата. Маркираният ред е избраният в момента. Маржът е по реалните доставни цени — тази страница е само за администратора.</p>
+    <div class="bar">
+        <select id="stack-filter" aria-label="Пакет"><option value="">Всички пакети</option></select>
+        <button type="button" id="reload">Обнови</button>
+        <span id="meta" class="lead" style="margin:0"></span>
+    </div>
+    <div class="legend">
+        <span><span class="tier t1">1</span> водеща международна марка</span>
+        <span><span class="tier t2">0.8–0.85</span> утвърдена марка</span>
+        <span><span class="tier t3">0.6–0.7</span> масова / местна марка</span>
+        <span><span class="tier t4">&lt;0.6</span> бюджетна (само резерва)</span>
+        <span>Сила: 0–1 (доза и форма от името)</span>
+        <span>„Спрямо цената при доставчика“ — маржът като % от цената в неговия магазин</span>
+    </div>
+    <div id="out"><p class="lead">Зареждане…</p></div>
+</main>
+<script type="module">
+  import { API_URL } from './config.js';
+  import { STACK_CONTENT, STACK_ORDER } from './portfolio-stacks-content.js';
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const eur = (n) => `${Number(n || 0).toFixed(2)} €`;
+  const tierCls = (t) => (t >= 1 ? 't1' : t >= 0.8 ? 't2' : t >= 0.6 ? 't3' : 't4');
+  const BAND = { elite: 'елит', strong: 'силен', reserve: 'резерва' };
+  const DIST = { fitness1: 'Fitness1', sila: 'Sila' };
+
+  function token() {
+    try {
+      return localStorage.getItem('admin_auth_token') || sessionStorage.getItem('admin_auth_token') || '';
+    } catch { return ''; }
+  }
+
+  for (const id of STACK_ORDER) {
+    const o = document.createElement('option');
+    o.value = id;
+    o.textContent = STACK_CONTENT[id]?.name || id;
+    $('stack-filter').appendChild(o);
+  }
+
+  function renderSlot(slot) {
+    const rows = slot.candidates.map((c) => `
+      <tr class="${c.sku_id === slot.picked_sku ? 'picked' : ''}">
+        <td>${DIST[c.distributor] || c.distributor}</td>
+        <td>${esc(c.substance)}</td>
+        <td><span class="tier ${tierCls(c.brand_tier)}">${c.brand_tier}</span> ${esc(c.brand)}</td>
+        <td class="name">${esc(c.name)}${c.pack ? ` · ${esc(c.pack)}` : ''}</td>
+        <td class="num">${eur(c.retail_price)}</td>
+        <td class="num">${eur(c.b2b_price)}</td>
+        <td class="num">${eur(c.margin_eur)}</td>
+        <td class="num">${c.margin_pct}%</td>
+        <td class="num">${c.official_price ? `${c.margin_vs_official_pct}%` : '—'}</td>
+        <td class="num">${c.potency}</td>
+        <td class="band-${c.band}">${BAND[c.band] || c.band}</td>
+      </tr>`).join('');
+    return `<div class="slot"><h3>${esc(slot.title)}</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Доставчик</th><th>Вещество</th><th>Марка</th><th>Продукт</th><th class="num">Цена</th><th class="num">Доставна</th>
+        <th class="num">Марж €</th><th class="num">Марж %</th><th class="num">Спрямо цената при доставчика</th><th class="num">Сила</th><th>Група</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="11">Няма кандидати.</td></tr>'}</tbody>
+      </table></div></div>`;
+  }
+
+  async function load() {
+    const t = token();
+    if (!t) {
+      $('out').innerHTML = '<p class="note">Влезте в <a href="admin.html">админ панела</a> (с „Запомни ме“) и отворете тази страница отново.</p>';
+      return;
+    }
+    $('out').innerHTML = '<p class="lead">Зареждане…</p>';
+    const id = $('stack-filter').value;
+    try {
+      const res = await fetch(`${API_URL}/portfolio/stacks/audit${id ? `?id=${id}` : ''}`, { headers: { Authorization: `Bearer ${t}` } });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Грешка ${res.status}`);
+      $('meta').textContent = `Приоритетен доставчик: ${DIST[data.preferred]} · каталог от ${new Date(data.synced_at).toLocaleString('bg-BG')}`;
+      $('out').innerHTML = data.stacks.map((s) => `
+        <section class="stack">
+          <h2>${esc(STACK_CONTENT[s.id]?.name || s.id)} — ${esc(STACK_CONTENT[s.id]?.goal || '')} · избран доставчик: ${DIST[s.distributor] || '—'}</h2>
+          ${s.slots.map(renderSlot).join('')}
+        </section>`).join('');
+    } catch (e) {
+      $('out').innerHTML = `<p class="note">${esc(e.message)}. Ако сесията е изтекла — влезте отново в <a href="admin.html">админ панела</a>.</p>`;
+    }
+  }
+
+  $('stack-filter').addEventListener('change', load);
+  $('reload').addEventListener('click', load);
+  load();
+</script>
+</body>
+</html>

@@ -577,7 +577,7 @@ export const STACK_RULES = {
           {
             key: 'ashwagandha', label: 'Ашваганда KSM-66',
             why: 'Адаптоген, който в изследвания понижава кортизола и усещането за стрес.',
-            rule: { ...ref('ashwagandha'), avoid: /shilajit|tribulus|maca|ginseng|sleep|melatonin|sport/i, prefer: /ksm|sensoril/i },
+            rule: { ...ref('ashwagandha'), avoid: /shilajit|tribulus|maca|ginseng|sleep|melatonin/i, prefer: /ksm|sensoril/i },
           },
           {
             key: 'rhodiola', label: 'Родиола (златен корен)',
@@ -633,30 +633,33 @@ export const STACK_RULES = {
 export const STACK_IDS = Object.keys(STACK_RULES);
 
 /**
- * Клас на марката (елитност и качество), 0–1:
- *  1    — елит: фармацевтичен стандарт, клинични дози, независим контрол (NOW, Doctor's Best, Natrol…);
- *  0.85 — премиум: европейски GMP производители, патентовани форми (Olimp, Nutrend, MagHerbs…);
- *  0.65 — масови спортни марки;
+ * Клас на марката, 0–1. Критерий: утвърден производител с дълга история и собствено
+ * производство, а не местна марка със собствен етикет на чужд продукт.
+ *  1    — водещи международни марки за хранителни добавки (NOW Foods, Doctor's Best, Natrol, Optimum Nutrition…);
+ *  0.8–0.85 — утвърдени производители (Olimp, Nutrend, Applied Nutrition, Universal…);
+ *  0.7  — големи масови спортни марки (Scitec, BioTech USA, MyProtein…);
+ *  0.6  — местни и по-малко известни марки (MagHerbs, Swedish Nutra, Grewia, Trec…) — праг за пакет;
  *  0.35 — бюджетни марки; непозната марка — 0.45.
  * Админът го променя с настройката `stack_brand_trust` ({ "Марка": 0.9 }).
  */
 export const BRAND_TIER = {
   'now foods': 1, now: 1, "doctor's best": 1, 'life extension': 1, 'jarrow formulas': 1, solgar: 1, thorne: 1,
-  'nordic naturals': 1, natrol: 1, osavi: 1, 'optimum nutrition': 1, 'swedish nutra': 1, 'swedish collagen': 1,
-  'garden of life': 1,
-  'olimp sport nutrition': 0.85, olimp: 0.85, nutrend: 0.85, magherbs: 0.85, biovea: 0.85, 'holland and barrett': 0.85,
-  biovital: 0.85, forcelab: 0.85, grassberg: 0.85, 'applied nutrition': 0.85, 'yava labs': 0.85,
-  'gaspari nutrition': 0.85, 'universal nutrition': 0.85,
-  'trec nutrition': 0.65, 'biotech usa': 0.65, scitec: 0.65, myprotein: 0.65, 'extrifit sports nutrition': 0.65,
-  ostrovit: 0.65, 'kevin levrone': 0.65, vplab: 0.65, everbuild: 0.65, grewia: 0.65, freelife: 0.65,
-  'swedish essentials': 0.65, 'swedish supplements': 0.65, allnutrition: 0.65, cellucor: 0.65, mutant: 0.65,
-  'core champs by kai greene': 0.6,
+  'nordic naturals': 1, natrol: 1, 'garden of life': 1, 'optimum nutrition': 1, 'source naturals': 1,
+  "nature's way": 1, 'california gold nutrition': 1,
+  'olimp sport nutrition': 0.85, olimp: 0.85, nutrend: 0.85, 'applied nutrition': 0.85,
+  'holland and barrett': 0.8, 'universal nutrition': 0.8, muscletech: 0.75, 'gaspari nutrition': 0.75,
+  scitec: 0.7, 'biotech usa': 0.7, myprotein: 0.7, cellucor: 0.7,
+  magherbs: 0.6, 'swedish nutra': 0.6, 'swedish collagen': 0.6, osavi: 0.6, biovea: 0.6, grassberg: 0.6,
+  forcelab: 0.6, 'yava labs': 0.6, biovital: 0.6, grewia: 0.6, 'trec nutrition': 0.6, ostrovit: 0.6,
+  'extrifit sports nutrition': 0.6, 'kevin levrone': 0.6, vplab: 0.6, everbuild: 0.6, freelife: 0.6,
+  'swedish essentials': 0.6, 'swedish supplements': 0.6, allnutrition: 0.6, mutant: 0.6,
+  'core champs by kai greene': 0.55,
   bioherba: 0.35, 'haya labs': 0.35, kfd: 0.35, battery: 0.35, vemoherb: 0.35, 'natura vita': 0.35,
   naturalico: 0.35, celipharm: 0.35, 'biliana yotovska': 0.35, 'cvetita herbal': 0.35,
 };
 export const DEFAULT_BRAND_TIER = 0.45;
-/** Марка от този клас нагоре се показва като „премиум марка“. */
-export const PREMIUM_BRAND_TIER = 0.85;
+/** От този клас нагоре марката се показва на клиента като „утвърдена марка“. */
+export const PREMIUM_BRAND_TIER = 0.8;
 /** @deprecated старото име */
 export const DEFAULT_BRAND_TRUST = DEFAULT_BRAND_TIER;
 
@@ -804,8 +807,9 @@ export function stackProof(optionKey, name, brand, trustOverrides = null) {
   const form = FORM_LABELS.find(([re]) => re.test(String(name || '')));
   if (form) out.push(form[1]);
   const tier = brandTrust(brand, trustOverrides);
-  if (tier >= 1) out.push('Елитна марка — фармацевтичен стандарт');
-  else if (tier >= PREMIUM_BRAND_TIER) out.push('Премиум марка — GMP производство');
+  // Само проверимо: класът на марката, без твърдения за производство или сертификати.
+  if (tier >= 1) out.push('Водеща международна марка');
+  else if (tier >= PREMIUM_BRAND_TIER) out.push('Утвърдена марка');
   return out.slice(0, 3);
 }
 
@@ -820,11 +824,14 @@ export const VALUE_WEIGHTS = { relative: 0.65, absolute: 0.35 };
 /** Сила на действие: в силната група влизат продуктите до толкова под най-силния. */
 export const POTENCY_BAND = 0.25;
 /** Праг за елит: марка поне от масовия клас и поне средна сила (иначе — само резерва). */
-export const ELITE_GATE = { brand: 0.6, potency: 0.6 };
+export const ELITE_GATE = { brand: 0.6, potency: 0.4 };
+/** Утвърдена марка: от този клас нагоре продуктите се подреждат преди местните марки. */
+export const SOLID_BRAND_TIER = 0.8;
 /** Висок марж: в групата влизат продуктите с поне толкова от най-високия относителен марж. */
 export const MARGIN_BAND = 0.75;
 /** Вътре в елитната група: тегла на марката и на цената. */
-export const PRESTIGE_WEIGHTS = { brand: 0.55, price: 0.45 };
+/** В групата с висок марж: тегла на марката, силата и цената. */
+export const PRESTIGE_WEIGHTS = { brand: 0.45, potency: 0.35, price: 0.2 };
 /** Колко кандидата на място се проверяват на живо при доставчика. */
 export const LIVE_BACKUPS_PER_SLOT = 4;
 
@@ -898,13 +905,13 @@ export function optionCandidates(index, option) {
 }
 
 /**
- * Подрежда кандидатите на едно вещество — три нива:
- *  0. Праг: марка поне ELITE_GATE.brand и сила поне ELITE_GATE.potency (иначе — резерва).
- *  1. Най-подходящи (tier 0) с най-силно действие (доза и форма, до POTENCY_BAND под най-силния).
- *  2. Сред тях — висок марж (поне MARGIN_BAND от най-високия марж спрямо цената при доставчика).
- *  3. В тази елитна група първи са по-скъпите продукти на елитни марки
- *     (PRESTIGE_WEIGHTS: марка 55%, цена 45%), при равенство — по-високият марж.
- * Останалите са резерва при изчерпване: подредени по марж, сила и марка.
+ * Подрежда кандидатите на едно вещество („солидна марка и голям марж“):
+ *  0. Праг: марка поне ELITE_GATE.brand, сила поне ELITE_GATE.potency (иначе — резерва).
+ *  1. Утвърдените марки (клас ≥ SOLID_BRAND_TIER) са преди местните — `solid`.
+ *  2. Във всяка от двете групи: висок марж — поне MARGIN_BAND от най-високия марж
+ *     спрямо цената при доставчика (`elite`); останалите от групата — `strong`.
+ *  3. В групата с висок марж: марка 45%, сила (доза и форма) 35%, цена 20%.
+ * Ред: утвърдени (elite → strong) → местни (elite → strong) → резерва.
  * @param {Array<{ entry: any, fit: number, tier?: number, group?: any, variant: any }>} rows
  * @param {object|null} trustOverrides
  * @param {string} [optionKey]
@@ -914,42 +921,54 @@ export function rankByValue(rows, trustOverrides = null, optionKey = '') {
   /** @type {any[]} */
   const scored = rows.map((r) => {
     const v = variantValue(r.variant);
+    const quality = brandTrust(r.entry.brand, trustOverrides);
+    const potency = potencyScore(optionKey, r.entry.name);
     return {
       ...r,
       rel: v.rel,
       abs: v.abs,
       price: Number(r.variant.retail_price) || 0,
-      potency: potencyScore(optionKey, r.entry.name),
-      quality: brandTrust(r.entry.brand, trustOverrides),
+      potency,
+      quality,
+      gated: quality >= ELITE_GATE.brand && potency >= ELITE_GATE.potency,
+      solid: quality >= SOLID_BRAND_TIER,
     };
   });
-  // Само минаващите прага за марка и сила могат да са в елитната група.
-  // Формата вече е в силата (potency), затова и продукти извън предпочитаната форма (tier 1) могат да минат.
-  const gated = scored.filter((r) => r.quality >= ELITE_GATE.brand && r.potency >= ELITE_GATE.potency);
-  const maxPot = Math.max(...gated.map((r) => r.potency), 0);
-  const strong = gated.filter((r) => r.potency >= maxPot - POTENCY_BAND);
-  const maxRelStrong = Math.max(...strong.map((r) => r.rel), 0);
-  const elite = strong.filter((r) => r.rel > 0 && r.rel >= MARGIN_BAND * maxRelStrong);
-  const maxPrice = Math.max(...elite.map((r) => r.price), 1e-9);
-  for (const r of elite) {
-    r.band = 'elite';
-    r.score = PRESTIGE_WEIGHTS.brand * r.quality + PRESTIGE_WEIGHTS.price * (r.price / maxPrice);
-  }
-  elite.sort((a, b) => b.score - a.score || b.rel - a.rel || String(a.entry.name).localeCompare(String(b.entry.name), 'bg'));
 
-  const rest = scored.filter((r) => !elite.includes(r));
+  const rankGroup = (list) => {
+    if (!list.length) return [];
+    const maxRel = Math.max(...list.map((r) => r.rel), 0);
+    const maxAbs = Math.max(...list.map((r) => r.abs), 1e-9);
+    const top = list.filter((r) => r.rel > 0 && r.rel >= MARGIN_BAND * maxRel);
+    const maxPrice = Math.max(...top.map((r) => r.price), 1e-9);
+    for (const r of list) {
+      if (top.includes(r)) {
+        r.band = 'elite';
+        r.score = PRESTIGE_WEIGHTS.brand * r.quality + PRESTIGE_WEIGHTS.potency * r.potency
+          + PRESTIGE_WEIGHTS.price * (r.price / maxPrice);
+      } else {
+        r.band = 'strong';
+        const margin = VALUE_WEIGHTS.relative * (maxRel > 0 ? r.rel / maxRel : 0) + VALUE_WEIGHTS.absolute * (r.abs / maxAbs);
+        r.score = 0.5 * margin + 0.3 * r.quality + 0.2 * r.potency;
+      }
+    }
+    const order = { elite: 0, strong: 1 };
+    return [...list].sort((a, b) => order[a.band] - order[b.band] || b.score - a.score || b.rel - a.rel
+      || String(a.entry.name).localeCompare(String(b.entry.name), 'bg'));
+  };
+
+  const solid = rankGroup(scored.filter((r) => r.gated && r.solid));
+  const local = rankGroup(scored.filter((r) => r.gated && !r.solid));
+  const rest = scored.filter((r) => !r.gated);
   const maxRel = Math.max(...rest.map((r) => r.rel), 1e-9);
   const maxAbs = Math.max(...rest.map((r) => r.abs), 1e-9);
   for (const r of rest) {
     const margin = VALUE_WEIGHTS.relative * (r.rel / maxRel) + VALUE_WEIGHTS.absolute * (r.abs / maxAbs);
-    // „strong“ — минава прага за марка и сила, но не е в групата на най-високия марж.
-    r.band = gated.includes(r) ? 'strong' : 'reserve';
+    r.band = 'reserve';
     r.score = 0.45 * margin + 0.3 * r.potency + 0.25 * r.quality;
   }
-  const bandOrder = { strong: 0, reserve: 1 };
-  rest.sort((a, b) => bandOrder[a.band] - bandOrder[b.band] || (a.tier || 0) - (b.tier || 0) || b.score - a.score
-    || String(a.entry.name).localeCompare(String(b.entry.name), 'bg'));
-  return [...elite, ...rest];
+  rest.sort((a, b) => b.score - a.score || String(a.entry.name).localeCompare(String(b.entry.name), 'bg'));
+  return [...solid, ...local, ...rest];
 }
 
 /**
@@ -976,13 +995,12 @@ export function rankSlotCandidates(index, slot, getGroup, opts = {}) {
       .filter(Boolean);
     for (const row of rankByValue(rows, opts.trust, option.key)) out.push({ option, ...row });
   }
-  // Първо всички продукти над прага (по реда на веществата: елит, после силни),
-  // едва после резервата — бюджетен продукт с основното вещество не изпреварва
-  // елитен продукт със заместителя.
-  const rank = { elite: 0, strong: 0, reserve: 1 };
+  // Утвърдените марки (по реда на веществата) → местните марки → резервата:
+  // утвърдена марка със заместващото вещество изпреварва местна марка с основното.
+  const rankOf = (row) => (row.band === 'reserve' ? 2 : row.solid ? 0 : 1);
   return out
     .map((row, i) => ({ row, i }))
-    .sort((a, b) => rank[a.row.band] - rank[b.row.band] || a.i - b.i)
+    .sort((a, b) => rankOf(a.row) - rankOf(b.row) || a.i - b.i)
     .map(({ row }) => row);
 }
 
