@@ -796,10 +796,37 @@ export function shouldSourceFromSila(f1Row, silaRow) {
   return silaB2b > 0 && f1B2b > 0 && silaB2b < f1B2b - 0.005;
 }
 
+/** Цената за клиента в магазина на доставчика: промо, ако е по-ниска, иначе редовната. */
+function shopCustomerPrice(row) {
+  const regular = parsePrice(row?.regular_price);
+  const sale = parsePrice(row?.sale_price);
+  if (sale > 0 && (regular <= 0 || sale < regular)) return sale;
+  return regular > 0 ? regular : 0;
+}
+
+/**
+ * Пазарната цена на продукт, който се продава и от двата доставчика (общ баркод), е
+ * НАЙ-НИСКАТА цена в техните магазини — клиентът ще намери продукта там, където е най-евтин,
+ * независимо от кого купуваме ние. Ако Sila продава по-евтино от Fitness1, цената на Sila
+ * влиза като sale_price (както промоция) — от нея се изчисляват нашата цена (под нея) и маржът.
+ * Редовната цена на Fitness1 остава за „стара цена“.
+ */
+export function applyLowestMarketPrice(f1Row, silaRow) {
+  const f1Price = shopCustomerPrice(f1Row);
+  const silaPrice = shopCustomerPrice(silaRow);
+  if (!(silaPrice > 0)) return f1Row;
+  if (f1Price > 0 && silaPrice >= f1Price - 0.005) return f1Row;
+  f1Row.sale_price = silaPrice.toFixed(2);
+  if (!(parsePrice(f1Row.regular_price) > 0)) f1Row.regular_price = silaRow.regular_price;
+  f1Row.market_price_source = DISTRIBUTOR_SILA;
+  return f1Row;
+}
+
 /**
  * Един каталог от двата доставчика, само по баркод:
  *  1. Общ баркод → един артикул (SKU на Fitness1), снабдяван от по-изгодния: наличен, после
- *     по-ниска доставна цена (shouldSourceFromSila).
+ *     по-ниска доставна цена (shouldSourceFromSila). Пазарната цена е най-ниската от двата
+ *     магазина (applyLowestMarketPrice).
  *  2. Модел на Sila, от който поне един баркод е във Fitness1 продукт → останалите му варианти
  *     (разфасовки/вкусове без общ баркод) влизат в същия продукт — една страница за клиента.
  *  3. Модел без общ баркод → отделен продукт (марката се изписва както при Fitness1).
@@ -837,6 +864,7 @@ export function mergeCatalogProducts(fitness1Products = [], silaProducts = []) {
     const bc = String(raw.barcode || '').trim();
     const f1Row = bc ? f1ByBarcode.get(bc) : null;
     if (f1Row) {
+      applyLowestMarketPrice(f1Row, raw);
       if (shouldSourceFromSila(f1Row, raw)) {
         Object.assign(f1Row, {
           distributor: DISTRIBUTOR_SILA,
