@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0}[hidden]{display:none!important}</style>
+<title>Тиреоиден хомеопатичен профил</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Commissioner:wght@400;500;600&display=swap">
+<style>
+/* Layout: една колона, един екран = една стъпка, големи зони за докосване */
+:root{
+ --bg:#f3f5f2;--paper:#ffffff;--ink:#1c2420;--muted:#5d6b64;--line:#d9e0db;
+ --accent:#2f6b5a;--accent-ink:#ffffff;--soft:#e6f0ec;
+ --warn:#fbf1dc;--warn-line:#e2c27c;--danger:#fbe9e5;--danger-line:#df9f92;
+ --display:"Literata",Georgia,serif;--body:"Commissioner",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --bg:#141a17;--paper:#1c2420;--ink:#e6ece8;--muted:#9aa9a1;--line:#2f3a35;
+ --accent:#7cc0a8;--accent-ink:#0f1613;--soft:#22322b;
+ --warn:#2e2816;--warn-line:#6f5a2a;--danger:#33201c;--danger-line:#7a3f34;color-scheme:dark}}
+:root[data-theme="dark"]{
+ --bg:#141a17;--paper:#1c2420;--ink:#e6ece8;--muted:#9aa9a1;--line:#2f3a35;
+ --accent:#7cc0a8;--accent-ink:#0f1613;--soft:#22322b;
+ --warn:#2e2816;--warn-line:#6f5a2a;--danger:#33201c;--danger-line:#7a3f34;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body)}
+.shell{max-width:640px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font:650 clamp(24px,5vw,30px)/1.15 var(--display);margin:0 0 6px;text-wrap:balance}
+.lead{color:var(--muted);margin:0 0 18px;font-size:15px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px}
+.prog{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px;font-variant-numeric:tabular-nums}
+.track{height:5px;background:var(--line);border-radius:9px;overflow:hidden;margin-bottom:20px}
+.fill{height:100%;background:var(--accent);transition:width .2s}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.group{display:grid;gap:8px;margin-top:18px}
+.group:first-of-type{margin-top:6px}
+.q{font:650 19px/1.3 var(--display);margin:4px 0 2px;text-wrap:balance}
+.hint{color:var(--muted);font-size:14px;margin:0 0 4px}
+.choice{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:11px;padding:12px 13px;cursor:pointer;background:var(--paper)}
+.choice:has(input:checked){border-color:var(--accent);background:var(--soft)}
+.choice input{accent-color:var(--accent);width:18px;height:18px;margin:2px 0 0;flex:none}
+.choice input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:4px}
+.fields label{font-size:12px;color:var(--muted);display:grid;gap:4px}
+.fields input{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font:inherit;background:var(--paper);color:var(--ink)}
+.nav{display:flex;gap:10px;margin-top:22px;align-items:center}
+.nav .sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:11px 18px;border-radius:10px;font:600 15px var(--body);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.err{color:#b03a2a;font-size:13px;min-height:18px;margin-top:8px}
+.alert{border:1px solid var(--warn-line);background:var(--warn);border-radius:11px;padding:12px 14px;font-size:14px;margin:0 0 10px}
+.alert.danger{border-color:var(--danger-line);background:var(--danger)}
+h2{font:650 21px/1.25 var(--display);margin:0 0 12px}
+h3{font:600 15px var(--body);margin:22px 0 8px;letter-spacing:.02em}
+.card{border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:10px}
+.card .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.card .name{font:650 17px var(--display)}
+.pts{font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.bar{height:4px;background:var(--line);border-radius:4px;margin:8px 0;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.card p,.card li{font-size:14px;color:var(--muted)}
+.card p{margin:4px 0}.card ul{margin:4px 0 0;padding-left:18px}
+dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:0;font-size:14px}
+dt{color:var(--muted)}dd{margin:0}
+.sec{margin-top:22px}
+.sec h3{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.sec h3::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--accent);flex:none}
+.rx{border:1px solid var(--accent);background:var(--soft);border-radius:11px;padding:14px}
+.rx .name{font:650 18px var(--display)}
+.rx .pot{font:600 15px var(--body);color:var(--accent);margin-top:2px}
+.items{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.items li{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.items li b{font-weight:600}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;padding:1px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted);margin-left:6px;vertical-align:1px}
+.tag.mod{border-color:var(--accent);color:var(--accent)}
+.note{font-size:13px;color:var(--muted);margin-top:14px}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+textarea#copySrc{width:100%;height:140px;margin-top:10px;font:13px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--ink);padding:9px}
+@media(max-width:480px){.fields{grid-template-columns:1fr 1fr}.panel{padding:16px}}
+@media(prefers-reduced-motion:reduce){.fill{transition:none}}
+</style>
+</head>
+<body>
+
+<main class="shell">
+ <h1>Хомеопатичен профил при автоимунен тиреоидит</h1>
+ <p class="lead">10 кратки стъпки, около 4 минути. Резултатът е готов протокол: хомеопатичен препарат с потенция и прием, хранене, добавки, психологически насоки, дневен режим и контрол. Хормоналното лечение се запазва без промяна.</p>
+
+ <section id="wizard" class="panel">
+  <div class="prog"><span id="pLabel"></span><span id="pPct"></span></div>
+  <div class="track"><div id="pFill" class="fill"></div></div>
+  <div id="area"></div>
+  <div class="nav">
+   <button id="back" class="btn" type="button">Назад</button>
+   <span class="sp"></span>
+   <button id="next" class="btn primary" type="button">Напред</button>
+  </div>
+  <div id="err" class="err" role="alert"></div>
+ </section>
+
+ <section id="results" class="panel" hidden>
+  <h2>Резултат</h2>
+  <div id="alerts"></div>
+  <h3>Съвпадения с Materia Medica</h3>
+  <div id="matches"></div>
+  <div id="protocol"></div>
+  <h3>Изходни данни</h3>
+  <div class="card"><dl id="params"></dl></div>
+  <p class="note">Хомеопатичната част следва класическите правила за избор на потенция (Organon, 6-то изд.; Kent). Добавките са с отбелязано ниво на доказателства. Точките при профилите показват съвпадение с описанията, не вероятност за ефект.</p>
+  <div class="actions">
+   <button id="copy" class="btn primary" type="button">Копирай обобщението</button>
+   <button id="restart" class="btn" type="button">Нов въпросник</button>
+  </div>
+  <div id="copyMsg" class="note" aria-live="polite"></div>
+  <textarea id="copySrc" readonly hidden></textarea>
+ </section>
+</main>
+
+<script>
+(() => {
+const screens = [
+ {eyebrow:'Диагноза', groups:[
+  {id:'diag',q:'Каква е поставената диагноза?',type:'radio',req:true,opts:[['hashimoto','Тиреоидит на Хашимото'],['graves','Болест на Грейвс'],['hypo','Хипотиреоидизъм без доказана автоимунна причина'],['nodules','Възли / гуша'],['unknown','Не знам / няма диагноза']]},
+  {id:'status',q:'Какви са последните изследвания?',hint:'Цифрите са по желание.',type:'radio',req:true,opts:[['eu','Нормална функция'],['hypo','Понижена функция (висок TSH)'],['hyper','Повишена функция (нисък TSH)'],['fluct','Колебаят се'],['unknown','Не знам']],
+   fields:[['tsh','TSH'],['ft4','FT4'],['tpo','Анти-TPO']]}
+ ]},
+ {eyebrow:'Лечение и давност', groups:[
+  {id:'meds',q:'Какво лекарство приемате за щитовидната жлеза?',type:'radio',req:true,opts:[['levo','Левотироксин (L-тироксин, Еутирокс)'],['thiam','Тиамазол / тиреостатик'],['other','Друго предписано'],['none','Нищо']]},
+  {id:'dur',q:'От колко време са оплакванията?',type:'radio',req:true,opts:[['lt3m','До 3 месеца'],['m3_12','3–12 месеца'],['y1_5','1–5 години'],['gt5','Над 5 години']]}
+ ]},
+ {eyebrow:'Безопасност', groups:[
+  {id:'flag',q:'Имате ли някое от следните в момента?',type:'radio',req:true,opts:[['none','Нищо от изброените'],['airway','Затруднено дишане или преглъщане'],['neck','Бързо растяща бучка на шията или нова дрезгавост'],['cardiac','Силно сърцебиене с болка в гърдите, прималяване или задух']]}
+ ]},
+ {eyebrow:'Общи белези', groups:[
+  {id:'thermal',q:'Как понасяте температурата?',type:'radio',req:true,opts:[['cold','Зиморничав(а) съм, често ми е студено'],['hot','Не понасям жега и задушни помещения'],['mixed','Ту ми е студено, ту горещо'],['neutral','Нищо особено']]},
+  {id:'weight',q:'Тегло и апетит?',type:'radio',req:true,opts:[['gain','Напълнявам лесно, усещам се забавен(а)'],['loss','Отслабвам, въпреки че ям много'],['variable','Колебае се'],['stable','Няма промяна']]}
+ ]},
+ {eyebrow:'Емоционално', groups:[
+  {id:'mind',q:'Кое ви описва най-точно?',hint:'До 2 отговора.',type:'multi',max:2,opts:[['grief','След скръб се затварям; утехата ме дразни'],['anxiety','Тревожа се за здравето си, търся сигурност'],['indiff','Изтощен(а) съм, отдалечавам се от близките'],['restless','Не мога да стоя на едно място'],['lowconf','Съмнявам се в себе си, но го прикривам с рязкост'],['slow','Мисленето ми е бавно, като в мъгла'],['none','Нищо от изброените']]}
+ ]},
+ {eyebrow:'Характерни белези', groups:[
+  {id:'signs',q:'Кое от тези се отнася ясно за вас?',hint:'До 3 отговора. Изберете само изразените.',type:'multi',max:3,opts:[['headsweat','Потя се по главата, особено нощем'],['eggs','Силно желание за яйца'],['salt','Силно желание за солено'],['sun','Главоболие от слънце'],['pelvic','Тежест / придърпване ниско в корема'],['throat','Стягане в гърлото, не понасям нищо около врата'],['bloat','Подуване и газове, по-лошо следобед (16–20 ч.)'],['dry','Суха кожа, подпухналост, мудност'],['none','Нищо от изброените']]}
+ ]},
+ {eyebrow:'Какво помага', groups:[
+  {id:'mods',q:'Кое ясно подобрява състоянието ви?',hint:'До 2 отговора.',type:'multi',max:2,opts:[['exercise','Активно движение'],['warmth','Топлина'],['coolair','Хладен въздух'],['rest','Почивка'],['alone','Да съм сам(а)'],['consol','Утеха и подкрепа'],['none','Нищо ясно']]}
+ ]},
+ {eyebrow:'Реактивност', groups:[
+  {id:'react',q:'Колко силно реагирате на лекарства, кафе, миризми?',type:'radio',req:true,opts:[['high','Силно — малка доза ме „удря“'],['mid','Обичайно'],['low','Слабо — почти нищо не ми действа'],['unknown','Не знам']]},
+  {id:'prior',q:'Приемали ли сте хомеопатия преди?',type:'radio',req:true,opts:[['helped','Да, с подобрение'],['aggr','Да, с временно влошаване'],['noeff','Да, без ефект'],['never','Не']]}
+ ]},
+ {eyebrow:'Съпътстващи', groups:[
+  {id:'comorb',q:'Има ли установено някое от следните?',hint:'Само доказани с изследване.',type:'multi',opts:[['celiac','Цьолиакия'],['b12','Нисък B12 / автоимунен гастрит'],['iron','Нисък феритин / желязо'],['vitd','Нисък витамин D'],['otherauto','Друго автоимунно заболяване'],['none','Нищо / не е изследвано']]},
+  {id:'preg',q:'Бременност?',type:'radio',req:true,opts:[['na','Не е приложимо'],['plan','Планирам'],['preg','Бременна съм / кърмя']]}
+ ]},
+ {eyebrow:'Добавки и навици', groups:[
+  {id:'supps',q:'Какво приемате в момента?',type:'multi',opts:[['se','Селен'],['d3','Витамин D'],['iod','Йод / водорасли / келп'],['biotin','Биотин (или „за коса и нокти“)'],['ashwa','Ашваганда'],['ca_fe','Калций, желязо или магнезий'],['none','Нищо']]},
+  {id:'habits',q:'Кое се отнася за вас?',type:'multi',opts:[['smoke','Пуша'],['coffee','Пия кафе до час след хапчето'],['sleep','Спя под 7 часа'],['sedentary','Движа се малко'],['none','Нищо от изброените']]}
+ ]}
+];
+
+const profiles = [
+ {name:'Calcarea carbonica',desc:'Зиморничавост, изпотяване на главата нощем, забавен метаболизъм, желание за яйца, тревожност за здравето.',w:[['thermal','cold',1.2],['weight','gain',1.2],['mind','anxiety',1.5],['signs','headsweat',2],['signs','eggs',1.5],['mods','warmth',.6],['mods','consol',.5]]},
+ {name:'Natrum muriaticum',desc:'Затваряне след скръб, отказ от утеха, желание за сол, главоболие от слънце, сухота.',w:[['mind','grief',2],['signs','salt',2],['signs','sun',1.5],['mods','alone',1.5],['thermal','hot',.6]]},
+ {name:'Sepia officinalis',desc:'Изтощение и дистанция към близките, тазова тежест, хормонални смущения, ясно подобрение от движение.',w:[['mind','indiff',2],['signs','pelvic',2],['mods','exercise',2],['thermal','cold',.6]]},
+ {name:'Iodum',desc:'Непоносимост към топлина, неспокойствие, отслабване при силен апетит, подобрение на хладно.',w:[['thermal','hot',1.5],['weight','loss',2.5],['mind','restless',1.5],['mods','coolair',1.2]]},
+ {name:'Lycopodium clavatum',desc:'Подуване и газове с влошаване 16–20 ч., несигурност, прикрита с рязкост.',w:[['mind','lowconf',2],['signs','bloat',2.2],['weight','variable',.5]]},
+ {name:'Thyroidinum',desc:'Мудност, забавено мислене, суха кожа, подпухналост, зиморничавост.',w:[['mind','slow',1.5],['signs','dry',1.5],['thermal','cold',.7],['weight','gain',.7]]},
+ {name:'Spongia tosta',desc:'Стягане и притискане в областта на шията, непоносимост към нещо около врата.',w:[['signs','throat',2.5],['mods','warmth',.4]]}
+];
+
+const A = {}; let step = 0;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const allGroups = screens.flatMap(s=>s.groups);
+const label = (gid,v) => allGroups.find(g=>g.id===gid)?.opts.find(o=>o[0]===v)?.[1] ?? v;
+const has = (gid,v) => Array.isArray(A[gid]) ? A[gid].includes(v) : A[gid]===v;
+
+function render(){
+ const s = screens[step], n = screens.length;
+ $('pLabel').textContent = `Стъпка ${step+1} от ${n}`;
+ $('pPct').textContent = Math.round((step+1)/n*100)+'%';
+ $('pFill').style.width = ((step+1)/n*100)+'%';
+ $('back').disabled = step===0;
+ $('next').textContent = step===n-1 ? 'Покажи резултата' : 'Напред';
+ $('err').textContent = '';
+ let h = `<div class="eyebrow">${esc(s.eyebrow)}</div>`;
+ s.groups.forEach(g=>{
+  h += `<div class="group" data-g="${g.id}"><div class="q">${esc(g.q)}</div>${g.hint?`<p class="hint">${esc(g.hint)}</p>`:''}`;
+  g.opts.forEach(([v,l])=>{
+   const t = g.type==='multi'?'checkbox':'radio';
+   h += `<label class="choice"><input type="${t}" id="${g.id}_${v}" name="${g.id}" value="${v}" ${has(g.id,v)?'checked':''}><span>${esc(l)}</span></label>`;
+  });
+  if(g.fields){ h+='<div class="fields">'+g.fields.map(([id,l])=>`<label>${esc(l)}<input id="${id}" inputmode="decimal" value="${esc(A[id]||'')}"></label>`).join('')+'</div>'; }
+  h += '</div>';
+ });
+ $('area').innerHTML = h;
+ s.groups.forEach(g=>{
+  $('area').querySelectorAll(`input[name="${g.id}"]`).forEach(el=>el.addEventListener('change',()=>{
+   if(g.type==='radio'){ A[g.id]=el.value; return; }
+   const boxes=[...$('area').querySelectorAll(`input[name="${g.id}"]`)];
+   if(el.checked && el.value==='none') boxes.forEach(b=>{ if(b!==el) b.checked=false; });
+   else if(el.checked) boxes.forEach(b=>{ if(b.value==='none') b.checked=false; });
+   let vals=boxes.filter(b=>b.checked).map(b=>b.value);
+   if(g.max && vals.length>g.max){ el.checked=false; vals=vals.filter(v=>v!==el.value); $('err').textContent=`Най-много ${g.max} отговора.`; }
+   else $('err').textContent='';
+   A[g.id]=vals;
+  }));
+  (g.fields||[]).forEach(([id])=>$(id).addEventListener('input',e=>A[id]=e.target.value.trim()));
+ });
+}
+function valid(){ return screens[step].groups.every(g=>!g.req || A[g.id]); }
+$('back').onclick=()=>{ if(step>0){step--;render();} };
+$('next').onclick=()=>{
+ if(!valid()){ $('err').textContent='Изберете отговор, за да продължите.'; return; }
+ if(step<screens.length-1){ step++; render(); window.scrollTo({top:0}); } else show();
+};
+
+function alerts(){
+ const a=[];
+ if(A.flag==='airway') a.push(['danger','Затруднено дишане или преглъщане — спешен преглед; при влошаване 112.']);
+ if(A.flag==='cardiac') a.push(['danger','Сърцебиене с болка в гърдите или прималяване — спешна оценка; 112.']);
+ if(A.flag==='neck') a.push(['danger','Бързо растяща бучка или нова дрезгавост — ехография и преглед при ендокринолог в кратък срок.']);
+ if(A.status==='hyper' || has('weight','loss') && A.thermal==='hot') a.push(['warn','Белезите съвпадат с повишена функция — препоръчително е TSH, FT4, FT3 преди да се започне каквото и да е.']);
+ if(A.meds==='levo' || A.meds==='thiam') a.push(['warn','Хомеопатичният прием върви успоредно; дозата на хормоналното лечение се коригира само по TSH/FT4 от лекуващия лекар.']);
+ return a;
+}
+function buildProtocol(ranked){
+ const ev=l=>` <span class="tag ${l==='умерени'?'mod':''}">доказателства: ${l}</span>`;
+ const c=v=>has('comorb',v), sp=v=>has('supps',v), hb=v=>has('habits',v), md=v=>has('mind',v);
+ const onLevo=A.meds==='levo', onThiam=A.meds==='thiam';
+ const tpoPos=A.tpo && parseFloat(String(A.tpo).replace(',','.'))>34;
+ const hashi=A.diag==='hashimoto'||tpoPos;
+ const hyper=A.diag==='graves'||A.status==='hyper';
+ const preg=A.preg==='preg'||A.preg==='plan';
+ const flag=A.flag && A.flag!=='none';
+
+ // 1. Хомеопатия
+ let H;
+ if(flag) H={blocked:'Схемата не се генерира, докато има отбелязан спешен сигнал. Първо преглед.'};
+ else if(!ranked.length) H={blocked:'Няма отчетлив профил. Препарат по общи симптоми не се назначава — попълнете отново с повече характерни белези.'};
+ else{
+  const r=ranked[0].p.name;
+  const sens=A.react==='high'||A.prior==='aggr';
+  const strong=A.react==='low'&&(A.dur==='gt5'||A.dur==='y1_5')&&!onLevo&&!onThiam&&!preg;
+  H={r,alt:(ranked[1]&&ranked[0].s-ranked[1].s<1)?ranked[1].p.name:null,minC:/Iodum|Spongia|Thyroidinum/.test(r)};
+  if(sens){Object.assign(H,{pot:'LM1 (Q1), разтвор',
+   why:A.prior==='aggr'?'Предишно влошаване от хомеопатия → най-мекият режим с постепенно покачване.':'Висока чувствителност → LM скала, позволява ежедневен прием без рязко влошаване.',
+   how:'1 гранула в 100 мл вода + 1 ч.л. спирт, в стъклено шише. Преди всеки прием: 10 разклащания, 1 ч.л. в чаша със 100 мл вода, разбъркване, изпива се 1 ч.л. от чашата.',
+   rep:'1 път дневно сутрин. При засилване на симптомите: пауза 2–3 дни, после през ден. След изчерпване на шишето (около 4 седмици) → LM2.'});}
+  else if(strong){Object.assign(H,{pot:'200C, единична доза',
+   why:'Ниска реактивност, дълга давност, без хормонално лечение → единична висока доза.',
+   how:'3 гранули под езика, еднократно.',
+   rep:'Не се повтаря, докато има подобрение. Оценка на 6-та седмица; повтаря се само ако подобрението спре.'});}
+  else{Object.assign(H,{pot:'30C',
+   why:'Средна реактивност'+((onLevo||onThiam)?' и текущо хормонално лечение':'')+' → стандартна потенция с умерено повторение.',
+   how:'3 гранули под езика.',
+   rep:'1 доза седмично × 4 седмици, после оценка. При ясно подобрение интервалът се удължава; при влошаване се спира до отшумяване.'});}
+ }
+ const intake=H.blocked?[]:[
+  'Гранулите се слагат под езика без докосване с пръсти и се оставят да се разтворят.',
+  'Без храна, напитки и паста за зъби 15 мин преди и след приема.',
+  onLevo?'Поне 30 мин след таблетката левотироксин.':null,
+  'По традиция се избягват камфор, ментол и силни етерични масла по време на курса.',
+  'Един препарат наведнъж, без комплексни хомеопатични продукти паралелно.',
+  H.minC?'Само C или LM потенции. Ниските D/X разреждания на този препарат съдържат измеримо количество йод или тиреоидна тъкан — неподходящи при автоимунен процес.':null
+ ].filter(Boolean);
+
+ // 2. Хранене
+ const diet=[
+  '<b>Основа:</b> белтък на всяко хранене, зеленчуци, риба 2 пъти седмично, зехтин, пълнозърнести — средиземноморски модел.',
+  c('celiac')?'<b>Строго безглутенова диета</b> — задължителна при цьолиакия; подобрява и усвояването на левотироксин.'+ev('високи')
+   :(has('signs','bloat')?'<b>Подуване:</b> първо anti-tTG IgA + общ IgA, докато още ядете глутен. След отрицателен тест — 4 седмици ниско FODMAP или без глутен като проба.':null),
+  preg?'<b>Йод:</b> при бременност/кърмене количеството се определя от лекаря.':'<b>Йод:</b> йодирана сол в обичайно количество; без водорасли, келп и йодни добавки.',
+  'Броколи, зеле и др. кръстоцветни — безопасни сготвени и в нормални количества.',
+  sp('se')?null:'<b>Селен от храна:</b> 1–2 бразилски ореха 2–3 пъти седмично (не ежедневно и не заедно с добавка селен).',
+  has('weight','gain')?'<b>Напълняване:</b> без течни калории, белтък и фибри първо в чинията, вечеря поне 3 ч преди сън.':null,
+  has('weight','loss')?'<b>Отслабване с апетит:</b> достатъчно калории и белтък; кофеинът се намалява до нормализиране на функцията.':null,
+  onLevo?'<b>Около хапчето:</b> кафе, мляко, соя и богати на фибри храни — поне 30–60 мин след левотироксина.':null
+ ].filter(Boolean);
+
+ // 3. Добавки
+ const sup=[];
+ if(hyper) sup.push('<b>Селен 200 мкг/ден</b> (2 × 100 мкг), 6 месеца — при очни прояви на Грейвс.'+ev('умерени'));
+ else if(hashi && preg) sup.push('<b>Селен</b> — само след консултация с лекар по време на бременност.');
+ else if(hashi && A.status==='hypo' && !onLevo) sup.push('<b>Мио-инозитол 600 мг + селен 83 мкг</b> дневно, 6 месеца — при субклинично понижена функция; заменя самостоятелния селен.'+ev('ограничени'));
+ else if(hashi) sup.push('<b>Селен (селенометионин) 100–200 мкг/ден</b>, 3–6 месеца, после контрол на анти-TPO. Общо до 200 мкг/ден от всички източници.'+ev('умерени'));
+ if(sp('se')&&hashi) sup.push('Вече приемате селен — проверете дозата в продукта и не я дублирайте.');
+ sup.push(c('vitd')||sp('d3')?'<b>Витамин D3</b> 2000–4000 IU/ден с мазна храна, минимум 3 месеца; контрол на 25(OH)D на 3-ия месец.'+ev('умерени')
+  :'<b>Витамин D:</b> изследване на 25(OH)D; добавка само при ниско ниво.');
+ if(c('iron')) sup.push('<b>Желязо</b> по назначение, през ден, на 4 ч от левотироксина; контрол на феритин след 3 месеца.'+ev('високи'));
+ if(c('b12')) sup.push('<b>B12</b> 1000 мкг/ден орално (при тежък дефицит — инжекции по назначение).'+ev('високи'));
+ if(sp('iod')) sup.push(preg?'<b>Йод/келп:</b> съгласувайте с лекаря дозата при бременност; водорасли и келп се спират.':'<b>Спрете йод, келп и водорасли</b> — излишният йод засилва автоимунния процес.');
+ if(sp('biotin')) sup.push('<b>Биотин:</b> спира се 3 дни преди кръвни изследвания — изкривява TSH и FT4.');
+ if(sp('ashwa')) sup.push(hyper?'<b>Ашваганда — спира се:</b> повишава тиреоидните хормони.':'<b>Ашваганда</b> може да промени нуждата от левотироксин — TSH след 6–8 седмици.');
+ if(sp('ca_fe')&&onLevo) sup.push('<b>Калций, желязо, магнезий, мултивитамини</b> — на поне 4 ч от левотироксина.');
+ sup.push('Нови добавки се въвеждат една по една, през 1–2 седмици.');
+
+ // 4. Психологически насоки
+ const psy=[];
+ if(md('grief')) psy.push('<b>Скръб:</b> 15 мин писане за преживяното 4 поредни дни; един доверен човек за редовен контакт, без натиск за „утеха“.');
+ if(md('anxiety')) psy.push('<b>Тревожност за здравето:</b> фиксиран „час за тревоги“ 15 мин дневно; изследванията по график, без ежедневно проверяване на симптоми.');
+ if(md('indiff')) psy.push('<b>Изтощение:</b> бюджет на енергията — махнете 1–2 задължения седмично; една приятна дейност дневно, планирана предварително.');
+ if(md('restless')) psy.push('<b>Безпокойство:</b> 5 мин бавно дишане (кратко вдишване, дълго издишване) 2 пъти дневно; ежедневно интензивно движение.');
+ if(md('lowconf')) psy.push('<b>Несигурност:</b> малки ежедневни завършени задачи, записани вечер; директно казване на нуждата вместо раздразнение.');
+ if(md('slow')) psy.push('<b>Мозъчна мъгла:</b> една задача наведнъж, външни бележки и списъци. Честа причина е недостатъчно компенсирана функция → TSH/FT4.');
+ psy.push('<b>Стрес:</b> 10–20 мин дневно без екран — разходка, дишане или тишина. Хроничният стрес влошава симптомите независимо от изследванията.');
+
+ // 5. Дневен режим
+ const day=[
+  onLevo?'<b>Левотироксин:</b> всеки ден по едно и също време, само с вода, 30–60 мин преди закуска (или вечер, 3 ч след храна).':null,
+  hb('coffee')&&onLevo?'<b>Кафето</b> се мести поне 30–60 мин след хапчето — сега намалява усвояването.':null,
+  '<b>Сън:</b> 7–9 ч, постоянен час на лягане и ставане'+(hb('sleep')?' — приоритет №1 за вас.':'.'),
+  '<b>Сутрешна светлина:</b> 10–15 мин навън до час след ставане.',
+  hyper?'<b>Движение:</b> умерено (ходене, леки силови) до нормализиране на функцията.':'<b>Движение:</b> силови тренировки 2–3 пъти седмично + ежедневно ходене'+(hb('sedentary')?'; започнете с 20 мин дневно.':'.'),
+  hb('smoke')?(A.diag==='graves'?'<b>Тютюнопушене:</b> спиране — най-силният рисков фактор за очни усложнения при Грейвс.':'<b>Тютюнопушене:</b> спиране — влошава автоимунния процес.'):null,
+  '<b>Алкохол:</b> минимален.',
+  '<b>Дневник:</b> веднъж седмично оценка 0–10 на умора, студ/топлина, настроение, храносмилане и основния белег.'
+ ].filter(Boolean);
+
+ // 6. Контрол
+ const mon=[
+  'TSH + FT4: 6–8 седмици след всяка промяна (включително нова добавка), после на 6–12 месеца.',
+  hashi?'Анти-TPO: на 3–6 месеца, ако приемате селен или витамин D.':null,
+  H.blocked?null:(H.pot.startsWith('200')?'Хомеопатична оценка: 6-та седмица.':'Хомеопатична оценка: 4-та седмица.'),
+  H.blocked?null:'Ако дневникът не се промени след 2 оценки → преминава се към '+(H.alt||'нова анамнеза')+'.',
+  preg?'Бременност: TSH веднага при положителен тест, после по график на ендокринолога.':null
+ ].filter(Boolean);
+
+ return {H,intake,diet,sup,psy,day,mon};
+}
+function renderProtocol(P){
+ const L=a=>`<ul class="items">${a.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+ let h='<div class="sec"><h3>1. Хомеопатия</h3>';
+ if(P.H.blocked) h+=`<div class="card"><p>${esc(P.H.blocked)}</p></div>`;
+ else{
+  h+=`<div class="rx"><div class="name">${esc(P.H.r)}</div><div class="pot">${esc(P.H.pot)}</div>
+   <dl style="margin-top:10px"><dt>Начин</dt><dd>${esc(P.H.how)}</dd><dt>Режим</dt><dd>${esc(P.H.rep)}</dd><dt>Защо</dt><dd>${esc(P.H.why)}</dd>${P.H.alt?`<dt>Резерва</dt><dd>${esc(P.H.alt)}, същата потенция</dd>`:''}</dl></div>`;
+  h+='<div style="margin-top:8px">'+L(P.intake)+'</div>';
+ }
+ h+='</div>';
+ [['2. Хранене',P.diet],['3. Добавки',P.sup],['4. Психологически насоки',P.psy],['5. Дневен режим',P.day],['6. Контрол',P.mon]].forEach(([t,a])=>h+=`<div class="sec"><h3>${t}</h3>${L(a)}</div>`);
+ $('protocol').innerHTML=h;
+}
+const strip=s=>s.replace(/<[^>]+>/g,'').replace(/\s+доказателства:/,' — доказателства:');
+function protocolText(P){
+ let t='\n\nПРОТОКОЛ\n\n1. Хомеопатия\n';
+ t+=P.H.blocked?P.H.blocked+'\n':`${P.H.r} ${P.H.pot}\nНачин: ${P.H.how}\nРежим: ${P.H.rep}\n${P.H.alt?'Резерва: '+P.H.alt+'\n':''}`+P.intake.map(x=>'- '+x).join('\n')+'\n';
+ [['2. Хранене',P.diet],['3. Добавки',P.sup],['4. Психологически насоки',P.psy],['5. Дневен режим',P.day],['6. Контрол',P.mon]].forEach(([n,a])=>t+=`\n${n}\n`+a.map(x=>'- '+strip(x)).join('\n')+'\n');
+ return t;
+}
+function show(){
+ $('wizard').hidden=true; $('results').hidden=false;
+ $('alerts').innerHTML = alerts().map(([k,t])=>`<div class="alert ${k==='danger'?'danger':''}">${esc(t)}</div>`).join('');
+ const ranked = profiles.map(p=>{
+  let s=0,m=[]; p.w.forEach(([g,v,pt])=>{ if(has(g,v)){ s+=pt; m.push(label(g,v)); } });
+  return {p,s,m};
+ }).filter(x=>x.s>=2).sort((a,b)=>b.s-a.s).slice(0,3);
+ const max = ranked[0]?.s || 1;
+ let mh = ranked.length ? ranked.map((x,i)=>`<div class="card"><div class="top"><span class="name">${i+1}. ${esc(x.p.name)}</span><span class="pts">${x.s.toFixed(1)} т.</span></div><div class="bar"><i style="width:${Math.round(x.s/max*100)}%"></i></div><p>${esc(x.p.desc)}</p><ul>${x.m.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`).join('')
+  : `<div class="card"><p>Няма отчетлив профил. Отговорите са твърде общи — нужна е подробна анамнеза при специалист.</p></div>`;
+ if(ranked.length>1 && ranked[0].s-ranked[1].s<1) mh = `<div class="alert">Първите два профила са близки — за разграничаване са нужни допълнителни модалности.</div>`+mh;
+ $('matches').innerHTML = mh;
+ const P = buildProtocol(ranked);
+ renderProtocol(P);
+
+ const labs=[['tsh','TSH'],['ft4','FT4'],['tpo','Анти-TPO']].filter(([k])=>A[k]).map(([k,l])=>`${l} ${A[k]}`).join(' · ');
+ const params = [
+  ['Диагноза', label('diag',A.diag)],
+  ['Функция', label('status',A.status)+(labs?` (${labs})`:'')],
+  ['Лекарство', label('meds',A.meds)],
+  ['Давност', label('dur',A.dur)],
+  ['Реактивност', label('react',A.react)],
+  ['Предишна хомеопатия', label('prior',A.prior)],
+  ['Съпътстващи', (A.comorb||[]).map(v=>label('comorb',v)).join('; ') || '—'],
+  ['Бременност', label('preg',A.preg)],
+  ['Добавки сега', (A.supps||[]).map(v=>label('supps',v)).join('; ') || '—'],
+  ['Сигнал', A.flag==='none' ? 'няма' : label('flag',A.flag)]
+ ];
+ $('params').innerHTML = params.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
+
+ $('copySrc').value = 'ХОМЕОПАТИЧЕН ПРОФИЛ — АВТОИМУНЕН ТИРЕОИДИТ\n\n'
+  + params.map(([k,v])=>`${k}: ${v}`).join('\n')
+  + '\n\nТермика: '+label('thermal',A.thermal)+'\nТегло/апетит: '+label('weight',A.weight)
+  + '\nЕмоционално: '+((A.mind||[]).map(v=>label('mind',v)).join('; ')||'—')
+  + '\nБелези: '+((A.signs||[]).map(v=>label('signs',v)).join('; ')||'—')
+  + '\nПодобрява: '+((A.mods||[]).map(v=>label('mods',v)).join('; ')||'—')
+  + '\n\nСъвпадения:\n'+(ranked.length?ranked.map((x,i)=>`${i+1}. ${x.p.name} — ${x.s.toFixed(1)} т.`).join('\n'):'няма отчетлив профил')
+  + protocolText(P);
+ window.scrollTo({top:0});
+}
+$('copy').onclick = async ()=>{
+ const t=$('copySrc').value;
+ try{ await navigator.clipboard.writeText(t); $('copyMsg').textContent='Копирано.'; }
+ catch(e){ $('copySrc').hidden=false; $('copySrc').select(); $('copyMsg').textContent='Маркирах текста — копирайте ръчно.'; }
+};
+$('restart').onclick=()=>{ Object.keys(A).forEach(k=>delete A[k]); step=0; $('results').hidden=true; $('copySrc').hidden=true; $('copyMsg').textContent=''; $('wizard').hidden=false; render(); window.scrollTo({top:0}); };
+render();
+})();
+</script>
+</body>
+</html>
