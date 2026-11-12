@@ -236,9 +236,9 @@ async function runTests() {
     } else {
       logPass(`order submitted (HTTP ${orderRes.status()})`);
     }
-    await page.waitForURL(/portfolio-order-success/, { timeout: 10000 });
-    if (page.url().includes('portfolio-order-success')) logPass('redirected to success page');
-    else logIssue('no redirect to success page');
+    await page.waitForURL(/checkout\.stripe\.com|portfolio-order-success/, { timeout: 10000 });
+    if (/checkout\.stripe\.com|portfolio-order-success/.test(page.url())) logPass('redirected to Stripe payment');
+    else logIssue('no redirect to Stripe payment');
   } else {
     logIssue(`order failed: ${orderData.error || orderRes.status()}`);
   }

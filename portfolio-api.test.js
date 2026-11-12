@@ -537,117 +537,214 @@ describe('Portfolio Fitness1 order approval', () => {
     expect(isAutoSubmitB2bEnabled({ auto_submit_b2b: false })).toBe(false);
   });
 
-  test('POST /portfolio/orders auto-submits B2B to Fitness1 on creation', async () => {
+  const orderCustomer = {
+    firstName: 'Иван',
+    lastName: 'Петров',
+    phone: '0888123456',
+    email: 'ivan@example.com',
+    policyConsent: true,
+    terms: true,
+    deliveryMethod: 'courier',
+    courierCompany: 'Speedy',
+    courierOfficeId: '123',
+    courierOfficeName: 'Офис София'
+  };
+
+  function makeOrderEnv(settings, extra = {}) {
     const store = new Map([
-      ['portfolio_settings', JSON.stringify({ auto_submit_b2b: true, global_markup_percent: 30 })],
+      ['portfolio_settings', JSON.stringify({ global_markup_percent: 30, ...settings })],
       ['portfolio_meta', JSON.stringify(catalogMeta)],
       ['portfolio_chunk_0', JSON.stringify(catalogChunk)],
       ['portfolio_orders', JSON.stringify([])]
     ]);
-
     const env = {
       FITNESS1_API_KEY: 'test-key',
+      STRIPE_SECRET_KEY: 'sk_test_x',
+      STRIPE_WEBHOOK_SECRET: 'whsec_test',
       PAGE_CONTENT: {
         get: async (key) => store.get(key) ?? null,
         put: async (key, value) => { store.set(key, value); },
         delete: async (key) => { store.delete(key); }
-      }
+      },
+      ...extra,
     };
+    return { env, store };
+  }
 
+  async function createPaidFlowOrder(env, fetchLog) {
     const originalFetch = global.fetch;
-    let fetchCalled = false;
     global.fetch = async (url, opts) => {
-      fetchCalled = true;
-      expect(url).toContain('https://fitness1.bg/b2b/api/orders/create');
-      const body = JSON.parse(opts.body);
-      expect(body.products).toEqual([{ barcode: '1234567890', quantity: 1 }]);
-      return {
-        ok: true,
-        json: async () => ({ status: 'ok', order: { id: 77777, price: '10.00' } })
-      };
+      const u = String(url);
+      fetchLog.push({ url: u, opts });
+      if (u.startsWith('https://api.stripe.com/v1/checkout/sessions')) {
+        return {
+          ok: true,
+          json: async () => ({ id: 'cs_test_1', url: 'https://checkout.stripe.com/c/pay/cs_test_1', expires_at: 2000000000 })
+        };
+      }
+      return { ok: true, json: async () => ({ status: 'ok', order: { id: 77777, price: '10.00' } }) };
     };
+    try {
+      const request = new Request('https://example.com/portfolio/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Origin: 'https://biocode-bg.com' },
+        body: JSON.stringify({ customer: orderCustomer, products: [{ sku_id: '1', quantity: 1 }], summary: { total: '14.64 €' } })
+      });
+      return await handlePortfolioRoute(request, env, new URL(request.url));
+    } finally {
+      global.fetch = originalFetch;
+    }
+  }
 
-    const request = new Request('https://example.com/portfolio/orders', {
+  async function signedWebhook(env, event) {
+    const { computeStripeSignature } = await import('./portfolio-payments.js');
+    const raw = JSON.stringify(event);
+    const t = Math.floor(Date.now() / 1000);
+    const sig = await computeStripeSignature(env.STRIPE_WEBHOOK_SECRET, t, raw);
+    return new Request('https://example.com/portfolio/payments/stripe-webhook', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customer: {
-          firstName: 'Иван',
-          lastName: 'Петров',
-          phone: '0888123456',
-          policyConsent: true,
-          terms: true,
-          deliveryMethod: 'courier',
-          courierCompany: 'Speedy',
-          courierOfficeId: '123',
-          courierOfficeName: 'Офис София'
-        },
-        products: [{ sku_id: '1', quantity: 1 }],
-        summary: { total: '14.64 €' }
-      })
+      headers: { 'Content-Type': 'application/json', 'Stripe-Signature': `t=${t},v1=${sig}` },
+      body: raw
     });
-    const res = await handlePortfolioRoute(request, env, new URL(request.url));
-    global.fetch = originalFetch;
+  }
+
+  test('POST /portfolio/orders creates a Stripe payment and does NOT submit B2B before payment', async () => {
+    const { env } = makeOrderEnv({ auto_submit_b2b: true });
+    const log = [];
+    const res = await createPaidFlowOrder(env, log);
 
     expect(res.status).toBe(201);
-    expect(fetchCalled).toBe(true);
     const data = await res.json();
-    expect(data.order.status).toBe('Изпратена към доставчик');
-    expect(data.order.fitness1_order.id).toBe(77777);
+    expect(data.payment_url).toBe('https://checkout.stripe.com/c/pay/cs_test_1');
+    expect(data.order.status).toBe('Чака плащане');
+    expect(log.some((c) => c.url.includes('orders/create'))).toBe(false);
+
+    const stripeCall = log.find((c) => c.url.includes('api.stripe.com'));
+    const form = new URLSearchParams(stripeCall.opts.body);
+    expect(form.get('mode')).toBe('payment');
+    expect(form.get('line_items[0][price_data][currency]')).toBe('eur');
+    expect(form.get('line_items[0][price_data][unit_amount]')).toBe('1464');
+    expect(form.get('metadata[order_id]')).toBe(data.order.id);
+    expect(form.get('success_url')).toContain('https://biocode-bg.com/portfolio-order-success.html?id=');
+    expect(stripeCall.opts.headers.Authorization).toBe('Bearer sk_test_x');
   });
 
-  test('POST /portfolio/orders skips auto-submit when disabled in settings', async () => {
-    const store = new Map([
-      ['portfolio_settings', JSON.stringify({ auto_submit_b2b: false, global_markup_percent: 30 })],
-      ['portfolio_meta', JSON.stringify(catalogMeta)],
-      ['portfolio_chunk_0', JSON.stringify(catalogChunk)],
-      ['portfolio_orders', JSON.stringify([])]
-    ]);
+  test('POST /portfolio/orders is refused when online payment is not configured', async () => {
+    const { env } = makeOrderEnv({}, { STRIPE_SECRET_KEY: '' });
+    const res = await createPaidFlowOrder(env, []);
+    expect(res.status).toBe(503);
+  });
 
-    const env = {
-      FITNESS1_API_KEY: 'test-key',
-      PAGE_CONTENT: {
-        get: async (key) => store.get(key) ?? null,
-        put: async (key, value) => { store.set(key, value); },
-        delete: async (key) => { store.delete(key); }
-      }
-    };
+  test('Stripe webhook marks the order paid and only then auto-submits B2B to Fitness1', async () => {
+    const { env } = makeOrderEnv({ auto_submit_b2b: true });
+    const created = await (await createPaidFlowOrder(env, [])).json();
+    const orderId = created.order.id;
 
     const originalFetch = global.fetch;
-    let fetchCalled = false;
-    global.fetch = async (url) => {
-      // Живата проверка на наличността (products_v3?id=) е позволена; B2B поръчка — не.
-      if (String(url).includes('orders/create')) fetchCalled = true;
-      return { ok: true, json: async () => ({ status: 'ok', order: { id: 1 } }) };
+    const sent = [];
+    global.fetch = async (url, opts) => {
+      if (String(url).includes('orders/create')) sent.push(JSON.parse(opts.body));
+      return { ok: true, json: async () => ({ status: 'ok', order: { id: 77777, price: '10.00' } }) };
     };
+    const event = {
+      type: 'checkout.session.completed',
+      data: { object: { id: 'cs_test_1', payment_status: 'paid', amount_total: 1464, currency: 'eur', metadata: { order_id: orderId }, payment_intent: 'pi_1' } }
+    };
+    const res = await handlePortfolioRoute(await signedWebhook(env, event), env, new URL('https://example.com/portfolio/payments/stripe-webhook'));
+    // Повторна доставка на същото събитие не изпраща втора B2B поръчка.
+    await handlePortfolioRoute(await signedWebhook(env, event), env, new URL('https://example.com/portfolio/payments/stripe-webhook'));
+    global.fetch = originalFetch;
 
-    const request = new Request('https://example.com/portfolio/orders', {
+    expect(res.status).toBe(200);
+    expect(sent).toEqual([{ products: [{ barcode: '1234567890', quantity: 1 }] }]);
+    const { getOrderRecord } = await import('./portfolio-order-store.js');
+    const order = await getOrderRecord(env, orderId);
+    expect(order.payment.status).toBe('paid');
+    expect(order.payment.payment_intent).toBe('pi_1');
+    expect(order.fitness1_order.id).toBe(77777);
+    expect(order.status).toBe('Изпратена към доставчик');
+  });
+
+  test('Stripe webhook with an amount mismatch does not mark the order paid', async () => {
+    const { env } = makeOrderEnv({ auto_submit_b2b: true });
+    const created = await (await createPaidFlowOrder(env, [])).json();
+    const event = {
+      type: 'checkout.session.completed',
+      data: { object: { payment_status: 'paid', amount_total: 100, currency: 'eur', metadata: { order_id: created.order.id } } }
+    };
+    await handlePortfolioRoute(await signedWebhook(env, event), env, new URL('https://example.com/portfolio/payments/stripe-webhook'));
+    const { getOrderRecord } = await import('./portfolio-order-store.js');
+    const order = await getOrderRecord(env, created.order.id);
+    expect(order.payment.status).toBe('pending');
+    expect(order.fitness1_order).toBeNull();
+  });
+
+  test('Stripe webhook rejects an invalid signature', async () => {
+    const { env } = makeOrderEnv({});
+    const request = new Request('https://example.com/portfolio/payments/stripe-webhook', {
+      method: 'POST',
+      headers: { 'Stripe-Signature': `t=${Math.floor(Date.now() / 1000)},v1=deadbeef` },
+      body: JSON.stringify({ type: 'checkout.session.completed', data: { object: {} } })
+    });
+    const res = await handlePortfolioRoute(request, env, new URL(request.url));
+    expect(res.status).toBe(400);
+  });
+
+  test('expired Stripe session marks the order unpaid', async () => {
+    const { env } = makeOrderEnv({});
+    const created = await (await createPaidFlowOrder(env, [])).json();
+    const event = { type: 'checkout.session.expired', data: { object: { metadata: { order_id: created.order.id } } } };
+    await handlePortfolioRoute(await signedWebhook(env, event), env, new URL('https://example.com/portfolio/payments/stripe-webhook'));
+    const { getOrderRecord } = await import('./portfolio-order-store.js');
+    const order = await getOrderRecord(env, created.order.id);
+    expect(order.status).toBe('Неплатена');
+    expect(order.payment.status).toBe('expired');
+  });
+
+  test('paid webhook with auto-submit disabled leaves the order for manual approval', async () => {
+    const { env } = makeOrderEnv({ auto_submit_b2b: false });
+    const created = await (await createPaidFlowOrder(env, [])).json();
+    const originalFetch = global.fetch;
+    let b2bCalled = false;
+    global.fetch = async (url) => {
+      if (String(url).includes('orders/create')) b2bCalled = true;
+      return { ok: true, json: async () => ({}) };
+    };
+    const event = {
+      type: 'checkout.session.completed',
+      data: { object: { payment_status: 'paid', amount_total: 1464, currency: 'eur', metadata: { order_id: created.order.id } } }
+    };
+    await handlePortfolioRoute(await signedWebhook(env, event), env, new URL('https://example.com/portfolio/payments/stripe-webhook'));
+    global.fetch = originalFetch;
+    const { getOrderRecord } = await import('./portfolio-order-store.js');
+    const order = await getOrderRecord(env, created.order.id);
+    expect(b2bCalled).toBe(false);
+    expect(order.status).toBe('Чака одобрение');
+    expect(order.payment.status).toBe('paid');
+  });
+
+  test('admin approve refuses an unpaid order', async () => {
+    const { env } = makeOrderEnv({ auto_submit_b2b: false });
+    const created = await (await createPaidFlowOrder(env, [])).json();
+    const originalFetch = global.fetch;
+    let b2bCalled = false;
+    global.fetch = async (url) => {
+      const u = String(url);
+      if (u.includes('orders/create')) b2bCalled = true;
+      if (u.includes('api.stripe.com')) {
+        return { ok: true, json: async () => ({ id: 'cs_test_1', payment_status: 'unpaid', amount_total: 1464, currency: 'eur', metadata: { order_id: created.order.id } }) };
+      }
+      return { ok: true, json: async () => ({}) };
+    };
+    const request = new Request('https://example.com/portfolio/orders/approve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customer: {
-          firstName: 'Иван',
-          lastName: 'Петров',
-          phone: '0888123456',
-          policyConsent: true,
-          terms: true,
-          deliveryMethod: 'courier',
-          courierCompany: 'Speedy',
-          courierOfficeId: '123',
-          courierOfficeName: 'Офис София'
-        },
-        products: [{ sku_id: '1', quantity: 1 }],
-        summary: { total: '14.64 €' }
-      })
+      body: JSON.stringify({ id: created.order.id })
     });
     const res = await handlePortfolioRoute(request, env, new URL(request.url));
     global.fetch = originalFetch;
-
-    expect(res.status).toBe(201);
-    expect(fetchCalled).toBe(false);
-    const data = await res.json();
-    expect(data.order.status).toBe('Чака одобрение');
-    expect(data.order.fitness1_order).toBeNull();
+    expect(res.status).toBe(409);
+    expect(b2bCalled).toBe(false);
   });
 
   test('GET /portfolio/orders/summary returns pending count', async () => {

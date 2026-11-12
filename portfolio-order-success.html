@@ -21,7 +21,7 @@
     <main class="pf-success-page">
         <div class="pf-success-card pf-card" id="success-card" style="display:none">
             <div class="pf-success-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg></div>
-            <h1>Поръчката е приета!</h1>
+            <h1>Плащането е успешно!</h1>
             <p class="pf-lead" id="success-message">Благодарим ви. Ще се свържем с вас за потвърждение.</p>
             <div class="pf-order-id-box">
                 <span>Номер на поръчка</span>
@@ -43,13 +43,14 @@
         </div>
 
         <div class="pf-success-card pf-card" id="loading-card">
-            <p class="pf-lead">Проверяваме поръчката...</p>
+            <p class="pf-lead">Проверяваме плащането...</p>
         </div>
     </main>
     <div id="pf-footer-slot"></div>
     <script type="module">
         import { initPortfolioPage } from './portfolio-shared.js';
         import { API_URL } from './config.js';
+        import { waitForOrderPayment } from './order-payment-status.js';
 
         await initPortfolioPage({ settingsOnly: true });
 
@@ -79,35 +80,25 @@
             document.title = 'Поръчката е приета – BIOCODE';
         }
 
-        function readStoredOrder(orderId) {
-            try {
-                const raw = sessionStorage.getItem('pf_last_order');
-                if (!raw) return null;
-                const order = JSON.parse(raw);
-                return order?.id === orderId ? order : null;
-            } catch {
-                return null;
-            }
-        }
-
         if (!id) {
             showError('Липсва номер на поръчка. Ако сте изпратили формата, проверете дали сте получили съобщение за грешка.');
         } else {
-            const stored = readStoredOrder(id);
-            if (stored) {
-                showSuccess(stored);
+            const result = await waitForOrderPayment(API_URL, id);
+            if (result.state === 'paid') {
+                localStorage.removeItem('portfolioCart');
+                sessionStorage.removeItem('pf_last_order');
+                showSuccess(result.order);
+            } else if (result.state === 'pending') {
+                showSuccess(result.order);
+                document.querySelector('#success-card h1').textContent = 'Плащането се обработва';
+                document.getElementById('success-message').textContent =
+                    'Още чакаме потвърждение от банката. Ще получите имейл от Stripe, щом плащането мине. Опреснете страницата след минута.';
+            } else if (result.state === 'unpaid') {
+                showError('Плащането не е завършено и поръчката не е приета. Количката ви е запазена — опитайте отново.');
+            } else if (result.state === 'missing') {
+                showError(result.error || 'Поръчката не е намерена в системата. Тя не е приета — опитайте отново.');
             } else {
-                try {
-                    const res = await fetch(`${API_URL}/portfolio/order?id=${encodeURIComponent(id)}`, { cache: 'no-cache' });
-                    const data = await res.json();
-                    if (!res.ok || !data.id) {
-                        showError(data.error || 'Поръчката не е намерена в системата. Тя не е приета — опитайте отново.');
-                    } else {
-                        showSuccess(data);
-                    }
-                } catch {
-                    showError('Не успяхме да потвърдим поръчката. Проверете връзката и опитайте отново.');
-                }
+                showError('Не успяхме да потвърдим поръчката. Проверете връзката и опреснете страницата.');
             }
         }
     </script>

@@ -442,8 +442,19 @@ async function fetchPortfolioOrdersSummary() {
     }
 }
 
+/** Онлайн плащане: етикет за админа (старите поръчки нямат `payment`). */
+function formatOrderPaymentLabel(order) {
+    const p = order?.payment;
+    if (!p) return '';
+    if (p.status === 'paid') return '<br><small style="color:#1e8449;">Платена с карта</small>';
+    if (p.status === 'expired') return '<br><small style="color:#c0392b;">Неплатена (изтекла сесия)</small>';
+    return '<br><small style="color:#b9770e;">Чака плащане</small>';
+}
+
 function isPortfolioOrderSendable(order) {
     if (!order || order.status === 'Отказана') return false;
+    // Неплатена поръчка не се изпраща към доставчик (сървърът го проверява и в Stripe).
+    if (order.payment && order.payment.status === 'expired') return false;
     const products = getB2bProducts(order);
     if (!products.length) return false;
     for (const p of products) {
@@ -5720,12 +5731,15 @@ function renderPortfolioOrders() {
             <td data-label="Дата" class="order-date mobile-key">${dateText}</td>
             <td data-label="Статус" class="order-status-cell" onclick="event.stopPropagation()">
                 <select class="portfolio-order-status" data-id="${escAdminHtml(order.id)}">
+                    <option value="Чака плащане" ${status === 'Чака плащане' ? 'selected' : ''}>Чака плащане</option>
+                    <option value="Неплатена" ${status === 'Неплатена' ? 'selected' : ''}>Неплатена</option>
                     <option value="Чака одобрение" ${status === 'Чака одобрение' ? 'selected' : ''}>Чака одобрение</option>
                     <option value="Обработва се" ${status === 'Обработва се' ? 'selected' : ''}>Обработва се</option>
                     <option value="Изпратена към доставчик" ${status === 'Изпратена към доставчик' || status === 'Изпратена към Fitness1' ? 'selected' : ''}>Изпратена към доставчик</option>
                     <option value="Отказана" ${status === 'Отказана' ? 'selected' : ''}>Отказана</option>
                 </select>
                 <span class="mobile-status-badge"></span>
+                ${formatOrderPaymentLabel(order)}
                 ${formatDistributorOrderRefs(order) ? `<br><small>B2B ${escAdminHtml(formatDistributorOrderRefs(order))}</small>` : ''}
                 ${order.b2b_submit_error?.message ? `<br><small style="color:#c0392b;">B2B грешка: ${escAdminHtml(order.b2b_submit_error.message)}</small>` : ''}
             </td>
@@ -5821,12 +5835,15 @@ function renderDirectOrders() {
             <td data-label="Дата" class="order-date mobile-key">${dateText}</td>
             <td data-label="Статус" class="order-status-cell" onclick="event.stopPropagation()">
                 <select class="direct-order-status" data-id="${escAdminHtml(order.id)}">
+                    <option value="Чака плащане" ${status === 'Чака плащане' ? 'selected' : ''}>Чака плащане</option>
+                    <option value="Неплатена" ${status === 'Неплатена' ? 'selected' : ''}>Неплатена</option>
                     <option value="Чака одобрение" ${status === 'Чака одобрение' ? 'selected' : ''}>Чака одобрение</option>
                     <option value="Обработва се" ${status === 'Обработва се' ? 'selected' : ''}>Обработва се</option>
                     <option value="Изпратена" ${status === 'Изпратена' || status === 'Изпратена към клиент' ? 'selected' : ''}>Изпратена</option>
                     <option value="Отказана" ${status === 'Отказана' ? 'selected' : ''}>Отказана</option>
                 </select>
                 <span class="mobile-status-badge"></span>
+                ${formatOrderPaymentLabel(order)}
             </td>
             <td data-label="Действия" onclick="event.stopPropagation()">
                 <button type="button" class="btn btn-sm btn-secondary direct-detail-btn" data-id="${escAdminHtml(order.id)}">Детайли</button>

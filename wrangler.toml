@@ -10,6 +10,8 @@ workers_dev = true
 
 # Set via: npx wrangler secret put FITNESS1_API_KEY
 # Set via: npx wrangler secret put SILA_API_TOKEN
+# Онлайн плащане (единственият начин на плащане): npx wrangler secret put STRIPE_SECRET_KEY
+# и npx wrangler secret put STRIPE_WEBHOOK_SECRET (webhook: POST /portfolio/payments/stripe-webhook)
 # Or KV keys fitness1_api_key / sila_api_token (see upload-portfolio-catalog.mjs)
 # CRITICAL for multi-domain routing (daotslabna / life-protocols / biocode-bg):
 # With the default asset-first mode (run_worker_first = false, sometimes shown as

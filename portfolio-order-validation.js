@@ -90,7 +90,8 @@ export function sanitizePortfolioCustomer(customer) {
     address: (customer.address || '').trim() || null,
     city: (customer.city || '').trim() || null,
     postcode: (customer.postcode || '').trim() || null,
-    paymentMethod: customer.paymentMethod || 'cod',
+    // Единственият начин на плащане е онлайн с карта.
+    paymentMethod: 'card',
     policyConsent: isTruthyConsent(customer.policyConsent),
     terms: isTruthyConsent(customer.terms)
   };

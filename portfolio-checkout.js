@@ -1,5 +1,6 @@
 import { productImgTag } from './portfolio-img.js';
 import { API_URL } from './config.js';
+import { PAYMENT_CANCELLED_MESSAGE } from './order-payment-status.js';
 import {
   CART_KEY, getCart, saveCart, updateCartBadges, showToast, formatPrice, initPortfolioPage, icon, escapeHtml,
   buildPortfolioProductUrl
@@ -86,7 +87,7 @@ function updateSummary() {
   }
 }
 
-const SUBMIT_LABEL = 'Поръчай с наложен платеж';
+const SUBMIT_LABEL = 'Плати с карта';
 
 function syncSubmitButtons({ disabled, label = SUBMIT_LABEL } = {}) {
   ['submit-btn', 'submit-btn-mobile'].forEach((id) => {
@@ -480,7 +481,7 @@ function buildCustomerPayload() {
     lastName: $('last-name')?.value?.trim() || '',
     phone: $('phone')?.value?.trim() || '',
     email: $('email')?.value?.trim() || '',
-    paymentMethod: 'cod',
+    paymentMethod: 'card',
     policyConsent: $('policy-consent')?.checked === true,
     terms: $('terms')?.checked === true
   };
@@ -570,7 +571,7 @@ async function submitOrder(e) {
     return;
   }
 
-  syncSubmitButtons({ disabled: true, label: 'Изпращане...' });
+  syncSubmitButtons({ disabled: true, label: 'Към плащането...' });
 
   const customer = buildCustomerPayload();
   const subtotal = getSubtotal();
@@ -603,9 +604,9 @@ async function submitOrder(e) {
       throw new Error(data.error || 'Поръчката не беше приета. Проверете данните и опитайте отново.');
     }
 
-    localStorage.removeItem(CART_KEY);
-    sessionStorage.setItem('pf_last_order', JSON.stringify(data.order));
-    window.location.href = `portfolio-order-success.html?id=${encodeURIComponent(data.order.id)}`;
+    if (!data.payment_url) throw new Error('Не успяхме да отворим плащането. Опитайте отново.');
+    // Количката остава до потвърждено плащане (изчиства се на страницата за успех).
+    window.location.href = data.payment_url;
   } catch (err) {
     showToast(err.message || 'Грешка при изпращане.', 'error');
     syncSubmitButtons({ disabled: false });
@@ -777,3 +778,9 @@ async function init() {
 }
 
 init();
+
+// Връщане от Stripe без плащане — количката е непокътната, клиентът може да опита пак.
+if (new URLSearchParams(location.search).has('cancelled')) {
+  showToast(PAYMENT_CANCELLED_MESSAGE, 'error');
+  history.replaceState(null, '', location.pathname);
+}

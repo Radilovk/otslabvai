@@ -108,7 +108,7 @@ async function runFlow(browser, deviceName, viewport) {
     clickSubmit(page),
   ]);
 
-  await page.waitForURL(/portfolio-order-success/, { timeout: 15000 }).catch(() => {});
+  await page.waitForURL(/checkout\.stripe\.com|portfolio-order-success/, { timeout: 15000 }).catch(() => {});
 
   let orderId = null;
   if (page.url().includes('success')) {

@@ -88,7 +88,22 @@ describe('Portfolio order creation rejects invalid orders', () => {
     synced_at: new Date().toISOString()
   };
 
+  const stripeFetch = async (url) => {
+    if (String(url).startsWith('https://api.stripe.com/')) {
+      return { ok: true, json: async () => ({ id: 'cs_test', url: 'https://checkout.stripe.com/c/pay/cs_test', expires_at: 2000000000 }) };
+    }
+    return { ok: false, status: 500, json: async () => ({}) };
+  };
+  let savedFetch;
+  beforeEach(() => { savedFetch = global.fetch; global.fetch = stripeFetch; });
+  afterEach(() => { global.fetch = savedFetch; });
+
+  const savedOrder = (id) => JSON.parse(env.PAGE_CONTENT.data.get(
+    [...env.PAGE_CONTENT.data.keys()].find((k) => k.startsWith('portfolio_order:') && env.PAGE_CONTENT.data.get(k).includes(id))
+  ));
+
   const env = {
+    STRIPE_SECRET_KEY: 'sk_test_x',
     PAGE_CONTENT: {
       data: new Map([
         ['portfolio_meta', JSON.stringify(freshMeta)],
@@ -144,7 +159,8 @@ describe('Portfolio order creation rejects invalid orders', () => {
     expect(res.status).toBe(201);
     const data = await res.json();
     expect(data.order.id).toMatch(/^pf-/);
-    expect(data.order.customer.phone).toBe('+359888123456');
+    expect(data.payment_url).toMatch(/^https:\/\/checkout\.stripe\.com\//);
+    expect(savedOrder(data.order.id).customer.phone).toBe('+359888123456');
   });
 
   test('POST /portfolio/validate-cart works with stale catalog when Fitness1 is unavailable', async () => {
@@ -206,8 +222,9 @@ describe('Portfolio order creation rejects invalid orders', () => {
     expect(res.status).toBe(201);
     const data = await res.json();
     expect(data.order.id).toMatch(/^main-/);
-    expect(data.order.products[0].sku_id).toBe('prod-lida-green');
-    expect(data.order.products[0].retail_price).toBe(38);
+    const order = savedOrder(data.order.id);
+    expect(order.products[0].sku_id).toBe('prod-lida-green');
+    expect(order.products[0].retail_price).toBe(38);
   });
 
   test('POST /portfolio/validate-cart resolves main site manual product', async () => {

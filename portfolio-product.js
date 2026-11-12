@@ -143,7 +143,7 @@ function renderTabs() {
       <div class="pf-tab-panel ${activeTab === 'shipping' ? 'active' : ''}" data-panel="shipping">
         <ul class="pf-shipping-info">
           <li>${icon('truck')}<span>Доставка до офис на Speedy или Econt, или до личен адрес</span></li>
-          <li>${icon('card')}<span>Плащане с наложен платеж – плащате при получаване</span></li>
+          <li>${icon('card')}<span>Сигурно онлайн плащане с карта</span></li>
           <li>${icon('box')}<span>Поръчката се преглежда преди изпращане към доставчик</span></li>
           <li>${icon('undo')}<span>Право на връщане в срок съгласно политиката ни</span></li>
         </ul>

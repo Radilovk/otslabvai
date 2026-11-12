@@ -77,6 +77,21 @@ import {
   isCatalogBackedCartId
 } from './portfolio-site-products.js';
 import {
+  PAYMENT_METHOD_CARD,
+  PAYMENT_STATUS,
+  ORDER_STATUS_AWAITING_PAYMENT,
+  ORDER_STATUS_UNPAID,
+  PaymentError,
+  isPaymentConfigured,
+  isOrderPaid,
+  orderRequiresPayment,
+  resolveReturnOrigin,
+  createCheckoutSession,
+  retrieveCheckoutSession,
+  isSessionPaidForOrder,
+  verifyStripeSignature,
+} from './portfolio-payments.js';
+import {
   getB2bProducts,
   isDirectSaleProductLine,
   orderHasB2bProducts,
@@ -225,7 +240,7 @@ export const DEFAULT_SETTINGS = {
         title: 'Контакт',
         lines: [
           'office@biocode.com',
-          'Доставка до офис · наложен платеж'
+          'Доставка до офис · онлайн плащане с карта'
         ]
       }
     ]
@@ -1310,6 +1325,8 @@ function isOrderFullySubmitted(order) {
 
 function isOrderB2bPending(order) {
   if (!order || order.status === 'Отказана') return false;
+  // Неплатените поръчки не са за изпращане към доставчик.
+  if (!isOrderPaid(order)) return false;
   const b2b = getB2bProducts(order);
   if (!b2b.length) {
     if (!Array.isArray(order.products) || order.products.length === 0) {
@@ -2548,6 +2565,11 @@ async function handleCreateOrder(request, env) {
     throw new PortfolioError(customerCheck.errors.join(' '), 400);
   }
 
+  // Единственият начин на плащане е онлайн с карта — без него поръчка не се приема.
+  if (!isPaymentConfigured(env)) {
+    throw new PortfolioError('Онлайн плащането временно не е налично. Моля, опитайте по-късно.', 503);
+  }
+
   const customer = sanitizePortfolioCustomer(body.customer);
   const catalogSkuIds = extractCatalogSkuIdsForStock(body.products);
   let stockCheckedAt = null;
@@ -2560,11 +2582,11 @@ async function handleCreateOrder(request, env) {
   if (body.promoCode) {
     const codes = await getPromoCodes(env);
     const promo = codes.find((p) => p.code === String(body.promoCode).toUpperCase().trim());
-    const check = validatePromoRecord(promo, { increment: true });
+    // Използването се отчита чак при успешно плащане (markOrderPaid).
+    const check = validatePromoRecord(promo);
     if (!check.valid) throw new PortfolioError(check.error, 400);
     promoRecord = promo;
     appliedPromo = check.promoCode;
-    await savePromoCodes(env, codes);
   }
 
   const items = await validateAndNormalizeCartItems(env, body.products, { promoRecord, project });
@@ -2603,13 +2625,11 @@ async function handleCreateOrder(request, env) {
     }
   }
 
-  const settings = await getSettings(env);
-
   const newOrder = {
     id: `${orderPrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     project,
     timestamp: new Date().toISOString(),
-    status: 'Чака одобрение',
+    status: ORDER_STATUS_AWAITING_PAYMENT,
     customer,
     products: items,
     promo: appliedPromo,
@@ -2622,6 +2642,15 @@ async function handleCreateOrder(request, env) {
       shipping_amount: shippingAmount,
       total: `${serverTotal.toFixed(2)} €`
     },
+    payment: {
+      method: PAYMENT_METHOD_CARD,
+      provider: 'stripe',
+      status: PAYMENT_STATUS.PENDING,
+      amount: serverTotal,
+      currency: 'EUR',
+      session_id: null,
+      created_at: new Date().toISOString(),
+    },
     fitness1_order: null,
     sila_order: null,
     admin_note: '',
@@ -2629,24 +2658,161 @@ async function handleCreateOrder(request, env) {
     live_stock: liveStock,
   };
 
-  if (isAutoSubmitB2bEnabled(settings) && orderHasB2bProducts(newOrder)) {
+  // Към доставчика не се изпраща нищо преди плащането — това става в Stripe webhook-а.
+  let session;
+  try {
+    session = await createCheckoutSession(env, newOrder, {
+      origin: resolveReturnOrigin(request.headers.get('Origin'), project),
+    });
+  } catch (e) {
+    if (e instanceof PaymentError) throw new PortfolioError(e.message, e.status);
+    throw e;
+  }
+  newOrder.payment.session_id = session.id;
+  newOrder.payment.expires_at = session.expires_at
+    ? new Date(session.expires_at * 1000).toISOString()
+    : null;
+
+  await saveOrderRecord(env, newOrder, { isB2bPending: isOrderB2bPending });
+
+  return jsonResponse({
+    success: true,
+    order: { id: newOrder.id, status: newOrder.status, summary: { total: newOrder.summary.total } },
+    payment_url: session.url,
+  }, 201);
+}
+
+async function incrementPromoUsage(env, code) {
+  const key = promoCodeKey(code);
+  if (!key) return;
+  const codes = await getPromoCodes(env);
+  const promo = codes.find((p) => p.code === key);
+  if (!promo) return;
+  promo.usedCount = (promo.usedCount || 0) + 1;
+  await savePromoCodes(env, codes);
+}
+
+/**
+ * Платена поръчка: отбелязва плащането, отчита промо кода и (ако е включено)
+ * изпраща B2B редовете към доставчиците. Идемпотентно — повторен webhook не прави нищо.
+ * @returns {Promise<boolean>} true, ако поръчката току-що е станала платена
+ */
+async function markOrderPaid(env, order, session) {
+  if (!orderRequiresPayment(order) || isOrderPaid(order)) return false;
+  order.payment = {
+    ...order.payment,
+    status: PAYMENT_STATUS.PAID,
+    paid_at: new Date().toISOString(),
+    payment_intent: typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id || null,
+  };
+  order.status = 'Чака одобрение';
+  // Записваме „платена“ преди B2B изпращането, за да не се загуби плащането при грешка.
+  await saveOrderRecord(env, order, { isB2bPending: isOrderB2bPending });
+
+  if (order.promo?.code) {
     try {
-      await submitB2bForOrder(env, newOrder, {
-        sourceOrderIds: [newOrder.id],
-        refreshStock: false,
-      });
+      await incrementPromoUsage(env, order.promo.code);
+    } catch (e) {
+      console.error('Promo usage increment failed:', e);
+    }
+  }
+
+  const settings = await getSettings(env);
+  if (isAutoSubmitB2bEnabled(settings) && orderHasB2bProducts(order)) {
+    try {
+      await submitB2bForOrder(env, order, { sourceOrderIds: [order.id] });
     } catch (e) {
       const msg = e instanceof PortfolioError
         ? e.message
         : (e?.message || 'B2B изпращане неуспешно');
-      newOrder.b2b_submit_error = { message: msg, at: new Date().toISOString() };
-      newOrder.status = 'Чака одобрение';
+      order.b2b_submit_error = { message: msg, at: new Date().toISOString() };
+      order.status = 'Чака одобрение';
     }
+    await saveOrderRecord(env, order, { isB2bPending: isOrderB2bPending });
+  }
+  return true;
+}
+
+function markOrderUnpaid(order) {
+  if (!orderRequiresPayment(order) || isOrderPaid(order)) return false;
+  order.payment = { ...order.payment, status: PAYMENT_STATUS.EXPIRED, expired_at: new Date().toISOString() };
+  order.status = ORDER_STATUS_UNPAID;
+  return true;
+}
+
+/**
+ * Неплатена поръчка → пита Stripe дали плащането е минало (резервен път, ако webhook-ът закъснее).
+ * Само чете; записът става от webhook-а или от одобрението в админ панела.
+ */
+async function fetchPaidSessionForOrder(env, order) {
+  const sessionId = order?.payment?.session_id;
+  if (!sessionId || !isPaymentConfigured(env)) return null;
+  const session = await retrieveCheckoutSession(env, sessionId);
+  return isSessionPaidForOrder(session, order) ? session : null;
+}
+
+/** Одобрение от админа: неплатена поръчка не се изпраща към доставчик. */
+async function assertOrderPaidForSubmit(env, order) {
+  if (isOrderPaid(order)) return;
+  let session = null;
+  try {
+    session = await fetchPaidSessionForOrder(env, order);
+  } catch (e) {
+    throw new PortfolioError(`Плащането не може да се провери: ${e.message}`, 502);
+  }
+  if (!session) {
+    throw new PortfolioError(`Поръчка ${order.id} не е платена — не може да се изпрати към доставчик.`, 409);
+  }
+  order.payment = {
+    ...order.payment,
+    status: PAYMENT_STATUS.PAID,
+    paid_at: new Date().toISOString(),
+    payment_intent: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+  };
+  if (order.promo?.code) await incrementPromoUsage(env, order.promo.code).catch(() => {});
+}
+
+async function handleStripeWebhook(request, env) {
+  const rawBody = await request.text();
+  const ok = await verifyStripeSignature(
+    rawBody,
+    request.headers.get('Stripe-Signature'),
+    String(env.STRIPE_WEBHOOK_SECRET || '').trim(),
+  );
+  if (!ok) throw new PortfolioError('Невалиден подпис.', 400);
+
+  let event;
+  try {
+    event = JSON.parse(rawBody);
+  } catch {
+    throw new PortfolioError('Невалиден JSON.', 400);
   }
 
-  await saveOrderRecord(env, newOrder, { isB2bPending: isOrderB2bPending });
+  const session = event?.data?.object;
+  const orderId = session?.metadata?.order_id || session?.client_reference_id;
+  const handled = ['checkout.session.completed', 'checkout.session.async_payment_succeeded', 'checkout.session.expired', 'checkout.session.async_payment_failed'];
+  if (!handled.includes(event?.type) || !orderId) {
+    return jsonResponse({ received: true, ignored: true });
+  }
 
-  return jsonResponse({ success: true, order: newOrder }, 201);
+  const order = await getOrderRecord(env, orderId);
+  if (!order) return jsonResponse({ received: true, unknown_order: true });
+
+  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
+    if (!isSessionPaidForOrder(session, order)) {
+      // completed с payment_status=unpaid е отложено плащане — чакаме async_payment_succeeded.
+      return jsonResponse({ received: true, paid: false });
+    }
+    const changed = await markOrderPaid(env, order, session);
+    return jsonResponse({ received: true, paid: true, changed });
+  }
+
+  if (markOrderUnpaid(order)) {
+    await saveOrderRecord(env, order, { isB2bPending: isOrderB2bPending });
+  }
+  return jsonResponse({ received: true, paid: false });
 }
 
 async function handleGetOrders(request, env) {
@@ -2668,10 +2834,24 @@ async function handleGetOrder(request, env) {
   const order = await getOrderRecord(env, id);
   if (!order) throw new PortfolioError('Поръчката не е намерена.', 404);
 
+  let paymentStatus = order.payment?.status || null;
+  if (paymentStatus === PAYMENT_STATUS.PENDING) {
+    // Клиентът се връща от Stripe преди webhook-а — показваме реалния статус от Stripe.
+    try {
+      if (await fetchPaidSessionForOrder(env, order)) paymentStatus = PAYMENT_STATUS.PAID;
+    } catch (e) {
+      console.error('Stripe session lookup failed:', e);
+    }
+  }
+
   return jsonResponse({
     id: order.id,
-    status: order.status,
+    status: paymentStatus === PAYMENT_STATUS.PAID && order.status === ORDER_STATUS_AWAITING_PAYMENT
+      ? 'Чака одобрение'
+      : order.status,
     timestamp: order.timestamp,
+    payment_status: paymentStatus,
+    total: order.summary?.total || null,
     customer: {
       firstName: order.customer?.firstName || '',
       lastName: order.customer?.lastName || '',
@@ -2929,6 +3109,8 @@ async function handleApproveOrder(request, env) {
     throw new PortfolioError('Поръчката няма продукти за B2B изпращане (директни продажби се обработват ръчно).', 400);
   }
 
+  await assertOrderPaidForSubmit(env, order);
+
   const { submitted } = await submitB2bForOrder(env, order, { sourceOrderIds: [order.id] });
   if (body.admin_note) order.admin_note = body.admin_note;
 
@@ -2956,6 +3138,7 @@ async function handleApproveBatchOrder(request, env) {
     if (isOrderFullySubmitted(order)) {
       throw new PortfolioError(`Поръчка ${id} вече е изпратена към дистрибуторите.`, 409);
     }
+    await assertOrderPaidForSubmit(env, order);
     selected.push({ order });
   }
 
@@ -3076,6 +3259,9 @@ export async function handlePortfolioRoute(request, env, url, ctx) {
     }
     if (path === '/portfolio/order' && method === 'GET') {
       return await handleGetOrder(request, env);
+    }
+    if (path === '/portfolio/payments/stripe-webhook' && method === 'POST') {
+      return await handleStripeWebhook(request, env);
     }
     if (path === '/portfolio/diagnostics/live-stock' && method === 'GET') {
       return await handleLiveStockDiagnostics(request, env);

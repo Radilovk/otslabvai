@@ -175,8 +175,8 @@
                 <section class="pf-form-section">
                     <h2>Плащане</h2>
                     <label class="pf-radio-card">
-                        <input type="radio" id="cod" name="paymentMethod" value="cod" checked>
-                        <span><strong>Наложен платеж</strong><small>Плащате при получаване</small></span>
+                        <input type="radio" id="card" name="paymentMethod" value="card" checked>
+                        <span><strong>Онлайн с карта</strong><small>Visa, Mastercard, Apple Pay, Google Pay — сигурно плащане през Stripe</small></span>
                     </label>
                 </section>
 
@@ -209,7 +209,7 @@
                     <div class="pf-summary-row pf-summary-total"><span>Общо</span><span id="summary-total">0.00 €</span></div>
                 </div>
                 <button type="button" class="pf-btn pf-btn-primary pf-btn-block pf-checkout-submit--desktop" id="submit-btn" disabled>
-                    Поръчай с наложен платеж
+                    Плати с карта
                 </button>
                 <p class="pf-trust pf-checkout-trust--desktop">
                     <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"/></svg>Сигурна поръчка</span>
@@ -226,7 +226,7 @@
         </div>
     </footer>
 
-    <button type="button" class="pf-floating-btn pf-fab-action" id="submit-btn-mobile" disabled aria-label="Поръчай с наложен платеж">
+    <button type="button" class="pf-floating-btn pf-fab-action" id="submit-btn-mobile" disabled aria-label="Плати с карта">
         Поръчай
     </button>
     <div class="pf-toast-container" id="toast-container"></div>

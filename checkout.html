@@ -1151,12 +1151,8 @@
                 <div class="form-step">
                     <h2>Начин на плащане</h2>
                     <div class="checkbox-group">
-                        <input type="radio" id="cod" name="paymentMethod" value="cod" checked>
-                        <label for="cod">Наложен платеж</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="radio" id="card" name="paymentMethod" value="card" disabled>
-                        <label for="card">Кредитна/Дебитна карта (Очаквайте скоро)</label>
+                        <input type="radio" id="card" name="paymentMethod" value="card" checked>
+                        <label for="card">Онлайн с карта — Visa, Mastercard, Apple Pay, Google Pay (сигурно плащане през Stripe)</label>
                     </div>
                 </div>
                 
@@ -1173,7 +1169,7 @@
                     </div>
                     <div class="error-message" id="terms-error">Трябва да се съгласите с общите условия.</div>
 
-                    <button type="submit" class="btn-submit" style="margin-top: 1.5rem;">Поръчай с наложен платеж</button>
+                    <button type="submit" class="btn-submit" style="margin-top: 1.5rem;">Плати с карта</button>
                     <p class="trust-seals">
                         <ul class="trust-seals-list">
                             <li>
@@ -1296,6 +1292,7 @@
 
     <script type="module">
     import { API_URL } from './config.js';
+    import { waitForOrderPayment, PAYMENT_CANCELLED_MESSAGE } from './order-payment-status.js';
     import {
       validateCartOnServer as sharedValidateCart,
       setStockWarningBanner,
@@ -2163,7 +2160,7 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
             }
 
             if (submitBtn) {
-                submitBtn.textContent = 'Изпращане...';
+                submitBtn.textContent = 'Към плащането...';
             }
 
             const formData = new FormData(form);
@@ -2219,12 +2216,12 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(fullOrder)
                 });
-                if (!orderRes.ok) {
-                    const errData = await orderRes.json().catch(() => ({}));
-                    throw new Error(errData.error || 'Server error');
+                const orderResData = await orderRes.json().catch(() => ({}));
+                if (!orderRes.ok || !orderResData.payment_url) {
+                    throw new Error(orderResData.error || 'Не успяхме да отворим плащането. Опитайте отново.');
                 }
-                localStorage.removeItem('cart');
-                showSuccessModal();
+                // Количката остава до потвърдено плащане — изчиства се при връщане от Stripe.
+                window.location.href = orderResData.payment_url;
             } catch (err) {
                 console.error('Грешка при изпращане на поръчката:', err);
                 notify(err.message || 'Възникна грешка. Опитай пак след малко.', 'error');
@@ -2360,6 +2357,29 @@ import { setLowMarginPromoUnlock, clearLowMarginPromoUnlock } from './product-vi
             }
         }
         
+        // --- Връщане от Stripe: ?id=…&paid=1 (успех) или ?cancelled=… (отказ) ---
+        (async () => {
+            const params = new URLSearchParams(location.search);
+            if (params.has('cancelled')) {
+                history.replaceState(null, '', location.pathname);
+                notify(PAYMENT_CANCELLED_MESSAGE, 'error');
+                return;
+            }
+            const paidId = params.get('paid') && params.get('id');
+            if (!paidId) return;
+            history.replaceState(null, '', location.pathname);
+            notify('Проверяваме плащането...', 'info');
+            const result = await waitForOrderPayment(API_URL, paidId);
+            if (result.state === 'paid') {
+                localStorage.removeItem('cart');
+                showSuccessModal();
+            } else if (result.state === 'pending') {
+                notify('Плащането още се обработва. Ще получите имейл от Stripe, щом мине.', 'info');
+            } else {
+                notify('Плащането не е завършено и поръчката не е приета. Количката е запазена — опитайте отново.', 'error');
+            }
+        })();
+
         // --- Прогрес: Данни → Доставка → Плащане според видимата секция ---
         const progressSteps = document.querySelectorAll('.checkout-progress-step');
         const formSteps = document.querySelectorAll('#checkout-form .form-step');

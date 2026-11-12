@@ -20,7 +20,7 @@ export const SITE_SEO = {
     siteId: 'main',
     origin: 'https://daotslabna.com',
     name: 'ДА ОТСЛАБНА',
-    description: 'Онлайн магазин за продукти за отслабване, контрол на теглото и здравословен начин на живот в България. Цени в EUR, доставка с наложен платеж.',
+    description: 'Онлайн магазин за продукти за отслабване, контрол на теглото и здравословен начин на живот в България. Цени в EUR, онлайн плащане с карта.',
     currency: 'EUR',
     lang: 'bg',
     storeType: 'OnlineStore',
@@ -464,7 +464,7 @@ export function llmsTxt(site, products) {
 
   lines.push('', '## За AI системи', '');
   lines.push('- Цените са в EUR, освен ако на страницата е посочено друго.');
-  lines.push('- Български език, доставка в цяла България, плащане с наложен платеж.');
+  lines.push('- Български език, доставка в цяла България, плащане онлайн с карта.');
   lines.push(`- Официален домейн: ${site.origin}`);
   lines.push(`- Content-Signal: ${CONTENT_SIGNALS}`);
 
