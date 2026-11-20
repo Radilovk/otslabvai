@@ -1867,13 +1867,14 @@ async function callOpenAI(settings, messages) {
  */
 const GEMINI_CURRENT_MODEL = 'gemini-3.5-flash-lite';
 // Спрени модели (Google ги изключи) — запазени в настройките, те чупят всяка AI заявка.
-const GEMINI_SHUT_DOWN = /^(gemini-1\.|gemini-2\.0-|gemini-3-pro-preview|gemini-3\.1-flash-lite-preview)/;
+// gemini-2.5-flash / 2.5-pro: Google ги пренасочва от 1.12.2026 (thinkingBudget там се отказва) — направо текущия.
+const GEMINI_SHUT_DOWN = /^(gemini-1\.|gemini-2\.0-|gemini-2\.5-(flash|pro)$|gemini-3-pro-preview|gemini-3\.1-flash-lite-preview)/;
 
 async function callGoogleAI(settings, messages) {
     const requested = settings.model || GEMINI_CURRENT_MODEL;
     const model = GEMINI_SHUT_DOWN.test(requested) ? GEMINI_CURRENT_MODEL : requested;
     if (model !== requested) console.warn(`Gemini модел ${requested} е спрян — ползва се ${model}.`);
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${settings.apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     // Map the messages array to Google's format.
     // A system-role message becomes a top-level systemInstruction.
@@ -1892,7 +1893,8 @@ async function callGoogleAI(settings, messages) {
             temperature: settings.temperature ?? 0.3,
             maxOutputTokens: settings.maxTokens || 4096,
             responseMimeType: 'application/json',
-            // thinkingBudget: 0 се приема от Gemini 2.5 Flash / Flash-Lite; други модели (2.5 Pro, 3.x) го отказват.
+            // Без мислене: Gemini 3 — ниво (Pro няма „minimal“), 2.5 Flash/Flash-Lite — бюджет 0.
+            ...(settings.disableThinking && /^gemini-[3-9]/.test(model) ? { thinkingConfig: { thinkingLevel: /pro/.test(model) ? 'low' : 'minimal' } } : {}),
             ...(settings.disableThinking && /2\.5-flash/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
         }
     };
@@ -1901,8 +1903,9 @@ async function callGoogleAI(settings, messages) {
         // Без отговор до timeoutMs — грешка (протоколите минават на резервния вариант), не безкраен спинер.
         signal: AbortSignal.timeout(settings.timeoutMs || 45000),
         method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json' 
+        headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': settings.apiKey,
         },
         body: JSON.stringify(payload)
     });
