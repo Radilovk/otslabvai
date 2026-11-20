@@ -1867,15 +1867,21 @@ async function callOpenAI(settings, messages) {
  */
 const GEMINI_CURRENT_MODEL = 'gemini-3.5-flash-lite';
 // Спрени модели (Google ги изключи) — запазени в настройките, те чупят всяка AI заявка.
-// gemini-2.5-flash / 2.5-pro: Google ги пренасочва от 1.12.2026 (thinkingBudget там се отказва) — направо текущия.
-const GEMINI_SHUT_DOWN = /^(gemini-1\.|gemini-2\.0-|gemini-2\.5-(flash|pro)$|gemini-3-pro-preview|gemini-3\.1-flash-lite-preview)/;
+const GEMINI_SHUT_DOWN = /^(gemini-1\.|gemini-2\.0-|gemini-3-pro-preview|gemini-3\.1-flash-lite-preview)/;
+// gemini-2.5-flash / 2.5-pro: Google ги пренасочва от 1.12.2026 (thinkingBudget там се отказва).
+// Те са в общите настройки — описанията и проучването на продуктите (редки, искат знания), затова
+// наследникът им е по-силният 3.6 Flash, не Flash-Lite.
+const GEMINI_RETIRED_STRONG = /^gemini-2\.5-(flash|pro)$/;
+const GEMINI_STRONG_MODEL = 'gemini-3.6-flash';
 
 async function callGoogleAI(settings, messages) {
     const requested = settings.model || GEMINI_CURRENT_MODEL;
-    const model = GEMINI_SHUT_DOWN.test(requested) ? GEMINI_CURRENT_MODEL : requested;
+    const model = GEMINI_SHUT_DOWN.test(requested) ? GEMINI_CURRENT_MODEL
+        : GEMINI_RETIRED_STRONG.test(requested) ? GEMINI_STRONG_MODEL : requested;
     if (model !== requested) console.warn(`Gemini модел ${requested} е спрян — ползва се ${model}.`);
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
+    const gemini3 = /^gemini-[3-9]/.test(model);
     // Map the messages array to Google's format.
     // A system-role message becomes a top-level systemInstruction.
     const systemMsg = messages.find(m => m.role === 'system');
@@ -1891,10 +1897,12 @@ async function callGoogleAI(settings, messages) {
         })),
         generationConfig: {
             temperature: settings.temperature ?? 0.3,
-            maxOutputTokens: settings.maxTokens || 4096,
+            // Gemini 3: мисленето се брои в maxOutputTokens — резерв отгоре, за да не се отреже JSON-ът.
+            maxOutputTokens: (settings.maxTokens || 4096) + (gemini3 ? (settings.disableThinking ? 512 : 2048) : 0),
             responseMimeType: 'application/json',
-            // Без мислене: Gemini 3 — ниво (Pro няма „minimal“), 2.5 Flash/Flash-Lite — бюджет 0.
-            ...(settings.disableThinking && /^gemini-[3-9]/.test(model) ? { thinkingConfig: { thinkingLevel: /pro/.test(model) ? 'low' : 'minimal' } } : {}),
+            // Gemini 3: без мислене — „minimal“ (Pro няма „minimal“); иначе „low“ (по подразбиране е
+            // „high“ — по-бавно и по-скъпо, без нужда за тези задачи). 2.5 Flash/Flash-Lite — бюджет 0.
+            ...(gemini3 ? { thinkingConfig: { thinkingLevel: settings.disableThinking && !/pro/.test(model) ? 'minimal' : 'low' } } : {}),
             ...(settings.disableThinking && /2\.5-flash/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
         }
     };
